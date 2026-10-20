@@ -130,6 +130,29 @@ fn stale_and_cross_namespace_declarations_cannot_commit() -> Result<(), String> 
 }
 
 #[test]
+fn cursor_definition_cannot_cross_into_an_unselected_namespace() -> Result<(), String> {
+    let mut ordinary = noble_contracts::source::Session::without_test_hosts();
+    let mut cursor = noble_contracts::source::Session::new_text_cursor();
+    let byte = prepare(&cursor, b"def byte [ \"a\" 0 text.byte ]")?;
+    assert!(byte.is_definition());
+    assert!(matches!(
+        ordinary.commit(byte),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance
+    ));
+    assert_eq!(ordinary.generation(), 0);
+    assert!(ordinary.prepare(b"byte", &[], limits()).is_err());
+
+    let ordinary_definition = prepare(&ordinary, b"def plain [ 1 ]")?;
+    assert!(matches!(
+        cursor.commit(ordinary_definition),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance
+    ));
+    define(&mut cursor, b"def byte [ \"a\" 0 text.byte ]")?;
+    assert!(prepare(&cursor, b"byte")?.submission().is_some());
+    Ok(())
+}
+
+#[test]
 fn generic_definitions_check_open_constraints_without_execution() -> Result<(), String> {
     let mut session = noble_contracts::source::Session::new();
     define(&mut session, b"def twice [ dup compose ]")?;
@@ -171,19 +194,19 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
     for (source, expected_end, expected_shape, actual_shape) in [
         (
             b"true [ 1 ] [ \"x\" ] if".as_slice(),
-            21_u32,
+            21,
             "Program<?stack -- ?stack Text>",
             "Program<?stack -- ?stack I64>",
         ),
         (
             b"true [ 1 ] [ 1 2 ] if".as_slice(),
-            21_u32,
+            21,
             "Program<?stack -- ?stack I64 I64>",
             "Program<?stack I64 -- ?stack I64 I64>",
         ),
         (
             b"true [ 1 \"x\" ] [ \"x\" 1 ] if".as_slice(),
-            27_u32,
+            27,
             "Program<?stack -- ?stack Text I64>",
             "Program<?stack -- ?stack I64 Text>",
         ),
@@ -204,13 +227,10 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
         assert_ne!(join.expected_stack, join.actual_stack);
         assert!(join.expected_stack.contains(expected_shape));
         assert!(join.actual_stack.contains(actual_shape));
-        let expected_start = expected_end
-            .checked_sub(2)
-            .ok_or("branch join fixture ends before its two-byte `if` word")?;
         assert_eq!(
             error.diagnostic().span,
             noble_contracts::Span {
-                start: expected_start,
+                start: expected_end - 2,
                 end: expected_end,
             }
         );

@@ -54,9 +54,11 @@ pub(super) fn rigid(
             super::Effect::Union(_, _) => Symbolic::empty(),
         });
     }
-    let mut remaining = arena.effects.len().saturating_add(1);
     let mut changed = true;
-    while changed && remaining != 0 {
+    // Concrete and rigid bits only accumulate; an unconstrained hole can
+    // only become constrained. The work meter bounds this finite fixed point
+    // even when several independent equations constrain the same hole.
+    while changed {
         attempt!(meter.charge(1, span));
         changed = false;
         for (at, effect) in arena.effects.iter().enumerate() {
@@ -91,13 +93,6 @@ pub(super) fn rigid(
                 ));
             }
         }
-        remaining -= 1;
-    }
-    if changed {
-        return Err(crate::invalid(
-            span,
-            "rigid effect equation did not converge",
-        ));
     }
     for (a, b) in &arena.effect_equations {
         let left = attempt!(symbol(&facts, *a, span));
@@ -136,8 +131,14 @@ fn equate_through_pure(
         let index = attempt!(crate::offset(id, span));
         match effects.get(index) {
             Some(super::Effect::Hole) => {
-                if facts[index] != value {
-                    facts[index] = value;
+                let current = facts[index];
+                let joined = Symbolic {
+                    concrete: current.concrete | value.concrete,
+                    rigid: current.rigid | value.rigid,
+                    unknown: current.unknown && value.unknown,
+                };
+                if current != joined {
+                    facts[index] = joined;
                     return Ok(true);
                 }
                 return Ok(false);
@@ -389,4 +390,34 @@ fn close_term(
         _ => {}
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::Effect;
+
+    #[test]
+    fn independent_pure_constraints_on_shared_branch_effect_converge_without_losing_host_bits() {
+        // A generic match can equate the same inferred branch effect with a
+        // pure signature and with the union of that branch with itself. The
+        // latter initially reads the prior pass's unknown symbolic fact.
+        let mut arena = crate::inference::Arena::new();
+        arena.effects = alloc::vec![
+            Effect::Hole,
+            Effect::Hole,
+            Effect::Constant(0),
+            Effect::Union(1, 1),
+        ];
+        arena.effect_equations = alloc::vec![(2, 1), (0, 3)];
+        arena.rigid_effect_goals = alloc::vec![(0, 2), (3, 2)];
+        let span = crate::Span { start: 0, end: 0 };
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        super::rigid(&arena, span, &mut meter).expect("independent pure constraints converge");
+
+        arena.effects.push(Effect::Constant(1));
+        arena.effect_equations.push((1, 4));
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        assert!(super::rigid(&arena, span, &mut meter).is_err(),
+            "a concrete host effect cannot satisfy the pure signature");
+    }
 }

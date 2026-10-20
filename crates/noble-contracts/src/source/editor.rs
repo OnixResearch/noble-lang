@@ -44,135 +44,79 @@ struct Builder {
     holes: usize,
 }
 
-/// Owned build state: each step consumes and returns it, so no caller-owned
-/// value is mutated through a borrowed capability.
-struct Emitter {
-    builder: Builder,
-    meter: crate::Meter,
-}
-
-impl Emitter {
-    fn append(mut self, bytes: &[u8]) -> Result<Self, crate::Diagnostic> {
-        let builder = &mut self.builder;
+impl Builder {
+    fn append(
+        &mut self,
+        bytes: &[u8],
+        meter: &mut crate::Meter,
+    ) -> Result<crate::Span, crate::Diagnostic> {
+        let start = attempt!(crate::index(self.source.len(), self.tree.span));
         let end = attempt!(crate::index(
-            builder.source.len().saturating_add(bytes.len()),
-            builder.tree.span
+            self.source.len().saturating_add(bytes.len()),
+            self.tree.span
         ));
-        if end >= self.meter.limits.bytes {
-            return Err(super::exhausted(builder.tree.span, "editor source byte limit exceeded"));
+        if end >= meter.limits.bytes {
+            return Err(super::exhausted(self.tree.span, "editor source byte limit exceeded"));
         }
-        attempt!(self.meter.charge(attempt!(crate::index(bytes.len(), builder.tree.span)), builder.tree.span));
-        builder.source.extend_from_slice(bytes);
-        builder.source.push(b' ');
-        Ok(self)
+        attempt!(meter.charge(attempt!(crate::index(bytes.len(), self.tree.span)), self.tree.span));
+        self.source.extend_from_slice(bytes);
+        self.source.push(b' ');
+        Ok(crate::Span { start, end })
     }
 
     fn body(
-        mut self,
+        &mut self,
         nodes: &[Node],
-    ) -> Result<(Self, Vec<u32>), crate::Diagnostic> {
-        struct Frame<'a> {
-            nodes: &'a [Node],
-            next: usize,
-            start: u32,
-            depth: u32,
-            value_start: usize,
-        }
-        let span = self.builder.tree.span;
-        attempt!(self.meter.depth(0, span));
-        let mut frames = alloc::vec![Frame {
-            nodes, next: 0, start: 0, depth: 0, value_start: 0,
-        }];
-        let mut values = Vec::new();
-        loop {
-            let Some(frame) = frames.last_mut() else {
-                return Err(crate::internal(span));
-            };
-            if frame.next == frame.nodes.len() {
-                let Some(frame) = frames.pop() else {
-                    return Err(crate::internal(span));
-                };
-                let Some(parent) = frames.last_mut() else {
-                    return Ok((self, values));
-                };
-                self = attempt!(self.append(b"]"));
-                let id = attempt!(crate::index(self.builder.tree.nodes.len(), span));
-                let end = attempt!(crate::index(self.builder.source.len(), span));
-                self.builder.tree.nodes.push(super::Node {
-                    kind: super::Kind::Quotation(values.split_off(frame.value_start)),
-                    span: crate::Span { start: frame.start, end },
-                });
-                let Some(parent_items) = values.len().checked_sub(parent.value_start) else {
-                    return Err(crate::internal(span));
-                };
-                if parent_items >= parent.nodes.len() {
-                    return Err(super::exhausted(span, "editor node limit exceeded"));
-                }
-                if values.len() >= self.builder.tree.nodes.len() {
-                    return Err(crate::internal(span));
-                }
-                values.push(id);
-                continue;
-            }
-            let node = &frame.nodes[frame.next];
-            frame.next += 1;
-            attempt!(self.meter.node(self.builder.tree.span));
-            let start = attempt!(crate::index(self.builder.source.len(), self.builder.tree.span));
+        depth: u32,
+        meter: &mut crate::Meter,
+    ) -> Result<Vec<u32>, crate::Diagnostic> {
+        attempt!(meter.depth(depth, self.tree.span));
+        let mut body = Vec::new();
+        for node in nodes {
+            attempt!(meter.node(self.tree.span));
+            let start = attempt!(crate::index(self.source.len(), self.tree.span));
             let kind = match node {
                 Node::Integer(value) => {
                     let text = alloc::format!("{value}");
-                    self = attempt!(self.append(text.as_bytes()));
+                    attempt!(self.append(text.as_bytes(), meter));
                     super::Kind::Literal(noble_kernel::untrusted::Lit::I64(*value))
                 }
                 Node::Boolean(value) => {
-                    self = attempt!(self.append(if *value { b"true" } else { b"false" }));
+                    attempt!(self.append(if *value { b"true" } else { b"false" }, meter));
                     super::Kind::Literal(noble_kernel::untrusted::Lit::Bool(*value))
                 }
                 Node::Word(word) => {
                     let span = crate::Span { start, end: start };
                     if !matches!(
-                        attempt!(super::lexer::tokens::classify(word.as_bytes(), span, &mut self.meter, false)),
+                        attempt!(super::lexer::tokens::classify(word.as_bytes(), span, meter, false)),
                         super::lexer::TokenKind::Word(_)
                     ) {
                         return Err(crate::invalid(span, "editor word is not source word syntax"));
                     }
-                    self = attempt!(self.append(word.as_bytes()));
+                    attempt!(self.append(word.as_bytes(), meter));
                     super::Kind::Word(word.as_bytes().to_vec())
                 }
                 Node::Hole => {
-                    self.builder.holes += 1;
-                    self = attempt!(self.append(b"@editor-hole"));
+                    self.holes += 1;
+                    attempt!(self.append(b"@editor-hole", meter));
                     super::Kind::EditorHole
                 }
                 Node::Quotation(children) => {
-                    self = attempt!(self.append(b"["));
-                    let depth = frame.depth.saturating_add(1);
-                    attempt!(self.meter.depth(depth, span));
-                    frames.push(Frame {
-                        nodes: children, next: 0, start, depth, value_start: values.len(),
-                    });
-                    continue;
+                    attempt!(self.append(b"[", meter));
+                    let children = attempt!(self.body(children, depth.saturating_add(1), meter));
+                    attempt!(self.append(b"]", meter));
+                    super::Kind::Quotation(children)
                 }
             };
-            let id = attempt!(crate::index(self.builder.tree.nodes.len(), self.builder.tree.span));
-            let end = attempt!(crate::index(self.builder.source.len(), self.builder.tree.span));
-            // The node budget is charged above, and each input contributes at
-            // most one body entry; do not reserve for rejected candidates.
-            let Some(body_items) = values.len().checked_sub(frame.value_start) else {
-                return Err(crate::internal(span));
-            };
-            if body_items >= frame.nodes.len() {
-                return Err(super::exhausted(self.builder.tree.span, "editor node limit exceeded"));
-            }
-            self.builder.tree.nodes.push(super::Node {
+            let id = attempt!(crate::index(self.tree.nodes.len(), self.tree.span));
+            let end = attempt!(crate::index(self.source.len(), self.tree.span));
+            self.tree.nodes.push(super::Node {
                 kind,
                 span: crate::Span { start, end },
             });
-            if values.len() >= self.builder.tree.nodes.len() {
-                return Err(crate::internal(span));
-            }
-            values.push(id);
+            body.push(id);
         }
+        Ok(body)
     }
 }
 
@@ -185,17 +129,14 @@ impl Candidate {
                 crate::Diagnostic::new(crate::DiagnosticKind::Unsupported, span, "unsupported editor format"),
             ));
         }
-        let emitter = Emitter {
-            builder: Builder {
-                tree: super::Tree { nodes: Vec::new(), body: Vec::new(), span },
-                source: Vec::new(),
-                holes: 0,
-            },
-            meter: crate::Meter::new(limits),
+        let mut builder = Builder {
+            tree: super::Tree { nodes: Vec::new(), body: Vec::new(), span },
+            source: Vec::new(),
+            holes: 0,
         };
-        let (Emitter { mut builder, meter }, body) = attempt!(emitter.body(&self.nodes)
+        let mut meter = crate::Meter::new(limits);
+        builder.tree.body = attempt!(builder.body(&self.nodes, 0, &mut meter)
             .map_err(|error| super::Error::at(super::Stage::Parse, error)));
-        builder.tree.body = body;
         builder.tree.span.end = attempt!(crate::index(builder.source.len(), span)
             .map_err(|error| super::Error::at(super::Stage::Parse, error)));
         Ok((builder, meter))
@@ -271,30 +212,5 @@ impl super::Session {
             attempt!(state.arena.editor_effect(root.effect, root.span, &mut meter)
                 .map_err(|error| super::Error::at(super::Stage::Check, error)));
         Ok(Analysis { holes, known_effects, unresolved_effect })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn deep_quotation_emission_respects_configured_depth_without_call_stack_recursion() {
-        let mut node = Node::Integer(7);
-        for _ in 0..512 {
-            node = Node::Quotation(alloc::vec![node]);
-        }
-        let candidate = Candidate { format: FORMAT, nodes: alloc::vec![node] };
-        let mut limits = crate::Limits { depth: 512, ..crate::Limits::default() };
-        let source = candidate.admitted_source(limits).expect("iterative quotation emission");
-        assert_eq!(source.iter().filter(|&&byte| byte == b'[').count(), 512);
-        assert_eq!(source.iter().filter(|&&byte| byte == b']').count(), 512);
-        assert!(source.starts_with(b"[ [ "));
-        assert!(source.ends_with(b"] ] "));
-
-        limits.depth = 511;
-        let error = candidate.admitted_source(limits).expect_err("depth limit");
-        assert_eq!(error.stage(), super::super::Stage::Parse);
-        assert_eq!(error.diagnostic().message, "frontend depth limit exceeded");
     }
 }

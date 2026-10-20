@@ -8,5 +8,9 @@ publish.workspace = true
 noble-contracts = { path = "../noble-contracts" }
 noble-kernel = { path = "../noble-kernel" }
 
+[dev-dependencies]
+wat = "=1.261.0"
+wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "gc", "gc-drc"] }
+
 [lints]
 workspace = true

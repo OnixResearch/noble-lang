@@ -74,8 +74,7 @@ impl Host {
         } else { None };
         let wrong_context = if matches!(mode, Mode::WrongContext) {
             Some(table.register(ownership::Requirement {
-                context: ownership::Context(identity.checked_add(1)
-                    .context("component invocation identity exhausted")?), ..required
+                context: ownership::Context(identity + 1), ..required
             }).map_err(|error| anyhow::anyhow!("foreign-context fixture: {error:?}"))?)
         } else { None };
         if let Some(stale) = stale {
@@ -143,8 +142,7 @@ impl Host {
         for (owner, required) in [
             (self.wrong_kind.take(), ownership::Requirement { kind: OTHER, ..self.required }),
             (self.wrong_context.take(), ownership::Requirement {
-                context: ownership::Context(self.required.context.0.checked_add(1)
-                    .context("component invocation identity exhausted")?), ..self.required
+                context: ownership::Context(self.required.context.0 + 1), ..self.required
             }),
         ] {
             if let Some(owner) = owner {

@@ -66,17 +66,7 @@ impl Encoding {
                 literal(&mut self.out, lit, body, node)
             }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                if submission.environment.text_cursor && (22..=25).contains(&def.0) {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                if submission.environment.text_cursor && def.0 == 26 {
-                    if submission.environment.kind(*def)
-                        != Some(noble_kernel::contracts::Behavior::TextByte)
-                    {
-                        return Err(crate::Diagnostic::Invalid);
-                    }
-                    attempt!(self.out.append(b"b26"));
-                } else if def.0 < super::super::builtin_count(&submission.environment) {
+                if def.0 < super::super::builtin_count(&submission.environment) {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
                 } else {
@@ -146,8 +136,13 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::Cons
                                 | noble_kernel::contracts::Behavior::ListCase
                                 | noble_kernel::contracts::Behavior::TestEmit
-                                | noble_kernel::contracts::Behavior::Reserved
                                 | noble_kernel::contracts::Behavior::TextByte
+                                | noble_kernel::contracts::Behavior::CalculatorIterate
+                                | noble_kernel::contracts::Behavior::CalculatorCompare
+                                | noble_kernel::contracts::Behavior::CalculatorDivRem
+                                | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+                                | noble_kernel::contracts::Behavior::CalculatorTextLength
+                                | noble_kernel::contracts::Behavior::Reserved
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
                                 | noble_kernel::contracts::Behavior::BoundClock(_) => {
@@ -213,12 +208,13 @@ fn literal(
 pub(in crate::source) fn check(
     submission: &noble_kernel::execution::Submission,
     identities: &mut alloc::vec::Vec<super::super::Identity>,
+    calculator: bool,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match admit(submission, index, identities, work) {
+        match admit(submission, index, identities, calculator, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -241,6 +237,7 @@ fn admit(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     identities: &mut alloc::vec::Vec<super::super::Identity>,
+    calculator: bool,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
@@ -256,7 +253,12 @@ fn admit(
             return Err(crate::Diagnostic::Invalid);
         }
     } else {
-        if identities.len() >= super::super::DEFINITION_LIMIT {
+        let limit = if calculator {
+            super::super::CALCULATOR_DEFINITION_LIMIT
+        } else {
+            super::super::DEFINITION_LIMIT
+        };
+        if identities.len() >= limit {
             return Err(crate::Diagnostic::Exhausted);
         }
         identities.push(super::super::Identity {

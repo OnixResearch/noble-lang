@@ -25,15 +25,74 @@ impl super::ModuleSession {
                 "source byte limit exceeded",
             ));
         }
+        // Only modules retain the candidate source. If the aggregate would overflow,
+        // classify the first lexical token before parsing or cloning prior sources.
+        if let Err(error) = self.check_retained_module_bytes(input_bytes.len(), limits) {
+            let mut meter = crate::Meter::new(limits);
+            let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
+                input_bytes,
+                &mut meter,
+            ).map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)));
+            let first = attempt!(scanner.next(&mut meter).map_err(|problem| {
+                crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
+            }));
+            if matches!(first, Some(crate::source::lexer::Token {
+                kind: crate::source::lexer::TokenKind::Word(ref spelling),
+                ..
+            }) if spelling == b"module") {
+                return Err(error);
+            }
+        }
         let unit = attempt!(
             crate::source::declared::parsing::parse(input_bytes, limits).map_err(|problem| {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             })
         );
+        if self.source.calculator {
+            let environment = attempt!(self.source.declared.as_ref()
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator source environment missing"))));
+            if environment.environment.defs.len()
+                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+            {
+                return Err(crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment row limit exceeded")));
+            }
+            let budget = attempt!(environment.environment.calculator_clone_budget()
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone bound exceeded"))));
+            let copies = attempt!(budget.reserved_bytes.checked_mul(2)
+                .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone fanout exceeded"))));
+            if copies > u64::from(limits.work) {
+                return Err(crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone work exceeded")));
+            }
+        }
         let StagedUnit { session: staged, kind, submission, output, pending } =
             attempt!(self
                 .snapshot()
                 .stage_unit(unit, input_bytes, inputs, limits));
+        if staged.source.calculator && staged.source.declared.as_ref()
+            .is_none_or(|context| context.environment.defs.len()
+                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT)
+        {
+            return Err(crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(super::super::SPAN,
+                    "calculator environment row limit exceeded")));
+        }
         attempt!(staged.retained(limits));
         Ok(super::ModulePrepared {
             kind,
@@ -150,6 +209,7 @@ impl super::ModuleSession {
 
     fn current_snapshot(&self, prepared: &super::ModulePrepared) -> bool {
         self.generation == prepared.generation
+            && self.source.calculator == prepared.staged.source.calculator
             && self.bindings == prepared.staged.bindings
             && self.modules == prepared.previous_modules
             && self.aliases == prepared.previous_aliases
@@ -258,18 +318,8 @@ impl super::ModuleSession {
         // A fan-out of local uses can otherwise duplicate nested proofs
         // exponentially. Charge the exact source bytes and nodes that would
         // be copied before each copy is made.
-        let (Ok(mut remaining_bytes), Ok(mut remaining_nodes)) = (
-            usize::try_from(prepared.limits.bytes),
-            usize::try_from(prepared.limits.nodes),
-        ) else {
-            return (
-                self,
-                Err(crate::source::declared::error(
-                    crate::source::Stage::Acceptance,
-                    "proof publication dependency budget exceeds address space",
-                )),
-            );
-        };
+        let mut remaining_bytes = usize::try_from(prepared.limits.bytes).unwrap_or(usize::MAX);
+        let mut remaining_nodes = usize::try_from(prepared.limits.nodes).unwrap_or(usize::MAX);
         for obligation in &batch.obligations {
             if remaining_bytes.checked_sub(batch.source.len()).is_none()
                 || remaining_nodes == 0
@@ -285,20 +335,16 @@ impl super::ModuleSession {
             remaining_bytes -= batch.source.len();
             remaining_nodes -= 1;
             for imported in &batch.dependencies {
-                if uses(&obligation.term, &imported.name) {
-                    let Some((bytes, nodes)) =
-                        charge_dependency(imported, remaining_bytes, remaining_nodes)
-                    else {
-                        return (
-                            self,
-                            Err(crate::source::declared::error(
-                                crate::source::Stage::Acceptance,
-                                "proof publication dependency budget exhausted",
-                            )),
-                        );
-                    };
-                    remaining_bytes = bytes;
-                    remaining_nodes = nodes;
+                if uses(&obligation.term, &imported.name)
+                    && !charge_dependency(imported, &mut remaining_bytes, &mut remaining_nodes)
+                {
+                    return (
+                        self,
+                        Err(crate::source::declared::error(
+                            crate::source::Stage::Acceptance,
+                            "proof publication dependency budget exhausted",
+                        )),
+                    );
                 }
             }
             // Earlier obligations are budgeted when materialized below;
@@ -313,59 +359,20 @@ impl super::ModuleSession {
                 )),
             );
         };
-        // Each published proof owns exactly the dependencies its term uses.
-        // Select and charge all of them before copying any, then copy each
-        // once into a list allocated at its exact length. A selection indexes
-        // the imported proofs followed by the earlier local proofs; the first
-        // `INLINE` stay on the stack and one spill buffer serves the batch.
-        const INLINE: usize = 32;
-        let mut inline = [0usize; INLINE];
-        let mut spill = alloc::vec::Vec::new();
-        let imported_count = batch.dependencies.len();
         for (obligation, result) in batch.obligations.iter().zip(checked) {
-            // At most one selection per imported or earlier local proof.
-            let dependency_bound = imported_count.saturating_add(module.proofs.len());
-            let candidates = batch
-                .dependencies
-                .iter()
-                .chain(module.proofs.iter().map(|local| &local.reference));
-            let mut selected = 0usize;
-            spill.clear();
-            for (index, candidate) in candidates.enumerate() {
-                if !uses(&obligation.term, &candidate.name) {
-                    continue;
+            let mut dependencies = alloc::vec::Vec::new();
+            for imported in &batch.dependencies {
+                if uses(&obligation.term, &imported.name) {
+                    dependencies.push(imported.clone());
                 }
-                // Imported closures were charged above; each local closure is
-                // charged here, in candidate order, before anything is copied.
-                if index >= imported_count {
-                    let Some((bytes, nodes)) =
-                        charge_dependency(candidate, remaining_bytes, remaining_nodes)
-                    else {
-                        return (
-                            self,
-                            Err(crate::source::declared::error(
-                                crate::source::Stage::Acceptance,
-                                "proof publication dependency budget exhausted",
-                            )),
-                        );
-                    };
-                    remaining_bytes = bytes;
-                    remaining_nodes = nodes;
-                }
-                if selected >= dependency_bound {
-                    return (
-                        self,
-                        Err(crate::source::declared::error(
-                            crate::source::Stage::Acceptance,
-                            "proof publication dependency budget exhausted",
-                        )),
-                    );
-                }
-                if selected < INLINE {
-                    inline[selected] = index;
-                } else {
-                    // One entry per selection, so this bound is never reached.
-                    if spill.len() >= dependency_bound {
+            }
+            for local in &module.proofs {
+                if uses(&obligation.term, &local.reference.name) {
+                    if !charge_dependency(
+                        &local.reference,
+                        &mut remaining_bytes,
+                        &mut remaining_nodes,
+                    ) {
                         return (
                             self,
                             Err(crate::source::declared::error(
@@ -374,17 +381,8 @@ impl super::ModuleSession {
                             )),
                         );
                     }
-                    spill.push(index);
+                    dependencies.push(local.reference.clone());
                 }
-                selected = selected.saturating_add(1);
-            }
-            let mut dependencies = alloc::vec::Vec::with_capacity(selected);
-            for &index in inline[..selected.min(INLINE)].iter().chain(&spill) {
-                let dependency = match index.checked_sub(imported_count) {
-                    None => &batch.dependencies[index],
-                    Some(local) => &module.proofs[local].reference,
-                };
-                dependencies.push(dependency.clone());
             }
             module.proofs.push(crate::source::declared::PublishedProof {
                 reference: crate::intrinsic::ProofDependency {
@@ -406,53 +404,94 @@ impl super::ModuleSession {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::super::ModuleSession;
+    use noble_kernel::contracts::Behavior;
+    use noble_kernel::{shapes::Pattern, words::Scheme};
+
+    #[test]
+    fn calculator_source_refuses_897_lightweight_rows_before_namespace_snapshot_clone() {
+        let mut session = ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator environment unavailable"));
+        let environment = &mut session.source.declared.as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        while environment.defs.len() < 897 {
+            environment.defs.push(Scheme {
+                var_kinds: alloc::vec::Vec::new(),
+                stack_in: alloc::vec::Vec::new(),
+                stack_out: alloc::vec![Pattern::Unit],
+                effects: alloc::vec::Vec::new(),
+            });
+            environment.kinds.push(Behavior::Named);
+            environment.deps.push(alloc::vec::Vec::new());
+            environment.definition_owners.push(None);
+        }
+        assert!(environment.calculator_clone_budget().is_some(),
+            "lightweight row 897 must not be confused with clone-byte exhaustion");
+        let limits = crate::Limits {
+            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+        };
+        let refused = session.prepare(b"1", &[], limits)
+            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        assert_eq!(refused.stage(), crate::source::Stage::Check);
+        assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
+    }
+
+    #[test]
+    fn calculator_source_refuses_deep_environment_before_namespace_snapshot_clone() {
+        let mut session = ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator environment unavailable"));
+        let environment = &mut session.source.declared.as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        let program = Pattern::program(
+            alloc::vec![Pattern::Unit; 128],
+            alloc::vec![Pattern::Unit; 128],
+            alloc::vec::Vec::new(),
+        );
+        for _ in 0..8 {
+            environment.defs.push(Scheme {
+                var_kinds: alloc::vec::Vec::new(),
+                stack_in: alloc::vec::Vec::new(),
+                stack_out: alloc::vec![program.clone(); 128],
+                effects: alloc::vec::Vec::new(),
+            });
+        }
+        assert!(environment.calculator_clone_budget().is_none(),
+            "nested program stacks must contribute every retained node to the clone bound");
+        let limits = crate::Limits {
+            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+        };
+        let refused = session.prepare(b"1", &[], limits)
+            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        assert_eq!(refused.stage(), crate::source::Stage::Check);
+        assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
+    }
+}
+
 fn revision(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-/// Charges a retained dependency and its transitive closure in the same
-/// pre-order as the published copy, returning the remaining byte and node
-/// budgets, or `None` once either is exhausted.
 fn charge_dependency(
     dependency: &crate::intrinsic::ProofDependency,
-    remaining_bytes: usize,
-    remaining_nodes: usize,
-) -> Option<(usize, usize)> {
-    const INLINE: usize = 32;
-    let mut inline: [Option<&crate::intrinsic::ProofDependency>; INLINE] = [None; INLINE];
-    let mut inline_len = 0usize;
-    let mut spill = alloc::vec::Vec::new();
-    let (mut bytes, mut nodes) = (remaining_bytes, remaining_nodes);
-    let mut current = Some(dependency);
-    while let Some(next) = current {
-        bytes = bytes.checked_sub(next.source.len())?;
-        nodes = nodes.checked_sub(1)?;
-        // Every queued proof costs a node. Refuse excessive fan-out before
-        // putting any of its children into scratch storage.
-        let waiting = inline_len.checked_add(spill.len())?;
-        if waiting.checked_add(next.dependencies.len())? > nodes {
-            return None;
+    remaining_bytes: &mut usize,
+    remaining_nodes: &mut usize,
+) -> bool {
+    let (Some(bytes), Some(nodes)) = (
+        remaining_bytes.checked_sub(dependency.source.len()),
+        remaining_nodes.checked_sub(1),
+    ) else {
+        return false;
+    };
+    *remaining_bytes = bytes;
+    *remaining_nodes = nodes;
+    for earlier in &dependency.dependencies {
+        if !charge_dependency(earlier, remaining_bytes, remaining_nodes) {
+            return false;
         }
-        // The first child runs next; the rest wait in reverse order. A leaf or
-        // unary chain has no heap allocation, unlike a one-element Vec seed.
-        for child in next.dependencies.iter().skip(1).rev() {
-            if inline_len < INLINE && spill.is_empty() {
-                inline[inline_len] = Some(child);
-                inline_len = inline_len.saturating_add(1);
-            } else {
-                if spill.len() >= nodes { return None; }
-                spill.push(child);
-            }
-        }
-        current = next.dependencies.first()
-            .or_else(|| spill.pop())
-            .or_else(|| {
-                let top = inline_len.checked_sub(1)?;
-                inline_len = top;
-                inline[top].take()
-            });
     }
-    Some((bytes, nodes))
+    true
 }
 
 fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {

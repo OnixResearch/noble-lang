@@ -1,0 +1,206 @@
+module calc_decimal@1 [
+    opaque DecimalCursor Pair<Pair<Text,Pair<I64,I64>>,Pair<Bool,Pair<calc_big@1.BigInt,calc_big@1.BigInt>>> private
+    export DecimalCursor
+    opaque DecimalDone Pair<calc_big@1.BigInt,calc_big@1.BigInt> private
+    export DecimalDone
+    opaque DecimalDigit Pair<DecimalCursor,I64> private
+    export DecimalDigit
+    opaque DecimalBitCursor Pair<Pair<DecimalCursor,Bool>,Pair<List<Bool>,Pair<I64,List<Bool>>>> private
+    export DecimalBitCursor
+    opaque DecimalBitActive DecimalBitCursor private
+    export DecimalBitActive
+    opaque DecimalBitDone DecimalBitCursor private
+    export DecimalBitDone
+    opaque DecimalBitSealed Pair<Pair<DecimalCursor,Bool>,calc_big@1.BigInt> private
+    export DecimalBitSealed
+    variant DecimalRoute Done DecimalDone public More DecimalCursor public
+    export DecimalRoute
+    export DecimalRoute.Done
+    export DecimalRoute.More
+    export DecimalRoute.match
+
+    # The cursor is (source,(byte offset,end)); the accumulator is
+    # (fractional,(denominator,numerator)). The lexer supplies a decimal
+    # token, so the byte span consists solely of digits and at most one dot.
+    def state_end_p [
+        dup unpair drop unpair swap drop unpair =
+    ]
+
+    signature cursor_start forall<S:stack>
+        [ S Text I64 I64 -- S DecimalCursor ! pure ]
+    export cursor_start
+    def cursor_start [
+        pair pair
+        false calc_big@1.big_one calc_big@1.big_zero pair pair pair
+        DecimalCursor.new
+    ]
+
+    signature cursor_route forall<S:stack>
+        [ S DecimalCursor -- S DecimalRoute ! pure ]
+    export cursor_route
+    def cursor_route [
+        dup DecimalCursor.into state_end_p swap drop
+        [ DecimalCursor.into
+          unpair swap drop unpair swap drop unpair swap pair
+          DecimalDone.new DecimalRoute.Done ]
+        [ DecimalRoute.More ] if
+    ]
+
+    # Each digit operates on guest BigInt magnitude bits, so its arithmetic
+    # has no I64 representational ceiling. The source cursor remains sealed.
+    signature cursor_classify forall<S:stack>
+        [ S DecimalCursor -- S result@1.Result<DecimalCursor,DecimalDigit> ! pure ]
+    export cursor_classify
+    def cursor_classify [
+        dup DecimalCursor.into dup unpair drop unpair dup unpair drop
+        [ swap ] dip text.byte swap drop [ drop ] dip swap drop dup 46 =
+        [ drop DecimalCursor.into unpair unpair swap drop true swap pair pair
+          unpair [ unpair unpair [ 1 + ] dip pair pair ] dip pair
+          DecimalCursor.new result@1.Result.Ok ]
+        [ 48 - pair DecimalDigit.new result@1.Result.Err ] if
+    ]
+
+    signature cursor_digit_begin forall<S:stack>
+        [ S DecimalDigit -- S DecimalBitCursor ! pure ]
+    export cursor_digit_begin
+    def cursor_digit_begin [
+        DecimalDigit.into unpair
+        [ dup DecimalCursor.into unpair swap drop unpair swap drop
+          unpair swap drop calc_big@1.big_bits ] dip
+        [ swap ] dip swap false pair swap [ swap ] dip
+        nil pair pair pair DecimalBitCursor.new
+    ]
+
+    signature cursor_digit_route forall<S:stack>
+        [ S DecimalBitCursor
+          -- S result@1.Result<DecimalBitDone,DecimalBitActive> ! pure ]
+    export cursor_digit_route
+    def cursor_digit_route [
+        dup DecimalBitCursor.into unpair swap drop unpair
+        [ [ true ] [ drop drop false ] list.case ] dip
+        unpair drop 0 = [ ] [ drop false ] if
+        [ DecimalBitDone.new result@1.Result.Ok ]
+        [ DecimalBitActive.new result@1.Result.Err ] if
+    ]
+
+    signature cursor_digit_advance forall<S:stack>
+        [ S DecimalBitActive -- S DecimalBitCursor ! pure ]
+    export cursor_digit_advance
+    def cursor_digit_advance [
+        DecimalBitActive.into DecimalBitCursor.into unpair
+        unpair swap [ false nil ] [ ] list.case
+        [ swap unpair [ swap [ 10 ] [ 0 ] if + ] dip
+          [ 2 i64.div-rem drop ] dip
+          swap 1 = swap cons pair ] dip
+        swap pair pair DecimalBitCursor.new
+    ]
+
+    # Exhaust all finite magnitude bits inside one guest invocation. The
+    # original measured Work is charged before issuing DecimalBitCursor;
+    # returning the route preserves the sealed source and Budget unchanged.
+    signature cursor_digit_run forall<S:stack>
+        [ S DecimalBitCursor
+          -- S result@1.Result<DecimalBitDone,DecimalBitActive> ! pure ]
+    export cursor_digit_run
+    def cursor_digit_run [
+        cursor_digit_route
+        [ [ result@1.Result.Ok false ]
+          [ cursor_digit_advance cursor_digit_route true ]
+          result@1.Result.match ] iterate
+    ]
+
+    signature cursor_digit_seal forall<S:stack>
+        [ S DecimalBitDone -- S DecimalBitSealed ! pure ]
+    export cursor_digit_seal
+    def cursor_digit_seal [
+        DecimalBitDone.into DecimalBitCursor.into unpair
+        unpair swap drop unpair swap drop
+        calc_big@1.big_from_msb_bits
+        pair DecimalBitSealed.new
+    ]
+
+    # Integral digits advance their source offset directly; fractional digits
+    # also shift and advance the denominator's separately sealed bit cursor.
+    signature cursor_digit_finish forall<S:stack>
+        [ S DecimalBitSealed
+          -- S result@1.Result<DecimalCursor,DecimalBitCursor> ! pure ]
+    export cursor_digit_finish
+    def cursor_digit_finish [
+        DecimalBitSealed.into unpair
+        [ unpair ] dip swap
+        [ [ DecimalCursor.into unpair ] dip
+          [ unpair unpair swap drop ] dip
+          swap pair pair pair unpair [ unpair unpair [ 1 + ] dip pair pair ] dip pair
+          DecimalCursor.new result@1.Result.Ok ]
+        [ [ DecimalCursor.into unpair ] dip
+          [ unpair unpair drop ] dip
+          pair pair pair DecimalCursor.new
+          dup DecimalCursor.into unpair swap drop unpair drop
+          [ dup DecimalCursor.into unpair swap drop
+            unpair swap drop unpair drop calc_big@1.big_bits
+            swap true pair swap
+            0 nil pair pair pair DecimalBitCursor.new result@1.Result.Err ]
+          [ DecimalCursor.into unpair [ unpair unpair [ 1 + ] dip pair pair ] dip pair
+            DecimalCursor.new result@1.Result.Ok ] if ] if
+    ]
+
+    signature cursor_digit_finish_probe forall<S:stack>
+        [ S DecimalBitSealed -- S Bool ! pure ]
+    export cursor_digit_finish_probe
+    def cursor_digit_finish_probe [
+        DecimalBitSealed.into unpair drop unpair swap drop
+    ]
+
+    signature cursor_digit_finish_true forall<S:stack>
+        [ S DecimalBitSealed -- S DecimalCursor ! pure ]
+    export cursor_digit_finish_true
+    def cursor_digit_finish_true [
+        DecimalBitSealed.into unpair [ unpair ] dip swap drop
+        [ DecimalCursor.into unpair ] dip
+        [ unpair unpair swap drop ] dip
+        swap pair pair pair unpair [ unpair unpair [ 1 + ] dip pair pair ] dip pair
+        DecimalCursor.new
+    ]
+
+    signature cursor_digit_finish_false_begin forall<S:stack>
+        [ S DecimalBitSealed -- S DecimalCursor ! pure ]
+    export cursor_digit_finish_false_begin
+    def cursor_digit_finish_false_begin [
+        DecimalBitSealed.into unpair [ unpair ] dip swap drop
+        [ DecimalCursor.into unpair ] dip
+        [ unpair unpair drop ] dip
+        pair pair pair DecimalCursor.new
+    ]
+
+    signature cursor_digit_finish_false_probe forall<S:stack>
+        [ S DecimalCursor -- S Bool ! pure ]
+    export cursor_digit_finish_false_probe
+    def cursor_digit_finish_false_probe [
+        DecimalCursor.into unpair swap drop unpair drop
+    ]
+
+    signature cursor_digit_finish_false_den forall<S:stack>
+        [ S DecimalCursor -- S DecimalBitCursor ! pure ]
+    export cursor_digit_finish_false_den
+    def cursor_digit_finish_false_den [
+        dup DecimalCursor.into unpair swap drop
+        unpair swap drop unpair drop calc_big@1.big_bits
+        swap true pair swap
+        0 nil pair pair pair DecimalBitCursor.new
+    ]
+
+    signature cursor_digit_finish_false_ready forall<S:stack>
+        [ S DecimalCursor -- S DecimalCursor ! pure ]
+    export cursor_digit_finish_false_ready
+    def cursor_digit_finish_false_ready [
+        DecimalCursor.into unpair [ unpair unpair [ 1 + ] dip pair pair ] dip pair
+        DecimalCursor.new
+    ]
+
+    signature cursor_finish forall<S:stack>
+        [ S DecimalDone
+          -- S Pair<calc_big@1.BigInt,calc_big@1.BigInt> ! pure ]
+    export cursor_finish
+    def cursor_finish [ DecimalDone.into ]
+
+]

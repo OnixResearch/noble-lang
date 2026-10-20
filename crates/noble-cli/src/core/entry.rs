@@ -12,11 +12,14 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     match result {
         Ok(exit) => std::process::ExitCode::from(exit),
         Err(error) => {
-            let report = if is_cursor {
-                super::output::Report::failure_with_profile(&error, "Text-Byte-Cursor-v1")
+            let profile = if is_cursor {
+                "Text-Byte-Cursor-v1"
+            } else if is_declared {
+                "Declared-Modules-v1"
             } else {
-                super::output::Report::failure(&error, is_declared)
+                "Core-Bootstrap"
             };
+            let report = super::output::Report::failure(&error, profile);
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);
             }

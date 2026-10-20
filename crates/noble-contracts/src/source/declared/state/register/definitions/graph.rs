@@ -5,7 +5,6 @@ pub(super) struct Schedule<'a> {
     pending: alloc::vec::Vec<Option<super::Definition>>,
     installed: alloc::vec::Vec<bool>,
     remaining: usize,
-    limits: crate::Limits,
 }
 
 struct PassPosition {
@@ -17,7 +16,6 @@ impl<'a> Schedule<'a> {
     pub(super) fn setup(
         session: crate::source::declared::ModuleSession,
         mut work: super::Work<'a>,
-        limits: crate::Limits,
     ) -> Result<Self, crate::source::Error> {
         let session = attempt!(super::reserve_words(session, work.definitions.len()));
         let count = work.definitions.len();
@@ -43,7 +41,6 @@ impl<'a> Schedule<'a> {
             pending,
             installed: alloc::vec![false;remaining],
             remaining,
-            limits,
         })
     }
 
@@ -213,10 +210,10 @@ impl<'a> Schedule<'a> {
                     .map(|(_, scheme)| scheme.clone()),
                 name,
                 source: definition_bytes,
-                limits: self.limits,
                 exports: self.work.exports,
             },
             core::mem::take(&mut self.work.local_exports),
+            &mut self.work.meter,
         );
         let (session, local_exports) = match installed {
             Ok(installed) => installed,

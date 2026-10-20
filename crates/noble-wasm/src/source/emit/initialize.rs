@@ -22,6 +22,11 @@ fn atom(
         super::super::plan::Action::Program(child) => (3, 0, Some(child), 0),
         super::super::plan::Action::Word(definition) => (2, i64::from(definition), None, 0),
         super::super::plan::Action::TextByte => (2, 26, None, 0),
+        super::super::plan::Action::CalculatorIterate => (2, 27, None, 0),
+        super::super::plan::Action::CalculatorCompare => (2, 28, None, 0),
+        super::super::plan::Action::CalculatorDivRem => (2, 29, None, 0),
+        super::super::plan::Action::CalculatorTextFromAscii => (2, 30, None, 0),
+        super::super::plan::Action::CalculatorTextLength => (2, 31, None, 0),
         super::super::plan::Action::Quote(_, _, _) => (2, 8, None, 0),
         super::super::plan::Action::Call(_, identity) => {
             (15, i64::from_le_bytes(identity.to_le_bytes()), None, 0)
@@ -43,8 +48,6 @@ fn atom(
         }
         super::super::plan::Action::EmitBound(slot) => (31, i64::from(slot), None, 0),
         super::super::plan::Action::ClockBound(slot) => (32, i64::from(slot), None, 0),
-        super::super::plan::Action::LivePropose(_) => (2, 24, None, 0),
-        super::super::plan::Action::LiveGeneration => (2, 25, None, 0),
         super::super::plan::Action::Text(address, length) => {
             return text_atom(out, (address, length), witness);
         }
@@ -84,7 +87,11 @@ pub(super) fn write(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $initialize (local $recipe i32) (local $atom i32)\n"));
     if generation == 0 {
-        attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n"));
+        if plan.calculator {
+            attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 5))\n"));
+        } else {
+            attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n"));
+        }
     }
     if plan.functions > plan.first_function {
         attempt!(out.append(b"(table.init $code "));

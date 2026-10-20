@@ -1,0 +1,395 @@
+module calc_lex@1 [
+    # Tokens are (kind,(start,end)) with half-open raw UTF-8 byte offsets.
+    # 0 reserved for parser EOF, 1 +, 2 -, 3 *, 4 /, 5 ^, 6 (, 7 ), 8 comma,
+    # 9 decimal, 10 identifier, 11 invalid, 14 definition equals.
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    def rot [ [ swap ] dip swap ]
+
+    signature token forall<S:stack>
+        [ S I64 I64 I64 -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def token [ rot [ pair ] dip swap pair ]
+
+    signature byte_at forall<S:stack> [ S Text I64 -- S I64 ! pure ]
+    export byte_at
+    def byte_at [ text.byte swap drop ]
+
+    signature whitespace forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def whitespace [
+        dup 32 = [ drop true ]
+        [ dup 9 = [ drop true ]
+          [ dup 10 = [ drop true ] [ 13 = ] if ] if ] if
+    ]
+
+    signature digit forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def digit [
+        dup 48 i64.cmp -1 = [ drop false ]
+        [ 57 i64.cmp 1 = [ false ] [ true ] if ] if
+    ]
+
+    signature alpha forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def alpha [
+        dup 95 = [ drop true ]
+        [ dup 65 i64.cmp -1 = [ drop false ]
+          [ dup 90 i64.cmp 1 =
+            [ dup 97 i64.cmp -1 = [ drop false ]
+              [ 122 i64.cmp 1 = [ false ] [ true ] if ] if ]
+            [ drop true ] if ] if ] if
+    ]
+
+    signature ident_byte forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def ident_byte [ dup alpha [ drop true ] [ digit ] if ]
+
+    signature punctuation forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def punctuation [
+        dup 43 = [ drop 1 ]
+        [ dup 45 = [ drop 2 ]
+          [ dup 42 = [ drop 3 ]
+            [ dup 47 = [ drop 4 ]
+              [ dup 94 = [ drop 5 ]
+                [ dup 40 = [ drop 6 ]
+                  [ dup 41 = [ drop 7 ]
+                    [ dup 44 = [ drop 8 ]
+                      [ 61 = [ 14 ] [ 11 ] if ] if ] if ] if ] if ] if ] if ] if ] if
+    ]
+
+    signature token_kind forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> -- S I64 ! pure ]
+    export token_kind
+    def token_kind [ unpair drop ]
+
+    signature token_span forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> -- S Pair<I64,I64> ! pure ]
+    export token_span
+    def token_span [ unpair swap drop ]
+
+    # The cursor owns the source and its reversed token history. Each scheduled
+    # action consumes at most one byte. Phases: 0 idle, 1 integer, 2 fraction,
+    # 3 identifier, 4 terminal, 5 consumed idle byte, 7 punctuation status,
+    # 8 dot decision, 9/10 number emit/end, 11/12 identifier emit/end,
+    # 13 decimal lookahead, 14 punctuation with guest-classified kind in token_start.
+    opaque ScanCursor Pair<Text,Pair<I64,Pair<I64,Pair<I64,List<Pair<I64,Pair<I64,I64>>>>>>> private
+    export ScanCursor
+
+    signature scan_pack forall<S:stack>
+        [ S Text I64 I64 I64 List<Pair<I64,Pair<I64,I64>>> -- S ScanCursor ! pure ]
+    def scan_pack [ pair pair pair pair ScanCursor.new ]
+
+    signature scan_unpack forall<S:stack>
+        [ S ScanCursor -- S Text I64 I64 I64 List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def scan_unpack [ ScanCursor.into unpair unpair unpair unpair ]
+
+    signature scan_start forall<S:stack> [ S Text -- S ScanCursor ! pure ]
+    export scan_start
+    def scan_start [ 0 0 0 nil scan_pack ]
+
+    signature scan_phase forall<S:stack> [ S ScanCursor -- S I64 ! pure ]
+    def scan_phase [
+        ScanCursor.into unpair swap drop unpair swap drop unpair swap drop
+        unpair drop
+    ]
+
+    signature scan_byte forall<S:stack> [ S ScanCursor -- S I64 ! pure ]
+    def scan_byte [ ScanCursor.into unpair unpair drop byte_at ]
+
+    signature scan_lookahead forall<S:stack> [ S ScanCursor -- S I64 ! pure ]
+    def scan_lookahead [ ScanCursor.into unpair unpair drop 1 + byte_at ]
+
+    signature scan_move forall<S:stack> [ S ScanCursor -- S ScanCursor ! pure ]
+    def scan_move [
+        scan_unpack [ [ [ 1 + ] dip ] dip ] dip scan_pack
+    ]
+
+    signature scan_set_phase forall<S:stack>
+        [ S ScanCursor I64 -- S ScanCursor ! pure ]
+    def scan_set_phase [
+        swap scan_unpack swap drop
+        [ [ rot ] dip ] dip [ swap ] dip scan_pack
+    ]
+
+    signature scan_begin_digits forall<S:stack> [ S ScanCursor -- S ScanCursor ! pure ]
+    def scan_begin_digits [
+        scan_unpack swap drop swap drop
+        [ dup 1 + swap ] dip [ 1 ] dip scan_pack
+    ]
+
+    signature scan_begin_ident forall<S:stack> [ S ScanCursor -- S ScanCursor ! pure ]
+    def scan_begin_ident [
+        scan_unpack swap drop swap drop
+        [ dup 1 + swap ] dip [ 3 ] dip scan_pack
+    ]
+
+    signature scan_emit_number forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    def scan_emit_number [
+        scan_unpack swap drop
+        [ [ dup ] dip swap 9 rot rot token ] dip cons
+        [ dup ] dip [ 10 ] dip scan_pack
+    ]
+
+    signature scan_emit_ident forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    def scan_emit_ident [
+        scan_unpack swap drop
+        [ [ dup ] dip swap 10 rot rot token ] dip cons
+        [ dup ] dip [ 12 ] dip scan_pack
+    ]
+
+    signature scan_emit_punctuation forall<S:stack>
+        [ S ScanCursor I64 -- S ScanCursor ! pure ]
+    def scan_emit_punctuation [
+        [ dup ScanCursor.into unpair unpair drop swap drop ] dip
+        [ dup 1 + ] dip rot rot token
+        swap scan_unpack swap drop swap drop [ rot ] dip cons
+        [ dup ] dip [ 7 ] dip scan_pack
+    ]
+
+    signature scan_tick_identifier_byte forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_identifier_byte
+    def scan_tick_identifier_byte [
+        dup scan_phase 3 =
+        [ dup scan_byte ident_byte
+          [ scan_move ] [ 11 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_identifier_emit forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_identifier_emit
+    def scan_tick_identifier_emit [
+        dup scan_phase 11 = [ scan_emit_ident ] [ ] if
+    ]
+
+    signature scan_tick_identifier_end forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_identifier_end
+    def scan_tick_identifier_end [
+        dup scan_phase 12 =
+        [ dup scan_byte -1 =
+          [ 4 scan_set_phase ] [ 0 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_fraction_byte forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_fraction_byte
+    def scan_tick_fraction_byte [
+        dup scan_phase 2 =
+        [ dup scan_byte digit [ scan_move ] [ 9 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_integer_byte forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_integer_byte
+    def scan_tick_integer_byte [
+        dup scan_phase 1 =
+        [ dup scan_byte digit [ scan_move ] [ 8 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_integer_dot forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_integer_dot
+    def scan_tick_integer_dot [
+        dup scan_phase 8 =
+        [ dup scan_byte 46 =
+          [ 13 scan_set_phase ] [ 9 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_dot_fraction forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_dot_fraction
+    def scan_tick_dot_fraction [
+        dup scan_phase 13 =
+        [ dup scan_lookahead digit
+          [ scan_move 2 scan_set_phase ]
+          [ 9 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_number_emit forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_number_emit
+    def scan_tick_number_emit [
+        dup scan_phase 9 = [ scan_emit_number ] [ ] if
+    ]
+
+    signature scan_tick_number_end forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_number_end
+    def scan_tick_number_end [
+        dup scan_phase 10 =
+        [ dup scan_byte -1 =
+          [ 4 scan_set_phase ] [ 0 scan_set_phase ] if ]
+        [ ] if
+    ]
+
+    # Guest phase and byte-class selectors schedule these guarded actions.
+    # Phase 5 prevents reading another idle byte before resume.
+    signature scan_tick_space forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_space
+    def scan_tick_space [
+        dup scan_phase 0 =
+        [ dup scan_byte whitespace
+          [ scan_move 5 scan_set_phase ] [ ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_digit forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_digit
+    def scan_tick_digit [
+        dup scan_phase 0 =
+        [ dup scan_byte digit [ scan_begin_digits ] [ ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_alpha forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_alpha
+    def scan_tick_alpha [
+        dup scan_phase 0 =
+        [ dup scan_byte alpha [ scan_begin_ident ] [ ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_eof forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_eof
+    def scan_tick_eof [
+        dup scan_phase 0 =
+        [ dup scan_byte -1 = [ 4 scan_set_phase ] [ ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_punctuation_detect forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_punctuation_detect
+    def scan_tick_punctuation_detect [
+        dup scan_phase 0 =
+        [ dup scan_byte punctuation
+          swap scan_unpack [ drop drop rot 14 ] dip scan_pack ]
+        [ ] if
+    ]
+
+    signature scan_tick_punctuation_emit forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_punctuation_emit
+    def scan_tick_punctuation_emit [
+        dup scan_phase 14 =
+        [ dup ScanCursor.into unpair swap drop unpair swap drop unpair drop
+          scan_emit_punctuation ]
+        [ ] if
+    ]
+
+    signature scan_tick_punctuation_invalid forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_punctuation_invalid
+    def scan_tick_punctuation_invalid [
+        dup scan_phase 7 =
+        [ dup scan_byte punctuation 11 =
+          [ 4 scan_set_phase ] [ ] if ]
+        [ ] if
+    ]
+
+    signature scan_tick_punctuation_advance forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_punctuation_advance
+    def scan_tick_punctuation_advance [
+        dup scan_phase 7 =
+        [ scan_move 5 scan_set_phase ]
+        [ ] if
+    ]
+
+    signature scan_tick_resume forall<S:stack>
+        [ S ScanCursor -- S ScanCursor ! pure ]
+    export scan_tick_resume
+    def scan_tick_resume [
+        dup scan_phase 5 = [ 0 scan_set_phase ] [ ] if
+    ]
+
+    # The shell may schedule by these guest-certified state and byte-class
+    # codes, but never reads the Text or constructs a token.
+    signature scan_phase_code forall<S:stack>
+        [ S ScanCursor -- S ScanCursor I64 ! pure ]
+    export scan_phase_code
+    def scan_phase_code [ dup scan_phase ]
+
+    signature scan_idle_opcode forall<S:stack>
+        [ S ScanCursor -- S ScanCursor I64 ! pure ]
+    export scan_idle_opcode
+    def scan_idle_opcode [
+        dup scan_byte
+        dup whitespace [ drop 20 ]
+        [ dup digit [ drop 21 ]
+          [ dup alpha [ drop 22 ]
+            [ -1 = [ 23 ] [ 24 ] if ] if ] if ] if
+    ]
+
+    signature scan_punctuation_opcode forall<S:stack>
+        [ S ScanCursor -- S ScanCursor I64 ! pure ]
+    export scan_punctuation_opcode
+    def scan_punctuation_opcode [
+        dup scan_byte punctuation 11 = [ 27 ] [ 28 ] if
+    ]
+
+    # The reversed list's head is the first invalid token: scanning stops as
+    # soon as one is emitted. Keep the cursor while the shell chooses a route.
+    signature scan_finish_status forall<S:stack>
+        [ S ScanCursor -- S ScanCursor Bool ! pure ]
+    export scan_finish_status
+    def scan_finish_status [
+        dup ScanCursor.into unpair swap drop
+        unpair swap drop unpair swap drop unpair swap drop
+        [ false ] [ drop token_kind 11 = ] list.case
+    ]
+
+    # A status mismatch is a checked guest error, never an invented span.
+    signature scan_finish_error forall<S:stack>
+        [ S ScanCursor -- S result@1.Result<Pair<I64,I64>,Unit> ! pure ]
+    export scan_finish_error
+    def scan_finish_error [
+        ScanCursor.into unpair swap drop
+        unpair swap drop unpair swap drop unpair swap drop
+        [ unit result@1.Result.Err ]
+        [ drop dup token_kind 11 =
+          [ token_span result@1.Result.Ok ]
+          [ drop unit result@1.Result.Err ] if ]
+        list.case
+    ]
+
+    # Reverse one token per guest action rather than making a deep protected
+    # frame carry an entire list traversal in a single selected root.
+    opaque ScanFinish Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>> private
+    export ScanFinish
+
+    signature scan_finish_begin forall<S:stack>
+        [ S ScanCursor -- S ScanFinish ! pure ]
+    export scan_finish_begin
+    def scan_finish_begin [
+        ScanCursor.into unpair swap drop
+        unpair swap drop unpair swap drop unpair swap drop
+        nil pair ScanFinish.new
+    ]
+
+    signature scan_finish_step forall<S:stack>
+        [ S ScanFinish -- S ScanFinish Bool ! pure ]
+    export scan_finish_step
+    def scan_finish_step [
+        ScanFinish.into unpair swap
+        [ nil swap pair ScanFinish.new false ]
+        [ [ swap cons ] dip
+          dup [ false ] [ drop drop true ] list.case
+          [ swap pair ScanFinish.new ] dip ]
+        list.case
+    ]
+
+    signature scan_finish_tokens forall<S:stack>
+        [ S ScanFinish -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    export scan_finish_tokens
+    def scan_finish_tokens [ ScanFinish.into unpair swap drop ]
+]

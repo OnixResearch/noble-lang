@@ -64,4 +64,102 @@ module calc_errors@1 [
     export NumericError.ResourceLimit
     export NumericError.Domain
     export NumericError.match
+
+    signature resource_code forall<S:stack>
+        [ S LimitCategory -- S I64 ! pure ]
+    def resource_code [
+        [ [ [ drop 7 ] [ drop 8 ] LimitIO.match ]
+          [ [ drop 9 ] [ drop 10 ] LimitNumeric.match ]
+          LimitPrimary.match ]
+        [ [ drop 11 ]
+          [ [ drop 12 ] [ drop 13 ] LimitDepth.match ]
+          LimitRemaining.match ]
+        LimitCategory.match
+    ]
+
+    signature domain_code forall<S:stack>
+        [ S DomainError -- S I64 ! pure ]
+    def domain_code [
+        [ [ drop 14 ] [ drop 15 ] DomainConversion.match ]
+        [ [ drop 16 ]
+          [ [ drop 17 ] [ drop 18 ] DomainArithmetic.match ]
+          DomainExtended.match ]
+        DomainError.match
+    ]
+
+    signature numeric_code forall<S:stack>
+        [ S NumericError -- S I64 ! pure ]
+    export numeric_code
+    def numeric_code [
+        [ resource_code ]
+        [ domain_code ]
+        NumericError.match
+    ]
+
+    signature resource_checked forall<S:stack>
+        [ S I64 -- S result@1.Result<NumericError,Unit> ! pure ]
+    def resource_checked [
+        dup 7 =
+        [ drop unit LimitIO.InputBytes
+          LimitPrimary.IO LimitCategory.Primary
+          NumericError.ResourceLimit result@1.Result.Ok ]
+        [ dup 8 =
+          [ drop unit LimitIO.OutputSize
+            LimitPrimary.IO LimitCategory.Primary
+            NumericError.ResourceLimit result@1.Result.Ok ]
+          [ dup 9 =
+            [ drop unit LimitNumeric.NumericDigits
+              LimitPrimary.Numeric LimitCategory.Primary
+              NumericError.ResourceLimit result@1.Result.Ok ]
+            [ dup 10 =
+              [ drop unit LimitNumeric.IntermediateIntegerBits
+                LimitPrimary.Numeric LimitCategory.Primary
+                NumericError.ResourceLimit result@1.Result.Ok ]
+              [ dup 11 =
+                [ drop unit LimitRemaining.EvaluationWork
+                  LimitCategory.Remaining
+                  NumericError.ResourceLimit result@1.Result.Ok ]
+                [ dup 12 =
+                  [ drop unit LimitDepth.SyntaxDepth
+                    LimitRemaining.NestedDepth LimitCategory.Remaining
+                    NumericError.ResourceLimit result@1.Result.Ok ]
+                  [ dup 13 =
+                    [ drop unit LimitDepth.CallDepth
+                      LimitRemaining.NestedDepth LimitCategory.Remaining
+                      NumericError.ResourceLimit result@1.Result.Ok ]
+                    [ drop unit result@1.Result.Err ] if ] if ] if ] if ] if ] if ] if
+    ]
+
+    signature domain_checked forall<S:stack>
+        [ S I64 -- S result@1.Result<NumericError,Unit> ! pure ]
+    def domain_checked [
+        dup 14 =
+        [ drop unit DomainConversion.NonIntegral
+          DomainError.Conversion NumericError.Domain result@1.Result.Ok ]
+        [ dup 15 =
+          [ drop unit DomainConversion.OutOfRange
+            DomainError.Conversion NumericError.Domain result@1.Result.Ok ]
+          [ dup 16 =
+            [ drop unit DomainExtended.NonIntegerExponent
+              DomainError.Extended NumericError.Domain result@1.Result.Ok ]
+            [ dup 17 =
+              [ drop unit DomainArithmetic.ZeroDenominator
+                DomainExtended.Arithmetic DomainError.Extended
+                NumericError.Domain result@1.Result.Ok ]
+              [ dup 18 =
+                [ drop unit DomainArithmetic.DivisionByZero
+                  DomainExtended.Arithmetic DomainError.Extended
+                  NumericError.Domain result@1.Result.Ok ]
+                [ drop unit result@1.Result.Err ] if ] if ] if ] if ] if
+    ]
+
+    signature numeric_code_checked forall<S:stack>
+        [ S I64 -- S result@1.Result<NumericError,Unit> ! pure ]
+    export numeric_code_checked
+    def numeric_code_checked [
+        dup resource_checked
+        [ [ drop ] dip result@1.Result.Ok ]
+        [ drop domain_checked ]
+        result@1.Result.match
+    ]
 ]

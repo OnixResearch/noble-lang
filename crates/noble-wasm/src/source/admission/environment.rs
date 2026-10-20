@@ -1,4 +1,5 @@
 mod replay;
+mod weight;
 
 #[expect(
     tigerstyle::missing_const_fn,
@@ -26,42 +27,28 @@ fn abort_scheme() -> noble_kernel::words::Scheme {
     }
 }
 
-fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
-    use noble_kernel::shapes::{EffectSlot, Pattern};
-    use noble_kernel::types::EffId;
-    use noble_kernel::words::{Scheme, Variable, VariableKind};
-    let stack = Pattern::StackVar(Variable(0));
-    [
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
-            stack_in: alloc::vec![stack.clone(), Pattern::I64,
-                Pattern::program(alloc::vec![Pattern::I64], alloc::vec![Pattern::I64],
-                    alloc::vec::Vec::new())],
-            stack_out: alloc::vec![stack.clone(), Pattern::Unit],
-            effects: alloc::vec![EffectSlot::Effect(EffId(3))],
-        },
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
-            stack_in: alloc::vec![stack.clone()],
-            stack_out: alloc::vec![stack, Pattern::I64],
-            effects: alloc::vec![EffectSlot::Effect(EffId(4))],
-        },
-    ]
-}
-
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every supplied environment row, dependency list and effect bound is untrusted and checked explicitly against the fixed bootstrap contract; mismatches return Invalid instead of asserting."
 )]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
-    live: bool,
     text_cursor: bool,
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
+    let definition_limit = if calculator {
+        super::super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::super::DEFINITION_LIMIT
+    };
+    let maximum_rows = if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else {
+        definition_limit.saturating_add(32)
+    };
     if env.defs.len() > maximum_rows
-        || submission.definitions.len() > super::super::DEFINITION_LIMIT
+        || submission.definitions.len() > definition_limit
     {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -77,13 +64,16 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.nominals.len() > super::super::DEFINITION_LIMIT
-        || env.generic_variants.len() > super::super::DEFINITION_LIMIT
-        || env.bound_adapters.len() > super::super::DEFINITION_LIMIT
+    if env.text_cursor != text_cursor || env.calculator != calculator
+        || (text_cursor && env.declared_modules)
+        || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.text_cursor != text_cursor || (text_cursor && (live || env.declared_modules)) {
+    if env.nominals.len() > definition_limit
+        || env.generic_variants.len() > definition_limit
+        || env.bound_adapters.len() > definition_limit
+    {
         return Err(crate::Diagnostic::Invalid);
     }
     let has_noncanonical_core_declarations = !env.declared_modules
@@ -96,8 +86,8 @@ pub(super) fn check(
     if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let (fixed, count) = attempt!(canonical_prefix(env, live, text_cursor));
-    let effects = if count == 23 || text_cursor {
+    let (fixed, count) = attempt!(canonical_prefix(env, text_cursor, calculator));
+    let effects = if count == 23 || text_cursor || calculator {
         alloc::vec![noble_kernel::types::EffId(0)]
     } else {
         alloc::vec![noble_kernel::types::EffId(0), noble_kernel::types::EffId(1)]
@@ -106,19 +96,7 @@ pub(super) fn check(
     if env.kinds.iter().any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))) {
         effects.push(noble_kernel::contracts::TEST_CLOCK);
     }
-    if count == 26 {
-        effects.push(noble_kernel::types::EffId(3));
-        effects.push(noble_kernel::types::EffId(4));
-    }
     if env.effects != effects {
-        return Err(crate::Diagnostic::Invalid);
-    }
-    if live && (submission.request.expected.allowed_effects.as_slice().iter()
-        .chain(submission.definitions.iter().flat_map(|definition| {
-            definition.expected.allowed_effects.as_slice().iter()
-        }))
-        .any(|effect| !matches!(effect.0, 3 | 4)))
-    {
         return Err(crate::Diagnostic::Invalid);
     }
     replay::check(
@@ -133,9 +111,28 @@ pub(super) fn check(
 
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
-    live: bool,
     text_cursor: bool,
+    calculator: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
+    if calculator {
+        let fixed = attempt!(noble_kernel::contracts::calculator_environment()
+            .map_err(|_| crate::Diagnostic::Defective));
+        if env.defs.len() < 32 {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let mut index = 0usize;
+        while index < 32 {
+            if !same_scheme(&env.defs[index], &fixed.defs[index])
+                || env.kinds[index] != fixed.kinds[index]
+                || !env.deps[index].is_empty()
+                || env.definition_owners[index].is_some()
+            {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            index += 1;
+        }
+        return Ok((fixed, 32));
+    }
     if text_cursor {
         let fixed = attempt!(noble_kernel::contracts::text_cursor_environment()
             .map_err(|_| crate::Diagnostic::Defective));
@@ -167,26 +164,6 @@ fn canonical_prefix(
         fixed.kinds.push(noble_kernel::contracts::Behavior::Named);
         fixed.deps.push(alloc::vec::Vec::new());
         fixed.definition_owners.push(None);
-    }
-    if live {
-        if env.declared_modules || !has_abort || env.defs.len() < 26 {
-            return Err(crate::Diagnostic::Invalid);
-        }
-        for (index, scheme) in live_schemes().into_iter().enumerate() {
-            let row = index + 24;
-            if !same_scheme(&env.defs[row], &scheme)
-                || env.kinds[row] != noble_kernel::contracts::Behavior::Named
-                || !env.deps[row].is_empty()
-                || env.definition_owners[row].is_some()
-            {
-                return Err(crate::Diagnostic::Invalid);
-            }
-            fixed.defs.push(scheme);
-            fixed.kinds.push(noble_kernel::contracts::Behavior::Named);
-            fixed.deps.push(alloc::vec::Vec::new());
-            fixed.definition_owners.push(None);
-        }
-        return Ok((fixed, 26));
     }
     Ok((fixed, if has_abort { 24 } else { 23 }))
 }
@@ -269,26 +246,68 @@ pub(super) fn exact_contract(
     Ok(())
 }
 
+pub(super) fn contract_work(
+    env: &noble_kernel::contracts::Env,
+    def: noble_kernel::contracts::Definition,
+    calculator: bool,
+    work: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let scheme = attempt!(env.scheme(def).ok_or(crate::Diagnostic::Invalid));
+    if calculator {
+        weight::scheme(scheme, attempt!(lookup_rows(env)), work)
+    } else {
+        scheme_work(scheme)
+    }
+}
+
+fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagnostic> {
+    env.nominals.len().checked_add(env.generic_variants.len())
+        .ok_or(crate::Diagnostic::Exhausted)
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; explicit row and component bounds precede saturating work accounting; oversized environments and unrepresentable costs must exhaust the shared budget rather than panic."
 )]
-pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, crate::Diagnostic> {
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
+pub(super) fn work(
+    environment: &noble_kernel::contracts::Env,
+    calculator: bool,
+    meter: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let definition_limit = if calculator {
+        super::super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::super::DEFINITION_LIMIT
+    };
+    let maximum_rows = if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else {
+        definition_limit.saturating_add(32)
+    };
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if environment.nominals.len() > super::super::DEFINITION_LIMIT
-        || environment.generic_variants.len() > super::super::DEFINITION_LIMIT
-        || environment.bound_adapters.len() > super::super::DEFINITION_LIMIT
+    if environment.nominals.len() > definition_limit
+        || environment.generic_variants.len() > definition_limit
+        || environment.bound_adapters.len() > definition_limit
     {
         return Err(crate::Diagnostic::Exhausted);
     }
     let mut cost = 1u64;
+    let selected_lookup_rows = if calculator {
+        attempt!(lookup_rows(environment))
+    } else {
+        0
+    };
     let mut index = 0usize;
     let mut failure = None;
     while index < environment.defs.len() {
-        match scheme_work(&environment.defs[index]) {
+        let row = if calculator {
+            weight::scheme(&environment.defs[index], selected_lookup_rows, meter)
+        } else {
+            scheme_work(&environment.defs[index])
+        };
+        match row {
             Ok(amount) => {
                 cost = cost.saturating_add(amount);
                 index += 1;

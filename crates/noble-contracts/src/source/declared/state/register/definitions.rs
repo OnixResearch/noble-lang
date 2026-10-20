@@ -20,7 +20,7 @@ pub(super) struct Work<'a> {
 
 pub(super) fn install(
     session: crate::source::declared::ModuleSession,
-    work: Work<'_>,
+    mut work: Work<'_>,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -31,14 +31,12 @@ pub(super) fn install(
     let count = attempt!(u32::try_from(work.definitions.len()).map_err(|_| {
         crate::source::declared::error(crate::source::Stage::Check, "definition count overflow")
     }));
-    let definition_limits = attempt!(definition_limits(count, work.limits).ok_or_else(|| {
-        crate::source::declared::error(
-            crate::source::Stage::Check,
-            "invalid definition resource budget",
-        )
-    }));
+    // Temporary length prefixes are replaced with the original source unit.
+    // Share the already-metered registration budget instead of dividing it
+    // equally: a large but valid definition can use the slack of smaller ones.
+    work.meter.limits.bytes = work.limits.bytes.saturating_add(count.saturating_mul(4));
     let history_start = session.source.history.len();
-    let graph = attempt!(graph::Schedule::setup(session, work, definition_limits));
+    let graph = attempt!(graph::Schedule::setup(session, work));
     let (session, work) = attempt!(graph.run());
     finish(session, work, history_start)
 }
@@ -140,28 +138,10 @@ fn contains_word(words: &[(alloc::string::String, crate::source::Target)], word:
     has_word
 }
 
-const fn definition_limits(count: u32, limits: crate::Limits) -> Option<crate::Limits> {
-    let budget = count.saturating_add(1);
-    let Some(nodes) = limits.nodes.checked_div(budget) else {
-        return None;
-    };
-    let Some(work) = limits.work.checked_div(budget) else {
-        return None;
-    };
-    Some(crate::Limits {
-        // Temporary per-definition length prefixes do not count twice toward retained source bytes.
-        bytes: limits.bytes.saturating_add(count.saturating_mul(4)),
-        nodes,
-        depth: limits.depth,
-        work,
-    })
-}
-
 struct DefinitionInput<'a> {
     name: alloc::string::String,
     signature: Option<noble_kernel::words::Scheme>,
     source: alloc::vec::Vec<u8>,
-    limits: crate::Limits,
     exports: &'a [alloc::string::String],
 }
 
@@ -169,6 +149,7 @@ fn install_one(
     session: crate::source::declared::ModuleSession,
     input: DefinitionInput<'_>,
     mut local_exports: alloc::vec::Vec<crate::source::declared::Export>,
+    meter: &mut crate::Meter,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -180,7 +161,7 @@ fn install_one(
         session,
         &input.source,
         input.signature.as_ref(),
-        input.limits,
+        meter,
     ));
     let Some(context) = session.source.declared.as_mut() else {
         return Err(crate::source::declared::error(
@@ -211,7 +192,7 @@ fn commit_definition(
     mut session: crate::source::declared::ModuleSession,
     definition_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
-    limits: crate::Limits,
+    meter: &mut crate::Meter,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -219,10 +200,17 @@ fn commit_definition(
     ),
     crate::source::Error,
 > {
-    let prepared =
-        attempt!(session
-            .source
-            .prepare_signed(definition_bytes, &[], signature, limits));
+    // Each definition is a separate source-checking body. Its nodes are
+    // bounded independently; rechecking a retained dependency must not
+    // consume every later body's node allowance. Validation work, unlike
+    // nodes, remains shared across the whole module registration.
+    let mut body_meter = crate::Meter::new(meter.limits);
+    body_meter.work = meter.work;
+    let prepared = session.source.prepare_signed_metered(
+        definition_bytes, &[], signature, &mut body_meter,
+    );
+    meter.work = body_meter.work;
+    let prepared = attempt!(prepared);
     if !prepared.is_definition() || prepared.submission().is_some() {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,

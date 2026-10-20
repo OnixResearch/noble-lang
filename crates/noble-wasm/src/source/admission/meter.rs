@@ -107,8 +107,8 @@ pub(in crate::source) fn compilation(
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
-    while index < pool.keys.len() {
-        match work.entries(pool.keys[index].len()) {
+    while index < pool.len() {
+        match work.entries(pool.key_len(index)) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);

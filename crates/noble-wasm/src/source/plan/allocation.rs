@@ -96,6 +96,7 @@ pub(super) fn bytes(
     text_end: &mut u32,
     data: &mut alloc::vec::Vec<(u32, alloc::vec::Vec<u8>)>,
     bytes: &[u8],
+    calculator: bool,
 ) -> Result<(u32, u32), crate::Diagnostic> {
     let length_bytes = attempt!(super::number(bytes.len()));
     let address_bytes = *text_end;
@@ -103,7 +104,7 @@ pub(super) fn bytes(
         Some(value) => value,
         None => return Err(crate::Diagnostic::Exhausted),
     };
-    if end_bytes > super::super::MEMORY_BYTES {
+    if end_bytes > if calculator { 983_040 } else { super::super::MEMORY_BYTES } {
         return Err(crate::Diagnostic::Exhausted);
     }
     *text_end = end_bytes;
@@ -114,10 +115,22 @@ pub(super) fn bytes(
 
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; function allocation uses non-const checked usize-to-u32 conversion before reserving the owned program's table span; overflow and table exhaustion remain diagnostics."
+    reason = "Owner: noble-maintainers; checked entry allocation traverses the owned operation sequence before reserving its bounded table span; overflow and table exhaustion remain diagnostics."
 )]
-fn entry(program: &mut super::Program, functions: &mut u32) -> Result<(), crate::Diagnostic> {
-    let count = attempt!(super::number(program.operations.len()));
+fn entry(
+    program: &mut super::Program,
+    functions: &mut u32,
+    calculator: bool,
+) -> Result<(), crate::Diagnostic> {
+    let mut start = 0usize;
+    let mut count = 0u32;
+    while start < program.operations.len() {
+        count = match count.checked_add(1) {
+            Some(value) => value,
+            None => return Err(crate::Diagnostic::Exhausted),
+        };
+        start = program.next_entry(start, calculator);
+    }
     program.entry = if count == 0 { 0 } else { *functions };
     *functions = match functions.checked_add(count) {
         Some(value) => value,
@@ -142,7 +155,7 @@ pub(super) fn finish(
     let mut index = 0usize;
     let mut failure = None;
     while index < layout.programs.len() {
-        match entry(&mut layout.programs[index], &mut compiler.functions) {
+        match entry(&mut layout.programs[index], &mut compiler.functions, compiler.calculator) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -154,21 +167,29 @@ pub(super) fn finish(
         return Err(problem);
     }
     layout.functions = compiler.functions;
-    layout.input_types = attempt!(layout
-        .types
-        .stack(&checked.interface.stack_in, compiler, work));
-    layout.output_types =
-        attempt!(layout
-            .types
-            .stack(&checked.interface.stack_out, compiler, work));
+    layout.input_types = attempt!(layout.types.stack(&checked.interface.stack_in, compiler, work));
+    layout.output_types = attempt!(layout.types.stack(&checked.interface.stack_out, compiler, work));
     layout.text_witness = attempt!(compiler.signature(&[noble_kernel::types::Ty::Text], work));
     index = compiler.descriptors.len();
-    while index < compiler.signatures.keys.len() {
-        match bytes(
-            &mut compiler.text_end,
-            &mut layout.data,
-            &compiler.signatures.keys[index],
-        ) {
+    while index < compiler.signatures.len() {
+        let descriptor = if compiler.calculator {
+            // The module that first publishes this ID carries its canonical
+            // key in passive data; the trusted engine copies it once through
+            // host scratch, so signature metadata never consumes literal Text.
+            let length = attempt!(super::number(compiler.signatures.key_len(index)));
+            if length > 65_536 {
+                return Err(crate::Diagnostic::Exhausted);
+            }
+            Ok((983_040, length))
+        } else {
+            bytes(
+                &mut compiler.text_end,
+                &mut layout.data,
+                &compiler.signatures.keys[index],
+                false,
+            )
+        };
+        match descriptor {
             Ok(descriptor) => {
                 compiler.descriptors.push(descriptor);
                 index += 1;

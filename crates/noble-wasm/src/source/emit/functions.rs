@@ -6,12 +6,21 @@
 pub(super) fn write(
     out: &mut crate::output::Buffer,
     program: &super::super::plan::Program,
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
-    let mut index = 0usize;
+    let mut start = 0usize;
+    let mut function = program.entry;
     let mut failure = None;
-    while index < program.operations.len() {
-        match function(out, program, index) {
-            Ok(()) => index += 1,
+    while start < program.operations.len() {
+        let end = program.next_entry(start, calculator);
+        match entry(out, program, start, end, function) {
+            Ok(()) => {
+                start = end;
+                function = match function.checked_add(1) {
+                    Some(value) => value,
+                    None => return Err(crate::Diagnostic::Exhausted),
+                };
+            }
             Err(problem) => {
                 failure = Some(problem);
                 break;
@@ -29,34 +38,44 @@ pub(super) fn write(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; allocation bounds the program's complete function range, while non-const checked numbering and allocating sink writes preserve overflow and output-exhaustion diagnostics rather than assertions."
 )]
-fn function(
+fn entry(
     out: &mut crate::output::Buffer,
     program: &super::super::plan::Program,
-    index: usize,
+    start: usize,
+    end: usize,
+    function: u32,
 ) -> Result<(), crate::Diagnostic> {
-    let function = match program
-        .entry
-        .checked_add(attempt!(super::super::plan::number(index)))
-    {
-        Some(value) => value,
-        None => return Err(crate::Diagnostic::Exhausted),
-    };
     attempt!(out.append(b"(func $f"));
     attempt!(out.number(u64::from(function)));
     attempt!(out
         .append(b" (type $entry) (param $env i32)\n(if (global.get $failure) (then (return)))\n"));
-    if index.saturating_add(1) < program.operations.len() {
-        attempt!(out.append(b"(call $enqueue "));
-        let next_function = match function.checked_add(1) {
-            Some(value) => value,
-            None => return Err(crate::Diagnostic::Exhausted),
-        };
-        attempt!(out.i32(next_function));
-        attempt!(out.append(b" (local.get $env))\n"));
+    let mut index = start;
+    while index < end {
+        if index + 1 < program.operations.len() {
+            attempt!(out.append(b"(call $enqueue "));
+            // A private inline continuation uses this valid table entry only
+            // as an unobservable pending slot. It is consumed after the next
+            // original dispatch tick, before any subsequent operation.
+            let next = if index + 1 < end {
+                function
+            } else {
+                match function.checked_add(1) {
+                    Some(value) => value,
+                    None => return Err(crate::Diagnostic::Exhausted),
+                }
+            };
+            attempt!(out.i32(next));
+            attempt!(out.append(b" (local.get $env))\n"));
+        }
+        attempt!(out.append(b"(if (i32.eqz (global.get $failure)) (then\n"));
+        attempt!(instruction(out, program.operations[index].action));
+        attempt!(out.append(b"))\n"));
+        if index + 1 < end {
+            attempt!(out.append(b"(if (i32.eqz (call $inline_step)) (then (return)))\n"));
+        }
+        index += 1;
     }
-    attempt!(out.append(b"(if (i32.eqz (global.get $failure)) (then\n"));
-    attempt!(instruction(out, program.operations[index].action));
-    out.append(b"))\n)\n")
+    out.append(b")\n")
 }
 
 #[expect(
@@ -82,6 +101,11 @@ fn instruction(
         super::super::plan::Action::Program(program) => push_program(out, program),
         super::super::plan::Action::Word(definition) => word_call(out, definition),
         super::super::plan::Action::TextByte => out.append(b"(call $op_text_byte"),
+        super::super::plan::Action::CalculatorIterate => out.append(b"(call $op_iterate"),
+        super::super::plan::Action::CalculatorCompare => out.append(b"(call $op_calc_compare"),
+        super::super::plan::Action::CalculatorDivRem => out.append(b"(call $op_calc_div_rem"),
+        super::super::plan::Action::CalculatorTextFromAscii => out.append(b"(call $op_text_from_ascii"),
+        super::super::plan::Action::CalculatorTextLength => out.append(b"(call $op_text_length"),
         super::super::plan::Action::Quote(input, output_signature, witness) => typed_quote(
             out,
             QuoteOperands {
@@ -126,11 +150,6 @@ fn instruction(
             ),
         super::super::plan::Action::EmitBound(slot) => bound_call(out, slot),
         super::super::plan::Action::ClockBound(slot) => clock_call(out, slot),
-        super::super::plan::Action::LivePropose(owner) => {
-            attempt!(out.append(b"(call $op_live_propose "));
-            out.i64(owner as i64)
-        }
-        super::super::plan::Action::LiveGeneration => out.append(b"(call $op_live_generation"),
     });
     out.append(b")\n")
 }

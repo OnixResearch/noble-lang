@@ -15,7 +15,7 @@ const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
 const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
 
-pub(super) struct Engine {
+pub(crate) struct Engine {
     child: std::process::Child,
     replies: std::sync::mpsc::Receiver<Result<super::output::Report, super::output::Failure>>,
     reader: Option<std::thread::JoinHandle<()>>,
@@ -71,19 +71,11 @@ impl Engine {
         self.reply()
     }
 
-    pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
+    pub(super) fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
-        Self::start_with_config(&config)
-    }
-
-    pub fn start_live() -> Result<Self, super::output::Failure> {
-        Self::start_with_config(&configuration::live())
-    }
-
-    fn start_with_config(config: &str) -> Result<Self, super::output::Failure> {
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
-            child: attempt!(launch(config)),
+            child: attempt!(launch(&config)),
             replies,
             reader: None,
             has_failed: false,
@@ -107,6 +99,31 @@ impl Engine {
         Ok(engine)
     }
 
+    pub fn start_calculator(optimized: bool) -> Result<Self, super::output::Failure> {
+        let config = attempt!(configuration::calculator(optimized));
+        let (send, replies) = std::sync::mpsc::sync_channel(1);
+        let mut engine = Self {
+            child: attempt!(launch_calculator(&config)),
+            replies,
+            reader: None,
+            has_failed: false,
+        };
+        let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
+        engine.reader = Some(attempt!(std::thread::Builder::new()
+            .name("noble-calculator-wasm-output".into())
+            .spawn(move || protocol::receive(stream, send))
+            .map_err(super::framing::io_error)));
+        let ready = attempt!(engine.reply());
+        if ready.outcome != "ready" {
+            engine.has_failed = true;
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+                ready.json,
+            ));
+        }
+        Ok(engine)
+    }
+
     pub fn prepare(
         &mut self,
         wat: &[u8],
@@ -117,74 +134,6 @@ impl Engine {
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
-        self.reply()
-    }
-
-    /// The checked Rust CLI owns source acceptance and in-process assembly;
-    /// the resident worker accepts only bounded standard Wasm bytes.
-    pub fn prepare_binary(
-        &mut self,
-        binary: &[u8],
-        source: &[u8],
-        submission: u64,
-    ) -> Result<super::output::Report, super::output::Failure> {
-        self.send_binary("compile-bin", binary, source, submission)
-    }
-
-    pub fn stage_binary(
-        &mut self,
-        binary: &[u8],
-        source: &[u8],
-        submission: u64,
-    ) -> Result<super::output::Report, super::output::Failure> {
-        self.send_binary("stage-bin", binary, source, submission)
-    }
-
-    fn send_binary(
-        &mut self,
-        kind: &str,
-        binary: &[u8],
-        source: &[u8],
-        submission: u64,
-    ) -> Result<super::output::Report, super::output::Failure> {
-        let header = std::format!("{kind} {} {} {submission}\n", binary.len(), source.len());
-        attempt!(self.write(header.as_bytes()));
-        attempt!(self.write(binary));
-        attempt!(self.write(source));
-        self.reply()
-    }
-
-    pub fn publish_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
-        attempt!(self.write(b"publish-bin\n"));
-        self.reply()
-    }
-
-    pub fn discard_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
-        attempt!(self.write(b"discard-bin\n"));
-        self.reply()
-    }
-
-    /// Only the trusted CLI chooses the exact checked owner and selected-source
-    /// generation. Guest input is never a grant-setting protocol command.
-    pub fn set_live_grant(
-        &mut self,
-        name: &str,
-        owner: u64,
-        source_generation: u64,
-    ) -> Result<super::output::Report, super::output::Failure> {
-        let header = std::format!(
-            "live-grant {} {owner} {source_generation}\n",
-            name.len()
-        );
-        attempt!(self.write(header.as_bytes()));
-        attempt!(self.write(name.as_bytes()));
-        self.reply()
-    }
-
-    /// Retrieve a bounded immutable candidate only after the guest returns.
-    /// Reading this receipt cannot consume the selected owner grant.
-    pub fn take_live_proposal(&mut self) -> Result<super::output::Report, super::output::Failure> {
-        attempt!(self.write(b"take-live-proposal\n"));
         self.reply()
     }
 
@@ -358,8 +307,25 @@ impl Drop for Engine {
 }
 
 fn launch(config: &str) -> Result<std::process::Child, super::output::Failure> {
-    std::process::Command::new(NODE)
-        .env_clear()
+    launch_with_temp(config, None)
+}
+
+fn launch_calculator(config: &str) -> Result<std::process::Child, super::output::Failure> {
+    let temp = attempt!(std::fs::canonicalize(std::env::temp_dir())
+        .map_err(super::framing::io_error));
+    launch_with_temp(config, Some(&temp))
+}
+
+fn launch_with_temp(
+    config: &str,
+    temp: Option<&std::path::Path>,
+) -> Result<std::process::Child, super::output::Failure> {
+    let mut command = std::process::Command::new(NODE);
+    command.env_clear();
+    if let Some(temp) = temp {
+        command.env("TMPDIR", temp);
+    }
+    command
         .args([
             "--no-liftoff",
             "--no-wasm-lazy-compilation",

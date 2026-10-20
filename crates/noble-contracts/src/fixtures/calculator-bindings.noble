@@ -1,0 +1,940 @@
+module calc_env@1 [
+    # Names refer to UTF-8 byte spans in immutable guest Text. The session
+    # histories are newest first; ranks retain the prefix visible at definition.
+    opaque Name Pair<Text,Pair<I64,I64>> private
+    export Name
+    opaque Variable Pair<Name,num@1.Rat> private
+    export Variable
+    opaque Function Pair<Name,Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,List<Name>>,Pair<I64,I64>>> private
+    export Function
+    opaque State Pair<List<Variable>,List<Function>> private
+    export State
+
+    variant NameFailure UnknownName Pair<I64,I64> public WrongArity Pair<I64,I64> public
+    export NameFailure
+    export NameFailure.UnknownName
+    export NameFailure.WrongArity
+    export NameFailure.match
+    variant Failure Name NameFailure public InvalidDefinition Pair<I64,I64> public
+    export Failure
+    export Failure.Name
+    export Failure.InvalidDefinition
+    export Failure.match
+    variant Binding Parameter I64 public Global num@1.Rat public
+    export Binding
+    export Binding.Parameter
+    export Binding.Global
+    export Binding.match
+    variant VariableSearch Found Variable public Missing Pair<List<Variable>,Name> public
+    export VariableSearch
+    variant FunctionSearch Found Function public Missing Pair<List<Function>,Name> public
+    export FunctionSearch
+    variant ParameterSearch Found Pair<I64,Name> public Missing Pair<Pair<List<Name>,Name>,I64> public
+    variant Validation Done Pair<Bool,Pair<I64,I64>> public Pending Pair<List<Name>,List<Name>> public
+    variant SeenSearch Done Bool public Seeking Pair<List<Name>,Name> public
+    export Validation
+    export SeenSearch
+
+    opaque CallBindingCursor Pair<Pair<State,Name>,Pair<List<Name>,List<num@1.Rat>>> private
+    export CallBindingCursor
+    variant CallBindingFinal Done State public Failed Failure public
+    export CallBindingFinal
+    export CallBindingFinal.Done
+    export CallBindingFinal.Failed
+    export CallBindingFinal.match
+    variant CallBindingRun More CallBindingCursor public Final CallBindingFinal public
+    export CallBindingRun
+    export CallBindingRun.More
+    export CallBindingRun.Final
+    export CallBindingRun.match
+    # Appended after the original nominal prefix. The search carries the
+    # checked call's own name/arity/argument list, never a host-made value.
+    opaque CallLookupCursor Pair<Pair<Name,Pair<I64,List<num@1.Rat>>>,FunctionSearch> private
+    export CallLookupCursor
+
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    def rot [ [ swap ] dip swap ]
+
+    signature list_count forall<S:stack,A:value>
+        [ S List<A> -- S I64 ! pure ]
+    def list_count [
+        0 pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap drop swap 1 + pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature name_from_span forall<S:stack>
+        [ S Text Pair<I64,I64> -- S Name ! pure ]
+    export name_from_span
+    def name_from_span [ pair Name.new ]
+
+    signature name_from_token forall<S:stack>
+        [ S Text Pair<I64,Pair<I64,I64>> -- S Name ! pure ]
+    export name_from_token
+    def name_from_token [ calc_lex@1.token_span name_from_span ]
+
+    signature name_span forall<S:stack> [ S Name -- S Pair<I64,I64> ! pure ]
+    export name_span
+    def name_span [ Name.into unpair swap drop ]
+
+    signature name_size forall<S:stack> [ S Name -- S I64 ! pure ]
+    export name_size
+    def name_size [ name_span unpair swap - ]
+
+    signature name_byte forall<S:stack> [ S Name I64 -- S I64 ! pure ]
+    def name_byte [ swap Name.into unpair unpair drop rot + calc_lex@1.byte_at ]
+
+    signature name_is_let forall<S:stack> [ S Name -- S Bool ! pure ]
+    export name_is_let
+    def name_is_let [
+        dup name_size 3 =
+        [ dup 0 name_byte 108 =
+          [ dup 1 name_byte 101 =
+            [ 2 name_byte 116 = ]
+            [ drop false ] if ]
+          [ drop false ] if ]
+        [ drop false ] if
+    ]
+
+    signature name_is_fn forall<S:stack> [ S Name -- S Bool ! pure ]
+    export name_is_fn
+    def name_is_fn [
+        dup name_size 2 =
+        [ dup 0 name_byte 102 =
+          [ 1 name_byte 110 = ]
+          [ drop false ] if ]
+        [ drop false ] if
+    ]
+
+    signature name_pair_byte_eq forall<S:stack>
+        [ S Pair<Name,Name> I64 -- S Bool ! pure ]
+    export name_pair_byte_eq
+    def name_pair_byte_eq [ [ unpair ] dip dup [ name_byte ] dip rot swap name_byte = ]
+
+    signature name_eq_step forall<S:stack>
+        [ S Pair<Pair<Name,Name>,I64> -- S Pair<Pair<Name,Name>,I64> Bool ! pure ]
+    def name_eq_step [
+        dup unpair [ unpair drop name_size ] dip =
+        [ false ]
+        [ dup unpair name_pair_byte_eq
+          [ unpair 1 + pair true ] [ false ] if ] if
+    ]
+
+    signature same_name forall<S:stack> [ S Name Name -- S Bool ! pure ]
+    export same_name
+    def same_name [
+        pair dup unpair
+        Name.into unpair swap drop unpair swap -
+        swap Name.into unpair swap drop unpair swap - =
+        [ 0 pair
+          [ dup unpair
+            [ unpair drop Name.into unpair swap drop unpair swap - ] dip =
+            [ false ]
+            [ dup unpair
+              [ unpair ] dip dup
+              [ swap Name.into unpair unpair drop rot +
+                calc_lex@1.byte_at ] dip
+              rot swap
+              swap Name.into unpair unpair drop rot +
+              calc_lex@1.byte_at =
+              [ unpair 1 + pair true ] [ false ] if ] if ]
+          iterate
+          unpair
+          [ unpair drop Name.into unpair swap drop unpair swap - ] dip = ]
+        [ drop false ] if
+    ]
+
+    signature initial forall<S:stack> [ S -- S State ! pure ]
+    export initial
+    def initial [ nil nil pair State.new ]
+
+    signature state_variables forall<S:stack> [ S State -- S List<Variable> ! pure ]
+    export state_variables
+    def state_variables [ State.into unpair drop ]
+
+    signature state_functions forall<S:stack> [ S State -- S List<Function> ! pure ]
+    export state_functions
+    def state_functions [ State.into unpair swap drop ]
+
+    signature bind_variable forall<S:stack>
+        [ S State Name num@1.Rat -- S State ! pure ]
+    export bind_variable
+    def bind_variable [ pair Variable.new [ State.into unpair ] dip rot cons swap pair State.new ]
+
+    signature function_name forall<S:stack> [ S Function -- S Name ! pure ]
+    export function_name
+    def function_name [ Function.into unpair drop ]
+
+    signature function_body forall<S:stack>
+        [ S Function -- S Pair<Text,List<Pair<I64,Pair<I64,I64>>>> ! pure ]
+    export function_body
+    def function_body [ Function.into unpair swap drop unpair drop unpair drop ]
+
+    signature function_parameters forall<S:stack> [ S Function -- S List<Name> ! pure ]
+    export function_parameters
+    def function_parameters [ Function.into unpair swap drop unpair drop unpair swap drop ]
+
+    signature function_arity forall<S:stack> [ S Function -- S I64 ! pure ]
+    export function_arity
+    def function_arity [ function_parameters list_count ]
+
+    signature function_ranks forall<S:stack>
+        [ S Function -- S Pair<I64,I64> ! pure ]
+    export function_ranks
+    def function_ranks [ Function.into unpair swap drop unpair swap drop ]
+
+    signature capture_ranks forall<S:stack>
+        [ S State -- S State Pair<I64,I64> ! pure ]
+    def capture_ranks [ dup State.into unpair [ list_count ] dip list_count pair ]
+
+    # Only invoke after the expression owner has checked the whole body and
+    # validated every reference. This routine never evaluates the body.
+    signature bind_function forall<S:stack>
+        [ S State Name Text List<Pair<I64,Pair<I64,I64>>> List<Name> -- S State ! pure ]
+    export bind_function
+    def bind_function [
+        [ pair ] dip pair
+        [ [ capture_ranks ] dip ] dip
+        rot pair pair Function.new
+        [ State.into unpair ] dip
+        swap cons pair State.new
+    ]
+
+    export variable_name
+    signature variable_name forall<S:stack> [ S Variable -- S Name ! pure ]
+    def variable_name [ Variable.into unpair drop ]
+
+
+    signature variable_search_step forall<S:stack>
+        [ S VariableSearch -- S VariableSearch Bool ! pure ]
+    export variable_search_step
+    def variable_search_step [
+        [ VariableSearch.Found false ]
+        [ unpair swap
+          [ nil swap pair VariableSearch.Missing false ]
+          [ [ pair dup unpair variable_name same_name ] dip swap
+            [ drop unpair [ drop ] dip VariableSearch.Found false ]
+            [ swap unpair drop pair VariableSearch.Missing true ] if ] list.case ]
+        VariableSearch.match
+    ]
+
+    signature variable_search_begin forall<S:stack>
+        [ S List<Variable> Name -- S VariableSearch ! pure ]
+    export variable_search_begin
+    def variable_search_begin [ pair VariableSearch.Missing ]
+
+    signature lookup_variable forall<S:stack>
+        [ S List<Variable> Name -- S result@1.Result<num@1.Rat,Failure> ! pure ]
+    export lookup_variable
+    def lookup_variable [
+        pair VariableSearch.Missing [ variable_search_step ] iterate
+        variable_search_finish
+    ]
+
+    signature variable_search_finish forall<S:stack>
+        [ S VariableSearch -- S result@1.Result<num@1.Rat,Failure> ! pure ]
+    export variable_search_finish
+    def variable_search_finish [
+        [ Variable.into unpair swap drop result@1.Result.Ok ]
+        [ unpair swap drop name_span NameFailure.UnknownName Failure.Name
+          result@1.Result.Err ] VariableSearch.match
+    ]
+
+    signature function_search_step forall<S:stack>
+        [ S FunctionSearch -- S FunctionSearch Bool ! pure ]
+    def function_search_step [
+        [ FunctionSearch.Found false ]
+        [ unpair swap
+          [ nil swap pair FunctionSearch.Missing false ]
+          [ [ pair dup unpair function_name same_name ] dip swap
+            [ drop unpair [ drop ] dip FunctionSearch.Found false ]
+            [ swap unpair drop pair FunctionSearch.Missing true ] if ] list.case ]
+        FunctionSearch.match
+    ]
+
+    signature find_function forall<S:stack>
+        [ S List<Function> Name -- S result@1.Result<Function,Failure> ! pure ]
+    export find_function
+    def find_function [
+        pair FunctionSearch.Missing [ function_search_step ] iterate
+        [ result@1.Result.Ok ]
+        [ unpair swap drop name_span NameFailure.UnknownName Failure.Name
+          result@1.Result.Err ] FunctionSearch.match
+    ]
+
+    # One authentic guest search transition per call. The caller schedules
+    # bounded steps but cannot provide an equality Bool or a replacement Name.
+    signature function_lookup_begin forall<S:stack>
+        [ S List<Function> Name -- S FunctionSearch ! pure ]
+    export function_lookup_begin
+    def function_lookup_begin [ pair FunctionSearch.Missing ]
+
+    signature function_lookup_step forall<S:stack>
+        [ S FunctionSearch -- S FunctionSearch Bool ! pure ]
+    export function_lookup_step
+    def function_lookup_step [ function_search_step ]
+
+    signature function_lookup_finish forall<S:stack>
+        [ S FunctionSearch -- S result@1.Result<Function,Failure> ! pure ]
+    export function_lookup_finish
+    def function_lookup_finish [
+        [ result@1.Result.Ok ]
+        [ unpair swap drop name_span NameFailure.UnknownName Failure.Name
+          result@1.Result.Err ]
+        FunctionSearch.match
+    ]
+
+    signature skip_variable_step forall<S:stack>
+        [ S Pair<List<Variable>,I64> -- S Pair<List<Variable>,I64> Bool ! pure ]
+    def skip_variable_step [
+        dup unpair swap drop 0 =
+        [ false ]
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap drop swap 1 - pair true ] list.case ] if
+    ]
+
+    signature skip_function_step forall<S:stack>
+        [ S Pair<List<Function>,I64> -- S Pair<List<Function>,I64> Bool ! pure ]
+    def skip_function_step [
+        dup unpair swap drop 0 =
+        [ false ]
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap drop swap 1 - pair true ] list.case ] if
+    ]
+
+    signature captured_variables forall<S:stack>
+        [ S State Function -- S List<Variable> ! pure ]
+    export captured_variables
+    def captured_variables [
+        function_ranks unpair drop
+        swap state_variables dup list_count rot - pair
+        [ skip_variable_step ] iterate unpair drop
+    ]
+
+    signature captured_functions forall<S:stack>
+        [ S State Function -- S List<Function> ! pure ]
+    export captured_functions
+    def captured_functions [
+        function_ranks unpair swap drop
+        swap state_functions dup list_count rot - pair
+        [ skip_function_step ] iterate unpair drop
+    ]
+
+    signature captured_variable forall<S:stack>
+        [ S State Function Name -- S result@1.Result<num@1.Rat,Failure> ! pure ]
+    export captured_variable
+    def captured_variable [ [ captured_variables ] dip lookup_variable ]
+
+    signature captured_function forall<S:stack>
+        [ S State Function Name -- S result@1.Result<Function,Failure> ! pure ]
+    export captured_function
+    def captured_function [ [ captured_functions ] dip find_function ]
+
+    # The rank stored in a bound Function selects immutable historical
+    # suffixes, excluding every variable or function installed afterward.
+    signature lexical_scope forall<S:stack>
+        [ S State Function -- S State ! pure ]
+    export lexical_scope
+    def lexical_scope [
+        pair dup
+        [ unpair captured_variables ] dip
+        swap [ unpair captured_functions ] dip
+        swap pair State.new
+    ]
+
+    # The caller conses each popped argument onto the accumulating list:
+    # RPN pops last-to-first, so both completed arguments and formal names
+    # are in source order. Parameter names are validated unique at admission.
+    signature call_bind_begin forall<S:stack>
+        [ S State Function Name List<num@1.Rat> -- S CallBindingCursor ! pure ]
+    export call_bind_begin
+    def call_bind_begin [
+        [ [ dup function_parameters
+            [ lexical_scope ] dip ] dip ] dip
+        swap [ pair ] dip
+        rot swap pair swap pair CallBindingCursor.new
+    ]
+
+    signature call_bind_one forall<S:stack>
+        [ S Pair<State,Name> Name num@1.Rat -- S Pair<State,Name> ! pure ]
+    def call_bind_one [
+        [ [ unpair ] dip ] dip
+        rot [ bind_variable ] dip pair
+    ]
+
+    signature call_bind_wrong_arity forall<S:stack>
+        [ S Pair<State,Name> -- S CallBindingRun ! pure ]
+    def call_bind_wrong_arity [
+        unpair swap drop name_span NameFailure.WrongArity
+        Failure.Name CallBindingFinal.Failed CallBindingRun.Final
+    ]
+
+    signature call_bind_finish forall<S:stack>
+        [ S Pair<State,Name> List<Name> -- S CallBindingRun ! pure ]
+    def call_bind_finish [
+        [ unpair drop CallBindingFinal.Done CallBindingRun.Final ]
+        [ drop drop call_bind_wrong_arity ]
+        list.case
+    ]
+
+    signature call_bind_more forall<S:stack>
+        [ S Pair<State,Name> num@1.Rat List<num@1.Rat> Name List<Name>
+          -- S CallBindingRun ! pure ]
+    def call_bind_more [
+        rot [ [ swap ] dip ] dip
+        [ [ call_bind_one ] dip ] dip
+        pair pair CallBindingCursor.new CallBindingRun.More
+    ]
+
+    signature call_bind_next forall<S:stack>
+        [ S Pair<State,Name> List<Name> num@1.Rat List<num@1.Rat>
+          -- S CallBindingRun ! pure ]
+    def call_bind_next [
+        rot
+        [ drop drop call_bind_wrong_arity ]
+        [ call_bind_more ]
+        list.case
+    ]
+
+    signature call_bind_step forall<S:stack>
+        [ S CallBindingCursor -- S CallBindingRun ! pure ]
+    export call_bind_step
+    def call_bind_step [
+        CallBindingCursor.into unpair unpair
+        [ call_bind_finish ]
+        [ call_bind_next ]
+        list.case
+    ]
+
+    # The host observes and routes the guest's variant but never copies its
+    # large State-bearing continuation into a separate selected invocation.
+    signature call_bind_route forall<S:stack>
+        [ S CallBindingRun
+          -- S Sum<CallBindingCursor,CallBindingFinal> ! pure ]
+    export call_bind_route
+    def call_bind_route [
+        [ inl ] [ inr ] CallBindingRun.match
+    ]
+
+    signature call_bind_result forall<S:stack>
+        [ S CallBindingFinal -- S result@1.Result<State,Failure> ! pure ]
+    export call_bind_result
+    def call_bind_result [
+        [ result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        CallBindingFinal.match
+    ]
+
+    signature call_lookup_begin forall<S:stack>
+        [ S List<Function> Name I64 List<num@1.Rat>
+          -- S CallLookupCursor ! pure ]
+    export call_lookup_begin
+    def call_lookup_begin [
+        [ [ dup ] dip ] dip
+        [ [ rot swap function_lookup_begin ] dip ] dip
+        rot [ pair pair ] dip pair CallLookupCursor.new
+    ]
+
+    signature call_lookup_step forall<S:stack>
+        [ S CallLookupCursor -- S Pair<CallLookupCursor,Bool> ! pure ]
+    export call_lookup_step
+    def call_lookup_step [
+        CallLookupCursor.into unpair
+        function_lookup_step
+        [ pair CallLookupCursor.new ] dip pair
+    ]
+
+    signature call_lookup_finish forall<S:stack>
+        [ S CallLookupCursor
+          -- S result@1.Result<Pair<Function,Pair<Name,Pair<I64,List<num@1.Rat>>>>,Failure> ! pure ]
+    export call_lookup_finish
+    def call_lookup_finish [
+        CallLookupCursor.into unpair
+        function_lookup_finish
+        [ swap pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The only arity selector is the source-checked Function's stored formal
+    # count. WrongArity keeps the original call Name span in Failure.Name.
+    signature call_lookup_arity forall<S:stack>
+        [ S result@1.Result<Pair<Function,Pair<Name,Pair<I64,List<num@1.Rat>>>>,Failure>
+          -- S result@1.Result<Pair<Function,Pair<Name,List<num@1.Rat>>>,Failure> ! pure ]
+    export call_lookup_arity
+    def call_lookup_arity [
+        [ unpair unpair unpair
+          [ [ dup name_span ] dip ] dip
+          [ swap ] dip
+          [ [ [ swap ] dip ] dip ] dip
+          [ check_arity ] dip
+          swap
+          [ rot rot pair pair result@1.Result.Ok ]
+          [ [ drop ] dip swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parameter_next forall<S:stack>
+        [ S I64 Name Name List<Name> -- S ParameterSearch Bool ! pure ]
+    def parameter_next [
+        [ pair dup unpair same_name ] dip swap
+        [ drop unpair drop pair ParameterSearch.Found false ]
+        [ swap unpair drop pair swap 1 + pair ParameterSearch.Missing true ] if
+    ]
+
+    signature parameter_step forall<S:stack>
+        [ S ParameterSearch -- S ParameterSearch Bool ! pure ]
+    def parameter_step [
+        [ ParameterSearch.Found false ]
+        [ unpair swap unpair swap
+          [ swap drop -1 swap pair ParameterSearch.Found false ]
+          [ parameter_next ] list.case ]
+        ParameterSearch.match
+    ]
+
+    # Returns a source-order index (zero-based), not a stack slot.
+    signature find_parameter forall<S:stack>
+        [ S List<Name> Name -- S result@1.Result<I64,Failure> ! pure ]
+    export find_parameter
+    def find_parameter [
+        pair 0 pair ParameterSearch.Missing [ parameter_step ] iterate
+        [ unpair swap dup -1 =
+          [ drop name_span NameFailure.UnknownName Failure.Name result@1.Result.Err ]
+          [ swap drop result@1.Result.Ok ] if ]
+        [ unpair drop unpair swap drop name_span NameFailure.UnknownName Failure.Name result@1.Result.Err ]
+        ParameterSearch.match
+    ]
+
+    signature name_in_list forall<S:stack>
+        [ S List<Name> Name -- S Bool ! pure ]
+    export name_in_list
+    def name_in_list [
+        pair SeenSearch.Seeking
+        [ [ SeenSearch.Done false ]
+          [ unpair swap
+            [ drop false SeenSearch.Done false ]
+            [ [ [ dup ] dip ] dip
+              swap [ swap ] dip swap
+              pair dup unpair
+              Name.into unpair swap drop unpair swap -
+              swap Name.into unpair swap drop unpair swap - =
+              [ 0 pair
+                [ dup unpair
+                  [ unpair drop Name.into unpair swap drop unpair swap - ] dip =
+                  [ false ]
+                  [ dup unpair
+                    [ unpair ] dip dup
+                    [ swap Name.into unpair unpair drop rot +
+                      calc_lex@1.byte_at ] dip
+                    rot swap
+                    swap Name.into unpair unpair drop rot +
+                    calc_lex@1.byte_at =
+                    [ unpair 1 + pair true ] [ false ] if ] if ]
+                iterate
+                unpair
+                [ unpair drop Name.into unpair swap drop unpair swap - ] dip = ]
+              [ drop false ] if
+              [ drop drop true SeenSearch.Done false ]
+              [ swap pair SeenSearch.Seeking true ] if ]
+            list.case ]
+          SeenSearch.match ] iterate
+        [ ] [ drop false ] SeenSearch.match
+    ]
+
+    signature seen_search_begin forall<S:stack>
+        [ S result@1.Result<Pair<List<Name>,Name>,Unit>
+          -- S result@1.Result<SeenSearch,Unit> ! pure ]
+    export seen_search_begin
+    def seen_search_begin [
+        [ SeenSearch.Seeking result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature validation_begin forall<S:stack>
+        [ S List<Name> -- S Validation ! pure ]
+    export validation_begin
+    def validation_begin [ nil swap pair Validation.Pending ]
+
+    signature validation_tick forall<S:stack>
+        [ S Validation -- S Validation Bool ! pure ]
+    export validation_tick
+    def validation_tick [
+        [ Validation.Done false ]
+        [ unpair
+          [ drop false 0 0 pair pair Validation.Done false ]
+          [ [ pair ] dip
+            [ dup unpair name_in_list ] dip swap
+            [ drop unpair swap drop name_span true swap pair Validation.Done false ]
+            [ swap unpair swap cons swap pair Validation.Pending true ] if ]
+          list.case ]
+        Validation.match
+    ]
+
+    signature validation_end forall<S:stack>
+        [ S Validation -- S result@1.Result<Unit,Failure> ! pure ]
+    export validation_end
+    def validation_end [
+        [ unpair swap
+          [ Failure.InvalidDefinition result@1.Result.Err ]
+          [ drop unit result@1.Result.Ok ] if ]
+        [ drop unit result@1.Result.Ok ] Validation.match
+    ]
+
+    # Reject even when a previous version of this function name exists.
+    signature reject_self_reference forall<S:stack>
+        [ S Name Name -- S result@1.Result<Unit,Failure> ! pure ]
+    export reject_self_reference
+    def reject_self_reference [
+        pair dup unpair same_name
+        [ unpair swap drop name_span Failure.InvalidDefinition result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ] if
+    ]
+
+    signature check_arity forall<S:stack>
+        [ S Function I64 Pair<I64,I64> -- S result@1.Result<Function,Failure> ! pure ]
+    export check_arity
+    def check_arity [
+        [ [ dup function_arity ] dip ] dip [ = ] dip swap
+        [ drop result@1.Result.Ok ]
+        [ swap drop NameFailure.WrongArity Failure.Name result@1.Result.Err ] if
+    ]
+    signature name_source forall<S:stack> [ S Name -- S Text ! pure ]
+    export name_source
+    def name_source [ Name.into unpair drop ]
+
+    signature variable_lookup_begin forall<S:stack>
+        [ S List<Variable> result@1.Result<Name,Unit>
+          -- S result@1.Result<VariableSearch,Unit> ! pure ]
+    export variable_lookup_begin
+    def variable_lookup_begin [
+        [ pair VariableSearch.Missing result@1.Result.Ok ]
+        [ [ drop ] dip result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_has_next forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<VariableSearch,Unit> Bool ! pure ]
+    export variable_lookup_has_next
+    def variable_lookup_has_next [
+        dup
+        [ [ drop false ]
+          [ unpair swap
+            [ drop false ]
+            [ drop drop drop true ] list.case ]
+          VariableSearch.match ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_size forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<VariableSearch,Unit> Bool ! pure ]
+    export variable_lookup_size
+    def variable_lookup_size [
+        dup
+        [ [ drop false ]
+          [ unpair swap
+            [ drop false ]
+            [ drop variable_name name_size swap name_size = ]
+            list.case ]
+          VariableSearch.match ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_length forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<VariableSearch,Unit> I64 ! pure ]
+    export variable_lookup_length
+    def variable_lookup_length [
+        dup
+        [ [ drop 0 ]
+          [ unpair swap drop name_size ]
+          VariableSearch.match ]
+        [ drop 0 ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_byte forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit> I64
+          -- S result@1.Result<VariableSearch,Unit> Bool ! pure ]
+    export variable_lookup_byte
+    def variable_lookup_byte [
+        swap dup
+        [ [ drop swap drop false ]
+          [ unpair swap
+            [ drop swap drop false ]
+            [ drop variable_name pair
+              swap [ swap name_pair_byte_eq ] dip swap ]
+            list.case ]
+          VariableSearch.match ]
+        [ drop swap drop false ]
+        result@1.Result.match
+    ]
+
+
+
+    signature variable_lookup_advance forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit> Bool
+          -- S result@1.Result<VariableSearch,Unit> Bool ! pure ]
+    export variable_lookup_advance
+    def variable_lookup_advance [
+        swap
+        [ swap
+          [ [ VariableSearch.Found false ]
+            [ unpair swap
+              [ nil swap pair VariableSearch.Missing false ]
+              [ drop swap drop VariableSearch.Found false ]
+              list.case ]
+            VariableSearch.match ]
+          [ [ VariableSearch.Found false ]
+            [ unpair swap
+              [ nil swap pair VariableSearch.Missing false ]
+              [ swap drop swap pair VariableSearch.Missing true ]
+              list.case ]
+            VariableSearch.match ]
+          if
+          [ result@1.Result.Ok ] dip ]
+        [ drop drop unit result@1.Result.Err false ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_step forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<VariableSearch,Unit> Bool ! pure ]
+    export variable_lookup_step
+    def variable_lookup_step [
+        [ variable_search_step [ result@1.Result.Ok ] dip ]
+        [ result@1.Result.Err false ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_status forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<VariableSearch,Unit> I64 ! pure ]
+    export variable_lookup_status
+    def variable_lookup_status [
+        dup
+        [ [ drop 0 ] [ drop 1 ] VariableSearch.match ]
+        [ drop 2 ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_value forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<num@1.Rat,Unit> ! pure ]
+    export variable_lookup_value
+    def variable_lookup_value [
+        [ [ Variable.into unpair swap drop result@1.Result.Ok ]
+          [ drop unit result@1.Result.Err ]
+          VariableSearch.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_missing forall<S:stack>
+        [ S result@1.Result<VariableSearch,Unit>
+          -- S result@1.Result<Name,Unit> ! pure ]
+    export variable_lookup_missing
+    def variable_lookup_missing [
+        [ [ drop unit result@1.Result.Err ]
+          [ unpair swap drop result@1.Result.Ok ]
+          VariableSearch.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature variable_lookup_missing_failure forall<S:stack>
+        [ S result@1.Result<Name,Unit>
+          -- S result@1.Result<Failure,Unit> ! pure ]
+    export variable_lookup_missing_failure
+    def variable_lookup_missing_failure [
+        [ name_span NameFailure.UnknownName Failure.Name result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature lookup_function forall<S:stack>
+        [ S State Name -- S result@1.Result<Function,Failure> ! pure ]
+    export lookup_function
+    def lookup_function [ [ state_functions ] dip find_function ]
+
+    # The history is newest first. Drop only entries appended after the rank;
+    # the remaining list shares the immutable historical suffix.
+    signature resolve_variable forall<S:stack>
+        [ S List<Variable> List<Name> Name -- S result@1.Result<Binding,Failure> ! pure ]
+    export resolve_variable
+    def resolve_variable [
+        [ dup ] dip dup [ find_parameter ] dip swap
+        [ swap drop [ drop ] dip swap drop
+          Binding.Parameter result@1.Result.Ok ]
+        [ drop [ drop ] dip lookup_variable
+          [ Binding.Global result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ] result@1.Result.match
+    ]
+
+    signature seen_search_has_next forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit>
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_has_next
+    def seen_search_has_next [
+        dup
+        [ [ drop false ]
+          [ unpair swap
+            [ drop false ]
+            [ drop drop drop true ] list.case ]
+          SeenSearch.match ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature seen_search_length forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit>
+          -- S result@1.Result<SeenSearch,Unit> I64 ! pure ]
+    export seen_search_length
+    def seen_search_length [
+        dup
+        [ [ drop 0 ]
+          [ unpair swap drop name_size ]
+          SeenSearch.match ]
+        [ drop 0 ]
+        result@1.Result.match
+    ]
+
+    signature seen_search_size forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit>
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_size
+    def seen_search_size [
+        dup
+        [ [ drop false ]
+          [ unpair swap
+            [ drop false ]
+            [ drop name_size swap name_size = ]
+            list.case ]
+          SeenSearch.match ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature seen_search_byte forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit> I64
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_byte
+    def seen_search_byte [
+        swap dup
+        [ [ drop swap drop false ]
+          [ unpair swap
+            [ drop swap drop false ]
+            [ drop pair
+              swap [ swap name_pair_byte_eq ] dip swap ]
+            list.case ]
+          SeenSearch.match ]
+        [ drop swap drop false ]
+        result@1.Result.match
+    ]
+
+    signature seen_search_byte_packed forall<S:stack>
+        [ S Pair<result@1.Result<SeenSearch,Unit>,I64>
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_byte_packed
+    def seen_search_byte_packed [ unpair seen_search_byte ]
+
+    signature seen_search_advance forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit> Bool
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_advance
+    def seen_search_advance [
+        swap
+        [ swap
+          [ [ SeenSearch.Done false ]
+            [ unpair swap
+              [ nil swap pair SeenSearch.Seeking false ]
+              [ drop swap drop drop true SeenSearch.Done false ]
+              list.case ]
+            SeenSearch.match ]
+          [ [ SeenSearch.Done false ]
+            [ unpair swap
+              [ nil swap pair SeenSearch.Seeking false ]
+              [ swap drop swap pair SeenSearch.Seeking true ]
+              list.case ]
+            SeenSearch.match ]
+          if
+          [ result@1.Result.Ok ] dip ]
+        [ drop drop unit result@1.Result.Err false ]
+        result@1.Result.match
+    ]
+
+    signature seen_search_advance_packed forall<S:stack>
+        [ S Pair<result@1.Result<SeenSearch,Unit>,Bool>
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_advance_packed
+    def seen_search_advance_packed [ unpair seen_search_advance ]
+
+    signature seen_search_found forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit>
+          -- S result@1.Result<SeenSearch,Unit> Bool ! pure ]
+    export seen_search_found
+    def seen_search_found [
+        dup
+        [ [ ] [ drop false ] SeenSearch.match ]
+        [ drop false ] result@1.Result.match
+    ]
+
+    signature seen_search_finish forall<S:stack>
+        [ S result@1.Result<SeenSearch,Unit> -- S Bool ! pure ]
+    export seen_search_finish
+    def seen_search_finish [
+        [ [ ] [ drop false ] SeenSearch.match ]
+        [ drop false ] result@1.Result.match
+    ]
+
+    signature validation_candidate forall<S:stack>
+        [ S Validation
+          -- S result@1.Result<Pair<List<Name>,Name>,Unit> ! pure ]
+    export validation_candidate
+    def validation_candidate [
+        [ drop unit result@1.Result.Err ]
+        [ unpair
+          [ drop unit result@1.Result.Err ]
+          [ drop pair result@1.Result.Ok ] list.case ]
+        Validation.match
+    ]
+
+    signature validation_candidate_present forall<S:stack,A:value>
+        [ S result@1.Result<A,Unit>
+          -- S result@1.Result<A,Unit> Bool ! pure ]
+    export validation_candidate_present
+    def validation_candidate_present [
+        dup
+        [ drop true ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature validation_advance forall<S:stack>
+        [ S Validation Bool -- S Validation Bool ! pure ]
+    export validation_advance
+    def validation_advance [
+        swap
+        [ swap drop Validation.Done false ]
+        [ unpair
+          [ swap drop drop false 0 0 pair pair Validation.Done false ]
+          [ [ pair ] dip rot
+            [ drop unpair swap drop name_span true swap pair Validation.Done false ]
+            [ swap unpair swap cons swap pair Validation.Pending true ] if ]
+          list.case ]
+        Validation.match
+    ]
+
+]

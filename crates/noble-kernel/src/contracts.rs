@@ -5,7 +5,12 @@
 //! Contracts are rank-1 schemes; the bootstrap table lives in `bootstrap`.
 
 pub mod bootstrap;
+mod clone_budget;
 mod nominal;
+pub use clone_budget::{
+    CloneBudget, CALCULATOR_ENVIRONMENT_ROW_LIMIT, CALCULATOR_ENV_CLONE_BYTES_LIMIT,
+    CALCULATOR_ENV_CLONE_FANOUT_LIMIT,
+};
 
 /// Identity of one environment definition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -71,12 +76,22 @@ pub enum Behavior {
     Cons,
     /// `list.case`.
     ListCase,
-    /// Pure byte-offset inspection of an immutable Text in the opt-in cursor profile.
-    TextByte,
-    /// Non-callable slots preserving globally disjoint builtin identities.
-    Reserved,
     /// The supplied `test.emit` operation.
     TestEmit,
+    /// Pure byte-offset inspection in standalone cursor or calculator.
+    TextByte,
+    /// Pure, budget-metered guest iteration in the opt-in calculator profile.
+    CalculatorIterate,
+    /// Signed comparison returning -1, 0 or 1.
+    CalculatorCompare,
+    /// Checked nonnegative integer quotient and remainder.
+    CalculatorDivRem,
+    /// One-pass checked ASCII construction from a list of bytes.
+    CalculatorTextFromAscii,
+    /// Constant-time immutable Text byte length for guest budget preflight.
+    CalculatorTextLength,
+    /// Non-callable slots keeping builtin identities disjoint between profiles.
+    Reserved,
     /// A required `test.emit` binding, retaining the immutable adapter slot.
     BoundEmit(u32),
     /// A required scripted `test.clock` binding, retaining its immutable slot.
@@ -252,8 +267,10 @@ pub struct Env {
     /// Module registration also enables it; it is required for declarations
     /// with no nominal types or bound operations.
     pub declared_modules: bool,
-    /// Separately selected pure Text byte cursor profile; never part of Core or declared modules.
+    /// Selected standalone Text cursor profile, not part of Core or declared modules.
     pub text_cursor: bool,
+    /// Selected calculator-only guest primitives and declared numeric modules.
+    pub calculator: bool,
     /// Owner of each definition, supplied independently of a candidate.
     pub definition_owners: alloc::vec::Vec<Option<u64>>,
     /// Host-confirmed immutable dispatch identities for required operations.
@@ -449,13 +466,15 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         caller_module: None,
         declared_modules: false,
         text_cursor: false,
+        calculator: false,
         definition_owners: alloc::vec![None; table.len()],
         bound_adapters: alloc::vec::Vec::new(),
         effects: alloc::vec![TEST_EMIT],
     })
 }
 
-/// Add the single pure Text cursor contract without changing the bootstrap table.
+/// Extend the fixed bootstrap table with private reserved rows and one pure
+/// Text byte-at operation, without making it available in other profiles.
 pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
     use crate::shapes::Pattern;
     use crate::words::{Scheme, Variable, VariableKind};
@@ -487,5 +506,71 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
     env.deps.push(alloc::vec::Vec::new());
     env.definition_owners.push(None);
     env.text_cursor = true;
+    Ok(env)
+}
+
+/// The calculator has its own opt-in prefix. Neither standalone cursor nor
+/// ordinary declared-module admission inherits these extra pure operations.
+pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
+    use crate::shapes::Pattern;
+    use crate::words::{Scheme, Variable, VariableKind};
+
+    let mut env = text_cursor_environment()?;
+    env.text_cursor = false;
+    env.calculator = true;
+    env.declared_modules = true;
+    let row = Pattern::StackVar(Variable(0));
+    let state = Pattern::Var(Variable(1));
+    let loop_step = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack, VariableKind::Value],
+        stack_in: alloc::vec![
+            row.clone(),
+            state.clone(),
+            Pattern::program(
+                alloc::vec![row.clone(), state.clone()],
+                alloc::vec![row.clone(), state.clone(), Pattern::Bool],
+                alloc::vec![],
+            ),
+        ],
+        stack_out: alloc::vec![row.clone(), state],
+        effects: alloc::vec![],
+    };
+    let compare = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![row.clone(), Pattern::I64, Pattern::I64],
+        stack_out: alloc::vec![row.clone(), Pattern::I64],
+        effects: alloc::vec![],
+    };
+    let divide = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![row.clone(), Pattern::I64, Pattern::I64],
+        stack_out: alloc::vec![row.clone(), Pattern::I64, Pattern::I64, Pattern::Bool],
+        effects: alloc::vec![],
+    };
+    let text = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![row.clone(), Pattern::List(alloc::boxed::Box::new(Pattern::I64))],
+        stack_out: alloc::vec![row.clone(), Pattern::Text, Pattern::Bool],
+        effects: alloc::vec![],
+    };
+    let text_length = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![row.clone(), Pattern::Text],
+        stack_out: alloc::vec![row, Pattern::Text, Pattern::I64],
+        effects: alloc::vec![],
+    };
+    for (behavior, scheme) in [
+        (Behavior::CalculatorIterate, loop_step),
+        (Behavior::CalculatorCompare, compare),
+        (Behavior::CalculatorDivRem, divide),
+        (Behavior::CalculatorTextFromAscii, text),
+        (Behavior::CalculatorTextLength, text_length),
+    ] {
+        scheme.validate()?;
+        env.defs.push(scheme);
+        env.kinds.push(behavior);
+        env.deps.push(alloc::vec::Vec::new());
+        env.definition_owners.push(None);
+    }
     Ok(env)
 }

@@ -23,11 +23,12 @@ fn get_global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::D
 fn programs(
     out: &mut crate::output::Buffer,
     programs: &[super::plan::Program],
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < programs.len() {
-        match program(out, index, &programs[index]) {
+        match program(out, index, &programs[index], calculator) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -45,11 +46,12 @@ fn program(
     out: &mut crate::output::Buffer,
     index: usize,
     program: &super::plan::Program,
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(global "));
     attempt!(global(out, index));
     attempt!(out.append(b" (mut i32) (i32.const 0))\n"));
-    functions::write(out, program)
+    functions::write(out, program, calculator)
 }
 
 fn code_elements(
@@ -89,16 +91,32 @@ fn function_element(
 pub(super) fn module(
     plan: &super::plan::Layout,
     generation: u32,
+    signature_base: usize,
+    signature_keys: &[alloc::vec::Vec<u8>],
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
-    let mut out = crate::output::Buffer::new(32_768);
+    // The calculator's bounded multi-definition closure may serialize above
+    // the ordinary one-MiB module cap. Keep that cap on all other profiles
+    // and on individual structural signature keys.
+    let limit = if plan.calculator {
+        4 * crate::OUTPUT_BYTE_LIMIT
+    } else {
+        crate::OUTPUT_BYTE_LIMIT
+    };
+    let mut out = crate::output::Buffer::with_limit(32_768, limit);
     attempt!(imports::write(&mut out, plan));
     attempt!(imports::runtime(&mut out, plan));
-    attempt!(plan.types.emit(&mut out));
-    attempt!(programs(&mut out, &plan.programs));
+    attempt!(plan.types.emit(&mut out, plan.calculator));
+    attempt!(programs(&mut out, &plan.programs, plan.calculator));
     if generation == 0 {
-        attempt!(out.append(
-            b"(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)\n"
-        ));
+        if plan.calculator {
+            attempt!(out.append(
+                b"(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry $iterate_resume)\n"
+            ));
+        } else {
+            attempt!(out.append(
+                b"(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)\n"
+            ));
+        }
     }
     if plan.functions > plan.first_function {
         attempt!(code_elements(&mut out, plan));
@@ -117,7 +135,25 @@ pub(super) fn module(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    attempt!(metadata::descriptors(&mut out, &plan.descriptors));
+    // Ordinary profiles emit their complete descriptor table. A calculator
+    // module carries only IDs `signature_base..` interned since the last
+    // published (committed) compiler state; the trusted host retains earlier
+    // IDs, so this metadata does not grow with the session's history.
+    if (!plan.calculator && signature_base != 0)
+        || signature_base.checked_add(signature_keys.len()) != Some(plan.descriptors.len())
+    {
+        return Err(crate::Diagnostic::Defective);
+    }
+    if plan.calculator {
+        for (offset, key) in signature_keys.iter().enumerate() {
+            attempt!(metadata::signature_segment(&mut out, signature_base + offset, key));
+        }
+    }
+    attempt!(metadata::descriptors(
+        &mut out,
+        &plan.descriptors,
+        if plan.calculator { Some((signature_base, signature_keys)) } else { None },
+    ));
     attempt!(initialize::write(&mut out, plan, generation));
     attempt!(metadata::stack_check(
         &mut out,
@@ -131,7 +167,14 @@ pub(super) fn module(
     ));
     attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
     attempt!(out.i32(generation));
-    attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));
+    attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n"));
+    // A calculator module is entered exactly once. Reset after host injection,
+    // immediately before validating its first input, even if the host observed
+    // the previous stack (and changed reflection_steps) between begin/submit.
+    if plan.calculator {
+        attempt!(out.append(b"(call $type_certificate_reset)\n"));
+    }
+    attempt!(out.append(b"(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));
     attempt!(get_global(&mut out, plan.root));
     attempt!(out.append(b")\n(call $dispatch)\n(if (i32.eqz (global.get $failure)) (then (call $check_output)))\n(if (i32.eqz (global.get $failure)) (then (global.set $generation (i32.add (global.get $generation) (i32.const 1)))))\n(global.get $failure))\n)\n"));
     Ok(out.finish())

@@ -11,6 +11,7 @@ mod initialization;
 const COMMON: &str = include_str!("../runtime/common.wat");
 const ACCOUNTING: &str = include_str!("../runtime/accounting.wat");
 const GC_STORAGE: &str = include_str!("../runtime/gc-storage.wat");
+const LINEAR_ADDRESS: &str = include_str!("../runtime/linear-address.wat");
 const LINEAR_STORAGE: &str = include_str!("../runtime/linear-storage.wat");
 const STACK: &str = include_str!("../runtime/stack.wat");
 const PROGRAMS: &str = include_str!("../runtime/programs.wat");
@@ -34,7 +35,10 @@ pub(crate) fn module(
     attempt!(fragment(&mut out, ACCOUNTING));
     match representation {
         crate::Representation::WasmGc => attempt!(fragment(&mut out, GC_STORAGE)),
-        crate::Representation::ManagedLinearMemory => attempt!(fragment(&mut out, LINEAR_STORAGE)),
+        crate::Representation::ManagedLinearMemory => {
+            attempt!(fragment(&mut out, LINEAR_ADDRESS));
+            attempt!(fragment(&mut out, LINEAR_STORAGE));
+        }
     }
     attempt!(fragment(&mut out, STACK));
     attempt!(fragment(&mut out, PROGRAMS));

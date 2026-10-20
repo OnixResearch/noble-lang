@@ -36,9 +36,7 @@ impl super::Arena {
                 None => return Err(crate::internal(span)),
             }
         }
-        // The finite host-effect universe has one output per set bit.
-        let count = attempt!(usize::try_from(bits.count_ones()).map_err(|_| crate::internal(span)));
-        let mut known = alloc::vec::Vec::with_capacity(count);
+        let mut known = alloc::vec::Vec::new();
         for bit in 0..64 {
             if bits & (1u64 << bit) != 0 {
                 known.push(bit);
@@ -259,7 +257,7 @@ impl super::Arena {
         Ok(id)
     }
 
-    pub(crate) fn program_effect(
+    pub(super) fn program_effect(
         &self,
         program: u32,
         span: crate::Span,

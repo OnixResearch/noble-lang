@@ -2,10 +2,10 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "9b1a9dc53787dea2e4590b9295309327d78683f4e67aee2610e9c3a8f620735e",
+    "sha256": "4d8873e9064398538950ae8eb381dcdc1ff226daabcb4c3b9fa6dea1516fb49b",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "5a75c586f7ab4d3065a71c1259ea1d835d896b663173a8c83300c6c47f7feeea"
+      "sha256": "da58b3ac6cc49d564191c237bb758820d69ea808ce820d421868c4644a1a0e41"
     }
   },
   "lane": "document-validation-only",
@@ -14,9 +14,9 @@
     "bun": "1.4.2",
     "node_api": "26.3.0"
   },
-  "documents": 13,
-  "requirements": 523,
-  "scenarios": 189,
+  "documents": 12,
+  "requirements": 500,
+  "scenarios": 169,
   "scenarios_executed": 116,
   "open_test_design": 193,
   "proof_obligations": 30,
@@ -224,11 +224,6 @@
     },
     {
       "name": "removed-backend-document",
-      "expected": "reject",
-      "result": "passed"
-    },
-    {
-      "name": "removed-C-backend-document",
       "expected": "reject",
       "result": "passed"
     },
@@ -1402,22 +1397,6 @@
       "sha256": "e5f3eccbda5f3298998d74e5360827ef1470ee88449985fad7544cf26d55d381"
     },
     {
-      "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "6bb5850a37150a195c457209a71a5764a36d5949c689a4c655b5ae8438413a30"
-    },
-    {
-      "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "af445c5e9f469788406c7f3543766f54f7ee1c5a153a103996c6b3f3aea996c4"
-    },
-    {
-      "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "5b325053353f5f076f5657c5345d8dbddc2c2aa67117be69042120445cfe391b"
-    },
-    {
-      "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "eb9dd821960f374b20a53f2cdd03ad05b26aeb1e5660b2e4d4815bab9ba9b44c"
-    },
-    {
       "file": ".cairn/changes/editor-hole-transport/design.md",
       "sha256": "17fb51d6b7517220b0f28613068bd328aa8c38a7399009b88234a777171fe3df"
     },
@@ -1435,7 +1414,7 @@
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/design.md",
-      "sha256": "79a9a93e101c3c60ac40fb3da61e43747293c4ae8bbe8e469e59973deaa2ab10"
+      "sha256": "bb0759a9a13a02829d00bbcbe07d39dbad29decf7e53ba6eefd7c3125dff343d"
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/proposal.md",
@@ -1460,46 +1439,6 @@
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/tasks.md",
       "sha256": "dda4524c7277b81c86c3c6bbe086835a80fa4cc6ba059c1e07b79038652545fe"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/design.md",
-      "sha256": "dc258c160789dc19a28703736ea660df71f0a88e2a1a0cf95a1f6a5768721040"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/proposal.md",
-      "sha256": "be8709a31f46c9e1de9ea4c9b1e95361199665fafdf0d18fd68c08758d520dc5"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/backend-experiments/spec.md",
-      "sha256": "4d1ab1b72a56ca20d1784ed10e4f4ea5cc8c483a7c56c81f2fdcada6b9e5c27e"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/core-bootstrap/spec.md",
-      "sha256": "251b3848f9eb69e7275b4eb02be016c0f0f8d373aefb015fbf553d3ab04bd016"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/developer-experience/spec.md",
-      "sha256": "6c8e0ec8be37254b4a82ae06b785329cde2fc804660979794f594d8f3f55a33c"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/evidence/spec.md",
-      "sha256": "869791267c0029928b94986b7d28c77b81c4b12156f5541d283f062d68d744f9"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/language/spec.md",
-      "sha256": "2d04a117e9a8534233724f6654ad50d91d9050c108668d344f825ed823f1e5dc"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/safety/spec.md",
-      "sha256": "6f3e39830ae5cbed74af8d8c8ccebae21e917df845f2f54592e84480d8ee1c80"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/specs/verification/spec.md",
-      "sha256": "a5a8f5615a63259dc5e0e5de4f382d96618213719e68a2371238561424f0a32d"
-    },
-    {
-      "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "20b1ea99589279fc2ff693a13f656196f87601bbb18e767f885c8101718aa045"
     },
     {
       "file": ".cairn/changes/safety-artifact-correspondence/design.md",
@@ -1651,15 +1590,11 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "aa54e2a19067027d907287b51d306e398a23b6d739d363048922023dc7cb8cb2"
+      "sha256": "03c8cc73fef85f659bcd8b5f84cc89f8728509b1c5fd73354cc60e1013faf772"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
-      "sha256": "15d8bfe0242014ea85d8f9afd893d131ed04983e3d7bde0e296894ee159ea109"
-    },
-    {
-      "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "f6c35caf200c386b8515d895c572449d75cdeb650508af152d34a7b5a7fd33da"
+      "sha256": "96aa55971f325e5a8461c3cf38bde4449213e749e9865b6b3ba124294d57f986"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -1667,19 +1602,19 @@
     },
     {
       "file": ".cairn/specs/core-bootstrap/spec.md",
-      "sha256": "d0ba755b56507f547a98ce5187a1fc7df71ae339f00a1742448aa04eddca8f5d"
+      "sha256": "61ac854df3c01e850d925bbf7200819ff8825094706ddd36f564ef574f532c3c"
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "aa861d34eee622da47a55c7b6bc918d3f37e377022b0c956b512ed09472bf352"
+      "sha256": "d3fd0be03105804adb02ea9fe5efffbc418384d790dd95eded33614346a4f4a3"
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
-      "sha256": "20f418443481a96435fbda6a513e95ec1c4291754aff1deb1bca702ca0f25c9e"
+      "sha256": "d09e005be96c082b1dd7c1cba474015003d4e968449d1a0d421d3a3a2f986e94"
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "fcbdef58964b8e9a57caea2377d68ac6b6324d634a4a1171635e45abde71cab9"
+      "sha256": "98aa6171d3df718deb3b2d03625d4c1ef43d9b0fd94ecb981cd3f9887fb3ffa6"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -1691,7 +1626,7 @@
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "106245e2dc9ae1be19aaeb241e16521742ab78a1e1daf8277a80f002da5bf0d3"
+      "sha256": "b4b43c041ed672407e119d258a296efadec728a5355ea838d5d3433a8e188862"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
@@ -1699,7 +1634,7 @@
     },
     {
       "file": ".cairn/specs/verification/spec.md",
-      "sha256": "cf65604375177cb056adf0ad78b3ac994c7c7796e715df112b4455d058042368"
+      "sha256": "bd940c2fb0c0e85f9c241cb94347b41f7fa36774f7d63b514504628ad91112e1"
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
@@ -1735,15 +1670,11 @@
     },
     {
       "file": "README.md",
-      "sha256": "4d2b4ff3c552a3b277d5a7b6bcb800c50aa205da10928229957171fb530877c9"
+      "sha256": "18fff589cf98bf9d1491fcb6f6c010990bc252714f0e2dd7961158831d4cb756"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
-      "sha256": "b4d47882404a3b835d9ebf18e5befcecb1f7ad77a379be51939c3524ed5138ee"
-    },
-    {
-      "file": "specs/C-BACKEND.md",
-      "sha256": "e1272a7e060d649a2a831495898f2b07feb9dfc7ff77c45766ffaedf349ead9a"
+      "sha256": "54844f8fbe8babb88e16942a3d6395d7fc62fac40714cc9bc757173c6b96531d"
     },
     {
       "file": "specs/CALCULATOR.md",
@@ -1751,11 +1682,7 @@
     },
     {
       "file": "specs/conformance/adaptation-cases.json",
-      "sha256": "f4da3f04d37b3654bb99848fcb0232a305d2a589058f64e29e2c2d075dfbe4a5"
-    },
-    {
-      "file": "specs/conformance/c-backend-cases.json",
-      "sha256": "904246ed09cabb510ae843a334732790f2dae1c4c53531e2d7615c55df85d698"
+      "sha256": "3189c52de6f994fd51eeb6c83766ece4bb195480f8c4c086b8877174de5bdcad"
     },
     {
       "file": "specs/conformance/calculator-cases.json",
@@ -1771,7 +1698,7 @@
     },
     {
       "file": "specs/conformance/developer-experience-cases.json",
-      "sha256": "760239624d082559738a7ae2f3018f8960bea1cf9ab7666e3a22e80e7e55e89e"
+      "sha256": "4037d1755f635edb73a461b239c4d0eade2f5fedabe8f28ef6e54925ffacaaa8"
     },
     {
       "file": "specs/conformance/identity-cases.json",
@@ -1780,10 +1707,6 @@
     {
       "file": "specs/conformance/language-workflow-cases.json",
       "sha256": "7dd4ab0c4920beb2bfff49a4ec9ec85bdfa5f4947aa6f8d90be9a653144e653f"
-    },
-    {
-      "file": "specs/conformance/live-wasm-cases.json",
-      "sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",
@@ -1795,7 +1718,7 @@
     },
     {
       "file": "specs/conformance/safety-cases.json",
-      "sha256": "06b4bedc9fa121591153d80ad256fe56d3956f9030871ffdad4fadb746068153"
+      "sha256": "2a0df7ffd9216630add06475eb3ccf37cf54e0972561aaf5742d30366d8e08b4"
     },
     {
       "file": "specs/conformance/verification-cases.json",
@@ -1811,7 +1734,7 @@
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
-      "sha256": "86b7995cd605fed8b14246caa7421ca2d92c6d61bc27e4005469f52c33533c66"
+      "sha256": "e754e3718729194534fb07d8897e638cdf0198b8b9c254dc868fe7836d4f142e"
     },
     {
       "file": "specs/DECISIONS.md",
@@ -1819,11 +1742,11 @@
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
-      "sha256": "486673aa1b7759665c657dbdac3acde1e677dfd103dc8cbc59009a24fafbfcc2"
+      "sha256": "0027789fd8685e5c3bcecbb2eed0b78f613b9a044a9984c3a93c05c59c7532cf"
     },
     {
       "file": "specs/EVIDENCE.md",
-      "sha256": "a2fb66a93598ddb938ec60a8dbfb3aa8c45a0fe636880cf17caaff992f76a1ac"
+      "sha256": "640e5b26659d82ef672ad9c95b9fdff844b1ff486adb12f335ff09d83e2eee4f"
     },
     {
       "file": "specs/OCTET-ADOPTION.md",
@@ -1835,11 +1758,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "d701488a0cc64616818f3bf3b81136924c1bccb70e4be64b7e51c989325a5014"
+      "sha256": "060d743cf5126641732e28c01cebf7067cae0f01a07a22ba7ea6917a51ed0b47"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "ca1f556ac1a179e93e3500c0db182f27aebc00c0744c7348f8c35b2410ddf3ec"
+      "sha256": "43500d6b0449a7fb2a4fd9d30891281a06cad6de63c4355b24cc051d987088b5"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1851,15 +1774,15 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "f1baee1d5b2fe6726c73918e116db94fae1e53b0e284eb1acc315a1fe31da336"
+      "sha256": "2acd9798a8ac435377eeb4cc2d2858e20f143c3cea4a119b4c9cc8e9eb70552b"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "85995003e2a86c33f8ed6b015469fc819358df985110255bfa74c0562b76e2b8"
+      "sha256": "d1b82946aeedd5dab3f21f051666b7e5d5fd9243e51f86ca8761f12717798e1e"
     },
     {
       "file": "specs/SAFETY.md",
-      "sha256": "189daba87dd35da524bfbe7d27cee6c29c43f4a19949b81dcb61e48148982288"
+      "sha256": "fe56596e9a71d6046c2a4040073b1d03001f0153799435dc98c7ea1d1388f276"
     },
     {
       "file": "specs/SOURCES.md",
@@ -1867,15 +1790,15 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "39356adc52409e4e3e5d3cd15b0599f4774c3af8680790f9370e98f7b97643d5"
+      "sha256": "a0c4a17d6baedfd548e2078ea1e02ea383acd9001db98864f7aa6f032ad75ded"
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "abe6ed0a40ca589ec56fa69d6ccdb15ccbba9dc4c5c98b45bf8536c13cf6ff97"
+      "sha256": "455fd0db6fddba8ad80fc9bf4424bc843c94ff7fc3c7a4461eed867fadf5dac4"
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "3212f47b0aa66a59aed9429ea7713d52ed3c5f76616aa6c18cf602fdb7ef9fa4"
+      "sha256": "2b06d6aacef79c34b4af4850cd0d9ef2e7b15e18cba4d33ff4429dc9b7de44c5"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -1883,7 +1806,7 @@
     },
     {
       "file": "specs/VERIFICATION.md",
-      "sha256": "b308c1a9bca06a6de65c3201c4bf7b1b19283b1a73409c9753f5c26243feea54"
+      "sha256": "c07977b08e801aa44283d2924533bfa99ed95d276d471e0ba69fe5d32e4832e0"
     },
     {
       "file": "specs/verification/obligations.json",
@@ -1907,7 +1830,7 @@
     },
     {
       "file": "verification/component-review.md",
-      "sha256": "d75b5da7c965d7c88b4b0265588990c803fbfdbd3dc2fa671ef5533adff206fe"
+      "sha256": "6d8dece7ab4f1910cddb830f191f4153b05cefb1a204cb4ebee76c808fc4d8ec"
     },
     {
       "file": "verification/extraction.md",
@@ -1915,7 +1838,7 @@
     },
     {
       "file": "verification/m1-controls.md",
-      "sha256": "0ff3beb9e446d6c3e006aab824e5ebcff75672c1ee77f76bdb8118fca60d2c72"
+      "sha256": "b589c68321816e82e0cf2feeacdc1573a81ab523d127908b2ac5173d8b72b332"
     },
     {
       "file": "verification/m1-runbook.md",
@@ -1979,19 +1902,19 @@
     },
     {
       "file": "verification/native-assurance.md",
-      "sha256": "6e473029ecde54035292166fd65f877e5c9ce69bd3ce67830cb3129f78f8a383"
+      "sha256": "c21d1a67c78b732ccf3b91bf456767e2aafcc173744df7111f46c973489dcebe"
     },
     {
       "file": "verification/source-inventory.md",
-      "sha256": "c031860566fe7aff6a189f9e47c3296e030de05fb68fdea67360a49f2dcd1260"
+      "sha256": "f962cd1ce0148b3f00e63c336639eb7390643a5ac25a6b52dfdb0d9b0c6a6399"
     },
     {
       "file": "verification/tool-selection.md",
-      "sha256": "cdb86890effc8efd65374a0320f35ed2c59d7c6b329bdb805d73c92b3ea2c997"
+      "sha256": "a0f75d4e5829d4f2b0f8f30b03bad7ac053bf7d0054145c4d03ebf2e10a3ddde"
     },
     {
       "file": "verification/wi03/README.md",
-      "sha256": "efdef146288c318a6adabf7d1b3c0e08c52b3d8ccbfd13a99ddb56a912d344d9"
+      "sha256": "4c2cf4857f2bd778f25fb15df7f5496d584dee51451353d0532f76bc632df341"
     }
   ],
   "non_claims": [

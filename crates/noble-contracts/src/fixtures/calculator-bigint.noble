@@ -1,0 +1,431 @@
+module calc_big@1 [
+    opaque BigInt Pair<Bool,List<Bool>> private
+    export BigInt
+    opaque BigMulInput Pair<Pair<BigInt,BigInt>,Bool> private
+    export BigMulInput
+    opaque BigMulCursor Pair<Bool,calc_bits@1.MultiplyCursor> private
+    export BigMulCursor
+    opaque BigMulActive Pair<Bool,calc_bits@1.MultiplyActive> private
+    export BigMulActive
+    opaque BigMulAddCursor Pair<Bool,calc_bits@1.MultiplyAddCursor> private
+    export BigMulAddCursor
+    opaque BigMulAdded Pair<Bool,calc_bits@1.MultiplyAdded> private
+    export BigMulAdded
+    opaque BigMulDone Pair<Bool,calc_bits@1.MultiplyDone> private
+    export BigMulDone
+    variant BigMulRoute Done BigMulDone public More BigMulActive public
+    export BigMulRoute
+    export BigMulRoute.Done
+    export BigMulRoute.More
+    export BigMulRoute.match
+    opaque BigAddOperands Pair<Bool,Pair<List<Bool>,List<Bool>>> private
+    export BigAddOperands
+    variant BigAddRoute Add BigAddOperands public Sub BigAddOperands public
+    export BigAddRoute
+    export BigAddRoute.Add
+    export BigAddRoute.Sub
+    export BigAddRoute.match
+
+    signature big_zero forall<S:stack> [ S -- S BigInt ! pure ]
+    export big_zero
+    def big_zero [ false nil pair BigInt.new ]
+
+    signature big_one forall<S:stack> [ S -- S BigInt ! pure ]
+    export big_one
+    def big_one [ false true nil cons pair BigInt.new ]
+
+    signature big_zero_p forall<S:stack> [ S BigInt -- S Bool ! pure ]
+    export big_zero_p
+    def big_zero_p [ BigInt.into unpair swap drop calc_bits@1.bits_empty ]
+
+    signature big_canonical forall<S:stack>
+        [ S Bool List<Bool> -- S BigInt ! pure ]
+    def big_canonical [
+        dup calc_bits@1.bits_empty
+        [ swap drop false swap pair BigInt.new ]
+        [ pair BigInt.new ] if
+    ]
+
+
+    signature big_sign forall<S:stack> [ S BigInt -- S Bool ! pure ]
+    export big_sign
+    def big_sign [ BigInt.into unpair drop ]
+
+    signature big_bits forall<S:stack> [ S BigInt -- S List<Bool> ! pure ]
+    export big_bits
+    def big_bits [ BigInt.into unpair swap drop ]
+
+    # A decimal digit emits its bits most-significant first. Trim leading
+    # zeroes before the only reverse needed for BigInt's canonical LSB order.
+    signature big_from_msb_bits forall<S:stack>
+        [ S List<Bool> -- S BigInt ! pure ]
+    export big_from_msb_bits
+    def big_from_msb_bits [
+        [ dup
+          [ false ]
+          [ swap [ drop false ] [ swap drop true ] if ]
+          list.case ] iterate
+        calc_bits@1.reverse_bits
+        false swap pair BigInt.new
+    ]
+
+    signature big_neg forall<S:stack> [ S BigInt -- S BigInt ! pure ]
+    export big_neg
+    def big_neg [ BigInt.into unpair [ calc_bits@1.bool_not ] dip big_canonical ]
+
+    signature pair_signs_equal forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S Bool ! pure ]
+    def pair_signs_equal [ unpair [ big_sign ] dip big_sign calc_bits@1.bool_equal ]
+
+    signature pair_compare_magnitudes forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S I64 ! pure ]
+    def pair_compare_magnitudes [
+        unpair [ big_bits ] dip big_bits calc_bits@1.compare_bits
+    ]
+
+    signature pair_add_magnitudes forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S List<Bool> ! pure ]
+    def pair_add_magnitudes [
+        unpair [ big_bits ] dip big_bits calc_bits@1.add_bits
+    ]
+
+    signature pair_sub_magnitudes forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S List<Bool> ! pure ]
+    def pair_sub_magnitudes [
+        unpair [ big_bits ] dip big_bits calc_bits@1.subtract_bits
+    ]
+
+    signature ordered_sub forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S BigInt ! pure ]
+    def ordered_sub [
+        dup unpair drop big_sign
+        swap pair_sub_magnitudes big_canonical
+    ]
+
+    signature big_add_raw forall<S:stack>
+        [ S BigInt BigInt -- S BigInt ! pure ]
+    export big_add_raw
+    def big_add_raw [
+        pair dup pair_signs_equal
+        [ dup unpair drop big_sign
+          swap pair_add_magnitudes big_canonical ]
+        [ dup pair_compare_magnitudes 0 i64.cmp -1 =
+          [ unpair swap pair ordered_sub ]
+          [ ordered_sub ] if ] if
+    ]
+
+    # A selected guest call chooses the signed operation and orders its
+    # canonical operands. Its private bit magnitudes prevent arbitrary lists
+    # from being used to synthesize a BigInt result.
+    signature big_add_begin forall<S:stack>
+        [ S BigInt BigInt -- S BigAddRoute ! pure ]
+    export big_add_begin
+    def big_add_begin [
+        pair dup pair_signs_equal
+        [ dup unpair drop big_sign
+          swap unpair [ big_bits ] dip big_bits
+          pair pair BigAddOperands.new BigAddRoute.Add ]
+        [ dup pair_compare_magnitudes 0 i64.cmp -1 =
+          [ unpair swap pair ] [ ] if
+          dup unpair drop big_sign
+          swap unpair [ big_bits ] dip big_bits
+          pair pair BigAddOperands.new BigAddRoute.Sub ] if
+    ]
+
+    # Keep the canonical signed operands while the protected evaluator
+    # determines their signs in one small selected guest submission. A
+    # second submission makes the exact same Add/Sub and magnitude-order
+    # decision as big_add_begin, without inlining it into a retained frame.
+    signature big_add_sign_check forall<S:stack>
+        [ S BigInt BigInt -- S Pair<Pair<BigInt,BigInt>,Bool> ! pure ]
+    export big_add_sign_check
+    def big_add_sign_check [
+        pair dup pair_signs_equal pair
+    ]
+
+    signature big_add_sign_begin forall<S:stack>
+        [ S Pair<Pair<BigInt,BigInt>,Bool> -- S BigAddRoute ! pure ]
+    export big_add_sign_begin
+    def big_add_sign_begin [
+        unpair
+        [ dup unpair drop big_sign
+          swap unpair [ big_bits ] dip big_bits
+          pair pair BigAddOperands.new BigAddRoute.Add ]
+        [ dup pair_compare_magnitudes 0 i64.cmp -1 =
+          [ unpair swap pair ] [ ] if
+          dup unpair drop big_sign
+          swap unpair [ big_bits ] dip big_bits
+          pair pair BigAddOperands.new BigAddRoute.Sub ] if
+    ]
+
+    signature big_add_finish_add forall<S:stack>
+        [ S BigAddRoute -- S result@1.Result<BigInt,Unit> ! pure ]
+    export big_add_finish_add
+    def big_add_finish_add [
+        [ BigAddOperands.into unpair unpair
+          calc_bits@1.add_bits big_canonical result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        BigAddRoute.match
+    ]
+
+    signature big_add_finish_sub forall<S:stack>
+        [ S BigAddRoute -- S result@1.Result<BigInt,Unit> ! pure ]
+    export big_add_finish_sub
+    def big_add_finish_sub [
+        [ drop unit result@1.Result.Err ]
+        [ BigAddOperands.into unpair unpair
+          calc_bits@1.subtract_bits big_canonical result@1.Result.Ok ]
+        BigAddRoute.match
+    ]
+
+    signature pair_signs_xor forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S Bool ! pure ]
+    def pair_signs_xor [ unpair [ big_sign ] dip big_sign calc_bits@1.bool_xor ]
+
+    signature pair_multiply_magnitudes forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S List<Bool> ! pure ]
+    def pair_multiply_magnitudes [
+        unpair [ big_bits ] dip big_bits calc_bits@1.multiply_bits
+    ]
+
+    signature big_mul_raw forall<S:stack>
+        [ S BigInt BigInt -- S BigInt ! pure ]
+    export big_mul_raw
+    def big_mul_raw [
+        pair dup pair_signs_xor
+        swap pair_multiply_magnitudes big_canonical
+    ]
+
+    # The two canonical operands determine the sign before starting actual
+    # per-bit multiplication. Only an exhausted sealed bit cursor can issue
+    # a signed canonical product, including zero.
+    signature big_mul_input forall<S:stack>
+        [ S BigInt BigInt -- S BigMulInput ! pure ]
+    export big_mul_input
+    def big_mul_input [
+        pair dup pair_signs_xor pair BigMulInput.new
+    ]
+
+    signature big_mul_begin forall<S:stack>
+        [ S BigMulInput -- S BigMulCursor ! pure ]
+    export big_mul_begin
+    def big_mul_begin [
+        BigMulInput.into unpair
+        [ unpair [ big_bits ] dip big_bits calc_bits@1.multiply_start ] dip
+        swap pair BigMulCursor.new
+    ]
+
+    signature big_mul_route forall<S:stack>
+        [ S BigMulCursor -- S BigMulRoute ! pure ]
+    export big_mul_route
+    def big_mul_route [
+        BigMulCursor.into unpair
+        calc_bits@1.multiply_route
+        [ pair BigMulDone.new BigMulRoute.Done ]
+        [ pair BigMulActive.new BigMulRoute.More ]
+        calc_bits@1.MultiplyRoute.match
+    ]
+
+    signature big_mul_next forall<S:stack>
+        [ S BigMulActive -- S BigMulCursor ! pure ]
+    export big_mul_next
+    def big_mul_next [
+        BigMulActive.into unpair
+        calc_bits@1.multiply_next pair BigMulCursor.new
+    ]
+
+    signature big_mul_accumulate forall<S:stack>
+        [ S BigMulActive -- S BigMulAdded ! pure ]
+    export big_mul_accumulate
+    def big_mul_accumulate [
+        BigMulActive.into unpair
+        calc_bits@1.multiply_accumulate pair BigMulAdded.new
+    ]
+
+    # Carry the original signed multiplier through the finite bit addition.
+    # Only the guest-certified Bool is exposed for branch selection.
+    signature big_mul_add_probe forall<S:stack>
+        [ S BigMulActive -- S Pair<BigMulActive,Bool> ! pure ]
+    export big_mul_add_probe
+    def big_mul_add_probe [
+        BigMulActive.into unpair
+        calc_bits@1.multiply_add_probe unpair
+        [ pair BigMulActive.new ] dip pair
+    ]
+
+    signature big_mul_add_keep forall<S:stack>
+        [ S BigMulActive -- S BigMulAdded ! pure ]
+    export big_mul_add_keep
+    def big_mul_add_keep [
+        BigMulActive.into unpair
+        calc_bits@1.multiply_add_keep pair BigMulAdded.new
+    ]
+
+    signature big_mul_add_begin forall<S:stack>
+        [ S BigMulActive -- S BigMulAddCursor ! pure ]
+    export big_mul_add_begin
+    def big_mul_add_begin [
+        BigMulActive.into unpair
+        calc_bits@1.multiply_add_begin pair BigMulAddCursor.new
+    ]
+
+    signature big_mul_add_digit forall<S:stack>
+        [ S BigMulAddCursor -- S BigMulAddCursor ! pure ]
+    export big_mul_add_digit
+    def big_mul_add_digit [
+        BigMulAddCursor.into unpair
+        calc_bits@1.multiply_add_digit pair BigMulAddCursor.new
+    ]
+
+    signature big_mul_add_more forall<S:stack>
+        [ S BigMulAddCursor -- S Pair<BigMulAddCursor,Bool> ! pure ]
+    export big_mul_add_more
+    def big_mul_add_more [
+        BigMulAddCursor.into unpair
+        calc_bits@1.multiply_add_more unpair
+        [ pair BigMulAddCursor.new ] dip pair
+    ]
+
+    signature big_mul_add_finish forall<S:stack>
+        [ S BigMulAddCursor -- S BigMulAdded ! pure ]
+    export big_mul_add_finish
+    def big_mul_add_finish [
+        BigMulAddCursor.into unpair
+        calc_bits@1.multiply_add_finish pair BigMulAdded.new
+    ]
+
+    signature big_mul_shift forall<S:stack>
+        [ S BigMulAdded -- S BigMulCursor ! pure ]
+    export big_mul_shift
+    def big_mul_shift [
+        BigMulAdded.into unpair
+        calc_bits@1.multiply_shift pair BigMulCursor.new
+    ]
+
+    signature big_mul_finish forall<S:stack>
+        [ S BigMulDone -- S BigInt ! pure ]
+    export big_mul_finish
+    def big_mul_finish [
+        BigMulDone.into unpair
+        calc_bits@1.multiply_finish big_canonical
+    ]
+
+    signature divide_big_by_bits forall<S:stack>
+        [ S BigInt List<Bool> -- S BigInt ! pure ]
+    export divide_big_by_bits
+    def divide_big_by_bits [
+        [ dup big_bits ] dip calc_bits@1.divide_bits
+        unpair drop [ big_sign ] dip big_canonical
+    ]
+
+    # Preserve the dividend sign beside the genuinely completed bit quotient.
+    # Materialization is a separate typed guest step, so a retained caller may
+    # carry its reserved Budget without trimming and normalization in one root.
+    signature big_divide_done_bits forall<S:stack>
+        [ S BigInt calc_bits@1.DivideDone -- S Pair<Bool,List<Bool>> ! pure ]
+    export big_divide_done_bits
+    def big_divide_done_bits [
+        [ BigInt.into unpair drop ] dip
+        calc_bits@1.divide_finish unpair drop pair
+    ]
+
+    signature big_from_signed_bits forall<S:stack>
+        [ S Pair<Bool,List<Bool>> -- S BigInt ! pure ]
+    export big_from_signed_bits
+    def big_from_signed_bits [ unpair big_canonical ]
+
+    # Preserve the public one-step API and canonicalize zero's sign.
+    signature big_from_divide_done forall<S:stack>
+        [ S BigInt calc_bits@1.DivideDone -- S BigInt ! pure ]
+    export big_from_divide_done
+    def big_from_divide_done [
+        big_divide_done_bits big_from_signed_bits
+    ]
+
+    signature pair_gcd forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S List<Bool> ! pure ]
+    export pair_gcd
+    def pair_gcd [ unpair [ big_bits ] dip big_bits calc_bits@1.gcd_bits ]
+
+    signature pair_quotient_by_gcd forall<S:stack>
+        [ S Pair<BigInt,BigInt> List<Bool>
+          -- S Pair<BigInt,BigInt> ! pure ]
+    export pair_quotient_by_gcd
+    def pair_quotient_by_gcd [
+        [ unpair ] dip
+        dup [ divide_big_by_bits ] dip
+        calc_bits@1.rot swap divide_big_by_bits swap pair
+    ]
+
+    signature pair_den_positive forall<S:stack>
+        [ S Pair<BigInt,BigInt> -- S Pair<BigInt,BigInt> ! pure ]
+    export pair_den_positive
+    def pair_den_positive [
+        dup unpair swap drop big_sign
+        [ unpair [ big_neg ] dip big_neg pair ]
+        [ ] if
+    ]
+
+    signature big_mag_one_p forall<S:stack>
+        [ S BigInt -- S Bool ! pure ]
+    export big_mag_one_p
+    def big_mag_one_p [
+        big_bits true nil cons calc_bits@1.compare_bits 0 =
+    ]
+
+    signature big_from_i64_raw forall<S:stack>
+        [ S I64 -- S BigInt ! pure ]
+    export big_from_i64_raw
+    def big_from_i64_raw [
+        dup 0 i64.cmp -1 =
+        [ 1 + 0 swap - calc_bits@1.bits_from_i64_nonnegative
+          true nil cons calc_bits@1.add_bits true swap pair BigInt.new ]
+        [ calc_bits@1.bits_from_i64_nonnegative false swap pair BigInt.new ] if
+    ]
+
+    signature big_decimal_digit forall<S:stack>
+        [ S BigInt I64 -- S BigInt ! pure ]
+    export big_decimal_digit
+    def big_decimal_digit [
+        [ big_bits ] dip calc_bits@1.add_decimal_digit
+        false swap pair BigInt.new
+    ]
+
+    signature big_decimal_ten forall<S:stack>
+        [ S BigInt -- S BigInt ! pure ]
+    export big_decimal_ten
+    def big_decimal_ten [
+        big_bits calc_bits@1.multiply_ten_bits
+        false swap pair BigInt.new
+    ]
+
+    signature out_of_range forall<S:stack>
+        [ S -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def out_of_range [
+        unit calc_errors@1.DomainConversion.OutOfRange
+        calc_errors@1.DomainError.Conversion
+        calc_errors@1.NumericError.Domain
+        result@1.Result.Err
+    ]
+
+    signature big_to_i64_raw forall<S:stack>
+        [ S BigInt
+          -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    export big_to_i64_raw
+    def big_to_i64_raw [
+        BigInt.into unpair dup calc_bits@1.bit_count
+        dup 63 i64.cmp 1 =
+        [ 64 =
+          [ dup calc_bits@1.count_one_bits 1 = calc_bits@1.rot calc_bits@1.bool_and
+            [ drop -9223372036854775808 result@1.Result.Ok ]
+            [ drop out_of_range ] if ]
+          [ drop drop out_of_range ] if ]
+        [ drop swap [ calc_bits@1.bits_to_i64_positive ] dip
+          [ 0 swap - result@1.Result.Ok ]
+          [ result@1.Result.Ok ] if ] if
+    ]
+
+    signature big_width forall<S:stack> [ S BigInt -- S I64 ! pure ]
+    export big_width
+    def big_width [ big_bits calc_bits@1.bit_count ]
+]

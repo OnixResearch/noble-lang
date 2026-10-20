@@ -700,6 +700,7 @@ impl Live {
                     return Ok(super::output::Report::source_error(
                         &error,
                         self.session.submissions,
+                        "Core-Bootstrap",
                     ));
                 }
             };
@@ -762,6 +763,7 @@ impl Live {
                 return Ok(super::output::Report::backend_error(
                     error,
                     self.session.submissions,
+                    "Core-Bootstrap",
                 ));
             }
         };
@@ -844,7 +846,7 @@ impl Live {
         &self,
         error: &noble_contracts::source::Error,
     ) -> Result<serde_json::Value, super::output::Failure> {
-        let report = super::output::Report::source_error(error, 0);
+        let report = super::output::Report::source_error(error, 0, "Core-Bootstrap");
         let mut source: serde_json::Value = serde_json::from_str(&report.json)
             .map_err(|_| fatal_failure("invalid checked source diagnostic"))?;
         let source_fields = source

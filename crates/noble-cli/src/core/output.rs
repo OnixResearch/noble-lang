@@ -1,14 +1,14 @@
 mod declared;
 
 #[derive(Clone, Copy)]
-pub(super) struct ErrorContext {
-    pub stage: &'static str,
-    pub outcome: &'static str,
+pub(crate) struct ErrorContext {
+    pub(crate) stage: &'static str,
+    pub(crate) outcome: &'static str,
 }
 
-pub(super) struct Failure {
-    pub context: ErrorContext,
-    pub message: std::string::String,
+pub(crate) struct Failure {
+    pub(crate) context: ErrorContext,
+    pub(crate) message: std::string::String,
 }
 
 impl Failure {
@@ -50,39 +50,24 @@ impl Failure {
     }
 }
 
-pub(super) struct Report {
-    pub outcome: std::string::String,
-    pub json: std::string::String,
+pub(crate) struct Report {
+    pub(crate) outcome: std::string::String,
+    pub(crate) json: std::string::String,
 }
 
 impl Report {
-    pub fn failure(failure: &Failure, declared: bool) -> Self {
-        if declared {
+    pub fn failure(failure: &Failure, profile: &str) -> Self {
+        if profile == "Declared-Modules-v1" {
             Self::declared_static(failure.context, &failure.message, 0, None)
         } else {
-            Self::static_report(
-                failure.context,
-                &failure.message,
-                0,
-                None,
-                None,
-                "Core-Bootstrap",
-            )
+            Self::static_report(failure.context, &failure.message, 0, None, None, profile)
         }
     }
 
-    pub fn failure_with_profile(failure: &Failure, profile: &str) -> Self {
-        Self::static_report(failure.context, &failure.message, 0, None, None, profile)
-    }
-
-    pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
-        Self::source_error_for_profile(error, submission, false)
-    }
-
-    pub fn source_error_for_profile(
+    pub fn source_error(
         error: &noble_contracts::source::Error,
         submission: u64,
-        text_byte_cursor: bool,
+        profile: &str,
     ) -> Self {
         let diagnostic = error.diagnostic();
         Self::static_report(
@@ -94,19 +79,11 @@ impl Report {
             submission,
             Some(diagnostic.span),
             diagnostic.join(),
-            profile(text_byte_cursor),
+            profile,
         )
     }
 
-    pub fn backend_error(error: noble_wasm::Diagnostic, submission: u64) -> Self {
-        Self::backend_error_for_profile(error, submission, false)
-    }
-
-    pub fn backend_error_for_profile(
-        error: noble_wasm::Diagnostic,
-        submission: u64,
-        text_byte_cursor: bool,
-    ) -> Self {
+    pub fn backend_error(error: noble_wasm::Diagnostic, submission: u64, profile: &str) -> Self {
         let failure = Failure::backend(error);
         Self::static_report(
             failure.context,
@@ -114,15 +91,11 @@ impl Report {
             submission,
             None,
             None,
-            profile(text_byte_cursor),
+            profile,
         )
     }
 
-    pub fn defined(submission: u64) -> Self {
-        Self::defined_for_profile(submission, false)
-    }
-
-    pub fn defined_for_profile(submission: u64, text_byte_cursor: bool) -> Self {
+    pub fn defined(submission: u64, profile: &str) -> Self {
         Self::static_report(
             ErrorContext {
                 stage: "check",
@@ -132,7 +105,7 @@ impl Report {
             submission,
             None,
             None,
-            profile(text_byte_cursor),
+            profile,
         )
     }
 
@@ -153,10 +126,7 @@ impl Report {
                 "schema",
                 crate::workflow::encoding::string("noble-core-report/v1"),
             ),
-            (
-                "profile",
-                crate::workflow::encoding::string(profile),
-            ),
+            ("profile", crate::workflow::encoding::string(profile)),
             (
                 "backend",
                 crate::workflow::encoding::string("managed-linear-memory"),
@@ -249,14 +219,6 @@ impl Report {
             self.outcome.as_str(),
             "trap" | "runtime-exhausted" | "internal-failure"
         )
-    }
-}
-
-const fn profile(text_byte_cursor: bool) -> &'static str {
-    if text_byte_cursor {
-        "Text-Byte-Cursor-v1"
-    } else {
-        "Core-Bootstrap"
     }
 }
 

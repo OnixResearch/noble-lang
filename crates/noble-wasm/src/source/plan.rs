@@ -16,6 +16,11 @@ pub(super) enum Action {
     Program(usize),
     Word(u32),
     TextByte,
+    CalculatorIterate,
+    CalculatorCompare,
+    CalculatorDivRem,
+    CalculatorTextFromAscii,
+    CalculatorTextLength,
     Quote(u32, u32, u32),
     Call(usize, u64),
     NominalNew(u64, u32, u32),
@@ -25,8 +30,6 @@ pub(super) enum Action {
     NominalMatch(u64, u32, u32, u32, u32),
     EmitBound(u32),
     ClockBound(u32),
-    LivePropose(u64),
-    LiveGeneration,
 }
 
 pub(super) struct Operation {
@@ -46,6 +49,47 @@ pub(super) struct Program {
     pub(super) leaves: u32,
 }
 
+// Only operations which cannot schedule a child may fall through inside one
+// compiled entry. A scheduling operation must return to $dispatch so its
+// child executes before the following source operation.
+impl Action {
+    pub(super) const fn records_interface(self) -> bool {
+        !matches!(
+            self,
+            Self::I64(_) | Self::Bool(_) | Self::Unit | Self::Text(..) | Self::Program(_)
+        )
+    }
+
+    pub(super) const fn can_fall_through(self) -> bool {
+        match self {
+            Self::Call(..) | Self::CalculatorIterate | Self::NominalMatch(..)
+            | Self::EmitBound(_) | Self::ClockBound(_) => false,
+            Self::Word(3 | 9 | 10 | 17 | 18 | 21) => false,
+            Self::Word(_) | Self::I64(_) | Self::Bool(_) | Self::Unit | Self::Text(..)
+            | Self::Program(_) | Self::TextByte | Self::CalculatorCompare
+            | Self::CalculatorDivRem | Self::CalculatorTextFromAscii
+            | Self::CalculatorTextLength | Self::Quote(..) | Self::NominalNew(..)
+            | Self::NominalInto(..) | Self::NominalLeft(..) | Self::NominalRight(..) => true,
+        }
+    }
+}
+
+impl Program {
+    // Recompute boundaries without a second owned index array: each program
+    // already owns the complete checked operation sequence.
+    pub(super) fn next_entry(&self, start: usize, calculator: bool) -> usize {
+        let mut end = start + 1;
+        if calculator {
+            while end < self.operations.len()
+                && self.operations[end - 1].action.can_fall_through()
+            {
+                end += 1;
+            }
+        }
+        end
+    }
+}
+
 pub(super) struct Layout {
     pub(super) programs: alloc::vec::Vec<Program>,
     pub(super) order: alloc::vec::Vec<usize>,
@@ -59,15 +103,14 @@ pub(super) struct Layout {
     pub(super) output_types: alloc::vec::Vec<u32>,
     pub(super) text_witness: u32,
     pub(super) declared_modules: bool,
-    pub(super) live: bool,
+    pub(super) text_cursor: bool,
+    pub(super) calculator: bool,
     pub(super) has_nominals: bool,
     pub(super) has_core_emit: bool,
     pub(super) has_core_abort: bool,
     pub(super) has_text_byte: bool,
     pub(super) has_bound_emit: bool,
     pub(super) has_bound_clock: bool,
-    pub(super) has_live_propose: bool,
-    pub(super) has_live_generation: bool,
 }
 
 struct Arena {
@@ -77,7 +120,7 @@ struct Arena {
 
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the bounded effect set is checked exhaustively against the admitted test and live effect identities, with Unsupported for any other identity instead of assertions on producer data."
+    reason = "Owner: noble-maintainers; the bounded effect set is checked exhaustively against the three admitted test-host identities, with Unsupported for any other identity instead of assertions on producer data."
 )]
 pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, crate::Diagnostic> {
     let mut mask = 0u32;
@@ -88,8 +131,6 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
             0 => mask |= 1,
             1 => mask |= 2,
             2 => mask |= 4,
-            3 => mask |= 8,
-            4 => mask |= 16,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
                 break;
@@ -159,7 +200,8 @@ fn start(
         output_types: alloc::vec::Vec::new(),
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
-        live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        text_cursor: submission.environment.text_cursor,
+        calculator: submission.environment.calculator,
         has_nominals: !submission.environment.nominals.is_empty()
             || !submission.environment.generic_variants.is_empty(),
         has_core_emit: false,
@@ -167,8 +209,6 @@ fn start(
         has_text_byte: false,
         has_bound_emit: false,
         has_bound_clock: false,
-        has_live_propose: false,
-        has_live_generation: false,
     };
     Ok((layout, arenas))
 }
@@ -184,7 +224,7 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
     for program in &layout.programs {
         for operation in &program.operations {
             match operation.action {
-                Action::Word(22 | 23) if layout.declared_modules || layout.live => {
+                Action::Word(22 | 23) if layout.declared_modules || layout.text_cursor || layout.calculator => {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 Action::Word(22) => layout.has_core_emit = true,
@@ -192,8 +232,6 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
                 Action::TextByte => layout.has_text_byte = true,
                 Action::EmitBound(_) => layout.has_bound_emit = true,
                 Action::ClockBound(_) => layout.has_bound_clock = true,
-                Action::LivePropose(_) => layout.has_live_propose = true,
-                Action::LiveGeneration => layout.has_live_generation = true,
                 _ => {}
             }
         }
@@ -221,7 +259,6 @@ pub(super) fn lower(
             checked: &checked.definitions[index],
             arena: &arenas[index],
             arenas: &arenas,
-            owner: Some(submission.definitions[index].identity),
         };
         match operations::fill(input, compiler, &mut layout, work) {
             Ok(()) => index += 1,
@@ -240,17 +277,11 @@ pub(super) fn lower(
         checked: &checked.root,
         arena: &arenas[index],
         arenas: &arenas,
-        owner: None,
     };
     attempt!(operations::fill(input, compiler, &mut layout, work));
     attempt!(host_footprint(&mut layout));
     attempt!(topology::order(&mut layout));
-    attempt!(allocation::finish(
-        &mut layout,
-        compiler,
-        &checked.root,
-        work
-    ));
+    attempt!(allocation::finish(&mut layout, compiler, &checked.root, work));
     Ok(layout)
 }
 

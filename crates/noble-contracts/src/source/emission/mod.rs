@@ -99,6 +99,42 @@ pub(super) fn emit(
         Ok(expected) => expected,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
     };
+    if environment.calculator {
+        if environment.defs.len() > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT {
+            return Err(super::Error::at(crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator environment row limit exceeded")));
+        }
+        // Interfaces have now materialized every selected specialization.
+        // Each body below independently clones this exact environment with
+        // its own caller owner; count and charge the whole fanout before the
+        // first checked body can own an Env.
+        let budget = match environment.calculator_clone_budget() {
+            Some(budget) => budget,
+            None => return Err(super::Error::at(crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator selected environment clone bound exceeded"))),
+        };
+        let copies = match u64::try_from(state.bodies.len()) {
+            Ok(copies) => copies,
+            Err(_) => return Err(super::Error::at(crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator selected clone count overflow"))),
+        };
+        if !budget.reserved_bytes.checked_mul(copies).is_some_and(|total|
+            total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+        {
+            return Err(super::Error::at(crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator selected environment clone fanout exceeded")));
+        }
+        let work = match budget.bytes.checked_mul(copies)
+            .and_then(|bytes| u32::try_from(bytes).ok())
+        {
+            Some(work) => work,
+            None => return Err(super::Error::at(crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator selected environment clone work exceeded"))),
+        };
+        if let Err(error) = meter.charge(work, state.span) {
+            return Err(super::Error::at(crate::source::Stage::Check, error));
+        }
+    }
     let span = state.span;
     let linked_slots = identity::selected_slots(&state, &environment);
     let limits = match allowance(state.bodies.len(), state.span, meter) {

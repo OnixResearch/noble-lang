@@ -1370,46 +1370,6 @@ OCTET-08/09/10 supply M1 policy and evidence controls. OCTET-01 through OCTET-04
 
 These obligations preserve the existing milestone dependencies and the mandatory Charon → Aeneas → Lean route. They add no agent syntax, general refinement inference, or required Verus migration.
 
-## Optional execution backends (unaccepted profiles)
-
-The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
-[the live namespace contract](../.cairn/specs/language/spec.md),
-[the backend boundary](BACKEND-EXPERIMENTS.md) and its
-[active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
-an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
-source reload and narrowly host-granted guest self-edit. A guarded resident
-Node/V8 REPL and in-process Wasm byte emitter support Core-only atomic rebuild
-for tested acyclic dependents under explicit host-selected file reload/direct
-admission. Automatic watch is unavailable: a directory rename notification
-does not authenticate the inode's bytes at rename time, and a writable mapping
-or external hardlink can alter them without a selected-basename content event.
-Use explicit `:reload`; automatic H-LIVE-01 and complete LIVE-05/watch
-acceptance, including declared modules, effectful watch, full in-flight
-source-change controls and code retirement, remain open.
-Bounded guest self-edit refuses any current effective dependent rather than
-rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped
-live-child checks; general proof and canonical LIVE case acceptance remain
-open. The guest may enqueue
-a checked pure Program candidate during Wasm execution, but only host-side
-post-return independent admission and a generation/definition-identity CAS
-may publish it. Guest publication leaves the selected file unchanged; LIVE-09
-and LIVE-10 remain unexecuted designs. The first target reuses selected
-Node/V8, which may JIT and
-does **not** establish strictly interpreted execution. A genuine interpreter
-engine remains separately unselected. The [MCB milestone](roadmap.json) follows
-M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
-[active change](../.cairn/changes/c-backend/proposal.md); native execution
-requires a pinned sandbox and separately checked source/C/ELF admission.
-Full watch-case acceptance, declared-module snapshots, complete source-bound
-LIVE-02 acceptance and code retirement remain open despite the guarded
-Core-only rebuild.
-Neither complete opt-in backend profile is accepted: all
-[LIVE](conformance/live-wasm-cases.json) and
-[CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
-open. A guarded partial live REPL implementation is not LIVE acceptance.
-Ordinary Core `run`/`session`, selected Wasm/Node-V8 and historical M4
-evidence remain unchanged; these designs inherit no M4 execution claim.
-
 ## Estimates
 
 Initial budgets for one engineer are 1–2 days for M1 and 3–5 days each for the M2/M3 feasibility experiments. These are investigation budgets, not completion promises.

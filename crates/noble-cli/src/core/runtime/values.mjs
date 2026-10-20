@@ -7,7 +7,31 @@ function readText(engine, offset, count) {
 
 function readSignature(engine, runtime, identity) {
     integer(identity, 16384, 'signature identity');
+    // Calculator-v1 IDs resolve through the engine-retained table recorded
+    // from each executed module's published delta. Ordinary profiles keep
+    // their original stable static signature descriptors.
+    if (engine.profile === 'Calculator-v1')
+      return engine.signatures[integer(identity, engine.signatures.length - 1, 'signature identity')];
     return readText(engine, runtime.signature_address(identity), runtime.signature_length(identity));
+  }
+
+  // A Calculator-v1 module publishes only IDs [signature_first, signature_end)
+  // interned since its compiler's committed base, which is never above the
+  // IDs this engine already holds. Keep the shared prefix and replace every
+  // later ID, so keys from an uncommitted predecessor can never be observed.
+  // Each key is materialized in raw ingress scratch [983040,1048576) and must
+  // be copied before the next signature or push_text overwrites it.
+function recordSignatures(engine, runtime) {
+    const first = integer(runtime.signature_first(), engine.signatures.length, 'signature base');
+    const end = integer(runtime.signature_end(), 8192, 'signature end');
+    if (end < first) fail('invalid published signature range');
+    const table = engine.signatures.slice(0, first);
+    for (let identity = first; identity < end; identity += 1) {
+      const address = runtime.signature_address(identity);
+      if (address !== 983040) fail('published signature is unavailable');
+      table.push(readText(engine, address, runtime.signature_length(identity)));
+    }
+    return table;
   }
 
 function readStack(engine, runtime) {
@@ -52,8 +76,8 @@ function readValue(engine, runtime, kind, value, depth) {
     if (kind === 4) return { type: 'Program', interface: {
       stack_in: readSignature(engine, runtime, runtime.cell_y(handle)),
       stack_out: readSignature(engine, runtime, runtime.cell_z(handle)),
-      effects: [0, 1, 2, 3, 4].filter(bit => Number(runtime.cell_payload(handle)) & (1 << bit))
-        .map(bit => ['test.emit', 'test.abort', 'test.clock', 'live.propose', 'live.observe-generation'][bit]),
+      effects: [0, 1, 2].filter(bit => Number(runtime.cell_payload(handle)) & (1 << bit))
+        .map(bit => ['test.emit', 'test.abort', 'test.clock'][bit]),
     }, ...readRecipe(engine, runtime, runtime.cell_c(handle), depth + 1) };
     if (kind === 5) return { type: 'Pair', value: [readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1), readBoxed(engine, runtime, runtime.cell_b(handle), depth + 1)] };
     if (kind === 6 || kind === 7) {
@@ -75,10 +99,17 @@ function readValue(engine, runtime, kind, value, depth) {
       const marker = runtime.cell_w(handle);
       if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
-      if (engine.profile !== 'Declared-Modules-v1') fail('nominal value is outside Core-Bootstrap');
+      if (engine.profile !== 'Declared-Modules-v1' && engine.profile !== 'Calculator-v1')
+        fail('nominal value is outside a declared module profile');
       if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
       if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
       const module = (BigInt(runtime.cell_y(handle) >>> 0) << 32n) | BigInt(runtime.cell_x(handle) >>> 0);
+      // The calculator observes only guest-certified tags, spans, and final
+      // Text. Never traverse its opaque parser, evaluator, numeric, or session
+      // payloads into the host report; their live handles stay in the worker.
+      if (engine.calculatorShellState && marker === 1)
+        return { type: 'Nominal', module: String(module), ordinal: runtime.cell_z(handle),
+          shape: 'opaque', variant: null, value: { type: 'Opaque' } };
       return { type: 'Nominal', module: String(module), ordinal: runtime.cell_z(handle),
         shape: marker === 1 ? 'opaque' : 'variant', variant: marker === 1 ? null : kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
@@ -130,8 +161,13 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
       else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
       else if (atom === 2) {
-        const id = integer(Number(value), 25, 'builtin identity');
-        result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        const maximum = engine.profile === 'Calculator-v1' ? 31
+          : engine.profile === 'Text-Byte-Cursor-v1' ? 26 : 23;
+        const id = integer(Number(value), maximum, 'builtin identity');
+        if ((engine.profile === 'Calculator-v1' || engine.profile === 'Text-Byte-Cursor-v1')
+          && id >= 22 && id <= 25)
+          fail('reserved builtin in observable recipe');
+        result.push({ invoke: `${id < 22 || id >= 26 ? 'builtin' : 'host'}:${names[id]}` });
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
         const program = readBoxed(engine, runtime, child, depth + 1);
@@ -162,104 +198,11 @@ function readRecipe(engine, runtime, root, depth) {
           node: result.length - 1,
           stack_in: readSignature(engine, runtime, runtime.cell_y(handle)),
           stack_out: readSignature(engine, runtime, runtime.cell_z(handle)),
-          effects: [0, 1, 2, 3, 4].filter(bit => runtime.cell_w(handle) & (1 << bit))
-            .map(bit => ['test.emit', 'test.abort', 'test.clock', 'live.propose', 'live.observe-generation'][bit]),
+          effects: [0, 1, 2].filter(bit => runtime.cell_w(handle) & (1 << bit))
+            .map(bit => ['test.emit', 'test.abort', 'test.clock'][bit]),
         });
       }
     }
     return { recipe: result, witnesses };
-  }
-
-  // A host effect cannot call back into Wasm: capture only already-allocated,
-  // immutable cells from the linear-memory ABI and bounded captured Text bytes.
-  // The bytes are checked again before post-return reflection, so a later
-  // guest write cannot replace the proposal that the callback accepted.
-function captureLiveProgram(engine, root) {
-    const maximum = integer(engine.shared.heap_cursor.value,
-      engine.abi.limits_maximum.session_cells, 'live cell count');
-    integer(root, maximum, 'proposal Program handle');
-    if (root === 0) fail('missing proposal Program handle');
-    const memory = new Uint8Array(engine.memory.buffer);
-    const view = new DataView(engine.memory.buffer);
-    const rootOffset = 65536 + (root - 1) * 48;
-    if (rootOffset + 48 > memory.length) fail('proposal Program exceeds arena');
-    const inputId = view.getUint32(rootOffset + 32, true);
-    const outputId = view.getUint32(rootOffset + 36, true);
-    const pending = [root], seen = new Set(), cells = [], text = [];
-    let captured = 0;
-    while (pending.length) {
-      const handle = pending.pop();
-      if (seen.has(handle)) continue;
-      seen.add(handle);
-      const offset = 65536 + (handle - 1) * 48;
-      if (offset + 48 > memory.length) fail('proposal cell exceeds arena');
-      const kind = view.getInt32(offset, true);
-      if (kind < 1 || kind > 16 || handle === root && kind !== 4) {
-        fail('proposal is not an immutable Program graph');
-      }
-      if (handle === root && view.getBigInt64(offset + 8, true) !== 0n) {
-        fail('proposal Program has latent effects');
-      }
-      const bytes = Uint8Array.from(memory.subarray(offset, offset + 48));
-      captured += bytes.length;
-      const refs = kind === 4 || kind === 16 ? [16, 20, 24]
-        : kind === 5 || kind === 6 || kind === 9 ? [16, 20]
-          : [8, 10, 12, 13, 15].includes(kind) ? [16] : [];
-      for (const field of refs) {
-        const child = view.getInt32(offset + field, true);
-        if (child !== 0) {
-          if (child < 0 || child >= handle) fail('proposal cell has an invalid edge');
-          pending.push(child);
-        }
-      }
-      if (kind === 11) {
-        const address = view.getInt32(offset + 28, true);
-        const length = view.getInt32(offset + 32, true);
-        if (address < 0 || length < 0 || address > memory.length - length
-          || captured + length > 262144) fail('proposal captured Text exceeds limit');
-        const value = Uint8Array.from(memory.subarray(address, address + length));
-        captured += length;
-        text.push({ address, value });
-      }
-      if (captured > 262144) fail('proposal snapshot exceeds limit');
-      cells.push({ address: offset, value: bytes });
-    }
-    // The digest names the callback-time bytes, not a later rendering of the
-    // proposal. Canonical addresses, lengths and typed records make identical
-    // immutable snapshots hash identically regardless of graph walk order.
-    cells.sort((left, right) => left.address - right.address);
-    text.sort((left, right) => left.address - right.address
-      || left.value.length - right.value.length);
-    const digest = crypto.createHash('sha256');
-    digest.update('noble-live-proposal-snapshot/v1\0');
-    const metadata = Buffer.allocUnsafe(12);
-    metadata.writeUInt32LE(root, 0);
-    metadata.writeUInt32LE(inputId, 4);
-    metadata.writeUInt32LE(outputId, 8);
-    digest.update(metadata);
-    const record = Buffer.allocUnsafe(9);
-    for (const [kind, entries] of [[1, cells], [2, text]]) {
-      record.writeUInt8(kind, 0);
-      for (const { address, value } of entries) {
-        record.writeUInt32LE(address, 1);
-        record.writeUInt32LE(value.length, 5);
-        digest.update(record);
-        digest.update(value);
-      }
-    }
-    return { root, inputId, outputId, cells, text, sha256: digest.digest('hex') };
-  }
-
-function checkLiveProgramSnapshot(engine, snapshot) {
-    const memory = new Uint8Array(engine.memory.buffer);
-    for (const cells of [snapshot.cells, snapshot.text]) {
-      for (const { address, value } of cells) {
-        if (address > memory.length - value.length
-          || !memory.subarray(address, address + value.length)
-            .every((byte, index) => byte === value[index])) {
-          fail('proposal changed after callback');
-        }
-      }
-    }
   }
 

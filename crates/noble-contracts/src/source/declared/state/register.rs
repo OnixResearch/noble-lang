@@ -46,19 +46,7 @@ impl super::ModuleSession {
                 "duplicate module version or module count exceeded",
             ));
         }
-        let retained_bytes = retained_bytes(&self, request.source.len());
-        let byte_limit_bytes = attempt!(usize::try_from(request.limits.bytes).map_err(|_| {
-            super::super::error(
-                crate::source::Stage::Check,
-                "retained module source byte limit exceeds address space",
-            )
-        }));
-        if retained_bytes > byte_limit_bytes {
-            return Err(super::super::error(
-                crate::source::Stage::Check,
-                "retained module source byte limit exceeded",
-            ));
-        }
+        attempt!(self.check_retained_module_bytes(request.source.len(), request.limits));
         let identity = attempt!(u64::try_from(self.modules.len())
             .ok()
             .and_then(|n| n.checked_add(1))
@@ -155,12 +143,25 @@ impl super::ModuleSession {
     }
 }
 
-fn retained_bytes(session: &super::ModuleSession, start: usize) -> usize {
-    let mut bytes = start;
-    let mut at = 0usize;
-    while at < session.modules.len() {
-        bytes = bytes.saturating_add(session.modules[at].source.len());
-        at += 1;
+impl super::ModuleSession {
+    pub(super) fn check_retained_module_bytes(
+        &self,
+        candidate_bytes: usize,
+        limits: crate::Limits,
+    ) -> Result<(), crate::source::Error> {
+        let limit = attempt!(self.retained_source_limit(limits));
+        let mut bytes = candidate_bytes;
+        for module in &self.modules {
+            bytes = attempt!(bytes.checked_add(module.source.len()).ok_or_else(|| {
+                super::super::error(crate::source::Stage::Check, "retained module byte count overflow")
+            }));
+        }
+        if bytes > limit {
+            return Err(super::super::error(
+                crate::source::Stage::Check,
+                "retained module source byte limit exceeded",
+            ));
+        }
+        Ok(())
     }
-    bytes
 }

@@ -10,6 +10,16 @@ pub(super) mod identity;
 mod metadata;
 pub(super) mod meter;
 
+/// Price the exact borrowed scheme selected by a calculator invocation
+/// before kernel node_of copies its witness on each referenced occurrence.
+pub(in crate::source) fn witness_scheme(
+    submission: &noble_kernel::execution::Submission,
+    def: noble_kernel::contracts::Definition,
+    work: &mut super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    environment::contract_work(&submission.environment, def, true, work)
+}
+
 pub(super) struct Accepted {
     pub(super) definitions: alloc::vec::Vec<noble_kernel::untrusted::Checked>,
     pub(super) root: noble_kernel::untrusted::Checked,
@@ -97,17 +107,12 @@ pub(super) fn definition_index(
 
 fn bounds(
     submission: &noble_kernel::execution::Submission,
-    environment_work: u64,
+    calculator: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut totals = metadata::Totals { nodes: 0, bytes: 0 };
     attempt!(metadata::check(&submission.body, &mut totals, work));
-    attempt!(definitions::bounds(
-        submission,
-        environment_work,
-        &mut totals,
-        work
-    ));
+    attempt!(definitions::bounds(submission, calculator, &mut totals, work));
     dependencies::check(submission, work)
 }
 
@@ -139,17 +144,45 @@ fn kernel_limits(
     Ok(limits)
 }
 
+fn calculator_environment_allowance(
+    submission: &noble_kernel::execution::Submission,
+    environment_work: u64,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let bodies = attempt!(u64::try_from(submission.definitions.len().saturating_add(1))
+        .map_err(|_| crate::Diagnostic::Exhausted));
+    // The already-checked whole environment is scanned once above, each
+    // distinct named definition's own scheme is substituted once below
+    // (their combined bounds cannot exceed one environment scan), and every
+    // independent kernel body validation physically scans the environment.
+    // Debit all of these scans as usual, but give this selected compiler a
+    // separate finite structural-work allowance on top of the caller's body
+    // work. Nothing is elided, and the absolute ceiling fails closed.
+    let scans = attempt!(bodies.checked_add(2).and_then(|count|
+        environment_work.checked_mul(count)).ok_or(crate::Diagnostic::Exhausted));
+    work.grant_calculator(scans)
+}
+
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
     text_cursor: bool,
+    calculator: bool,
     work: &mut super::Work,
 ) -> Result<Accepted, crate::Diagnostic> {
     attempt!(work.charge(1));
-    let environment_work = attempt!(environment::work(&submission.environment));
+    if submission.environment.declared_modules && (live || text_cursor)
+        || calculator && (live || text_cursor)
+    {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    let environment_work = attempt!(environment::work(&submission.environment, calculator, work));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live, text_cursor));
-    attempt!(bounds(submission, environment_work, work));
+    attempt!(environment::check(submission, text_cursor, calculator));
+    if calculator {
+        attempt!(calculator_environment_allowance(submission, environment_work, work));
+    }
+    attempt!(bounds(submission, calculator, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
     let definitions = attempt!(definitions::accept(submission, limits, work));
     let root = attempt!(accept_root(submission, limits, work));

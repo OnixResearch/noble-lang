@@ -191,9 +191,24 @@ pub(super) fn ty(
     max_node_count: u32,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
+    attempt!(count(root, max_node_count, work));
+    Ok(())
+}
+
+/// One already-metered borrowed walk measures the total depth-weighted
+/// substitution binding volume and nominal lookups. Kernel Ty::size and
+/// interface joins clone ancestors while visiting descendants, not just
+/// one owned node per unique constructor.
+pub(in crate::source) fn count(
+    root: &noble_kernel::types::Ty,
+    max_node_count: u32,
+    work: &mut super::super::Work,
+) -> Result<(u64, u64, u64), crate::Diagnostic> {
     attempt!(work.charge(1));
     let mut path = alloc::vec::Vec::with_capacity(super::PATH_LIMIT);
     let mut nodes = 0u32;
+    let mut weighted = 0u64;
+    let mut lookups = 0u64;
     let mut failure = None;
     loop {
         if nodes >= max_node_count.min(super::TYPE_LIMIT) {
@@ -201,6 +216,14 @@ pub(super) fn ty(
             break;
         }
         nodes += 1;
+        weighted = attempt!(weighted.checked_add(path.len() as u64 + 1)
+            .ok_or(crate::Diagnostic::Exhausted));
+        let current = attempt!(type_at(root, &path));
+        if matches!(current, noble_kernel::types::Ty::Nominal(_, _)
+            | noble_kernel::types::Ty::GenericNominal(_, _, _))
+        {
+            lookups = attempt!(lookups.checked_add(1).ok_or(crate::Diagnostic::Exhausted));
+        }
         match type_step(root, &mut path, work) {
             Ok(true) => {}
             Ok(false) => break,
@@ -212,7 +235,7 @@ pub(super) fn ty(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => Ok(()),
+        None => Ok((u64::from(nodes), weighted, lookups)),
     }
 }
 

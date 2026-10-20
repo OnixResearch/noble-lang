@@ -17,7 +17,7 @@
  (if (global.get $failure) (then (return (i32.const 0))))
  (local.set $next (i32.add (global.get $heap_cursor) (i32.const 1)))
  (local.set $bytes (i32.mul (i32.sub (local.get $next) (global.get $heap_baseline)) (i32.const 48)))
- (if (i32.or (i32.gt_u (local.get $next) (i32.const 4096))
+ (if (i32.or (i32.gt_u (local.get $next) (global.get $cell_limit))
              (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))
   (then (call $quota (i32.const 1)) (return (i32.const 0))))
  (if (i32.eqz (call $storage_ensure (local.get $next)))

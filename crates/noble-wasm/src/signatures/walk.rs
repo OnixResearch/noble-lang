@@ -15,6 +15,7 @@ struct State {
     out: crate::output::Buffer,
     fuel: usize,
     extended: bool,
+    compact: bool,
 }
 
 #[expect(
@@ -24,6 +25,7 @@ struct State {
 pub(super) fn encode(
     stack: &[noble_kernel::types::Ty],
     extended: bool,
+    compact: bool,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     if stack.len() > WORK_LIMIT / 2 {
         return Err(crate::Diagnostic::Exhausted);
@@ -33,6 +35,7 @@ pub(super) fn encode(
         out: crate::output::Buffer::new(64),
         fuel: WORK_LIMIT,
         extended,
+        compact,
     };
     walk.work.push(Step::Stack(copy_roots(stack)));
     let mut failure = None;
@@ -74,7 +77,7 @@ fn advance(walk: &mut State) -> Result<(), crate::Diagnostic> {
         Some(Step::Byte(byte)) => walk.out.append(&[byte]),
         Some(Step::Effects(effects)) => emit_effects(&effects, &mut walk.out),
         Some(Step::Stack(entries)) => push_stack(entries, &mut walk.work, &mut walk.out),
-        Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out, walk.extended),
+        Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out, walk.extended, walk.compact),
     }
 }
 
@@ -119,42 +122,43 @@ fn push_type(
     work: &mut alloc::vec::Vec<Step>,
     out: &mut crate::output::Buffer,
     extended: bool,
+    compact: bool,
 ) -> Result<(), crate::Diagnostic> {
     if !extended && unavailable_in_core(&ty) {
         return Err(crate::Diagnostic::Unsupported);
     }
     let is_pair = matches!(&ty, noble_kernel::types::Ty::Pair(_, _));
     match ty {
-        noble_kernel::types::Ty::Unit => attempt!(out.append(b"Unit")),
-        noble_kernel::types::Ty::Bool => attempt!(out.append(b"Bool")),
-        noble_kernel::types::Ty::I64 => attempt!(out.append(b"I64")),
-        noble_kernel::types::Ty::Text => attempt!(out.append(b"Text")),
-        noble_kernel::types::Ty::Syntax => attempt!(out.append(b"Syntax")),
-        noble_kernel::types::Ty::Contract => attempt!(out.append(b"Contract")),
-        noble_kernel::types::Ty::Evidence => attempt!(out.append(b"Evidence")),
-        noble_kernel::types::Ty::Certified => attempt!(out.append(b"Certified")),
+        noble_kernel::types::Ty::Unit => attempt!(out.append(if compact { b"u" } else { b"Unit" })),
+        noble_kernel::types::Ty::Bool => attempt!(out.append(if compact { b"b" } else { b"Bool" })),
+        noble_kernel::types::Ty::I64 => attempt!(out.append(if compact { b"i" } else { b"I64" })),
+        noble_kernel::types::Ty::Text => attempt!(out.append(if compact { b"t" } else { b"Text" })),
+        noble_kernel::types::Ty::Syntax => attempt!(out.append(if compact { b"x" } else { b"Syntax" })),
+        noble_kernel::types::Ty::Contract => attempt!(out.append(if compact { b"c" } else { b"Contract" })),
+        noble_kernel::types::Ty::Evidence => attempt!(out.append(if compact { b"e" } else { b"Evidence" })),
+        noble_kernel::types::Ty::Certified => attempt!(out.append(if compact { b"f" } else { b"Certified" })),
         noble_kernel::types::Ty::Resource(kind) => {
             if !extended {
                 return Err(crate::Diagnostic::Unsupported);
             }
-            attempt!(out.append(b"Resource("));
+            attempt!(out.append(if compact { b"R(" } else { b"Resource(" }));
             attempt!(out.number(u64::from(kind.0)));
             attempt!(out.append(b")"));
         }
         noble_kernel::types::Ty::Nominal(id, shape) => {
-            attempt!(out.append(b"Nominal("));
+            attempt!(out.append(if compact { b"N(" } else { b"Nominal(" }));
             attempt!(out.number(id.module));
             attempt!(out.append(b":"));
             attempt!(out.number(u64::from(id.ordinal)));
             match *shape {
                 noble_kernel::types::NominalShape::Opaque(value) => {
-                    attempt!(out.append(b",Opaque("));
+                    attempt!(out.append(if compact { b",O(" } else { b",Opaque(" }));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Type(*value));
                 }
                 noble_kernel::types::NominalShape::Variant(left, right) => {
-                    attempt!(out.append(b",Variant("));
+                    attempt!(out.append(if compact { b",V(" } else { b",Variant(" }));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Type(*right));
@@ -163,8 +167,14 @@ fn push_type(
                 }
             }
         }
-        noble_kernel::types::Ty::GenericNominal(id, arguments, _) => {
-            attempt!(out.append(b"GenericNominal("));
+        noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => {
+            // The selected descriptor adds up to seven queued steps beyond
+            // the ordinary argument walk. Keep the owned queue bounded even
+            // when a deeply nested but otherwise valid type reaches it.
+            if compact && work.len() > WORK_LIMIT - 11 {
+                return Err(crate::Diagnostic::Exhausted);
+            }
+            attempt!(out.append(if compact { b"G(" } else { b"GenericNominal(" }));
             attempt!(out.number(id.module));
             attempt!(out.append(b":"));
             attempt!(out.number(u64::from(id.ordinal)));
@@ -174,21 +184,46 @@ fn push_type(
             work.push(Step::Type(second));
             work.push(Step::Byte(b','));
             work.push(Step::Type(first));
+            if compact {
+                // A family ID and arguments alone do not identify a concrete
+                // type across independently checked source environments:
+                // swapped generic payload parameters can produce a different
+                // canonical descriptor for those same arguments.
+                work.push(Step::Byte(b','));
+                match *shape {
+                    noble_kernel::types::NominalShape::Opaque(value) => {
+                        work.push(Step::Byte(b')'));
+                        work.push(Step::Type(*value));
+                        work.push(Step::Byte(b'('));
+                        work.push(Step::Byte(b'O'));
+                    }
+                    noble_kernel::types::NominalShape::Variant(left, right) => {
+                        work.push(Step::Byte(b')'));
+                        work.push(Step::Type(*right));
+                        work.push(Step::Byte(b','));
+                        work.push(Step::Type(*left));
+                        work.push(Step::Byte(b'('));
+                        work.push(Step::Byte(b'V'));
+                    }
+                }
+            }
         }
         noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
-            attempt!(out.append(if is_pair { b"Pair(" } else { b"Sum(" }));
+            attempt!(out.append(if compact {
+                if is_pair { b"P(" } else { b"S(" }
+            } else if is_pair { b"Pair(" } else { b"Sum(" }));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*right));
             work.push(Step::Byte(b','));
             work.push(Step::Type(*left));
         }
         noble_kernel::types::Ty::List(item) => {
-            attempt!(out.append(b"List("));
+            attempt!(out.append(if compact { b"L(" } else { b"List(" }));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*item));
         }
         noble_kernel::types::Ty::Program(input_stack, output_stack, effects) => {
-            attempt!(out.append(b"Program("));
+            attempt!(out.append(if compact { b"Q(" } else { b"Program(" }));
             work.push(Step::Byte(b')'));
             if !effects.is_empty() {
                 work.push(Step::Effects(effects));

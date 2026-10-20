@@ -1,0 +1,3206 @@
+module num@1 [
+    opaque Budget List<I64> private
+    export Budget
+    opaque InputChargeMeasured Pair<Budget,Pair<I64,I64>> private
+    export InputChargeMeasured
+    opaque InputChargeChecked Pair<Budget,I64> private
+    export InputChargeChecked
+    opaque WorkChargeMeasured Pair<Budget,Pair<I64,I64>> private
+    export WorkChargeMeasured
+    opaque WorkChargeChecked Pair<Budget,I64> private
+    export WorkChargeChecked
+    opaque Rat Pair<calc_big@1.BigInt,calc_big@1.BigInt> private
+    export Rat
+    opaque FromI64Input Pair<I64,Budget> private
+    export FromI64Input
+    opaque FromI64Measured Pair<FromI64Input,I64> private
+    export FromI64Measured
+    opaque FromI64Reserved Pair<I64,Budget> private
+    export FromI64Reserved
+    opaque ToI64Input Pair<Rat,Budget> private
+    export ToI64Input
+    opaque ToI64Integral Pair<Rat,Budget> private
+    export ToI64Integral
+    variant ToI64DomainOutcome Ok ToI64Integral public Err calc_errors@1.NumericError public
+    export ToI64DomainOutcome
+    export ToI64DomainOutcome.Ok
+    export ToI64DomainOutcome.Err
+    export ToI64DomainOutcome.match
+    opaque ToI64Measured Pair<ToI64Integral,I64> private
+    export ToI64Measured
+    opaque ToI64Reserved Pair<Rat,Budget> private
+    export ToI64Reserved
+    opaque RawRat Pair<calc_big@1.BigInt,calc_big@1.BigInt> private
+    export RawRat
+    opaque OpInput Pair<Pair<Rat,Rat>,Pair<Budget,I64>> private
+    export OpInput
+    opaque OpMeasured Pair<OpInput,I64> private
+    export OpMeasured
+    opaque OpBitsLimit Pair<OpMeasured,I64> private
+    export OpBitsLimit
+    opaque OpBitsAdmitted Pair<OpInput,I64> private
+    export OpBitsAdmitted
+    opaque OpWorkLimit Pair<OpBitsAdmitted,Pair<Budget,Pair<I64,I64>>> private
+    export OpWorkLimit
+    opaque OpWorkChecked Pair<OpBitsAdmitted,WorkChargeChecked> private
+    export OpWorkChecked
+    opaque OpReady Pair<Pair<Rat,Rat>,Pair<Budget,I64>> private
+    export OpReady
+    opaque GcdReserved Pair<RawRat,Budget> private
+    export GcdReserved
+    opaque GcdMeasured Pair<RawRat,Pair<Budget,I64>> private
+    export GcdMeasured
+    opaque GcdBitsMeasured Pair<GcdMeasured,I64> private
+    export GcdBitsMeasured
+    opaque GcdBitsAdmitted Pair<RawRat,Pair<Budget,I64>> private
+    export GcdBitsAdmitted
+    opaque GcdWorkMeasured Pair<RawRat,Pair<Budget,Pair<I64,I64>>> private
+    export GcdWorkMeasured
+    opaque GcdWorkChecked Pair<RawRat,Pair<Budget,I64>> private
+    export GcdWorkChecked
+    # Original source/span, then budget and the current (offset,digit count).
+    opaque ParseCountCursor Pair<Pair<Text,Pair<I64,I64>>,Pair<Budget,Pair<I64,I64>>> private
+    export ParseCountCursor
+    opaque ParseCountActive ParseCountCursor private
+    export ParseCountActive
+    opaque ParseCountClassified Pair<ParseCountActive,Bool> private
+    export ParseCountClassified
+    opaque ParseUncharged Pair<Pair<Text,Pair<I64,I64>>,Pair<Budget,I64>> private
+    export ParseUncharged
+    opaque ParseDigitMeasured Pair<ParseUncharged,I64> private
+    export ParseDigitMeasured
+    opaque ParseDigitChecked Pair<ParseUncharged,I64> private
+    export ParseDigitChecked
+    opaque ParseCharged Pair<Pair<Text,Pair<I64,I64>>,Pair<Budget,I64>> private
+    export ParseCharged
+    opaque ParseMeasured Pair<Pair<Text,Pair<I64,I64>>,Pair<Budget,I64>> private
+    export ParseMeasured
+    opaque ParseBitsAdmitted ParseMeasured private
+    export ParseBitsAdmitted
+    opaque ParseWorkMeasured Pair<ParseBitsAdmitted,Pair<I64,I64>> private
+    export ParseWorkMeasured
+    opaque ParseWorkChecked Pair<ParseBitsAdmitted,I64> private
+    export ParseWorkChecked
+    opaque ParseReserved Pair<Pair<Text,Pair<I64,I64>>,Budget> private
+    export ParseReserved
+    opaque ParseDecimalCursor Pair<calc_decimal@1.DecimalCursor,Budget> private
+    export ParseDecimalCursor
+    opaque ParseDecimalDigit Pair<calc_decimal@1.DecimalDigit,Budget> private
+    export ParseDecimalDigit
+    opaque ParseDecimalBitCursor Pair<calc_decimal@1.DecimalBitCursor,Budget> private
+    export ParseDecimalBitCursor
+    variant ParseDecimalBitRoute Done Pair<calc_decimal@1.DecimalBitDone,Budget> public More Pair<calc_decimal@1.DecimalBitActive,Budget> public
+    export ParseDecimalBitRoute
+    export ParseDecimalBitRoute.Done
+    export ParseDecimalBitRoute.More
+    export ParseDecimalBitRoute.match
+    opaque ParseDecimalBitSealed Pair<calc_decimal@1.DecimalBitSealed,Budget> private
+    export ParseDecimalBitSealed
+    opaque ParseDecimalDone Pair<calc_decimal@1.DecimalDone,Budget> private
+    export ParseDecimalDone
+    opaque ReducingRat Pair<RawRat,List<Bool>> private
+    export ReducingRat
+    opaque GcdCursor Pair<Pair<RawRat,Budget>,Pair<List<Bool>,List<Bool>>> private
+    export GcdCursor
+    variant GcdRoute Done Pair<ReducingRat,Budget> public Iterate GcdCursor public
+    export GcdRoute
+    export GcdRoute.Done
+    export GcdRoute.Iterate
+    export GcdRoute.match
+    opaque GcdRemainder Pair<Pair<RawRat,Budget>,Pair<List<Bool>,calc_bits@1.RemainderCursor>> private
+    export GcdRemainder
+    opaque GcdRemainderDone Pair<Pair<RawRat,Budget>,Pair<List<Bool>,calc_bits@1.RemainderDone>> private
+    export GcdRemainderDone
+    opaque GcdRemainderActive Pair<Pair<RawRat,Budget>,Pair<List<Bool>,calc_bits@1.RemainderActive>> private
+    export GcdRemainderActive
+    variant GcdRemainderProgress More GcdRemainderActive public Done GcdRemainderDone public
+    export GcdRemainderProgress
+    export GcdRemainderProgress.More
+    export GcdRemainderProgress.Done
+    export GcdRemainderProgress.match
+    opaque FinishNumReserved Pair<ReducingRat,Budget> private
+    export FinishNumReserved
+    opaque FinishNumMeasured Pair<ReducingRat,Pair<Budget,I64>> private
+    export FinishNumMeasured
+    opaque FinishNumBitsMeasured Pair<FinishNumMeasured,I64> private
+    export FinishNumBitsMeasured
+    opaque FinishNumBitsAdmitted Pair<ReducingRat,Pair<Budget,I64>> private
+    export FinishNumBitsAdmitted
+    opaque FinishNumWorkMeasured Pair<ReducingRat,Pair<Budget,Pair<I64,I64>>> private
+    export FinishNumWorkMeasured
+    opaque FinishNumWorkChecked Pair<ReducingRat,Pair<Budget,I64>> private
+    export FinishNumWorkChecked
+    opaque PartlyReducedRat Pair<calc_big@1.BigInt,Pair<calc_big@1.BigInt,List<Bool>>> private
+    export PartlyReducedRat
+    opaque FinishNumDivide Pair<FinishNumReserved,calc_bits@1.DivideCursor> private
+    export FinishNumDivide
+    opaque FinishNumDivideDone Pair<FinishNumReserved,calc_bits@1.DivideDone> private
+    export FinishNumDivideDone
+    opaque FinishNumQuotient Pair<FinishNumReserved,calc_big@1.BigInt> private
+    export FinishNumQuotient
+    variant FinishNumRoute Ready Pair<PartlyReducedRat,Budget> public Divide FinishNumDivide public
+    export FinishNumRoute
+    export FinishNumRoute.Ready
+    export FinishNumRoute.Divide
+    export FinishNumRoute.match
+    opaque FinishDenReserved Pair<PartlyReducedRat,Budget> private
+    export FinishDenReserved
+    opaque FinishDenMeasured Pair<PartlyReducedRat,Pair<Budget,I64>> private
+    export FinishDenMeasured
+    opaque FinishDenBitsMeasured Pair<FinishDenMeasured,I64> private
+    export FinishDenBitsMeasured
+    opaque FinishDenBitsAdmitted Pair<PartlyReducedRat,Pair<Budget,I64>> private
+    export FinishDenBitsAdmitted
+    opaque FinishDenWorkMeasured Pair<PartlyReducedRat,Pair<Budget,Pair<I64,I64>>> private
+    export FinishDenWorkMeasured
+    opaque FinishDenWorkChecked Pair<PartlyReducedRat,Pair<Budget,I64>> private
+    export FinishDenWorkChecked
+    opaque FullyReducedRat Pair<calc_big@1.BigInt,calc_big@1.BigInt> private
+    export FullyReducedRat
+    opaque FinishDenDivide Pair<FinishDenReserved,calc_bits@1.DivideCursor> private
+    export FinishDenDivide
+    opaque FinishDenDivideDone Pair<FinishDenReserved,calc_bits@1.DivideDone> private
+    export FinishDenDivideDone
+    opaque FinishDenQuotient Pair<FinishDenReserved,calc_big@1.BigInt> private
+    export FinishDenQuotient
+    variant FinishDenRoute Ready Pair<FullyReducedRat,Budget> public Divide FinishDenDivide public
+    export FinishDenRoute
+    export FinishDenRoute.Ready
+    export FinishDenRoute.Divide
+    export FinishDenRoute.match
+    opaque PowState Pair<List<Bool>,Pair<Rat,Rat>> private
+    export PowState
+    variant PowProgress More PowState public Done Rat public
+    export PowProgress
+    export PowProgress.More
+    export PowProgress.Done
+    export PowProgress.match
+    opaque PowAccInput Pair<List<Bool>,Pair<Rat,Rat>> private
+    export PowAccInput
+    opaque PowAccNumerator Pair<List<Bool>,Pair<Pair<Rat,Rat>,calc_big@1.BigInt>> private
+    export PowAccNumerator
+    opaque PowAccDenominator Pair<List<Bool>,Pair<Rat,Pair<calc_big@1.BigInt,calc_big@1.BigInt>>> private
+    export PowAccDenominator
+    variant PowMulContext Numerator Pair<List<Bool>,Pair<Rat,Rat>> public Denominator Pair<List<Bool>,Pair<Rat,calc_big@1.BigInt>> public
+    export PowMulContext
+    opaque PowMulCursor Pair<PowMulContext,calc_big@1.BigMulCursor> private
+    export PowMulCursor
+    opaque PowMulActive Pair<PowMulContext,calc_big@1.BigMulActive> private
+    export PowMulActive
+    opaque PowMulAdded Pair<PowMulContext,calc_big@1.BigMulAdded> private
+    export PowMulAdded
+    opaque PowMulDone Pair<PowMulContext,calc_big@1.BigMulDone> private
+    export PowMulDone
+    opaque PowMulRouted Pair<PowMulContext,calc_big@1.BigMulRoute> private
+    export PowMulRouted
+    opaque PowSquareInput Pair<List<Bool>,Pair<Rat,Rat>> private
+    export PowSquareInput
+    opaque PowIntegral Pair<Pair<Rat,Rat>,Budget> private
+    export PowIntegral
+    opaque PowDomainChecked Pair<Pair<Rat,Rat>,Budget> private
+    export PowDomainChecked
+    opaque PowBaseNum Pair<PowDomainChecked,I64> private
+    export PowBaseNum
+    opaque PowBaseWidth Pair<PowDomainChecked,I64> private
+    export PowBaseWidth
+    opaque PowBoundBits Pair<PowBaseWidth,List<Bool>> private
+    export PowBoundBits
+    opaque PowBoundCompared Pair<PowBaseWidth,Pair<List<Bool>,List<Bool>>> private
+    export PowBoundCompared
+    # Retain the exact base width already measured for the exponent bound;
+    # no BigInt traversal is repeated after exponent admission.
+    opaque PowWorkAdmitted Pair<PowDomainChecked,I64> private
+    export PowWorkAdmitted
+    opaque PowWidthExponent Pair<PowWorkAdmitted,I64> private
+    export PowWidthExponent
+    opaque PowWidthBase Pair<PowWidthExponent,I64> private
+    export PowWidthBase
+    opaque PowWidthMeasured Pair<PowWorkAdmitted,I64> private
+    export PowWidthMeasured
+    opaque PowWidthAdmitted Pair<PowWorkAdmitted,I64> private
+    export PowWidthAdmitted
+    opaque PowBitsAdmitted Pair<PowWidthAdmitted,Budget> private
+    export PowBitsAdmitted
+    opaque PowWorkBounded Pair<PowBitsAdmitted,Pair<I64,I64>> private
+    export PowWorkBounded
+    opaque PowWorkChecked Pair<PowBitsAdmitted,WorkChargeChecked> private
+    export PowWorkChecked
+    opaque PowReserved Pair<Pair<Rat,Rat>,Budget> private
+    export PowReserved
+
+    # Private tagged state; original live Numeric schema ordinals precede it.
+    opaque OpFirstA Pair<Pair<Budget,I64>,Pair<List<calc_big@1.BigInt>,Sum<calc_big@1.BigMulInput,calc_big@1.BigMulCursor>>> private
+    export OpFirstA
+    opaque OpFirstB Pair<Pair<Budget,I64>,Pair<List<calc_big@1.BigInt>,Sum<calc_big@1.BigMulActive,Sum<calc_big@1.BigMulDone,Sum<calc_big@1.BigMulAdded,calc_big@1.BigMulAddCursor>>>>> private
+    export OpFirstB
+    opaque OpFirstC Pair<Pair<Budget,I64>,Pair<List<calc_big@1.BigInt>,Sum<calc_big@1.BigInt,Sum<Pair<calc_big@1.BigInt,calc_big@1.BigInt>,calc_big@1.BigAddRoute>>>> private
+    export OpFirstC
+    # Appended staged power addition cursor; earlier nominal ordinals are unchanged.
+    opaque PowMulAddCursor Pair<PowMulContext,calc_big@1.BigMulAddCursor> private
+    export PowMulAddCursor
+
+    signature budget forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64
+          -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export budget
+    def budget [
+        nil cons cons cons cons cons cons cons Budget.new
+        dup Budget.into
+        true pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap 0 i64.cmp -1 =
+            [ swap drop false ] [ swap ] if
+            pair true ] list.case ] iterate
+        unpair swap drop
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.InputBytes
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit
+          result@1.Result.Err ] if
+    ]
+
+    signature budget_nth forall<S:stack> [ S Budget I64 -- S I64 ! pure ]
+    def budget_nth [
+        swap Budget.into swap pair
+        [ unpair dup 0 =
+          [ pair false ]
+          [ 1 - swap
+            [ nil swap pair false ]
+            [ swap drop swap pair true ] list.case ] if
+        ] iterate
+        unpair drop [ 0 ] [ drop ] list.case
+    ]
+
+    signature budget_set forall<S:stack> [ S Budget I64 I64 -- S Budget ! pure ]
+    def budget_set [
+        [ swap ] dip swap Budget.into swap [ swap ] dip pair nil pair pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ [ unpair ] dip [ swap ] dip swap dup unpair
+              [ swap ] dip swap
+              [ swap 0 = [ swap drop ] [ drop ] if ] dip
+              swap [ swap ] dip swap cons swap unpair
+              [ 1 - ] dip pair swap pair
+            ] dip swap pair true ] list.case
+        ] iterate
+        unpair swap drop unpair swap drop
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop Budget.new
+    ]
+
+    def charge_at [
+        dup 0 i64.cmp -1 =
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ pair dup unpair budget_nth ] dip -
+          dup 0 i64.cmp -1 =
+          [ drop drop unit result@1.Result.Err ]
+          [ [ unpair ] dip budget_set result@1.Result.Ok ] if ] if
+    ]
+
+    def admit_at [
+        dup 0 i64.cmp -1 =
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ pair dup unpair budget_nth ] dip -
+          dup 0 i64.cmp -1 =
+          [ drop drop unit result@1.Result.Err ]
+          [ drop unpair drop result@1.Result.Ok ] if ] if
+    ]
+
+    signature admit_bits_check forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,Unit> ! pure ]
+    export admit_bits_check
+    def admit_bits_check [ 2 swap admit_at ]
+
+    signature admit_bits forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_bits
+    def admit_bits [
+        2 swap admit_at
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_syntax forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_syntax
+    def admit_syntax [
+        3 swap admit_at
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitDepth.SyntaxDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Only the callee receives the one-level depth debit. Its other quota
+    # consumptions return to the caller; call depth is restored on return.
+    signature call_enter forall<S:stack>
+        [ S Budget -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export call_enter
+    def call_enter [
+        4 1 charge_at
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitDepth.CallDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature call_leave forall<S:stack>
+        [ S Budget Pair<Rat,Budget> -- S Pair<Rat,Budget> ! pure ]
+    export call_leave
+    def call_leave [
+        unpair swap
+        [ swap 4 budget_nth 4 swap budget_set ] dip
+        swap pair
+    ]
+
+    # The parser retains the original sealed Budget and attaches its exact
+    # token span to a denial. Use the same nonnegative/index-three gate as
+    # admit_syntax; these queries never consume or charge the depth allowance.
+    # Splitting them lets the parser compare two I64s rather than carrying
+    # its rich state through a Budget admission closure.
+    signature syntax_limit forall<S:stack>
+        [ S Budget -- S I64 ! pure ]
+    export syntax_limit
+    def syntax_limit [ 3 budget_nth ]
+
+    signature syntax_allows forall<S:stack>
+        [ S I64 I64 -- S Bool ! pure ]
+    export syntax_allows
+    def syntax_allows [
+        dup 0 i64.cmp -1 =
+        [ drop drop false ]
+        [ i64.cmp -1 = calc_bits@1.bool_not ] if
+    ]
+
+    signature charge_work forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_work
+    def charge_work [
+        5 swap charge_at
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitRemaining.EvaluationWork
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Unary plus is the identity on its original canonical Rat, but still
+    # charges exactly one unit of the authenticated remaining Work allowance.
+    # Keep the evaluator's original Pending outside these small guest phases.
+    signature plus_work_limit forall<S:stack>
+        [ S Pair<Rat,Budget>
+          -- S Pair<Rat,Pair<Budget,I64>> ! pure ]
+    export plus_work_limit
+    def plus_work_limit [
+        unpair dup 5 budget_nth pair pair
+    ]
+
+    signature plus_work_probe forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>>
+          -- S Pair<Pair<Rat,Pair<Budget,I64>>,Bool> ! pure ]
+    export plus_work_probe
+    def plus_work_probe [
+        dup unpair unpair [ drop drop ] dip
+        1 - 0 i64.cmp -1 = pair
+    ]
+
+    signature plus_work_admit forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>>
+          -- S Pair<Rat,Budget> ! pure ]
+    export plus_work_admit
+    def plus_work_admit [
+        unpair unpair 1 - 5 swap budget_set pair
+    ]
+
+    # Carry the original certified Budget unchanged until a category-specific
+    # check issues a private token for that category's budget update.
+    signature input_charge_limit forall<S:stack>
+        [ S Budget I64 -- S InputChargeMeasured ! pure ]
+    export input_charge_limit
+    def input_charge_limit [
+        [ dup 0 budget_nth ] dip swap
+        pair pair InputChargeMeasured.new
+    ]
+
+    signature input_charge_check forall<S:stack>
+        [ S InputChargeMeasured
+          -- S result@1.Result<InputChargeChecked,calc_errors@1.NumericError> ! pure ]
+    export input_charge_check
+    def input_charge_check [
+        InputChargeMeasured.into unpair unpair swap
+        dup 0 i64.cmp -1 =
+        [ drop drop drop
+          unit calc_errors@1.LimitIO.InputBytes
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        [ - dup 0 i64.cmp -1 =
+          [ drop drop
+            unit calc_errors@1.LimitIO.InputBytes
+            calc_errors@1.LimitPrimary.IO
+            calc_errors@1.LimitCategory.Primary
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          [ pair InputChargeChecked.new result@1.Result.Ok ] if ] if
+    ]
+
+    signature input_charge_commit forall<S:stack>
+        [ S InputChargeChecked -- S Budget ! pure ]
+    export input_charge_commit
+    def input_charge_commit [
+        InputChargeChecked.into unpair
+        0 swap budget_set
+    ]
+
+    signature work_charge_limit forall<S:stack>
+        [ S Budget I64 -- S WorkChargeMeasured ! pure ]
+    export work_charge_limit
+    def work_charge_limit [
+        [ dup 5 budget_nth ] dip swap
+        pair pair WorkChargeMeasured.new
+    ]
+
+    signature work_charge_check forall<S:stack>
+        [ S WorkChargeMeasured
+          -- S result@1.Result<WorkChargeChecked,calc_errors@1.NumericError> ! pure ]
+    export work_charge_check
+    def work_charge_check [
+        WorkChargeMeasured.into unpair unpair swap
+        dup 0 i64.cmp -1 =
+        [ drop drop drop
+          unit calc_errors@1.LimitRemaining.EvaluationWork
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        [ - dup 0 i64.cmp -1 =
+          [ drop drop
+            unit calc_errors@1.LimitRemaining.EvaluationWork
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          [ pair WorkChargeChecked.new result@1.Result.Ok ] if ] if
+    ]
+
+    signature work_charge_commit forall<S:stack>
+        [ S WorkChargeChecked -- S Budget ! pure ]
+    export work_charge_commit
+    def work_charge_commit [
+        WorkChargeChecked.into unpair
+        5 swap budget_set
+    ]
+
+    signature charge_output_size forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_output_size
+    def charge_output_size [
+        6 swap charge_at
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.OutputSize
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature rat_parts forall<S:stack>
+        [ S Rat -- S Pair<calc_big@1.BigInt,calc_big@1.BigInt> ! pure ]
+    export rat_parts
+    def rat_parts [ Rat.into ]
+
+    signature rat_num forall<S:stack> [ S Rat -- S calc_big@1.BigInt ! pure ]
+    def rat_num [ Rat.into unpair drop ]
+
+    signature rat_den forall<S:stack> [ S Rat -- S calc_big@1.BigInt ! pure ]
+    def rat_den [ Rat.into unpair swap drop ]
+
+    # PowState contains only powers of one canonical Rat (or its reciprocal).
+    # Coprime numerator/denominator remain coprime under products of powers,
+    # including the zero base with denominator one. Re-running gcd here would
+    # repeat normalization already certified by Rat and the pow domain gate.
+    signature reserve forall<S:stack>
+        [ S Budget I64 I64
+          -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export reserve
+    def reserve [
+        [ admit_bits ] dip swap
+        [ swap charge_work ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature pair_big_total_width forall<S:stack>
+        [ S Pair<calc_big@1.BigInt,calc_big@1.BigInt> -- S I64 ! pure ]
+    def pair_big_total_width [
+        unpair [ calc_big@1.big_width ] dip calc_big@1.big_width +
+    ]
+
+    signature rat_total_width forall<S:stack> [ S Rat -- S I64 ! pure ]
+    export rat_total_width
+    def rat_total_width [
+        Rat.into unpair [ calc_big@1.big_width ] dip calc_big@1.big_width +
+    ]
+
+
+    # Carry the exact input width without entering either quota gate. Only the
+    # private Bit-admitted token may enter the Work gate; materialization still
+    # requires the final GcdReserved token.
+    signature gcd_measure forall<S:stack>
+        [ S RawRat Budget -- S GcdMeasured ! pure ]
+    export gcd_measure
+    def gcd_measure [
+        [ dup RawRat.into pair_big_total_width ] dip swap
+        2 + pair pair GcdMeasured.new
+    ]
+
+    signature gcd_bits_limit forall<S:stack>
+        [ S GcdMeasured -- S GcdBitsMeasured ! pure ]
+    export gcd_bits_limit
+    def gcd_bits_limit [
+        dup GcdMeasured.into unpair unpair
+        drop swap drop 2 budget_nth
+        pair GcdBitsMeasured.new
+    ]
+
+    # Preserve the exact RawRat, its original Budget, and the measured
+    # prospective width while the protected binary-result Pending routes
+    # the original Bits quota verdict in separate selected guest steps.
+    signature gcd_bits_probe forall<S:stack>
+        [ S GcdBitsMeasured -- S Pair<GcdBitsMeasured,Bool> ! pure ]
+    export gcd_bits_probe
+    def gcd_bits_probe [
+        dup GcdBitsMeasured.into unpair
+        [ GcdMeasured.into unpair unpair ] dip
+        [ dup ] dip swap - 0 i64.cmp -1 =
+        [ drop drop drop ] dip pair
+    ]
+
+    signature gcd_bits_admit forall<S:stack>
+        [ S GcdBitsMeasured -- S GcdBitsAdmitted ! pure ]
+    export gcd_bits_admit
+    def gcd_bits_admit [
+        GcdBitsMeasured.into unpair
+        [ GcdMeasured.into unpair unpair ] dip
+        drop pair pair GcdBitsAdmitted.new
+    ]
+
+    signature gcd_bits_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export gcd_bits_deny
+    def gcd_bits_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature gcd_work_limit forall<S:stack>
+        [ S GcdBitsAdmitted -- S GcdWorkMeasured ! pure ]
+    export gcd_work_limit
+    def gcd_work_limit [
+        GcdBitsAdmitted.into unpair unpair
+        [ dup 5 budget_nth ] dip swap
+        pair pair pair GcdWorkMeasured.new
+    ]
+
+    # Evaluate both original quotient-first Work bounds before constructing
+    # the charge. The Bool is an authentic guest verdict over the sealed
+    # measured RawRat and original allowance, never a host-derived estimate.
+    signature gcd_work_probe forall<S:stack>
+        [ S GcdWorkMeasured -- S Pair<GcdWorkMeasured,Bool> ! pure ]
+    export gcd_work_probe
+    def gcd_work_probe [
+        dup GcdWorkMeasured.into unpair unpair unpair
+        [ dup ] dip dup 50 i64.div-rem drop drop
+        calc_bits@1.rot i64.cmp -1 =
+        [ drop drop drop drop true ]
+        [ swap
+          [ dup 50 i64.div-rem drop drop ] dip
+          swap [ dup ] dip swap i64.div-rem drop drop
+          [ dup ] dip i64.cmp 1 =
+          [ drop drop drop drop true ]
+          [ drop drop drop drop false ] if ] if pair
+    ]
+
+    signature gcd_work_admit forall<S:stack>
+        [ S GcdWorkMeasured -- S GcdWorkChecked ! pure ]
+    export gcd_work_admit
+    def gcd_work_admit [
+        GcdWorkMeasured.into unpair unpair unpair
+        swap dup * 50 * - pair pair GcdWorkChecked.new
+    ]
+
+    signature gcd_work_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export gcd_work_deny
+    def gcd_work_deny [
+        drop unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature gcd_commit_work forall<S:stack>
+        [ S GcdWorkChecked -- S GcdReserved ! pure ]
+    export gcd_commit_work
+    def gcd_commit_work [
+        GcdWorkChecked.into unpair unpair
+        5 swap budget_set pair GcdReserved.new
+    ]
+
+    # A singleton true bit is exactly positive magnitude one. Source-created
+    # BigInts and GCD factors use canonical low-bit-first lists. A malformed
+    # redundant high zero merely takes the slower original GCD/divide route.
+    # Inspect only the head and the tail constructor: the extra certificate
+    # costs constant Work, not another scan of an admitted 512-bit operand.
+    signature gcd_unit_bits_p forall<S:stack>
+        [ S List<Bool> -- S Bool ! pure ]
+    def gcd_unit_bits_p [
+        [ false ]
+        [ calc_bits@1.bits_empty swap calc_bits@1.bool_and ]
+        list.case
+    ]
+
+    signature gcd_unit_big_p forall<S:stack>
+        [ S calc_big@1.BigInt -- S Bool ! pure ]
+    def gcd_unit_big_p [ calc_big@1.big_bits gcd_unit_bits_p ]
+
+    # A positive unit denominator or a unit-magnitude numerator has gcd one.
+    # Certify both inside the guest from a private, quota-admitted RawRat:
+    # no byte spelling or host-supplied routing Bool can assert this fact.
+    signature gcd_unit_cert forall<S:stack>
+        [ S RawRat -- S Bool ! pure ]
+    def gcd_unit_cert [
+        dup RawRat.into unpair swap drop
+        dup calc_big@1.big_sign
+        [ drop false ]
+        [ calc_big@1.big_zero_p [ false ] [ true ] if ] if
+        [ RawRat.into unpair
+          [ gcd_unit_big_p ] dip swap
+          [ drop true ] [ gcd_unit_big_p ] if ]
+        [ drop false ] if
+    ]
+
+    # Both the original GCD Bits and Work gates run before this probe.
+    # The existing finish-num and finish-den gates likewise still run before
+    # their algebraic division-by-one routes.
+    signature gcd_one_probe forall<S:stack>
+        [ S GcdReserved -- S Pair<GcdReserved,Bool> ! pure ]
+    export gcd_one_probe
+    def gcd_one_probe [
+        dup GcdReserved.into unpair drop
+        gcd_unit_cert
+        pair
+    ]
+
+    signature gcd_one_route forall<S:stack>
+        [ S Pair<GcdReserved,Bool> -- S GcdRoute ! pure ]
+    export gcd_one_route
+    def gcd_one_route [
+        unpair drop
+        dup GcdReserved.into unpair drop gcd_unit_cert
+        [ GcdReserved.into unpair
+          [ true nil cons pair ReducingRat.new ] dip
+          pair GcdRoute.Done ]
+        [ GcdReserved.into dup unpair drop RawRat.into unpair
+          [ calc_big@1.big_bits ] dip calc_big@1.big_bits
+          pair pair GcdCursor.new GcdRoute.Iterate ] if
+    ]
+
+    signature gcd_cursor_check forall<S:stack>
+        [ S GcdCursor -- S GcdRoute ! pure ]
+    export gcd_cursor_check
+    def gcd_cursor_check [
+        GcdCursor.into unpair
+        dup unpair swap drop calc_bits@1.bits_empty
+        [ unpair drop swap unpair [ swap ] dip
+          [ pair ReducingRat.new ] dip
+          pair GcdRoute.Done ]
+        [ pair GcdCursor.new GcdRoute.Iterate ] if
+    ]
+
+    signature gcd_remainder_start forall<S:stack>
+        [ S GcdCursor -- S GcdRemainder ! pure ]
+    export gcd_remainder_start
+    def gcd_remainder_start [
+        GcdCursor.into unpair
+        dup unpair calc_bits@1.remainder_start
+        swap unpair swap drop swap
+        pair pair GcdRemainder.new
+    ]
+
+    # Consume the sealed dividend as one guest step after the original GCD
+    # width and Work admissions; the Rat and debited Budget remain on-stack.
+    signature gcd_remainder_run forall<S:stack>
+        [ S GcdRemainder -- S GcdRemainderProgress ! pure ]
+    export gcd_remainder_run
+    def gcd_remainder_run [
+        GcdRemainder.into unpair unpair
+        # Run the bit loop with the reserved RawRat/Budget and quotient bits
+        # parked above it, not beneath every one of its nodes.
+        [ pair ] dip swap [ calc_bits@1.remainder_run ] dip unpair calc_bits@1.rot
+        pair pair GcdRemainderDone.new GcdRemainderProgress.Done
+    ]
+
+    signature gcd_remainder_end forall<S:stack>
+        [ S GcdRemainderDone -- S GcdCursor ! pure ]
+    export gcd_remainder_end
+    def gcd_remainder_end [
+        GcdRemainderDone.into unpair unpair
+        calc_bits@1.remainder_finish
+        pair pair GcdCursor.new
+    ]
+
+    signature finish_num_measure forall<S:stack>
+        [ S ReducingRat Budget -- S FinishNumMeasured ! pure ]
+    export finish_num_measure
+    def finish_num_measure [
+        [ dup ReducingRat.into unpair drop RawRat.into pair_big_total_width ] dip swap
+        2 + pair pair FinishNumMeasured.new
+    ]
+
+    signature finish_num_bits_limit forall<S:stack>
+        [ S FinishNumMeasured -- S FinishNumBitsMeasured ! pure ]
+    export finish_num_bits_limit
+    def finish_num_bits_limit [
+        dup FinishNumMeasured.into unpair unpair
+        drop swap drop 2 budget_nth
+        pair FinishNumBitsMeasured.new
+    ]
+
+    signature finish_num_bits_probe forall<S:stack>
+        [ S FinishNumBitsMeasured
+          -- S Pair<FinishNumBitsMeasured,Bool> ! pure ]
+    export finish_num_bits_probe
+    def finish_num_bits_probe [
+        dup FinishNumBitsMeasured.into unpair
+        [ FinishNumMeasured.into unpair unpair ] dip
+        [ dup ] dip swap - 0 i64.cmp -1 =
+        [ drop drop drop ] dip pair
+    ]
+
+    signature finish_num_bits_admit forall<S:stack>
+        [ S FinishNumBitsMeasured -- S FinishNumBitsAdmitted ! pure ]
+    export finish_num_bits_admit
+    def finish_num_bits_admit [
+        FinishNumBitsMeasured.into unpair
+        [ FinishNumMeasured.into unpair unpair ] dip
+        drop pair pair FinishNumBitsAdmitted.new
+    ]
+
+    signature finish_num_bits_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export finish_num_bits_deny
+    def finish_num_bits_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature finish_num_work_limit forall<S:stack>
+        [ S FinishNumBitsAdmitted -- S FinishNumWorkMeasured ! pure ]
+    export finish_num_work_limit
+    def finish_num_work_limit [
+        FinishNumBitsAdmitted.into unpair unpair
+        [ dup 5 budget_nth ] dip swap
+        pair pair pair FinishNumWorkMeasured.new
+    ]
+
+    signature finish_num_work_probe forall<S:stack>
+        [ S FinishNumWorkMeasured
+          -- S Pair<FinishNumWorkMeasured,Bool> ! pure ]
+    export finish_num_work_probe
+    def finish_num_work_probe [
+        dup FinishNumWorkMeasured.into unpair unpair unpair
+        [ dup ] dip dup 25 i64.div-rem drop drop
+        calc_bits@1.rot i64.cmp -1 =
+        [ drop drop drop drop true ]
+        [ swap
+          [ dup 25 i64.div-rem drop drop ] dip
+          swap [ dup ] dip swap i64.div-rem drop drop
+          [ dup ] dip i64.cmp 1 =
+          [ drop drop drop drop true ]
+          [ drop drop drop drop false ] if ] if pair
+    ]
+
+    signature finish_num_work_admit forall<S:stack>
+        [ S FinishNumWorkMeasured -- S FinishNumWorkChecked ! pure ]
+    export finish_num_work_admit
+    def finish_num_work_admit [
+        FinishNumWorkMeasured.into unpair unpair unpair
+        swap dup * 25 * - pair pair FinishNumWorkChecked.new
+    ]
+
+    signature finish_num_work_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export finish_num_work_deny
+    def finish_num_work_deny [
+        drop unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature finish_num_commit_work forall<S:stack>
+        [ S FinishNumWorkChecked -- S FinishNumReserved ! pure ]
+    export finish_num_commit_work
+    def finish_num_commit_work [
+        FinishNumWorkChecked.into unpair unpair
+        5 swap budget_set pair FinishNumReserved.new
+    ]
+
+    signature finish_num_one_probe forall<S:stack>
+        [ S FinishNumReserved -- S Pair<FinishNumReserved,Bool> ! pure ]
+    export finish_num_one_probe
+    def finish_num_one_probe [
+        dup FinishNumReserved.into unpair drop
+        ReducingRat.into unpair swap drop
+        gcd_unit_bits_p
+        pair
+    ]
+
+    signature finish_num_route forall<S:stack>
+        [ S Pair<FinishNumReserved,Bool> -- S FinishNumRoute ! pure ]
+    export finish_num_route
+    def finish_num_route [
+        unpair drop
+        dup FinishNumReserved.into unpair drop
+        ReducingRat.into unpair swap drop
+        gcd_unit_bits_p
+        [ FinishNumReserved.into unpair
+          [ ReducingRat.into unpair
+            [ RawRat.into unpair ] dip ] dip
+          [ pair pair PartlyReducedRat.new ] dip
+          pair FinishNumRoute.Ready ]
+        [ dup FinishNumReserved.into unpair drop
+          ReducingRat.into unpair
+          [ RawRat.into unpair drop calc_big@1.big_bits ] dip
+          calc_bits@1.divide_start pair FinishNumDivide.new
+          FinishNumRoute.Divide ] if
+    ]
+
+    # The checked reservation stays sealed with the original quotient cursor
+    # throughout the finite guest bit loop and its direct terminal token.
+    signature finish_num_bit_batch_begin forall<S:stack>
+        [ S FinishNumDivide
+          -- S Pair<FinishNumReserved,calc_bits@1.DivideCursor> ! pure ]
+    export finish_num_bit_batch_begin
+    def finish_num_bit_batch_begin [ FinishNumDivide.into ]
+
+    signature finish_num_bit_batch_step forall<S:stack>
+        [ S Pair<FinishNumReserved,calc_bits@1.DivideCursor>
+          -- S Pair<FinishNumReserved,calc_bits@1.DivideDone> ! pure ]
+    export finish_num_bit_batch_step
+    def finish_num_bit_batch_step [
+        unpair swap [ calc_bits@1.divide_run ] dip swap pair
+    ]
+
+    signature finish_num_bit_batch_done_direct forall<S:stack>
+        [ S Pair<FinishNumReserved,calc_bits@1.DivideDone>
+          -- S FinishNumDivideDone ! pure ]
+    export finish_num_bit_batch_done_direct
+    def finish_num_bit_batch_done_direct [
+        unpair pair FinishNumDivideDone.new
+    ]
+
+    signature finish_num_divide_bits forall<S:stack>
+        [ S FinishNumDivideDone
+          -- S Pair<FinishNumReserved,Pair<Bool,List<Bool>>> ! pure ]
+    export finish_num_divide_bits
+    def finish_num_divide_bits [
+        FinishNumDivideDone.into unpair
+        [ dup FinishNumReserved.into unpair drop
+          ReducingRat.into unpair drop
+          RawRat.into unpair drop ] dip
+        calc_big@1.big_divide_done_bits pair
+    ]
+
+    signature finish_num_divide_materialize forall<S:stack>
+        [ S Pair<FinishNumReserved,Pair<Bool,List<Bool>>>
+          -- S FinishNumQuotient ! pure ]
+    export finish_num_divide_materialize
+    def finish_num_divide_materialize [
+        unpair calc_big@1.big_from_signed_bits
+        pair FinishNumQuotient.new
+    ]
+
+    signature finish_num_divide_finish forall<S:stack>
+        [ S FinishNumQuotient -- S Pair<PartlyReducedRat,Budget> ! pure ]
+    export finish_num_divide_finish
+    def finish_num_divide_finish [
+        FinishNumQuotient.into unpair
+        [ FinishNumReserved.into unpair
+          [ ReducingRat.into unpair
+            [ RawRat.into unpair ] dip ] dip
+          pair pair pair ] dip
+        swap unpair swap drop unpair unpair
+        [ pair pair PartlyReducedRat.new ] dip pair
+    ]
+
+    signature finish_den_measure forall<S:stack>
+        [ S PartlyReducedRat Budget -- S FinishDenMeasured ! pure ]
+    export finish_den_measure
+    def finish_den_measure [
+        [ dup PartlyReducedRat.into unpair
+          [ calc_big@1.big_width ] dip
+          unpair drop calc_big@1.big_width + ] dip swap
+        2 + pair pair FinishDenMeasured.new
+    ]
+
+    signature finish_den_bits_limit forall<S:stack>
+        [ S FinishDenMeasured -- S FinishDenBitsMeasured ! pure ]
+    export finish_den_bits_limit
+    def finish_den_bits_limit [
+        dup FinishDenMeasured.into unpair unpair
+        drop swap drop 2 budget_nth
+        pair FinishDenBitsMeasured.new
+    ]
+
+    signature finish_den_bits_probe forall<S:stack>
+        [ S FinishDenBitsMeasured
+          -- S Pair<FinishDenBitsMeasured,Bool> ! pure ]
+    export finish_den_bits_probe
+    def finish_den_bits_probe [
+        dup FinishDenBitsMeasured.into unpair
+        [ FinishDenMeasured.into unpair unpair ] dip
+        [ dup ] dip swap - 0 i64.cmp -1 =
+        [ drop drop drop ] dip pair
+    ]
+
+    signature finish_den_bits_admit forall<S:stack>
+        [ S FinishDenBitsMeasured -- S FinishDenBitsAdmitted ! pure ]
+    export finish_den_bits_admit
+    def finish_den_bits_admit [
+        FinishDenBitsMeasured.into unpair
+        [ FinishDenMeasured.into unpair unpair ] dip
+        drop pair pair FinishDenBitsAdmitted.new
+    ]
+
+    signature finish_den_bits_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export finish_den_bits_deny
+    def finish_den_bits_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature finish_den_work_limit forall<S:stack>
+        [ S FinishDenBitsAdmitted -- S FinishDenWorkMeasured ! pure ]
+    export finish_den_work_limit
+    def finish_den_work_limit [
+        FinishDenBitsAdmitted.into unpair unpair
+        [ dup 5 budget_nth ] dip swap
+        pair pair pair FinishDenWorkMeasured.new
+    ]
+
+    signature finish_den_work_probe forall<S:stack>
+        [ S FinishDenWorkMeasured
+          -- S Pair<FinishDenWorkMeasured,Bool> ! pure ]
+    export finish_den_work_probe
+    def finish_den_work_probe [
+        dup FinishDenWorkMeasured.into unpair unpair unpair
+        [ dup ] dip dup 25 i64.div-rem drop drop
+        calc_bits@1.rot i64.cmp -1 =
+        [ drop drop drop drop true ]
+        [ swap
+          [ dup 25 i64.div-rem drop drop ] dip
+          swap [ dup ] dip swap i64.div-rem drop drop
+          [ dup ] dip i64.cmp 1 =
+          [ drop drop drop drop true ]
+          [ drop drop drop drop false ] if ] if pair
+    ]
+
+    signature finish_den_work_admit forall<S:stack>
+        [ S FinishDenWorkMeasured -- S FinishDenWorkChecked ! pure ]
+    export finish_den_work_admit
+    def finish_den_work_admit [
+        FinishDenWorkMeasured.into unpair unpair unpair
+        swap dup * 25 * - pair pair FinishDenWorkChecked.new
+    ]
+
+    signature finish_den_work_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export finish_den_work_deny
+    def finish_den_work_deny [
+        drop unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature finish_den_commit_work forall<S:stack>
+        [ S FinishDenWorkChecked -- S FinishDenReserved ! pure ]
+    export finish_den_commit_work
+    def finish_den_commit_work [
+        FinishDenWorkChecked.into unpair unpair
+        5 swap budget_set pair FinishDenReserved.new
+    ]
+
+    signature finish_den_one_probe forall<S:stack>
+        [ S FinishDenReserved -- S Pair<FinishDenReserved,Bool> ! pure ]
+    export finish_den_one_probe
+    def finish_den_one_probe [
+        dup FinishDenReserved.into unpair drop
+        PartlyReducedRat.into unpair swap drop
+        unpair swap drop
+        gcd_unit_bits_p
+        pair
+    ]
+
+    signature finish_den_route forall<S:stack>
+        [ S Pair<FinishDenReserved,Bool> -- S FinishDenRoute ! pure ]
+    export finish_den_route
+    def finish_den_route [
+        unpair drop
+        dup FinishDenReserved.into unpair drop
+        PartlyReducedRat.into unpair swap drop
+        unpair swap drop
+        gcd_unit_bits_p
+        [ FinishDenReserved.into unpair
+          [ PartlyReducedRat.into unpair unpair ] dip
+          [ drop pair FullyReducedRat.new ] dip
+          pair FinishDenRoute.Ready ]
+        [ dup FinishDenReserved.into unpair drop
+          PartlyReducedRat.into unpair swap drop unpair
+          [ calc_big@1.big_bits ] dip
+          calc_bits@1.divide_start pair FinishDenDivide.new
+          FinishDenRoute.Divide ] if
+    ]
+
+    signature finish_den_bit_batch_begin forall<S:stack>
+        [ S FinishDenDivide
+          -- S Pair<FinishDenReserved,calc_bits@1.DivideCursor> ! pure ]
+    export finish_den_bit_batch_begin
+    def finish_den_bit_batch_begin [ FinishDenDivide.into ]
+
+    signature finish_den_bit_batch_step forall<S:stack>
+        [ S Pair<FinishDenReserved,calc_bits@1.DivideCursor>
+          -- S Pair<FinishDenReserved,calc_bits@1.DivideDone> ! pure ]
+    export finish_den_bit_batch_step
+    def finish_den_bit_batch_step [
+        unpair swap [ calc_bits@1.divide_run ] dip swap pair
+    ]
+
+    signature finish_den_bit_batch_done_direct forall<S:stack>
+        [ S Pair<FinishDenReserved,calc_bits@1.DivideDone>
+          -- S FinishDenDivideDone ! pure ]
+    export finish_den_bit_batch_done_direct
+    def finish_den_bit_batch_done_direct [
+        unpair pair FinishDenDivideDone.new
+    ]
+
+    signature finish_den_divide_bits forall<S:stack>
+        [ S FinishDenDivideDone
+          -- S Pair<FinishDenReserved,Pair<Bool,List<Bool>>> ! pure ]
+    export finish_den_divide_bits
+    def finish_den_divide_bits [
+        FinishDenDivideDone.into unpair
+        [ dup FinishDenReserved.into unpair drop
+          PartlyReducedRat.into unpair swap drop unpair drop ] dip
+        calc_big@1.big_divide_done_bits pair
+    ]
+
+    signature finish_den_divide_materialize forall<S:stack>
+        [ S Pair<FinishDenReserved,Pair<Bool,List<Bool>>>
+          -- S FinishDenQuotient ! pure ]
+    export finish_den_divide_materialize
+    def finish_den_divide_materialize [
+        unpair calc_big@1.big_from_signed_bits
+        pair FinishDenQuotient.new
+    ]
+
+    signature finish_den_divide_finish forall<S:stack>
+        [ S FinishDenQuotient -- S Pair<FullyReducedRat,Budget> ! pure ]
+    export finish_den_divide_finish
+    def finish_den_divide_finish [
+        FinishDenQuotient.into unpair
+        [ FinishDenReserved.into unpair
+          [ PartlyReducedRat.into unpair unpair ] dip
+          pair pair pair ] dip
+        swap unpair unpair unpair
+        [ drop drop swap pair FullyReducedRat.new ] dip pair
+    ]
+
+    # Both BigInt quotients are exact and the source-checker guards these
+    # private phases; this is the sole constructor of the public canonical Rat.
+    signature finish_materialize forall<S:stack>
+        [ S FullyReducedRat Budget -- S Pair<Rat,Budget> ! pure ]
+    export finish_materialize
+    def finish_materialize [
+        [ FullyReducedRat.into Rat.new ] dip pair
+    ]
+
+    # A selected operator root must finish the original Bits and quadratic
+    # Work gates before any cross-products can construct an unnormalized Rat.
+    signature op_input forall<S:stack>
+        [ S Pair<Rat,Rat> Budget I64 -- S OpInput ! pure ]
+    def op_input [ pair pair OpInput.new ]
+
+    signature op_input_kind forall<S:stack>
+        [ S OpInput -- S I64 ! pure ]
+    export op_input_kind
+    def op_input_kind [
+        OpInput.into unpair swap drop unpair swap drop
+    ]
+
+    signature op_begin_add forall<S:stack>
+        [ S Rat Rat Budget -- S OpInput ! pure ]
+    export op_begin_add
+    def op_begin_add [ [ pair ] dip 0 op_input ]
+
+    signature op_begin_sub forall<S:stack>
+        [ S Rat Rat Budget -- S OpInput ! pure ]
+    export op_begin_sub
+    def op_begin_sub [ [ pair ] dip 1 op_input ]
+
+    signature op_begin_mul forall<S:stack>
+        [ S Rat Rat Budget -- S OpInput ! pure ]
+    export op_begin_mul
+    def op_begin_mul [ [ pair ] dip 2 op_input ]
+
+    signature op_begin_div forall<S:stack>
+        [ S Rat Rat Budget
+          -- S result@1.Result<OpInput,calc_errors@1.NumericError> ! pure ]
+    export op_begin_div
+    def op_begin_div [
+        [ pair ] dip
+        [ dup unpair swap drop rat_num calc_big@1.big_zero_p ] dip swap
+        [ drop drop
+          unit calc_errors@1.DomainArithmetic.DivisionByZero
+          calc_errors@1.DomainExtended.Arithmetic
+          calc_errors@1.DomainError.Extended
+          calc_errors@1.NumericError.Domain result@1.Result.Err ]
+        [ 3 op_input result@1.Result.Ok ] if
+    ]
+
+    # The divisor's numerator is the original guest BigInt. Keep both Rats
+    # and the budget intact while a protected Pending controller routes the
+    # zero case before admitting a division operation.
+    signature op_divisor_probe forall<S:stack>
+        [ S Pair<Pair<Rat,Rat>,Budget>
+          -- S Pair<Pair<Pair<Rat,Rat>,Budget>,Bool> ! pure ]
+    export op_divisor_probe
+    def op_divisor_probe [
+        dup unpair drop unpair swap drop
+        rat_num calc_big@1.big_zero_p pair
+    ]
+
+    signature op_divisor_route forall<S:stack>
+        [ S Pair<Pair<Pair<Rat,Rat>,Budget>,Bool>
+          -- S Pair<Pair<Pair<Rat,Rat>,Budget>,result@1.Result<Unit,Unit>> ! pure ]
+    export op_divisor_route
+    def op_divisor_route [
+        unpair [ unit result@1.Result.Err ]
+               [ unit result@1.Result.Ok ] if pair
+    ]
+
+    signature op_divisor_admit forall<S:stack>
+        [ S Pair<Pair<Rat,Rat>,Budget> -- S OpInput ! pure ]
+    export op_divisor_admit
+    def op_divisor_admit [ unpair 3 op_input ]
+
+    signature op_divisor_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export op_divisor_deny
+    def op_divisor_deny [
+        drop unit calc_errors@1.DomainArithmetic.DivisionByZero
+        calc_errors@1.DomainExtended.Arithmetic
+        calc_errors@1.DomainError.Extended
+        calc_errors@1.NumericError.Domain
+    ]
+
+    signature op_bits_measure_left forall<S:stack>
+        [ S OpInput -- S Pair<OpInput,I64> ! pure ]
+    export op_bits_measure_left
+    def op_bits_measure_left [
+        dup OpInput.into unpair drop unpair drop
+        Rat.into unpair
+        [ calc_big@1.big_width ] dip calc_big@1.big_width +
+        pair
+    ]
+
+    signature op_bits_measure_right forall<S:stack>
+        [ S Pair<OpInput,I64> -- S OpMeasured ! pure ]
+    export op_bits_measure_right
+    def op_bits_measure_right [
+        unpair
+        [ dup OpInput.into unpair drop unpair swap drop
+          Rat.into unpair
+          [ calc_big@1.big_width ] dip calc_big@1.big_width + ] dip
+        + 2 + pair OpMeasured.new
+    ]
+
+    signature op_bits_limit forall<S:stack>
+        [ S OpMeasured -- S OpBitsLimit ! pure ]
+    export op_bits_limit
+    def op_bits_limit [
+        dup OpMeasured.into unpair drop
+        OpInput.into unpair swap drop unpair drop
+        2 budget_nth pair OpBitsLimit.new
+    ]
+
+    # The source quota decision is carried back into a typed guest branch,
+    # rather than combining its arithmetic and error construction into one
+    # retained WASM root with the entire evaluator's state on the stack.
+    signature op_bits_probe forall<S:stack>
+        [ S OpBitsLimit -- S Pair<OpBitsLimit,Bool> ! pure ]
+    export op_bits_probe
+    def op_bits_probe [
+        dup OpBitsLimit.into unpair
+        [ OpMeasured.into unpair swap drop ] dip
+        swap - 0 i64.cmp -1 = pair
+    ]
+
+    signature op_bits_route forall<S:stack>
+        [ S Pair<OpBitsLimit,Bool>
+          -- S Pair<OpBitsLimit,result@1.Result<Unit,Unit>> ! pure ]
+    export op_bits_route
+    def op_bits_route [
+        unpair
+        [ unit result@1.Result.Err ]
+        [ unit result@1.Result.Ok ] if
+        pair
+    ]
+
+    signature op_bits_admit forall<S:stack>
+        [ S OpBitsLimit -- S OpBitsAdmitted ! pure ]
+    export op_bits_admit
+    def op_bits_admit [
+        OpBitsLimit.into unpair
+        [ OpMeasured.into unpair ] dip drop
+        pair OpBitsAdmitted.new
+    ]
+
+    signature op_bits_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export op_bits_deny
+    def op_bits_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature op_work_limit forall<S:stack>
+        [ S OpBitsAdmitted -- S OpWorkLimit ! pure ]
+    export op_work_limit
+    def op_work_limit [
+        # Measure the left operand widths a=|n1|, c=|d1| for the Work
+        # count and keep them packed as a + 65536*c in the count slot.
+        dup OpBitsAdmitted.into unpair drop
+        OpInput.into unpair drop unpair drop
+        Rat.into unpair calc_big@1.big_width [ calc_big@1.big_width ] dip
+        65536 * +
+        [ dup OpBitsAdmitted.into unpair drop
+          OpInput.into unpair swap drop unpair drop ] dip
+        [ dup 5 budget_nth ] dip
+        swap pair pair pair OpWorkLimit.new
+    ]
+
+    signature op_work_probe forall<S:stack>
+        [ S OpWorkLimit -- S Pair<OpWorkLimit,Bool> ! pure ]
+    export op_work_probe
+    def op_work_probe [
+        # Measure the right operand widths e=|n2|, f=|d2|. While b <= 384
+        # every width is below 2^10: the count slot becomes
+        # S*2^40 + a + c*2^10 + e*2^20 + f*2^30 with the cross-product
+        # count S = M(a,f) + M(c,e) (see op_work_route), computed over
+        # integers with the operand parked above it.
+        OpWorkLimit.into unpair unpair unpair pair pair
+        swap dup OpBitsAdmitted.into unpair 384 i64.cmp 1 =
+        [ drop 0 0 pair ]
+        [ OpInput.into unpair drop unpair swap drop
+          Rat.into unpair calc_big@1.big_width [ calc_big@1.big_width ] dip
+          pair ] if
+        [ swap ] dip swap unpair unpair
+        [ swap ] dip pair
+        [ [ swap ] dip swap ] dip swap pair
+        [ 65536 i64.div-rem drop swap [ swap ] dip swap unpair
+          pair [ pair ] dip pair
+          dup unpair unpair [ swap ] dip swap unpair
+          [ swap ] dip [ dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + ] dip
+          [ swap ] dip swap dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + + swap
+          unpair unpair 1073741824 * swap 1048576 * +
+          [ unpair 1024 * + ] dip +
+          swap 1099511627776 * + ] dip
+        unpair [ unpair ] dip
+        swap [ swap [ swap ] dip ] dip [ swap ] dip
+        pair pair pair OpWorkLimit.new false pair
+    ]
+
+    signature op_work_route forall<S:stack>
+        [ S Pair<OpWorkLimit,Bool>
+          -- S Pair<OpWorkLimit,result@1.Result<Unit,Unit>> ! pure ]
+    export op_work_route
+    def op_work_route [
+        # EvaluationWork count C (charged at 150 Work per unit): one unit per
+        # list-element visit of this operator's actual guest loops. A
+        # shift-and-add product with multiplicand width P and multiplier
+        # width Q visits at most M(P,Q) = 4PQ + 2Q^2 + 9Q + 2 elements (per
+        # multiplier bit: route, probe, shift, and an add over at most P+i+1
+        # digit/continue/trim/reverse positions). x multiplies n1*n2 and
+        # d1*d2: M(a,e) + M(c,f). / multiplies n1*d2 and d1*n2: S. + and -
+        # multiply n1*d2, d1*n2 and d1*d2, then compare, add/subtract, trim
+        # and reverse over at most b bits: S + M(c,f) + 5b + 9. Both Bits
+        # measurements and the two width stages visit the four widths
+        # (2b + 4). Above 384 Bits the widths are not packed and
+        # C = 8b^2 + 25b + 19 bounds every kind. Admit iff 150*C <= remaining,
+        # compared quotient-first.
+        unpair drop
+        OpWorkLimit.into unpair unpair unpair pair pair
+        swap dup OpBitsAdmitted.into unpair swap
+        OpInput.into unpair swap drop unpair swap drop pair
+        [ swap ] dip swap dup unpair swap drop unpair drop
+        [ swap ] dip swap swap pair
+        [ pair ] dip swap
+        [ unpair [ unpair ] dip [ swap ] dip swap
+          dup 384 i64.cmp 1 =
+          [ [ drop drop ] dip dup dup * 8 * swap 25 * + 19 + ]
+          [ swap [ swap ] dip
+            1099511627776 i64.div-rem drop
+            1024 i64.div-rem drop swap 1024 i64.div-rem drop
+            swap 1024 i64.div-rem drop swap
+            [ swap ] dip dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + [ dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + ] dip pair pair
+            swap dup 2 =
+            [ drop unpair swap drop unpair + ]
+            [ 3 =
+              [ unpair drop ]
+              [ unpair unpair swap drop + [ dup 5 * 9 + ] dip + ] if ] if
+            [ dup 2 + 2 * ] dip + swap drop ] if ] dip
+        unpair
+        unpair unpair swap drop [ [ swap ] dip swap ] dip
+        dup 150 i64.div-rem drop drop
+        [ [ dup ] dip ] dip [ swap ] dip i64.cmp 1 =
+        [ pair pair pair OpWorkLimit.new ] dip
+        [ unit result@1.Result.Err ]
+        [ unit result@1.Result.Ok ] if pair
+    ]
+
+    signature op_work_admit forall<S:stack>
+        [ S OpWorkLimit -- S OpWorkChecked ! pure ]
+    export op_work_admit
+    def op_work_admit [
+        OpWorkLimit.into unpair unpair unpair
+        swap 150 * -
+        pair WorkChargeChecked.new
+        pair OpWorkChecked.new
+    ]
+
+    signature op_work_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export op_work_deny
+    def op_work_deny [
+        drop unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature op_work_commit forall<S:stack>
+        [ S OpWorkChecked -- S OpReady ! pure ]
+    export op_work_commit
+    def op_work_commit [
+        OpWorkChecked.into unpair
+        work_charge_commit
+        [ OpBitsAdmitted.into unpair drop OpInput.into unpair ] dip
+        [ unpair swap drop ] dip
+        swap pair pair OpReady.new
+    ]
+
+    # The operation's kind remains inside the sealed OpReady. The expression
+    # module uses this projection only while comparing the original RPN token;
+    # neither host-selected branches nor a detached opcode establish identity.
+    signature op_ready_kind forall<S:stack>
+        [ S OpReady -- S I64 ! pure ]
+    export op_ready_kind
+    def op_ready_kind [
+        OpReady.into unpair swap drop unpair swap drop
+    ]
+
+
+    # No caller can synthesize StageA: OpReady itself is private and the
+    # original signed operand kind is checked in this constructor.
+    signature op_first_stage_seed_mul forall<S:stack>
+        [ S OpReady -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_seed_mul
+    def op_first_stage_seed_mul [
+        dup OpReady.into unpair swap drop unpair swap drop 2 =
+        [ OpReady.into unpair swap
+          unpair [ Rat.into unpair ] dip Rat.into unpair
+          swap [ nil cons cons ] dip swap
+          [ calc_big@1.big_mul_input ] dip
+          swap inl pair pair OpFirstA.new
+          result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature op_first_stage_seed_cross forall<S:stack>
+        [ S OpReady -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_seed_cross
+    def op_first_stage_seed_cross [
+        dup OpReady.into unpair swap drop unpair swap drop
+        dup 0 = swap dup 1 = swap 3 =
+        [ drop drop true ] [ [ drop true ] [ ] if ] if
+        [ OpReady.into unpair swap
+          unpair [ Rat.into unpair ] dip Rat.into unpair
+          [ pair ] dip swap [ dup ] dip swap [ unpair ] dip
+          nil cons cons cons
+          [ calc_big@1.big_mul_input ] dip
+          swap inl pair pair OpFirstA.new
+          result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # Every stage consumes a private carrier, and any wrong tag is Err;
+    # no public Stage.new/into, no source-supplied Bool or detached owner.
+    signature op_first_stage_begin forall<S:stack>
+        [ S OpFirstA -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_begin
+    def op_first_stage_begin [
+        OpFirstA.into unpair unpair
+        [ calc_big@1.big_mul_begin
+          inr
+          pair pair OpFirstA.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        case
+    ]
+
+    signature op_first_stage_route forall<S:stack>
+        [ S OpFirstA -- S result@1.Result<OpFirstB,Unit> ! pure ]
+    export op_first_stage_route
+    def op_first_stage_route [
+        OpFirstA.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ calc_big@1.big_mul_route
+          [ inl inr pair pair OpFirstB.new result@1.Result.Ok ]
+          [ inl pair pair OpFirstB.new result@1.Result.Ok ]
+          calc_big@1.BigMulRoute.match ]
+        case
+    ]
+
+    # A genuine BigMulRoute, matched inside this module, creates the only
+    # StageB Done or Active tag. The Bool observation reuses StageB's
+    # existing Pair<OpFirstB,Bool> shape from its signed add-bit probes.
+    signature op_first_stage_route_probe forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<Pair<OpFirstB,Bool>,Unit> ! pure ]
+    export op_first_stage_route_probe
+    def op_first_stage_route_probe [
+        dup OpFirstB.into unpair unpair
+        [ drop drop drop false ]
+        [ [ drop drop drop true ]
+          [ [ drop drop drop false ]
+            [ drop drop drop false ]
+            case ]
+          case ]
+        case
+        pair result@1.Result.Ok
+    ]
+
+    # The private StageB tags deliberately keep the exact original
+    # BigMulActive through each finite addition decision and bit cursor.
+    signature op_first_stage_add_probe forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<Pair<OpFirstB,Bool>,Unit> ! pure ]
+    export op_first_stage_add_probe
+    def op_first_stage_add_probe [
+        OpFirstB.into unpair unpair
+        [ calc_big@1.big_mul_add_probe unpair
+          [ inl pair pair OpFirstB.new ] dip
+          pair result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        case
+    ]
+
+    signature op_first_stage_add_keep forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstB,Unit> ! pure ]
+    export op_first_stage_add_keep
+    def op_first_stage_add_keep [
+        OpFirstB.into unpair unpair
+        [ calc_big@1.big_mul_add_keep
+          inl inr inr pair pair OpFirstB.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        case
+    ]
+
+    signature op_first_stage_add_begin forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstB,Unit> ! pure ]
+    export op_first_stage_add_begin
+    def op_first_stage_add_begin [
+        OpFirstB.into unpair unpair
+        [ calc_big@1.big_mul_add_begin
+          inr inr inr pair pair OpFirstB.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        case
+    ]
+
+    signature op_first_stage_add_digit forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstB,Unit> ! pure ]
+    export op_first_stage_add_digit
+    def op_first_stage_add_digit [
+        OpFirstB.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ drop drop drop unit result@1.Result.Err ]
+          [ [ drop drop drop unit result@1.Result.Err ]
+            [ calc_big@1.big_mul_add_digit
+              inr inr inr pair pair OpFirstB.new result@1.Result.Ok ]
+            case ]
+          case ]
+        case
+    ]
+
+    signature op_first_stage_add_more forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<Pair<OpFirstB,Bool>,Unit> ! pure ]
+    export op_first_stage_add_more
+    def op_first_stage_add_more [
+        OpFirstB.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ drop drop drop unit result@1.Result.Err ]
+          [ [ drop drop drop unit result@1.Result.Err ]
+            [ calc_big@1.big_mul_add_more unpair
+              [ inr inr inr pair pair OpFirstB.new ] dip
+              pair result@1.Result.Ok ]
+            case ]
+          case ]
+        case
+    ]
+
+    signature op_first_stage_add_finish forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstB,Unit> ! pure ]
+    export op_first_stage_add_finish
+    def op_first_stage_add_finish [
+        OpFirstB.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ drop drop drop unit result@1.Result.Err ]
+          [ [ drop drop drop unit result@1.Result.Err ]
+            [ calc_big@1.big_mul_add_finish
+              inl inr inr pair pair OpFirstB.new result@1.Result.Ok ]
+            case ]
+          case ]
+        case
+    ]
+
+    signature op_first_stage_shift forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_shift
+    def op_first_stage_shift [
+        OpFirstB.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ drop drop drop unit result@1.Result.Err ]
+          [ [ calc_big@1.big_mul_shift
+              inr pair pair OpFirstA.new result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            case ]
+          case ]
+        case
+    ]
+
+    signature op_first_stage_finish forall<S:stack>
+        [ S OpFirstB -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_finish
+    def op_first_stage_finish [
+        OpFirstB.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ calc_big@1.big_mul_finish
+              inl pair pair OpFirstC.new result@1.Result.Ok ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        case
+    ]
+
+    # These list destructors reject missing/extra factors; factor lists are
+    # created only by kind-checked OpReady and immutable guest multiplications.
+    signature op_first_stage_exact_two forall<S:stack>
+        [ S List<calc_big@1.BigInt>
+          -- S result@1.Result<Pair<calc_big@1.BigInt,calc_big@1.BigInt>,Unit> ! pure ]
+    def op_first_stage_exact_two [
+        [ unit result@1.Result.Err ]
+        [ [ drop unit result@1.Result.Err ]
+          [ [ pair result@1.Result.Ok ]
+            [ drop drop drop drop unit result@1.Result.Err ]
+            list.case ]
+          list.case ]
+        list.case
+    ]
+
+    signature op_first_stage_exact_three forall<S:stack>
+        [ S List<calc_big@1.BigInt>
+          -- S result@1.Result<Pair<calc_big@1.BigInt,Pair<calc_big@1.BigInt,calc_big@1.BigInt>>,Unit> ! pure ]
+    def op_first_stage_exact_three [
+        [ unit result@1.Result.Err ]
+        [ [ drop unit result@1.Result.Err ]
+          [ [ drop drop unit result@1.Result.Err ]
+            [ [ pair pair result@1.Result.Ok ]
+              [ drop drop drop drop drop unit result@1.Result.Err ]
+              list.case ]
+            list.case ]
+          list.case ]
+        list.case
+    ]
+
+    signature op_first_stage_exact_four forall<S:stack>
+        [ S List<calc_big@1.BigInt>
+          -- S result@1.Result<Pair<calc_big@1.BigInt,Pair<calc_big@1.BigInt,Pair<calc_big@1.BigInt,calc_big@1.BigInt>>>,Unit> ! pure ]
+    def op_first_stage_exact_four [
+        [ unit result@1.Result.Err ]
+        [ op_first_stage_exact_three
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        list.case
+    ]
+
+    signature op_first_stage_sum_prepare_add forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_prepare_add
+    def op_first_stage_sum_prepare_add [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        0 =
+        [ OpFirstC.into unpair unpair
+          [ swap dup [ op_first_stage_exact_four ] dip swap
+            [ unpair drop calc_bits@1.rot pair
+              inl inr pair pair OpFirstC.new result@1.Result.Ok ]
+            [ drop drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature op_first_stage_sum_prepare_sub forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_prepare_sub
+    def op_first_stage_sum_prepare_sub [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        1 =
+        [ OpFirstC.into unpair unpair
+          [ swap dup [ op_first_stage_exact_four ] dip swap
+            [ unpair drop calc_bits@1.rot calc_big@1.big_neg pair
+              inl inr pair pair OpFirstC.new result@1.Result.Ok ]
+            [ drop drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature op_first_stage_sum_begin forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_begin
+    def op_first_stage_sum_begin [
+        OpFirstC.into unpair unpair
+        # Begin the add with the Budget/scale and partial products parked
+        # above it, then rebuild the cursor beneath the outcome.
+        [ pair ] dip swap
+        [ [ drop unit result@1.Result.Err ]
+          [ [ unpair calc_big@1.big_add_begin result@1.Result.Ok ]
+            [ drop unit result@1.Result.Err ]
+            case ]
+          case ] dip
+        unpair calc_bits@1.rot
+        [ inr inr pair pair OpFirstC.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature op_first_stage_sum_finish forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_finish
+    def op_first_stage_sum_finish [
+        OpFirstC.into unpair unpair
+        [ drop drop drop unit result@1.Result.Err ]
+        [ [ drop drop drop unit result@1.Result.Err ]
+          [ [ calc_big@1.BigAddRoute.Add calc_big@1.big_add_finish_add ]
+            [ calc_big@1.BigAddRoute.Sub calc_big@1.big_add_finish_sub ]
+            calc_big@1.BigAddRoute.match
+            [ dup [ swap cons ] dip
+              inl pair pair OpFirstC.new result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          case ]
+        case
+    ]
+
+    # A completed signed sum has exactly five genuine factors. Duplicating
+    # its authenticated sum into the list changes the stage to six factors;
+    # consequently the terminal RawRat endpoint cannot be invoked before
+    # the separate finite denominator multiplication has completed.
+    signature op_first_stage_sum_den_mul forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_sum_den_mul
+    def op_first_stage_sum_den_mul [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        dup 0 = swap 1 = [ drop true ] [ ] if
+        [ OpFirstC.into unpair unpair
+          [ dup [ swap cons ] dip swap
+            dup
+            [ [ unit result@1.Result.Err ]
+              [ swap drop
+                [ unit result@1.Result.Err ]
+                [ swap drop op_first_stage_exact_four
+                  [ unpair swap drop unpair unpair
+                    [ drop ] dip pair result@1.Result.Ok ]
+                  [ result@1.Result.Err ]
+                  result@1.Result.match ]
+                list.case ]
+              list.case ]
+            dip swap
+            [ unpair calc_big@1.big_mul_input
+              calc_bits@1.rot drop
+              inl pair pair OpFirstA.new result@1.Result.Ok ]
+            [ drop drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature op_first_stage_sum_raw forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<Pair<RawRat,Budget>,Unit> ! pure ]
+    export op_first_stage_sum_raw
+    def op_first_stage_sum_raw [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        dup 0 = swap 1 = [ drop true ] [ ] if
+        [ OpFirstC.into unpair unpair
+          [ swap
+            [ drop drop unit result@1.Result.Err ]
+            [ [ drop drop drop unit result@1.Result.Err ]
+              [ swap drop op_first_stage_exact_four
+                [ drop swap pair
+                  calc_big@1.pair_den_positive RawRat.new
+                  swap unpair drop pair result@1.Result.Ok ]
+                [ drop drop drop drop unit result@1.Result.Err ]
+                result@1.Result.match ]
+              list.case ]
+            list.case ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # After the first *completed* product, × multiplies only the original
+    # canonical denominators; ± and ÷ multiply the exact other cross pair.
+    # No host-authored BigInt, list member, or detached Budget is accepted.
+    signature op_first_stage_second_mul forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_second_mul
+    def op_first_stage_second_mul [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        2 =
+        [ OpFirstC.into unpair unpair
+          [ dup [ swap cons ] dip
+            [ dup [ unit result@1.Result.Err ]
+                  [ swap drop op_first_stage_exact_two ]
+              list.case ] dip
+            drop
+            [ unpair calc_big@1.big_mul_input inl
+              pair pair OpFirstA.new result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature op_first_stage_second_cross forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstA,Unit> ! pure ]
+    export op_first_stage_second_cross
+    def op_first_stage_second_cross [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        dup 0 = swap dup 1 = swap 3 =
+        [ drop drop true ] [ [ drop true ] [ ] if ] if
+        [ OpFirstC.into unpair unpair
+          [ dup [ swap cons ] dip
+            [ dup [ unit result@1.Result.Err ]
+                  [ swap drop op_first_stage_exact_three ]
+              list.case ] dip
+            drop
+            [ unpair unpair drop calc_big@1.big_mul_input inl
+              pair pair OpFirstA.new result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # A first numerator product alone has only two factors. The selected
+    # second multiplication adds the authentic denominator product's
+    # companion, making exactly three before multiplication can finish.
+    signature op_first_stage_mul_raw forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<Pair<RawRat,Budget>,Unit> ! pure ]
+    export op_first_stage_mul_raw
+    def op_first_stage_mul_raw [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        2 =
+        [ OpFirstC.into unpair unpair
+          [ [ op_first_stage_exact_three ] dip swap
+            [ unpair drop swap pair
+              calc_big@1.pair_den_positive RawRat.new
+              swap unpair drop pair result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # The terminal result is merely RawRat, not a forged already-canonical
+    # Rat: run original GCD, Bits/Work, and quotient-first finish afterward.
+    signature op_first_stage_div_raw forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<Pair<RawRat,Budget>,Unit> ! pure ]
+    export op_first_stage_div_raw
+    def op_first_stage_div_raw [
+        dup OpFirstC.into unpair unpair drop drop unpair swap drop
+        3 =
+        [ OpFirstC.into unpair unpair
+          [ [ op_first_stage_exact_four ] dip swap
+            [ unpair drop swap pair
+              calc_big@1.pair_den_positive RawRat.new
+              swap unpair drop pair result@1.Result.Ok ]
+            [ drop drop drop unit result@1.Result.Err ]
+            result@1.Result.match ]
+          [ drop drop drop unit result@1.Result.Err ]
+          case ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # The numerator and denominator widths are measured in separate guest
+    # submissions so neither selected root imports both BigInt width bodies.
+    # Both retain the original Rat and Budget for the following Bits gate.
+    signature neg_measure_num forall<S:stack>
+        [ S Rat Budget -- S Pair<Rat,Pair<Budget,I64>> ! pure ]
+    export neg_measure_num
+    def neg_measure_num [
+        [ dup rat_num calc_big@1.big_width ] dip swap pair pair
+    ]
+
+    signature neg_measure_den forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>>
+          -- S Pair<Rat,Pair<Budget,I64>> ! pure ]
+    export neg_measure_den
+    def neg_measure_den [
+        unpair unpair
+        [ [ dup rat_den calc_big@1.big_width ] dip ] dip
+        calc_bits@1.rot
+        + pair pair
+    ]
+
+    signature neg_bits_probe forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>>
+          -- S Pair<Pair<Rat,Pair<Budget,I64>>,Bool> ! pure ]
+    export neg_bits_probe
+    def neg_bits_probe [
+        dup unpair unpair
+        [ dup 2 budget_nth ] dip
+        - 0 i64.cmp -1 =
+        [ drop drop ] dip pair
+    ]
+
+    signature neg_work_limit forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>>
+          -- S Pair<Rat,Pair<Budget,Pair<I64,I64>>> ! pure ]
+    export neg_work_limit
+    def neg_work_limit [
+        unpair unpair
+        [ dup 5 budget_nth ] dip
+        swap pair pair pair
+    ]
+
+    signature neg_work_probe forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,Pair<I64,I64>>>
+          -- S Pair<Pair<Rat,Pair<Budget,Pair<I64,I64>>>,Bool> ! pure ]
+    export neg_work_probe
+    def neg_work_probe [
+        dup unpair unpair unpair
+        [ dup ] dip dup 100 i64.div-rem drop drop
+        calc_bits@1.rot i64.cmp -1 =
+        [ drop drop drop drop true ]
+        [ swap
+          [ dup 100 i64.div-rem drop drop ] dip
+          swap [ dup ] dip swap i64.div-rem drop drop
+          [ dup ] dip i64.cmp 1 =
+          [ drop drop drop drop true ]
+          [ drop drop drop drop false ] if ] if pair
+    ]
+
+    signature neg_work_admit forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,Pair<I64,I64>>>
+          -- S Pair<Rat,Pair<Budget,I64>> ! pure ]
+    export neg_work_admit
+    def neg_work_admit [
+        unpair unpair unpair swap dup * 100 * - pair pair
+    ]
+
+    signature neg_work_commit forall<S:stack>
+        [ S Pair<Rat,Pair<Budget,I64>> -- S Pair<Rat,Budget> ! pure ]
+    export neg_work_commit
+    def neg_work_commit [ unpair unpair 5 swap budget_set pair ]
+
+    signature neg_materialize forall<S:stack>
+        [ S Pair<Rat,Budget> -- S Pair<Rat,Budget> ! pure ]
+    export neg_materialize
+    def neg_materialize [ unpair [ Rat.into unpair [ calc_big@1.big_neg ] dip pair Rat.new ] dip pair ]
+
+
+    # The signed width and budget reservation are independent selected guest
+    # submissions; BigInt materialization requires the private reserved token.
+    signature from_i64_input forall<S:stack>
+        [ S I64 Budget -- S FromI64Input ! pure ]
+    export from_i64_input
+    def from_i64_input [ pair FromI64Input.new ]
+
+    signature from_i64_measure forall<S:stack>
+        [ S FromI64Input -- S FromI64Measured ! pure ]
+    export from_i64_measure
+    def from_i64_measure [
+        dup FromI64Input.into unpair drop
+        dup -9223372036854775808 =
+        [ drop 64 ]
+        [ dup 0 i64.cmp -1 =
+          [ 0 swap - ]
+          [ ] if
+          0 pair
+          [ unpair swap dup 0 =
+          [ swap pair false ]
+          [ 2 i64.div-rem drop drop swap 1 + pair true ] if
+          ] iterate
+          unpair swap drop ] if
+        dup 0 = [ drop 1 ] [ ] if
+        pair FromI64Measured.new
+    ]
+
+    signature from_i64_reserve forall<S:stack>
+        [ S FromI64Measured
+          -- S result@1.Result<FromI64Reserved,calc_errors@1.NumericError> ! pure ]
+    export from_i64_reserve
+    def from_i64_reserve [
+        FromI64Measured.into unpair
+        [ FromI64Input.into unpair ] dip
+        dup 250 * reserve
+        [ pair FromI64Reserved.new result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature from_i64_materialize forall<S:stack>
+        [ S FromI64Reserved -- S Pair<Rat,Budget> ! pure ]
+    export from_i64_materialize
+    def from_i64_materialize [
+        FromI64Reserved.into unpair
+        [ calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new ] dip
+        pair
+    ]
+
+    # The lexical layer certifies these source offsets. Do not materialize
+    # substrings: keep the Text and its bounds through each quota gate.
+    signature parse_count_begin forall<S:stack>
+        [ S Text I64 I64 Budget -- S ParseCountCursor ! pure ]
+    export parse_count_begin
+    def parse_count_begin [
+        [ pair pair ] dip
+        [ dup unpair swap drop unpair drop ] dip
+        swap 0 pair pair pair ParseCountCursor.new
+    ]
+
+    signature parse_count_probe forall<S:stack>
+        [ S ParseCountCursor -- S Pair<ParseCountCursor,Bool> ! pure ]
+    export parse_count_probe
+    def parse_count_probe [
+        dup ParseCountCursor.into unpair
+        [ unpair swap drop unpair swap drop ] dip
+        unpair swap drop unpair drop
+        = pair
+    ]
+
+    signature parse_count_route forall<S:stack>
+        [ S Pair<ParseCountCursor,Bool>
+          -- S result@1.Result<ParseUncharged,ParseCountActive> ! pure ]
+    export parse_count_route
+    def parse_count_route [
+        unpair
+        [ ParseCountCursor.into unpair unpair
+          unpair swap drop pair pair ParseUncharged.new
+          result@1.Result.Ok ]
+        [ ParseCountActive.new result@1.Result.Err ] if
+    ]
+
+    signature parse_uncharged_span forall<S:stack>
+        [ S ParseUncharged -- S Pair<ParseUncharged,Pair<I64,I64>> ! pure ]
+    export parse_uncharged_span
+    def parse_uncharged_span [
+        dup ParseUncharged.into unpair drop unpair swap drop pair
+    ]
+
+    signature parse_count_byte forall<S:stack>
+        [ S ParseCountActive -- S Pair<ParseCountActive,I64> ! pure ]
+    export parse_count_byte
+    def parse_count_byte [
+        dup ParseCountActive.into ParseCountCursor.into unpair
+        [ unpair drop ] dip
+        unpair swap drop unpair drop
+        text.byte swap drop pair
+    ]
+
+    signature parse_count_classify forall<S:stack>
+        [ S Pair<ParseCountActive,I64> -- S ParseCountClassified ! pure ]
+    export parse_count_classify
+    def parse_count_classify [
+        unpair 46 = pair ParseCountClassified.new
+    ]
+
+    signature parse_count_advance_classified forall<S:stack>
+        [ S ParseCountClassified -- S ParseCountCursor ! pure ]
+    export parse_count_advance_classified
+    def parse_count_advance_classified [
+        ParseCountClassified.into unpair
+        [ ParseCountActive.into ParseCountCursor.into unpair ] dip
+        [ unpair unpair ] dip
+        [ ] [ 1 + ] if
+        [ 1 + ] dip
+        pair pair pair ParseCountCursor.new
+    ]
+
+    signature parse_digit_measure forall<S:stack>
+        [ S ParseUncharged -- S ParseDigitMeasured ! pure ]
+    export parse_digit_measure
+    def parse_digit_measure [
+        dup ParseUncharged.into unpair swap drop unpair drop
+        1 budget_nth pair ParseDigitMeasured.new
+    ]
+
+    signature parse_digit_error forall<S:stack>
+        [ S -- S result@1.Result<ParseDigitChecked,calc_errors@1.NumericError> ! pure ]
+    def parse_digit_error [
+        unit calc_errors@1.LimitNumeric.NumericDigits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit result@1.Result.Err
+    ]
+
+    signature parse_digit_check forall<S:stack>
+        [ S ParseDigitMeasured
+          -- S result@1.Result<ParseDigitChecked,calc_errors@1.NumericError> ! pure ]
+    export parse_digit_check
+    def parse_digit_check [
+        ParseDigitMeasured.into unpair
+        [ dup ParseUncharged.into unpair swap drop unpair swap drop ] dip
+        swap dup 0 i64.cmp -1 =
+        [ drop drop drop parse_digit_error ]
+        [ - dup 0 i64.cmp -1 =
+          [ drop drop parse_digit_error ]
+          [ pair ParseDigitChecked.new result@1.Result.Ok ] if ] if
+    ]
+
+    signature parse_digit_commit forall<S:stack>
+        [ S ParseDigitChecked -- S ParseCharged ! pure ]
+    export parse_digit_commit
+    def parse_digit_commit [
+        ParseDigitChecked.into unpair
+        [ ParseUncharged.into unpair unpair ] dip
+        swap [ 1 swap budget_set ] dip
+        pair pair ParseCharged.new
+    ]
+
+    signature parse_measured_bits_error forall<S:stack>
+        [ S -- S result@1.Result<ParseMeasured,calc_errors@1.NumericError> ! pure ]
+    def parse_measured_bits_error [
+        unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit result@1.Result.Err
+    ]
+
+    # Only a checked decimal digit count can issue this private estimated-width
+    # token. The original source Text, span and charged budget remain intact.
+    signature parse_reserve_bounds forall<S:stack>
+        [ S ParseCharged
+          -- S result@1.Result<ParseMeasured,calc_errors@1.NumericError> ! pure ]
+    export parse_reserve_bounds
+    def parse_reserve_bounds [
+        ParseCharged.into unpair unpair
+        [ dup 2 budget_nth ] dip
+        # A d-digit decimal magnitude (and its 10^f denominator, f <= d)
+        # has at most floor(d*log2 10)+1 bits; ceil(3.322*d)+2 bounds it
+        # because 3.322 > log2 10. Above 256 digits (the default
+        # NumericDigits budget) the former 4d+2 estimate is kept, so a
+        # raised digit budget admits no literal the former model refused.
+        dup 256 i64.cmp 1 =
+        [ 4 * 2 + ]
+        [ 3322 * 999 + 1000 i64.div-rem drop drop 2 + ] if
+        dup calc_bits@1.unrot i64.cmp -1 =
+        [ drop drop drop parse_measured_bits_error ]
+        [ pair pair ParseMeasured.new result@1.Result.Ok ] if
+    ]
+
+    # Keep the original counted text, Budget and estimated width sealed across
+    # the two resource checks. A caller cannot issue a decimal cursor until
+    # both the genuine Bits admission and Work charge have succeeded.
+    signature parse_reserve_bits forall<S:stack>
+        [ S ParseMeasured
+          -- S result@1.Result<ParseBitsAdmitted,calc_errors@1.NumericError> ! pure ]
+    export parse_reserve_bits
+    def parse_reserve_bits [
+        dup ParseMeasured.into unpair swap drop unpair
+        [ dup 2 budget_nth ] dip swap i64.cmp 1 =
+        [ drop drop
+          unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        [ drop ParseBitsAdmitted.new result@1.Result.Ok ] if
+    ]
+
+    # A measured width comes only from the admitted bit token. Its original
+    # source/span and certified Budget remain sealed through Work admission.
+    signature parse_work_limit forall<S:stack>
+        [ S ParseBitsAdmitted -- S ParseWorkMeasured ! pure ]
+    export parse_work_limit
+    def parse_work_limit [
+        dup ParseBitsAdmitted.into ParseMeasured.into unpair
+        swap drop unpair swap 5 budget_nth
+        pair pair ParseWorkMeasured.new
+    ]
+
+    signature parse_work_check forall<S:stack>
+        [ S ParseWorkMeasured
+          -- S result@1.Result<ParseWorkChecked,calc_errors@1.NumericError> ! pure ]
+    export parse_work_check
+    def parse_work_check [
+        ParseWorkMeasured.into unpair unpair
+        # First bound 2*width+1 by the remaining Work allowance; do not
+        # multiply an unchecked guest integer, even in a denial path.
+        [ dup ] dip dup 100 i64.div-rem drop drop
+        calc_bits@1.rot i64.cmp -1 =
+        [ drop drop drop
+          unit calc_errors@1.LimitRemaining.EvaluationWork
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        [ [ 2 * 1 + ] dip swap
+          [ dup 50 i64.div-rem drop drop ] dip
+          swap [ dup ] dip swap i64.div-rem drop drop
+          [ dup ] dip i64.cmp 1 =
+          [ drop drop drop
+            unit calc_errors@1.LimitRemaining.EvaluationWork
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          [ dup * 50 * -
+            pair ParseWorkChecked.new result@1.Result.Ok ] if ] if
+    ]
+
+    signature parse_work_commit forall<S:stack>
+        [ S ParseWorkChecked -- S ParseReserved ! pure ]
+    export parse_work_commit
+    def parse_work_commit [
+        ParseWorkChecked.into unpair
+        [ ParseBitsAdmitted.into ParseMeasured.into unpair unpair ] dip
+        [ drop ] dip
+        5 swap budget_set pair ParseReserved.new
+    ]
+
+    signature parse_reserve_work forall<S:stack>
+        [ S ParseBitsAdmitted
+          -- S result@1.Result<ParseReserved,calc_errors@1.NumericError> ! pure ]
+    export parse_reserve_work
+    def parse_reserve_work [
+        parse_work_limit parse_work_check
+        [ parse_work_commit result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The guest decimal cursor consumes the already-admitted budget.
+    # Only exhaustion of the decimal cursor can issue a RawRat.
+    signature parse_decimal_begin forall<S:stack>
+        [ S ParseReserved -- S ParseDecimalCursor ! pure ]
+    export parse_decimal_begin
+    def parse_decimal_begin [
+        ParseReserved.into unpair
+        [ unpair unpair calc_decimal@1.cursor_start ] dip
+        pair ParseDecimalCursor.new
+    ]
+
+    # Original charged Budget stays sealed in each digit stage. Only a guest
+    # completed decimal bit cursor may advance the original source offset.
+    signature parse_decimal_classify forall<S:stack>
+        [ S ParseDecimalCursor
+          -- S result@1.Result<ParseDecimalCursor,ParseDecimalDigit> ! pure ]
+    export parse_decimal_classify
+    def parse_decimal_classify [
+        ParseDecimalCursor.into unpair
+        [ calc_decimal@1.cursor_classify ] dip swap
+        [ swap pair ParseDecimalCursor.new result@1.Result.Ok ]
+        [ swap pair ParseDecimalDigit.new result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_decimal_digit_begin forall<S:stack>
+        [ S ParseDecimalDigit -- S ParseDecimalBitCursor ! pure ]
+    export parse_decimal_digit_begin
+    def parse_decimal_digit_begin [
+        ParseDecimalDigit.into unpair
+        [ calc_decimal@1.cursor_digit_begin ] dip
+        pair ParseDecimalBitCursor.new
+    ]
+
+    signature parse_decimal_digit_route forall<S:stack>
+        [ S ParseDecimalBitCursor -- S ParseDecimalBitRoute ! pure ]
+    export parse_decimal_digit_route
+    def parse_decimal_digit_route [
+        ParseDecimalBitCursor.into unpair
+        [ calc_decimal@1.cursor_digit_route ] dip swap
+        [ swap pair ParseDecimalBitRoute.Done ]
+        [ swap pair ParseDecimalBitRoute.More ]
+        result@1.Result.match
+    ]
+
+    signature parse_decimal_digit_run forall<S:stack>
+        [ S ParseDecimalBitCursor -- S ParseDecimalBitRoute ! pure ]
+    export parse_decimal_digit_run
+    def parse_decimal_digit_run [
+        ParseDecimalBitCursor.into unpair
+        [ calc_decimal@1.cursor_digit_run ] dip swap
+        [ swap pair ParseDecimalBitRoute.Done ]
+        [ swap pair ParseDecimalBitRoute.More ]
+        result@1.Result.match
+    ]
+
+    signature parse_decimal_digit_advance forall<S:stack>
+        [ S ParseDecimalBitRoute
+          -- S result@1.Result<ParseDecimalBitCursor,Unit> ! pure ]
+    export parse_decimal_digit_advance
+    def parse_decimal_digit_advance [
+        [ drop unit result@1.Result.Err ]
+        [ unpair [ calc_decimal@1.cursor_digit_advance ] dip
+          pair ParseDecimalBitCursor.new result@1.Result.Ok ]
+        ParseDecimalBitRoute.match
+    ]
+
+    signature parse_decimal_digit_seal forall<S:stack>
+        [ S ParseDecimalBitRoute
+          -- S result@1.Result<ParseDecimalBitSealed,Unit> ! pure ]
+    export parse_decimal_digit_seal
+    def parse_decimal_digit_seal [
+        [ unpair [ calc_decimal@1.cursor_digit_seal ] dip
+          pair ParseDecimalBitSealed.new result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        ParseDecimalBitRoute.match
+    ]
+
+    signature parse_decimal_digit_finish forall<S:stack>
+        [ S ParseDecimalBitSealed
+          -- S result@1.Result<ParseDecimalCursor,ParseDecimalBitCursor> ! pure ]
+    export parse_decimal_digit_finish
+    def parse_decimal_digit_finish [
+        ParseDecimalBitSealed.into unpair
+        [ calc_decimal@1.cursor_digit_finish ] dip swap
+        [ swap pair ParseDecimalCursor.new result@1.Result.Ok ]
+        [ swap pair ParseDecimalBitCursor.new result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_decimal_digit_finish_probe forall<S:stack>
+        [ S ParseDecimalBitSealed
+          -- S Pair<ParseDecimalBitSealed,Bool> ! pure ]
+    export parse_decimal_digit_finish_probe
+    def parse_decimal_digit_finish_probe [
+        dup ParseDecimalBitSealed.into unpair drop
+        calc_decimal@1.cursor_digit_finish_probe pair
+    ]
+
+    signature parse_decimal_digit_finish_route forall<S:stack>
+        [ S Pair<ParseDecimalBitSealed,Bool>
+          -- S Pair<ParseDecimalBitSealed,result@1.Result<Unit,Unit>> ! pure ]
+    export parse_decimal_digit_finish_route
+    def parse_decimal_digit_finish_route [
+        unpair
+        [ unit result@1.Result.Ok ]
+        [ unit result@1.Result.Err ] if pair
+    ]
+
+    signature parse_decimal_digit_finish_true forall<S:stack>
+        [ S ParseDecimalBitSealed -- S ParseDecimalCursor ! pure ]
+    export parse_decimal_digit_finish_true
+    def parse_decimal_digit_finish_true [
+        ParseDecimalBitSealed.into unpair
+        [ calc_decimal@1.cursor_digit_finish_true ] dip
+        pair ParseDecimalCursor.new
+    ]
+
+    signature parse_decimal_digit_finish_false_begin forall<S:stack>
+        [ S ParseDecimalBitSealed -- S ParseDecimalCursor ! pure ]
+    export parse_decimal_digit_finish_false_begin
+    def parse_decimal_digit_finish_false_begin [
+        ParseDecimalBitSealed.into unpair
+        [ calc_decimal@1.cursor_digit_finish_false_begin ] dip
+        pair ParseDecimalCursor.new
+    ]
+
+    signature parse_decimal_digit_finish_false_probe forall<S:stack>
+        [ S ParseDecimalCursor -- S Pair<ParseDecimalCursor,Bool> ! pure ]
+    export parse_decimal_digit_finish_false_probe
+    def parse_decimal_digit_finish_false_probe [
+        dup ParseDecimalCursor.into unpair drop
+        calc_decimal@1.cursor_digit_finish_false_probe pair
+    ]
+
+    signature parse_decimal_digit_finish_false_route forall<S:stack>
+        [ S Pair<ParseDecimalCursor,Bool>
+          -- S Pair<ParseDecimalCursor,result@1.Result<Unit,Unit>> ! pure ]
+    export parse_decimal_digit_finish_false_route
+    def parse_decimal_digit_finish_false_route [
+        unpair
+        [ unit result@1.Result.Ok ]
+        [ unit result@1.Result.Err ] if pair
+    ]
+
+    signature parse_decimal_digit_finish_false_den forall<S:stack>
+        [ S ParseDecimalCursor -- S ParseDecimalBitCursor ! pure ]
+    export parse_decimal_digit_finish_false_den
+    def parse_decimal_digit_finish_false_den [
+        ParseDecimalCursor.into unpair
+        [ calc_decimal@1.cursor_digit_finish_false_den ] dip
+        pair ParseDecimalBitCursor.new
+    ]
+
+    signature parse_decimal_digit_finish_false_ready forall<S:stack>
+        [ S ParseDecimalCursor -- S ParseDecimalCursor ! pure ]
+    export parse_decimal_digit_finish_false_ready
+    def parse_decimal_digit_finish_false_ready [
+        ParseDecimalCursor.into unpair
+        [ calc_decimal@1.cursor_digit_finish_false_ready ] dip
+        pair ParseDecimalCursor.new
+    ]
+
+    signature parse_decimal_route forall<S:stack>
+        [ S ParseDecimalCursor
+          -- S result@1.Result<ParseDecimalDone,ParseDecimalCursor> ! pure ]
+    export parse_decimal_route
+    def parse_decimal_route [
+        ParseDecimalCursor.into unpair
+        [ calc_decimal@1.cursor_route ] dip swap
+        [ swap pair ParseDecimalDone.new result@1.Result.Ok ]
+        [ swap pair ParseDecimalCursor.new result@1.Result.Err ]
+        calc_decimal@1.DecimalRoute.match
+    ]
+
+    signature parse_decimal_finish forall<S:stack>
+        [ S ParseDecimalDone -- S Pair<RawRat,Budget> ! pure ]
+    export parse_decimal_finish
+    def parse_decimal_finish [
+        ParseDecimalDone.into unpair
+        [ calc_decimal@1.cursor_finish RawRat.new ] dip
+        pair
+    ]
+
+    # Integral-domain proof and the original width/Work reservation precede
+    # exact signed conversion. The final token never exposes a nonintegral Rat.
+    signature to_i64_input forall<S:stack>
+        [ S Rat Budget -- S ToI64Input ! pure ]
+    export to_i64_input
+    def to_i64_input [ pair ToI64Input.new ]
+
+    signature to_i64_integral_probe forall<S:stack>
+        [ S ToI64Input -- S Pair<ToI64Input,Bool> ! pure ]
+    export to_i64_integral_probe
+    def to_i64_integral_probe [
+        dup ToI64Input.into unpair drop
+        rat_den calc_big@1.big_mag_one_p pair
+    ]
+
+    signature to_i64_integral_admit forall<S:stack>
+        [ S Pair<ToI64Input,Bool> -- S ToI64DomainOutcome ! pure ]
+    export to_i64_integral_admit
+    def to_i64_integral_admit [
+        unpair
+        [ ToI64Input.into ToI64Integral.new ToI64DomainOutcome.Ok ]
+        [ drop
+          unit calc_errors@1.DomainConversion.NonIntegral
+          calc_errors@1.DomainError.Conversion
+          calc_errors@1.NumericError.Domain ToI64DomainOutcome.Err ] if
+    ]
+
+    signature to_i64_measure forall<S:stack>
+        [ S ToI64Integral -- S ToI64Measured ! pure ]
+    export to_i64_measure
+    def to_i64_measure [
+        dup ToI64Integral.into unpair drop
+        rat_num calc_big@1.big_width pair ToI64Measured.new
+    ]
+
+    signature to_i64_reserve forall<S:stack>
+        [ S ToI64Measured
+          -- S result@1.Result<ToI64Reserved,calc_errors@1.NumericError> ! pure ]
+    export to_i64_reserve
+    def to_i64_reserve [
+        # Preserve the measured numerator token, admit its exact Bits width
+        # first, and inspect the remaining Work allowance before computing
+        # width*300. The original Rat is reconstructed only on admission.
+        dup ToI64Measured.into unpair
+        [ ToI64Integral.into unpair swap drop ] dip
+        calc_bits@1.rot [ admit_bits ] dip swap
+        [ [ dup ToI64Measured.into unpair swap drop ] dip
+          dup 5 budget_nth
+          calc_bits@1.rot swap
+          [ dup ] dip dup 300 i64.div-rem drop drop
+          calc_bits@1.rot i64.cmp -1 =
+          [ drop drop drop drop
+            unit calc_errors@1.LimitRemaining.EvaluationWork
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          [ swap 300 * - 5 swap budget_set
+            [ ToI64Measured.into unpair drop
+              ToI64Integral.into unpair drop ] dip
+            pair ToI64Reserved.new result@1.Result.Ok ] if ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature to_i64_materialize forall<S:stack>
+        [ S ToI64Reserved
+          -- S result@1.Result<Pair<I64,Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_i64_materialize
+    def to_i64_materialize [
+        ToI64Reserved.into unpair
+        [ rat_num calc_big@1.big_to_i64_raw ] dip swap
+        [ swap pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The domain gates run as independent guest invocations before the
+    # potentially expensive exponent-bound and budget-reservation closure.
+    # The checked private carrier keeps the original Rats and Budget intact.
+    signature pow_input forall<S:stack>
+        [ S Rat Rat Budget -- S Pair<Pair<Rat,Rat>,Budget> ! pure ]
+    export pow_input
+    def pow_input [ [ pair ] dip pair ]
+
+    # Split exact integral-domain and zero-negative checks into selected
+    # guest predicates plus typed routes. Every selector retains the original
+    # sealed operand pair and Budget; the host never inspects Rat payloads.
+    signature pow_integral_bool forall<S:stack>
+        [ S Pair<Pair<Rat,Rat>,Budget>
+          -- S Pair<Pair<Pair<Rat,Rat>,Budget>,Bool> ! pure ]
+    export pow_integral_bool
+    def pow_integral_bool [
+        dup unpair drop unpair swap drop
+        rat_den calc_big@1.big_mag_one_p pair
+    ]
+
+    signature pow_integral_route forall<S:stack>
+        [ S Pair<Pair<Pair<Rat,Rat>,Budget>,Bool>
+          -- S Pair<Pair<Pair<Rat,Rat>,Budget>,result@1.Result<Unit,Unit>> ! pure ]
+    export pow_integral_route
+    def pow_integral_route [
+        unpair [ unit result@1.Result.Ok ]
+               [ unit result@1.Result.Err ] if pair
+    ]
+
+    signature pow_integral_admit forall<S:stack>
+        [ S Pair<Pair<Rat,Rat>,Budget> -- S PowIntegral ! pure ]
+    export pow_integral_admit
+    def pow_integral_admit [ PowIntegral.new ]
+
+    signature pow_integral_reject forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export pow_integral_reject
+    def pow_integral_reject [
+        drop unit calc_errors@1.DomainExtended.NonIntegerExponent
+        calc_errors@1.DomainError.Extended
+        calc_errors@1.NumericError.Domain
+    ]
+
+    signature pow_zero_sign forall<S:stack>
+        [ S PowIntegral -- S Pair<PowIntegral,Bool> ! pure ]
+    export pow_zero_sign
+    def pow_zero_sign [
+        dup PowIntegral.into unpair drop
+        unpair swap drop rat_num calc_big@1.big_sign pair
+    ]
+
+    signature pow_zero_base forall<S:stack>
+        [ S Pair<PowIntegral,Bool> -- S Pair<PowIntegral,Bool> ! pure ]
+    export pow_zero_base
+    def pow_zero_base [
+        unpair
+        [ dup PowIntegral.into unpair drop
+          unpair drop rat_num calc_big@1.big_zero_p ]
+        [ false ] if pair
+    ]
+
+    signature pow_zero_route forall<S:stack>
+        [ S Pair<PowIntegral,Bool>
+          -- S Pair<PowIntegral,result@1.Result<Unit,Unit>> ! pure ]
+    export pow_zero_route
+    def pow_zero_route [
+        unpair [ unit result@1.Result.Err ]
+               [ unit result@1.Result.Ok ] if pair
+    ]
+
+    signature pow_zero_admit forall<S:stack>
+        [ S PowIntegral -- S PowDomainChecked ! pure ]
+    export pow_zero_admit
+    def pow_zero_admit [ PowIntegral.into PowDomainChecked.new ]
+
+    signature pow_zero_reject forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export pow_zero_reject
+    def pow_zero_reject [
+        drop unit calc_errors@1.DomainArithmetic.DivisionByZero
+        calc_errors@1.DomainExtended.Arithmetic
+        calc_errors@1.DomainError.Extended
+        calc_errors@1.NumericError.Domain
+    ]
+
+    # The exact base width and the existing Bits allowance determine the
+    # largest admissible exponent. Compare the full guest exponent magnitude
+    # against that bound *before* converting any exponent bits to signed I64.
+    signature pow_base_num forall<S:stack>
+        [ S PowDomainChecked -- S PowBaseNum ! pure ]
+    export pow_base_num
+    def pow_base_num [
+        dup PowDomainChecked.into unpair drop unpair drop
+        rat_num calc_big@1.big_width pair PowBaseNum.new
+    ]
+
+    signature pow_base_den forall<S:stack>
+        [ S PowBaseNum -- S PowBaseWidth ! pure ]
+    export pow_base_den
+    def pow_base_den [
+        PowBaseNum.into unpair
+        [ dup PowDomainChecked.into unpair drop unpair drop
+          rat_den calc_big@1.big_width ] dip
+        + pair PowBaseWidth.new
+    ]
+
+    signature pow_exponent_bound forall<S:stack>
+        [ S PowBaseWidth -- S PowBoundBits ! pure ]
+    export pow_exponent_bound
+    def pow_exponent_bound [
+        dup PowBaseWidth.into unpair
+        [ PowDomainChecked.into unpair swap drop 2 budget_nth ] dip
+        swap dup 2 i64.cmp -1 =
+        [ drop drop 0 ]
+        [ 2 - swap i64.div-rem drop drop ] if
+        calc_bits@1.bits_from_i64_nonnegative
+        pair PowBoundBits.new
+    ]
+
+    signature pow_exponent_bits forall<S:stack>
+        [ S PowBoundBits -- S PowBoundCompared ! pure ]
+    export pow_exponent_bits
+    def pow_exponent_bits [
+        PowBoundBits.into unpair
+        [ dup PowBaseWidth.into unpair drop
+          PowDomainChecked.into unpair drop
+          unpair swap drop rat_num calc_big@1.big_bits ] dip
+        pair pair PowBoundCompared.new
+    ]
+
+    # The bound is calculated from a nonnegative signed-I64 Bits allowance
+    # and a positive base width, so its bit length fits signed I64. Reject
+    # longer exponents using guest list lengths before interpreting any
+    # exponent bits as an I64; no fixed exponent or result-width cap exists.
+    signature pow_exponent_length_exp forall<S:stack>
+        [ S PowBoundCompared -- S Pair<PowBoundCompared,I64> ! pure ]
+    export pow_exponent_length_exp
+    def pow_exponent_length_exp [
+        dup PowBoundCompared.into unpair swap drop unpair drop
+        calc_bits@1.bit_count pair
+    ]
+
+    signature pow_exponent_length_bound forall<S:stack>
+        [ S Pair<PowBoundCompared,I64>
+          -- S Pair<PowBoundCompared,Pair<I64,I64>> ! pure ]
+    export pow_exponent_length_bound
+    def pow_exponent_length_bound [
+        unpair
+        [ dup PowBoundCompared.into unpair swap drop
+          unpair swap drop calc_bits@1.bit_count ] dip
+        swap pair pair
+    ]
+
+    # A single guest comparison distinguishes strictly shorter exponents
+    # (already admitted), equal lengths (compare the actual bits next), and
+    # longer exponents (resource denial). Avoid counting both lists again.
+    signature pow_exponent_length_compare forall<S:stack>
+        [ S Pair<PowBoundCompared,Pair<I64,I64>>
+          -- S Pair<PowBoundCompared,I64> ! pure ]
+    export pow_exponent_length_compare
+    def pow_exponent_length_compare [
+        unpair unpair i64.cmp pair
+    ]
+
+    signature pow_exponent_compare_parts forall<S:stack>
+        [ S PowBoundCompared
+          -- S Pair<PowBoundCompared,Pair<List<Bool>,List<Bool>>> ! pure ]
+    export pow_exponent_compare_parts
+    def pow_exponent_compare_parts [
+        dup PowBoundCompared.into unpair swap drop pair
+    ]
+
+    signature pow_exponent_compare_exp forall<S:stack>
+        [ S Pair<PowBoundCompared,Pair<List<Bool>,List<Bool>>>
+          -- S Pair<PowBoundCompared,Pair<I64,List<Bool>>> ! pure ]
+    export pow_exponent_compare_exp
+    def pow_exponent_compare_exp [
+        unpair unpair
+        [ calc_bits@1.bits_to_i64_positive ] dip
+        pair pair
+    ]
+
+    signature pow_exponent_compare_bound forall<S:stack>
+        [ S Pair<PowBoundCompared,Pair<I64,List<Bool>>>
+          -- S Pair<PowBoundCompared,Pair<I64,I64>> ! pure ]
+    export pow_exponent_compare_bound
+    def pow_exponent_compare_bound [
+        unpair unpair
+        calc_bits@1.bits_to_i64_positive
+        pair pair
+    ]
+
+    signature pow_exponent_compare_probe forall<S:stack>
+        [ S Pair<PowBoundCompared,Pair<I64,I64>>
+          -- S Pair<PowBoundCompared,Bool> ! pure ]
+    export pow_exponent_compare_probe
+    def pow_exponent_compare_probe [
+        unpair unpair i64.cmp 1 = pair
+    ]
+
+    signature pow_exponent_route forall<S:stack>
+        [ S Pair<PowBoundCompared,Bool>
+          -- S Pair<PowBoundCompared,result@1.Result<Unit,Unit>> ! pure ]
+    export pow_exponent_route
+    def pow_exponent_route [
+        unpair [ unit result@1.Result.Err ]
+               [ unit result@1.Result.Ok ] if pair
+    ]
+
+    signature pow_exponent_admit forall<S:stack>
+        [ S PowBoundCompared -- S PowWorkAdmitted ! pure ]
+    export pow_exponent_admit
+    def pow_exponent_admit [
+        PowBoundCompared.into unpair drop
+        PowBaseWidth.into PowWorkAdmitted.new
+    ]
+
+    signature pow_exponent_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export pow_exponent_deny
+    def pow_exponent_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # Keep the checked exponent and exact base width sealed independently:
+    # neither the consumer nor another module may substitute a lower Bits
+    # projection before the original quadratic Work reservation.
+    signature pow_width_exponent forall<S:stack>
+        [ S PowWorkAdmitted -- S PowWidthExponent ! pure ]
+    export pow_width_exponent
+    def pow_width_exponent [
+        dup PowWorkAdmitted.into unpair drop
+        PowDomainChecked.into unpair drop
+        unpair swap drop rat_num calc_big@1.big_bits calc_bits@1.bits_to_i64_positive
+        pair PowWidthExponent.new
+    ]
+
+    signature pow_width_base forall<S:stack>
+        [ S PowWidthExponent -- S PowWidthBase ! pure ]
+    export pow_width_base
+    def pow_width_base [
+        dup PowWidthExponent.into unpair drop
+        PowWorkAdmitted.into unpair swap drop
+        pair PowWidthBase.new
+    ]
+
+    signature pow_width_measure forall<S:stack>
+        [ S PowWidthBase -- S PowWidthMeasured ! pure ]
+    export pow_width_measure
+    def pow_width_measure [
+        PowWidthBase.into unpair
+        [ PowWidthExponent.into unpair ] dip
+        * 2 + pair PowWidthMeasured.new
+    ]
+
+    signature pow_bits_probe forall<S:stack>
+        [ S PowWidthMeasured -- S Pair<PowWidthMeasured,Bool> ! pure ]
+    export pow_bits_probe
+    def pow_bits_probe [
+        dup PowWidthMeasured.into unpair
+        [ PowWorkAdmitted.into unpair drop
+          PowDomainChecked.into unpair swap drop
+          2 budget_nth ] dip
+        swap i64.cmp 1 = pair
+    ]
+
+    signature pow_bits_route forall<S:stack>
+        [ S Pair<PowWidthMeasured,Bool>
+          -- S Pair<PowWidthMeasured,result@1.Result<Unit,Unit>> ! pure ]
+    export pow_bits_route
+    def pow_bits_route [
+        unpair [ unit result@1.Result.Err ]
+               [ unit result@1.Result.Ok ] if pair
+    ]
+
+    # The routed Bits proof must actually debit the original guest Budget.
+    # Keep the private measured-width certificate while computing the
+    # nonnegative remaining allowance; mutate its persistent Budget only in
+    # the next bounded submission, instead of inlining two list traversals.
+    signature pow_bits_measure_debit forall<S:stack>
+        [ S PowWidthMeasured
+          -- S Pair<PowWidthAdmitted,Pair<Budget,I64>> ! pure ]
+    export pow_bits_measure_debit
+    def pow_bits_measure_debit [
+        PowWidthMeasured.into PowWidthAdmitted.new
+        dup PowWidthAdmitted.into unpair
+        [ PowWorkAdmitted.into unpair drop
+          PowDomainChecked.into unpair swap drop ] dip
+        [ dup 2 budget_nth ] dip -
+        pair pair
+    ]
+
+    signature pow_bits_commit_debit forall<S:stack>
+        [ S Pair<PowWidthAdmitted,Pair<Budget,I64>>
+          -- S PowBitsAdmitted ! pure ]
+    export pow_bits_commit_debit
+    def pow_bits_commit_debit [
+        unpair unpair 2 swap budget_set
+        pair PowBitsAdmitted.new
+    ]
+
+    signature pow_bits_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export pow_bits_deny
+    def pow_bits_deny [
+        drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # A bounded exponent guarantees projected width fits I64, but its
+    # quadratic Work charge must still be compared quotient-first against
+    # the *remaining* guest Work allowance before any multiplication.
+    signature pow_work_bounded forall<S:stack>
+        [ S PowBitsAdmitted -- S PowWorkBounded ! pure ]
+    export pow_work_bounded
+    def pow_work_bounded [
+        dup PowBitsAdmitted.into unpair drop
+        PowWidthAdmitted.into unpair swap drop
+        [ dup PowBitsAdmitted.into unpair swap drop
+          5 budget_nth ] dip
+        swap pair pair PowWorkBounded.new
+    ]
+
+    signature pow_work_limit_probe forall<S:stack>
+        [ S PowWorkBounded -- S Pair<PowWorkBounded,Bool> ! pure ]
+    export pow_work_limit_probe
+    def pow_work_limit_probe [
+        dup PowWorkBounded.into unpair swap drop unpair
+        100 i64.div-rem drop drop
+        i64.cmp 1 = pair
+    ]
+
+    signature pow_work_square_probe forall<S:stack>
+        [ S PowWorkBounded -- S Pair<PowWorkBounded,Bool> ! pure ]
+    export pow_work_square_probe
+    def pow_work_square_probe [
+        dup PowWorkBounded.into unpair swap drop unpair
+        [ dup ] dip 100 i64.div-rem drop drop
+        swap i64.div-rem drop drop
+        i64.cmp 1 = pair
+    ]
+
+    signature pow_work_admit forall<S:stack>
+        [ S PowWorkBounded -- S PowWorkChecked ! pure ]
+    export pow_work_admit
+    def pow_work_admit [
+        PowWorkBounded.into unpair unpair
+        swap dup * 100 * -
+        [ dup PowBitsAdmitted.into unpair swap drop ] dip
+        pair WorkChargeChecked.new
+        pair PowWorkChecked.new
+    ]
+
+    signature pow_work_deny forall<S:stack>
+        [ S Unit -- S calc_errors@1.NumericError ! pure ]
+    export pow_work_deny
+    def pow_work_deny [
+        drop unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature pow_work_commit forall<S:stack>
+        [ S PowWorkChecked -- S PowReserved ! pure ]
+    export pow_work_commit
+    def pow_work_commit [
+        PowWorkChecked.into unpair
+        work_charge_commit
+        [ PowBitsAdmitted.into unpair drop
+          PowWidthAdmitted.into unpair drop
+          PowWorkAdmitted.into unpair drop
+          PowDomainChecked.into unpair drop ] dip
+        pair PowReserved.new
+    ]
+
+    signature pow_materialize forall<S:stack>
+        [ S PowReserved -- S Pair<PowState,Budget> ! pure ]
+    export pow_materialize
+    def pow_materialize [
+        PowReserved.into unpair
+        [ unpair rat_num dup calc_big@1.big_sign
+          swap calc_big@1.big_bits
+          [ [ Rat.into unpair swap pair calc_big@1.pair_den_positive Rat.new ] [ ] if ] dip
+          swap calc_big@1.big_one calc_big@1.big_one pair Rat.new pair pair PowState.new ] dip
+        pair
+    ]
+
+    # A bit routes to at most two separate exact products. Private tokens
+    # retain the remaining exponent bits, base, and accumulator across guest
+    # submissions; only a fully consumed exponent can expose the result.
+    signature pow_bit_route forall<S:stack>
+        [ S PowState Budget -- S Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget> ! pure ]
+    export pow_bit_route
+    def pow_bit_route [
+        [ PowState.into unpair swap
+          [ unpair swap drop inl ]
+          [ swap
+            [ swap pair PowAccInput.new inl inr ]
+            [ swap pair PowSquareInput.new inr inr ] if ]
+          list.case ] dip pair
+    ]
+
+    # Inspect only the branch tag. Rebuild the same sealed Sum with its
+    # original payload and Budget, without duplicating any Rat or cursor.
+    signature pow_route_kind forall<S:stack>
+        [ S Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget>
+          -- S Pair<Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget>,I64> ! pure ]
+    export pow_route_kind
+    def pow_route_kind [
+        unpair
+        [ [ inl 0 pair ]
+          [ [ inl inr 1 pair ]
+            [ inr inr 2 pair ] case ]
+          case ] dip
+        [ unpair ] dip
+        swap [ pair ] dip pair
+    ]
+
+    # The route holds sealed signed-product inputs. Each narrow projection
+    # independently rejects the other two branches.
+    signature pow_route_select_acc forall<S:stack>
+        [ S Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget>
+          -- S result@1.Result<Pair<PowAccInput,Budget>,Unit> ! pure ]
+    export pow_route_select_acc
+    def pow_route_select_acc [
+        unpair swap
+        [ drop drop unit result@1.Result.Err ]
+        [ [ swap pair result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ] case ]
+        case
+    ]
+
+    signature pow_route_select_square forall<S:stack>
+        [ S Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget>
+          -- S result@1.Result<Pair<PowSquareInput,Budget>,Unit> ! pure ]
+    export pow_route_select_square
+    def pow_route_select_square [
+        unpair swap
+        [ drop drop unit result@1.Result.Err ]
+        [ [ drop drop unit result@1.Result.Err ]
+          [ swap pair result@1.Result.Ok ] case ]
+        case
+    ]
+
+    signature pow_route_select_done forall<S:stack>
+        [ S Pair<Sum<Rat,Sum<PowAccInput,PowSquareInput>>,Budget>
+          -- S result@1.Result<Pair<Rat,Budget>,Unit> ! pure ]
+    export pow_route_select_done
+    def pow_route_select_done [
+        unpair swap
+        [ swap pair result@1.Result.Ok ]
+        [ drop drop unit result@1.Result.Err ]
+        case
+    ]
+
+    # Both products reuse the same sealed signed schoolbook cursor. The
+    # context is private: a client cannot substitute an unrelated BigInt
+    # product for either accumulator numerator or denominator.
+    signature pow_acc_num_begin forall<S:stack>
+        [ S PowAccInput -- S PowMulCursor ! pure ]
+    export pow_acc_num_begin
+    def pow_acc_num_begin [
+        PowAccInput.into unpair
+        dup unpair [ rat_num ] dip rat_num calc_big@1.big_mul_input
+        [ pair PowMulContext.Numerator ] dip
+        calc_big@1.big_mul_begin pair PowMulCursor.new
+    ]
+
+    signature pow_acc_den_begin forall<S:stack>
+        [ S PowAccNumerator -- S PowMulCursor ! pure ]
+    export pow_acc_den_begin
+    def pow_acc_den_begin [
+        PowAccNumerator.into unpair unpair
+        [ dup unpair [ rat_den ] dip rat_den calc_big@1.big_mul_input ] dip
+        swap
+        [ [ unpair drop ] dip pair pair PowMulContext.Denominator ] dip
+        calc_big@1.big_mul_begin pair PowMulCursor.new
+    ]
+
+    signature pow_mul_classify forall<S:stack>
+        [ S PowMulCursor -- S PowMulRouted ! pure ]
+    export pow_mul_classify
+    def pow_mul_classify [
+        PowMulCursor.into unpair
+        calc_big@1.big_mul_route pair PowMulRouted.new
+    ]
+
+    # Inspect the signed bit-cursor without exposing its two large route
+    # branches as one selected output. Both selectors check the sealed route
+    # independently rather than trusting the caller's Bool.
+    signature pow_mul_probe forall<S:stack>
+        [ S PowMulRouted -- S Pair<PowMulRouted,Bool> ! pure ]
+    export pow_mul_probe
+    def pow_mul_probe [
+        dup PowMulRouted.into unpair swap drop
+        [ drop false ] [ drop true ] calc_big@1.BigMulRoute.match
+        pair
+    ]
+
+    signature pow_mul_select_done forall<S:stack>
+        [ S PowMulRouted -- S result@1.Result<PowMulDone,Unit> ! pure ]
+    export pow_mul_select_done
+    def pow_mul_select_done [
+        PowMulRouted.into unpair
+        [ pair PowMulDone.new result@1.Result.Ok ]
+        [ drop drop unit result@1.Result.Err ]
+        calc_big@1.BigMulRoute.match
+    ]
+
+    signature pow_mul_select_active forall<S:stack>
+        [ S PowMulRouted -- S result@1.Result<PowMulActive,Unit> ! pure ]
+    export pow_mul_select_active
+    def pow_mul_select_active [
+        PowMulRouted.into unpair
+        [ drop drop unit result@1.Result.Err ]
+        [ pair PowMulActive.new result@1.Result.Ok ]
+        calc_big@1.BigMulRoute.match
+    ]
+
+    signature pow_mul_accumulate forall<S:stack>
+        [ S PowMulActive -- S PowMulAdded ! pure ]
+    export pow_mul_accumulate
+    def pow_mul_accumulate [
+        PowMulActive.into unpair
+        calc_big@1.big_mul_accumulate pair PowMulAdded.new
+    ]
+
+    signature pow_mul_shift forall<S:stack>
+        [ S PowMulAdded -- S PowMulCursor ! pure ]
+    export pow_mul_shift
+    def pow_mul_shift [
+        PowMulAdded.into unpair
+        calc_big@1.big_mul_shift pair PowMulCursor.new
+    ]
+
+    signature pow_mul_finish_numerator forall<S:stack>
+        [ S PowMulDone -- S result@1.Result<PowAccNumerator,Unit> ! pure ]
+    export pow_mul_finish_numerator
+    def pow_mul_finish_numerator [
+        PowMulDone.into unpair
+        calc_big@1.big_mul_finish swap
+        [ unpair
+          calc_bits@1.rot pair pair PowAccNumerator.new
+          result@1.Result.Ok ]
+        [ drop drop unit result@1.Result.Err ]
+        PowMulContext.match
+    ]
+
+    signature pow_mul_finish_denominator forall<S:stack>
+        [ S PowMulDone -- S result@1.Result<PowAccDenominator,Unit> ! pure ]
+    export pow_mul_finish_denominator
+    def pow_mul_finish_denominator [
+        PowMulDone.into unpair
+        calc_big@1.big_mul_finish swap
+        [ drop drop unit result@1.Result.Err ]
+        [ unpair calc_bits@1.rot
+          [ unpair ] dip
+          pair pair pair PowAccDenominator.new
+          result@1.Result.Ok ]
+        PowMulContext.match
+    ]
+
+    signature pow_acc_finish forall<S:stack>
+        [ S PowAccDenominator -- S PowSquareInput ! pure ]
+    export pow_acc_finish
+    def pow_acc_finish [
+        PowAccDenominator.into unpair unpair
+        Rat.new
+        pair pair PowSquareInput.new
+    ]
+
+    # A consumed exponent needs no further squaring. Its terminal route
+    # produces PowState; the other route preserves the original sealed input
+    # for the already-admitted staged schoolbook base*base product.
+    signature pow_square_route forall<S:stack>
+        [ S PowSquareInput
+          -- S result@1.Result<PowState,PowSquareInput> ! pure ]
+    export pow_square_route
+    def pow_square_route [
+        PowSquareInput.into unpair
+        [ dup calc_bits@1.bits_empty ] dip swap
+        [ pair PowState.new result@1.Result.Ok ]
+        [ pair PowSquareInput.new result@1.Result.Err ] if
+    ]
+
+    # Reuse the existing schoolbook multiplication cursor for base*base.
+    # Retain the genuine accumulator outside the cursor on the guest stack:
+    # a client must start with a still-unconsumed sealed PowSquareInput.
+    signature pow_square_begin forall<S:stack>
+        [ S PowSquareInput
+          -- S result@1.Result<Pair<Rat,PowAccInput>,Unit> ! pure ]
+    export pow_square_begin
+    def pow_square_begin [
+        PowSquareInput.into unpair
+        [ dup calc_bits@1.bits_empty ] dip swap
+        [ drop drop unit result@1.Result.Err ]
+        [ unpair swap
+          dup pair calc_bits@1.rot swap pair PowAccInput.new
+          pair result@1.Result.Ok ] if
+    ]
+
+    # PowState is Pair<bits,Pair<base,acc>>. pow_square_begin retains the
+    # accumulator and multiplies the duplicated base; pow_acc_finish returns
+    # the exponent bits and Pair<base,base*base>. The squared base becomes the
+    # new base and the untouched accumulator is restored.
+    signature pow_square_finish forall<S:stack>
+        [ S Pair<Rat,PowSquareInput> -- S PowState ! pure ]
+    export pow_square_finish
+    def pow_square_finish [
+        unpair PowSquareInput.into unpair unpair [ drop ] dip
+        calc_bits@1.rot pair pair PowState.new
+    ]
+
+    # Appended Stage 1 splits. The monolithic pow_mul_accumulate and
+    # op_first_stage_sum_finish closures exceed the calculator compiler's
+    # per-prepare Work ceiling; these smaller stages reuse the same BigInt
+    # steps that the signed product already runs one at a time.
+    signature pow_mul_add_probe forall<S:stack>
+        [ S PowMulActive -- S Pair<PowMulActive,Bool> ! pure ]
+    export pow_mul_add_probe
+    def pow_mul_add_probe [
+        PowMulActive.into unpair
+        calc_big@1.big_mul_add_probe unpair
+        [ pair PowMulActive.new ] dip pair
+    ]
+
+    signature pow_mul_add_keep forall<S:stack>
+        [ S PowMulActive -- S PowMulAdded ! pure ]
+    export pow_mul_add_keep
+    def pow_mul_add_keep [
+        PowMulActive.into unpair
+        calc_big@1.big_mul_add_keep pair PowMulAdded.new
+    ]
+
+    signature pow_mul_add_begin forall<S:stack>
+        [ S PowMulActive -- S PowMulAddCursor ! pure ]
+    export pow_mul_add_begin
+    def pow_mul_add_begin [
+        PowMulActive.into unpair
+        calc_big@1.big_mul_add_begin pair PowMulAddCursor.new
+    ]
+
+    signature pow_mul_add_digit forall<S:stack>
+        [ S PowMulAddCursor -- S PowMulAddCursor ! pure ]
+    export pow_mul_add_digit
+    def pow_mul_add_digit [
+        PowMulAddCursor.into unpair
+        calc_big@1.big_mul_add_digit pair PowMulAddCursor.new
+    ]
+
+    signature pow_mul_add_more forall<S:stack>
+        [ S PowMulAddCursor -- S Pair<PowMulAddCursor,Bool> ! pure ]
+    export pow_mul_add_more
+    def pow_mul_add_more [
+        PowMulAddCursor.into unpair
+        calc_big@1.big_mul_add_more unpair
+        [ pair PowMulAddCursor.new ] dip pair
+    ]
+
+    signature pow_mul_add_finish forall<S:stack>
+        [ S PowMulAddCursor -- S PowMulAdded ! pure ]
+    export pow_mul_add_finish
+    def pow_mul_add_finish [
+        PowMulAddCursor.into unpair
+        calc_big@1.big_mul_add_finish pair PowMulAdded.new
+    ]
+
+    # True selects the addition finish; any other OpFirstC stage reports
+    # false and is then rejected by op_first_stage_sum_finish_sub.
+    signature op_first_stage_sum_route_probe forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<Pair<OpFirstC,Bool>,Unit> ! pure ]
+    export op_first_stage_sum_route_probe
+    def op_first_stage_sum_route_probe [
+        dup OpFirstC.into unpair unpair [ drop drop ] dip
+        [ drop false ]
+        [ [ drop false ]
+          [ [ drop true ] [ drop false ] calc_big@1.BigAddRoute.match ]
+          case ]
+        case
+        pair result@1.Result.Ok
+    ]
+
+    signature op_first_stage_sum_finish_add forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_finish_add
+    def op_first_stage_sum_finish_add [
+        OpFirstC.into unpair unpair
+        # Finish the add with the Budget/scale and partial products parked
+        # above it, then rebuild the cursor beneath the outcome.
+        [ pair ] dip swap
+        [ [ drop unit result@1.Result.Err ]
+          [ [ drop unit result@1.Result.Err ]
+            [ [ calc_big@1.BigAddRoute.Add calc_big@1.big_add_finish_add ]
+              [ drop unit result@1.Result.Err ]
+              calc_big@1.BigAddRoute.match ]
+            case ]
+          case ] dip
+        unpair calc_bits@1.rot
+        [ dup [ swap cons ] dip
+          inl pair pair OpFirstC.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature op_first_stage_sum_finish_sub forall<S:stack>
+        [ S OpFirstC -- S result@1.Result<OpFirstC,Unit> ! pure ]
+    export op_first_stage_sum_finish_sub
+    def op_first_stage_sum_finish_sub [
+        OpFirstC.into unpair unpair
+        # As op_first_stage_sum_finish_add, for the subtraction route.
+        [ pair ] dip swap
+        [ [ drop unit result@1.Result.Err ]
+          [ [ drop unit result@1.Result.Err ]
+            [ [ drop unit result@1.Result.Err ]
+              [ calc_big@1.BigAddRoute.Sub calc_big@1.big_add_finish_sub ]
+              calc_big@1.BigAddRoute.match ]
+            case ]
+          case ] dip
+        unpair calc_bits@1.rot
+        [ dup [ swap cons ] dip
+          inl pair pair OpFirstC.new result@1.Result.Ok ]
+        [ drop drop drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

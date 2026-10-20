@@ -6,9 +6,8 @@ pub(crate) mod companions;
 mod declared;
 pub(crate) mod editor;
 pub(crate) mod entry;
-mod framing;
-pub(crate) mod live;
-mod output;
+pub(crate) mod framing;
+pub(crate) mod output;
 mod report;
 pub(crate) mod worker;
 
@@ -26,8 +25,6 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 };
 
 pub const USAGE: &str = "usage:
-  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N]
-  live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
   noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
   JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
@@ -35,9 +32,9 @@ pub const USAGE: &str = "usage:
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
   Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
-  noble compile SOURCE [--text-byte-cursor] [--input-type I64|Bool|Text|Unit ...]
+  noble compile SOURCE [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
-  noble session [--text-byte-cursor] [--framed] [--opt off|on] [--emit NEW_DIR]
+  noble session [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
@@ -45,10 +42,6 @@ pub const USAGE: &str = "usage:
   Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
---text-byte-cursor selects Text-Byte-Cursor-v1 for ordinary compile/session only;
-it adds pure text.byte, retaining Text and returning unsigned byte 0..255,
-EOF -1 at the byte length, negative-offset -2 or past-end -3. Increment
-the offset only after a nonnegative byte. It cannot combine with --declared-modules.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
@@ -71,10 +64,10 @@ struct Session {
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
         let declared = match &options.manifest {
-            Some(manifest) => Some(attempt!(
-                noble_contracts::source::ModuleSession::new(&manifest.operations())
-                    .map_err(output::Failure::source)
-            )),
+            Some(manifest) => Some(attempt!(noble_contracts::source::ModuleSession::new(
+                &manifest.operations()
+            )
+            .map_err(output::Failure::source))),
             None => None,
         };
         Ok(Self {
@@ -116,21 +109,27 @@ impl Session {
         if self.declared.is_some() {
             return self.submit_declared(source, options);
         }
+        let profile = if options.text_byte_cursor {
+            "Text-Byte-Cursor-v1"
+        } else {
+            "Core-Bootstrap"
+        };
         let prepared = match self.frontend.prepare(source, &self.stack, options.limits) {
             Ok(prepared) => prepared,
-            Err(error) => return Ok(output::Report::source_error_for_profile(
-                &error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::source_error(
+                    &error,
+                    self.submissions,
+                    profile,
+                ))
+            }
         };
         if prepared.is_definition() {
-            attempt!(
-                self.frontend
-                    .commit(prepared)
-                    .map_err(output::Failure::source)
-            );
-            return Ok(output::Report::defined_for_profile(
-                self.submissions, options.text_byte_cursor,
-            ));
+            attempt!(self
+                .frontend
+                .commit(prepared)
+                .map_err(output::Failure::source));
+            return Ok(output::Report::defined(self.submissions, profile));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
             output::Failure::new(
@@ -143,9 +142,13 @@ impl Session {
         }));
         let compiled = match self.compiler.prepare(submission) {
             Ok(compiled) => compiled,
-            Err(error) => return Ok(output::Report::backend_error_for_profile(
-                error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::backend_error(
+                    error,
+                    self.submissions,
+                    profile,
+                ))
+            }
         };
         if self.worker.is_none() {
             self.worker = Some(attempt!(worker::Engine::start(options)));
@@ -164,16 +167,14 @@ impl Session {
             return Ok(prepared_report);
         }
         let output_types = prepared.output().to_vec();
-        attempt!(
-            self.compiler
-                .commit(compiled)
-                .map_err(output::Failure::backend)
-        );
-        attempt!(
-            self.frontend
-                .commit(prepared)
-                .map_err(output::Failure::source)
-        );
+        attempt!(self
+            .compiler
+            .commit(compiled)
+            .map_err(output::Failure::backend));
+        attempt!(self
+            .frontend
+            .commit(prepared)
+            .map_err(output::Failure::source));
         let report = attempt!(engine.execute());
         if report.outcome == "normal" {
             self.stack = output_types;

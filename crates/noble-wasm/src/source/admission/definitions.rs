@@ -4,14 +4,14 @@
 )]
 pub(super) fn bounds(
     submission: &noble_kernel::execution::Submission,
-    environment_work: u64,
+    calculator: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match definition_bounds(submission, index, environment_work, totals, work) {
+        match definition_bounds(submission, calculator, index, totals, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -32,14 +32,20 @@ pub(super) fn bounds(
 
 fn definition_bounds(
     submission: &noble_kernel::execution::Submission,
+    calculator: bool,
     index: usize,
-    environment_work: u64,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
     attempt!(check_identity(submission, index, work));
-    attempt!(work.charge(environment_work));
+    let contract_work = attempt!(super::environment::contract_work(
+        &submission.environment,
+        definition.definition,
+        calculator,
+        work,
+    ));
+    attempt!(work.charge(contract_work));
     attempt!(super::environment::exact_contract(
         &submission.environment,
         definition.definition,
