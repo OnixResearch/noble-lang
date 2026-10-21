@@ -213,10 +213,6 @@ fn finish_draft(
     Ok((node, draft.span))
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
 pub(crate) fn check(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,
@@ -228,6 +224,10 @@ pub(crate) fn check(
 }
 
 /// This remains a structural check, not a source-authorizing entry point.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 pub(crate) fn check_signed_structure(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,
@@ -247,6 +247,12 @@ pub(crate) fn check_signed_structure(
     )
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::function_length,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 fn check_with_owner(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,

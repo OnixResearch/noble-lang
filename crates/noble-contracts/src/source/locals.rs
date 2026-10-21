@@ -6,6 +6,10 @@
 //! its free values at construction with checked `quote` and `compose`; its
 //! recipe therefore retains the original values, not source spellings.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use alloc::vec::Vec;
 
 struct Bound {
@@ -26,6 +30,10 @@ pub(super) enum Generation {
 }
 
 impl Generation {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
+    )]
     pub(super) const fn as_str(self) -> &'static str {
         match self {
             Self::BindingSwap => "binding-swap",
@@ -54,6 +62,10 @@ struct Lower<'a> {
     witnesses: Option<&'a mut Vec<GeneratedWitness>>,
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
 pub(super) fn lower(
     tree: &mut super::Tree,
     meter: &mut crate::Meter,
@@ -61,6 +73,14 @@ pub(super) fn lower(
     lower_inner(tree, meter, None)
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; it forwards the growable witness vector to lower_inner, which appends generated witnesses with Vec::push."
+)]
 pub(super) fn lower_with_witness(
     tree: &mut super::Tree,
     meter: &mut crate::Meter,
@@ -69,6 +89,11 @@ pub(super) fn lower_with_witness(
     lower_inner(tree, meter, Some(witnesses))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
 fn lower_inner(
     tree: &mut super::Tree,
     meter: &mut crate::Meter,
@@ -112,6 +137,10 @@ fn lower_inner(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+)]
 fn name(bytes: &[u8]) -> bool {
     let Some((&first, rest)) = bytes.split_first() else {
         return false;
@@ -123,6 +152,10 @@ fn name(bytes: &[u8]) -> bool {
         && bytes != b"let"
 }
 
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 fn source_node(
     nodes: &[super::Node],
     id: u32,
@@ -138,6 +171,21 @@ fn source_node(
 #[expect(
     clippy::too_many_arguments,
     reason = "Owner: noble-contracts; the lexical free-occurrence walk threads its node table, body, outer binders, shadow stack and meter explicitly; bundling them would hide which state each recursive step reads or extends"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::no_recursion,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the shadow scope stack is pushed and popped while names are freed, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; at is an in-bounds body index, so at + 1 is at most the body length and cannot overflow usize."
 )]
 fn free(
     nodes: &[super::Node],
@@ -174,15 +222,15 @@ fn free(
                 continue;
             }
             super::Kind::Word(word) => {
-                let mut hidden = false;
+                let mut is_hidden = false;
                 for local in shadow.iter().rev() {
                     attempt!(meter.charge(1, node.span));
                     if local == word {
-                        hidden = true;
+                        is_hidden = true;
                         break;
                     }
                 }
-                if !hidden {
+                if !is_hidden {
                     for (index, local) in outer.iter().enumerate() {
                         attempt!(meter.charge(1, node.span));
                         if local.name == *word {
@@ -209,6 +257,10 @@ fn free(
 }
 
 impl Lower<'_> {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     fn node(
         &mut self,
         kind: super::Kind,
@@ -231,6 +283,10 @@ impl Lower<'_> {
         Ok(id)
     }
 
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     fn builtin(
         &mut self,
         definition: u32,
@@ -248,6 +304,16 @@ impl Lower<'_> {
         )
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable depth maps to usize::MAX, whose following checked_add fails closed."
+    )]
     fn wrapped(
         &mut self,
         id: u32,
@@ -293,6 +359,16 @@ impl Lower<'_> {
         clippy::too_many_arguments,
         reason = "Owner: noble-contracts; one lexical lowering step names its output code, owner, locals and witness state separately; bundling them would change the extracted subject"
     )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the emitted code buffer grows with Vec::push, so it needs the growable vector."
+    )]
     fn operation(
         &mut self,
         code: &mut Vec<u32>,
@@ -323,6 +399,10 @@ impl Lower<'_> {
         Ok(())
     }
 
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     fn lookup(
         meter: &mut crate::Meter,
         locals: &[Bound],
@@ -340,6 +420,20 @@ impl Lower<'_> {
 
     /// Project a local at physical index `which` below *all* hidden values.
     /// Each `dup` or `swap` is itself an ordinary kernel-checked builtin.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; it forwards the growable code buffer to operation, which appends with Vec::push."
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the preceding which >= locals.len() refusal guarantees locals.len() - which - 1 cannot underflow."
+    )]
     fn read(
         &mut self,
         code: &mut Vec<u32>,
@@ -384,6 +478,12 @@ impl Lower<'_> {
         Ok(())
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; growth is bounded by the checked input or admission limits that drive the loop."
+    )]
     fn quote(
         &mut self,
         id: u32,
@@ -426,7 +526,7 @@ impl Lower<'_> {
             }
         }
         let mut lowered = Vec::new();
-        let mut first = true;
+        let mut is_first = true;
         // `outer[0]` is the newest/top binder. Capture oldest first, so
         // replaying the composed programs reconstructs that same stack order.
         for index in (0..used.len()).rev() {
@@ -444,7 +544,7 @@ impl Lower<'_> {
                     id,
                     binder_node
                 ));
-                if !first {
+                if !is_first {
                     attempt!(self.operation(
                         &mut lowered,
                         9,
@@ -457,7 +557,7 @@ impl Lower<'_> {
                         binder_node
                     ));
                 }
-                first = false;
+                is_first = false;
             }
         }
         let body = attempt!(self.body(&nested, captured, deeper));
@@ -474,7 +574,7 @@ impl Lower<'_> {
             span,
             id
         )));
-        if !first {
+        if !is_first {
             attempt!(self.operation(
                 &mut lowered,
                 9,
@@ -490,6 +590,16 @@ impl Lower<'_> {
         Ok(lowered)
     }
 
+    #[expect(
+        tigerstyle::allocation_in_loop,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; each iteration's buffer is bounded by the checked input that drives the loop; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; growth is bounded by the checked input or admission limits that drive the loop."
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; at is an in-bounds source index, so at + 1 is at most the source length and cannot overflow usize; a Vec length is below isize::MAX, so locals.len() + 1 cannot overflow usize."
+    )]
     fn body(
         &mut self,
         source: &[u32],

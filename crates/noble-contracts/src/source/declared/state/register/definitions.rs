@@ -266,6 +266,14 @@ fn exported_definition(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; committing mutates the owned session and the work meter through non-const calls."
+)]
 fn commit_definition(
     mut session: crate::source::declared::ModuleSession,
     definition_bytes: &[u8],

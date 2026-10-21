@@ -65,6 +65,10 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every supplied environment row, dependency list and effect bound is untrusted and checked explicitly against the fixed bootstrap contract; mismatches return Invalid instead of asserting."
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
@@ -190,6 +194,10 @@ pub(super) fn check(
     }
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+)]
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
     let has_clock = env
         .kinds
@@ -268,6 +276,10 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
 #[expect(
     tigerstyle::allocation_in_loop,
     reason = "Owner: noble-wasm-maintainers; each fixed definition row owns a fresh empty dependency list, so one buffer cannot be moved into every row."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
@@ -603,6 +615,12 @@ fn scheme_work(scheme: &noble_kernel::words::Scheme) -> Result<u64, crate::Diagn
     Ok(parts.saturating_mul(512))
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::non_trait_imports,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod contract_meter_tests {
     use super::{exact_contract, scheme_work, work};
@@ -668,6 +686,11 @@ mod contract_meter_tests {
     }
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod declared_text_profile_tests {
     #[test]

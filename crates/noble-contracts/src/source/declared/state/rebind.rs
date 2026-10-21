@@ -2,8 +2,16 @@
 //! keep their old resolved owners; only current outside named definitions are
 //! replayed in one unpublished successor, in dependency order.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use alloc::{string::String, vec::Vec};
 
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 struct Rebind<'a> {
     spelling: &'a str,
     prior_owner: u64,
@@ -65,6 +73,11 @@ impl super::ModuleSession {
             .any(|before| before.spelling == after.spelling && before.module != after.module)
     }
 
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; growth is bounded by the checked input or admission limits that drive the loop."
+    )]
     pub(super) fn rebuild_import_alias(
         &self,
         staged: &mut Self,
@@ -107,10 +120,10 @@ impl super::ModuleSession {
             attempt!(meter
                 .charge(1, definition.tree.span)
                 .map_err(|error| super::super::diagnostic(crate::source::Stage::Check, error)));
-            let directly = definition.alias_uses.iter().any(|entry| {
+            let is_directly = definition.alias_uses.iter().any(|entry| {
                 entry.spelling == rebind.spelling && entry.owner == rebind.prior_owner
             });
-            let mut transitively = false;
+            let mut is_transitively = false;
             for node in &definition.tree.nodes {
                 attempt!(meter
                     .charge(1, node.span)
@@ -119,18 +132,18 @@ impl super::ModuleSession {
                 {
                     let target = usize::try_from(*target)
                         .map_err(|_| refusal("retained named dependency exceeds address space"))?;
-                    let changed = affected.get(target).copied().ok_or_else(|| {
+                    let is_changed = affected.get(target).copied().ok_or_else(|| {
                         refusal("retained named dependency lacks its checked source")
                     })?;
-                    if changed && current[index] && !current[target] {
+                    if is_changed && current[index] && !current[target] {
                         return Err(refusal(
                             "current definition depends on a shadowed alias owner that cannot be replayed",
                         ));
                     }
-                    transitively |= changed;
+                    is_transitively |= is_changed;
                 }
             }
-            if directly || transitively {
+            if is_directly || is_transitively {
                 affected[index] = true;
                 if current[index] {
                     dependents.push(index);
@@ -141,7 +154,10 @@ impl super::ModuleSession {
         let mut replacements = alloc::vec![None; source_count];
         let count = u32::try_from(dependents.len().max(1))
             .map_err(|_| refusal("dependent rebuild count exceeds source limit"))?;
-        let work = limits.work / count;
+        // count >= 1 by construction; checked_div keeps the zero case explicit.
+        let Some(work) = limits.work.checked_div(count) else {
+            return Err(refusal("dependent replay work budget exhausted"));
+        };
         if work == 0 {
             return Err(refusal("dependent replay work budget exhausted"));
         }
@@ -167,14 +183,14 @@ impl super::ModuleSession {
                     "retained definition changed an unapproved resolved owner",
                 ));
             }
-            let compatible = attempt!(crate::source::replacement::compatible(
+            let is_compatible = attempt!(crate::source::replacement::compatible(
                 &staged.source,
                 original,
                 replacement,
                 replay_limits,
             )
             .map_err(|error| super::super::diagnostic(crate::source::Stage::Check, error)));
-            if !compatible {
+            if !is_compatible {
                 return Err(refusal(
                     "import rebind changes a dependent interface or effect ceiling",
                 ));
@@ -195,6 +211,14 @@ impl super::ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::function_length,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+)]
 fn preserves_rebind_targets(
     original: &crate::source::Named,
     replayed: &crate::source::Named,
@@ -259,7 +283,7 @@ fn preserves_rebind_targets(
                     if left == right {
                         return true;
                     }
-                    let rebuilt_edge = match (left, right) {
+                    let is_rebuilt_edge = match (left, right) {
                         (
                             crate::source::Target::Named(before),
                             crate::source::Target::Named(after),
@@ -269,7 +293,7 @@ fn preserves_rebind_targets(
                         }
                         _ => false,
                     };
-                    let alias_edge = original.alias_uses.iter().any(|entry| {
+                    let is_alias_edge = original.alias_uses.iter().any(|entry| {
                         entry.spelling == rebind.spelling
                             && entry.owner == rebind.prior_owner
                             && entry.nodes.contains(&(ordinal, *left))
@@ -278,7 +302,7 @@ fn preserves_rebind_targets(
                             && entry.owner == rebind.next_owner
                             && entry.nodes.contains(&(ordinal, *right))
                     });
-                    rebuilt_edge || alias_edge
+                    is_rebuilt_edge || is_alias_edge
                 }
                 _ => false,
             }

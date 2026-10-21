@@ -133,8 +133,12 @@ fn is_ready(
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::borrowed_argument_types,
-    tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; the caller reserves one slot per admitted node in this fresh seen table, whose insertion requires Vec growth; metered lookup rejects missing definitions without assertions while the submission and done slice remain immutable."
+)]
+#[expect(
+    tigerstyle::compound_condition,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn inspect_node(
     submission: &noble_kernel::execution::Submission,

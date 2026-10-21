@@ -1,5 +1,11 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::excessive_file_length,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 
 const fn limits() -> noble_contracts::Limits {
     noble_contracts::Limits {

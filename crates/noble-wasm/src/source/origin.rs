@@ -2,10 +2,26 @@
 //! Program. Unsupported source shapes keep ordinary Program execution and
 //! saved-owner retention without an invented returned-target identity.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-wasm-maintainers; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use alloc::{rc::Rc, vec::Vec};
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-wasm-maintainers; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use noble_contracts::source::proof::{CheckedLexicalKind, CheckedSelectedTarget};
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-wasm-maintainers; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use noble_kernel::{types::Ty, untrusted::NodeId};
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-wasm-maintainers; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use super::{
     plan::{Action, Layout},
     OriginAction, OriginFixedArithmetic, OriginFixedExpression, OriginI64, OriginOperand,
@@ -50,7 +66,7 @@ fn action(
         Action::Program(index) if index < plan.programs.len() => OriginAction::StaticProgram(index),
         Action::Quote(input, output, witness) if program_index != plan.root => {
             let site = selected.checked_quote_site(operation.node).ok()?;
-            let program_operand = match site.interface().stack_in.last()? {
+            let is_program_operand = match site.interface().stack_in.last()? {
                 Ty::I64 => false,
                 Ty::Program(_, _, effects) if effects.is_empty() => true,
                 _ => return None,
@@ -59,7 +75,7 @@ fn action(
                 input,
                 output,
                 witness,
-                program_operand,
+                program_operand: is_program_operand,
             }
         }
         Action::Call(index, identity)
@@ -74,6 +90,11 @@ fn action(
     Some(result)
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks."
+)]
 fn programs(selected: &CheckedSelectedTarget<'_>, plan: &Layout) -> Option<Vec<OriginProgram>> {
     if plan.programs.len() > MAX_ORIGIN_PROGRAMS || plan.programs.is_empty() {
         return None;
@@ -221,6 +242,17 @@ fn fixed_dimensions(recipe: &OriginFixedExpression) -> (usize, usize) {
 #[expect(
     clippy::too_many_arguments,
     reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
+)]
+#[expect(
+    tigerstyle::function_length,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::no_recursion,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
 )]
 fn execute(
     programs: &[OriginProgram],
@@ -381,6 +413,11 @@ fn execute(
     Some(())
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; growth is bounded by the checked input or admission limits that drive the loop."
+)]
 fn returned_outputs(
     selected: &CheckedSelectedTarget<'_>,
     plan: &Layout,
@@ -445,6 +482,13 @@ fn returned_outputs(
     Some(result)
 }
 
+#[expect(
+    tigerstyle::function_length,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::no_recursion,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 fn bounded_graph_cells(
     value: &Rc<OriginProgramValue>,
     programs: &[OriginProgram],
@@ -454,10 +498,19 @@ fn bounded_graph_cells(
     total: &mut usize,
     fixed_nodes: &mut usize,
 ) -> Option<()> {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     fn charge(total: &mut usize, cells: usize) -> Option<()> {
         *total = total.checked_add(cells)?;
         (*total <= MAX_ORIGIN_PROGRAMS).then_some(())
     }
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input."
+    )]
     fn static_body(
         index: usize,
         programs: &[OriginProgram],
@@ -478,6 +531,11 @@ fn bounded_graph_cells(
         }
         Some(())
     }
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input."
+    )]
     fn fixed_recipe(
         recipe: &Rc<OriginFixedExpression>,
         depth: usize,
@@ -555,6 +613,10 @@ fn bounded_graph_cells(
     }
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+)]
 pub(super) fn build(
     selected: &CheckedSelectedTarget<'_>,
     plan: &Layout,

@@ -316,6 +316,10 @@ pub struct SelectedOriginMetadata {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-wasm-maintainers; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 pub enum OriginSource {
     Definition,
     Selection,
@@ -801,6 +805,10 @@ impl Compiler {
 
     /// Rebuild a signed staged-source snapshot before authorizing `SignedSelf`.
     /// A public Submission or Env cannot supply the owner instance witness.
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     pub fn prepare_signed(
         &self,
         source: &noble_contracts::source::SignedSourceOwner<'_>,
@@ -827,6 +835,10 @@ impl Compiler {
     /// The merged cursor/declared profile has no raw Submission ingress.
     /// Rebuild from the contracts-private source snapshot, including the
     /// signed owner and all quotations, before the fixed-prefix admission audit.
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     pub fn prepare_declared_text(
         &self,
         source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
@@ -845,7 +857,7 @@ impl Compiler {
         if !submission.environment.declared_modules || !submission.environment.text_cursor {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let signed = submission.definitions.iter().any(|definition| {
+        let is_signed = submission.definitions.iter().any(|definition| {
             definition
                 .body
                 .candidate
@@ -853,7 +865,7 @@ impl Compiler {
                 .iter()
                 .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
         });
-        self.prepare_from(&submission, None, self.functions, false, false, signed)
+        self.prepare_from(&submission, None, self.functions, false, false, is_signed)
     }
 
     /// Calculator-only preparation at a quiescent submission boundary: the
@@ -905,6 +917,11 @@ impl Compiler {
         )
     }
 
+    #[expect(
+        tigerstyle::allocation_in_loop,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-wasm-maintainers; each iteration's buffer is bounded by the checked input that drives the loop; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
     fn prepare_from(
         &self,
         submission: &noble_kernel::execution::Submission,
@@ -1307,6 +1324,11 @@ impl Compiler {
     /// no external or saved roots, cleared every source code entry and
     /// released every module global before tombstoning the complete heap.
     /// Source identities and generation remain monotone across this epoch.
+    #[expect(
+        tigerstyle::compound_condition,
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     pub fn retire_declared_text_epoch(
         &mut self,
         generation: u32,
@@ -1875,6 +1897,14 @@ mod tests {
     }
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::numeric_units,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod declared_text_ingress_tests {
     use super::{admission, emit, plan, preflight, Compiler, Work};
@@ -2056,6 +2086,12 @@ mod declared_text_ingress_tests {
     }
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::non_trait_imports,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod signed_dispatch_tests {
     use super::Compiler;

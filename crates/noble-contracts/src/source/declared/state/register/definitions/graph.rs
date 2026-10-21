@@ -175,7 +175,7 @@ impl<'a> Schedule<'a> {
                 )),
             );
         };
-        let signed_owner = self
+        let is_signed_owner = self
             .session
             .as_ref()
             .and_then(|session| session.source.declared.as_ref())
@@ -189,7 +189,7 @@ impl<'a> Schedule<'a> {
             tree,
             &self.names,
             &self.installed,
-            signed_owner.then_some(name.as_str()),
+            is_signed_owner.then_some(name.as_str()),
             self.work.meter,
         );
         self.work.meter = meter;

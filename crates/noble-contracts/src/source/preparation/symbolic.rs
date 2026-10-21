@@ -2,12 +2,24 @@
 //! inferred graph before its definition can enter a staged module. This is a
 //! contracts-private source certificate, not a concrete kernel Checked value.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use alloc::{vec, vec::Vec};
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use noble_kernel::{
     contracts::Definition,
     words::{Scheme, VariableKind},
 };
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+)]
 use crate::source::{Kind, SignedRelation, SymbolicNode, Target, Tree};
 
 fn refused(span: crate::Span) -> crate::Diagnostic {
@@ -17,7 +29,14 @@ fn refused(span: crate::Span) -> crate::Diagnostic {
     )
 }
 
-fn same_variable(left: crate::inference::Variable, right: crate::inference::Variable) -> bool {
+const fn same_variable(
+    left: crate::inference::Variable,
+    right: crate::inference::Variable,
+) -> bool {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use crate::inference::Variable;
     match (left, right) {
         (Variable::Value(a), Variable::Value(b))
@@ -28,7 +47,15 @@ fn same_variable(left: crate::inference::Variable, right: crate::inference::Vari
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+)]
 fn witness_shape(kinds: &[VariableKind], witnesses: &[crate::inference::Variable]) -> bool {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use crate::inference::Variable;
     kinds.len() == witnesses.len()
         && kinds.iter().zip(witnesses).all(|(kind, witness)| {
@@ -44,6 +71,10 @@ fn witness_shape(kinds: &[VariableKind], witnesses: &[crate::inference::Variable
         })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn rigid_owner(
     state: &crate::source::inference::State,
     scheme: &Scheme,
@@ -51,6 +82,10 @@ fn rigid_owner(
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use crate::inference::{Term, Variable};
     if !witness_shape(&scheme.var_kinds, variables) {
         return Err(refused(span));
@@ -58,7 +93,7 @@ fn rigid_owner(
     for (ordinal, (kind, variable)) in scheme.var_kinds.iter().zip(variables).enumerate() {
         attempt!(meter.charge(1, span));
         let ordinal = attempt!(crate::index(ordinal, span));
-        let sound = match (kind, variable) {
+        let is_sound = match (kind, variable) {
             (VariableKind::Value, Variable::Value(id)) => {
                 matches!(state.arena.get(attempt!(state.arena.root(*id, span, meter)), span)?,
                     Term::RigidValue(identity) if identity == ordinal)
@@ -72,13 +107,21 @@ fn rigid_owner(
             }
             _ => false,
         };
-        if !sound {
+        if !is_sound {
             return Err(refused(span));
         }
     }
     Ok(())
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the count walks owned tree vectors with iterator adapters, which are not const."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; the earlier nodes.last() refusal guarantees at least one node, so nodes.len() - 1 cannot underflow."
+)]
 fn semantic_count(tree: &Tree) -> Result<usize, crate::Diagnostic> {
     let Some(outer) = tree.nodes.last() else {
         return Err(refused(tree.span));
@@ -95,6 +138,11 @@ fn semantic_count(tree: &Tree) -> Result<usize, crate::Diagnostic> {
     Ok(tree.nodes.len() - 1)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; growth is bounded by the checked input or admission limits that drive the loop."
+)]
 fn reachable(
     tree: &Tree,
     meter: &mut crate::Meter,
@@ -156,6 +204,17 @@ fn reachable(
 #[expect(
     clippy::too_many_arguments,
     reason = "Owner: noble-contracts; the symbolic check compares the parsed tree, inference state, owner scheme and exact source bytes together; bundling them would change the extracted subject"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::function_length,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::sentinel_fallback,
+    reason = "Owner: noble-contracts; u32 node limits always fit usize on supported targets, so the usize::MAX fallback is unreachable."
 )]
 pub(super) fn check(
     tree: &Tree,
@@ -335,6 +394,10 @@ pub(super) fn check(
     })
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the edge comparison calls an impl Fn mapper, which cannot be called in a const fn."
+)]
 fn same_edges(
     source: &[u32],
     drafts: &[noble_kernel::untrusted::NodeId],
@@ -347,6 +410,10 @@ fn same_edges(
             .all(|(original, inferred)| mapped(*original) == Some(inferred.0))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn named_token_matches(
     source: &crate::source::Node,
     raw: &crate::source::Node,
@@ -376,6 +443,10 @@ fn named_token_matches(
     Ok(false)
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str and byte-slice equality are not const."
+)]
 fn lexical_kind(
     source: &crate::source::Node,
     raw: &crate::source::Node,
@@ -408,6 +479,16 @@ fn lexical_kind(
     clippy::too_many_arguments,
     reason = "Owner: noble-contracts; one occurrence comparison needs the source node, draft, inference state, owner scheme and rigid variables at once; bundling them would change the extracted subject"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::function_length,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the comparison walks owned scheme and draft tables with iterator adapters, which are not const."
+)]
 fn draft_matches(
     source: &crate::source::Node,
     draft: &crate::source::inference::Draft,
@@ -419,8 +500,12 @@ fn draft_matches(
     environment: &noble_kernel::contracts::Env,
     meter: &mut crate::Meter,
 ) -> Result<bool, crate::Diagnostic> {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use crate::source::inference::DraftKind;
-    let same = match (&source.kind, &draft.kind) {
+    let is_same = match (&source.kind, &draft.kind) {
         (Kind::Literal(a), DraftKind::Literal(b)) => {
             a == b
                 && draft.text.is_none()
@@ -451,7 +536,7 @@ fn draft_matches(
                 .and_then(|position| state.bodies.get(position));
             match (target, body) {
                 (Some(target), Some(body)) => {
-                    let exact_variables = if body
+                    let is_exact_variables = if body
                         .nodes
                         .iter()
                         .any(|node| matches!(node.kind, DraftKind::SignedSelf(_)))
@@ -476,7 +561,7 @@ fn draft_matches(
                         && body.owner_slot == Some(*index)
                         && body.identity == Some(target.identity)
                         && body.owner == target.owner
-                        && exact_variables
+                        && is_exact_variables
                         && draft.text.is_none()
                 }
                 _ => false,
@@ -508,11 +593,18 @@ fn draft_matches(
         _ => false,
     };
     attempt!(meter.charge(1, source.span));
-    Ok(same)
+    Ok(is_same)
 }
 
 /// Check the private certificate against the retained original lexical bytes
 /// before a signed-only compiler may rederive any concrete specialization.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::too_many_parameters,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields; growth is bounded by the checked input or admission limits that drive the loop."
+)]
 pub(in crate::source) fn verify(
     tree: &Tree,
     original: &Tree,

@@ -758,6 +758,10 @@ struct LoweredProgram {
     depth: usize,
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the C shape arena interns each new shape with Vec::push, so it needs the owned growable vector rather than a slice."
+)]
 fn shape_id<'a>(shapes: &mut Vec<&'a Ty>, ty: &'a Ty) -> Result<usize, String> {
     if let Some(index) = shapes.iter().position(|known| *known == ty) {
         return Ok(index + 1);
@@ -801,6 +805,10 @@ fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>,
 #[expect(
     clippy::too_many_arguments,
     reason = "Owner: noble-maintainers; the C lowering walk threads the checked candidate, body, behaviors, literal texts, interfaces, shape arena, visit marks, lowered programs and slot explicitly through each recursive step."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the lowering walk passes the growable C shape arena to shape_id, which interns new shapes with Vec::push."
 )]
 fn lower_body<'a>(
     candidate: &Candidate,

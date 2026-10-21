@@ -25,6 +25,11 @@ pub(super) fn resolve(
 /// Resolve retained source at its original declaration boundary. Later
 /// definitions (including later shadows of bootstrap words) were not visible
 /// when this body was checked and must not change its immutable targets.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn resolve_prefix(
     tree: &mut super::Tree,
     declaration: Option<&str>,
@@ -62,6 +67,10 @@ pub(super) fn resolve_prefix(
     }
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 fn resolve_node(
     node: &mut super::Node,
     declaration: Option<&str>,
@@ -97,6 +106,10 @@ fn resolve_node(
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn lookup(
     word: &[u8],
@@ -229,6 +242,10 @@ fn lookup(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; reverse namespace lookup charges Meter before each exact word comparison and preserves first budget error then builtin/unbound precedence; guest failures must not panic; reassess fallible-check density."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn declared_lookup(
     word: &[u8],

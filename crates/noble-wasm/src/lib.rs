@@ -10,6 +10,10 @@
     reason = "Owner: noble-wasm-maintainers; the selected source stage is already split by lowering phase at the policy's nine-file capacity"
 )]
 #![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-wasm-maintainers; source/emit/core_live.rs names the Core-live ownership stage beside the separate live stage; a nested core/live.rs path would imply a core module that does not exist."
+)]
+#![expect(
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-wasm-maintainers; supported targets have usize >= 32 bits and every flagged cast converts a validated non-negative count or index"
 )]

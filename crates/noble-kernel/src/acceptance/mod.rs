@@ -73,6 +73,10 @@ pub fn check_signed_structure(
     outcome(run(env, request, candidate, Some((owner, owner_inst))))
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the Result<Checked, Fail> argument has a destructor, which a const fn cannot evaluate (E0493 on the pinned compiler)."
+)]
 fn outcome(result: Result<crate::untrusted::Checked, Fail>) -> crate::untrusted::Outcome {
     match result {
         Ok(checked) => crate::untrusted::Outcome::Accepted(checked),

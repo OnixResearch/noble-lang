@@ -2,6 +2,13 @@
 #![register_tool(tigerstyle)]
 #![allow(
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::compound_assertion,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {

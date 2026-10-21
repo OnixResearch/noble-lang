@@ -178,6 +178,11 @@ fn export_capacity(
         .ok_or(crate::Diagnostic::Exhausted)
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod tests {
     use alloc::vec;

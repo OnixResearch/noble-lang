@@ -78,13 +78,13 @@ impl super::Session {
         } else {
             alloc::vec::Vec::new()
         };
-        let signed_owner = signature.is_some()
+        let is_signed_owner = signature.is_some()
             && self
                 .declared
                 .as_ref()
                 .is_some_and(|context| context.signed_self);
         if let Err(error) =
-            super::resolution::resolve(&mut tree, name.as_deref(), self, signed_owner, meter)
+            super::resolution::resolve(&mut tree, name.as_deref(), self, is_signed_owner, meter)
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
@@ -145,7 +145,7 @@ impl super::Session {
         // An actual unpublished owner interface occupies this transaction's
         // prospective Env row while its body is checked. It is never installed
         // into the committed namespace or exposed as a raw graph self edge.
-        let prospective_owner = if signed_owner
+        let prospective_owner = if is_signed_owner
             && tree
                 .nodes
                 .iter()
@@ -373,6 +373,15 @@ impl super::Session {
 /// Preserve exact source node ordinals before resolution erases spellings.
 /// Only current outside aliases on a top-level named body are mutable;
 /// module-local imports belong to that module's immutable source snapshot.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; an alias length is a String length below isize::MAX, so alias.len() + 1 cannot overflow usize."
+)]
 fn alias_candidates(
     tree: &super::Tree,
     session: &super::Session,
@@ -404,6 +413,12 @@ fn alias_candidates(
     Ok(candidates)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added; growth is bounded by the checked input or admission limits that drive the loop."
+)]
 fn checked_alias_uses(
     tree: &super::Tree,
     session: &super::Session,

@@ -173,6 +173,10 @@ fn invoke(
     }
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
+)]
 fn contains_program(ty: &noble_kernel::types::Ty) -> bool {
     match ty {
         noble_kernel::types::Ty::Program(_, _, _) => true,

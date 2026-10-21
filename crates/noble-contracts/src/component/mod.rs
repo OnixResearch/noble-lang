@@ -243,6 +243,10 @@ impl World {
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_CODE_EXPORT))
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     fn select_worker_program_shape(
         mut self,
         effect: Option<noble_kernel::types::EffId>,

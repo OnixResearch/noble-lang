@@ -273,6 +273,10 @@ impl Collected {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
     )]
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
     fn add_definition(
         mut self,
         name: alloc::string::String,

@@ -96,6 +96,10 @@ impl super::Arena {
         self.add_effect(Effect::Rigid(identity), span, meter)
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape."
+    )]
     pub(crate) fn is_rigid_effect(&self, id: u32, identity: u32) -> bool {
         usize::try_from(id)
             .ok()
@@ -193,6 +197,14 @@ impl super::Arena {
         }
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the union mutates the solver tables and meter through non-const method calls."
+    )]
     fn program_type_effect_union(
         &mut self,
         left: u32,

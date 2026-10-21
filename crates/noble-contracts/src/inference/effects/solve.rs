@@ -422,6 +422,11 @@ fn close_term(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod tests {
     use super::super::Effect;

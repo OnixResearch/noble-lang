@@ -67,6 +67,10 @@ impl<'a> Output<'a> {
         Err(crate::Diagnostic::Invalid)
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     pub(super) fn code_export_action(
         self,
         slot: u32,

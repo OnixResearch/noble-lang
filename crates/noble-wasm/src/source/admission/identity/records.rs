@@ -1,5 +1,9 @@
 //! Identity record admission for a checked submission.
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn admit(
     submission: &noble_kernel::execution::Submission,
     index: usize,
@@ -9,13 +13,13 @@ pub(super) fn admit(
     work: &mut super::super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
-    let signed_body = definition
+    let is_signed_body = definition
         .body
         .candidate
         .nodes
         .iter()
         .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }));
-    if signed_body && !signed {
+    if is_signed_body && !signed {
         return Err(crate::Diagnostic::Invalid);
     }
     let recipe = attempt!(super::encode(

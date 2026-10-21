@@ -98,12 +98,28 @@ pub struct CheckedOperationSite {
     pub generated_witness: Option<CheckedGeneratedWitness>,
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless; growth is bounded by the checked input or admission limits that drive the loop."
+)]
 fn candidate_to_lexical(
     candidate: &noble_kernel::untrusted::Candidate,
     tree: &super::Tree,
     meter: &mut crate::Meter,
 ) -> Result<alloc::vec::Vec<u32>, SourceProofRefusal> {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use noble_kernel::untrusted::Node;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        tigerstyle::renamed_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency; the short local alias keeps the refusal constructors readable within this function."
+    )]
     use SourceProofRefusal as Refusal;
     let mut mapping = alloc::vec![u32::MAX; candidate.nodes.len()];
     let mut pairs = alloc::vec::Vec::new();
@@ -171,6 +187,17 @@ type LexicalReplay = (
     alloc::vec::Vec<u32>,
 );
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; the is_empty refusal precedes nodes.len() - 1, and witness ordinals are compared only after witnesses.len() equals end - original, so original + ordinal stays below end."
+)]
 fn replay_lexical_source(
     bytes: &[u8],
     retained: &super::Named,
@@ -179,6 +206,11 @@ fn replay_lexical_source(
     limits: crate::Limits,
     candidate: &noble_kernel::untrusted::Candidate,
 ) -> Result<LexicalReplay, SourceProofRefusal> {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        tigerstyle::renamed_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency; the short local alias keeps the refusal constructors readable within this function."
+    )]
     use SourceProofRefusal as Refusal;
     let mut meter = crate::Meter::new(limits);
     let (mut replay, name) =
@@ -202,11 +234,17 @@ fn replay_lexical_source(
         &mut meter,
     )
     .map_err(|_| Refusal::MismatchedSource)?;
-    let end = u32::try_from(replay.nodes.len() - 1).map_err(|_| Refusal::MismatchedSource)?;
+    let last = replay
+        .nodes
+        .len()
+        .checked_sub(1)
+        .ok_or(Refusal::MismatchedSource)?;
+    let end = u32::try_from(last).map_err(|_| Refusal::MismatchedSource)?;
     if replay != retained.tree {
         return Err(Refusal::MismatchedSource);
     }
-    if witnesses.len() != (end - original) as usize
+    let generated_count = end.checked_sub(original).ok_or(Refusal::MismatchedSource)?;
+    if witnesses.len() != generated_count as usize
         || witnesses
             .iter()
             .enumerate()
@@ -249,6 +287,10 @@ impl CheckedSelectedTarget<'_> {
     pub fn lexical_body(&self) -> &[u32] {
         &self.tree.body
     }
+    #[expect(
+        tigerstyle::usize_in_public_api,
+        reason = "Owner: noble-contracts; the value indexes in-memory tables already typed usize by every caller."
+    )]
     pub fn lexical_nodes_len(&self) -> usize {
         self.tree.nodes.len()
     }
@@ -258,9 +300,17 @@ impl CheckedSelectedTarget<'_> {
     pub const fn generated_lexical_end(&self) -> u32 {
         self.generated.end
     }
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
     pub fn lexical_source_node(&self, candidate: noble_kernel::untrusted::NodeId) -> Option<u32> {
         self.candidate_to_lexical.get(candidate.0 as usize).copied()
     }
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
     fn lexical_witness(&self, node: u32) -> Option<CheckedGeneratedWitness> {
         let at = node.checked_sub(self.generated.start)?;
         let witness = self.witnesses.get(at as usize)?;
@@ -302,10 +352,6 @@ impl CheckedSelectedTarget<'_> {
     }
 
     #[expect(
-        tigerstyle::compound_condition,
-        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
-    )]
-    #[expect(
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
     )]
@@ -333,8 +379,8 @@ impl CheckedSelectedTarget<'_> {
             usize::try_from(source.span.start).map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let end =
             usize::try_from(source.span.end).map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let generated = self.generated.contains(&lexical_node);
-        let bytes = if generated {
+        let is_generated = self.generated.contains(&lexical_node);
+        let bytes = if is_generated {
             // A replayed projection or cleanup has no corresponding authored
             // token. The entire immutable lowering was compared at selection.
             &[][..]
@@ -350,11 +396,11 @@ impl CheckedSelectedTarget<'_> {
                 Node::Literal {
                     lit: Lit::I64(b), ..
                 },
-            ) => !generated && a == b,
+            ) => !is_generated && a == b,
             (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
                 if *a == def.0 =>
             {
-                generated || {
+                is_generated || {
                     let expected = match a {
                         0 => b"dup".as_slice(),
                         1 => b"drop".as_slice(),
@@ -372,7 +418,7 @@ impl CheckedSelectedTarget<'_> {
                 }
             }
             (super::Kind::Quotation(source_body), Node::Quotation { body, .. }) => {
-                (generated || (bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')))
+                (is_generated || (bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')))
                     && source_body.len() == body.len()
                     && source_body
                         .iter()
@@ -396,7 +442,7 @@ impl CheckedSelectedTarget<'_> {
         }
         Ok(CheckedOperationSite {
             lexical_node,
-            authored_span: (!generated).then_some(source.span),
+            authored_span: (!is_generated).then_some(source.span),
             generated_witness: self.lexical_witness(lexical_node),
         })
     }

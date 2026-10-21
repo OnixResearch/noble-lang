@@ -624,6 +624,10 @@ struct Host {
     code_export_denials: u32,
     capture_published: bool,
 }
+#[expect(
+    tigerstyle::type_accumulation,
+    reason = "Owner: noble-maintainers; Host is the single wasmtime store state for the worker guest; its generated WIT host traits and this ledger impl must all target the same store type."
+)]
 impl Host {
     fn release(&mut self, owner: Resource<ProgramCell>) -> Result<ProgramCell> {
         let cell = self.table.delete(owner)?;
@@ -791,6 +795,10 @@ fn cell_field(
 /// that emitted it. Text bytes alone cannot distinguish lexical aliases:
 /// the matching atom carries the checked source node before its runtime
 /// address, length and bytes are accepted.
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-maintainers; each installed Program recipe is checked with a fresh worklist seeded by its recipe address; the walk is bounded by the checked layout's atom count."
+)]
 fn text_alias_hash(
     store: &mut Store<Host>,
     instance: wasmtime::Instance,
@@ -2194,6 +2202,13 @@ fn execute_reserved_with_task(
     })
 }
 
+// Test harness only: mpsc channels observe revoke/cancel acknowledgement order.
+#[allow(
+    tigerstyle::compound_assertion,
+    tigerstyle::negated_predicate,
+    tigerstyle::unbounded_channel,
+    reason = "Owner: noble-maintainers; these concurrency tests use short-lived mpsc channels to observe revoke/cancel ordering and assert one combined ordering property, so the harness form is the readable one."
+)]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,5 +1,9 @@
 //! Meter forward dependencies while scheduling module definitions.
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 pub(super) fn blocked(
     tree: &crate::source::Tree,
     names: &[alloc::string::String],

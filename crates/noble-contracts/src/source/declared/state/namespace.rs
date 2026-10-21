@@ -231,15 +231,19 @@ impl super::ModuleSession {
                 "module alias count exceeded",
             ));
         }
-        let pending = self.module_has_unverified_signed_owner(index);
+        let is_pending = self.module_has_unverified_signed_owner(index);
         self.aliases.push(super::super::Alias {
             spelling: alias,
             module: index,
-            pending,
+            pending: is_pending,
         });
         self.outside_words()
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+    )]
     fn module_has_unverified_signed_owner(&self, module_index: usize) -> bool {
         let Some(module) = self.modules.get(module_index) else {
             return true;
@@ -259,6 +263,10 @@ impl super::ModuleSession {
 
     /// Pending aliases remain unresolvable until each signed owner in their
     /// module has a concrete kernel-checked and original-source-paired body.
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable slot maps to usize::MAX, which get() reports as absent, so the lookup fails closed with its diagnostic."
+    )]
     pub(super) fn record_signed_certified(
         mut self,
         submission: &noble_kernel::execution::Submission,

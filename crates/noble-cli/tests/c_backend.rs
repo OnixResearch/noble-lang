@@ -1,3 +1,16 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Source-only C candidate controls. Native execution remains separately gated.
 
 use std::path::{Path, PathBuf};

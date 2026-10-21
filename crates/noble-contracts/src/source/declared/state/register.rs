@@ -15,6 +15,10 @@ pub(super) struct Registration<'a> {
     pub limits: crate::Limits,
 }
 
+#[expect(
+    tigerstyle::type_accumulation,
+    reason = "Owner: noble-contracts; the session's responsibilities are split into per-stage modules, each with its own impl block."
+)]
 impl super::ModuleSession {
     pub(super) fn register(
         mut self,
@@ -53,7 +57,7 @@ impl super::ModuleSession {
                 crate::source::Stage::Check,
                 "module identity limit exceeded"
             )));
-        let selected_locals = self
+        let is_selected_locals = self
             .source
             .declared
             .as_ref()
@@ -61,7 +65,7 @@ impl super::ModuleSession {
         let mut collected = attempt!(collection::Collected::collect(
             core::mem::take(&mut request.members),
             request.limits,
-            selected_locals,
+            is_selected_locals,
         ));
         self = attempt!(self.outside_words());
         let (next, resolved, meter) =
@@ -158,6 +162,10 @@ impl super::ModuleSession {
 
 /// Re-parse the retained whole module, including the signature declaration
 /// paired by exact definition name, rather than trusting a staged Scheme.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 pub(super) fn original_signature(
     session: &super::ModuleSession,
     module: &super::super::Module,
@@ -185,7 +193,7 @@ pub(super) fn original_signature(
             "signed owner original module identity differs",
         ));
     }
-    let selected_locals = session
+    let is_selected_locals = session
         .source
         .declared
         .as_ref()
@@ -193,7 +201,7 @@ pub(super) fn original_signature(
     let collected = attempt!(collection::Collected::collect(
         members,
         limits,
-        selected_locals
+        is_selected_locals
     ));
     let families =
         crate::source::declared::signatures::families(session, &collected.schemas, module.identity);

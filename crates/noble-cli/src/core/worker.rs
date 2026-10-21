@@ -859,10 +859,6 @@ impl Engine {
         result
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; reply waits on an mpsc receiver with a runtime deadline and formats channel failures. Channel synchronization and owned diagnostic formatting cannot be const."
-    )]
     fn reply(&mut self) -> Result<super::output::Report, super::output::Failure> {
         self.reply_with_deadline("internal-failure")
     }

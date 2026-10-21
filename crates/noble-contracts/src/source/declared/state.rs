@@ -32,6 +32,10 @@ pub struct ModuleSession {
     // collection: retirement must not make an old captured owner reusable.
     next_module_identity: u64,
     generation: u64,
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the field stores RetainedSourceLimit::bytes(), so its unit is source bytes as documented on that type."
+    )]
     retained_source_limit: u32,
     pub(super) source: crate::source::Session,
 }
@@ -169,12 +173,20 @@ impl CheckedProgramOwner {
 
 /// Borrowed, unforgeable-from-DTO ingress for signed source rederivation.
 /// Neither an Env, a Candidate, nor the structural kernel result can make one.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 pub struct SignedSourceOwner<'a> {
     prepared: &'a ModulePrepared,
 }
 
 /// Checked source-only declared-text ingress. No public Env or Submission can
 /// select the merged declared/Text profile at the selected Wasm compiler.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 pub struct DeclaredTextSourceOwner<'a> {
     prepared: &'a ModulePrepared,
 }
@@ -315,6 +327,10 @@ impl ModulePrepared {
             .map(|(owner, _)| owner)
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     fn checked_program_owner_source(
         &self,
         module: &super::Module,
@@ -391,6 +407,10 @@ impl ModulePrepared {
             .then_some((owner, closure))
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+    )]
     fn closure_invokes_bound(
         &self,
         closure: &[CheckedProgramOwner],
@@ -410,6 +430,11 @@ impl ModulePrepared {
         })
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
     fn checked_bound_adapter(
         &self,
         module: &super::Module,
@@ -536,6 +561,15 @@ impl ModulePrepared {
         Some(SignedSourceOwner { prepared: self })
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; growth is bounded by the checked input or admission limits that drive the loop."
+    )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable definition index maps to usize::MAX, which get() reports as absent, so the ownership guard fails closed."
+    )]
     fn verify_signed_origins(&self) -> Result<(), crate::source::Error> {
         let Some(submission) = self.submission.as_ref() else {
             return Err(super::error(
@@ -744,7 +778,7 @@ impl ModulePrepared {
             }
             let source_slot = attempt!(crate::index(source_index, definition.tree.span)
                 .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            let mut matched_specialization = false;
+            let mut is_matched_specialization = false;
             for specialization in submission
                 .definitions
                 .iter()
@@ -776,9 +810,9 @@ impl ModulePrepared {
                         "signed specialization has a foreign source, signature or effect ceiling",
                     ));
                 }
-                matched_specialization = true;
+                is_matched_specialization = true;
             }
-            if !matched_specialization {
+            if !is_matched_specialization {
                 return Err(super::error(
                     crate::source::Stage::Check,
                     "signed definition has no exact specialized owner",
@@ -924,6 +958,10 @@ impl ModulePrepared {
 
     /// Source-checked interface for an independently selected bound effect
     /// binding. This type token does not authorize a host operation.
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
     pub fn checked_program_interface_for_binding(
         &self,
         owner: &CheckedProgramOwner,
@@ -967,6 +1005,11 @@ impl ModulePrepared {
         })
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
     fn checked_program_invocation(
         &self,
         owner: &CheckedProgramOwner,
@@ -1237,12 +1280,16 @@ impl ModuleSession {
         Self::initialize(&[], false, false, true, CALCULATOR_RETAINED_SOURCE_BYTES)
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape."
+    )]
     fn initialize(
         bindings: &[super::BoundOperation],
         signed_self: bool,
         declared_text: bool,
         calculator: bool,
-        retained_source_limit: u32,
+        retained_source_limit_bytes: u32,
     ) -> Result<Self, crate::source::Error> {
         if bindings.len() > super::MODULE_CAP {
             return Err(super::error(
@@ -1302,7 +1349,7 @@ impl ModuleSession {
             aliases: alloc::vec::Vec::new(),
             next_module_identity: 1,
             generation: 0,
-            retained_source_limit,
+            retained_source_limit: retained_source_limit_bytes,
         })
     }
 
@@ -1361,6 +1408,10 @@ impl ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; equality on the owned scheme vectors and effect set is PartialEq, which is not const."
+)]
 fn same_scheme(left: &noble_kernel::words::Scheme, right: &noble_kernel::words::Scheme) -> bool {
     left.var_kinds == right.var_kinds
         && left.stack_in == right.stack_in
@@ -1368,6 +1419,14 @@ fn same_scheme(left: &noble_kernel::words::Scheme, right: &noble_kernel::words::
         && left.effects == right.effects
 }
 
+// Test harness only: scenario-named tests over checked fixtures.
+#[allow(
+    tigerstyle::assertion_density,
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
 #[cfg(test)]
 mod symbolic_owner_tests {
     use super::{ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition};

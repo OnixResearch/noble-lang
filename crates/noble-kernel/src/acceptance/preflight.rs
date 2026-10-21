@@ -6,6 +6,12 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; check_request preserves format, byte/node, scheme, dependency, schema, stack and effect rejection order; invalid requests are typed outcomes, not assertion failures."
 )]
+#[expect(
+    tigerstyle::function_length,
+    tigerstyle::compound_condition,
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-maintainers; the B-CHECK-02 preflight and the signed-self owner checks stay in one ordered body so the rejection order is reviewable in the extracted subject; each compound admission predicate has side-effect-free operands."
+)]
 pub(super) fn check_request(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
@@ -72,7 +78,7 @@ pub(super) fn check_request(
     if let Some((owner, owner_inst)) = signed_owner {
         let scheme = match env.scheme(owner) {
             Some(scheme) if env.kind(owner) == Some(crate::contracts::Behavior::Named) => scheme,
-            _ => {
+            Some(_) | None => {
                 return Err(super::Fail::Unsupported(
                     crate::untrusted::UnsupportedKind::NodeForm,
                 ))
@@ -160,6 +166,10 @@ pub(super) fn check_request(
 /// Each site matches the independently supplied owner-body concrete witness,
 /// even when there is only one quoted site. Public structural results are not
 /// source authority; only sealed source ingress authenticates that witness.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the comparison uses PartialEq on owned stack, type and effect values, which is not const."
+)]
 fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Binding) -> bool {
     match (left, right) {
         (crate::words::Binding::Stack(a), crate::words::Binding::Stack(b)) => a == b,
@@ -173,6 +183,11 @@ fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Bindin
 /// Borrowed, metered walk BEFORE any scheme instantiation can clone a caller's
 /// potentially enormous witness. Each queued child is bounded and charged
 /// before insertion; the later equality walk is charged once more.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the request-local work allowance is threaded by exclusive reference so every binding is charged before it is walked; exhaustion is a typed outcome, not an assertion failure."
+)]
 fn guard_inst(
     inst: &crate::words::Inst,
     request: &crate::untrusted::Request,
@@ -200,10 +215,10 @@ fn guard_inst(
                 cost = cost.saturating_add(attempt!(guard_ty(ty, request, remaining)));
             }
             crate::words::Binding::Effect(effects) => {
-                let length = u32::try_from(effects.as_slice().len())
+                let effect_count = u32::try_from(effects.as_slice().len())
                     .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
-                *remaining = attempt!(super::parts::charge(*remaining, length));
-                cost = cost.saturating_add(length);
+                *remaining = attempt!(super::parts::charge(*remaining, effect_count));
+                cost = cost.saturating_add(effect_count);
             }
             crate::words::Binding::Ref(_) => {}
         }
@@ -211,6 +226,11 @@ fn guard_inst(
     Ok(cost)
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the bounded type walk charges the caller's exclusive request-local work allowance before each child is queued; type-size and work exhaustion are typed outcomes, not assertion failures."
+)]
 fn guard_ty(
     ty: &crate::types::Ty,
     request: &crate::untrusted::Request,

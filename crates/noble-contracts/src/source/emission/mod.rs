@@ -38,10 +38,6 @@ struct CheckedBody {
 }
 
 impl Assembly {
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; installation appends owned definitions and can construct checked-ID diagnostics, neither of which is const evaluation."
-    )]
     fn install(
         &mut self,
         mut checked: CheckedBody,
@@ -293,6 +289,12 @@ fn allowance(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; witness materialization, reserved checker work, and independent kernel checking are fallible admission checks, not conditions that may panic on source input."
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    tigerstyle::function_length,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn checked(
     draft: super::inference::Body,

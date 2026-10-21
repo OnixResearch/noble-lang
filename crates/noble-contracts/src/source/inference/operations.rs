@@ -122,6 +122,11 @@ pub(super) fn builtin(
 /// A signed occurrence uses the already instantiated owner body's variables.
 /// In particular, a quotation cannot choose a fresh stack row or effect for
 /// its recursive call; that would silently admit polymorphic recursion.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
+)]
 pub(super) fn signed_self(
     span: crate::Span,
     frame: &mut super::Frame,

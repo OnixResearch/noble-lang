@@ -47,6 +47,10 @@ pub const RESULT_LIBRARY_SOURCE: &[u8] = include_bytes!("fixtures/result.noble")
 /// Host-selected aggregate of original module bytes and outside definition history.
 /// This does not raise the per-submission `Limits::bytes` parser bound.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
 pub struct RetainedSourceLimit {
     bytes: u32,
 }
@@ -105,6 +109,14 @@ pub struct CoreInterface {
 /// Parse host-selected Core interface words with the source type parser.
 /// The C source-only caller separately checks this against kernel acceptance
 /// and still refuses value forms its emitter cannot lower.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::sentinel_fallback,
+    reason = "Owner: noble-contracts; the saturated span end is a diagnostic location only; inputs that long are refused by the 4096-byte check that follows."
+)]
 pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
     let span = crate::Span {
         start: 0,
@@ -118,19 +130,19 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
     }
     let mut stack_in = alloc::vec::Vec::new();
     let mut stack_out = alloc::vec::Vec::new();
-    let mut separator = false;
+    let mut is_separator = false;
     for word in text.split_ascii_whitespace() {
         if word == "--" {
-            if separator {
+            if is_separator {
                 return Err(Error::at(
                     Stage::Check,
                     crate::invalid(span, "duplicate stack separator"),
                 ));
             }
-            separator = true;
+            is_separator = true;
             continue;
         }
-        let stack = if separator {
+        let stack = if is_separator {
             &mut stack_out
         } else {
             &mut stack_in
@@ -151,7 +163,7 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
         }
         stack.push(parsed.ty);
     }
-    if !separator {
+    if !is_separator {
         return Err(Error::at(
             Stage::Check,
             crate::invalid(span, "missing stack separator"),
@@ -163,7 +175,19 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
     })
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the recursion follows the structure of an already checked, size-bounded input."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the walk recurses through boxed Ty children, and Box dereference is not const."
+)]
 fn core_type(ty: &noble_kernel::types::Ty) -> bool {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
     use noble_kernel::types::Ty;
     match ty {
         Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text | Ty::Syntax => true,
@@ -361,8 +385,12 @@ struct Named {
 }
 
 impl PartialEq for Named {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; a PartialEq::eq trait implementation cannot be declared const."
+    )]
     fn eq(&self, other: &Self) -> bool {
-        let same_signature = match (&self.signature, &other.signature) {
+        let is_same_signature = match (&self.signature, &other.signature) {
             (Some(a), Some(b)) => {
                 a.var_kinds == b.var_kinds
                     && a.stack_in == b.stack_in
@@ -376,7 +404,7 @@ impl PartialEq for Named {
             && self.identity == other.identity
             && self.owner == other.owner
             && self.tree == other.tree
-            && same_signature
+            && is_same_signature
             && self.signed == other.signed
             && self.alias_uses == other.alias_uses
             && self.history_start == other.history_start
@@ -885,7 +913,7 @@ impl Session {
     /// source offset was fixed when its original checked definition committed.
     fn definition_source(&self, index: usize) -> Result<&[u8], Error> {
         let span = crate::Span { start: 0, end: 0 };
-        let offset = self
+        let offset_bytes = self
             .definitions
             .get(index)
             .and_then(|definition| definition.history_start)
@@ -895,33 +923,33 @@ impl Session {
                     crate::invalid(span, "retained dependent has no outside source provenance"),
                 )
             })?;
-        let header_end = offset.checked_add(4).ok_or_else(|| {
+        let header_end = offset_bytes.checked_add(4).ok_or_else(|| {
             Error::at(
                 Stage::Acceptance,
                 crate::invalid(span, "retained source header overflows"),
             )
         })?;
-        let header = self.history.get(offset..header_end).ok_or_else(|| {
+        let header = self.history.get(offset_bytes..header_end).ok_or_else(|| {
             Error::at(
                 Stage::Acceptance,
                 crate::invalid(span, "retained source header is missing"),
             )
         })?;
-        let length = usize::try_from(u32::from_le_bytes(<[u8; 4]>::try_from(header).map_err(
-            |_| {
+        let length_bytes = usize::try_from(u32::from_le_bytes(
+            <[u8; 4]>::try_from(header).map_err(|_| {
                 Error::at(
                     Stage::Acceptance,
                     crate::invalid(span, "invalid retained source length"),
                 )
-            },
-        )?))
+            })?,
+        ))
         .map_err(|_| {
             Error::at(
                 Stage::Acceptance,
                 crate::invalid(span, "retained source length exceeds address space"),
             )
         })?;
-        let end = header_end.checked_add(length).ok_or_else(|| {
+        let end = header_end.checked_add(length_bytes).ok_or_else(|| {
             Error::at(
                 Stage::Acceptance,
                 crate::invalid(span, "retained source length overflows"),
@@ -1093,7 +1121,7 @@ impl Session {
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
     )]
     fn is_current_namespace(&self, prepared: &Prepared) -> bool {
-        let live_slot_owner_matches = match (&self.live_slots, &prepared.live_slot_owner) {
+        let is_live_slot_owner_matches = match (&self.live_slots, &prepared.live_slot_owner) {
             (Some(slots), Some(owner)) => alloc::sync::Arc::ptr_eq(&slots.owner, owner),
             (None, None) => true,
             _ => false,
@@ -1105,7 +1133,7 @@ impl Session {
             || prepared.live_slots != self.live_slots.is_some()
             || prepared.calculator != self.calculator
             || prepared.history != self.history
-            || !live_slot_owner_matches
+            || !is_live_slot_owner_matches
         {
             return false;
         }

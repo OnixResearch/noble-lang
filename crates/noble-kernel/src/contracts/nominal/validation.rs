@@ -58,6 +58,11 @@ impl super::super::Env {
 
 /// The combined declared-text profile is exactly the fixed cursor prefix plus
 /// signed comparison at 27; no row from 23 onward may be relabeled or owned.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-kernel; the prefix check compares side-effect-free table lengths and rows against the fixed declared-text environment and reports a mismatch as false; callers turn that into a typed rejection."
+)]
 fn declared_text_prefix_matches(env: &super::super::Env) -> bool {
     let Ok(fixed) = super::super::declared_text_environment() else {
         return false;
@@ -421,7 +426,7 @@ fn bound_definition_matches(
     slot: u32,
     effect: crate::types::EffId,
 ) -> bool {
-    let valid_scheme = if effect == super::super::TEST_EMIT {
+    let is_valid_scheme = if effect == super::super::TEST_EMIT {
         super::schemes::valid_emit_scheme(&env.defs[index])
     } else if effect == super::super::TEST_CLOCK {
         super::schemes::valid_clock_scheme(&env.defs[index])
@@ -429,7 +434,7 @@ fn bound_definition_matches(
         effect == super::super::TEST_CODE_EXPORT
             && super::schemes::valid_code_export_scheme(&env.defs[index])
     };
-    if !valid_scheme {
+    if !is_valid_scheme {
         return false;
     }
     let Ok(def) = u32::try_from(index) else {

@@ -254,6 +254,10 @@ enum ProgramOrigin {
     },
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the replay records each newly visited Program origin by pushing its pointer onto the shared alias table, so it needs the growable vector."
+)]
 fn replay_program_json(
     program: &Rc<ProgramOrigin>,
     aliases: &mut Vec<*const ProgramOrigin>,
@@ -303,6 +307,10 @@ fn replay_program_json(
     }
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; replay pushes and pops values on the replayed operand stack, so it needs the growable vector."
+)]
 fn replay_execute(
     programs: &[Value],
     index: usize,
@@ -459,6 +467,10 @@ fn replay_execute(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-maintainers; Vec::new allocates no storage; each returned Program is replayed against a fresh empty alias table."
+)]
 fn replay_returned_origin(
     programs: &[Value],
     contracts: &[ProgramContract],

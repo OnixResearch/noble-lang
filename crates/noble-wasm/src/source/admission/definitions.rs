@@ -57,13 +57,13 @@ fn definition_bounds(
         ));
         attempt!(work.charge(contract_work));
     }
-    let signed_body = definition
+    let is_signed_body = definition
         .body
         .candidate
         .nodes
         .iter()
         .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }));
-    let owner_inst = match (signed, signed_body, definition.owner_inst.as_ref()) {
+    let owner_inst = match (signed, is_signed_body, definition.owner_inst.as_ref()) {
         (true, true, Some(inst)) => Some(inst),
         (_, false, None) => None,
         _ => return Err(crate::Diagnostic::Invalid),
@@ -132,10 +132,6 @@ pub(super) fn accept(
     Ok(definitions)
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; independent kernel acceptance and owned expected-interface cloning are non-const operations and remain mandatory for every executable definition."
-)]
 fn accept_definition(
     submission: &noble_kernel::execution::Submission,
     index: usize,

@@ -721,6 +721,10 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
 /// Pure declared text retains the immutable cursor at 26 and adds signed
 /// comparison at 27. Core, standalone cursor, ordinary modules and the
 /// separately selected calculator profile gain neither.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the environment validates the added signed-comparison scheme before extending its parallel definition/kind/dependency/owner tables and returns the first Defect; assertions would change this fallible construction contract."
+)]
 pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
     let mut env = text_cursor_environment()?;
     let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));

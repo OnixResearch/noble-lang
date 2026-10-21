@@ -323,6 +323,11 @@ pub(super) fn register_bound_clock(
     Ok((env, def))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-kernel; registration admits only the exact reserved code-export identity, Text Text input, empty output, single effect and an unused adapter slot, and rejects any other registration as a typed NominalError; the operands are side-effect free."
+)]
 pub(super) fn register_bound_code_export(
     env: super::Env,
     registration: super::BoundCodeExportRegistration,

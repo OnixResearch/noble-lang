@@ -115,7 +115,6 @@ pub(super) fn bootstrap(word: &[u8]) -> Option<noble_kernel::contracts::Definiti
 }
 
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; the finite spelling table appends directly to an owned diagnostic String without indexing or a temporary allocation; unknown diagnostic IDs retain their explicit unknown label."
 )]
@@ -126,6 +125,10 @@ pub(super) fn append_spelling(
     output.push_str(spelling(definition.0).unwrap_or("unknown"));
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 pub(super) const fn spelling(identity: u32) -> Option<&'static str> {
     let name = match identity {
         0 => "dup",

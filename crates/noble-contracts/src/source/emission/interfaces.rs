@@ -57,11 +57,11 @@ fn install_interface(
         // the concrete Env. Its fresh, exact owner Inst is materialized
         // separately from this body's source-derived variables and checked
         // against the body's concrete expected interface by the kernel.
-        let signed = body
+        let is_signed = body
             .nodes
             .iter()
             .any(|node| matches!(node.kind, super::super::inference::DraftKind::SignedSelf(_)));
-        let scheme = if signed {
+        let scheme = if is_signed {
             let source = body
                 .owner_slot
                 .and_then(|slot| usize::try_from(slot).ok())

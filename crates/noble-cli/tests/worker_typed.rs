@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::ignored_result,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 use std::os::unix::fs::DirBuilderExt;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};

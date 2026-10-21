@@ -213,7 +213,7 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<StagedUnit, crate::source::Error> {
-        let expression = matches!(
+        let is_expression = matches!(
             &unit,
             crate::source::declared::parsing::ParsedUnit::Expression
         );
@@ -249,7 +249,7 @@ impl super::ModuleSession {
             }
             crate::source::declared::parsing::ParsedUnit::Definition
             | crate::source::declared::parsing::ParsedUnit::Expression => {
-                if expression {
+                if is_expression {
                     self = attempt!(self.pending_signed_expression_words());
                 }
                 let mut prepared = attempt!(self.source.prepare_with_retention(
@@ -263,7 +263,7 @@ impl super::ModuleSession {
                 } else {
                     super::ModuleKind::Expression
                 };
-                if expression != (kind == super::ModuleKind::Expression) {
+                if is_expression != (kind == super::ModuleKind::Expression) {
                     return Err(crate::source::declared::error(
                         crate::source::Stage::Check,
                         "source unit changed between module and expression parsing",
@@ -282,7 +282,7 @@ impl super::ModuleSession {
                 let submission = prepared.submission.take();
                 let output = core::mem::take(&mut prepared.output);
                 attempt!(self.source.commit(prepared));
-                if kind == super::ModuleKind::Definition || expression {
+                if kind == super::ModuleKind::Definition || is_expression {
                     self = attempt!(self.outside_words());
                 }
                 (kind, submission, output, None)

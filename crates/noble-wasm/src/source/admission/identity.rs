@@ -134,7 +134,7 @@ impl Encoding {
                             let marker = match behavior {
                                 Some(noble_kernel::contracts::Behavior::BoundClock(_)) => b"c",
                                 Some(noble_kernel::contracts::Behavior::BoundCodeExport(_)) => b"e",
-                                _ => b"a",
+                                Some(_) | None => b"a",
                             };
                             attempt!(self.out.append(marker));
                             attempt!(self.out.number(u64::from(slot)));

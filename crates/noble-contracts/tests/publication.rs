@@ -1,3 +1,9 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_unwrap,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Publication copy budgets for transitive imported proof dependencies.
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {

@@ -277,6 +277,10 @@ impl super::super::ModuleSession {
 
     /// Refresh an unpublished successor after replaying a checked outside
     /// definition; no repeated whole-session clone is needed per dependent.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
     pub(in crate::source::declared::state) fn refresh_outside_words(
         &mut self,
         permit_signed: bool,

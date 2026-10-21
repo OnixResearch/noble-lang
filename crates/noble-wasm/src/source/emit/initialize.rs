@@ -5,9 +5,7 @@
 
 #[expect(
     tigerstyle::assertion_density,
-    tigerstyle::missing_const_fn,
-    tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-maintainers; every closed Action variant must select its exact immutable recipe atom rather than a fallback; writing the allocating bounded sink cannot be const and output failures propagate diagnostics."
+    reason = "Owner: noble-maintainers; atom writes the exact recipe atom for each closed Action variant and propagates output failures as diagnostics; there is no further invariant for an assertion to check."
 )]
 fn atom(
     out: &mut crate::output::Buffer,

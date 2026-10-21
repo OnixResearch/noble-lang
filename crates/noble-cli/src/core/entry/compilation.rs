@@ -194,10 +194,6 @@ fn expression_candidate(
     })
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; emitting WAT writes to an owned output stream or creates a worker and its artifact directory."
-)]
 fn emit_declared_wat(
     options: &super::super::arguments::Options,
     source: &[u8],

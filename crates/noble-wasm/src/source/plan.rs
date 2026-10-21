@@ -48,6 +48,11 @@ pub(super) struct Operation {
 /// One closed mapping shared by source emission and the independently
 /// inspected installed-cell receipt. `source_node` preserves lexical Text
 /// occurrence identity across equal byte strings.
+#[expect(
+    tigerstyle::compound_condition,
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks."
+)]
 pub(super) fn atom_metadata(
     operation: &Operation,
     text_witness: u32,

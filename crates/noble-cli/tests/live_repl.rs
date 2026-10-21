@@ -16,6 +16,9 @@
     tigerstyle::allocation_in_loop,
     tigerstyle::missing_const_fn,
     tigerstyle::raw_arithmetic_overflow,
+    tigerstyle::ambiguous_params,
+    tigerstyle::bool_naming,
+    tigerstyle::foreign_enum_catch_all,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Real-process checks for the opt-in live REPL. These are finite runtime cases,
