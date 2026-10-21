@@ -43,6 +43,35 @@ fn checked<T, E: std::fmt::Debug>(value: Result<T, E>) -> Result<T, Failure> {
     value.map_err(|error| internal(format!("host-owned worker transition: {error:?}")))
 }
 
+fn preserve(mut primary: Failure, cleanup: Result<(), Failure>) -> Failure {
+    if let Err(error) = cleanup {
+        primary.message.push_str("; retirement: ");
+        primary.message.push_str(&error.message);
+    }
+    primary
+}
+
+fn note<T>(failure: &mut Option<Failure>, result: Result<T, Failure>) -> Option<T> {
+    match result {
+        Ok(value) => Some(value),
+        Err(error) => {
+            if let Some(primary) = failure {
+                primary.message.push_str("; retirement: ");
+                primary.message.push_str(&error.message);
+            } else {
+                *failure = Some(error);
+            }
+            None
+        }
+    }
+}
+
+fn require(failure: &mut Option<Failure>, satisfied: bool, message: &'static str) {
+    if !satisfied {
+        let _ = note(failure, Err::<(), _>(internal(message)));
+    }
+}
+
 struct Grant {
     attempt: i64,
     text: String,
@@ -199,6 +228,27 @@ fn cancellation(event: &[u8], attempt: i64) -> Result<(), Failure> {
     Ok(())
 }
 
+#[derive(Default)]
+struct ShellEvidence {
+    counters: Option<auth::Counters>,
+    tasks: Option<task::Observation>,
+    resources: Option<owner::Observation>,
+    native_bytes: Option<usize>,
+}
+
+impl ShellEvidence {
+    fn observe(
+        &mut self,
+        tasks: &task::Table,
+        resources: &owner::Table,
+        authority: &auth::Authority,
+    ) {
+        self.counters = Some(authority.counters());
+        self.tasks = Some(tasks.observation());
+        self.resources = Some(resources.observation());
+    }
+}
+
 #[expect(
     clippy::too_many_arguments,
     reason = "Owner: noble-maintainers; the report constructor maps each optional observation to one fixed JSON field."
@@ -221,8 +271,8 @@ fn report(
         "first_guest":first, "cancel_guest":second,
         "worker_host_requests":first.map(|value| &value["guest_requests"]),
         "native_send_bytes":native_bytes,
-        "protected_operation_attempts":counters.map(|value| value.protected_operations).unwrap_or(0),
-        "successful_result_deliveries":counters.map(|value| value.successful_deliveries).unwrap_or(0),
+        "protected_operation_attempts":counters.map(|value| value.protected_operations),
+        "successful_result_deliveries":counters.map(|value| value.successful_deliveries),
         "task_state":tasks.map(|value| if value.retired == 1 {"Retired"} else {"not-retired"}),
         "outstanding_native_pins":tasks.map(|value| value.outstanding_pins),
         "resource_state":resource.map(|value| if value.retired == 1 {"Retired"} else {"not-retired"}),
@@ -235,6 +285,20 @@ fn report(
         outcome: outcome.to_owned(),
         json: value.to_string(),
     }
+}
+
+fn failure_report(error: &Failure, evidence: &ShellEvidence) -> Report {
+    report(
+        error.context.outcome,
+        error.context.stage,
+        None,
+        None,
+        evidence.tasks,
+        evidence.resources,
+        evidence.counters,
+        evidence.native_bytes,
+        Some(&error.message),
+    )
 }
 
 struct Native {
@@ -348,6 +412,333 @@ fn cleanup_retiring(
     Ok(())
 }
 
+// A rejected cancellation returns the original move-only Task. Hold it until
+// trusted host retirement succeeds; dropping it is not a cleanup operation.
+fn cancel_owned(
+    tasks: &mut task::Table,
+    admitted: task::Admitted<()>,
+    context: task::Context,
+    bytes: Option<usize>,
+    failure: &mut Option<Failure>,
+) -> (task::Callback, Option<task::Task>) {
+    let callback = admitted.callback;
+    let token = match tasks.cancel(admitted.task, context) {
+        Ok(cancelled) => {
+            require(
+                failure,
+                cancelled.action == task::Action::CancellationAcknowledged
+                    && cancelled.record.state == task::State::Retiring
+                    && cancelled.record.pins == 1
+                    && cancelled.record.retiring_inputs == 1
+                    && bytes
+                        .is_none_or(|bytes| tasks.observation().reserved.bytes == 3 * bytes + 256),
+                "cancellation did not preserve native ownership",
+            );
+            None
+        }
+        Err(rejected) => {
+            let _ = note(
+                failure,
+                Err::<(), _>(internal(format!(
+                    "host-owned worker transition: {:?}",
+                    rejected.error
+                ))),
+            );
+            Some(rejected.input)
+        }
+    };
+    (callback, token)
+}
+
+fn retire_owned(
+    tasks: &mut task::Table,
+    callback: task::Callback,
+    token: &mut Option<task::Task>,
+    failure: &mut Option<Failure>,
+) -> bool {
+    let state = tasks
+        .snapshot(callback.task.slot)
+        .filter(|snapshot| snapshot.handle == callback.task)
+        .map(|snapshot| snapshot.state);
+    if matches!(state, Some(task::State::Retiring | task::State::Retired)) {
+        token.take();
+        return true;
+    }
+    if let Some(retired) = note(
+        failure,
+        checked(tasks.retire(callback.task, task::Failure::Internal)),
+    ) {
+        let settled = retired.record.state == task::State::Retiring;
+        require(
+            failure,
+            settled,
+            "host task retirement did not retain native debt",
+        );
+        if settled {
+            token.take();
+        }
+        return settled;
+    }
+    false
+}
+
+fn revoke_owned(
+    resources: &mut owner::Table,
+    scope: owner::Scope,
+    reason: owner::Retirement,
+    failure: &mut Option<Failure>,
+) -> bool {
+    if let Some(revoked) = note(failure, checked(resources.revoke(scope, reason))) {
+        let settled = revoked.record.state == owner::State::Retiring(scope.serial);
+        require(
+            failure,
+            settled && resources.observation().native_pins == 1,
+            "resource cancellation did not retain the native pin",
+        );
+        if settled {
+            return true;
+        }
+    }
+    retire_resource_if_needed(resources, scope, failure)
+}
+
+fn retire_resource_if_needed(
+    resources: &mut owner::Table,
+    scope: owner::Scope,
+    failure: &mut Option<Failure>,
+) -> bool {
+    let state = resources
+        .snapshot(scope.handle.slot)
+        .filter(|snapshot| snapshot.handle == scope.handle)
+        .map(|snapshot| snapshot.state);
+    if matches!(
+        state,
+        Some(owner::State::Retiring(_) | owner::State::Retired)
+    ) {
+        return true;
+    }
+    if let Some(retired) = note(
+        failure,
+        checked(resources.retire(scope.handle, owner::Retirement::HostCleanup)),
+    ) {
+        let settled = retired.record.state == owner::State::Retiring(scope.serial);
+        require(
+            failure,
+            settled,
+            "host resource retirement did not retain native debt",
+        );
+        return settled;
+    }
+    false
+}
+
+// Called only after the producer has joined (or before it was spawned). Each
+// independent obligation is attempted even if a preceding settlement failed.
+fn settle_native(
+    tasks: &mut task::Table,
+    resources: &mut owner::Table,
+    callback: task::Callback,
+    scope: Option<owner::Scope>,
+    completion: owner::Completion,
+    failure: &mut Option<Failure>,
+) {
+    let _ = note(failure, checked(tasks.native_stopped(callback)));
+    if let Some(scope) = scope {
+        let state = resources
+            .snapshot(scope.handle.slot)
+            .filter(|snapshot| snapshot.handle == scope.handle)
+            .map(|snapshot| snapshot.state);
+        if state == Some(owner::State::Retiring(scope.serial)) {
+            if let Some(released) = note(failure, checked(resources.complete(scope, completion))) {
+                require(
+                    failure,
+                    released.owner.is_none()
+                        && released.decision.accounting().pins_released == 1
+                        && released.decision.accounting().local_releases == 1,
+                    "late native completion resurrected the protected resource owner",
+                );
+            }
+        } else {
+            require(
+                failure,
+                state == Some(owner::State::Retired),
+                "resource scope remained busy after native stop",
+            );
+        }
+    }
+    let snapshot = tasks
+        .snapshot(callback.task.slot)
+        .filter(|snapshot| snapshot.handle == callback.task);
+    if let Some(snapshot) = snapshot {
+        if snapshot.native_stopped && snapshot.pins == 1 {
+            if let Some(settled) = note(failure, checked(tasks.settle_pins(callback, 1))) {
+                require(
+                    failure,
+                    settled.accounting.pins_released == 1,
+                    "native pin release was not accounted",
+                );
+            }
+        } else {
+            require(
+                failure,
+                snapshot.native_stopped && snapshot.pins == 0,
+                "task pin remained unsettled after native stop",
+            );
+        }
+    } else {
+        require(
+            failure,
+            false,
+            "native task disappeared before pin settlement",
+        );
+    }
+    if note(
+        failure,
+        cleanup_retiring(tasks, callback, callback.task.context),
+    )
+    .is_some()
+    {
+        if let Some(finalization) = note(failure, checked(tasks.finish(callback.task))) {
+            require(
+                failure,
+                finalization.action == task::Action::RetirementCompleted,
+                "native task reservation was not finalized",
+            );
+        }
+    }
+    let tasks = tasks.observation();
+    let resources = resources.observation();
+    require(
+        failure,
+        tasks.retired == 1
+            && tasks.outstanding_pins == 0
+            && tasks.reserved.bytes == 0
+            && resources.retired == 1
+            && resources.native_pins == 0,
+        "native retirement retained a task, resource, reservation or pin",
+    );
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-maintainers; one started-send retirement names the task, authority and resource tables, the borrowed scope, the admitted task, the native handle, the cancel context, its attempt and text, and the reserved byte count explicitly."
+)]
+fn retire_started(
+    tasks: &mut task::Table,
+    authority: &mut auth::Authority,
+    resources: &mut owner::Table,
+    borrowed: &owner::Borrow,
+    admitted: task::Admitted<()>,
+    mut native: Native,
+    cancel_context: task::Context,
+    attempt: i64,
+    text: &str,
+    bytes: usize,
+) -> Result<(task::Observation, owner::Observation), Failure> {
+    let mut failure = None;
+    let (callback, mut token) =
+        cancel_owned(tasks, admitted, cancel_context, Some(bytes), &mut failure);
+    let guest_cancelled = token.is_none();
+    let task_retired = retire_owned(tasks, callback, &mut token, &mut failure);
+    if note(&mut failure, checked(authority.cancel_invocation())).is_none() {
+        let _ = note(&mut failure, checked(authority.fail_invocation()));
+    }
+    let scope = borrowed.scope();
+    let reason = if guest_cancelled {
+        owner::Retirement::Cancelled
+    } else {
+        owner::Retirement::HostCleanup
+    };
+    let resource_retired = revoke_owned(resources, scope, reason, &mut failure);
+    require(
+        &mut failure,
+        resources.native_access(borrowed).is_err(),
+        "resource access remained live after cancellation",
+    );
+
+    // finish joins the producer before inspecting its datagram. An error from
+    // join (including a panic) still means the native thread has stopped.
+    // Drop the socket and receive buffer before refunding their task reservation.
+    let native_result = native.finish(attempt, text);
+    drop(native);
+    let native_ok = native_result.is_ok();
+    let _ = note(&mut failure, native_result);
+    if !task_retired {
+        let _ = retire_owned(tasks, callback, &mut token, &mut failure);
+    }
+    if !resource_retired {
+        let _ = retire_resource_if_needed(resources, scope, &mut failure);
+    }
+    if native_ok {
+        let state = tasks
+            .snapshot(callback.task.slot)
+            .filter(|snapshot| snapshot.handle == callback.task)
+            .map(|snapshot| snapshot.state);
+        if state == Some(task::State::Retiring) {
+            if let Some(late) = note(
+                &mut failure,
+                checked(tasks.complete(
+                    callback,
+                    task::Outcome::Success,
+                    task::Completion {
+                        inputs: task::Disposition {
+                            returned: 0,
+                            consumed: 0,
+                            retired: 1,
+                        },
+                        produced: 0,
+                        bytes: 0,
+                    },
+                )),
+            ) {
+                require(
+                    &mut failure,
+                    late.action == task::Action::CompletionRetired(task::Outcome::Success),
+                    "late native result was delivered after cancellation",
+                );
+            }
+        } else {
+            require(
+                &mut failure,
+                false,
+                "native result could not be retired without delivering to the guest",
+            );
+        }
+    }
+    let completion = if native_ok {
+        owner::Completion::Success
+    } else {
+        owner::Completion::DomainError
+    };
+    settle_native(
+        tasks,
+        resources,
+        callback,
+        Some(scope),
+        completion,
+        &mut failure,
+    );
+    failure.map_or_else(|| Ok((tasks.observation(), resources.observation())), Err)
+}
+
+fn release_unbegun(
+    resources: &mut owner::Table,
+    capability: owner::Owner,
+    required: owner::Requirement,
+) -> Result<(), Failure> {
+    match resources.release(capability, required) {
+        Ok(released) if released.record.state == owner::State::Retired => Ok(()),
+        Ok(_) => Err(internal("unbegun resource remained live after release")),
+        Err(rejected) => {
+            let primary = internal(format!("unbegun resource release: {:?}", rejected.error));
+            let retired =
+                checked(resources.retire(rejected.input.handle(), owner::Retirement::HostCleanup))
+                    .map(|_| ());
+            Err(preserve(primary, retired))
+        }
+    }
+}
+
 fn retire_unstarted(
     tasks: &mut task::Table,
     authority: &mut auth::Authority,
@@ -355,24 +746,34 @@ fn retire_unstarted(
     scope: Option<owner::Scope>,
     admitted: task::Admitted<()>,
 ) -> Result<(), Failure> {
-    let callback = admitted.callback;
-    checked(tasks.cancel(admitted.task, callback.task.context))?;
-    let authority_result = authority.fail_invocation();
+    let mut failure = None;
+    let context = admitted.callback.task.context;
+    let (callback, mut token) = cancel_owned(tasks, admitted, context, None, &mut failure);
+    let task_retired = retire_owned(tasks, callback, &mut token, &mut failure);
+    let _ = note(&mut failure, checked(authority.fail_invocation()));
     if let Some(scope) = scope {
-        checked(resources.revoke(scope, owner::Retirement::HostCleanup))?;
-        let released = checked(resources.complete(scope, owner::Completion::DomainError))?;
-        if released.owner.is_some() {
-            return Err(internal("failed native send returned a retired owner"));
-        }
+        let _ = revoke_owned(
+            resources,
+            scope,
+            owner::Retirement::HostCleanup,
+            &mut failure,
+        );
     }
-    checked(tasks.native_stopped(callback))?;
-    checked(tasks.settle_pins(callback, 1))?;
-    cleanup_retiring(tasks, callback, callback.task.context)?;
-    checked(tasks.finish(callback.task))?;
-    checked(authority_result)?;
-    Ok(())
+    if !task_retired {
+        let _ = retire_owned(tasks, callback, &mut token, &mut failure);
+    }
+    settle_native(
+        tasks,
+        resources,
+        callback,
+        scope,
+        owner::Completion::DomainError,
+        &mut failure,
+    );
+    failure.map_or(Ok(()), Err)
 }
 
+#[cfg(test)]
 pub(super) fn execute(
     package: &[u8],
     schema: &[u8],
@@ -380,6 +781,26 @@ pub(super) fn execute(
     submit: &[u8],
     cancel: &[u8],
     grant_bytes: &[u8],
+) -> Result<Report, Failure> {
+    execute_recording(
+        package,
+        schema,
+        initial,
+        submit,
+        cancel,
+        grant_bytes,
+        &mut ShellEvidence::default(),
+    )
+}
+
+fn execute_recording(
+    package: &[u8],
+    schema: &[u8],
+    initial: &[u8],
+    submit: &[u8],
+    cancel: &[u8],
+    grant_bytes: &[u8],
+    evidence: &mut ShellEvidence,
 ) -> Result<Report, Failure> {
     let grant = grant(grant_bytes)?;
     let initial_frame: Value =
@@ -423,6 +844,7 @@ pub(super) fn execute(
             requests: 2,
         },
     }))?;
+    evidence.counters = Some(authority.counters());
     let granted = plan(owner, grant.attempt, &grant.text)?;
     let proposed = plan(owner, attempt, text)?;
     let bytes = 8 + text.len();
@@ -479,12 +901,17 @@ pub(super) fn execute(
             scopes: 1,
         },
     ))?;
+    evidence.resources = Some(resources.observation());
     let capability = checked(resources.register(required))?;
     let facts = facts(&granted, grant.allow);
     let witness = match authority.authorize_from_trusted_host(proposed.clone(), &facts) {
         auth::Authorization::Authorized(witness) => witness,
         auth::Authorization::Denied(_) | auth::Authorization::Preflight(_) => {
-            checked(resources.release(capability, required))?;
+            if let Err(error) = release_unbegun(&mut resources, capability, required) {
+                evidence.counters = Some(authority.counters());
+                evidence.resources = Some(resources.observation());
+                return Err(error);
+            }
             return Ok(report(
                 "denied",
                 "authorization",
@@ -505,9 +932,14 @@ pub(super) fn execute(
     let execution = match authority.admit(Some(witness), &admission, &facts) {
         auth::Admission::Committed(execution) => execution,
         auth::Admission::Denied { witness, .. } | auth::Admission::Preflight { witness, .. } => {
-            checked(resources.release(capability, required))?;
+            let mut failure = release_unbegun(&mut resources, capability, required).err();
             if let Some(witness) = witness {
-                checked(authority.retire_witness(witness))?;
+                let _ = note(&mut failure, checked(authority.retire_witness(witness)));
+            }
+            if let Some(failure) = failure {
+                evidence.counters = Some(authority.counters());
+                evidence.resources = Some(resources.observation());
+                return Err(failure);
             }
             return Ok(report(
                 "denied",
@@ -523,191 +955,143 @@ pub(super) fn execute(
         }
     };
     let admitted = prepared.commit(());
-    let callback = admitted.callback;
-    let borrowed = match resources.begin(capability, required) {
-        Ok(borrowed) => borrowed,
-        Err(rejected) => {
-            checked(resources.release(rejected.input, required))?;
+    let result = (|| -> Result<Report, Failure> {
+        let borrowed = match resources.begin(capability, required) {
+            Ok(borrowed) => borrowed,
+            Err(rejected) => {
+                let primary = internal(format!("host send resource refused: {:?}", rejected.error));
+                let released = release_unbegun(&mut resources, rejected.input, required);
+                drop((wire, receive_buffer, sender, receiver));
+                let retired =
+                    retire_unstarted(&mut tasks, &mut authority, &mut resources, None, admitted);
+                return Err(preserve(preserve(primary, released), retired));
+            }
+        };
+        let scope = borrowed.borrow.scope();
+        if let Err(error) = resources.native_access(&borrowed.borrow) {
             drop((wire, receive_buffer, sender, receiver));
-            retire_unstarted(&mut tasks, &mut authority, &mut resources, None, admitted)?;
-            return Err(internal(format!(
-                "host send resource refused: {:?}",
-                rejected.error
-            )));
-        }
-    };
-    let scope = borrowed.borrow.scope();
-    if let Err(error) = resources.native_access(&borrowed.borrow) {
-        drop((wire, receive_buffer, sender, receiver));
-        retire_unstarted(
-            &mut tasks,
-            &mut authority,
-            &mut resources,
-            Some(scope),
-            admitted,
-        )?;
-        return Err(internal(format!(
-            "host send resource lost native access: {error:?}"
-        )));
-    }
-    let started = match authority.start_execution(execution) {
-        Ok(started) => started,
-        Err(error) => {
-            drop((wire, receive_buffer, sender, receiver));
-            retire_unstarted(
+            let retired = retire_unstarted(
                 &mut tasks,
                 &mut authority,
                 &mut resources,
                 Some(scope),
                 admitted,
-            )?;
-            return Err(internal(format!(
-                "host authority refused committed invocation: {error:?}"
-            )));
+            );
+            return Err(preserve(
+                internal(format!("host send resource lost native access: {error:?}")),
+                retired,
+            ));
         }
-    };
-    // This is an in-process datagram, not an external send. It exercises a
-    // real native operation and a live retained pin without claiming network
-    // delivery, a portable capability, or a WORKER-01 receipt.
-    let (mut native, started_rx) =
-        match Native::start(started, wire, sender, receiver, receive_buffer) {
-            Ok(value) => value,
+        let started = match authority.start_execution(execution) {
+            Ok(started) => started,
             Err(error) => {
-                retire_unstarted(
+                drop((wire, receive_buffer, sender, receiver));
+                let retired = retire_unstarted(
                     &mut tasks,
                     &mut authority,
                     &mut resources,
                     Some(scope),
                     admitted,
-                )?;
-                return Err(error);
+                );
+                return Err(preserve(
+                    internal(format!(
+                        "host authority refused committed invocation: {error:?}"
+                    )),
+                    retired,
+                ));
             }
         };
-    let sent = started_rx
-        .recv_timeout(Duration::from_secs(5))
-        .map_err(|_| internal("native operation did not start before its deadline"))
-        .and_then(|sent| sent.map_err(|error| internal(error.to_string())));
-    if !matches!(&sent, Ok(size) if *size == bytes) {
-        let stopped = native.stop();
-        drop(native);
-        let retired = retire_unstarted(
+        // This is an in-process datagram, not an external send. It exercises a
+        // real native operation and a live retained pin without claiming network
+        // delivery, a portable capability, or a WORKER-01 receipt.
+        let (mut native, started_rx) =
+            match Native::start(started, wire, sender, receiver, receive_buffer) {
+                Ok(value) => value,
+                Err(error) => {
+                    let retired = retire_unstarted(
+                        &mut tasks,
+                        &mut authority,
+                        &mut resources,
+                        Some(scope),
+                        admitted,
+                    );
+                    return Err(preserve(error, retired));
+                }
+            };
+        let sent = started_rx
+            .recv_timeout(Duration::from_secs(5))
+            .map_err(|_| internal("native operation did not start before its deadline"))
+            .and_then(|sent| sent.map_err(|error| internal(error.to_string())));
+        if let Ok(size) = &sent {
+            evidence.native_bytes = Some(*size);
+        }
+        if !matches!(&sent, Ok(size) if *size == bytes) {
+            let stopped = native.stop();
+            drop(native);
+            let retired = retire_unstarted(
+                &mut tasks,
+                &mut authority,
+                &mut resources,
+                Some(scope),
+                admitted,
+            );
+            let primary = sent
+                .err()
+                .unwrap_or_else(|| internal("native operation sent incomplete action"));
+            return Err(preserve(preserve(primary, stopped), retired));
+        }
+
+        let cancel_guest = super::worker_typed::execute(package, schema, &next_state, cancel);
+        let retirement = retire_started(
             &mut tasks,
             &mut authority,
             &mut resources,
-            Some(scope),
+            &borrowed.borrow,
             admitted,
+            native,
+            context,
+            attempt,
+            text,
+            bytes,
         );
-        stopped?;
-        retired?;
-        return Err(sent
-            .err()
-            .unwrap_or_else(|| internal("native operation sent incomplete action")));
-    }
-
-    let cancel_guest = super::worker_typed::execute(package, schema, &next_state, cancel);
-    let cancelled = checked(tasks.cancel(admitted.task, context))?;
-    if cancelled.action != task::Action::CancellationAcknowledged
-        || cancelled.record.state != task::State::Retiring
-        || cancelled.record.pins != 1
-        || cancelled.record.retiring_inputs != 1
-        || tasks.observation().reserved.bytes != 3 * bytes + 256
-    {
-        return Err(internal("cancellation did not preserve native ownership"));
-    }
-    checked(authority.cancel_invocation())?;
-    let revoked = checked(resources.revoke(scope, owner::Retirement::Cancelled))?;
-    if revoked.record.state != owner::State::Retiring(scope.serial)
-        || resources.observation().native_pins != 1
-        || resources.native_access(&borrowed.borrow).is_ok()
-    {
-        return Err(internal(
-            "resource access or native pin violated cancellation acknowledgement",
-        ));
-    }
-    let native_result = native.finish(attempt, text);
-    drop(native);
-    if native_result.is_ok() {
-        let late = checked(tasks.complete(
-            callback,
-            task::Outcome::Success,
-            task::Completion {
-                inputs: task::Disposition {
-                    returned: 0,
-                    consumed: 0,
-                    retired: 1,
-                },
-                produced: 0,
-                bytes: 0,
-            },
-        ))?;
-        if late.action != task::Action::CompletionRetired(task::Outcome::Success) {
-            return Err(internal(
-                "late native result was delivered after cancellation",
+        let (second, (observation, resource_observation)) = match (cancel_guest, retirement) {
+            (Ok(second), Ok(retirement)) => (second, retirement),
+            (Err(guest), Err(retirement)) => return Err(preserve(guest, Err(retirement))),
+            (Err(guest), Ok(_)) => return Err(guest),
+            (Ok(_), Err(retirement)) => return Err(retirement),
+        };
+        let second: Value = serde_json::from_str(&second.json)
+            .map_err(|_| internal("malformed cancellation guest report"))?;
+        if second["outcome"] != "normal"
+            || second["typed_output"]["state"]["value"]["left"]["value"] != "1"
+            || second["typed_output"]["state"]["value"]["right"]["arm"] != "left"
+            || second["typed_output"]["actions"]["items"]
+                .as_array()
+                .is_none_or(|rows| !rows.is_empty())
+            || second["source_sha256"] != first["source_sha256"]
+        {
+            return Err(invalid(
+                "cancellation guest did not clear exact pending attempt",
             ));
         }
-    }
-    checked(tasks.native_stopped(callback))?;
-    let completion = if native_result.is_ok() {
-        owner::Completion::Success
-    } else {
-        owner::Completion::DomainError
-    };
-    let released = checked(resources.complete(scope, completion))?;
-    if released.owner.is_some()
-        || released.decision.accounting().pins_released != 1
-        || released.decision.accounting().local_releases != 1
-    {
-        return Err(internal(
-            "late native completion resurrected the protected resource owner",
-        ));
-    }
-    let settled = checked(tasks.settle_pins(callback, 1))?;
-    if settled.accounting.pins_released != 1 {
-        return Err(internal("native pin release was not accounted"));
-    }
-    cleanup_retiring(&mut tasks, callback, context)?;
-    let finalization = checked(tasks.finish(callback.task))?;
-    let observation = tasks.observation();
-    let resource_observation = resources.observation();
-    if finalization.action != task::Action::RetirementCompleted
-        || observation.outstanding_pins != 0
-        || observation.retired != 1
-        || observation.reserved.bytes != 0
-        || resource_observation.native_pins != 0
-        || resource_observation.retired != 1
-    {
-        return Err(internal("late result retained a task owner or pin"));
-    }
-    native_result?;
-    let second = cancel_guest?;
-    let second: Value = serde_json::from_str(&second.json)
-        .map_err(|_| internal("malformed cancellation guest report"))?;
-    if second["outcome"] != "normal"
-        || second["typed_output"]["state"]["value"]["left"]["value"] != "1"
-        || second["typed_output"]["state"]["value"]["right"]["arm"] != "left"
-        || second["typed_output"]["actions"]["items"]
-            .as_array()
-            .is_none_or(|rows| !rows.is_empty())
-        || second["source_sha256"] != first["source_sha256"]
-    {
-        return Err(invalid(
-            "cancellation guest did not clear exact pending attempt",
-        ));
-    }
-    Ok(report(
-        "normal",
-        "retirement",
-        Some(&first),
-        Some(&second),
-        Some(observation),
-        Some(resource_observation),
-        Some(authority.counters()),
-        Some(bytes),
-        None,
-    ))
+        Ok(report(
+            "normal",
+            "retirement",
+            Some(&first),
+            Some(&second),
+            Some(observation),
+            Some(resource_observation),
+            Some(authority.counters()),
+            Some(bytes),
+            None,
+        ))
+    })();
+    evidence.observe(&tasks, &resources, &authority);
+    result
 }
 
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    let mut evidence = ShellEvidence::default();
     let result = if arguments.len() != 13
         || arguments[1] != "shell"
         || arguments[3] != "--schema"
@@ -734,7 +1118,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         });
         match files {
             [Ok(package), Ok(schema), Ok(state), Ok(submit), Ok(cancel), Ok(grant)] => {
-                execute(&package, &schema, &state, &submit, &cancel, &grant)
+                execute_recording(
+                    &package,
+                    &schema,
+                    &state,
+                    &submit,
+                    &cancel,
+                    &grant,
+                    &mut evidence,
+                )
             }
             files => Err(files
                 .into_iter()
@@ -744,21 +1136,277 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     };
     let report = match result {
         Ok(report) => report,
-        Err(error) => report(
-            error.context.outcome,
-            error.context.stage,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(&error.message),
-        ),
+        Err(error) => failure_report(&error, &evidence),
     };
     if let Err(error) = super::output::print(&report) {
         eprintln!("noble: {}", error.message);
         return std::process::ExitCode::from(error.exit());
     }
     std::process::ExitCode::from(report.exit())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct PendingSend {
+        authority: auth::Authority,
+        tasks: task::Table,
+        resources: owner::Table,
+        admitted: task::Admitted<()>,
+        borrowed: owner::Admitted,
+        execution: auth::Execution,
+        context: task::Context,
+    }
+
+    fn pending_send() -> Result<PendingSend, String> {
+        let namespace = NAMESPACE.fetch_add(1, Ordering::Relaxed);
+        let context = task::Context(namespace);
+        let owner = auth::OwnerContext {
+            instance: namespace,
+            invocation: 1,
+            generation: 1,
+        };
+        let mut authority = auth::Authority::new(auth::Profile {
+            owner,
+            witness_kind: auth::WITNESS_KIND,
+            authority_source: SOURCE,
+            observation_source: auth::SourceId(2),
+            invocation_source: auth::SourceId(3),
+            checkpoint: CHECKPOINT,
+            limits: auth::Limits {
+                witnesses: 1,
+                attempts: 1,
+                requests: 2,
+            },
+        })
+        .map_err(|error| format!("{error:?}"))?;
+        let proposed = plan(owner, 1, "ping").map_err(|error| error.message)?;
+        let facts = facts(&proposed, true);
+        let witness = match authority.authorize_from_trusted_host(proposed.clone(), &facts) {
+            auth::Authorization::Authorized(witness) => witness,
+            _ => return Err("real exact worker authority refused".into()),
+        };
+        let admission = auth::AdmissionRequest {
+            claim: witness.claim(),
+            plan: proposed,
+        };
+        let execution = match authority.admit(Some(witness), &admission, &facts) {
+            auth::Admission::Committed(execution) => execution,
+            _ => return Err("real worker admission refused".into()),
+        };
+        let mut tasks = task::Table::new(
+            task::TableId(namespace),
+            task::Limits {
+                tasks: 1,
+                terminal_results: 1,
+                bytes: 3 * auth::MAX_ARGUMENT_BYTES + 256,
+                parked_payloads: 1,
+                pins: 1,
+                wakeups: 0,
+                retirement_work: 5,
+                generations: 1,
+            },
+        )
+        .map_err(|error| format!("{error:?}"))?;
+        let admitted = tasks
+            .prepare(task::Request {
+                context,
+                native: task::NativeId(namespace),
+                inputs: 1,
+                results: 0,
+                input_bytes: 12,
+                result_bytes: 12,
+                parked_bytes: 268,
+                pins: 1,
+                wakeups: 0,
+            })
+            .map_err(|error| format!("{error:?}"))?
+            .commit(());
+        let mut resources = owner::Table::new(
+            owner::TableId(namespace),
+            owner::Limits {
+                slots: 1,
+                pins: 1,
+                owners_per_context: 1,
+                generations: 1,
+                scopes: 1,
+            },
+        )
+        .map_err(|error| format!("{error:?}"))?;
+        let required = owner::Requirement {
+            context,
+            kind: ResourceKind(1),
+            rights: owner::Rights(1),
+        };
+        let capability = resources
+            .register(required)
+            .map_err(|error| format!("{error:?}"))?;
+        let borrowed = resources
+            .begin(capability, required)
+            .map_err(|rejected| format!("{:?}", rejected.error))?;
+        Ok(PendingSend {
+            authority,
+            tasks,
+            resources,
+            admitted,
+            borrowed,
+            execution,
+            context,
+        })
+    }
+
+    fn retired(
+        tasks: &task::Table,
+        resources: &owner::Table,
+        callback: task::Callback,
+        failure: task::Failure,
+    ) -> Result<(), String> {
+        let snapshot = tasks
+            .snapshot(callback.task.slot)
+            .ok_or("retired task record disappeared")?;
+        if snapshot.handle != callback.task
+            || snapshot.state != task::State::Retired
+            || snapshot.failure != Some(failure)
+            || !snapshot.native_stopped
+            || !snapshot.completion_closed
+            || snapshot.pins != 0
+            || !snapshot.finalized
+        {
+            return Err(format!(
+                "native task was not terminal and settled: {snapshot:?}"
+            ));
+        }
+        let task_counts = tasks.observation();
+        let resource_counts = resources.observation();
+        if task_counts.retired != 1
+            || task_counts.outstanding_pins != 0
+            || task_counts.reserved.bytes != 0
+            || resource_counts.retired != 1
+            || resource_counts.native_pins != 0
+            || resource_counts.busy != 0
+            || resource_counts.retiring != 0
+        {
+            return Err(format!(
+                "retirement leaked task or resource: \
+                {task_counts:?}, {resource_counts:?}"
+            ));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn rejected_move_only_cancellation_still_joins_and_settles_native_send() -> Result<(), String> {
+        let mut send = pending_send()?;
+        let callback = send.admitted.callback;
+        let started = send
+            .authority
+            .start_execution(send.execution)
+            .map_err(|error| format!("{error:?}"))?;
+        let mut wire = Vec::with_capacity(12);
+        wire.extend_from_slice(&1_i64.to_le_bytes());
+        wire.extend_from_slice(b"ping");
+        let (sender, receiver) = UnixDatagram::pair().map_err(|error| error.to_string())?;
+        sender
+            .set_nonblocking(true)
+            .map_err(|error| error.to_string())?;
+        receiver
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .map_err(|error| error.to_string())?;
+        let (native, sent) = Native::start(started, wire, sender, receiver, vec![0; 12])
+            .map_err(|error| error.message)?;
+        let size = sent
+            .recv_timeout(Duration::from_secs(5))
+            .map_err(|error| error.to_string())?
+            .map_err(|error| error.to_string())?;
+        assert_eq!(size, 12);
+        let wrong_context = task::Context(send.context.0 + 1);
+        let rejected = retire_started(
+            &mut send.tasks,
+            &mut send.authority,
+            &mut send.resources,
+            &send.borrowed.borrow,
+            send.admitted,
+            native,
+            wrong_context,
+            1,
+            "ping",
+            12,
+        )
+        .err()
+        .ok_or("wrong-context Task cancellation was accepted")?;
+        assert_eq!(rejected.context.outcome, "internal-failure");
+        assert_eq!(send.authority.counters().successful_deliveries, 0);
+        assert_eq!(
+            send.resources
+                .snapshot(send.borrowed.borrow.scope().handle.slot)
+                .ok_or("resource record disappeared")?
+                .retirement,
+            Some(owner::Retirement::HostCleanup)
+        );
+        let mut evidence = ShellEvidence {
+            native_bytes: Some(size),
+            ..ShellEvidence::default()
+        };
+        evidence.observe(&send.tasks, &send.resources, &send.authority);
+        let reported: Value = serde_json::from_str(&failure_report(&rejected, &evidence).json)
+            .map_err(|error| error.to_string())?;
+        assert_eq!(reported["outcome"], "internal-failure");
+        assert_eq!(reported["protected_operation_attempts"], 1);
+        assert_eq!(reported["native_send_bytes"], 12);
+        assert_eq!(reported["successful_result_deliveries"], 0);
+        assert_eq!(reported["task_state"], "Retired");
+        assert_eq!(reported["resource_state"], "Retired");
+        assert_eq!(reported["outstanding_native_pins"], 0);
+        assert_eq!(reported["resource_native_pins"], 0);
+        retired(
+            &send.tasks,
+            &send.resources,
+            callback,
+            task::Failure::Internal,
+        )
+    }
+
+    #[test]
+    fn malformed_host_grant_refuses_before_authority_without_fake_attempts() -> Result<(), String> {
+        let mut evidence = ShellEvidence::default();
+        let rejected = execute_recording(&[], &[], &[], &[], &[], b"{", &mut evidence)
+            .err()
+            .ok_or("malformed host grant crossed authority boundary")?;
+        assert_eq!(rejected.context.outcome, "invalid-input");
+        let report = failure_report(&rejected, &evidence);
+        let reported: Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        assert_eq!(reported["outcome"], "invalid-input");
+        assert_eq!(reported["protected_operation_attempts"], Value::Null);
+        assert_eq!(reported["successful_result_deliveries"], Value::Null);
+        assert_eq!(reported["native_send_bytes"], Value::Null);
+        Ok(())
+    }
+
+    #[test]
+    fn failed_unstarted_authority_settles_task_and_resource_independently() -> Result<(), String> {
+        let mut send = pending_send()?;
+        let callback = send.admitted.callback;
+        drop(send.execution);
+        send.authority
+            .cancel_invocation()
+            .map_err(|error| format!("{error:?}"))?;
+        let rejected = retire_unstarted(
+            &mut send.tasks,
+            &mut send.authority,
+            &mut send.resources,
+            Some(send.borrowed.borrow.scope()),
+            send.admitted,
+        )
+        .err()
+        .ok_or("already-cancelled invocation did not reject failure settlement")?;
+        assert_eq!(rejected.context.outcome, "internal-failure");
+        retired(
+            &send.tasks,
+            &send.resources,
+            callback,
+            task::Failure::Cancelled,
+        )
+    }
 }
