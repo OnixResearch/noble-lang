@@ -1,5 +1,35 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-21 (current source, commit `f03413e`)
+
+The [receipt](receipt-f03413e.json) records a cold run of all fourteen flake
+checks at `f03413edd116548af40e519f4e5ab8958761b48d`; its parent is upstream
+`68d16b8a`. **Eight checks pass and six fail**, so the gate is not green.
+
+At `68d16b8a` no check could evaluate at all. `c1d18799` merged the nine-lock
+`nix/reviewed-vendor.nix` recipe after `c56df13b` had pinned the eight-lock
+vendor, and the merge did not re-pin `component_sync`, so evaluation stopped at
+`assert toString reviewedVendor == selectionPolicy.component_sync.vendor`. The
+tested commit only re-pins `verification/m5/pins.json` (vendor path and NAR
+hash), its `policy/tool-selection-files.ncl` binding and the regenerated
+`policy/tool-selection.json` export; no Cargo lock, crate archive or recipe byte
+changed. The rebuilt vendor NAR hash is
+`sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=`.
+
+| check | result | attribution |
+|---|---|---|
+| `tool-selection`, `tool-versions`, `tool-overrides`, `format`, `clippy`, `cairn`, `policy`, `source-inventory-controls` | pass | runs bind `f03413e` only |
+| `rust-tests` | fail | `c_backend.rs` hardcodes `/nix/store/788mx…-gcc-wrapper-15.2.0/bin/gcc`, which no current pin produces and no check input declares; reproduced with `--option builders ''` |
+| `documents` | fail | 17 links into `.cairn/archive/*` broke when `e282d8fa` compacted those archives into `.cairn/compaction/v1`; 18 bun tests then fail |
+| `octet` | fail | `Cargo --all-features plan does not match the explicit architecture policy row` |
+| `source-coverage`, `native-assurance` | fail | `selected compiler architecture units exceed policy limit 89` |
+| `boundary-controls` | fail | `acyclic-shell` cannot open the missing `deny` artifact root; the same #26-family cause, after one attempt lost `cargo-vendor-dir` to builder signal 15 |
+
+The historical 10 PASS / 4 known FAIL receipt and its `2026-10-16` roster
+receipt are unchanged; they bind their own commits and are not relabelled by
+this run. No check was weakened or rerun to produce a pass, and no proof
+obligation, milestone acceptance or scenario case moved.
+
 ## Checking change log — 2026-10-16 (#27 roster only)
 
 The [source-bound roster renewal receipt](boundary-roster-20261016.json)

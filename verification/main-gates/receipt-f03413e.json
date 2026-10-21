@@ -1,0 +1,192 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "tested_commit": "f03413edd116548af40e519f4e5ab8958761b48d",
+  "base_upstream_commit": "68d16b8abe584e2e4a3dcd10d0eb3492cca43f4e",
+  "flake_note": "Cold run of all fourteen flake checks at f03413ed, the mechanical vendor re-pin of 68d16b8a. Eight checks pass and six fail. No historical receipt bytes were reused, no failed check was relabelled, and no policy or source was changed to make a check pass. Builds used the configured leviathan remote builder; both sandboxed and unsandboxed reproductions are recorded where they distinguish an environment defect from a source result.",
+  "run": {
+    "date": "2026-10-21",
+    "worktree": "/var/tmp/noble-gate-f03413ed",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check>",
+    "options": ["--option min-free 0", "--option max-free 0"],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed"
+  },
+  "prerequisite": {
+    "defect": "At 68d16b8a flake evaluation aborted before any check: assert toString reviewedVendor == selectionPolicy.component_sync.vendor",
+    "computed_vendor": "/nix/store/30ikms0n34wqal44lr5sjr9qzaayg385-noble-reviewed-offline-vendor",
+    "pinned_vendor": "/nix/store/4bf1y4d9pqwpxkxb8n1clh6nsjm30lj8-noble-reviewed-offline-vendor",
+    "cause": "c1d18799 merged nix/reviewed-vendor.nix's nine-lock python recipe after the eight-lock path had been pinned at c56df13b; the merge did not re-pin component_sync in verification/m5/pins.json",
+    "repair_commit": "f03413edd116548af40e519f4e5ab8958761b48d",
+    "repair_scope": "verification/m5/pins.json vendor path and NAR hash, its policy/tool-selection-files.ncl binding, and the regenerated policy/tool-selection.json export; no Cargo.lock, crate archive, or recipe byte changed",
+    "rebuilt_vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=",
+    "reproduction": "nix build -f <expr importing nix/reviewed-vendor.nix with locked nixpkgs_17 and rust-overlay_15>; nix hash path --sri /nix/store/30ikms0n34wqal44lr5sjr9qzaayg385-noble-reviewed-offline-vendor"
+  },
+  "flake_checks": [
+    {
+      "check": "boundary-controls",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 155,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/boundary-controls.log",
+      "log_sha256": "9b45654d2fd80e86b65d21a412ef2208235c20a93226f67d4b65041b8078c410",
+      "observation": "acyclic-shell: 'open artifact root .../deny: No such file or directory' then 'artifact replay failed; not an accepted rejection' - the deny-all dependency writes no deny root, matching the documented #26-family cause. A first attempt additionally lost cargo-vendor-dir to builder signal 15; the retry reached the dependency failure."
+    },
+    {
+      "check": "tool-selection",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 72,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/tool-selection.log",
+      "log_sha256": "70f64e5e8e5411fa5a8ff51123643c0f1130b5ab0b1c4eaa67ee3a260cb1df53",
+      "observation": "Nickel export matches the committed policy/tool-selection.json; registry typecheck and selector tests pass."
+    },
+    {
+      "check": "tool-versions",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 1578,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/tool-versions.log",
+      "log_sha256": "69467fdb180bdf8bfd2d2d9df67aa7c2d0469699482c00ddd5adbf57ad092694",
+      "observation": "Selected tool versions accepted; most of the duration is building and checking the pinned extraction/Lean tools."
+    },
+    {
+      "check": "tool-overrides",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 19,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/tool-overrides.log",
+      "log_sha256": "29bb78a93e0b3c8f068799bbed287e95ea66404592138e5e645901bb10778f98",
+      "observation": "21 environment overrides, one manual override argument and one backend directory symlink rejected."
+    },
+    {
+      "check": "format",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 25,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/format.log",
+      "log_sha256": "1c1185124e85a169fc78793002db3eceba3a24ec715034099101c4e059780131",
+      "observation": "cargo fmt --all -- --check passes with the pinned nightly-2026-03-21 rustfmt."
+    },
+    {
+      "check": "rust-tests",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 157,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/rust-tests.log",
+      "log_sha256": "55ce0acb54b6fe1b2776155fffd81a151c3384c9f924dc0f5ceded06055cd0fd",
+      "observation": "c_backend::checked_c_source_is_c11_syntax_valid_without_native_execution fails with 'C11 syntax diagnostic requires the pinned GCC15 supporting -fsyntax-only: No such file or directory'. crates/noble-cli/tests/c_backend.rs:8 hardcodes /nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/gcc, which no current nixpkgs pin produces and no check input declares, so the Nix sandbox hides it. Reproduced with a local build (--option builders ''), where that store path exists but remains absent from the sandbox. Every other observed test result line was ok (97 passed/2 ignored, 5 passed, 10 passed in the failing binary)."
+    },
+    {
+      "check": "clippy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 67,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/clippy.log",
+      "log_sha256": "2a4e7f54e3e332537118bb271a42583cfecda6b3408801e8abb70be7627e98a7",
+      "observation": "cargo clippy --workspace --all-targets --all-features -D warnings passes."
+    },
+    {
+      "check": "documents",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 30,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/documents.log",
+      "log_sha256": "42348168413eb20e894c406fff1cebbab0ca861577c48e83744108e05456d3b0",
+      "observation": "18 bun tests fail. Live document validation reports 17 broken local links into .cairn/archive/* for M1, M3, M7, M8, DXM1 and Numeric-Graph: e282d8fa compacted those archives into .cairn/compaction/v1 packs and pointers, so the linked paths no longer exist. Two unrelated links also break: verification/foundation/receipts/README.md -> 3d5ccc2/ and verification/calculator-v1/woxi/README.md -> helper/."
+    },
+    {
+      "check": "cairn",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 36,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/cairn.log",
+      "log_sha256": "5c3e664b03503709fbbba630b51d791c35877e87368c0d661b9b71cbdc98225e",
+      "observation": "Pinned Cairn validation passes across the active change trees."
+    },
+    {
+      "check": "policy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 16,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/policy.log",
+      "log_sha256": "e818b0148114ea6e80ae3d33cc0de931f30e34a74b71f7baa1748937b8a721a2",
+      "observation": "Nickel exports and the Octet standards manifest match the committed policy files."
+    },
+    {
+      "check": "octet",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 99,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/octet.log",
+      "log_sha256": "1cd68d7fa80548b94c8135061241972d656bb81621bd8815ac45456d4d0924d2",
+      "observation": "noble-octet-deny-all exits 2 with 'Cargo --all-features plan does not match the explicit architecture policy row'; the deny-all lint phase produces no result."
+    },
+    {
+      "check": "source-inventory-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 12,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/source-inventory-controls.log",
+      "log_sha256": "cecfe922689ae49757adc40f012960a2800bb59761848a5e55d164e08789abe8",
+      "observation": "Inventory comparator controls pass."
+    },
+    {
+      "check": "source-coverage",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 16,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/source-coverage.log",
+      "log_sha256": "0a3ec1ae76356ee634d13eb6e66e94ecf005b21e78988825a08f6f7024bde0ba",
+      "observation": "noble-inventory-artifacts exits 2 with 'selected compiler architecture units exceed policy limit 89'; no inventory artifact is produced, so the comparator never runs."
+    },
+    {
+      "check": "native-assurance",
+      "result": "fail",
+      "exit": 1,
+      "duration_s": 13,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/native-assurance.log",
+      "log_sha256": "f06bc0f025bdeab110707a4561eb826d42189d286b02b61eb5da2baaf2f12d49",
+      "observation": "Same shared inventory dependency: 'selected compiler architecture units exceed policy limit 89' before any assurance comparison runs."
+    }
+  ],
+  "rust_tests": {
+    "result": "failed",
+    "failing_tests": ["checked_c_source_is_c11_syntax_valid_without_native_execution"],
+    "partial_result_lines": [
+      {"result": "ok", "passed": 97, "failed": 0, "ignored": 2},
+      {"result": "ok", "passed": 5, "failed": 0, "ignored": 0},
+      {"result": "FAILED", "passed": 10, "failed": 1, "ignored": 0}
+    ],
+    "log_sha256": "55ce0acb54b6fe1b2776155fffd81a151c3384c9f924dc0f5ceded06055cd0fd",
+    "local_reproduction": {
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/rust-tests-local.log",
+      "exit": 1,
+      "finding": "The same single test fails with --option builders '' on this host, where /nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/gcc does exist outside the sandbox. The failure is an undeclared absolute store path, not a C11 emission defect and not a remote-builder-only artifact."
+    }
+  },
+  "follow_ups": [
+    {
+      "checks": ["rust-tests"],
+      "root_cause": "crates/noble-cli/tests/c_backend.rs:8 hardcodes a gcc wrapper store path that is neither produced by the current nixpkgs pins nor declared as a rust-tests input; the Nix sandbox hides it. Declaring the compiler as a check input (and reading it from an env-provided path) is required before this test can report on emitted C."
+    },
+    {
+      "checks": ["documents"],
+      "root_cause": "e282d8fa Cairn compaction replaced .cairn/archive/<change> trees with .cairn/compaction/v1 packs and pointers, while 17 canonical links in README.md, specs/ and verification/ still target the archive paths. Either the links move to compaction records or the archives are restored; check-specs also counts these as validation errors on the live tree."
+    },
+    {
+      "checks": ["octet"],
+      "root_cause": "The merged Cargo target set no longer matches the explicit --all-features architecture policy row; the deny-all gate aborts before linting."
+    },
+    {
+      "checks": ["source-coverage", "native-assurance", "boundary-controls"],
+      "root_cause": "Target discovery now exceeds the policy capacity of 89 compiler units, so inventory collection fails and both consumers plus the boundary artifact replay fail. Capacity renewal or target reconciliation is a policy change, not a re-run."
+    }
+  ],
+  "non_claims": [
+    "This is not a green global 14-check gate; six checks fail and each failure is attributed above.",
+    "No Cairn change is promoted, archived or re-synced by this receipt.",
+    "The vendor re-pin restores evaluation only; it is not a re-review of the merged nine-lock vendor recipe or of its .cargo-checksum.json writer.",
+    "No proof obligation, milestone acceptance or case result is advanced.",
+    "This receipt binds f03413ed only; later source changes need a fresh run."
+  ]
+}
