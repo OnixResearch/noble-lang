@@ -46,24 +46,24 @@
   ],
   "collection_limits": {
     "max_artifact_bytes": 268435456,
-    "max_calls": 32768,
-    "max_configurations": 2048,
+    "max_calls": 65536,
+    "max_configurations": 4096,
     "max_constructors": 32768,
     "max_effects": 4096,
-    "max_expansions": 8192,
+    "max_expansions": 16384,
     "max_function_safety_facts": 4096,
     "max_implementations": 1024,
-    "max_items": 4096,
+    "max_items": 8192,
     "max_modules": 2048,
     "max_shard_bytes": 67108864,
-    "max_shards": 89,
+    "max_shards": 96,
     "max_signatures": 4096,
     "max_span_bytes": 1048576,
-    "max_spans": 32768,
+    "max_spans": 65536,
     "max_traits": 512,
     "max_type_shapes": 4096,
     "max_types": 4096,
-    "max_units": 89,
+    "max_units": 96,
     "max_unknowns": 4096,
     "max_value_flow_bodies": 4096,
     "max_value_flow_rounds": 64,
@@ -111,6 +111,7 @@
       "alloc",
       "core",
       "rustc_apfloat",
+      "serde",
       "std"
     ],
     "local_traits": [
@@ -299,6 +300,7 @@
       {
         "default_features": true,
         "features": [
+          "live-test-barrier",
           "safety-observe"
         ],
         "triple": "x86_64-unknown-linux-gnu"
@@ -350,6 +352,28 @@
         "composition-root"
       ],
       "rationale": "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the noble-ngraph evaluators."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "infrastructure",
+      "package": "rustix",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI cooperative live watch (core/live/watch.rs): inotify watch registration, event reads and poll on the selected source directory. This static edge permission does not establish syscall, FFI or native safety, and a watch event does not authenticate later file bytes."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "serde",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI C-backend control JSON decoding through a duplicate-member-refusing serde Visitor over serde_json; decoded input remains untrusted and this is not a semantic acceptance witness."
     },
     {
       "edge_kinds": [

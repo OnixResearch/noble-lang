@@ -9,9 +9,11 @@ let contracts = import "./architecture.contracts.ncl" in
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       # The complete plan. `noble-cli` declares the empty `safety-observe`
-      # feature for its explicit evidence build; units without that feature
-      # retain the default configuration.
-      features = ["safety-observe"],
+      # feature for its explicit evidence build and the test-only
+      # `live-test-barrier` safepoint feature; the deny-all gate's
+      # --all-features plan enables both. Units without those features retain
+      # the default configuration. The installed CLI enables neither.
+      features = ["live-test-barrier", "safety-observe"],
       default_features = true,
     }],
   },
@@ -50,7 +52,7 @@ let contracts = import "./architecture.contracts.ncl" in
       edge_kinds = ["normal", "build"],
     },
   ],
-  # The observed Cargo graph has ten direct third-party normal edges: seven
+  # The observed Cargo graph has twelve direct third-party normal edges: nine
   # from noble-cli and three (blake3, rustc_apfloat, serde_json) from the
   # issue #14 noble-ngraph-experiment crate. That crate is an isolated
   # measurement harness outside the ordinary compiler path; the policy has no
@@ -64,7 +66,7 @@ let contracts = import "./architecture.contracts.ncl" in
   # role-granular: noble-syndicate is also composition-root, so this policy
   # alone would allow its future normal edges to these providers.
   # The separate native and source comparisons bind exact observed callers:
-  # the ten external edges are source-reviewed, and a new syndicate external
+  # the twelve external edges are source-reviewed, and a new syndicate external
   # edge would fail source dependency closure. Source comparison
   # remains red on other classifications; neither downstream comparator runs
   # after the blocked Octet architecture gate or attests native safety.
@@ -120,6 +122,20 @@ let contracts = import "./architecture.contracts.ncl" in
       permitted_caller_roles = ["composition-root"],
       edge_kinds = ["normal"],
       rationale = "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the noble-ngraph evaluators.",
+    },
+    {
+      package = "rustix",
+      kind = "infrastructure",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI cooperative live watch (core/live/watch.rs): inotify watch registration, event reads and poll on the selected source directory. This static edge permission does not establish syscall, FFI or native safety, and a watch event does not authenticate later file bytes.",
+    },
+    {
+      package = "serde",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI C-backend control JSON decoding through a duplicate-member-refusing serde Visitor over serde_json; decoded input remains untrusted and this is not a semantic acceptance witness.",
     },
     {
       package = "serde_json",
@@ -330,7 +346,9 @@ let contracts = import "./architecture.contracts.ncl" in
     # dynamic by language semantics. Their capability effects remain classified
     # from the resolved definition path; external target behavior is governed by
     # the provider and dependency rules above.
-    external_crates = ["alloc", "core", "rustc_apfloat", "std"],
+    # serde: the C-backend duplicate-member Visitor calls Deserializer,
+    # SeqAccess, MapAccess and de::Error trait methods on generic receivers.
+    external_crates = ["alloc", "core", "rustc_apfloat", "serde", "std"],
     local_traits = [
       {
         path = "noble_ngraph::grad::Real",
@@ -380,12 +398,22 @@ let contracts = import "./architecture.contracts.ncl" in
     # 0 unexpected, status=complete (receipt
     # c5141c143199c3b622da256ed8c9b73ede7f6dc525a2c1fa12190eb1b18b2a2c). The
     # previous 88 predated the #31 graph-byte accounting helpers.
-    max_units = 89,
-    max_shards = 89,
+    # 96 units: the 2026-10-21 integration of the live, worker, C11 and
+    # linking lines adds noble-cli tests c_backend, worker_host_child,
+    # worker_scalar and worker_typed, and noble-wasm tests signed_self,
+    # declared_text and core_live_code_owner. A scratch collection of e3011209
+    # with every count cap quadrupled observed expected=96, observed=96,
+    # 0 missing, 0 invalid shards, status=complete, and a 228,646,563-byte IR.
+    # Its largest shard, the CLI noble bin+test, had 36,666 calls, 31,596
+    # constructors, 8,857 expansions, 4,398 items, 2,196 configuration facts
+    # and at least 39,624 distinct fact spans; the five exceeded caps below are
+    # doubled once and every other cap is unchanged.
+    max_units = 96,
+    max_shards = 96,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
-    max_items = 4096,
+    max_items = 8192,
     max_types = 4096,
     max_traits = 512,
     max_implementations = 1024,
@@ -395,14 +423,14 @@ let contracts = import "./architecture.contracts.ncl" in
     # shard also reached the 16,384 constructor cap, so both were incomplete.
     # Double both bounds for one complete re-collection; truncation is never
     # an inventory.
-    max_calls = 32768,
+    max_calls = 65536,
     max_constructors = 32768,
     max_effects = 4096,
-    max_expansions = 8192,
+    max_expansions = 16384,
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
     # configuration facts per unit. Retain complete collection without widening
     # the single declared target/feature configuration.
-    max_configurations = 2048,
+    max_configurations = 4096,
     max_type_shapes = 4096,
     max_function_safety_facts = 4096,
     max_value_provenance_facts = 8192,
@@ -413,7 +441,7 @@ let contracts = import "./architecture.contracts.ncl" in
     # This candidate's sealed-source CLI bin+test shard reached the 16,384-span
     # cap and omitted at least 541 distinct referenced spans (minimum 16,925).
     # Permit one bounded re-collection; the incomplete shard is not an inventory.
-    max_spans = 32768,
+    max_spans = 65536,
     max_span_bytes = 1048576,
     # The truncated issue #22 CLI shards were already 27,781,842 and
     # 26,658,831 bytes, so complete shards cannot fit 32 MiB. Double the

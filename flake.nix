@@ -207,7 +207,7 @@
         chmod -R u+w source
         cd source
         exec cargo-octet check --workspace --output-format json --artifact-dir "$out" \
-          -- --all-targets --features safety-observe --offline -j4
+          -- --all-targets --features live-test-barrier,safety-observe --offline -j4
       '';
       inventory = import ./nix/source-inventory-derive.nix {
         ir = builtins.fromJSON (builtins.readFile "${inventoryArtifacts}/compiler-architecture-ir.json");
