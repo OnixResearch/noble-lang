@@ -1,0 +1,265 @@
+{
+  "schema": "noble-host-locality-theorem-inventory/v1",
+  "module": "proofs/m5/HostLocality.lean",
+  "namespace": "HostLocality",
+  "theorems": [
+    {
+      "name": "HostLocality.encodeDecision_wellFormed",
+      "role": "response-encoding",
+      "claim": "Both modeled bounded-read outcomes encode with a recognized result tag and an exact payload length.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.readDecision_success",
+      "role": "bounded-read-decision",
+      "claim": "An exact-representation, exact-handle, in-bounds request with authorized access returns precisely the selected byte slice.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.readDecision_domainError",
+      "role": "bounded-read-decision",
+      "claim": "An exact-representation, exact-handle, in-bounds request denied by native access yields the modeled invalid-handle domain error.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.t5_decision_logic_relation",
+      "role": "t5-model-relation",
+      "claim": "Under the explicit wrapper-response refinement premise, result validation precedes restoration of only the declared borrowed handle, preserves its original prefix position, and pushes the exact response.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.guest_call_collection_exact",
+      "role": "guest-stack-model",
+      "claim": "The modeled call stack contains the owner, offset, and length after its unchanged prefix; argument collection saves the owner and leaves exactly that prefix.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.restoration_before_validation_is_noop",
+      "role": "ordering-control",
+      "claim": "Before result validation, restoration is a no-op and its stack differs from a mutant that prematurely appends the borrowed owner.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.malformed_return_has_no_guest_continuation",
+      "role": "abnormal-guest-exit",
+      "claim": "An ABI-malformed returned response aborts the modeled guest call without continuing or restoring the owner to its guest stack.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.trapped_call_has_no_guest_continuation",
+      "role": "abnormal-guest-exit",
+      "claim": "A trapped modeled call aborts without guest continuation or owner restoration.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.malformed_tag_rejected",
+      "role": "response-control",
+      "claim": "The unsupported result-tag fixture fails the modeled ABI response validation.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.altered_result_length_rejected",
+      "role": "response-control",
+      "claim": "The inconsistent result-length fixture fails the modeled ABI response validation.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.altered_result_tag_breaks_wrapper_refinement",
+      "role": "response-control",
+      "claim": "Two responses cannot both exactly refine one decision when their result tags differ.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.altered_result_length_breaks_wrapper_refinement",
+      "role": "response-control",
+      "claim": "Two responses cannot both exactly refine one decision when their lengths differ.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.malformed_tag_does_not_restore",
+      "role": "abnormal-guest-exit-control",
+      "claim": "The unsupported-tag fixture aborts with the exact suspended stack and borrowed-owner state unchanged.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.altered_length_does_not_restore",
+      "role": "abnormal-guest-exit-control",
+      "claim": "The altered-length fixture aborts without restoring the borrowed owner or continuing the guest.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.host_locality_preserves_projection",
+      "role": "horizontal-frame",
+      "claim": "The independent host-locality premise preserves the unrelated owner, resource snapshot, and protected surrounding cells in the frame projection.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.m5_table_complete_exact",
+      "role": "actual-m5-table-correspondence",
+      "claim": "For the selected actual M5 table record in an authentic Busy scope, Table.decide completion agrees with normal_completion_owner_once and table_decide_refines, returning exactly one owner and the exact M5 accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.bounded_read_frame_and_restoration",
+      "role": "bounded-host-boundary-model",
+      "claim": "Given independent frame-locality, exact wrapper response, adapter-update, identity, bounds, and actual M5-table premises, a completed bounded read preserves the frame, restores only the declared owner in order, preserves response and read/release counters, and uses the actual M5 completion decision and accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.successful_read_frame_and_restoration",
+      "role": "successful-read-boundary",
+      "claim": "An authorized bounded read returns the exact region slice, restores only the declared borrowed owner, preserves the frame and release count, increments protected/read counters once, and follows the actual M5 Success completion accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.domain_error_read_frame_and_restoration",
+      "role": "domain-error-boundary",
+      "claim": "An in-bounds exact-handle read denied by native access returns the exact modeled domain error, restores only the declared borrowed owner, preserves frame and adapter counters, and follows the actual M5 DomainError completion accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.preflight_domain_error_frame_and_restoration",
+      "role": "preflight-error-boundary",
+      "claim": "A representation, handle, or bounds preflight refusal has a modeled domain-error response, leaves adapter state and the unrelated frame unchanged, and restores only the declared borrowed owner after response validation without claiming an M5 completion.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.m5_table_release_exact",
+      "role": "actual-m5-consuming-release",
+      "claim": "For a valid selected Live M5 record, Table.decide and the generated release refinement retire the record as LocalRelease with no owner return and exactly one local-release accounting unit.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.consuming_release_does_not_restore_guest_owner",
+      "role": "consuming-guest-owner",
+      "claim": "The consuming-release model removes the owner from the guest stack, clears borrowed state, continues without returning it, and differs from appending the consumed owner.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.consuming_release_boundary_does_not_restore_and_accounts_once",
+      "role": "consuming-release-boundary",
+      "claim": "Under the explicit successful Host::release refinement, consuming release preserves the unrelated frame, does not restore the guest owner, clears the host owner, increments the release counter once without overflow, and agrees with actual M5 release decisions and accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.consuming_release_does_not_restore",
+      "role": "consuming-release-control",
+      "claim": "The actual M5 table and generated release refinement plus the guest consuming model return no owner and account only a local release.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_success_is_selected_invoked_and_consuming",
+      "role": "cleanup-model",
+      "claim": "When an owner remains, successful cleanup selects and invokes one release and leaves no owner retained by the adapter model.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_failure_is_selected_invoked_and_retained",
+      "role": "cleanup-model",
+      "claim": "When cleanup release fails, the selection and invocation are recorded and the rejected owner remains retained; cleanup success is not assumed.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_success_counts_one_release",
+      "role": "cleanup-accounting",
+      "claim": "A successful modeled cleanup contributes exactly one release to its accounting delta.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_failure_counts_no_release",
+      "role": "cleanup-accounting",
+      "claim": "A failed modeled cleanup contributes no successful release to its accounting delta.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_without_owner_is_skipped",
+      "role": "cleanup-model",
+      "claim": "Cleanup with no retained owner is skipped and does not invoke release.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.abnormal_cleanup_does_not_restore_guest",
+      "role": "abnormal-cleanup",
+      "claim": "Cleanup success or failure after a malformed response cannot revive guest continuation or restore the borrowed owner.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.trapped_cleanup_does_not_restore_guest",
+      "role": "abnormal-cleanup",
+      "claim": "Cleanup success or failure after a trap cannot revive guest continuation or restore the borrowed owner.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.cleanup_success_is_not_selected_twice",
+      "role": "double-cleanup-control",
+      "claim": "After successful cleanup clears the owner, a second cleanup is skipped, not invoked, and contributes no second release.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.m5_double_retirement_has_no_second_release",
+      "role": "actual-m5-double-retirement",
+      "claim": "The first M5 retirement performs LocalRelease and a second retirement of the already-retired record is unchanged with zero further accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.abnormal_late_completion_is_idempotent",
+      "role": "actual-m5-abnormal-completion",
+      "claim": "A completion arriving after an M5 record is Retired remains unchanged and contributes zero accounting.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_table_identity_rejected",
+      "role": "identity-control",
+      "claim": "A mismatch in the actual M5 Handle table component is rejected as InvalidHandle.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_slot_identity_rejected",
+      "role": "identity-control",
+      "claim": "A mismatch in the actual M5 Handle slot component is rejected as InvalidHandle.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_context_identity_rejected",
+      "role": "identity-control",
+      "claim": "A context-only M5 Handle mismatch with table and slot held equal is rejected as WrongContext.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_generation_identity_rejected",
+      "role": "identity-control",
+      "claim": "A generation-only M5 Handle mismatch with earlier checked components equal is rejected as WrongGeneration.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_kind_identity_rejected",
+      "role": "identity-control",
+      "claim": "A kind-only M5 Handle mismatch with table, slot, and context equal is rejected as WrongKind.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.wrong_rights_identity_rejected",
+      "role": "identity-control",
+      "claim": "A rights-only M5 Handle mismatch with earlier checked components equal is rejected as WrongRights.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.unrelated_frame_mutation_rejected",
+      "role": "frame-control",
+      "claim": "A mutation of protected surrounding cells while unrelated owner and state remain equal violates the locality premise.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.unrelated_owner_mutation_rejected",
+      "role": "frame-control",
+      "claim": "Changing the unrelated owner's exact M5 Handle violates the locality premise.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "HostLocality.unrelated_state_mutation_rejected",
+      "role": "frame-control",
+      "claim": "Changing the unrelated resource snapshot violates the locality premise.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    }
+  ]
+}

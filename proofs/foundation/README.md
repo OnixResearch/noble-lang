@@ -414,6 +414,66 @@ lowering and loading simulations needed to instantiate the conditional linker
 remain premises: C8 and O1/O3/O7 are not discharged, and #7/#10 remain completed
 designs. No existing conformance or proof-ledger status changes.
 
+## Bounded host-call locality (issue #51)
+
+[`HostLocality.lean`](../m5/HostLocality.lean) models one synchronous
+bounded-region adapter, an ordered guest stack with one saved borrowed owner,
+exact M5 resource identity and a separate unrelated-owner/state projection.
+The adapter may read only its immutable region and request and update only its
+own owner, table snapshot and counters. Actual host locality remains an explicit
+premise: the native host has process-memory authority, not a Wasm sandbox.
+
+The 43 inventoried model theorems cover normal success, preflight/domain errors,
+validation before ordered borrow restoration, consuming release without owner
+return, malformed results, trap, cleanup failure and double retirement. The
+decision relation reuses actual `M5Resources` completion, table, release and
+late-completion lemmas. It does not replace the extracted table with a handwritten
+lookalike. Request naturals describe the post-signed-ABI-validation model;
+explicit counter-room premises exclude `u64` overflow.
+
+`verification/host-locality/check.mjs` recovers the exact generated Lean sources
+from the retained M5 archive and compiles them anew with the pinned Lean. It
+cross-checks the archive against its historical extraction receipt and requires
+all six current Rust resource-decision files to retain their recorded hashes.
+The separate theorem inventory records exact compiled statements and transitive
+axioms; only `propext`, `Classical.choice` and `Quot.sound` are allowed. The
+historical generated-code naming warnings are retained, not treated as proof
+holes. Imported Mathlib/Aeneas libraries remain a separate trust assumption.
+
+The execution runner builds the current CLI with the hash-checked offline
+vendor, reusing the worktree's ignored Cargo target. It compiles the selected WIT
+guest through the real CLI, then exercises 10 Wasmtime cases: read/empty-end
+success, ordinary bounds refusals and emitted-core trap/tag/length faults.
+Five direct production-Host tests cover forged identity, cross-invocation use,
+owner retention, double release and cleanup refusal/recovery. The malformed
+result controls corrupt guest return-area memory after a valid typed host
+response; they are not adversarial malformed host `Val` returns.
+
+From a clean committed checkout with the existing foundation dependency cache:
+
+```sh
+NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
+OUT="$HOME/.cache/noble-host-locality-$(date +%s)"
+env -i "$NODE" verification/host-locality/run.mjs --output "$OUT"
+env -i "$NODE" verification/host-locality/run.mjs --verify "$OUT/locality.json"
+```
+
+Select `tool_paths.node.output` from `policy/tool-selection.json` elsewhere.
+`--allow-dirty` is available for development smoke runs, never clean-source
+acceptance. Separate proof/execution receipts retain raw argv/status/stdout/
+stderr, source/tool/WIT/component hashes, assumptions and limited controls.
+`--verify` checks source and retained-artifact identity only; it does not replay
+Lean or prove Rust/Wasmtime refinement. The CI recipe runs this separate lane.
+
+T5 Rust-wrapper refinement and T6 lowering refinement remain open. Borrow
+restoration itself changes compiler `State.stack`, not a separate runtime event;
+early-restoration and unrelated-frame mutation controls are model-only. The
+one-owner adapter is unchanged. Its v1 report cannot distinguish guest release
+from cleanup, and public CLI cleanup failure remains unexercised; the direct
+Host refusal test does not close that edge. No arbitrary-host, async, reentrant,
+shared-memory or whole-engine isolation claim, conformance promotion, or
+proof-ledger change follows from this pilot. The completed #9 design stays closed.
+
 ## Phase 2: law/obligation matrix (pure MC1 model)
 
 Observation relations are kept separate:

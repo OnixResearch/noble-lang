@@ -138,6 +138,13 @@ states conditional horizontal and vertical composition rules. It retains exact
 source/dependency/artifact identities and finite off/on executions; real
 lowering and loading correspondence remain open.
 
+The [bounded host-call locality pilot](proofs/foundation/README.md#bounded-host-call-locality-issue-51)
+(#51) kernel-checks conditional frame, borrowed-owner restoration, consuming
+release and abnormal-cleanup theorems over the actual retained M5 table model.
+Its separate CLI/Wasmtime runner exercises the selected bounded-region guest
+and malformed-result controls. Rust-wrapper and lowering refinement remain
+open; the host is explicitly trusted to satisfy the locality premises.
+
 To retain the source, reports, WAT, Wasm, and tool observations:
 
 ```sh
