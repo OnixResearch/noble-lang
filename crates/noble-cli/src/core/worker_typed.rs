@@ -3,7 +3,7 @@
 //! module and retained exported Program owner are source-checked separately.
 
 use super::output::{ErrorContext, Failure, Report};
-use super::worker_package::Package;
+use super::worker_package::{InterfaceReject, Package};
 use super::worker_value::{self, Refusal, Schema};
 use noble_kernel::types::Ty;
 use serde_json::{json, Value};
@@ -47,6 +47,31 @@ fn value_failure(problem: Refusal) -> Failure {
             "exhausted",
             "worker value or package exceeded the shared budget",
         ),
+        Refusal::Ineligible => failure(
+            "eligibility-reject",
+            "worker capture hides a resource; resources are never capturable worker data",
+        ),
+    }
+}
+
+/// WORKER-02 interface rejections. All are decided at admission, before any
+/// worker engine starts, so the reported guest requests and protected
+/// operations are zero.
+fn interface_failure(problem: InterfaceReject) -> Failure {
+    match problem {
+        InterfaceReject::Interface => failure(
+            "interface-reject",
+            "declared worker interface differs from State Event -- State List<Action>",
+        ),
+        InterfaceReject::Schema => failure(
+            "schema-reject",
+            "declared worker interface names a schema identity outside the checked host catalog",
+        ),
+        InterfaceReject::Effect => failure(
+            "effect-reject",
+            "declared worker effects exceed the empty dispatch ceiling",
+        ),
+        InterfaceReject::Malformed => failure("invalid-input", "malformed worker interface claim"),
     }
 }
 
@@ -206,9 +231,12 @@ fn selected_schema(
             ));
         }
     }
-    attempt!(package
-        .bind_schemas(&catalog, schema_source)
-        .map_err(value_failure));
+    attempt!(package.bind_schemas(&catalog, schema_source).map_err(|_| {
+        failure(
+            "schema-reject",
+            "package schema rows differ from the checked host schema catalog",
+        )
+    }));
     let state_schema = catalog
         .iter()
         .find(|row| row.ty == state)
@@ -222,8 +250,8 @@ fn selected_schema(
         .find(|row| row.ty == action)
         .ok_or_else(|| failure("invalid-input", "missing Action schema"))?;
     attempt!(package
-        .bind_interface(state_schema, event_schema, action_schema)
-        .map_err(value_failure));
+        .check_interface(&catalog, state_schema, event_schema, action_schema)
+        .map_err(interface_failure));
     Ok((catalog, [state, event, action, attempt_id]))
 }
 
@@ -1486,6 +1514,110 @@ mod tests {
         .err()
         .ok_or("non-Send action crossed protected boundary")?;
         assert_eq!(refusal.context.outcome, "invalid-input");
+        Ok(())
+    }
+
+    /// WORKER-02 rejection variants, each run through the production admission
+    /// path. An Err from `execute` is an admission-stage refusal before any
+    /// worker engine starts, which `run` reports with zero guest requests and
+    /// zero protected operations.
+    #[test]
+    fn worker_interface_checker_classifies_each_worker02_variant() -> Result<(), String> {
+        let fixture = fixture()?;
+        let refused = |manifest: &Value, schema: &str| -> Result<String, String> {
+            let package = serde_json::to_vec(manifest).map_err(|error| error.to_string())?;
+            match execute(&package, schema.as_bytes(), &fixture.state, &fixture.event) {
+                Ok(report) => Err(format!("variant was admitted: {}", report.json)),
+                Err(problem) => Ok(problem.context.outcome.to_owned()),
+            }
+        };
+        let state = fixture.manifest["interface"]["inputs"][0].clone();
+        let event = fixture.manifest["interface"]["inputs"][1].clone();
+        let actions = fixture.manifest["interface"]["outputs"][1].clone();
+        let action = actions["list"].clone();
+
+        // The unmodified claim and program are admitted and executed.
+        let accepted = serde_json::to_vec(&fixture.manifest).map_err(|error| error.to_string())?;
+        let normal = execute(&accepted, SCHEMA.as_bytes(), &fixture.state, &fixture.event)
+            .map_err(|problem| problem.message)?;
+        if normal.outcome != "normal" {
+            return Err(format!("baseline worker was refused: {}", normal.json));
+        }
+
+        let mut reversed = fixture.manifest.clone();
+        reversed["interface"]["inputs"] = json!([event, state]);
+        let mut extra = fixture.manifest.clone();
+        extra["interface"]["outputs"] = json!([state, actions, state]);
+        let mut foreign_identity = fixture.manifest.clone();
+        let mut same_layout = state.clone();
+        let module_id = same_layout["module_id"]
+            .as_str()
+            .ok_or("schema wire lacks module identity")?
+            .parse::<u64>()
+            .map_err(|error| error.to_string())?;
+        same_layout["module_id"] = json!(module_id.wrapping_add(1).to_string());
+        foreign_identity["interface"]["inputs"][0] = same_layout;
+        let mut effectful = fixture.manifest.clone();
+        effectful["interface"]["effects"] = json!(["test.emit"]);
+        let mut capture = fixture.manifest.clone();
+        capture["captures"] = json!([{"tag":"opaque","schema":state,
+            "value":{"tag":"pair","left":{"tag":"i64","value":"0"},
+                "right":{"tag":"resource","value":"hidden"}}}]);
+        let mut heterogeneous = fixture.manifest.clone();
+        heterogeneous["interface"]["outputs"][1] = json!({"list":[action, event]});
+
+        for (name, manifest, expected) in [
+            ("reversed-state-event-stack", &reversed, "interface-reject"),
+            ("extra-output-value", &extra, "interface-reject"),
+            (
+                "same-layout-different-schema-identity",
+                &foreign_identity,
+                "schema-reject",
+            ),
+            (
+                "effect-outside-dispatch-ceiling",
+                &effectful,
+                "effect-reject",
+            ),
+            (
+                "resource-hidden-in-worker-capture",
+                &capture,
+                "eligibility-reject",
+            ),
+            (
+                "heterogeneous-list-without-adapter",
+                &heterogeneous,
+                "interface-reject",
+            ),
+        ] {
+            let outcome = refused(manifest, SCHEMA)?;
+            if outcome != expected {
+                return Err(format!("{name}: expected {expected}, got {outcome}"));
+            }
+        }
+
+        // The checked Program itself is held to the same interface: a correct
+        // claim cannot admit a transition whose instantiated stack is reversed
+        // or carries an extra output.
+        for (name, source) in [
+            (
+                "program-reversed-state-event-stack",
+                "module worker@1 [ export transition \
+                 def transition [ swap drop unit WorkerData@1.Action.Noop nil cons ] ]",
+            ),
+            (
+                "program-extra-output-value",
+                "module worker@1 [ export transition \
+                 def transition [ drop unit WorkerData@1.Action.Noop nil cons 0 ] ]",
+            ),
+        ] {
+            let variant =
+                fixture_with_source(SCHEMA, source, json!({"tag":"text","value":"attempt-1"}))?;
+            let outcome = refused(&variant.manifest, SCHEMA)?;
+            if outcome != "interface-reject" {
+                return Err(format!("{name}: expected interface-reject, got {outcome}"));
+            }
+        }
         Ok(())
     }
 }

@@ -17,6 +17,60 @@ pub(crate) struct Package {
     pub(crate) remaining_work: usize,
 }
 
+/// Why a declared worker interface differs from the host-selected dispatch
+/// interface `State Event -- State List<Action> ! {}` (WORKER-02). Each class is
+/// decided from the package claim against the independently checked schema
+/// catalog; none guesses arguments, converts schemas or falls back to `Any`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum InterfaceReject {
+    /// Stack arity, order or list element shape differs.
+    Interface,
+    /// A declared schema identity is not a checked host catalog row, even if
+    /// its layout digest matches one.
+    Schema,
+    /// A declared latent effect lies outside the empty dispatch ceiling.
+    Effect,
+    /// The interface claim is not the selected wire shape.
+    Malformed,
+}
+
+/// Every schema wire named by a declared stack entry: a bare wire, or each
+/// element wire of a `{"list": ...}` entry whose element may be one wire or an
+/// array of wires (a heterogeneous list claim).
+fn declared_wires(entry: &Value) -> Result<Vec<&Value>, InterfaceReject> {
+    let Some(fields) = entry.as_object() else {
+        return Err(InterfaceReject::Malformed);
+    };
+    if fields.len() != 1 || !fields.contains_key("list") {
+        return Ok(vec![entry]);
+    }
+    match &entry["list"] {
+        Value::Array(elements) if !elements.is_empty() => Ok(elements.iter().collect()),
+        element @ Value::Object(_) => Ok(vec![element]),
+        _ => Err(InterfaceReject::Malformed),
+    }
+}
+
+/// Resource search over a claimed capture value at every depth. The worklist
+/// holds at most the package's node count, which NODE_LIMIT bounds before this
+/// walk runs.
+fn hides_resource(value: &Value) -> bool {
+    let mut pending = vec![value];
+    while let Some(next) = pending.pop() {
+        match next {
+            Value::Object(fields) => {
+                if fields.get("tag").and_then(Value::as_str) == Some("resource") {
+                    return true;
+                }
+                pending.extend(fields.values());
+            }
+            Value::Array(items) => pending.extend(items),
+            Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+        }
+    }
+    false
+}
+
 fn object<'a>(
     value: &'a Value,
     keys: &[&str],
@@ -180,10 +234,16 @@ impl Package {
         if document["artifact"] != Value::Null {
             return Err(Refusal::Unsupported);
         }
-        if document["captures"]
+        let captures = document["captures"]
             .as_array()
-            .filter(|value| value.is_empty())
-            .is_none()
+            .ok_or(Refusal::Unsupported)?;
+        // Local v1 admits no captures. A resource hidden at any depth is still
+        // refused for eligibility first, so a wrapper cannot launder it into
+        // a merely unsupported capture.
+        if captures.iter().any(hides_resource) {
+            return Err(Refusal::Ineligible);
+        }
+        if !captures.is_empty()
             || document["host_contracts"]
                 .as_array()
                 .filter(|value| value.is_empty())
@@ -298,27 +358,14 @@ impl Package {
         }
         let interface = &document["interface"];
         object(interface, &["inputs", "outputs", "effects"])?;
-        let inputs = interface["inputs"]
-            .as_array()
-            .filter(|values| values.len() == 2)
-            .ok_or(Refusal::Invalid)?;
-        let outputs = interface["outputs"]
-            .as_array()
-            .filter(|values| values.len() == 2)
-            .ok_or(Refusal::Invalid)?;
-        if interface["effects"]
-            .as_array()
-            .filter(|values| values.is_empty())
-            .is_none()
+        // Arity, order, schema identity and effects are classified by
+        // check_interface against the checked host catalog (WORKER-02).
+        if ["inputs", "outputs", "effects"]
+            .iter()
+            .any(|key| !interface[*key].is_array())
         {
-            return Err(Refusal::Unsupported);
+            return Err(Refusal::Invalid);
         }
-        for value in inputs {
-            schema_wire(value)?;
-        }
-        schema_wire(&outputs[0])?;
-        object(&outputs[1], &["list"])?;
-        schema_wire(&outputs[1]["list"])?;
         Ok(Self {
             document,
             memory,
@@ -384,16 +431,47 @@ impl Package {
         Ok(())
     }
 
-    pub(crate) fn bind_interface(
+    /// Check the declared worker interface claim against the checked host
+    /// catalog and the selected dispatch interface, in this order: the empty
+    /// effect ceiling, then exact schema identities, then the exact stack.
+    pub(crate) fn check_interface(
         &self,
+        catalog: &[Schema],
         state: &Schema,
         event: &Schema,
         action: &Schema,
-    ) -> Result<(), Refusal> {
-        let witness = json!({"inputs":[state.wire(),event.wire()],
-            "outputs":[state.wire(),{"list":action.wire()}],"effects":[]});
-        if self.document["interface"] != witness {
-            return Err(Refusal::Invalid);
+    ) -> Result<(), InterfaceReject> {
+        let declared = &self.document["interface"];
+        let Some(fields) = declared.as_object() else {
+            return Err(InterfaceReject::Malformed);
+        };
+        let (Some(inputs), Some(outputs), Some(effects)) = (
+            declared["inputs"].as_array(),
+            declared["outputs"].as_array(),
+            declared["effects"].as_array(),
+        ) else {
+            return Err(InterfaceReject::Malformed);
+        };
+        if fields.len() != 3 {
+            return Err(InterfaceReject::Malformed);
+        }
+        if !effects.is_empty() {
+            return Err(InterfaceReject::Effect);
+        }
+        for entry in inputs.iter().chain(outputs) {
+            for wire in declared_wires(entry)? {
+                if schema_wire(wire).is_err() {
+                    return Err(InterfaceReject::Malformed);
+                }
+                if !catalog.iter().any(|schema| schema.wire() == wire) {
+                    return Err(InterfaceReject::Schema);
+                }
+            }
+        }
+        if inputs.as_slice() != [state.wire().clone(), event.wire().clone()]
+            || outputs.as_slice() != [state.wire().clone(), json!({"list":action.wire()})]
+        {
+            return Err(InterfaceReject::Interface);
         }
         Ok(())
     }
@@ -455,7 +533,16 @@ mod tests {
 
         let mut capture = accepted.clone();
         capture["captures"] = json!([{"tag":"resource","value":"hidden"}]);
-        assert!(matches!(parse(&capture), Err(Refusal::Unsupported)));
+        assert!(matches!(parse(&capture), Err(Refusal::Ineligible)));
+
+        let mut wrapped = accepted.clone();
+        wrapped["captures"] = json!([{"tag":"pair","left":{"tag":"i64","value":"1"},
+            "right":{"tag":"opaque","schema":{},"value":{"tag":"resource","value":"hidden"}}}]);
+        assert!(matches!(parse(&wrapped), Err(Refusal::Ineligible)));
+
+        let mut data_capture = accepted.clone();
+        data_capture["captures"] = json!([{"tag":"i64","value":"1"}]);
+        assert!(matches!(parse(&data_capture), Err(Refusal::Unsupported)));
 
         let mut host_contract = accepted.clone();
         host_contract["host_contracts"] = json!([{"operation":"test.emit","adapter":"claimed"}]);

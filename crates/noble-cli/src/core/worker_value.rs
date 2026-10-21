@@ -15,6 +15,9 @@ pub(crate) enum Refusal {
     Invalid,
     Unsupported,
     Exhausted,
+    /// A claimed capture contains a resource at any depth. Resources are never
+    /// capturable worker data, whatever wrapper encloses them (K-TYPE-02).
+    Ineligible,
 }
 
 /// Construct these entries only from independently checked ModuleSession
