@@ -20,7 +20,7 @@ fn unwritten_fifo_is_refused_before_blocking_or_guest_execution(
     std::fs::DirBuilder::new().mode(0o700).create(&path)?;
     let private = PrivateDirectory(path);
     let fifo = private.0.join("unwritten");
-    if !Command::new("/bin/mkfifo").arg(&fifo).status()?.success() {
+    if !Command::new("mkfifo").arg(&fifo).status()?.success() {
         return Err("could not create private FIFO".into());
     }
     let link = private.0.join("fifo-link");

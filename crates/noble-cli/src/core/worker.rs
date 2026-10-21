@@ -1280,7 +1280,7 @@ mod tests {
         let (mut engine, root) = prepared_private_artifacts()?;
         // Match the real preparation timeout: Node cannot run its JS close()
         // while stopped, and Rust must own the artifact cleanup after SIGKILL.
-        if !std::process::Command::new("/bin/kill")
+        if !std::process::Command::new("kill")
             .args(["-STOP", &engine.child.id().to_string()])
             .status()
             .map_err(|error| error.to_string())?
