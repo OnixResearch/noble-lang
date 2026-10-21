@@ -2169,7 +2169,8 @@ class SlotEngine {
       return slotReply('trace-capacity-refused', {
         diagnostic: 'exact host trace retention is full; release this session before invoking' });
     }
-    const root = this.registry.pinRoot(module.handle, module.token, request._frozen_snapshot ?? null);
+    const root = this.registry.pinRoot(module.handle, module.token,
+      request._frozen_snapshot ?? null, request.inputs, request.refs);
     if (this.rootSequence === Number.MAX_SAFE_INTEGER) throw Error('host root sequence exhausted');
     this.rootSequence++;
     this.checkpointIndex = 0;
@@ -2231,7 +2232,7 @@ class SlotEngine {
           throw Error('cannot retain actual frozen caller Program owner');
         }
         let snapshot;
-        try { snapshot = this.registry.freezeRoot(root); }
+        try { snapshot = this.registry.freezeRoot(root, request.inputs, request.refs); }
         catch (error) {
           if (runtime.release_target(module.handle) !== 0) this.poisoned = true;
           throw error;
@@ -2349,6 +2350,13 @@ class SlotEngine {
         || !sameSlotJSON(recorded.stack, request.expected_stack)
         || !sameSlotJSON(recorded.identity, request.expected_identity)) {
         return slotReply('replay-diverged', { diagnostic: 'host frozen receipt differs from supplied replay observation' });
+      }
+      const module = this.modules.get(recorded.id);
+      if (!module || !this.registry.frozenRootMatches(recorded.snapshot,
+        module.handle, module.token, request.inputs, request.refs)) {
+        return slotReply('replay-diverged', {
+          diagnostic: 'host-issued typed root inputs or ordered borrowed bindings differ from frozen root',
+        });
       }
       const effects = recorded.trace.filter(row => row.operation === 'effect');
       this.replaying = { effects, index: 0 };

@@ -25,7 +25,7 @@ fn host_registry_pins_authorizes_and_retires_real_versions() {
 }
 
 #[test]
-fn cli_scripted_effect_failure_counts_no_real_replay_operations() {
+fn cli_replay_refuses_changed_root_before_guest_and_keeps_exact_replay() {
     let node = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node";
     let script = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -35,10 +35,10 @@ fn cli_scripted_effect_failure_counts_no_real_replay_operations() {
         .arg(script)
         .arg(env!("CARGO_BIN_EXE_noble"))
         .output()
-        .expect("launch selected CLI conditional replay child");
+        .expect("launch selected CLI frozen-root replay child");
     assert!(
         output.status.success(),
-        "checked CLI scripted replay failed: stdout={} stderr={}",
+        "checked CLI frozen-root replay failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );

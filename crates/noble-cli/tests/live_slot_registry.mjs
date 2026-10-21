@@ -412,6 +412,8 @@ const frame = (address, parent, handle, pairs) => {
 
 // Replay must account for the exact ordered protected requests and recorded
 // responses without asking the current live-effect grant or performing again.
+// The frozen host-issued root inputs and borrowed binding order are checked
+// before an active root exists, even when the old map is no longer current.
 {
   const registry = host(2);
   grants('publish', 'script', true);
@@ -422,13 +424,20 @@ const frame = (address, parent, handle, pairs) => {
   assert.equal(registry.publish({ slotId: 'script', expectedEpoch: 0n,
     interface: iface, version: selected }).outcome, 'published');
   const module = registry.registerModule(digest, [site(iface.input, iface.output, iface.effectCeiling)]);
+  const inputs = [{ kind: 'i64', value: '5' }];
+  const refs = [
+    { position: 1, ordinal: 0, slot: 'script' },
+    { position: 2, ordinal: 1, slot: 'script' },
+  ];
   const enter = token => {
-    registry.bindRef(token, 1, 19, 'script', iface);
-    view.setUint32(ROOT_BINDING_COUNT, 1, true);
-    frame(FRAME + 2048, 0, 880, [[1, 19]]);
-    assert.equal(registry.validateBorrowBinding(token, module, 1, 19), 1);
+    registry.bindRef(token, 1, 0, 'script', iface);
+    registry.bindRef(token, 2, 1, 'script', iface);
+    view.setUint32(ROOT_BINDING_COUNT, 2, true);
+    frame(FRAME + 2048, 0, 880, [[1, 0], [2, 1]]);
+    assert.equal(registry.validateBorrowBinding(token, module, 1, 0), 1);
+    assert.equal(registry.validateBorrowBinding(token, module, 2, 1), 1);
     const parent = registry.enterFrame(token, module, -1, FRAME + 2048, 880, memory);
-    assert.equal(registry.dispatch(token, 19, module, 3).handle, 521);
+    assert.equal(registry.dispatch(token, 0, module, 3).handle, 521);
     frame(FRAME + 2112, FRAME + 2048, 521, []);
     const child = registry.enterFrame(token, module, 3, FRAME + 2112, 521, memory);
     return [parent, child];
@@ -444,11 +453,31 @@ const frame = (address, parent, handle, pairs) => {
   assert.deepEqual(scripted.map(row => row.protectedOperations), [1, 2]);
   assert.deepEqual(scripted.map(row => row.policyInput.request), ['A', 'B']);
   registry.leaveFrame(original, child); registry.leaveFrame(original, parent);
-  const frozen = registry.freezeRoot(original);
+  const frozen = registry.freezeRoot(original, inputs, refs);
   registry.finishRoot(original);
+  const originalInputs = structuredClone(inputs);
+  const originalRefs = structuredClone(refs);
+  inputs[0].value = '6';
+  refs[0].slot = 'altered-after-freeze';
+  assert.equal(registry.frozenRootMatches(frozen, 880, module, inputs, refs), false,
+    'mutating input objects after freeze cannot rewrite the retained binding');
+  const replacement = admit(registry, 'script-replacement', 522, ['test.emit']);
+  assert.equal(registry.publish({ slotId: 'script', expectedEpoch: 1n,
+    expectedIncarnation: 1n, expectedGeneration: 1n, version: replacement }).epoch, 2n);
   grants('effect', 'script', false);
   const externalEffects = performed.length;
-  const replay = registry.pinRoot(880, module, frozen);
+  const changed = [{ kind: 'i64', value: '6' }];
+  const reversed = originalRefs.slice().reverse();
+  assert.equal(registry.frozenRootMatches(frozen, 880, module, changed, originalRefs), false);
+  assert.equal(registry.frozenRootMatches(frozen, 880, module, originalInputs, reversed), false);
+  assert.throws(() => registry.pinRoot(880, module, frozen, changed, originalRefs), /invalid frozen caller root/);
+  assert.throws(() => registry.pinRoot(880, module, frozen, originalInputs, reversed), /invalid frozen caller root/);
+  assert.equal(performed.length, externalEffects, 'mismatched roots cannot perform real effects');
+  assert.equal(registry.frozenRootMatches(frozen, 880, module, originalInputs, originalRefs), true);
+  const replay = registry.pinRoot(880, module, frozen, originalInputs, originalRefs);
+  assert.equal(registry.rootEpoch(replay), 1n, 'frozen root retains its original map epoch');
+  assert.equal(registry.frozenIdentity(replay).find(row => row.slotId === 'script')?.programValueId,
+    selected.programValueId, 'frozen root retains the admitted old selected target');
   const [replayParent, replayChild] = enter(replay);
   assert.equal(registry.replayEffect(replay, replayChild, 521, 'test.emit',
     'A', scripted[0]).response, 'ok-A');
@@ -463,6 +492,8 @@ const frame = (address, parent, handle, pairs) => {
   registry.leaveFrame(replay, replayChild); registry.leaveFrame(replay, replayParent);
   registry.finishRoot(replay);
   registry.releaseFrozen(frozen);
+  assert.equal(registry.retainedVersions, 1, 'mismatched replay created no hidden pinned old root');
+  assert.ok(released.includes('521:P-script'), 'last frozen pin retires the old selected target');
 }
 
 // Nominal resource identity, ordered inputs, ceiling, and exact selected

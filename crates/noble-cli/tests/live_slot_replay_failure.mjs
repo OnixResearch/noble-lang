@@ -76,19 +76,20 @@ try {
     inputs: [{ kind: 'i64', value: '0' }], refs,
     expected_identity: recorded.frozen_identity,
     expected_trace: recorded.request_trace, expected_stack: recorded.stack });
-  assert.ok(['replay-diverged', 'replay-refused'].includes(replay.outcome), JSON.stringify(replay));
-  assert.equal(replay.actual?.outcome, 'execution-failed', JSON.stringify(replay));
-  assert.equal(replay.actual.protected_operations, 0,
-    'the virtually performed first effect must not count as a real protected operation on failure');
-  assert.deepEqual(replay.actual.request_trace.filter(row => row.operation === 'effect')
-    .map(row => row.request), ['first']);
-  assert.equal(replay.actual.request_trace.find(row => row.operation === 'effect')?.outcome,
-    'performed');
+  expect(replay, 'replay-diverged');
+  assert.equal(replay.actual, undefined, 'changed host-issued input must refuse before a guest root');
+  assert.equal(replay.guest_requests, 0);
+  assert.equal(replay.protected_operations, 0);
+  assert.match(replay.diagnostic, /host-issued typed root inputs/);
+  const stillMatched = expect(await issue(replayRequest), 'replay-matched');
+  assert.equal(stillMatched.scripted_operations, 2);
+  assert.equal(stillMatched.protected_operations, 0);
+  expect(await issue({ operation: 'release-replay', token: recorded.replay_token }), 'replay-released');
   child.stdin.end();
   const exit = child.exitCode === null
     ? await new Promise(resolve => child.once('exit', resolve)) : child.exitCode;
-  assert.equal(exit, 2, stderr);
-  console.log('checked conditional replay: first response scripted, second diverged, no real replay effect');
+  assert.equal(exit, 0, stderr);
+  console.log('checked conditional replay: changed root refuses before guest; exact frozen replay remains eligible without real effects');
 } catch (error) {
   child.stdin.end();
   child.kill();

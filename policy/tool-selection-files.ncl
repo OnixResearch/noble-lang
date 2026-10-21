@@ -188,7 +188,7 @@
   "crates/noble-wasm/tests/nominal.rs" = "4b689ee060d62b29ee51e1c62ea5309f457cc8ec9b3f15da734cca9b0a5a4970",
   "crates/noble-wasm/tests/signed_self.rs" = "11a3199113efd3b0057c09a932aa585a3c8975ad412339fd2441ba843467291b",
   "crates/noble-cli/src/core/runtime/live-test-barrier.mjs" = "7d76638c7bbfe624ee2ffc9cd479ab3542aed4134c375e53ac1505d4993fd6bf",
-  "crates/noble-cli/src/core/runtime/slot-engine.mjs" = "715d036e240ab3f689f7d80d11b7535a83e27e7a782794d34cebdeefa225909c",
+  "crates/noble-cli/src/core/runtime/slot-engine.mjs" = "e787608bd6c65c7eec1c8745286da18c7c5035c3842fbc1112cc6475355774bf",
   "crates/noble-cli/tests/live_repl.rs" = "3385446c7b01ad7b317f5f931c110d1214f84958dc7442767f50438548fd7238",
   "crates/noble-cli/tests/live_slot_selected_origin.mjs" = "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
   "crates/noble-cli/tests/live_slot_selected_retention.rs" = "c3d570334884cbda25ed5b7822ff76aefba3cf8f3e3f36699c49e98cb38d6fa0",

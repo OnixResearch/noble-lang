@@ -68,6 +68,58 @@ function exactEvidence(evidence, version) {
     && evidence.artifactSha256 === version.artifactSha256;
 }
 
+// Only the host-normalized typed root values accepted by injection and ordered
+// borrowed bindings are sealed. Explicit primitive fields avoid hashing JSON, VM cell
+// addresses, display names, or an operator-supplied replay receipt.
+function rootBinding(inputs, refs) {
+  if (!Array.isArray(inputs) || inputs.length > 128
+    || !Array.isArray(refs) || refs.length > 128) throw Error('invalid frozen root inputs');
+  const shape = (value, fields) => value && typeof value === 'object'
+    && !Array.isArray(value) && Object.keys(value).length === fields.length
+    && fields.every(key => Object.hasOwn(value, key));
+  const position = value => Number.isInteger(value) && value >= 0 && value < 128;
+  const unsigned = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+  const owner = value => typeof value === 'string' && value.length > 0
+    && Buffer.byteLength(value) <= 256 && !value.includes('\0');
+  const values = Array.from(inputs, input => {
+    if (shape(input, ['kind', 'value']) && input.kind === 'i64'
+      && typeof input.value === 'string' && input.value.length <= 20
+      && /^-?(0|[1-9][0-9]*)$/.test(input.value)) {
+      const value = BigInt(input.value);
+      if (value >= -(1n << 63n) && value < (1n << 63n)
+        && value.toString() === input.value) return ['i64', input.value];
+    }
+    if (shape(input, ['kind', 'value']) && input.kind === 'bool'
+      && typeof input.value === 'boolean') return ['bool', input.value];
+    if (shape(input, ['kind']) && input.kind === 'unit') return ['unit'];
+    if (shape(input, ['kind', 'owner']) && input.kind === 'program'
+      && owner(input.owner)) return ['program', input.owner];
+    if (shape(input, ['kind', 'module', 'position', 'ordinal',
+      'nominalOrdinal', 'resourceKind', 'owner']) && input.kind === 'resource'
+      && position(input.position) && position(input.ordinal)
+      && unsigned(input.nominalOrdinal) && unsigned(input.resourceKind)
+      && owner(input.owner)) {
+      const module = slotInteger(
+        typeof input.module === 'string' && input.module.length <= 20
+          && /^(0|[1-9][0-9]{0,19})$/.test(input.module)
+          ? BigInt(input.module) : -1n,
+        'root resource module');
+      return ['resource', module.toString(), input.position, input.ordinal,
+        input.nominalOrdinal, input.resourceKind, input.owner];
+    }
+    throw Error('unsupported frozen root input');
+  });
+  const bindings = Array.from(refs, (ref, index) => {
+    if (!shape(ref, ['position', 'ordinal', 'slot'])
+      || !position(ref.position) || ref.ordinal !== index
+      || (index > 0 && ref.position <= refs[index - 1].position)) {
+      throw Error('invalid frozen root reference');
+    }
+    return [ref.position, ref.ordinal, slotName(ref.slot)];
+  });
+  return JSON.stringify([values, bindings]);
+}
+
 class CommittedRetirementError extends Error {
   constructor(transition, epoch, cause) {
     super(`live-slot ${transition} committed at epoch ${epoch}; backend retirement failed: ${cause}`);
@@ -424,16 +476,16 @@ export class SlotRegistry {
     return { outcome: 'deleted', epoch: this.epoch };
   }
 
-  pinRoot(callerHandle, callerModule, frozenToken = null) {
+  pinRoot(callerHandle, callerModule, frozenToken = null, inputs, refs) {
     this.#check();
     if (!Number.isSafeInteger(callerHandle) || callerHandle <= 0 || callerHandle > 0xffffffff) {
       throw Error('invalid checked root caller handle');
     }
     if (!this.#modules.has(callerModule)) throw Error('unregistered checked root module');
     const frozen = frozenToken === null ? null : this.#frozen.get(frozenToken);
-    if (frozenToken !== null && (!frozen || frozen.callerHandle !== callerHandle
-      || frozen.callerModule !== callerModule)) {
-      throw Error('invalid frozen caller root');
+    if (frozenToken !== null
+      && !this.frozenRootMatches(frozenToken, callerHandle, callerModule, inputs, refs)) {
+      throw Error('invalid frozen caller root inputs or bindings');
     }
     if (this.#nextRoot === U64_MAX) throw Error('root identity exhausted');
     const token = Object.freeze({});
@@ -446,6 +498,16 @@ export class SlotRegistry {
   }
 
   rootEpoch(token) { return this.#root(token).state.epoch; }
+
+  frozenRootMatches(snapshot, callerHandle, callerModule, inputs, refs) {
+    this.#check();
+    const frozen = this.#frozen.get(snapshot);
+    if (!frozen || frozen.callerHandle !== callerHandle
+      || frozen.callerModule !== callerModule) return false;
+    try { return frozen.binding === rootBinding(inputs, refs); }
+    catch { return false; }
+  }
+
   #root(token) {
     this.#check();
     const root = this.#roots.get(token);
@@ -855,12 +917,20 @@ export class SlotRegistry {
     })).sort((left, right) => left.slotId.localeCompare(right.slotId));
   }
 
-  freezeRoot(token) {
+  freezeRoot(token, inputs, refs) {
     const root = this.#root(token);
     if (root.frames.length || root.pending) throw Error('cannot freeze an active borrowed frame');
+    const binding = rootBinding(inputs, refs);
+    if (root.refs.size !== refs.length || root.boundRefs.size !== refs.length
+      || refs.some(ref => {
+        const bound = root.refs.get(ref.ordinal);
+        return !bound || bound.slotId !== ref.slot
+          || bound.logicalInputPosition !== ref.position
+          || !root.boundRefs.has(ref.ordinal);
+      })) throw Error('frozen root differs from checked borrowed bindings');
     const snapshot = Object.freeze({});
     this.#frozen.set(snapshot, Object.freeze({
-      state: root.state, callerHandle: root.callerHandle, callerModule: root.callerModule,
+      state: root.state, callerHandle: root.callerHandle, callerModule: root.callerModule, binding,
     }));
     return snapshot;
   }
