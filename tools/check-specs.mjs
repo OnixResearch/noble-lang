@@ -97,7 +97,7 @@ const STATES = {
   trust: ['unassessed', 'explicit'],
 };
 const KINDS = ['static', 'runtime', 'admission', 'adapter', 'identity', 'review'];
-const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-BE002', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001'];
+const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-BE002', 'SPEC-BE003', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001'];
 const EXECUTED = ['passed', 'failed', 'timeout'];
 const ROUTES = {
   K: ['semantic-test', 'model-proof', 'review'],
@@ -106,6 +106,7 @@ const ROUTES = {
   BE: ['experiment-test', 'correspondence', 'review'],
   CB: ['native-boundary-test', 'backend-correspondence', 'review'],
   NGRAPH: ['experiment-test', 'correspondence', 'review'],
+  EA: ['form-admission-test', 'isolated-backend-correspondence', 'review'],
   W: ['boundary-test', 'correspondence', 'review'],
   H: ['boundary-test', 'correspondence', 'review'],
   S: ['boundary-test', 'correspondence', 'review'],

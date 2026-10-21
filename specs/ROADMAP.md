@@ -1488,6 +1488,20 @@ open. A guarded partial live REPL implementation is not LIVE acceptance.
 Ordinary Core `run`/`session`, selected Wasm/Node-V8 and historical M4
 evidence remain unchanged; these designs inherit no M4 execution claim.
 
+The separate [MEB milestone](roadmap.json) follows M4 only and records the
+nonselected [Erlang abstract-form contract](ERLANG-ABSTRACT-BACKEND.md) and
+[archived specification-only change](../.cairn/archive/2026-10-06-erlang-abstract-backend/proposal.md).
+Its first positive slice is resource-free signed-I64 arithmetic, **not**
+complete Core-Bootstrap: Noble source must pass independent checking before
+bounded annotated abstract forms travel as a validated ETF *list of terms*
+to pinned `compile:noenv_forms`. Any compiled BEAM load requires exact
+source/form/byte admission and a disposable OS-confined VM; a BEAM process
+is not a machine sandbox, and the slice grants no `test.emit`. All seven
+[EA designs](conformance/erlang-abstract-cases.json) remain
+absent/not-run/proof-open/unassessed with empty evidence. No Noble compiler,
+isolated runtime, accepted execution, full bootstrap backend, proof,
+production selection or Gleam-derived performance claim exists.
+
 ## Estimates
 
 Initial budgets for one engineer are 1–2 days for M1 and 3–5 days each for the M2/M3 feasibility experiments. These are investigation budgets, not completion promises.
