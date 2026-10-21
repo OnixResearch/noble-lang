@@ -166,7 +166,7 @@
     "crates/noble-contracts/src/source/proof.rs": "9970a1f52ba4904db412769939ecc675d77e5db3dd4dcd9e9b2503c12100dac9",
     "crates/noble-contracts/src/source/resolution.rs": "483c97691426112364f8688833dd83b1999e517bd959f0664cccd5781d0bb331",
     "crates/noble-contracts/tests/component.rs": "582753aeb3ed0a6088104aeede15d2280048353927c34d95796e08405cebcba7",
-    "crates/noble-contracts/tests/declared.rs": "08771b865e41fb5b3c8296c03045ee200441ffb3b9f71c0f8f8927b4bfeba54d",
+    "crates/noble-contracts/tests/declared.rs": "822efae0d91ab52dbf58974a1c629c03eebac98cd386fada9bfca0635e748a62",
     "crates/noble-contracts/tests/declared/bindings.rs": "2c5336c794e854d20526cf3c880e48770b8fd8c253a0a10c793762ef9a9e3396",
     "crates/noble-contracts/tests/declared/cases.rs": "cf4d54ad038b41b1cda46ec1b533a93e5a42393d14ff1f5ab35a318146801452",
     "crates/noble-contracts/tests/declared/named.rs": "cff6e4d0ed2d0a1c6315bce239feab5acd8c2129032828a67a6b5bb4f1a4f192",

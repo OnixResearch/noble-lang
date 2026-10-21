@@ -169,6 +169,7 @@ does not copy a suffix, allocate an aggregate, or request a host effect.
 Ordinary `run`, declared modules, and live REPL cannot select this profile.
 Managed-Wasm reports from the opted-in session identify `Text-Byte-Cursor-v1`.
 
+
 ### Persistent sessions
 
 A session keeps its stack, definitions, captured values, and compiled programs

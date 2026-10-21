@@ -58,8 +58,16 @@ impl<'a> Scanner<'a> {
             return Err(super::exhausted(full, "source byte limit exceeded"));
         }
         attempt!(meter.charge(full.end, full));
-        if core::str::from_utf8(source_bytes).is_err() {
-            return Err(crate::invalid(full, "invalid UTF-8 source encoding"));
+        if let Err(error) = core::str::from_utf8(source_bytes) {
+            let start = attempt!(crate::index(error.valid_up_to(), full));
+            let end = match error.error_len() {
+                Some(length) => start.saturating_add(attempt!(crate::index(length, full))),
+                None => full.end,
+            };
+            return Err(crate::invalid(
+                crate::Span { start, end },
+                "invalid UTF-8 source encoding",
+            ));
         }
         Ok(Self {
             source: source_bytes,

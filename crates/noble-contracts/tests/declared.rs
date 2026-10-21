@@ -543,6 +543,48 @@ fn invalid_initializers_and_imports_leave_generation_unchanged() -> Result<(), S
     Ok(())
 }
 
+// r[verify DX-DIAG-01]
+#[test]
+fn declared_source_utf8_errors_locate_bad_bytes_and_preserve_valid_text() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, Stage};
+
+    let session = ModuleSession::new_declared_text(&[], false, retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let generation = session.generation();
+    for (source, end) in [(b"1 \xff 2".as_slice(), 3), (b"1 \xe2\x82".as_slice(), 4)] {
+        let error = session
+            .prepare(source, &[], LIMITS)
+            .expect_err("invalid UTF-8 must not produce a declared candidate");
+        assert_eq!(error.stage(), Stage::Parse);
+        assert_eq!(
+            error.diagnostic().kind,
+            noble_contracts::DiagnosticKind::Invalid
+        );
+        assert_eq!(
+            error.diagnostic().span,
+            noble_contracts::Span { start: 2, end },
+        );
+    }
+    assert_eq!(session.generation(), generation);
+
+    let accepted = session
+        .prepare(b"\"A\xc3\xa9\" 1", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(
+        accepted.output(),
+        &[noble_kernel::types::Ty::Text, noble_kernel::types::Ty::I64],
+    );
+    let text = accepted
+        .submission()
+        .ok_or("valid text expression has no submission")?
+        .body
+        .texts
+        .first()
+        .ok_or("valid text literal was not retained")?;
+    assert_eq!(text.bytes, b"A\xc3\xa9");
+    Ok(())
+}
+
 #[test]
 fn incompatible_alias_rebind_and_stale_commit_keep_previous_candidate() -> Result<(), String> {
     let mut session = noble_contracts::source::ModuleSession::new(

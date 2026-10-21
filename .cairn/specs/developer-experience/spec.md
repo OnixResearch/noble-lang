@@ -83,6 +83,8 @@ r[DX-DIAG-01]
 
 Successful editor analysis should expose stack states at word boundaries. Diagnostics must distinguish stack order, stack arity, type mismatch, branch mismatch, and resource duplication. Exact wording is not standardized.
 
+For invalid UTF-8 source bytes, the parse diagnostic span identifies the first malformed byte sequence, not the entire submission: from the valid prefix length through the malformed sequence, or through the source end for an incomplete trailing sequence. These are byte offsets in the submitted source; rejected input leaves the prior stack and declared namespace unchanged.
+
 
 <!-- cairn:scenario-links:start -->
 #### Scenario: DX-01 for DX-DIAG-01
