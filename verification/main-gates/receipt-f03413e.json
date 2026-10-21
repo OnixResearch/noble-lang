@@ -29,6 +29,8 @@
       "duration_s": 155,
       "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/boundary-controls.log",
       "log_sha256": "9b45654d2fd80e86b65d21a412ef2208235c20a93226f67d4b65041b8078c410",
+      "retry_log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/boundary-controls-retry.log",
+      "retry_log_sha256": "f5150c4e3d422902552167d00494c7d79665972b1a13db076c8c2e13ee892eb7",
       "observation": "acyclic-shell: 'open artifact root .../deny: No such file or directory' then 'artifact replay failed; not an accepted rejection' - the deny-all dependency writes no deny root, matching the documented #26-family cause. A first attempt additionally lost cargo-vendor-dir to builder signal 15; the retry reached the dependency failure."
     },
     {
@@ -160,6 +162,7 @@
     "log_sha256": "55ce0acb54b6fe1b2776155fffd81a151c3384c9f924dc0f5ceded06055cd0fd",
     "local_reproduction": {
       "log": "/home/brittonr/.cache/noble-issues/logs/gates/f03413ed/rust-tests-local.log",
+      "log_sha256": "3e7ff0de9a43a2351ddc4adcab3b21049e685ffce6fe58c1d427a82d7c821050",
       "exit": 1,
       "finding": "The same single test fails with --option builders '' on this host, where /nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/gcc does exist outside the sandbox. The failure is an undeclared absolute store path, not a C11 emission defect and not a remote-builder-only artifact."
     }
