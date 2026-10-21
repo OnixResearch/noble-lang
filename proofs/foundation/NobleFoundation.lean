@@ -9,3 +9,4 @@ import NobleFoundation.Slice
 import NobleFoundation.Preservation
 import NobleFoundation.Laws
 import NobleFoundation.Effects
+import NobleFoundation.LinkBoundary

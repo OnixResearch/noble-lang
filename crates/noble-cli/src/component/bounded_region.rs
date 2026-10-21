@@ -393,6 +393,8 @@ mod tests {
         let original = host.owner.as_ref().unwrap().handle();
         let mut forged = original;
         forged.slot = 42;
+        let mut wrong_table = original;
+        wrong_table.table = ownership::TableId(original.table.0.checked_add(1).unwrap());
         let mut foreign = original;
         foreign.context = ownership::Context(original.context.0.checked_add(1).unwrap());
         let mut wrong_kind = original;
@@ -401,9 +403,10 @@ mod tests {
         stale.generation += 1;
         let mut wrong_right = original;
         wrong_right.rights = ownership::Rights(0);
-        for claim in [forged, foreign, wrong_kind, stale, wrong_right] {
+        for claim in [forged, wrong_table, foreign, wrong_kind, stale, wrong_right] {
             assert_eq!(host.read(1, claim, 1, 2), Err("invalid-handle"));
         }
+        assert_eq!(host.read(2, original, 1, 2), Err("invalid-handle"));
         for (offset, length) in [(3, 1), (2, 2), (4, 0), (-1, 1), (0, -1), (i64::MAX, 1)] {
             assert_eq!(host.read(1, original, offset, length), Err("bounds-reject"));
         }
@@ -447,5 +450,35 @@ mod tests {
         assert_eq!(second.table.observation().native_pins, 0);
         assert_eq!(second.read(1, rightful, 0, 1), Ok(vec![9]));
         second.release(1).unwrap();
+    }
+
+    #[test]
+    fn double_release_does_not_retire_the_owner_twice() {
+        let mut host = Host::new(vec![0, 1, 2]).unwrap();
+        host.release(1).unwrap();
+        assert_eq!(host.releases, 1);
+        assert_eq!(host.table.observation().live, 0);
+        assert!(host.release(1).is_err());
+        assert_eq!(host.releases, 1);
+        assert_eq!(host.table.observation().live, 0);
+    }
+
+    #[test]
+    fn failed_cleanup_release_retains_owner_for_recovery() {
+        // Test-only corrupted Host state: a guest cannot mutate this context.
+        // Exercise the production release refusal and returned-owner path.
+        let mut host = Host::new(vec![0, 1, 2]).unwrap();
+        let context = host.context;
+        let original = host.owner.as_ref().unwrap().handle();
+        host.context = ownership::Context(context.0.checked_add(1).unwrap());
+        assert!(host.release(1).is_err());
+        assert_eq!(host.releases, 0);
+        assert_eq!(host.table.observation().live, 1);
+        assert_eq!(host.owner.as_ref().unwrap().handle(), original);
+
+        host.context = context;
+        host.release(1).unwrap();
+        assert_eq!(host.releases, 1);
+        assert_eq!(host.table.observation().live, 0);
     }
 }

@@ -72,3 +72,44 @@ refinement remains open; downloaded Mathlib `.olean` files remain a trust
 assumption. Like every packet above, this packet is stale for the commit
 that adds it: the successful verifier outputs name the tested source tree,
 not the later evidence-only commit.
+
+## 039b5ee — bounded one-call linking (issue #52)
+
+[`039b5ee/index.json`](039b5ee/index.json) records clean source commit
+`039b5ee1473bae02ec3140308d0023353242a486`, tree
+`3b3990393ed477348018b033b463f93930392110`. The actual invocation was
+`verification/foundation/ci.sh NEW_OUTPUT_DIR --skip-slice`; the retained
+[`ci-summary.txt`](039b5ee/ci-summary.txt) reports `overall=0`.
+The Phase 3 host-service slice was explicitly **skipped**.
+
+| File | Content |
+|---|---|
+| `foundation-check.json` | verbatim inventory: 196 Lean-checked theorems, including 48 linking theorems, with exact statements and transitive axioms |
+| `linking.json` | verbatim exact-subject, dependency, ABI, tool and artifact receipt for the actual same-artifact named-call/continuation path |
+| `linking-summary.json` | verbatim runner stdout: 24 normal executions and all eight controls detected |
+| `differential-summary.json` | 163 matching rows, all seven controls detected; per-case rows remain external and their raw receipt is hashed |
+| `emi.json`, `emi-replay.json`, `minimal-control.json` | verbatim branch-EMI regression and discrepancy replay evidence |
+| `*-verify.json`, `stale-receipt-refused.json` | actual clean-tree receipt verification and stale-tree refusal stdout |
+| `nix-*` | verbatim selected gate logs and summary, including the failing document gate |
+| `document-failure-attribution.json` | offline baseline attribution of that recorded failure, not a baseline test run |
+
+The linking controls detect a same-signature wrong body, same-signature
+identity reuse, reversed arguments, reversed results, a wrong return target,
+changed version, changed dependency bytes, and post-check callee substitution.
+Both optimization modes execute the ordered scalar results and preserved
+typed prefix. The audited transitive axiom union is `Classical.choice`,
+`Quot.sound`, and `propext`.
+
+The selected Nix `format`, `cairn`, `policy`, and `tool-selection` gates passed.
+**`documents` failed:** 91 tests passed and 18 failed, reporting 17 distinct
+local links already present at baseline `62b6362e7c05458cc8c4fbdddf781208c8392db0`.
+Fifteen destinations are missing historical files; two are directory-only
+links. The packet retains the failure rather than treating attribution as a
+pass. These selected gates are not the complete flake check set.
+
+The horizontal linking and separate vertical composition theorems are
+conditional model results, not an implementation theorem. C8 and O1/O3/O7
+lowering/loading correspondence remain premises; quota/abort and resource
+behavior remain outside the selected claim. The evidence-only commit that
+adds this packet has a different tree: its historical successful verifier
+outputs do not authorize receipt reuse on that later tree.

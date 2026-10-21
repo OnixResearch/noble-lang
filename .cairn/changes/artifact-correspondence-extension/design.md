@@ -178,6 +178,13 @@ PAA-1 neither replays nor relabels them. New coverage is exactly ACORR-CASE-01â€
 
 Matching hashes establish only O6's *premises* for one execution. Passing ACORR cases are finite observations, and extraction success is not refinement (VC-GATE-03).
 
+**Bounded O1/O3/O7 follow-on (#52):** the [one-call linking pilot](../../../verification/linking/README.md)
+separates source/helper-model composition from real lowering and final-byte
+loading. Its actual named callee is embedded in one compiled module, outside
+PAA-1's definitions/imports exclusion. Exact subject/dependency/artifact receipts
+and finite execution controls do not discharge O1, O3 or O7. PAA-1 and the
+completed #10 design are unchanged; no PO-17/18 status is promoted.
+
 ## Residual assumptions and unsupported cases
 
 **Assumed** (reported in every PAA-1 receipt):

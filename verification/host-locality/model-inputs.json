@@ -1,0 +1,46 @@
+{
+  "schema": "noble-host-locality-model-inputs/v1",
+  "source": "verification/m5/discovery.tar.gz",
+  "archive_sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+  "historical_extraction_receipt": "verification/m5/extraction.json",
+  "historical_source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+  "members": {
+    "./workspace/proofs/m3/NobleKernel.lean": {
+      "sha256": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+      "bytes": 24
+    },
+    "./workspace/proofs/m3/NobleKernel/Types.lean": {
+      "sha256": "1dc658e3196df56a7bd5535fec6e631a5c3bb205f8edb7d60456806457b33bd8",
+      "bytes": 42777
+    },
+    "./workspace/proofs/m3/NobleKernel/TypesExternal.lean": {
+      "sha256": "da81bda2798bdcabaaa2b88d276c929a2db93c56a3d9fc2888177bb73a4b9333",
+      "bytes": 1449
+    },
+    "./workspace/proofs/m3/NobleKernel/Funs.lean": {
+      "sha256": "9a79bac89999e5035da5e68320843d2a5f6965f70aad324e66951e8bbfc81b8a",
+      "bytes": 819809
+    },
+    "./workspace/proofs/m3/NobleKernel/FunsExternal.lean": {
+      "sha256": "4c1db4c216843f5c0c2b1bdd9dbd4231824d6154d6f643b00bf55cde559a7da0",
+      "bytes": 13952
+    },
+    "./workspace/proofs/m5/M5Resources.lean": {
+      "sha256": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+      "bytes": 15141
+    }
+  },
+  "scope": "Pinned historical M5 generated table decision model, rebuilt from source for this pilot. Current resource-table Rust and CLI/Wasmtime wrapper refinement are separate obligations; archival source reuse is not fresh Rust extraction.",
+  "lean_version": "4.31.0",
+  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+  "historical_resource_source_sha256": {
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+  }
+}

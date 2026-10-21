@@ -73,6 +73,11 @@
 #   cargo graph 3e81a6f7448e5f0199fc15ef24ec8e751d229ba19d5924dda5011b4679f85198; collector policy bd10f0092120956cabbfee63a2c20a1c5fd8d5e1112e3d750b29785063830585.
 #   12053 production paths = 5894 body/open + 3664 generated + 2495 structural;
 #   4207 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls from a complete 89-unit selected collection:
+#   IR 21624f0a35c8e5a530b407093e5b0e18ad436fa5c94d9e603e39976122bc44cd; coverage 261b8bdd96d4534e29ff346c27301d8c82eb688055746994368059676a6fdc5c;
+#   cargo graph 3e81a6f7448e5f0199fc15ef24ec8e751d229ba19d5924dda5011b4679f85198; collector policy bd10f0092120956cabbfee63a2c20a1c5fd8d5e1112e3d750b29785063830585.
+#   12057 production paths = 5896 body/open + 3666 generated + 2495 structural;
+#   4207 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -10742,9 +10747,6 @@ let
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12530:12537" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:13386:13441" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:14032:14039" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15484:17082" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17100:17553" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17571:18383" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:5951:5958" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7241:7257" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7813:7844" "noble-cli" "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -12215,6 +12217,16 @@ let
     body "noble::core::report::tests::strings::rejects_malformed_isolated_and_reversed_surrogates" "noble-cli" "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble::core::report::tests::strings::rejects_non_hex_and_signed_unicode_escape_digits" "noble-cli" "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     generated "noble::core::report::tests::strings::test" "noble-cli" "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    # Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: 7 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15484:17298" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17316:17769" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17787:18599" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:18617:18995" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:19013:19827" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    body "noble::component::bounded_region::tests::double_release_does_not_retire_the_owner_twice" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble::component::bounded_region::tests::failed_cleanup_release_retains_owner_for_recovery" "noble-cli" "Renewed 2026-10-20 issue 51 bounded-region release and cleanup regression controls from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [

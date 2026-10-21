@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and transcribed runtime helpers). No implementation theorem.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -896,6 +896,294 @@
       "phase": 2,
       "role": "eligibility",
       "claim": "a program whose input expects a resource is still copyable data"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.split_entry_lookup",
+      "phase": 3,
+      "role": "named-linking-fixture",
+      "claim": "the pilot call resolves to the selected NamedV1 environment entry by specialization slot"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.split_entry_matches_use",
+      "phase": 3,
+      "role": "named-linking-fixture",
+      "claim": "the pilot entry preserves the call's exact source provenance and ordered input/output interface"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.split_entry_typed",
+      "phase": 3,
+      "role": "named-linking-typing",
+      "claim": "the split callee body is NamedV1-typed from two I64 values to two I64 results"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_root_typed",
+      "phase": 3,
+      "role": "named-linking-typing",
+      "claim": "the c.split-minus caller body is NamedV1-typed from two I64 inputs to one I64 output"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_closure",
+      "phase": 3,
+      "role": "named-linking-identity",
+      "claim": "the finite caller fixture has an exact single-entry acyclic NamedV1 dependency closure"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.scalar_call_entry_return",
+      "phase": 3,
+      "role": "named-linking-normal-return",
+      "claim": "the NamedV1 call to split returns ordered [x-y, 7] while preserving every stack-tail value"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.caller_after_named_call",
+      "phase": 3,
+      "role": "named-linking-normal-return",
+      "claim": "every normal NamedV1 execution of c.split-minus returns the preserved tail followed by wrapping x-y-7"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_caller_executes",
+      "phase": 3,
+      "role": "named-linking-normal-return",
+      "claim": "the concrete c.split-minus source body has the normal-return result tail ++ [x-y-7]"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_bool_prefix_executes",
+      "phase": 3,
+      "role": "named-linking-prefix",
+      "claim": "the concrete caller normal-return witness preserves a Bool prefix before x and y"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.operand_order_distinguished",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "wrapping subtraction of 3-8 differs from 8-3, detecting operand reversal"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.result_order_distinguished",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "the pilot ordered result pair [3-8, 7] differs from its reversal"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.horizontal_compose",
+      "phase": 3,
+      "role": "horizontal-composition",
+      "claim": "independent NamedV1 pre, resolved callee and post normal-return segments compose across an exact call lookup/match boundary"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.operand_slot_address",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "operand slot i is addressed at byte offset 16*i"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.continuation_slot_address",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "continuation slot i is addressed at byte offset 4096+8*i"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.same_identity_required",
+      "phase": 3,
+      "role": "identity-binding",
+      "claim": "an unambiguous exact runtime target key in the pinned table identifies the full source, interface, dependency slots/rank, byte and body binding"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.dependency_version_identity_exact",
+      "phase": 3,
+      "role": "identity-binding",
+      "claim": "exact source identity equality entails equality of the selected dependency module version"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.dependency_snapshot_identity_exact",
+      "phase": 3,
+      "role": "identity-binding",
+      "claim": "exact source identity equality entails equality of import-resolution snapshot bytes"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.dependency_version_change_refused",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "changing the callee dependency version cannot reuse the exact embedded-definition binding"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.dependency_snapshot_change_refused",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "changing the import dependency snapshot cannot reuse the caller's same-signature identity"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.same_signature_wrong_body_refused",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "same artifact target, source identity and ordered signature do not admit a different callee body"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.embedded_callee_substitution_refused",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "post-check embedded-callee byte/body substitution is rejected by exact embedded-definition identity"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_bindings_share_artifact",
+      "phase": 3,
+      "role": "same-artifact-dispatch",
+      "claim": "the pilot caller and callee bindings use one common compiled artifact identity"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_entry_selected_binding",
+      "phase": 3,
+      "role": "model-mapping",
+      "claim": "the concrete split NamedV1 entry matches the selected runtime binding's exact slot, provenance, interface, body and closure row"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_caller_root_binding",
+      "phase": 3,
+      "role": "model-mapping",
+      "claim": "the runtime caller binding retains the exact c.split-minus root body, provenance and import snapshot bytes"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_caller_binding_closure",
+      "phase": 3,
+      "role": "named-linking-identity",
+      "claim": "the runtime caller root binding carries the exact acyclic NamedV1 dependency closure and root rank"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.wrong_return_target_refused",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "a different continuation index is not the exact caller return target"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.return_target_exact",
+      "phase": 3,
+      "role": "continuation-ownership",
+      "claim": "LIFO dispatch selects the just-enqueued callee first and then the exact caller continuation"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.bool_cell_decodes",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "an initialized Bool slot uses tag 2 and payload 0-or-1 to decode to the corresponding NamedV1 Bool"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.i64_cell_decodes",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "an I64 slot uses tag 1 and its i64 payload to decode to the corresponding NamedV1 I64"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.bool_prefix_typed",
+      "phase": 3,
+      "role": "named-linking-prefix",
+      "claim": "the preserved Bool prefix value is well typed in NamedV1"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_bool_input_values_typed",
+      "phase": 3,
+      "role": "named-linking-prefix",
+      "claim": "the pilot Bool prefix and both I64 operands are NamedV1-typed values"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.runtime_run_preserves_control",
+      "phase": 3,
+      "role": "runtime-ownership",
+      "claim": "successful scalar runtime segments preserve the continuation stack, cp and function table"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.enqueueOne_preserves_counters",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "enqueuing one continuation increments cp consistently with the continuation count"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.return_target_exact_after_run",
+      "phase": 3,
+      "role": "continuation-ownership",
+      "claim": "a normal scalar callee segment that preserves control returns dispatch to the queued caller target"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.runtime_step_preserves_sp_count",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "successful modeled push and subtraction transitions maintain sp as the operand-cell count"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.runtime_run_preserves_sp_count",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "successful scalar runtime segments preserve sp as the operand-cell count"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.runtime_run_preserves_counters",
+      "phase": 3,
+      "role": "runtime-abi",
+      "claim": "a successful scalar segment preserves consistent operand and continuation counters"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.runtime_run_preserves_protected_suffix",
+      "phase": 3,
+      "role": "runtime-ownership",
+      "claim": "a modeled scalar segment preserves its exact protected bottom-prefix cells"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_entry_boundary",
+      "phase": 3,
+      "role": "runtime-model-mapping",
+      "claim": "runtime operand slots for Bool,x,y decode to the top-first NamedV1 entry stack y,x,Bool"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_callee_boundary",
+      "phase": 3,
+      "role": "runtime-model-mapping",
+      "claim": "the callee runtime result slots decode in order to x-y,7 and preserve the Bool prefix"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_final_boundary",
+      "phase": 3,
+      "role": "runtime-model-mapping",
+      "claim": "the caller runtime result slots decode to x-y-7 and preserve the Bool prefix"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_callee_run",
+      "phase": 3,
+      "role": "runtime-component-simulation",
+      "claim": "the modeled callee scalar helpers perform pop-right/pop-left subtraction then push 7 above an unchanged Bool prefix"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_caller_post_run",
+      "phase": 3,
+      "role": "runtime-component-simulation",
+      "claim": "the modeled caller post-call subtraction consumes ordered [x-y,7] and preserves the Bool prefix"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_runtime_two_results_and_caller_law",
+      "phase": 3,
+      "role": "runtime-component-simulation",
+      "claim": "the independently modeled callee and caller runtime segments produce the final NamedV1 boundary value"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_callee_lowering",
+      "phase": 3,
+      "role": "model-mapping",
+      "claim": "the selected split body maps in the scalar model to subtraction followed by pushing 7"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.pilot_caller_post_lowering",
+      "phase": 3,
+      "role": "model-mapping",
+      "claim": "the caller operation after named return maps in the scalar model to subtraction"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.horizontal_runtime_link",
+      "phase": 3,
+      "role": "conditional-linking",
+      "claim": "separate NamedV1 and runtime pre/callee/post segments compose under exact caller dependency closure, ABI representation, same-artifact table identity, LIFO return target and exclusive engine-state ownership"
+    },
+    {
+      "name": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "phase": 3,
+      "role": "vertical-composition",
+      "claim": "two local forward simulations compose over finite intermediate-model execution segments"
     }
   ]
 }

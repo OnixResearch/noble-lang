@@ -349,6 +349,13 @@ Passing PREUSE-S01 through S22 is finite regression evidence. It never discharge
 | C7 | NamedV1 semantics is adequate to the language semantics for the revision-3 fragment | lean-kernel | PO-15, V-AUTH-01 |
 | C8 | The executed caller and callee artifacts correspond to the checked subjects | #10 | PO-17, PO-18 |
 
+**Bounded C8 follow-on (#52):** the [one-call linking pilot](../../../verification/linking/README.md)
+uses the existing same-artifact named-call path, an explicit engine-owned
+operand/continuation ABI model, conditional composition rules and finite
+source/dependency/final-byte controls. Actual lowering and loading remain
+premises; C8 and PO-17/18 remain open. This does not implement revision-3 calls,
+promote PREUSE scenarios, or reopen the completed #7 design.
+
 ### Decision 10: Migration plan
 
 **Choice:** Additive only.

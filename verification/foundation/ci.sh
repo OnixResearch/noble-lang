@@ -55,6 +55,18 @@ stage emi-replay "${emi_node[@]}" verification/foundation/differential.mjs --emi
   --foundation "$out/check/foundation-check.json" --output "$out/emi-replay" || status=1
 stage emi-replay-verify "${emi_node[@]}" verification/foundation/differential.mjs --emi \
   --verify "$out/emi-replay/emi.json" || status=1
+# The one-call linking pilot shares the bounded V8 controller configuration;
+# its receipt is identity/finite-execution evidence, not a lowering proof.
+stage linking "${emi_node[@]}" verification/linking/run.mjs \
+  --foundation "$out/check/foundation-check.json" --output "$out/linking" || status=1
+stage linking-verify "${emi_node[@]}" verification/linking/run.mjs \
+  --verify "$out/linking/linking.json" || status=1
+# Host locality has a separate M5-based Lean audit and actual component-host
+# execution boundary; its receipt does not promote wrapper/lowering refinement.
+stage host-locality env -i "$node" verification/host-locality/run.mjs \
+  --output "$out/host-locality" || status=1
+stage host-locality-verify env -i "$node" verification/host-locality/run.mjs \
+  --verify "$out/host-locality/locality.json" || status=1
 # Stale-evidence control: the retained in-repo receipt names an older tree and
 # must be refused.
 stale=$(ls -d verification/foundation/receipts/*/ | head -n 1)

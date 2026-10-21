@@ -1,0 +1,776 @@
+# commit 039b5ee1473bae02ec3140308d0023353242a486 check documents start 2026-10-21T02:21:32Z
+this derivation will be built:
+  /nix/store/cb8rl93z0mpk3z349ldyf4il4cb01rz3-noble-documents.drv
+building '/nix/store/cb8rl93z0mpk3z349ldyf4il4cb01rz3-noble-documents.drv'...
+noble-documents> {
+noble-documents>   "result": "passed",
+noble-documents>   "specs": 13,
+noble-documents>   "scenarios": 213,
+noble-documents>   "self_tests_passed": 26,
+noble-documents>   "lane": "document-conversion-only"
+noble-documents> }
+noble-documents> bun test v1.3.10 (30e609e0)
+noble-documents> 
+noble-documents> tools/check-specs.test.mjs:
+noble-documents> 39 |     const target = path.posix.join(path.posix.dirname(file), 'fixture target.md');
+noble-documents> 40 |     bundle.texts.set(file, '[fixture](fixture%20target.md)\n');
+noble-documents> 41 |     bundle.texts.set(target, '# Fixture\n');
+noble-documents> 42 |     bundle.paths.add(file);
+noble-documents> 43 |     bundle.paths.add(target);
+noble-documents> 44 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                 ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:44:12)
+noble-documents> ✗ runbook links stay checked: verification/runbook-probe.md [64.00ms]
+noble-documents> 39 |     const target = path.posix.join(path.posix.dirname(file), 'fixture target.md');
+noble-documents> 40 |     bundle.texts.set(file, '[fixture](fixture%20target.md)\n');
+noble-documents> 41 |     bundle.texts.set(target, '# Fixture\n');
+noble-documents> 42 |     bundle.paths.add(file);
+noble-documents> 43 |     bundle.paths.add(target);
+noble-documents> 44 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                 ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:44:12)
+noble-documents> ✗ runbook links stay checked: proofs/m1/runbook-probe.md [52.00ms]
+noble-documents> ✓ document discovery omits private evidence and compiler caches, not runbooks [1.00ms]
+noble-documents> 62 |     rmSync(root, { recursive: true, force: true });
+noble-documents> 63 |   }
+noble-documents> 64 | });
+noble-documents> 65 |
+noble-documents> 66 | test('current family passes document validation', () => {
+noble-documents> 67 |   assert.deepEqual(validate(baseline).errors, []);
+noble-documents>               ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:67:10)
+noble-documents> ✗ current family passes document validation [48.00ms]
+noble-documents> 85 |   });
+noble-documents> 86 |   assert.deepEqual(checkConversion(documents, cases), []);
+noble-documents> 87 |   bundle.texts.set('specs/requirements.json', JSON.stringify(deriveLedger(bundle), null, 2) + '\n');
+noble-documents> 88 |
+noble-documents> 89 |   const errors = validate(bundle).errors;
+noble-documents> 90 |   assert.equal(errors.length, 9, `missing conformance coverage must be the only error: ${errors}`);
+noble-documents>               ^
+noble-documents> AssertionError: missing conformance coverage must be the only error: live slot oracle: required case LSLOT-01,live slot oracle: required case LSLOT-02,live slot oracle: required case LSLOT-03,live slot oracle: required case LSLOT-04,live slot oracle: required case LSLOT-05,live slot oracle: required case LSLOT-06,live slot oracle: required case LSLOT-07,live slot oracle: required case LSLOT-08,live slot oracle: required case LSLOT-09,broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md,broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md,broken local link: verification/calculator-v1/woxi/README.md -> helper/,broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/,broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md,broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md,broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md,broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md,broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md,broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md,broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md,broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md,broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md,broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md,broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md,broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md,broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md
+noble-documents> 
+noble-documents> 26 !== 9
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at strictEqual (node:assert:159:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:90:10)
+noble-documents> ✗ dropping all live-slot scenarios fails after regenerating canonical links, views and ledger [116.00ms]
+noble-documents> ✓ WIT effect fixture rejects reviewed purity erases request [49.00ms]
+noble-documents> ✓ WIT effect fixture rejects missing matrix row [50.00ms]
+noble-documents> ✓ WIT effect fixture rejects duplicate matrix row [50.00ms]
+noble-documents> ✓ WIT effect fixture rejects wrong operation identity [49.00ms]
+noble-documents> ✓ WIT effect fixture rejects request removed from positive row [48.00ms]
+noble-documents> ✓ WIT effect fixture rejects reject-all checker [49.00ms]
+noble-documents> ✓ runtime passed requires test evidence, not review evidence [46.00ms]
+noble-documents> 115 |     rejects(bundle, 'execution evidence mismatch: CORE-01');
+noble-documents> 116 |   });
+noble-documents> 117 |   test(`runtime ${result} accepts a claim-bound test record`, () => {
+noble-documents> 118 |     const bundle = fixture();
+noble-documents> 119 |     scenarioResult(bundle, result);
+noble-documents> 120 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:120:12)
+noble-documents> ✗ runtime passed accepts a claim-bound test record [47.00ms]
+noble-documents> ✓ runtime failed requires test evidence, not review evidence [48.00ms]
+noble-documents> 115 |     rejects(bundle, 'execution evidence mismatch: CORE-01');
+noble-documents> 116 |   });
+noble-documents> 117 |   test(`runtime ${result} accepts a claim-bound test record`, () => {
+noble-documents> 118 |     const bundle = fixture();
+noble-documents> 119 |     scenarioResult(bundle, result);
+noble-documents> 120 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:120:12)
+noble-documents> ✗ runtime failed accepts a claim-bound test record [48.00ms]
+noble-documents> ✓ runtime timeout requires test evidence, not review evidence [48.00ms]
+noble-documents> 115 |     rejects(bundle, 'execution evidence mismatch: CORE-01');
+noble-documents> 116 |   });
+noble-documents> 117 |   test(`runtime ${result} accepts a claim-bound test record`, () => {
+noble-documents> 118 |     const bundle = fixture();
+noble-documents> 119 |     scenarioResult(bundle, result);
+noble-documents> 120 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:120:12)
+noble-documents> ✗ runtime timeout accepts a claim-bound test record [48.00ms]
+noble-documents> ✓ evidence rejects claim: missing [48.00ms]
+noble-documents> ✓ evidence rejects claim: empty [48.00ms]
+noble-documents> ✓ evidence rejects claim: whitespace [48.00ms]
+noble-documents> ✓ evidence rejects claim: wrong type [42.00ms]
+noble-documents> 137 |   changeJson(bundle, 'specs/conformance/wit-wasi-cases.json', packet => {
+noble-documents> 138 |     const c = packet.cases.find(c => c.id === 'WI-17');
+noble-documents> 139 |     c.state.execution = 'passed';
+noble-documents> 140 |     c.evidence = [evidence(c.id, 'review', 'passed')];
+noble-documents> 141 |   });
+noble-documents> 142 |   assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:142:10)
+noble-documents> ✗ review evidence remains valid for an explicitly review-kind scenario without a runtime [42.00ms]
+noble-documents> ✓ core-checker execution cannot use review-only evidence [42.00ms]
+noble-documents> ✓ wasm-runtime execution cannot use review-only evidence [45.00ms]
+noble-documents> ✓ proof records also require an explicit claim [44.00ms]
+noble-documents> 184 |   for (const id of ['PO-01', 'SO-01']) {
+noble-documents> 185 |     test(`${id} ${result} accepts a claim-bound proof record`, () => {
+noble-documents> 186 |       const bundle = fixture();
+noble-documents> 187 |       obligationResult(bundle, id, result);
+noble-documents> 188 |       const checked = validate(bundle);
+noble-documents> 189 |       assert.deepEqual(checked.errors, []);
+noble-documents>                    ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:189:14)
+noble-documents> ✗ PO-01 accepted accepts a claim-bound proof record [45.00ms]
+noble-documents> 184 |   for (const id of ['PO-01', 'SO-01']) {
+noble-documents> 185 |     test(`${id} ${result} accepts a claim-bound proof record`, () => {
+noble-documents> 186 |       const bundle = fixture();
+noble-documents> 187 |       obligationResult(bundle, id, result);
+noble-documents> 188 |       const checked = validate(bundle);
+noble-documents> 189 |       assert.deepEqual(checked.errors, []);
+noble-documents>                    ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:189:14)
+noble-documents> ✗ SO-01 accepted accepts a claim-bound proof record [47.00ms]
+noble-documents> ✓ obligation accepted rejects empty evidence [44.00ms]
+noble-documents> ✓ obligation accepted rejects missing evidence [44.00ms]
+noble-documents> ✓ obligation accepted rejects non-array evidence [50.00ms]
+noble-documents> ✓ obligation accepted rejects null record [47.00ms]
+noble-documents> ✓ obligation accepted rejects string record [46.00ms]
+noble-documents> ✓ obligation accepted rejects review-only evidence [46.00ms]
+noble-documents> ✓ obligation accepted rejects test-only evidence [42.00ms]
+noble-documents> ✓ obligation accepted rejects wrong result [45.00ms]
+noble-documents> ✓ obligation accepted rejects wrong subject [49.00ms]
+noble-documents> ✓ obligation accepted rejects stale revision [46.00ms]
+noble-documents> ✓ obligation accepted rejects missing source [48.00ms]
+noble-documents> ✓ obligation accepted rejects empty configuration [44.00ms]
+noble-documents> ✓ obligation accepted rejects missing assumptions [44.00ms]
+noble-documents> ✓ obligation accepted rejects missing claim [45.00ms]
+noble-documents> ✓ obligation accepted rejects blank claim [46.00ms]
+noble-documents> ✓ obligation accepted rejects wrong claim type [45.00ms]
+noble-documents> ✓ obligation accepted rejects invalid companion record [44.00ms]
+noble-documents> 184 |   for (const id of ['PO-01', 'SO-01']) {
+noble-documents> 185 |     test(`${id} ${result} accepts a claim-bound proof record`, () => {
+noble-documents> 186 |       const bundle = fixture();
+noble-documents> 187 |       obligationResult(bundle, id, result);
+noble-documents> 188 |       const checked = validate(bundle);
+noble-documents> 189 |       assert.deepEqual(checked.errors, []);
+noble-documents>                    ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:189:14)
+noble-documents> ✗ PO-01 failed accepts a claim-bound proof record [43.00ms]
+noble-documents> 184 |   for (const id of ['PO-01', 'SO-01']) {
+noble-documents> 185 |     test(`${id} ${result} accepts a claim-bound proof record`, () => {
+noble-documents> 186 |       const bundle = fixture();
+noble-documents> 187 |       obligationResult(bundle, id, result);
+noble-documents> 188 |       const checked = validate(bundle);
+noble-documents> 189 |       assert.deepEqual(checked.errors, []);
+noble-documents>                    ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:189:14)
+noble-documents> ✗ SO-01 failed accepts a claim-bound proof record [43.00ms]
+noble-documents> ✓ obligation failed rejects empty evidence [44.00ms]
+noble-documents> ✓ obligation failed rejects missing evidence [45.00ms]
+noble-documents> ✓ obligation failed rejects non-array evidence [43.00ms]
+noble-documents> ✓ obligation failed rejects null record [42.00ms]
+noble-documents> ✓ obligation failed rejects string record [43.00ms]
+noble-documents> ✓ obligation failed rejects review-only evidence [41.00ms]
+noble-documents> ✓ obligation failed rejects test-only evidence [41.00ms]
+noble-documents> ✓ obligation failed rejects wrong result [42.00ms]
+noble-documents> ✓ obligation failed rejects wrong subject [42.00ms]
+noble-documents> ✓ obligation failed rejects stale revision [42.00ms]
+noble-documents> ✓ obligation failed rejects missing source [41.00ms]
+noble-documents> ✓ obligation failed rejects empty configuration [42.00ms]
+noble-documents> ✓ obligation failed rejects missing assumptions [42.00ms]
+noble-documents> ✓ obligation failed rejects missing claim [40.00ms]
+noble-documents> ✓ obligation failed rejects blank claim [43.00ms]
+noble-documents> ✓ obligation failed rejects wrong claim type [45.00ms]
+noble-documents> ✓ obligation failed rejects invalid companion record [43.00ms]
+noble-documents> ✓ open obligations still validate any supplied evidence [45.00ms]
+noble-documents> ✓ well-formed obligation evidence cannot bypass the greenfield proof gate [41.00ms]
+noble-documents> 246 |     updateCanonical(bundle, name, bundle.texts.get(canonicalPath(name)) + example);
+noble-documents> 247 |     const before = deriveLedger(baseline);
+noble-documents> 248 |     const after = deriveLedger(bundle);
+noble-documents> 249 |     assert.equal(after.requirements.length, before.requirements.length, 'fenced text must not change the requirement count');
+noble-documents> 250 |     assert.deepEqual(after, before);
+noble-documents> 251 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:251:12)
+noble-documents> ✗ ``` fenced examples never enter the requirement ledger [97.00ms]
+noble-documents> 257 |     const source = fileURLToPath(new URL(doc.source, new URL('../specs/', import.meta.url)));
+noble-documents> 258 |     const root = fileURLToPath(new URL('../', import.meta.url));
+noble-documents> 259 |     const key = source.slice(root.length);
+noble-documents> 260 |     assert.ok(bundle.texts.has(key));
+noble-documents> 261 |     bundle.texts.set(key, bundle.texts.get(key) + `\n${fence}markdown\n**S-EXAMPLE-01.** Not normative.\n${fence}\n`);
+noble-documents> 262 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:262:12)
+noble-documents> ✗ ``` fenced historical examples create no preservation obligation [44.00ms]
+noble-documents> 246 |     updateCanonical(bundle, name, bundle.texts.get(canonicalPath(name)) + example);
+noble-documents> 247 |     const before = deriveLedger(baseline);
+noble-documents> 248 |     const after = deriveLedger(bundle);
+noble-documents> 249 |     assert.equal(after.requirements.length, before.requirements.length, 'fenced text must not change the requirement count');
+noble-documents> 250 |     assert.deepEqual(after, before);
+noble-documents> 251 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:251:12)
+noble-documents> ✗ ~~~~ fenced examples never enter the requirement ledger [96.00ms]
+noble-documents> 257 |     const source = fileURLToPath(new URL(doc.source, new URL('../specs/', import.meta.url)));
+noble-documents> 258 |     const root = fileURLToPath(new URL('../', import.meta.url));
+noble-documents> 259 |     const key = source.slice(root.length);
+noble-documents> 260 |     assert.ok(bundle.texts.has(key));
+noble-documents> 261 |     bundle.texts.set(key, bundle.texts.get(key) + `\n${fence}markdown\n**S-EXAMPLE-01.** Not normative.\n${fence}\n`);
+noble-documents> 262 |     assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                  ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:262:12)
+noble-documents> ✗ ~~~~ fenced historical examples create no preservation obligation [43.00ms]
+noble-documents> 267 |   const file = canonicalPath('CORE-BOOTSTRAP.md');
+noble-documents> 268 |   bundle.texts.set(file, bundle.texts.get(file) + '\n### Requirement: B-NATIVE-99\nr[B-NATIVE-99]\n\nThe checker MUST reject unsupported input.\n');
+noble-documents> 269 |   const ledger = deriveLedger(bundle);
+noble-documents> 270 |   assert.ok(ledger.requirements.some(r => r.id === 'B-NATIVE-99'));
+noble-documents> 271 |   bundle.texts.set('specs/requirements.json', JSON.stringify(ledger));
+noble-documents> 272 |   assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:272:10)
+noble-documents> ✗ native requirements do not need legacy labels to enter the ledger [58.00ms]
+noble-documents> 279 |   bundle.texts.set(target, '{}');
+noble-documents> 280 |   bundle.paths.add(target);
+noble-documents> 281 |   updateCanonical(bundle, name, bundle.texts.get(canonicalPath(name)) + '\n' + link + '\n');
+noble-documents> 282 |   assert.ok(bundle.texts.get(canonicalPath(name)).includes(link));
+noble-documents> 283 |   assert.ok(bundle.texts.get(`specs/${name}`).includes('[artifact](probe%20%23%25%28file%29.json#details)'));
+noble-documents> 284 |   assert.deepEqual(validate(bundle).errors, []);
+noble-documents>                ^
+noble-documents> AssertionError: Expected values to be strictly deep-equal:
+noble-documents> + actual - expected
+noble-documents> 
+noble-documents> + [
+noble-documents> +   'broken local link: verification/m1-runbook.md -> ../.cairn/archive/2026-09-15-m1-workspace/tasks.md',
+noble-documents> +   'broken local link: verification/m3-fragment.md -> ../.cairn/archive/2026-09-19-m3-checker-coverage/design.md',
+noble-documents> +   'broken local link: verification/calculator-v1/woxi/README.md -> helper/',
+noble-documents> +   'broken local link: verification/foundation/receipts/README.md -> 3d5ccc2/',
+noble-documents> +   'broken local link: verification/ngraph/README.md -> ../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: verification/component-review.md -> ../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md',
+noble-documents> +   'broken local link: verification/m1-controls.md -> ../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/design.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: .cairn/changes/numeric-graph-v1/proposal.md -> ../../archive/2026-10-16-numeric-graph-profile/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/design.md',
+noble-documents> +   'broken local link: specs/DECISIONS.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md',
+noble-documents> +   'broken local link: specs/ROADMAP.md -> ../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md',
+noble-documents> +   'broken local link: specs/README.md -> ../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md',
+noble-documents> +   'broken local link: README.md -> .cairn/archive/2026-10-16-numeric-graph-profile/design.md'
+noble-documents> + ]
+noble-documents> - []
+noble-documents> 
+noble-documents>       at innerFail (node:assert:36:32)
+noble-documents>       at deepStrictEqual (node:assert:134:14)
+noble-documents>       at <anonymous> (/build/source/tools/check-specs.test.mjs:284:10)
+noble-documents> ✗ encoded local links retain their path and remain subject to link validation [76.00ms]
+noble-documents> ✓ an unfenced duplicate native requirement still fails [7.00ms]
+noble-documents> 
+noble-documents> tools/cairn-specs.test.mjs:
+noble-documents> ✓ --write-views preserves ``` marker examples with padding "" [51.00ms]
+noble-documents> ✓ --write-views preserves ``` marker examples with padding "\n" [42.00ms]
+noble-documents> ✓ ``` link-like code stays literal during regeneration [1.00ms]
+noble-documents> ✓ ``` literal markers and links survive conversion round trips
+noble-documents> ✓ --write-views preserves ~~~~ marker examples with padding "" [40.00ms]
+noble-documents> ✓ --write-views preserves ~~~~ marker examples with padding "\n" [51.00ms]
+noble-documents> ✓ ~~~~ link-like code stays literal during regeneration
+noble-documents> ✓ ~~~~ literal markers and links survive conversion round trips
+noble-documents> ✓ a purpose-wrapper example survives even when the native document has no generated wrapper [1.00ms]
+noble-documents> ✓ conversion preserves authored final whitespace ""
+noble-documents> ✓ conversion preserves authored final whitespace "\n"
+noble-documents> ✓ conversion preserves authored final whitespace "\n\n"
+noble-documents> ✓ --write-views preserves encoded destinations and real generated scenario links [43.00ms]
+noble-documents> ✓ link rebasing preserves encoded path probe%20file.json
+noble-documents> ✓ link rebasing preserves encoded path probe%23file.json
+noble-documents> ✓ link rebasing preserves encoded path probe%25file.json
+noble-documents> ✓ link rebasing preserves encoded path probe%28file%29.json
+noble-documents> ✓ link rebasing preserves encoded path probe%3Ffile.json
+noble-documents> ✓ link rebasing preserves encoded path caf%C3%A9.json
+noble-documents> ✓ link rebasing preserves external URLs and local anchors
+noble-documents> ✓ --write-views preserves a native requirement without a legacy label or ledger link [43.00ms]
+noble-documents> ✓ --write-views changes no files after mismatched legacy label [22.00ms]
+noble-documents> ✓ --write-views changes no files after mismatched native marker [22.00ms]
+noble-documents> ✓ --write-views changes no files after missing native marker [21.00ms]
+noble-documents> ✓ --write-views changes no files after duplicate native ID [24.00ms]
+noble-documents> ✓ --write-views changes no files after cross-document duplicate [22.00ms]
+noble-documents> ✓ --write-views changes no files after nested generated region [21.00ms]
+noble-documents> ✓ --write-views changes no files after unclosed generated region [22.00ms]
+noble-documents> ✓ --write-views changes no files after orphan generated end [22.00ms]
+noble-documents> 
+noble-documents> tools/calculator-headroom.test.mjs:
+noble-documents> ✓ a compile exactly at the Work margin passes; one unit under fails
+noble-documents> ✓ the lowest headroom over all compiles is reported with its stage
+noble-documents> ✓ warn-only breaches never fail, and a margin override can promote one
+noble-documents> ✓ margin overrides keep severity unless given and reject unknown metrics [1.00ms]
+noble-documents> ✓ a record missing a metric is an error, not a silent pass
+noble-documents> ✓ traces keep only module records with compile metrics and reject other schemas
+noble-documents> ✓ sessions group by candidate session and track text growth and key charge
+noble-documents> ✓ environment share isolates the per-body allowance of the tightest compile
+noble-documents> 
+noble-documents> 18 tests failed:
+noble-documents> ✗ runbook links stay checked: verification/runbook-probe.md [64.00ms]
+noble-documents> ✗ runbook links stay checked: proofs/m1/runbook-probe.md [52.00ms]
+noble-documents> ✗ current family passes document validation [48.00ms]
+noble-documents> ✗ dropping all live-slot scenarios fails after regenerating canonical links, views and ledger [116.00ms]
+noble-documents> ✗ runtime passed accepts a claim-bound test record [47.00ms]
+noble-documents> ✗ runtime failed accepts a claim-bound test record [48.00ms]
+noble-documents> ✗ runtime timeout accepts a claim-bound test record [48.00ms]
+noble-documents> ✗ review evidence remains valid for an explicitly review-kind scenario without a runtime [42.00ms]
+noble-documents> ✗ PO-01 accepted accepts a claim-bound proof record [45.00ms]
+noble-documents> ✗ SO-01 accepted accepts a claim-bound proof record [47.00ms]
+noble-documents> ✗ PO-01 failed accepts a claim-bound proof record [43.00ms]
+noble-documents> ✗ SO-01 failed accepts a claim-bound proof record [43.00ms]
+noble-documents> ✗ ``` fenced examples never enter the requirement ledger [97.00ms]
+noble-documents> ✗ ``` fenced historical examples create no preservation obligation [44.00ms]
+noble-documents> ✗ ~~~~ fenced examples never enter the requirement ledger [96.00ms]
+noble-documents> ✗ ~~~~ fenced historical examples create no preservation obligation [43.00ms]
+noble-documents> ✗ native requirements do not need legacy labels to enter the ledger [58.00ms]
+noble-documents> ✗ encoded local links retain their path and remain subject to link validation [76.00ms]
+noble-documents> 
+noble-documents>  91 pass
+noble-documents>  18 fail
+noble-documents> Ran 109 tests across 3 files. [4.32s]
+error: Cannot build '/nix/store/cb8rl93z0mpk3z349ldyf4il4cb01rz3-noble-documents.drv'.
+       Reason: builder failed with exit code 1.
+       Output paths:
+         /nix/store/52srf61cqni3p0z0380j2qfj0v3bid9a-noble-documents
+       Last 25 log lines:
+       > ✓ environment share isolates the per-body allowance of the tightest compile
+       >
+       > 18 tests failed:
+       > ✗ runbook links stay checked: verification/runbook-probe.md [64.00ms]
+       > ✗ runbook links stay checked: proofs/m1/runbook-probe.md [52.00ms]
+       > ✗ current family passes document validation [48.00ms]
+       > ✗ dropping all live-slot scenarios fails after regenerating canonical links, views and ledger [116.00ms]
+       > ✗ runtime passed accepts a claim-bound test record [47.00ms]
+       > ✗ runtime failed accepts a claim-bound test record [48.00ms]
+       > ✗ runtime timeout accepts a claim-bound test record [48.00ms]
+       > ✗ review evidence remains valid for an explicitly review-kind scenario without a runtime [42.00ms]
+       > ✗ PO-01 accepted accepts a claim-bound proof record [45.00ms]
+       > ✗ SO-01 accepted accepts a claim-bound proof record [47.00ms]
+       > ✗ PO-01 failed accepts a claim-bound proof record [43.00ms]
+       > ✗ SO-01 failed accepts a claim-bound proof record [43.00ms]
+       > ✗ ``` fenced examples never enter the requirement ledger [97.00ms]
+       > ✗ ``` fenced historical examples create no preservation obligation [44.00ms]
+       > ✗ ~~~~ fenced examples never enter the requirement ledger [96.00ms]
+       > ✗ ~~~~ fenced historical examples create no preservation obligation [43.00ms]
+       > ✗ native requirements do not need legacy labels to enter the ledger [58.00ms]
+       > ✗ encoded local links retain their path and remain subject to link validation [76.00ms]
+       >
+       >  91 pass
+       >  18 fail
+       > Ran 109 tests across 3 files. [4.32s]
+       For full logs, run:
+         nix log /nix/store/cb8rl93z0mpk3z349ldyf4il4cb01rz3-noble-documents.drv
+# exit 1

@@ -1,0 +1,5 @@
+format	pass	0	24s	/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/format.log	/nix/store/hcirzq5zg0l99jd81619s27ikm6i8i5p-noble-format
+documents	FAIL	1	20s	/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/documents.log	
+cairn	pass	0	16s	/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/cairn.log	/nix/store/qv8cys2iwv3fgddlqvwsb8nlzv1j3cxk-noble-cairn
+policy	pass	0	16s	/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/policy.log	/nix/store/05i8x90rmkcaz7yvllf6mlsfjmqw2w4h-noble-policy-freshness
+tool-selection	pass	0	15s	/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/tool-selection.log	/nix/store/ib8giswpvy0s40pikkaf1hhjyyqna9zl-noble-tool-selection
