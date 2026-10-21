@@ -1,0 +1,12 @@
+{
+  "verified": false,
+  "receipt_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
+  "current_tree": "51f9f9b053e25c75f7547f1ec948da3ced14fe78",
+  "clean": true,
+  "drift": [
+    "verification/foundation/differential.mjs",
+    "policy/tool-selection.json",
+    "Cargo.lock",
+    "crates/noble-kernel/tests/property.rs"
+  ]
+}

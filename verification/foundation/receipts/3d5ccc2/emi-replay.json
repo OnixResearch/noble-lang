@@ -1,0 +1,864 @@
+{
+  "schema": "noble-foundation-emi/v1",
+  "seed": "53",
+  "requested_positive_pairs": 16,
+  "profile": "Core-Bootstrap / managed-linear-memory",
+  "fragment": "fixed-input scalar if and I64 sum case with pure AOp bodies",
+  "opt_modes": [
+    "off",
+    "on"
+  ],
+  "universal_equivalence": false,
+  "compiler_theorem": false,
+  "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay",
+  "cases": [
+    {
+      "index": 0,
+      "kind": "if",
+      "selected": 0,
+      "transformation": {
+        "kind": "replace-constant",
+        "branch": 1,
+        "site": 0
+      },
+      "pair": {
+        "index": 0,
+        "kind": "if",
+        "selected": 0,
+        "input": [
+          "0",
+          "0",
+          "0"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ],
+        "original": [
+          [
+            {
+              "push": "1"
+            },
+            "add"
+          ],
+          [
+            {
+              "push": "1"
+            },
+            "add"
+          ]
+        ],
+        "variant": [
+          [
+            {
+              "push": "1"
+            },
+            "add"
+          ],
+          [
+            {
+              "push": "-1"
+            },
+            "add"
+          ]
+        ],
+        "transformation": {
+          "kind": "replace-constant",
+          "branch": 1,
+          "site": 0
+        }
+      },
+      "subject": {
+        "original_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+        "variant_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+        "fixed_input_sha256": "ee725e1ca9bc95ec90020a6a7b133105d3109bbbbf417859d8de984784a06e43",
+        "model_pair_sha256": "c2087ed2a5fd9e3893e57a6d32d83f85ac3d7cae3af36f1489695f88a016936b"
+      },
+      "model_eligibility": {
+        "eligible": true,
+        "reason": null,
+        "expected": {
+          "outcome": "normal",
+          "stack": [
+            [
+              "I64",
+              "0"
+            ],
+            [
+              "Bool",
+              "false"
+            ],
+            [
+              "I64",
+              "0"
+            ],
+            [
+              "I64",
+              "0"
+            ],
+            [
+              "I64",
+              "1"
+            ]
+          ],
+          "trace": []
+        },
+        "reference": [
+          "1",
+          "0",
+          "0"
+        ],
+        "input_types": [],
+        "output_types": [
+          "I64",
+          "Bool",
+          "I64",
+          "I64",
+          "I64"
+        ]
+      },
+      "admission": {
+        "original": {
+          "label": "pair-0-original",
+          "directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-original",
+          "source": "0 false 0 0 0 true [ 1 + ] [ 1 + ] if\n",
+          "source_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+          "admitted": true,
+          "exit": 0,
+          "argv": [
+            "compile",
+            "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-original/source.noble"
+          ],
+          "stdout_sha256": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "wat_sha256": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206"
+        },
+        "variant": {
+          "label": "pair-0-variant",
+          "directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-variant",
+          "source": "0 false 0 0 0 true [ 1 + ] [ -1 + ] if\n",
+          "source_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+          "admitted": true,
+          "exit": 0,
+          "argv": [
+            "compile",
+            "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-variant/source.noble"
+          ],
+          "stdout_sha256": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "wat_sha256": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e"
+        }
+      },
+      "executions": [
+        {
+          "mode": "off",
+          "original": {
+            "outcome": "normal",
+            "stack": [
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "Bool",
+                "false"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "1"
+              ]
+            ],
+            "trace": [],
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "headroom": {
+              "limits": {
+                "allocation_bytes": 196608,
+                "recipe_leaves": 256,
+                "program_depth": 256,
+                "operand_bytes": 2048,
+                "continuation_bytes": 4096,
+                "steps": 100000,
+                "reflection_steps": 100000
+              },
+              "used": {
+                "allocation_bytes": 1248,
+                "operand_bytes": 128,
+                "continuation_bytes": 8,
+                "steps": 38,
+                "reflection_steps": 5,
+                "recipe_leaves": 13,
+                "program_depth": 2
+              },
+              "remaining": {
+                "allocation_bytes": 195360,
+                "operand_bytes": 1920,
+                "continuation_bytes": 4088,
+                "steps": 99962,
+                "reflection_steps": 99995,
+                "recipe_leaves": 243,
+                "program_depth": 254
+              },
+              "sufficient": true
+            },
+            "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-original/off-1",
+            "wasm_sha256": "0a0d1a4f8f23a36b020e763612cd399a0b273b34843b3dff85f77f26fc16a556",
+            "wat_sha256": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+            "fault_injected": false,
+            "report_sha256": "7836e5eead7ba39b52f045112a06db2a1b675a72d3bfe77dc88da38ca78f5bf0"
+          },
+          "variant": {
+            "outcome": "normal",
+            "stack": [
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "Bool",
+                "false"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "1"
+              ]
+            ],
+            "trace": [],
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "headroom": {
+              "limits": {
+                "allocation_bytes": 196608,
+                "recipe_leaves": 256,
+                "program_depth": 256,
+                "operand_bytes": 2048,
+                "continuation_bytes": 4096,
+                "steps": 100000,
+                "reflection_steps": 100000
+              },
+              "used": {
+                "allocation_bytes": 1248,
+                "operand_bytes": 128,
+                "continuation_bytes": 8,
+                "steps": 38,
+                "reflection_steps": 5,
+                "recipe_leaves": 13,
+                "program_depth": 2
+              },
+              "remaining": {
+                "allocation_bytes": 195360,
+                "operand_bytes": 1920,
+                "continuation_bytes": 4088,
+                "steps": 99962,
+                "reflection_steps": 99995,
+                "recipe_leaves": 243,
+                "program_depth": 254
+              },
+              "sufficient": true
+            },
+            "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-variant/off-2",
+            "wasm_sha256": "68d0fdfae43495f8efa7195d40478d1f61cf5c378a331d2f5f956fa4239cef39",
+            "wat_sha256": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+            "fault_injected": false,
+            "report_sha256": "3fc962e3f8c64f619097b9629996f84efbd1fdc8f73e489ab7e876bcfea368c4"
+          },
+          "discrepancy": null
+        },
+        {
+          "mode": "on",
+          "original": {
+            "outcome": "normal",
+            "stack": [
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "Bool",
+                "false"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "1"
+              ]
+            ],
+            "trace": [],
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "headroom": {
+              "limits": {
+                "allocation_bytes": 196608,
+                "recipe_leaves": 256,
+                "program_depth": 256,
+                "operand_bytes": 2048,
+                "continuation_bytes": 4096,
+                "steps": 100000,
+                "reflection_steps": 100000
+              },
+              "used": {
+                "allocation_bytes": 1248,
+                "operand_bytes": 128,
+                "continuation_bytes": 8,
+                "steps": 38,
+                "reflection_steps": 5,
+                "recipe_leaves": 13,
+                "program_depth": 2
+              },
+              "remaining": {
+                "allocation_bytes": 195360,
+                "operand_bytes": 1920,
+                "continuation_bytes": 4088,
+                "steps": 99962,
+                "reflection_steps": 99995,
+                "recipe_leaves": 243,
+                "program_depth": 254
+              },
+              "sufficient": true
+            },
+            "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-original/on-3",
+            "wasm_sha256": "46b740d089cd77f30a3220211b142428b6605798305ee207d560edb555fdf726",
+            "wat_sha256": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+            "fault_injected": false,
+            "report_sha256": "3b8f6e92ef41ba65f86f19f29701ffde5c53ca97d16058d8c09527aefa3230a7"
+          },
+          "variant": {
+            "outcome": "normal",
+            "stack": [
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "Bool",
+                "false"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "0"
+              ],
+              [
+                "I64",
+                "1"
+              ]
+            ],
+            "trace": [],
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "headroom": {
+              "limits": {
+                "allocation_bytes": 196608,
+                "recipe_leaves": 256,
+                "program_depth": 256,
+                "operand_bytes": 2048,
+                "continuation_bytes": 4096,
+                "steps": 100000,
+                "reflection_steps": 100000
+              },
+              "used": {
+                "allocation_bytes": 1248,
+                "operand_bytes": 128,
+                "continuation_bytes": 8,
+                "steps": 38,
+                "reflection_steps": 5,
+                "recipe_leaves": 13,
+                "program_depth": 2
+              },
+              "remaining": {
+                "allocation_bytes": 195360,
+                "operand_bytes": 1920,
+                "continuation_bytes": 4088,
+                "steps": 99962,
+                "reflection_steps": 99995,
+                "recipe_leaves": 243,
+                "program_depth": 254
+              },
+              "sufficient": true
+            },
+            "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/pair-0-variant/on-4",
+            "wasm_sha256": "54345bd517a325564383f8c46a05e793fb82ce196c275c0a1fc50436629f572e",
+            "wat_sha256": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+            "fault_injected": false,
+            "report_sha256": "0fbc5aa0b2869593ea9649683dcd9cf094e8a2b49e32a5562d4e2a25700dd017"
+          },
+          "discrepancy": null
+        }
+      ],
+      "classification": "eligible",
+      "evidence": {
+        "subject": {
+          "original_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+          "variant_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+          "fixed_input_sha256": "ee725e1ca9bc95ec90020a6a7b133105d3109bbbbf417859d8de984784a06e43",
+          "model_pair_sha256": "c2087ed2a5fd9e3893e57a6d32d83f85ac3d7cae3af36f1489695f88a016936b"
+        },
+        "kernel_checked": true,
+        "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+        "lean_file": "proofs/pair-0.lean",
+        "lean_sha256": "dd7e4fb51f9c4c7153d2ec5fb08ff42479a0c2e9ffd772af4041f7086a570aa1",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "argv": [
+          "env",
+          "lean",
+          "--json",
+          "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/proofs/pair-0.lean"
+        ],
+        "model_root": "/home/brittonr/.cache/noble-issues/wt/issue-53",
+        "model_theorem": "NobleFoundation.exec_branchRef"
+      }
+    }
+  ],
+  "controls": [
+    {
+      "id": "replay-discrepancy",
+      "detected": true,
+      "observed_discrepancy": "ordered-output",
+      "expected_discrepancy": "ordered-output",
+      "evidence": {
+        "subject": {
+          "original_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+          "variant_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+          "fixed_input_sha256": "ee725e1ca9bc95ec90020a6a7b133105d3109bbbbf417859d8de984784a06e43",
+          "model_pair_sha256": "c2087ed2a5fd9e3893e57a6d32d83f85ac3d7cae3af36f1489695f88a016936b"
+        },
+        "kernel_checked": true,
+        "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+        "lean_file": "proofs/replay.lean",
+        "lean_sha256": "62d07eec6b2c56728dfacc35d4d4ac0959cb5b6d1ffece404e7fb8559481409b",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "argv": [
+          "env",
+          "lean",
+          "--json",
+          "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/proofs/replay.lean"
+        ],
+        "model_root": "/home/brittonr/.cache/noble-issues/wt/issue-53",
+        "model_theorem": "NobleFoundation.exec_branchRef"
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "-1"
+          ]
+        ],
+        "trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "headroom": {
+          "limits": {
+            "allocation_bytes": 196608,
+            "recipe_leaves": 256,
+            "program_depth": 256,
+            "operand_bytes": 2048,
+            "continuation_bytes": 4096,
+            "steps": 100000,
+            "reflection_steps": 100000
+          },
+          "used": {
+            "allocation_bytes": 1248,
+            "operand_bytes": 128,
+            "continuation_bytes": 8,
+            "steps": 38,
+            "reflection_steps": 5,
+            "recipe_leaves": 13,
+            "program_depth": 2
+          },
+          "remaining": {
+            "allocation_bytes": 195360,
+            "operand_bytes": 1920,
+            "continuation_bytes": 4088,
+            "steps": 99962,
+            "reflection_steps": 99995,
+            "recipe_leaves": 243,
+            "program_depth": 254
+          },
+          "sufficient": true
+        },
+        "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/subjects/replay-variant/off-6",
+        "wasm_sha256": "263885bd603729643328b63c3780245df56cb94654c89e22826b4b2c8a8b1753",
+        "wat_sha256": "40ab5bc032712fc22ca29b021c0429c963296b37a9f7ca86a8a325e13708fc99",
+        "fault_injected": true,
+        "report_sha256": "50583124590185e6d6751065a1f2d2411d0a0f979c14f6554942ecb6d4e13fbf"
+      }
+    }
+  ],
+  "discrepancies": [],
+  "source_commit": "3d5ccc2770d3928a0071c143e86fdc6abbad22d4",
+  "source_tree": "51f9f9b053e25c75f7547f1ec948da3ced14fe78",
+  "clean_source": true,
+  "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+  "theorems": [
+    {
+      "name": "NobleFoundation.exec_branchRef",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "successful independent if/I64-case reference agrees with exact MC1 normal result, preserving any public prefix",
+      "status": "proved",
+      "statement": "@NobleFoundation.exec_branchRef : ∀ {kind : NobleFoundation.BranchKind} {left : Bool} {p q : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.branchRef kind left p q zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.branchCode kind left p q) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.branchRef_untaken",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "changing only the untaken branch leaves if/I64-case reference outcomes unchanged",
+      "status": "proved",
+      "statement": "NobleFoundation.branchRef_untaken : ∀ (kind : NobleFoundation.BranchKind) (left : Bool) (selected other₁ other₂ : List NobleFoundation.AOp) (zs : List ℤ), NobleFoundation.branchRef kind left (if left = true then selected else other₁) (if left = true then other₁ else selected) zs = NobleFoundation.branchRef kind left (if left = true then selected else other₂) (if left = true then other₂ else selected) zs",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.branchVisits_selected",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "selected-branch visit vector is [1,0] for left and [0,1] for right",
+      "status": "proved",
+      "statement": "NobleFoundation.branchVisits_selected : ∀ (left : Bool), NobleFoundation.branchVisits left = if left = true then [1, 0] else [0, 1]",
+      "axioms": []
+    }
+  ],
+  "bounds": {
+    "runtime": {
+      "allocation_bytes": 196608,
+      "recipe_leaves": 256,
+      "program_depth": 256,
+      "operand_bytes": 2048,
+      "continuation_bytes": 4096,
+      "steps": 100000
+    },
+    "source_bytes": 65536,
+    "generated_pairs": 16,
+    "shrink_attempts": 64,
+    "required_free_fraction": "strictly more than one half of every selected runtime bound"
+  },
+  "sources_sha256": {
+    "verification/foundation/differential.mjs": "7b71a32c2d37ea678d52f0d707cf1d3350cad61bbd3544d2b0a98f1d0809ce6d",
+    "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+    "verification/foundation/execution.mjs": "607bfbe9a7c5656c18e0de84a3f3d9c584e0d7d5ee794b6de7419118cca4b263",
+    "verification/selected-vendor.mjs": "1e1d32f8861ab0f83fa34e3128b73d28e997286eca197f784ee79826070b7921",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/Literal.lean": "9c02a9426076058717f870b14ba0ef279f89d2ca6739164915665e364619cf61",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-cli/src/core/runtime/config.json": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+    "policy/tool-selection.json": "c18c7be4a0d74ad64ec453a39931fee9d15f1cb419c8ef6f31cacb1deac0e507",
+    "Cargo.lock": "5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3",
+    "crates/noble-kernel/tests/property.rs": "8d3ad6b061849c29951b65c08edff96eff0a84e44eddee61cc616ae5b929680e",
+    "verification/foundation/emi.mjs": "76680554aad11406eb60f0e74dc17d2eb68b2d16321891f556ff968585f66296",
+    "verification/foundation/emi-model.mjs": "c31f9a00044b45a3a8b80afa6ee166075b771cae190ba54b3a2b1421575fbc70",
+    "verification/foundation/emi-shrink.mjs": "27e6d13f753653cc7efc6be763e4c3b4e2d7e3bb6a2287ed75d14698b3f09737",
+    "verification/foundation/emi-evidence.mjs": "c0fb3c04f7a6d94fa725b205a46815dc5d684da90807a9790aa61de082efb13e",
+    "verification/foundation/emi-controls.mjs": "430c26d6535127963aebf57f5b5732372448f238b74b47fb230a844a1a28837f",
+    "proofs/foundation/NobleFoundation/Branch.lean": "1e98f7a73fb166dbc3d55b14a718b23c0a01934b09c25031cfb003ed69b35fff",
+    "proofs/foundation/inventory.json": "a384cc8d92bcb83b72bac2a58fddeccddde716e2852b8ab2d1b23f645be80ef8",
+    "crates/noble-cli/src/core/runtime/host.mjs": "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
+    "crates/noble-cli/src/core/runtime/preamble.mjs": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28",
+    "crates/noble-cli/src/core/runtime/values.mjs": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4",
+    "crates/noble-cli/src/core/runtime/protocol.mjs": "e8b5ed5c8c52818f1cfd2f5b9e4d1613e81fb0d7bee0514cb2c88f3872e819f3",
+    "crates/noble-cli/src/core/runtime/engine.mjs": "cfcecfec1898708747ef7aac29e8d5550e6d9e9efbafe05ea7d4fe6a3ba9aa4a",
+    "crates/noble-cli/src/core/runtime/engine-host.mjs": "827946ba44ae66227e02eff711e7b90382c7af56a50b937c17192fd2a46f2496",
+    "crates/noble-cli/src/core/runtime/abi.json": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44",
+    "crates/noble-wasm/runtime/accounting.wat": "e23e4fad5985ca7a6e62c3825827be4b87032c4cc31b7cbaf35966ecbc945b4a",
+    "crates/noble-wasm/runtime/common.wat": "4645cd1a9fe249627a757311c04c9f105831e304dd766a27b12993ee6216dd96",
+    "crates/noble-wasm/runtime/data.wat": "3680e0487bd20d7f701879f9f99fd1f0e5d16e32e56cbb5c40d7efee1a9d11bf",
+    "crates/noble-wasm/runtime/gc-storage.wat": "10f03f88ef8f250d69e88a0f8297f8a0bfc9a6d54b7b94a6bce2621060cc5c17",
+    "crates/noble-wasm/runtime/linear-storage.wat": "0db9a4088c0bc36502f04db40e2b6d8f5ce420c00a911dd9a7dd5ba750995305",
+    "crates/noble-wasm/runtime/reflection.wat": "ca6a9f1b6c31caf83edbc8868d7f0c0c9792c4fe2bfb11deb50a225eb54cd01d",
+    "crates/noble-wasm/runtime/source.wat": "9e55ac86abfde1bc7e9865ee50bc7e66942dc2fd7a0fb07351981c75871d4440",
+    "crates/noble-wasm/runtime/experiment.wat": "8fb13ca3686e356dd392cab41ebfd7bb4ff930093c8bbcc54d019e4fe94ed0c3"
+  },
+  "toolchain": {
+    "cli_sha256": "d426c7ec24e9082c4da9c124bac024938478d4674928f5e7a2474a31aca60364",
+    "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+    "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
+    "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+    "node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "version": "24.13.0",
+      "v8": "13.6.233.17-node.37",
+      "flags": [
+        "--no-liftoff",
+        "--no-wasm-lazy-compilation",
+        "--no-wasm-tier-up",
+        "--stack-size=1024",
+        "--max-old-space-size=256"
+      ]
+    },
+    "wasm_tools": {
+      "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+    },
+    "wasm_opt": {
+      "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+      "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2"
+    },
+    "vendor": {
+      "directory": "/nix/store/4bf1y4d9pqwpxkxb8n1clh6nsjm30lj8-noble-reviewed-offline-vendor/source-registry-0",
+      "narHash": "sha256-4qbgvoXEoqILGYyj47Jkn2eJmSLmKK+D/jhV++WeiNU="
+    }
+  },
+  "generated_pairs_sha256": "73cdd1caf2c9b73238bc1590097f7090dbda23dce11fd69c49f716821cc075b6",
+  "counts": {
+    "generated_pairs": 1,
+    "eligible": 1,
+    "refused": 0,
+    "branch_kinds": {
+      "if": 1
+    },
+    "selected_branches": {
+      "if/0": 1
+    },
+    "transformations": {
+      "replace-constant": 1
+    },
+    "eligibility": {
+      "eligible": 1
+    },
+    "eligible_branch_kinds": {
+      "if": 1
+    },
+    "eligible_transformations": {
+      "replace-constant": 1
+    },
+    "opt_modes": {
+      "off": 2,
+      "on": 2
+    },
+    "nominal_kernel_checked_subjects": 2,
+    "kernel_checked_subjects": 4,
+    "controls": 1
+  },
+  "proof_checks": [
+    {
+      "subject": {
+        "original_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+        "variant_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+        "fixed_input_sha256": "ee725e1ca9bc95ec90020a6a7b133105d3109bbbbf417859d8de984784a06e43",
+        "model_pair_sha256": "c2087ed2a5fd9e3893e57a6d32d83f85ac3d7cae3af36f1489695f88a016936b"
+      },
+      "kernel_checked": true,
+      "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+      "lean_file": "proofs/pair-0.lean",
+      "lean_sha256": "dd7e4fb51f9c4c7153d2ec5fb08ff42479a0c2e9ffd772af4041f7086a570aa1",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0,
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/proofs/pair-0.lean"
+      ],
+      "model_root": "/home/brittonr/.cache/noble-issues/wt/issue-53",
+      "model_theorem": "NobleFoundation.exec_branchRef"
+    },
+    {
+      "subject": {
+        "original_sha256": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+        "variant_sha256": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+        "fixed_input_sha256": "ee725e1ca9bc95ec90020a6a7b133105d3109bbbbf417859d8de984784a06e43",
+        "model_pair_sha256": "c2087ed2a5fd9e3893e57a6d32d83f85ac3d7cae3af36f1489695f88a016936b"
+      },
+      "kernel_checked": true,
+      "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+      "lean_file": "proofs/replay.lean",
+      "lean_sha256": "62d07eec6b2c56728dfacc35d4d4ac0959cb5b6d1ffece404e7fb8559481409b",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0,
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2/emi-replay/proofs/replay.lean"
+      ],
+      "model_root": "/home/brittonr/.cache/noble-issues/wt/issue-53",
+      "model_theorem": "NobleFoundation.exec_branchRef"
+    }
+  ],
+  "all_matched": true,
+  "command_count": 7,
+  "claims": {
+    "branch_reference_and_prefix": "Lean-kernel-checked MC1 model",
+    "per_subject_expectations": "Lean-kernel-checked decide and exec_branchRef instantiation",
+    "frontend_kernel_and_Wasm_execution": "finite supporting evidence",
+    "Rust_renderer_and_lowering_refinement": "open",
+    "universal_input_equivalence": "not claimed",
+    "quota_sensitive_or_identity_observations": "excluded",
+    "mathlib_oleans": "downloaded Lake cache (lake exe cache get), not rebuilt: separate trust assumption",
+    "receipt_authenticity": "not claimed"
+  },
+  "artifacts_sha256": {
+    "cargo-build.stderr": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc",
+    "cargo-build.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/1/command.json": "38188d5f8aa81efe065fc2c4b9b9fb4ff0046d6dbf41a9f5caff21a16b7f9a6d",
+    "commands/1/stderr": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc",
+    "commands/1/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/2/command.json": "ad9df6c61e24770aaa20d82f88d55c5996cea735d0c7f6adea917221f01ce644",
+    "commands/2/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/2/stdout": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "commands/3/command.json": "9cf690cbf248f8576425020937fcdbd535dded7a4cce454ecb2e9b31d517120c",
+    "commands/3/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/3/stdout": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "commands/4/command.json": "2ceaffebf4e3e1c119b9000b6554806da5af46bcac4cee1d43173cc136606d22",
+    "commands/4/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/4/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/5/command.json": "85e308716399051a7f99f515c043f83a518c87aab661cdfec56e982931e3eea7",
+    "commands/5/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/5/stdout": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "commands/6/command.json": "28637f6c5fdfa508ac87bc3d61210622d28004a90372799bc3a3b4de8507e342",
+    "commands/6/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/6/stdout": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "commands/7/command.json": "f922b4e246e6d3f46a6d19c428eae2808d8299c19312c43d2f0e0fc1e170a923",
+    "commands/7/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/7/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "proofs/pair-0.lean": "dd7e4fb51f9c4c7153d2ec5fb08ff42479a0c2e9ffd772af4041f7086a570aa1",
+    "proofs/pair-0.lean.json": "1658da834bc435d03e4656004ffa7f1061b21ec12caf3782ed04d8391f8a6ac1",
+    "proofs/pair-0.lean.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "proofs/pair-0.lean.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "proofs/replay.lean": "62d07eec6b2c56728dfacc35d4d4ac0959cb5b6d1ffece404e7fb8559481409b",
+    "proofs/replay.lean.json": "ba64e07f8bcb6abbeb39f7645b32bcf9a4cf1cc994e586416f4af4eec6533620",
+    "proofs/replay.lean.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "proofs/replay.lean.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "subjects/pair-0-original/admission.json": "466c019e0050b6a4ed38b0ce665fd146c9c9f6ad9f65560de18d5d88cfefba6b",
+    "subjects/pair-0-original/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "subjects/pair-0-original/compile.stdout": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "subjects/pair-0-original/off-1/engine/module-1-assemble.json": "bb1816f84d56bfd501e3f97619d81061ffd0d080a79e1c457c05d66d921e58b2",
+    "subjects/pair-0-original/off-1/engine/module-1-execution.json": "7836e5eead7ba39b52f045112a06db2a1b675a72d3bfe77dc88da38ca78f5bf0",
+    "subjects/pair-0-original/off-1/engine/module-1-validate.json": "c795e79c90dda2d0fa5f75363cbd465c294825efb386a4c281cd323b6e0f039f",
+    "subjects/pair-0-original/off-1/engine/module-1.noble": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+    "subjects/pair-0-original/off-1/engine/module-1.wasm": "0a0d1a4f8f23a36b020e763612cd399a0b273b34843b3dff85f77f26fc16a556",
+    "subjects/pair-0-original/off-1/engine/module-1.wat": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "subjects/pair-0-original/off-1/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/pair-0-original/off-1/observation.json": "7836e5eead7ba39b52f045112a06db2a1b675a72d3bfe77dc88da38ca78f5bf0",
+    "subjects/pair-0-original/on-3/engine/module-1-assemble.json": "469cc03054e334d252f59baed657a73683c89aad5248bbb8245201d7184406ce",
+    "subjects/pair-0-original/on-3/engine/module-1-execution.json": "3b8f6e92ef41ba65f86f19f29701ffde5c53ca97d16058d8c09527aefa3230a7",
+    "subjects/pair-0-original/on-3/engine/module-1-optimize.json": "0ffef384fc307bc3e15832e502d91642a3f03b9df16979905596ee66f4811dff",
+    "subjects/pair-0-original/on-3/engine/module-1-optimized.wasm": "46b740d089cd77f30a3220211b142428b6605798305ee207d560edb555fdf726",
+    "subjects/pair-0-original/on-3/engine/module-1-validate-optimized.json": "1f28a779d3dea6dc5de2e0a7b9fc20b2422ebe5b72975c12236438220ee981b5",
+    "subjects/pair-0-original/on-3/engine/module-1-validate.json": "cc93af56ba052a94dee87ed88ac1b6f59bfbe3dbca31629709b1df5c6ee087f1",
+    "subjects/pair-0-original/on-3/engine/module-1.noble": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+    "subjects/pair-0-original/on-3/engine/module-1.wasm": "0a0d1a4f8f23a36b020e763612cd399a0b273b34843b3dff85f77f26fc16a556",
+    "subjects/pair-0-original/on-3/engine/module-1.wat": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "subjects/pair-0-original/on-3/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/pair-0-original/on-3/observation.json": "3b8f6e92ef41ba65f86f19f29701ffde5c53ca97d16058d8c09527aefa3230a7",
+    "subjects/pair-0-original/source.noble": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+    "subjects/pair-0-variant/admission.json": "d9e85cc0c1a2eb7818a3fb377736d0052e315e29b55d8cc0a4c626be75b13cf1",
+    "subjects/pair-0-variant/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "subjects/pair-0-variant/compile.stdout": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "subjects/pair-0-variant/off-2/engine/module-1-assemble.json": "0cc49a81374bf64141c64e11eea15ac1051e24a767356e0dcf55350bdd056ea7",
+    "subjects/pair-0-variant/off-2/engine/module-1-execution.json": "3fc962e3f8c64f619097b9629996f84efbd1fdc8f73e489ab7e876bcfea368c4",
+    "subjects/pair-0-variant/off-2/engine/module-1-validate.json": "0d5d8ba05f9faa46adc1b74477afc7e7857d316067ea2ec8722c4b2cdb763771",
+    "subjects/pair-0-variant/off-2/engine/module-1.noble": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+    "subjects/pair-0-variant/off-2/engine/module-1.wasm": "68d0fdfae43495f8efa7195d40478d1f61cf5c378a331d2f5f956fa4239cef39",
+    "subjects/pair-0-variant/off-2/engine/module-1.wat": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "subjects/pair-0-variant/off-2/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/pair-0-variant/off-2/observation.json": "3fc962e3f8c64f619097b9629996f84efbd1fdc8f73e489ab7e876bcfea368c4",
+    "subjects/pair-0-variant/on-4/engine/module-1-assemble.json": "cf1207ecb6100d75490fa0595cc21aa7a18a1bc5752b6f7bc0a9ff674d1be3e9",
+    "subjects/pair-0-variant/on-4/engine/module-1-execution.json": "0fbc5aa0b2869593ea9649683dcd9cf094e8a2b49e32a5562d4e2a25700dd017",
+    "subjects/pair-0-variant/on-4/engine/module-1-optimize.json": "c40dbfce7e792cf416af20a085614dc593712b9b753dbd7d36eb3d9695ac7a5f",
+    "subjects/pair-0-variant/on-4/engine/module-1-optimized.wasm": "54345bd517a325564383f8c46a05e793fb82ce196c275c0a1fc50436629f572e",
+    "subjects/pair-0-variant/on-4/engine/module-1-validate-optimized.json": "2da0fdd2ddcb2fc7bb9364f135d1441b25a083136d6241c0b204b3f393cdae0e",
+    "subjects/pair-0-variant/on-4/engine/module-1-validate.json": "ee1bba0010431d543501ab7ecc8a10c30991f2d013496712403b1fee5f6bb79a",
+    "subjects/pair-0-variant/on-4/engine/module-1.noble": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+    "subjects/pair-0-variant/on-4/engine/module-1.wasm": "68d0fdfae43495f8efa7195d40478d1f61cf5c378a331d2f5f956fa4239cef39",
+    "subjects/pair-0-variant/on-4/engine/module-1.wat": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "subjects/pair-0-variant/on-4/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/pair-0-variant/on-4/observation.json": "0fbc5aa0b2869593ea9649683dcd9cf094e8a2b49e32a5562d4e2a25700dd017",
+    "subjects/pair-0-variant/source.noble": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+    "subjects/replay-original/admission.json": "e10997e3426580021ed9d28fd8087af09781f80b06b57bbd7f30385f080f5d69",
+    "subjects/replay-original/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "subjects/replay-original/compile.stdout": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "subjects/replay-original/off-5/engine/module-1-assemble.json": "0ecad0c383dbab88e6099b9a1b6af65b1593b617fcd6750d2fc1d9652f3c29bb",
+    "subjects/replay-original/off-5/engine/module-1-execution.json": "7836e5eead7ba39b52f045112a06db2a1b675a72d3bfe77dc88da38ca78f5bf0",
+    "subjects/replay-original/off-5/engine/module-1-validate.json": "a2b352a278fbe0078550f2935a2eca28bda5b42e6cd86c5d355d5a6364200e77",
+    "subjects/replay-original/off-5/engine/module-1.noble": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+    "subjects/replay-original/off-5/engine/module-1.wasm": "0a0d1a4f8f23a36b020e763612cd399a0b273b34843b3dff85f77f26fc16a556",
+    "subjects/replay-original/off-5/engine/module-1.wat": "31ae44eec4c62961e41fbff68139ad3a0b17d7d585de20ee7e13cd695c0a2206",
+    "subjects/replay-original/off-5/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/replay-original/off-5/observation.json": "7836e5eead7ba39b52f045112a06db2a1b675a72d3bfe77dc88da38ca78f5bf0",
+    "subjects/replay-original/source.noble": "41c2d21da36337b5bda634681b5010c1415babfbcb2122fe251daeacd41590e3",
+    "subjects/replay-variant/admission.json": "b499f8d6aa39dcbb684c40deeb2fc0110614d11111b3b624139e2ff709504460",
+    "subjects/replay-variant/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "subjects/replay-variant/compile.stdout": "bf145e05ab206f70255304b708d3a67b5a46e048112774bba24089022181e24e",
+    "subjects/replay-variant/off-6/engine/module-1-assemble.json": "95fe2281a9282438d7a69c763b798dc1b021243d877bfd75a705ae33d97bd13a",
+    "subjects/replay-variant/off-6/engine/module-1-execution.json": "50583124590185e6d6751065a1f2d2411d0a0f979c14f6554942ecb6d4e13fbf",
+    "subjects/replay-variant/off-6/engine/module-1-validate.json": "e744a19932927c6a3855c25cd45c9f93c260de6cfcb25161fd8adc9e16baeb10",
+    "subjects/replay-variant/off-6/engine/module-1.noble": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9",
+    "subjects/replay-variant/off-6/engine/module-1.wasm": "263885bd603729643328b63c3780245df56cb94654c89e22826b4b2c8a8b1753",
+    "subjects/replay-variant/off-6/engine/module-1.wat": "40ab5bc032712fc22ca29b021c0429c963296b37a9f7ca86a8a325e13708fc99",
+    "subjects/replay-variant/off-6/engine/tools.json": "abbc11601310f1975219818fb15f5d6ca51e23a982734d909a6b694201117679",
+    "subjects/replay-variant/off-6/observation.json": "50583124590185e6d6751065a1f2d2411d0a0f979c14f6554942ecb6d4e13fbf",
+    "subjects/replay-variant/source.noble": "61f4986dbedfd2005f425c8d51cc35d79905f9fb60be8a0a55317675d9ec7ca9"
+  }
+}

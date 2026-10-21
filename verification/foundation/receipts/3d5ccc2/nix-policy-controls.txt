@@ -1,0 +1,42 @@
+matching Octet pin, scope, and lint configuration
+the reviewed revision is reported
+flake url revision
+flake lock revision
+flake lock nar hash
+pre-commit remote tool
+pre-commit wrong entry
+pre-commit scope
+pre-commit feature scope
+pre-commit fields split across hooks
+octet metadata scope
+lint downgrade
+unsafe lint not forbidden
+architecture mode
+architecture waiver
+architecture finding budget
+policy package missing
+Wasm emitter package omitted
+policy source scope missing
+Wasm emitter source scope omitted
+policy target missing
+policy target incomplete
+policy package role missing
+policy dependency rules missing
+policy capability family missing
+policy capability not forbidden
+policy outbound effects missing
+policy outbound authority missing
+policy core no-std missing
+contract frontend no-std missing
+Wasm emitter no-std missing
+numeric graph library no-std missing
+numeric graph library package omitted
+policy core no-std mismatch
+policy ports not declared
+policy providers not declared
+domain core cannot use classified providers
+classified providers cannot gain build edges
+classified provider kind is exact
+provider rationale cannot be blank
+policy summary reports the mode
+policy summary reports the forbidden capability families

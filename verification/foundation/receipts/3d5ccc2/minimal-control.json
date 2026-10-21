@@ -1,0 +1,59 @@
+{
+  "schema": "noble-foundation-emi-replay/v1",
+  "pair": {
+    "index": 0,
+    "kind": "if",
+    "selected": 0,
+    "input": [
+      "0",
+      "0",
+      "0"
+    ],
+    "prefix": [
+      [
+        "I64",
+        "0"
+      ],
+      [
+        "Bool",
+        "false"
+      ]
+    ],
+    "original": [
+      [
+        {
+          "push": "1"
+        },
+        "add"
+      ],
+      [
+        {
+          "push": "1"
+        },
+        "add"
+      ]
+    ],
+    "variant": [
+      [
+        {
+          "push": "1"
+        },
+        "add"
+      ],
+      [
+        {
+          "push": "-1"
+        },
+        "add"
+      ]
+    ],
+    "transformation": {
+      "kind": "replace-constant",
+      "branch": 1,
+      "site": 0
+    }
+  },
+  "mode": "off",
+  "fault": "wrong-selected-branch-lowering",
+  "discrepancy": "ordered-output"
+}

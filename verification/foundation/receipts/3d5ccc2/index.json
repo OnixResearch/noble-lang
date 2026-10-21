@@ -1,0 +1,249 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "3d5ccc2770d3928a0071c143e86fdc6abbad22d4",
+  "source_tree": "51f9f9b053e25c75f7547f1ec948da3ced14fe78",
+  "run": "verification/foundation/ci.sh NEW_OUTPUT_DIR --skip-slice (overall=0; Phase 3 host-service slice explicitly skipped)",
+  "raw_location": "/home/brittonr/.cache/noble-issues/receipts/issue-53/ci-3d5ccc2 (host-local, not attested by this file)",
+  "raw_sha256": {
+    "check/foundation-check.json": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+    "emi/emi.json": "8f1033ae1dd24abb79762175f897bd96fe6540b93e26484f2c5946bbc91b8770",
+    "emi-replay/emi.json": "f0013ecbf7868993de4de7b35d8c98f6537ca5c208dcb65fe5b01f6995de11bd",
+    "emi/minimal-control.json": "8c9a1b2988aa529f30954e9f039b5c8d5b7844cb82b5bce1d66d9381faddd02e",
+    "summary.txt": "922b5612619e70ea580eff17872d6b7c52ba4c205336aaec2b7e6706334fca92",
+    "verify.log": "36c16b9f31b50f3d3ae58a60f88ac6f1beae32ebcbd5ae2089d54a5548d21e0e",
+    "emi-verify.log": "dacf92000ebb8efa64fd09e980bb5d228d27d19e4e29171d4364c0043fb1d993",
+    "emi-replay-verify.log": "dacf92000ebb8efa64fd09e980bb5d228d27d19e4e29171d4364c0043fb1d993",
+    "stale-receipt-refused.log": "a35b47dd193d9932a99f62369d15d86466bec746036c0d58ac39db94f5e71cae",
+    "differential/differential.json": "f4046c6c5a3c7e8be54b70a6bcb0034cff6ba7bdd6c21a1bef3578e1c2e7641b"
+  },
+  "nix_raw_sha256": {
+    "/nix/store/zi7icai1v0k6xbgabpas6r6bmj157m1k-noble-octet-deny-all/summary.txt": "54ab0a8de31b83fc1ea13756ce3745b63df0e2de735a28d001ba583bb89f1104",
+    "/nix/store/cjhk3a97y7cn3yx89pqadsb96gp878gr-noble-source-coverage/coverage.json": "dc6a54f0d4fde5949ca0435f65edbbf0227f8544724e0ab77c2ec41974aeed32",
+    "/nix/store/cby7rkgd3j25syyiipvs5nni373mdjj9-noble-native-assurance/coverage.json": "0bbb4621cbf9e31dd4ba458de32979c5debeaa2af01ae99e7f134b52acd83591",
+    "/nix/store/wzgjba9jasg56cff41vwfp6v2v1xxhjv-noble-policy-freshness/octet-control-diagnostics.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "/nix/store/wzgjba9jasg56cff41vwfp6v2v1xxhjv-noble-policy-freshness/octet-control-tests.txt": "31e85ef3ad6c3eaf664969d87b2a8ffd27142bf2a1e8c0a7f9ba9d59173b0dc2",
+    "/nix/store/5xz3rkiw83922krwcddzwwwlclbyi7l3-noble-source-inventory-controls/self-tests.txt": "df10f7af99259d431f55ac990ea35f4c686710f79666a66e5741297a9a317443"
+  },
+  "in_repo_sha256": {
+    "foundation-check.json": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+    "emi.json": "8f1033ae1dd24abb79762175f897bd96fe6540b93e26484f2c5946bbc91b8770",
+    "emi-replay.json": "f0013ecbf7868993de4de7b35d8c98f6537ca5c208dcb65fe5b01f6995de11bd",
+    "minimal-control.json": "8c9a1b2988aa529f30954e9f039b5c8d5b7844cb82b5bce1d66d9381faddd02e",
+    "ci-summary.txt": "922b5612619e70ea580eff17872d6b7c52ba4c205336aaec2b7e6706334fca92",
+    "differential-verify.json": "36c16b9f31b50f3d3ae58a60f88ac6f1beae32ebcbd5ae2089d54a5548d21e0e",
+    "emi-verify.json": "dacf92000ebb8efa64fd09e980bb5d228d27d19e4e29171d4364c0043fb1d993",
+    "emi-replay-verify.json": "dacf92000ebb8efa64fd09e980bb5d228d27d19e4e29171d4364c0043fb1d993",
+    "stale-receipt-refused.json": "a35b47dd193d9932a99f62369d15d86466bec746036c0d58ac39db94f5e71cae",
+    "differential-summary.json": "ac6e4009b7b3533ec9d8ec644eede5aed160be1afd85282db70b98f243d73288",
+    "nix-octet-summary.txt": "54ab0a8de31b83fc1ea13756ce3745b63df0e2de735a28d001ba583bb89f1104",
+    "nix-source-coverage.json": "dc6a54f0d4fde5949ca0435f65edbbf0227f8544724e0ab77c2ec41974aeed32",
+    "nix-native-assurance.json": "0bbb4621cbf9e31dd4ba458de32979c5debeaa2af01ae99e7f134b52acd83591",
+    "nix-policy-diagnostics.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "nix-policy-controls.txt": "31e85ef3ad6c3eaf664969d87b2a8ffd27142bf2a1e8c0a7f9ba9d59173b0dc2",
+    "nix-source-inventory-controls.txt": "df10f7af99259d431f55ac990ea35f4c686710f79666a66e5741297a9a317443"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim",
+    "differential-summary.json": "compacted (per-case rows removed)",
+    "emi.json": "verbatim",
+    "emi-replay.json": "verbatim",
+    "minimal-control.json": "verbatim",
+    "ci-summary.txt": "verbatim",
+    "*-verify.json": "verbatim verifier stdout",
+    "stale-receipt-refused.json": "verbatim verifier stdout",
+    "nix-*": "verbatim selected Nix output files"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 148,
+      "clean_source": true
+    },
+    "slice": {
+      "skipped": true,
+      "reason": "issue #53 covers fixed-input EMI and arithmetic regression, not a new Phase 3 host-service receipt"
+    },
+    "differential": {
+      "seed": "15",
+      "rows": 163,
+      "all_matched": true,
+      "opt_on_off_same_stack": true,
+      "mutation_controls_detected": 7,
+      "checker_property_lanes": {
+        "command": "cargo test --locked --offline -p noble-kernel --test property",
+        "exit": 0,
+        "summary": [
+          "test oracle_table_covers_every_pool_word ... ok",
+          "test malformed_candidates_never_panic_or_accept ... ok",
+          "test generated_candidates_agree_with_independent_oracle ... ok",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s"
+        ],
+        "generated_oracle_candidates": 1000,
+        "malformed_candidates": 200,
+        "coverage_class": "checker acceptance (kernel), NOT execution semantics"
+      }
+    },
+    "emi": {
+      "seed": "53",
+      "counts": {
+        "generated_pairs": 19,
+        "eligible": 16,
+        "refused": 3,
+        "branch_kinds": {
+          "case": 5,
+          "if": 14
+        },
+        "selected_branches": {
+          "case/0": 3,
+          "case/1": 2,
+          "if/0": 9,
+          "if/1": 5
+        },
+        "transformations": {
+          "insert-neutral": 4,
+          "prune-neutral": 4,
+          "replace-constant": 5,
+          "replace-operator": 4,
+          "unsupported-word": 1,
+          "wrong-branch-type": 1
+        },
+        "eligibility": {
+          "eligible": 16,
+          "model-ineligible": 3
+        },
+        "eligible_branch_kinds": {
+          "case": 4,
+          "if": 12
+        },
+        "eligible_transformations": {
+          "insert-neutral": 4,
+          "prune-neutral": 4,
+          "replace-constant": 4,
+          "replace-operator": 4
+        },
+        "opt_modes": {
+          "off": 32,
+          "on": 32
+        },
+        "nominal_kernel_checked_subjects": 32,
+        "kernel_checked_subjects": 62,
+        "controls": 7
+      },
+      "all_matched": true,
+      "controls_detected": 7,
+      "shrink": {
+        "attempts": 13,
+        "accepted": 12,
+        "outcomes": {
+          "model_refused": 0,
+          "admission_refused": 0,
+          "class_changed": 1,
+          "retained": 12
+        },
+        "local_minimal": true,
+        "bound_exhausted": false,
+        "interface_preserved": true,
+        "initial_mutation_site": 2,
+        "final_mutation_site": 0
+      }
+    },
+    "replay": {
+      "all_matched": true,
+      "detected": true,
+      "discrepancy": "ordered-output"
+    },
+    "nix": {
+      "source": "git+file:///home/brittonr/.cache/noble-issues/wt/issue-53?rev=3d5ccc2770d3928a0071c143e86fdc6abbad22d4",
+      "exit": 0,
+      "options": {
+        "min-free": 0,
+        "max-jobs": 1,
+        "cores": 4
+      },
+      "checks": {
+        "octet": {
+          "output": "/nix/store/zi7icai1v0k6xbgabpas6r6bmj157m1k-noble-octet-deny-all",
+          "result": "passed"
+        },
+        "source-coverage": {
+          "output": "/nix/store/cjhk3a97y7cn3yx89pqadsb96gp878gr-noble-source-coverage",
+          "result": "passed"
+        },
+        "native-assurance": {
+          "output": "/nix/store/cby7rkgd3j25syyiipvs5nni373mdjj9-noble-native-assurance",
+          "result": "passed"
+        },
+        "policy": {
+          "output": "/nix/store/wzgjba9jasg56cff41vwfp6v2v1xxhjv-noble-policy-freshness",
+          "result": "passed"
+        },
+        "source-inventory-controls": {
+          "output": "/nix/store/5xz3rkiw83922krwcddzwwwlclbyi7l3-noble-source-inventory-controls",
+          "result": "passed"
+        }
+      },
+      "source_coverage": {
+        "counts": {
+          "bodies": 5894,
+          "compiler_production_items": 12384,
+          "configurations": 2,
+          "dependencies": 23,
+          "excepted": 0,
+          "extracted": 0,
+          "future_components": 2,
+          "generated": 3664,
+          "macro_origins": 88,
+          "modeled": 0,
+          "open": 5894,
+          "open_refinement": 5894,
+          "proved": 0,
+          "reviewed_subjects": 12053,
+          "structural": 2495,
+          "test_subjects": 4207,
+          "tools": 13,
+          "units": 89
+        },
+        "diagnostics": [],
+        "non_claims": [
+          "inventory-classification-is-not-refinement",
+          "open-work-is-not-verified",
+          "extraction-status-is-not-a-proof",
+          "structural-and-generated-subjects-are-accounting-not-noble-bodies",
+          "not-whole-project-verification"
+        ],
+        "valid": true
+      },
+      "native_assurance": {
+        "counts": {
+          "compiler_tools": 5,
+          "fixture_packages": 110,
+          "foreign_items": 0,
+          "foreign_libraries": 0,
+          "function_safety_facts": 0,
+          "production_dependencies": 10,
+          "production_items": 17510,
+          "required_miri_tests": 1,
+          "reviewed_unsafe_sites": 0,
+          "safety_arguments": 7,
+          "target_assumptions": 1,
+          "units": 89,
+          "unsafe_sites": 0
+        },
+        "diagnostics": [],
+        "non_claims": [
+          "native-assurance-inventory-is-not-soundness",
+          "dependency-records-are-not-dependency-safety",
+          "miri-results-are-not-refinement",
+          "empty-owned-unsafe-scope-requires-accounting",
+          "not-m1-acceptance"
+        ],
+        "valid": true
+      }
+    }
+  },
+  "claims": {
+    "compiler_theorem": false,
+    "universal_input_equivalence": false,
+    "receipt_authenticity": "not claimed",
+    "source_scope": "the immutable source commit above, not the later evidence-only commit"
+  }
+}

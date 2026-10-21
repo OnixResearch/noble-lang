@@ -1,0 +1,63 @@
+complete reviewed inventory matches compiler-derived data
+partition reports the compiler-derived production total
+open work is reported separately from verification
+no refinement proof is implied by the classification
+old inventory schema
+missing inventory schema
+missing item span
+missing item provenance
+nonboolean item provenance
+missing test provenance
+handwritten Module implementation is structural and its eq is body/open
+handwritten Module impl relabeled generated
+handwritten Module eq relabeled generated
+derive item is eligible for generated accounting, not proof
+authored test function and expanded registration remain a body
+mixed test function relabeled generated
+expansion-first mixed test path remains a body
+expansion-first mixed path relabeled generated
+stale generated path is rejected without inventing an authored observation
+derivation preserves both authored and expanded item observations
+derivation rejects missing referenced span
+derivation rejects nonboolean span expansion
+derivation rejects missing span expansion
+derivation rejects duplicate conflicting span IDs
+derivation rejects identical duplicate span IDs
+derivation rejects an item without unit membership
+derivation rejects duplicate item fact IDs
+derivation rejects missing item span ID
+unreviewed compiler subject
+stale reviewed subject
+stale generated subject has no expansion evidence
+package binding mismatch
+unclassified test subject
+stale reviewed test subject
+test-only path cannot exempt production body
+unreviewed macro body
+unexpected compiler macro origin
+stale reviewed macro origin
+unclassified dependency
+wrong dependency kind
+exactly reviewed external provider edge
+unreviewed external provider edge
+stale reviewed external provider edge
+wrong external provider caller
+wrong external provider kind
+unclassified tool
+incomplete compiler coverage
+missing compiler unit
+unexpected compiler unit
+duplicate compiler unit
+unit count mismatch
+changed required target
+changed required features
+changed default-feature state
+undeclared source scope
+undeclared package coverage
+invalid disposition
+invalid refinement status
+excepted subject without record
+kernel exception rejected
+incomplete exception record
+future component claiming verification
+future component in the production subject list

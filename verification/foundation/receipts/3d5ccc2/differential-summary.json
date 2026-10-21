@@ -1,0 +1,293 @@
+{
+  "schema": "noble-foundation-differential/v1",
+  "profile": "Core-Bootstrap / managed-linear-memory",
+  "fragment": "I64 literals, + - *, quote, literal blocks, compose, run, nested quote-run-run, Bool/I64 prefix",
+  "seed": "15",
+  "count": 80,
+  "opt_modes": [
+    "off",
+    "on"
+  ],
+  "universal_backend_proof": false,
+  "source_commit": "3d5ccc2770d3928a0071c143e86fdc6abbad22d4",
+  "source_tree": "51f9f9b053e25c75f7547f1ec948da3ced14fe78",
+  "clean_source": true,
+  "theorems": [
+    {
+      "name": "NobleFoundation.PExpr.exec_inputs_run",
+      "statement": "NobleFoundation.PExpr.exec_inputs_run : ∀ (P : NobleFoundation.PExpr) (ins : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ P.flat) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ (P.code ++ [NobleContracts.Op.word 10])) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll_from_empty",
+      "statement": "@NobleFoundation.exec_lowerAll_from_empty : ∀ {ops : List NobleFoundation.AOp} {zs' : List ℤ}, NobleFoundation.refRun ops [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_inputs_nested",
+      "statement": "NobleFoundation.exec_inputs_nested : ∀ (ins ops : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ ops) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ [NobleContracts.Op.block (NobleFoundation.lowerAll ops), NobleContracts.Op.word 8, NobleContracts.Op.word 10, NobleContracts.Op.word 10]) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll",
+      "statement": "@NobleFoundation.exec_lowerAll : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_run_ref",
+      "statement": "NobleFoundation.PExpr.exec_run_ref : ∀ (P : NobleFoundation.PExpr) {zs zs' : List ℤ}, NobleFoundation.refRun P.flat zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 10]) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.accumulate_eq_acceptLiteral",
+      "statement": "NobleFoundation.accumulate_eq_acceptLiteral : ∀ (negative : Bool) (ds : List (Fin 10)), NobleFoundation.accumulate negative ds = NobleFoundation.acceptLiteral negative ds",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.refRun_range",
+      "statement": "@NobleFoundation.refRun_range : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → (∀ z ∈ zs, NobleFoundation.I64Range z) → ∀ z ∈ zs', NobleFoundation.I64Range z",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_knum01",
+      "statement": "NobleFoundation.wrap_eq_knum01 : ∀ (z : ℤ), MathlibI64.wrap z = (z + 2 ^ 63) % 2 ^ 64 - 2 ^ 63",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "foundation_receipt_sha256": "a1f0b8f6f5d8169a97a43ad80251bbaec1063a77dd6f8f1f444d9abab2b90e6b",
+  "toolchain": {
+    "cli_sha256": "d426c7ec24e9082c4da9c124bac024938478d4674928f5e7a2474a31aca60364",
+    "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+    "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+    "tools": {
+      "node": {
+        "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+      },
+      "wasm_tools": {
+        "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+      },
+      "wasm_opt": {
+        "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+        "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2"
+      }
+    }
+  },
+  "expected_lean": {
+    "path": "Expected.lean",
+    "sha256": "26478fc05a9e3ac8ee86eca385df66f95af602668ea25904f907d1a2ec845ece",
+    "kernel_checked_cases": 83
+  },
+  "all_matched": true,
+  "opt_on_off_same_stack": true,
+  "coverage": {
+    "kinds": {
+      "straight": 23,
+      "program": 41,
+      "nested": 19
+    },
+    "with_prefix": 55,
+    "with_bool_prefix": 19,
+    "with_compose": 14,
+    "with_nested_compose": 8,
+    "with_quote": 42,
+    "negative_results": 58,
+    "boundary_values": 21,
+    "rejection_cases": 3
+  },
+  "controls": [
+    {
+      "id": "reversed-subtraction",
+      "intended": "reference computes top - deeper",
+      "detected_cases": 66,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ 0 1 - ] quote run run",
+        "steps": 49
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "unsigned-decoding",
+      "intended": "observed I64 decoded as unsigned",
+      "detected_cases": 116,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ -1 ] quote run run",
+        "steps": 17
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "prefix-corruption",
+      "intended": "expected bottom prefix item replaced",
+      "detected_cases": 108,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "2 [  ] quote run run",
+        "steps": 4
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "wrong-composition-order",
+      "intended": "compose evaluated as q then p",
+      "detected_cases": 26,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "-7671914197926969886 quote 3 quote compose run",
+        "steps": 4
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "trace-mismatch",
+      "intended": "expectation claims a host request",
+      "detected_cases": 160,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[  ] quote run run",
+        "steps": 3
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "literal-wrapping-instead-of-refusal",
+      "intended": "out-of-range literal assumed to wrap",
+      "detected_cases": 3,
+      "demonstrably_fails": true
+    },
+    {
+      "id": "stale-proof-subject",
+      "intended": "Lean case or foundation receipt for a different subject",
+      "lean_case_rebinding_rejected": true,
+      "foundation_tree_mismatch_rejected": true,
+      "demonstrably_fails": true
+    }
+  ],
+  "checker_property_lanes": {
+    "command": "cargo test --locked --offline -p noble-kernel --test property",
+    "exit": 0,
+    "summary": [
+      "test oracle_table_covers_every_pool_word ... ok",
+      "test malformed_candidates_never_panic_or_accept ... ok",
+      "test generated_candidates_agree_with_independent_oracle ... ok",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s"
+    ],
+    "generated_oracle_candidates": 1000,
+    "malformed_candidates": 200,
+    "coverage_class": "checker acceptance (kernel), NOT execution semantics"
+  },
+  "sources_sha256": {
+    "verification/foundation/differential.mjs": "7b71a32c2d37ea678d52f0d707cf1d3350cad61bbd3544d2b0a98f1d0809ce6d",
+    "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+    "verification/foundation/execution.mjs": "607bfbe9a7c5656c18e0de84a3f3d9c584e0d7d5ee794b6de7419118cca4b263",
+    "verification/selected-vendor.mjs": "1e1d32f8861ab0f83fa34e3128b73d28e997286eca197f784ee79826070b7921",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/Literal.lean": "9c02a9426076058717f870b14ba0ef279f89d2ca6739164915665e364619cf61",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-cli/src/core/runtime/config.json": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+    "policy/tool-selection.json": "c18c7be4a0d74ad64ec453a39931fee9d15f1cb419c8ef6f31cacb1deac0e507",
+    "Cargo.lock": "5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3",
+    "crates/noble-kernel/tests/property.rs": "8d3ad6b061849c29951b65c08edff96eff0a84e44eddee61cc616ae5b929680e"
+  },
+  "claims": [
+    {
+      "claim": "refRun semantics equal MC1 Exec for the fragment (any prefix)",
+      "status": "proved",
+      "theorems": [
+        "NobleFoundation.PExpr.exec_inputs_run",
+        "NobleFoundation.exec_lowerAll_from_empty",
+        "NobleFoundation.exec_inputs_nested",
+        "NobleFoundation.exec_lowerAll",
+        "NobleFoundation.PExpr.exec_run_ref"
+      ]
+    },
+    {
+      "claim": "per-case expectations equal refRun (kernel decide) and per-case MC1 theorems",
+      "status": "proved",
+      "count": 83
+    },
+    {
+      "claim": "compiled managed-Wasm execution matches, opt off and on",
+      "status": "tested",
+      "count": 163
+    },
+    {
+      "claim": "out-of-range literals refused by the frontend",
+      "status": "tested",
+      "count": 3
+    },
+    {
+      "claim": "Rust frontend refines the transcribed literal accumulator",
+      "status": "open"
+    },
+    {
+      "claim": "noble-wasm lowering, helpers, wasm-tools, wasm-opt, V8",
+      "status": "assumed"
+    },
+    {
+      "claim": "universal backend correctness",
+      "status": "open"
+    },
+    {
+      "claim": "Mathlib .olean imports",
+      "status": "assumed",
+      "note": "downloaded cache, not rebuilt"
+    }
+  ],
+  "commands": 248,
+  "case_summary": {
+    "rows": 163,
+    "matched": 163,
+    "expected_refusals": 3
+  },
+  "compacted_from": {
+    "file": "differential.json",
+    "sha256": "f4046c6c5a3c7e8be54b70a6bcb0034cff6ba7bdd6c21a1bef3578e1c2e7641b",
+    "bytes": 170289,
+    "note": "per-case rows omitted; full raw receipt retained outside the repository"
+  }
+}
