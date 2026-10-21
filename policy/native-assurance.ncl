@@ -34,7 +34,7 @@
     # Cargo.lock checksum; only the selected Wasmtime source NAR binds them.
     # The architecture policy now permits composition-root normal edges to
     # these providers, including a possible noble-syndicate caller; this
-    # comparator separately binds the seven observed noble-cli callers and the
+    # comparator separately binds the nine observed noble-cli callers and the
     # three observed noble-ngraph-experiment callers.
     # Neither classification audits transitive dependencies,
     # external unsafe code, native linking or implementation safety.
@@ -59,6 +59,20 @@
         role = "noble-cli",
         edge_kind = "normal",
         assumption = "CLI authority path walking uses Linux O_NOFOLLOW/O_DIRECTORY flags through std OpenOptions; kernel and /proc/self/fd behavior and external libc safety remain host assumptions.",
+      },
+      {
+        name = "rustix",
+        version = "1.1.5",
+        role = "noble-cli",
+        edge_kind = "normal",
+        assumption = "CLI cooperative live watch registers inotify watches, reads events and polls through rustix's fs and event features; Linux inotify semantics and rustix's raw syscall implementation remain unaudited host assumptions, and a watch event never authenticates later file bytes.",
+      },
+      {
+        name = "serde",
+        version = "1.0.229",
+        role = "noble-cli",
+        edge_kind = "normal",
+        assumption = "CLI C-backend control JSON is decoded through a duplicate-member-refusing serde Visitor over serde_json; decoding establishes syntax and member uniqueness only, not trusted policy, and external implementation safety is not audited.",
       },
       {
         name = "serde_json",

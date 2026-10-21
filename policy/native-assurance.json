@@ -53,6 +53,20 @@
         "version": "0.2.189"
       },
       {
+        "assumption": "CLI cooperative live watch registers inotify watches, reads events and polls through rustix's fs and event features; Linux inotify semantics and rustix's raw syscall implementation remain unaudited host assumptions, and a watch event never authenticates later file bytes.",
+        "edge_kind": "normal",
+        "name": "rustix",
+        "role": "noble-cli",
+        "version": "1.1.5"
+      },
+      {
+        "assumption": "CLI C-backend control JSON is decoded through a duplicate-member-refusing serde Visitor over serde_json; decoding establishes syntax and member uniqueness only, not trusted policy, and external implementation safety is not audited.",
+        "edge_kind": "normal",
+        "name": "serde",
+        "role": "noble-cli",
+        "version": "1.0.229"
+      },
+      {
         "assumption": "CLI JSON parsing and serialization require separate bounded-input and authority/schema checks; syntactic parsing and external implementation safety do not establish trusted commands or receipts.",
         "edge_kind": "normal",
         "name": "serde_json",
