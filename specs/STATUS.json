@@ -1875,7 +1875,7 @@
     "c_backend": "optional-nonselected-C11-AOT-specification-only; absent/not-run; no native execution",
     "erlang_abstract_backend": "optional-nonselected-abstract-forms-and-OTP-compiled-BEAM-specification-only; narrow-arithmetic-subset; absent/not-run; no runtime execution"
   },
-  "next_milestone": null,
+  "next_milestone": "MW1",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
     "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",

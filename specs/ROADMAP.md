@@ -374,6 +374,8 @@ promotes MW1 or MW2.
 
 MW1 requires a worker-interface checker, declared schemas/modules, an explicit preparation service, package encoding, and a bounded execution profile. The finite DXM1 session-local module selection alone does not close these broader entry gates or make MW1 a completed capability. MW2 additionally requires concrete native-async task interfaces. M2 establishes finite candidate limits in its own subset. M6 owns RA-ASYNC-02 through RA-ASYNC-05 regardless of the worker harness.
 
+**Selection.** MW1 is the selected successor to M8 and DXM1. Its `M4` and `M5` dependencies are complete, and two active Cairn changes already declare MW1 scope: [worker program v2](../.cairn/changes/typed-worker-program-v2-native/proposal.md) and the [WORKER-12 code-export adapter](../.cairn/changes/worker-code-export-bound-effect/proposal.md). Selection is direction, not capability: all five entry gates remain open, no WORKER case is promoted, and neither active change makes MW1 or MW2 a completed milestone. MW2 also depends on the completed M6 lane, so MW1 is the only worker milestone that can begin.
+
 The MW1 case set is WORKER-02 through WORKER-07 and WORKER-09 through WORKER-12. Async-dependent rows in WORKER-09 remain MW2 obligations rather than false MW1 coverage. MW2 executes WORKER-01 and WORKER-08 plus those deferred rows. Reports retain a result for every applicable matrix entry.
 
 Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. M6's completed local WORKER-08 slice did not establish M7 service acceptance, and neither the separately accepted bounded M7 service nor M8 choreography closes the broader worker milestones.
