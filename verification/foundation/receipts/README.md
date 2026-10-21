@@ -26,7 +26,7 @@ obtain current evidence.
 
 ## 3d5ccc2 — fixed-input branch EMI (issue #53)
 
-[`3d5ccc2/`](3d5ccc2/) records clean source commit
+`3d5ccc2/` records clean source commit
 `3d5ccc2770d3928a0071c143e86fdc6abbad22d4`, tree
 `51f9f9b053e25c75f7547f1ec948da3ced14fe78`. The actual invocation was
 `verification/foundation/ci.sh NEW_OUTPUT_DIR --skip-slice`; its

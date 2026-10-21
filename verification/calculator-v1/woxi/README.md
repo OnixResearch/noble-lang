@@ -10,7 +10,7 @@ test observations only. They never change a canonical case `state` or
 `evidence`.
 
 **Prerequisite status.** A fresh Woxi comparison needs only the Rust helper:
-`cargo build --release --locked` in [`helper/`](helper/). Woxi is a crates.io
+`cargo build --release --locked` in `helper/`. Woxi is a crates.io
 dependency (`woxi = "=0.3.0"`, AGPL-3.0-or-later) and does not require a
 Wolfram kernel, licence or client. The CPython `python-fractions` stand-in
 needs Python but is never reported as an oracle run.
