@@ -198,7 +198,6 @@ function currentSourceHashes(foundation) {
     'crates/noble-wasm/src/source/emit/functions.rs',
     'crates/noble-wasm/src/source/emit/functions/slots.rs',
     'crates/noble-wasm/src/source/emit/initialize.rs',
-    'crates/noble-wasm/src/emit/functions.rs',
     'crates/noble-wasm/runtime/operations.wat',
     'crates/noble-wasm/runtime/programs.wat',
     'crates/noble-wasm/runtime/stack.wat',
