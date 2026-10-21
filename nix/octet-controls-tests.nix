@@ -14,6 +14,8 @@ let
     (provider "blake3" "pure-value")
     (provider "libc" "infrastructure")
     (provider "rustc_apfloat" "pure-value")
+    (provider "rustix" "infrastructure")
+    (provider "serde" "pure-value")
     (provider "serde_json" "pure-value")
     (provider "wasmparser" "pure-value")
     (provider "wasmtime" "infrastructure")

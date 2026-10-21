@@ -106,6 +106,8 @@ let
     { package = "blake3"; kind = "pure-value"; }
     { package = "libc"; kind = "infrastructure"; }
     { package = "rustc_apfloat"; kind = "pure-value"; }
+    { package = "rustix"; kind = "infrastructure"; }
+    { package = "serde"; kind = "pure-value"; }
     { package = "serde_json"; kind = "pure-value"; }
     { package = "wasmparser"; kind = "pure-value"; }
     { package = "wasmtime"; kind = "infrastructure"; }
