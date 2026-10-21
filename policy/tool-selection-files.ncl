@@ -127,7 +127,7 @@
   "verification/m5/identity-boundary.rs" = "f3c1e3e94bb39024450f044e34099872a1604975e6249d4b240af14468a734a7",
   "verification/m5/peer/Cargo.lock" = "0d5f4ffc5f42646cc25c539e46c565b95903813ef4cc0fe5256358b3cbf42435",
   "verification/m5/peer/Cargo.toml" = "e9bace4245a7c9bff6b5a6afc972f6f91ecba6ff1250d447f116ee5108860a8a",
-  "verification/m5/pins.json" = "a7414e4bd61cd0e46929c766aab5702514de901f7dd7a52e3b031f4ee9beefc9",
+  "verification/m5/pins.json" = "c11da9e37edfba5b45c4f877144a83695238e19fc07abf4f7341df57e7e90d7e",
   "verification/m6/build.mjs" = "aec94c011163dd42312d5370a4976df73babd63d0cb037342f2e679374c55f83",
   "verification/m6/extraction.mjs" = "dda3dcb311b79830506d8232c542c3b42405ff8962e54e757cb1c584830254e7",
   "verification/m6/gate.mjs" = "0609f69c0d77008e6f35f2382b8aa7edce241fb00a80a323c900b22bfddbb407",
