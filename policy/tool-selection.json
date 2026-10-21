@@ -127,7 +127,7 @@
     "crates/noble-cli/src/core/worker_value.rs": "396391a82737c2bc97b5173eb106457d0a78e914459b24d78f8b2c0b89d376c0",
     "crates/noble-cli/src/main.rs": "cce579085276e623e0ed4290d2e0ae79db0509a90b6f8b7f8ecc61c7403b6fbd",
     "crates/noble-cli/src/workflow/intrinsic.rs": "10e46e5c4b0bce07305991bcca224a3bd2c04842f2517fcd80a5533fb0c62dab",
-    "crates/noble-cli/tests/c_backend.rs": "ee3bc2f8e2f9ba84870f9475971b89cc23ce82dbdd0729bd7e6cdfd316425df2",
+    "crates/noble-cli/tests/c_backend.rs": "5d69ebb2f6dfac975ce00e7b78d8ea8fe7530bff3260bc44a4c510672e53258e",
     "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble": "0bb7e63ef292cfa871f15b6f154a9426cb739fe5185a7098e324c653de84f65e",
     "crates/noble-cli/tests/live_repl.rs": "3385446c7b01ad7b317f5f931c110d1214f84958dc7442767f50438548fd7238",
     "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",

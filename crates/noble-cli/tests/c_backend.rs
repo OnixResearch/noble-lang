@@ -3,9 +3,13 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-// Existing component-tool pin used only for a source syntax diagnostic;
-// this is not a selected C backend compiler, linker, or native build pin.
-const SYNTAX_GCC: &str = "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/gcc";
+// This source syntax diagnostic is not a selected C backend compiler, linker,
+// or native build pin. Resolve the compiler from PATH so the check's declared
+// stdenv.cc is used; a fixed store path from another nixpkgs pin is not a
+// declared input and the Nix sandbox hides it. NOBLE_C11_CC overrides it.
+fn syntax_compiler() -> String {
+    std::env::var("NOBLE_C11_CC").unwrap_or_else(|_| "gcc".to_owned())
+}
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Result<Self, std::io::Error> {
@@ -138,7 +142,7 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             String::from_utf8_lossy(&built.stderr)
         );
         let artifact = out.join("artifact.c");
-        let diagnostic = Command::new(SYNTAX_GCC)
+        let diagnostic = Command::new(syntax_compiler())
             .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
             .arg(&artifact)
             .output()

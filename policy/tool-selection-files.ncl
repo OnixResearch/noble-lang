@@ -216,7 +216,7 @@
   "crates/noble-cli/src/core/worker/process.rs" = "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
   "crates/noble-cli/src/core/worker/protocol.rs" = "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
   "crates/noble-cli/src/main.rs" = "cce579085276e623e0ed4290d2e0ae79db0509a90b6f8b7f8ecc61c7403b6fbd",
-  "crates/noble-cli/tests/c_backend.rs" = "ee3bc2f8e2f9ba84870f9475971b89cc23ce82dbdd0729bd7e6cdfd316425df2",
+  "crates/noble-cli/tests/c_backend.rs" = "5d69ebb2f6dfac975ce00e7b78d8ea8fe7530bff3260bc44a4c510672e53258e",
   "crates/noble-cli/tests/worker_host_child.rs" = "7566565a13f7a812dc671604ce308829b5a7c701a7a95fb5856b7b156163bed4",
   "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble" = "0bb7e63ef292cfa871f15b6f154a9426cb739fe5185a7098e324c653de84f65e",
   "crates/noble-contracts/src/component/bindings.rs" = "b6c15ae0d787db0adb1473c532d0f36f4271ea248eb59d19a367d5dbced47025",
