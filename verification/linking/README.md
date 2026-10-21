@@ -13,7 +13,7 @@ observations, not semantic preservation of Rust, Wasm or the loader.
 
 ## Selected subject
 
-The exact fixture files are in [`fixtures/`](fixtures/):
+The exact fixture files are listed by [`fixtures/subject.json`](fixtures/subject.json):
 
 ```noble
 module LinkCallee@1 [ export split def split [ - 7 ] ]
