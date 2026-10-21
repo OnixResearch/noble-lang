@@ -1,0 +1,6 @@
+# commit 039b5ee1473bae02ec3140308d0023353242a486 check format start 2026-10-21T02:21:08Z
+this derivation will be built:
+  /nix/store/akhb7ci7sk3cfbbsydldg83b4xnpfxhy-noble-format.drv
+building '/nix/store/akhb7ci7sk3cfbbsydldg83b4xnpfxhy-noble-format.drv'...
+/nix/store/hcirzq5zg0l99jd81619s27ikm6i8i5p-noble-format
+# exit 0

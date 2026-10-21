@@ -1,0 +1,20 @@
+{
+  "schema": "noble-linking-execution/v1",
+  "verified": true,
+  "source_commit": "039b5ee1473bae02ec3140308d0023353242a486",
+  "source_tree": "3b3990393ed477348018b033b463f93930392110",
+  "normal_executions": 24,
+  "controls": {
+    "same_signature_wrong_body": true,
+    "same_signature_identity_reuse": true,
+    "reversed_inputs": true,
+    "reversed_results": true,
+    "wrong_return_target": true,
+    "changed_version": true,
+    "changed_dependency_bytes": true,
+    "post_check_callee_substitution": true
+  },
+  "artifact_count": 578,
+  "receipt_sha256": "406d2b94e2484b07b3a6437e5179415bc690e36dc29b2ac1f65d9d7fdc2b13b3"
+}
+

@@ -1,0 +1,282 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "039b5ee1473bae02ec3140308d0023353242a486",
+  "source_tree": "3b3990393ed477348018b033b463f93930392110",
+  "run": "verification/foundation/ci.sh NEW_OUTPUT_DIR --skip-slice (overall=0; Phase 3 host-service slice explicitly skipped)",
+  "raw_location": "/home/brittonr/.cache/noble-issues/issue52-acceptance/final-ci (host-local, not attested by this file)",
+  "raw_sha256": {
+    "check/foundation-check.json": "295a6439bd20febfbb653f167a33388ed8fb70ae66333ec07228d48e68a9e3c9",
+    "linking/linking.json": "406d2b94e2484b07b3a6437e5179415bc690e36dc29b2ac1f65d9d7fdc2b13b3",
+    "linking.log": "67c2dc16170988aa76c481f8e7502da6b6f3fb0b7045b74b4ec380eb8e4b5884",
+    "emi/emi.json": "80a703a2287fc61451b92e74f5372a3c85bb3285923262d0627cd217fe094c68",
+    "emi-replay/emi.json": "420360cd18401da23ca7b2fedfdbf7de9bdcebb5bc130ba269641bf24f7a4774",
+    "emi/minimal-control.json": "8c9a1b2988aa529f30954e9f039b5c8d5b7844cb82b5bce1d66d9381faddd02e",
+    "summary.txt": "de42ea7db766aa9c3642d045c8efed518b6e112a542e028cc96463a33851935d",
+    "verify.log": "1654f1bc6e9919f65766a33a694bfc10d4d86c2b504229bd0a56f1eaa659e108",
+    "emi-verify.log": "34685660cd8a33a18f69471aae191bc6ed71a7ae5343d69f1b2c323b5da24fca",
+    "emi-replay-verify.log": "34685660cd8a33a18f69471aae191bc6ed71a7ae5343d69f1b2c323b5da24fca",
+    "linking-verify.log": "8c8c761438e9d787f1a473717272b01e28918766abcde01a3dc6a42ab25c5605",
+    "stale-receipt-refused.log": "bdac5c9d6dfc312bd96483ef0be346c87d26ea7f899eb6ae83c53fa8d87e8c16",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/format.log": "f54fe43b63a69caff81f5a24218ecd765213be89cf462f8dbab19880f80781db",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/documents.log": "5e186686a7d707d29b9b1dfd7cc846766b358d22959a4fb130447ebf83bb936b",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/cairn.log": "d0944930aa2578a6641f60fb09bb085971892fd5875f81fd5e271e3c1ee33d8c",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/policy.log": "edc93537e70b70529abff4fcaef444cda83ff5422411afa9020097caf2f1859e",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/tool-selection.log": "2dfae958bc59a527bd0c2ba1af2f9c53f23b94849538ab39b8caa8c09d9cd682",
+    "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/summary.tsv": "59f612dd214065baeb6e6eebf6d67e00e1d8cea74d6c0e8d81ff006b9ca7950f",
+    "differential/differential.json": "18e559a8f4f54a8e9b68e578449461a73a61675666cc1b6fe8dd916401f3b867"
+  },
+  "in_repo_sha256": {
+    "foundation-check.json": "295a6439bd20febfbb653f167a33388ed8fb70ae66333ec07228d48e68a9e3c9",
+    "linking.json": "406d2b94e2484b07b3a6437e5179415bc690e36dc29b2ac1f65d9d7fdc2b13b3",
+    "linking-summary.json": "67c2dc16170988aa76c481f8e7502da6b6f3fb0b7045b74b4ec380eb8e4b5884",
+    "emi.json": "80a703a2287fc61451b92e74f5372a3c85bb3285923262d0627cd217fe094c68",
+    "emi-replay.json": "420360cd18401da23ca7b2fedfdbf7de9bdcebb5bc130ba269641bf24f7a4774",
+    "minimal-control.json": "8c9a1b2988aa529f30954e9f039b5c8d5b7844cb82b5bce1d66d9381faddd02e",
+    "ci-summary.txt": "de42ea7db766aa9c3642d045c8efed518b6e112a542e028cc96463a33851935d",
+    "differential-verify.json": "1654f1bc6e9919f65766a33a694bfc10d4d86c2b504229bd0a56f1eaa659e108",
+    "emi-verify.json": "34685660cd8a33a18f69471aae191bc6ed71a7ae5343d69f1b2c323b5da24fca",
+    "emi-replay-verify.json": "34685660cd8a33a18f69471aae191bc6ed71a7ae5343d69f1b2c323b5da24fca",
+    "linking-verify.json": "8c8c761438e9d787f1a473717272b01e28918766abcde01a3dc6a42ab25c5605",
+    "stale-receipt-refused.json": "bdac5c9d6dfc312bd96483ef0be346c87d26ea7f899eb6ae83c53fa8d87e8c16",
+    "nix-format.log": "f54fe43b63a69caff81f5a24218ecd765213be89cf462f8dbab19880f80781db",
+    "nix-documents.log": "5e186686a7d707d29b9b1dfd7cc846766b358d22959a4fb130447ebf83bb936b",
+    "nix-cairn.log": "d0944930aa2578a6641f60fb09bb085971892fd5875f81fd5e271e3c1ee33d8c",
+    "nix-policy.log": "edc93537e70b70529abff4fcaef444cda83ff5422411afa9020097caf2f1859e",
+    "nix-tool-selection.log": "2dfae958bc59a527bd0c2ba1af2f9c53f23b94849538ab39b8caa8c09d9cd682",
+    "nix-summary.tsv": "59f612dd214065baeb6e6eebf6d67e00e1d8cea74d6c0e8d81ff006b9ca7950f",
+    "differential-summary.json": "646c8d1eb192fe80f6906478d39cc985e266f8712fc6bd62e19f1e6065d390df",
+    "document-failure-attribution.json": "a553ff8e5f8af3c49cea45700502b50cf987b822def4a2a74fa1c90bc1ea9e8d"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim",
+    "linking.json": "verbatim",
+    "linking-summary.json": "verbatim runner stdout",
+    "differential-summary.json": "compacted (per-case rows removed)",
+    "emi.json": "verbatim",
+    "emi-replay.json": "verbatim",
+    "minimal-control.json": "verbatim",
+    "ci-summary.txt": "verbatim",
+    "*-verify.json": "verbatim verifier stdout",
+    "stale-receipt-refused.json": "verbatim verifier stdout",
+    "nix-*": "verbatim selected Nix gate logs and summary, including the failing documents gate",
+    "document-failure-attribution.json": "offline comparison of the recorded failure with the baseline tracked sources; not a rerun"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 196,
+      "linking_theorem_count": 48,
+      "clean_source": true,
+      "transitive_axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "implementation_theorem": false
+    },
+    "slice": {
+      "skipped": true,
+      "reason": "issue #52 covers the bounded pure one-call linking pilot, not a new Phase 3 host-service receipt"
+    },
+    "linking": {
+      "schema": "noble-linking-execution/v1",
+      "receipt": "/home/brittonr/.cache/noble-issues/issue52-acceptance/final-ci/linking/linking.json",
+      "source_commit": "039b5ee1473bae02ec3140308d0023353242a486",
+      "source_tree": "3b3990393ed477348018b033b463f93930392110",
+      "normal_executions": 24,
+      "controls": {
+        "same_signature_wrong_body": true,
+        "same_signature_identity_reuse": true,
+        "reversed_inputs": true,
+        "reversed_results": true,
+        "wrong_return_target": true,
+        "changed_version": true,
+        "changed_dependency_bytes": true,
+        "post_check_callee_substitution": true
+      },
+      "artifact_count": 578,
+      "receipt_sha256": "406d2b94e2484b07b3a6437e5179415bc690e36dc29b2ac1f65d9d7fdc2b13b3"
+    },
+    "differential": {
+      "seed": "15",
+      "rows": 163,
+      "all_matched": true,
+      "opt_on_off_same_stack": true,
+      "mutation_controls_detected": 7,
+      "checker_property_lanes": {
+        "command": "cargo test --locked --offline -p noble-kernel --test property",
+        "exit": 0,
+        "summary": [
+          "test oracle_table_covers_every_pool_word ... ok",
+          "test malformed_candidates_never_panic_or_accept ... ok",
+          "test generated_candidates_agree_with_independent_oracle ... ok",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s"
+        ],
+        "generated_oracle_candidates": 1000,
+        "malformed_candidates": 200,
+        "coverage_class": "checker acceptance (kernel), NOT execution semantics"
+      }
+    },
+    "emi": {
+      "seed": "53",
+      "counts": {
+        "generated_pairs": 19,
+        "eligible": 16,
+        "refused": 3,
+        "branch_kinds": {
+          "case": 5,
+          "if": 14
+        },
+        "selected_branches": {
+          "case/0": 3,
+          "case/1": 2,
+          "if/0": 9,
+          "if/1": 5
+        },
+        "transformations": {
+          "insert-neutral": 4,
+          "prune-neutral": 4,
+          "replace-constant": 5,
+          "replace-operator": 4,
+          "unsupported-word": 1,
+          "wrong-branch-type": 1
+        },
+        "eligibility": {
+          "eligible": 16,
+          "model-ineligible": 3
+        },
+        "eligible_branch_kinds": {
+          "case": 4,
+          "if": 12
+        },
+        "eligible_transformations": {
+          "insert-neutral": 4,
+          "prune-neutral": 4,
+          "replace-constant": 4,
+          "replace-operator": 4
+        },
+        "opt_modes": {
+          "off": 32,
+          "on": 32
+        },
+        "nominal_kernel_checked_subjects": 32,
+        "kernel_checked_subjects": 62,
+        "controls": 7
+      },
+      "all_matched": true,
+      "controls_detected": 7
+    },
+    "emi_replay": {
+      "counts": {
+        "generated_pairs": 1,
+        "eligible": 1,
+        "refused": 0,
+        "branch_kinds": {
+          "if": 1
+        },
+        "selected_branches": {
+          "if/0": 1
+        },
+        "transformations": {
+          "replace-constant": 1
+        },
+        "eligibility": {
+          "eligible": 1
+        },
+        "eligible_branch_kinds": {
+          "if": 1
+        },
+        "eligible_transformations": {
+          "replace-constant": 1
+        },
+        "opt_modes": {
+          "off": 2,
+          "on": 2
+        },
+        "nominal_kernel_checked_subjects": 2,
+        "kernel_checked_subjects": 4,
+        "controls": 1
+      },
+      "all_matched": true,
+      "controls_detected": 1
+    },
+    "ci_stages": {
+      "check": "0",
+      "slice": "skipped",
+      "differential": "0",
+      "verify": "0",
+      "emi": "0",
+      "emi-verify": "0",
+      "emi-replay": "0",
+      "emi-replay-verify": "0",
+      "linking": "0",
+      "linking-verify": "0",
+      "stale-receipt-refused": "1",
+      "overall": "0"
+    },
+    "selected_nix_gates": [
+      {
+        "name": "format",
+        "result": "pass",
+        "exit": 0,
+        "duration": "24s",
+        "log": "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/format.log",
+        "output": "/nix/store/hcirzq5zg0l99jd81619s27ikm6i8i5p-noble-format"
+      },
+      {
+        "name": "documents",
+        "result": "FAIL",
+        "exit": 1,
+        "duration": "20s",
+        "log": "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/documents.log",
+        "output": null
+      },
+      {
+        "name": "cairn",
+        "result": "pass",
+        "exit": 0,
+        "duration": "16s",
+        "log": "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/cairn.log",
+        "output": "/nix/store/qv8cys2iwv3fgddlqvwsb8nlzv1j3cxk-noble-cairn"
+      },
+      {
+        "name": "policy",
+        "result": "pass",
+        "exit": 0,
+        "duration": "16s",
+        "log": "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/policy.log",
+        "output": "/nix/store/05i8x90rmkcaz7yvllf6mlsfjmqw2w4h-noble-policy-freshness"
+      },
+      {
+        "name": "tool-selection",
+        "result": "pass",
+        "exit": 0,
+        "duration": "15s",
+        "log": "/home/brittonr/.cache/noble-issues/issue52-acceptance/nix-final/039b5ee1473bae02ec3140308d0023353242a486/tool-selection.log",
+        "output": "/nix/store/ib8giswpvy0s40pikkaf1hhjyyqna9zl-noble-tool-selection"
+      }
+    ],
+    "documents": {
+      "exit": 1,
+      "tests_passed": 91,
+      "tests_failed": 18,
+      "unique_broken_links": 17,
+      "all_links_present_in_baseline": true,
+      "missing_historical_file_targets": 15,
+      "directory_only_targets": 2,
+      "baseline_commit": "62b6362e7c05458cc8c4fbdddf781208c8392db0",
+      "attribution": "document-failure-attribution.json",
+      "all_selected_nix_gates_passed": false
+    }
+  },
+  "coverage": {
+    "model": "Lean-checked bounded normal-return horizontal linking and separate vertical composition; exact subjects, ordered scalar interface, typed prefix and private engine ABI state",
+    "execution": "finite actual same-artifact named-call/continuation path with opt off/on; identity and mutation controls",
+    "open": [
+      "C8 and O1/O3/O7 implementation correspondence are premises, not discharged by these receipts",
+      "general compiler correctness",
+      "quota/abort behavior",
+      "resource calls, live dispatch, async, recursion, adversarial concurrent contexts"
+    ]
+  },
+  "reuse": "Historical evidence only for the named tested commit and tree. Stale on the evidence-only commit that adds this packet; successful verifier stdout does not authorize reuse on a later tree."
+}

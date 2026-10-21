@@ -1,0 +1,6 @@
+# commit 039b5ee1473bae02ec3140308d0023353242a486 check policy start 2026-10-21T02:22:08Z
+this derivation will be built:
+  /nix/store/jxdi4vps4rwwj95r26zy7qvx3rla1yx7-noble-policy-freshness.drv
+building '/nix/store/jxdi4vps4rwwj95r26zy7qvx3rla1yx7-noble-policy-freshness.drv'...
+/nix/store/05i8x90rmkcaz7yvllf6mlsfjmqw2w4h-noble-policy-freshness
+# exit 0

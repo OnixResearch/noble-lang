@@ -1,0 +1,151 @@
+{
+  "schema": "noble-document-failure-attribution/v1",
+  "tested_commit": "039b5ee1473bae02ec3140308d0023353242a486",
+  "tested_tree": "3b3990393ed477348018b033b463f93930392110",
+  "baseline_commit": "62b6362e7c05458cc8c4fbdddf781208c8392db0",
+  "documents_exit": 1,
+  "tests": {
+    "passed": 91,
+    "failed": 18,
+    "total": 109
+  },
+  "method": "Offline attribution of the recorded documents.log failure; not a baseline test run. Each failing local link is present in the baseline source and its destination is absent from the baseline tracked-file set. The two directory-only links are distinguished from absent archive files.",
+  "broken_links": [
+    {
+      "file": "verification/m1-runbook.md",
+      "target": "../.cairn/archive/2026-09-15-m1-workspace/tasks.md",
+      "resolved": ".cairn/archive/2026-09-15-m1-workspace/tasks.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "verification/m3-fragment.md",
+      "target": "../.cairn/archive/2026-09-19-m3-checker-coverage/design.md",
+      "resolved": ".cairn/archive/2026-09-19-m3-checker-coverage/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "verification/calculator-v1/woxi/README.md",
+      "target": "helper/",
+      "resolved": "verification/calculator-v1/woxi/helper/",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": true
+    },
+    {
+      "file": "verification/foundation/receipts/README.md",
+      "target": "3d5ccc2/",
+      "resolved": "verification/foundation/receipts/3d5ccc2/",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": true
+    },
+    {
+      "file": "verification/ngraph/README.md",
+      "target": "../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "resolved": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "verification/component-review.md",
+      "target": "../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md",
+      "resolved": ".cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "verification/m1-controls.md",
+      "target": "../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md",
+      "resolved": ".cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/design.md",
+      "target": "../../archive/2026-10-16-numeric-graph-profile/design.md",
+      "resolved": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/proposal.md",
+      "target": "../../archive/2026-10-16-numeric-graph-profile/design.md",
+      "resolved": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/DECISIONS.md",
+      "target": "../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md",
+      "resolved": ".cairn/archive/2026-09-25-m7-syndicate-service/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/DECISIONS.md",
+      "target": "../.cairn/archive/2026-09-26-m8-choreography-projection/design.md",
+      "resolved": ".cairn/archive/2026-09-26-m8-choreography-projection/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/DECISIONS.md",
+      "target": "../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md",
+      "resolved": ".cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/ROADMAP.md",
+      "target": "../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "resolved": ".cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/ROADMAP.md",
+      "target": "../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md",
+      "resolved": ".cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/ROADMAP.md",
+      "target": "../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md",
+      "resolved": ".cairn/archive/2026-09-25-m7-syndicate-service/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "specs/README.md",
+      "target": "../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "resolved": ".cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    },
+    {
+      "file": "README.md",
+      "target": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "resolved": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "link_present_in_baseline": true,
+      "target_is_baseline_tracked_file": false,
+      "has_tracked_descendants": false
+    }
+  ]
+}

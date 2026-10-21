@@ -1,0 +1,6 @@
+# commit 039b5ee1473bae02ec3140308d0023353242a486 check tool-selection start 2026-10-21T02:22:24Z
+this derivation will be built:
+  /nix/store/5azac7477pq6q8bvr113bmm47119wph6-noble-tool-selection.drv
+building '/nix/store/5azac7477pq6q8bvr113bmm47119wph6-noble-tool-selection.drv'...
+/nix/store/ib8giswpvy0s40pikkaf1hhjyyqna9zl-noble-tool-selection
+# exit 0
