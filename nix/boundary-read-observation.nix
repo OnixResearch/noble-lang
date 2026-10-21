@@ -9,7 +9,6 @@
 let
   read = name: builtins.fromJSON (builtins.readFile (directory + "/" + name));
   has = name: builtins.pathExists (directory + "/" + name);
-  precollection = case.observation == "precollection";
   denyStatus = if has "deny/status.json" then read "deny/status.json" else { };
   denyRaw = if has "deny/results.jsonl" then builtins.readFile (directory + "/deny/results.jsonl") else "";
   lines = builtins.filter (line: builtins.isString line && line != "") (builtins.split "\n" denyRaw);
@@ -18,6 +17,7 @@ let
     if
       case.observation == "clean"
       || case.observation == "role_edge"
+      || case.observation == "source_role"
       || (case.observation == "policy" && case.deny_lint == "")
     then
       "deny"
@@ -27,23 +27,13 @@ let
     deny_exit = read "deny-exit.json";
     deny_status = denyStatus;
     deny_findings =
-      if precollection then
-        [ ]
-      else if denyStatus ? phases then
+      if denyStatus ? phases then
         (builtins.fromJSON denyRaw).lint_findings
       else
         map builtins.fromJSON lines;
   }
   // (
-    if precollection then
-      {
-        precollection = {
-          exit = read "deny-exit.json";
-          diagnostic = builtins.readFile (directory + "/precollection-diagnostic.txt");
-          status_published = has "deny/status.json";
-        };
-      }
-    else if compilerOnly then
+    if compilerOnly then
       { }
     else
       {

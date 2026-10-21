@@ -85,12 +85,12 @@ let
       positive = case.observation == "clean";
       compilerOnly = case.observation == "compiler_only";
       policyBlocked = case.observation == "policy";
-      precollection = case.observation == "precollection";
       auxiliary =
         !positive
         && !compilerOnly
         && (!policyBlocked || case.deny_lint != "")
-        && case.observation != "role_edge";
+        && case.observation != "role_edge"
+        && case.observation != "source_role";
       usesRandomnessDependency = builtins.elem case.mutation [
         "randomness"
         "randomness_dependency"
@@ -195,12 +195,7 @@ let
         ''}
         # Preserve raw context even when replay or comparison rejects the run.
         if [ -d .octet ]; then tar -cf "$out/raw-compiler-observations.tar" .octet; fi
-        ${pkgs.lib.optionalString precollection ''
-          # Pre-collection rejection: capture the diagnostic and confirm no bundle exists.
-          cat "$out/deny.stderr" > "$out/precollection-stderr.txt"
-          cat "$out/deny.stderr" > "$out/precollection-diagnostic.txt"
-        ''}
-        ${pkgs.lib.optionalString (!compilerOnly && !precollection) ''
+        ${pkgs.lib.optionalString (!compilerOnly) ''
           if ! cargo-octet artifact verify --artifact-dir "$out/${
             if auxiliary then "observation" else "deny"
           }" \

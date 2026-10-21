@@ -7,12 +7,11 @@ let Case = {
   needs_std | Bool,
   deny_lint | String,
   deny_source | String | default = "",
-  observation | [| 'clean, 'effect, 'call, 'type, 'compiler_only, 'role_edge, 'policy, 'precollection |],
+  observation | [| 'clean, 'effect, 'call, 'type, 'compiler_only, 'role_edge, 'policy, 'source_role |],
   expected | String,
   edge_message | String | default = "",
   expected_message | String | default = "",
   expected_scope | String | default = "",
-  expected_secondary | String | default = "",
 } in
 let case = fun case_id mutation_value statement_value std_value lint_value observation_value expected_value => {
   id = case_id, base = 'workspace, mutation = mutation_value, statement = statement_value,
@@ -174,7 +173,11 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     case "unsafe-function" 'unsafe_function "" false "unsafe_code" 'compiler_only "",
     case "unsafe-foreign-declaration" 'unsafe_foreign_declaration "" false "unsafe_code" 'compiler_only "",
     case "host-return" 'host_return "" true "resource_return_from_core" 'type "std::fs::File",
-    case "test-source-import" 'test_source_import "" false "" 'precollection "invalid Cargo diagnostic path",
+    # The selected Octet collects the escaping #[path] import and refuses it
+    # as an integration failure: the test-labelled source conflicts with both
+    # kernel production observations. The earlier pin refused it before
+    # collection with an invalid diagnostic path.
+    case "test-source-import" 'test_source_import "" false "" 'source_role "source-role-unit-mismatch",
     (case "no-std-test-witness" 'no_std_test_witness "" false "fallible_int_fallback" 'policy "no-std-obligation") & {
       deny_source | force = "crates/noble-kernel/src/acceptance/mod.rs",
       expected_message | force = "lacks compiler-confirmed crate:no-std",

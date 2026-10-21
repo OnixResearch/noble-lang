@@ -50,8 +50,9 @@ With the full checker present, that mutation also makes the deny-all run reject 
 
 
 The `test-source-import` case appends a `#[path]` import to the kernel root that resolves through `..` into a test-labelled directory.
-The collector rejects the escaping diagnostic path before collection, so no status, receipt, or artifact bundle exists.
-The case requires exit 2, the exact diagnostic substrings, and the absence of a published bundle.
+The selected Octet collects that escaping import and refuses it in the architecture phase: the lint phase is clean, the receipt status is `integration-failure`, and each of the two kernel production observations has an open `source-role-unit-mismatch` finding naming the imported test source.
+The case requires deny-all exit 2, a successful Cargo process, a valid artifact replay, exactly those two findings and no other finding.
+The earlier Octet pin refused the escaping diagnostic path before collection; that pre-collection observation mode is retired with it.
 
 ## Fixture matrix
 
@@ -74,7 +75,7 @@ Each row is one case on `x86_64-unknown-linux-gnu`, with the selected quality Ru
 | `unsafe-function` | Compiler `unsafe_code` error at the kernel source | Matched |
 | `unsafe-foreign-declaration` | Compiler `unsafe_code` error for a public foreign `extern` declaration at the kernel source | Matched |
 | `host-return` | `resource_return_from_core`, resolved `std::fs::File` type in both kernel units | Matched |
-| `test-source-import` | Rejection before collection: a production root importing test-labelled source by a parent-relative path | Matched |
+| `test-source-import` | Architecture integration failure: two `source-role-unit-mismatch` findings for a production root importing test-labelled source by a parent-relative path | Matched |
 | `no-std-test-witness` | `no-std-obligation`, the kernel scope lacks compiler-confirmed `crate:no_std` when the attribute holds only outside the test configuration | Matched |
 | `reverse-dependency` | `forbidden-role-edge`, successful compilation, blocked architecture gate and valid replay | Matched |
 

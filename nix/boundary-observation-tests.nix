@@ -197,14 +197,30 @@ let
     };
     replay.status = "valid";
   };
-  precollectionInput = {
+  # Collected escaping #[path] import: lint clean, architecture integration
+  # failure, one source-role conflict per kernel production observation.
+  sourceRoleInput = clean // {
     deny_exit = 2;
-    deny_status = { };
-    deny_findings = [ ];
-    precollection = {
-      exit = 2;
-      diagnostic = "error: invalid Cargo diagnostic path: capability locator `${policy.test_source.escaped}` contains `..`\n";
-      status_published = false;
+    deny_status = clean.deny_status // {
+      status = "integration-failure";
+      phases = {
+        architecture.status = "integration-failure";
+        lint.status = "clean";
+      };
+    };
+    observation_exit = 2;
+    observation_status = {
+      cargo_process_exit.code = 0;
+      exit_code = 2;
+    };
+    receipt = clean.receipt // {
+      status = "integration-failure";
+      findings = map (u: {
+        code = "source-role-unit-mismatch";
+        status = "open";
+        unit_id = null;
+        message = "source `${policy.test_source.path}` conflicts with production observation `${u.unit_id}`";
+      }) kernels;
     };
   };
   extraUnits = builtins.genList (
@@ -436,28 +452,61 @@ let
       policyInput // { deny_exit = 0; }
     ) "required-deny-all-result")
     (
-      assert (evaluate cases.test-source-import precollectionInput).valid;
-      "production import of test source rejects before collection"
+      assert (evaluate cases.test-source-import sourceRoleInput).valid;
+      "production import of test source is a source-role integration failure"
     )
-    (reject "published test-source bundle" cases.test-source-import (
-      precollectionInput // { precollection = precollectionInput.precollection // { status_published = true; }; }
-    ) "required-deny-all-result")
-    (reject "unrelated precollection diagnostic" cases.test-source-import (
-      precollectionInput
+    (reject "clean architecture is not a source-role refusal" cases.test-source-import (
+      sourceRoleInput
       // {
-        precollection = precollectionInput.precollection // {
-          diagnostic = "error: unrelated compiler failure\n";
+        deny_status = sourceRoleInput.deny_status // {
+          phases = sourceRoleInput.deny_status.phases // { architecture.status = "clean"; };
         };
       }
     ) "required-deny-all-result")
-    (reject "missing escaped path" cases.test-source-import (
-      precollectionInput
+    (reject "compiler failure is not a source-role refusal" cases.test-source-import (
+      sourceRoleInput
       // {
-        precollection = precollectionInput.precollection // {
-          diagnostic = "error: invalid Cargo diagnostic path: contains `..`\n";
-        };
+        deny_status = sourceRoleInput.deny_status // { cargo_process_exit.code = 101; };
       }
     ) "required-deny-all-result")
+    (reject "unrelated source-role path" cases.test-source-import (
+      sourceRoleInput
+      // {
+        receipt = sourceRoleInput.receipt // {
+          findings = map (
+            f: f // { message = "source `crates/noble-kernel/src/lib.rs` conflicts"; }
+          ) sourceRoleInput.receipt.findings;
+        };
+      }
+    ) "expected-boundary-observation")
+    (reject "one kernel observation is not both" cases.test-source-import (
+      sourceRoleInput
+      // {
+        receipt = sourceRoleInput.receipt // { findings = [ (head sourceRoleInput.receipt.findings) ]; };
+      }
+    ) "expected-boundary-observation")
+    (reject "an extra finding is not the source-role refusal" cases.test-source-import (
+      sourceRoleInput
+      // {
+        receipt = sourceRoleInput.receipt // {
+          findings = sourceRoleInput.receipt.findings ++ [
+            {
+              code = "forbidden-role-edge";
+              status = "open";
+              message = "unrelated";
+            }
+          ];
+        };
+      }
+    ) "expected-boundary-observation")
+    (reject "waived source-role finding" cases.test-source-import (
+      sourceRoleInput
+      // {
+        receipt = sourceRoleInput.receipt // {
+          findings = map (f: f // { status = "waived"; }) sourceRoleInput.receipt.findings;
+        };
+      }
+    ) "expected-boundary-observation")
     (reject "Cargo cycle is not role enforcement" cases.reverse-dependency (
       reverseInput
       // {

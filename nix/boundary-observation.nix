@@ -41,7 +41,7 @@ let
   compilerOnly = case.observation == "compiler_only";
   roleEdge = case.observation == "role_edge";
   policyBlocked = case.observation == "policy";
-  precollection = case.observation == "precollection";
+  sourceRole = case.observation == "source_role";
   ds = observed.deny_status;
   lint =
     f:
@@ -66,13 +66,14 @@ let
       && ds.cargo_process_exit.code == 0
       && ds.phases.architecture.status == "blocked"
       && ds.phases.lint.status == "clean"
-    else if precollection then
+    else if sourceRole then
+      # Collection completes and the lint phase is clean; the architecture
+      # phase refuses the test-labelled source as an integration failure.
       observed.deny_exit == 2
-      && observed.precollection.exit == 2
-      && hasInfix case.expected observed.precollection.diagnostic
-      && hasInfix case.expected_secondary observed.precollection.diagnostic
-      && hasInfix policy.test_source.escaped observed.precollection.diagnostic
-      && !observed.precollection.status_published
+      && ds.status == "integration-failure"
+      && ds.cargo_process_exit.code == 0
+      && ds.phases.lint.status == "clean"
+      && ds.phases.architecture.status == "integration-failure"
     else
       observed.deny_exit == 2
       && ds.status == "integration-failure"
@@ -122,14 +123,23 @@ let
     && (case.edge_message == "" || f.message == case.edge_message)
     && any (u: u.unit_id == f.unit_id) kernels
   ) receipt.findings;
+  # One open source-role conflict per kernel production observation, each
+  # naming the imported test-labelled source.
+  sourceRoleFindings = filter (
+    f:
+    f.code == case.expected
+    && f.status == "open"
+    && hasInfix "source `${policy.test_source.path}`" (f.message or "")
+  ) receipt.findings;
   observationValid =
     if positive then
       receipt.status == "clean" && receipt.findings == [ ]
     else if roleEdge then
       receipt.status == "blocked" && edgeFinding
-    else if precollection then
-      # No artifact bundle exists. Rejection happens before collection.
-      true
+    else if sourceRole then
+      receipt.status == "integration-failure"
+      && builtins.length sourceRoleFindings == builtins.length kernels
+      && builtins.length receipt.findings == builtins.length sourceRoleFindings
     else if policyBlocked then
       receipt.status == "blocked"
       && any (
@@ -144,16 +154,11 @@ let
       && (case.observation != "effect" || (receipt.status == "blocked" && all effectFinding kernels));
   diagnostics =
     require denyValid "required-deny-all-result"
+    ++ require (
+      ds.metadata.toolchain == "${selection.configuration.quality_rust}-${selection.configuration.target}"
+    ) "deny-toolchain"
     ++ (
-      if precollection then
-        [ ]
-      else
-        require (
-          ds.metadata.toolchain == "${selection.configuration.quality_rust}-${selection.configuration.target}"
-        ) "deny-toolchain"
-    )
-    ++ (
-      if compilerOnly || precollection then
+      if compilerOnly then
         [ ]
       else
         require (observed.replay.status == "valid") "artifact-replay"
@@ -173,15 +178,25 @@ let
         ++ require (builtins.length kernels == 2 && all itemPresent kernels) "kernel-ownership"
         ++ require (
           receipt.mode == "gate"
-          && elem receipt.status [
-            "clean"
-            "blocked"
-          ]
+          && elem receipt.status (
+            [
+              "clean"
+              "blocked"
+            ]
+            ++ (if sourceRole then [ "integration-failure" ] else [ ])
+          )
         ) "architecture-mode"
         ++ require (
           observed.observation_status.cargo_process_exit.code == 0
           && observed.observation_exit == observed.observation_status.exit_code
-          && observed.observation_exit == (if receipt.status == "clean" then 0 else 1)
+          && observed.observation_exit == (
+            if receipt.status == "clean" then
+              0
+            else if receipt.status == "integration-failure" then
+              2
+            else
+              1
+          )
         ) "observation-process"
         ++ require observationValid "expected-boundary-observation"
     );
