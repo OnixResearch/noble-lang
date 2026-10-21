@@ -143,13 +143,18 @@ let
         tar -cf "$out/source.tar" Cargo.toml Cargo.lock rust-toolchain.toml dylint.toml crates policy
         ${pkgs.lib.optionalString (case.base == "acyclic_shell") ''
           # Issue #27: the acyclic-shell base adds two lib units beyond the reviewed
-          # 88-unit workspace roster. This fixture alone re-exports the architecture
-          # policy at a raised capacity with the same deterministic exporter the
-          # reviewed check uses, so the export manifest stays consistent. Every other
-          # case keeps the reviewed 88.
+          # workspace roster. This fixture alone re-exports the architecture policy
+          # at the reviewed capacity plus two with the same deterministic exporter
+          # the reviewed check uses, so the export manifest stays consistent. Every
+          # other case keeps the reviewed capacity. The bump is derived from the
+          # policy so a renewed roster cannot silently leave this fixture behind.
           cp policy/architecture.ncl "$out/architecture-acyclic.ncl"
-          sed -i 's/max_units = 88,/max_units = 90,/; s/max_shards = 88,/max_shards = 90,/' \
+          reviewed_units=$(grep -oE '^    max_units = [0-9]+,' policy/architecture.ncl | grep -oE '[0-9]+')
+          reviewed_shards=$(grep -oE '^    max_shards = [0-9]+,' policy/architecture.ncl | grep -oE '[0-9]+')
+          test -n "$reviewed_units" && test "$reviewed_units" = "$reviewed_shards"
+          sed -i "s/^    max_units = $reviewed_units,/    max_units = $((reviewed_units + 2)),/; s/^    max_shards = $reviewed_shards,/    max_shards = $((reviewed_shards + 2)),/" \
             "$out/architecture-acyclic.ncl"
+          grep -qE "^    max_units = $((reviewed_units + 2)),$" "$out/architecture-acyclic.ncl"
           mv "$out/architecture-acyclic.ncl" policy/architecture.ncl
           # The exporter reads its --output file, so export the policy first and
           # then derive the manifest from it, exactly as the reviewed check does.

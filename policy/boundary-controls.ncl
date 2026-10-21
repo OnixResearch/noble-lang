@@ -36,14 +36,17 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     escaped | String = "crates/noble-kernel/src/../tests/support/production_import.rs",
     module | String = "production_import",
   },
-  # Reviewed from the complete 88-unit collection of 5406170, rebound to
-  # cd76c608 by identical source/manifest/tool context and Cargo target discovery.
-  # See verification/main-gates/boundary-roster-20261016.json. Exact equality
-  # remains mandatory; the separate acyclic-shell fixture still adds two units.
+  # Renewed to the complete 96-unit collection of 9c62cafa (expected=96,
+  # observed=96, status=complete): the 88 units reviewed in
+  # verification/main-gates/boundary-roster-20261016.json, noble-ngraph's
+  # retained_bytes test (#31) and the seven integration tests merged on
+  # 2026-10-21. Exact equality remains mandatory; the separate acyclic-shell
+  # fixture still adds two units.
   units | Array String = [
     "noble-cli:bin+test:crates/noble-cli/src/main.rs:composition-root",
     "noble-cli:bin:crates/noble-cli/src/main.rs:composition-root",
     "noble-cli:test+test:crates/noble-cli/tests/build.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/c_backend.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/calculator_engine.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/core.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/editor.rs:test",
@@ -60,6 +63,9 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-cli:test+test:crates/noble-cli/tests/named_v2.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/ngraph.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/smoke.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/worker_host_child.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/worker_scalar.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/worker_typed.rs:test",
     "noble-contracts:lib+test:crates/noble-contracts/src/lib.rs:domain-core",
     "noble-contracts:lib:crates/noble-contracts/src/lib.rs:domain-core",
     "noble-contracts:test+test:crates/noble-contracts/tests/companion.rs:test",
@@ -111,6 +117,7 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-ngraph:test+test:crates/noble-ngraph/tests/format_graph.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/format_values.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/ir_check.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/retained_bytes.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/snapshot_file.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/soft_float.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/train_admission.rs:test",
@@ -124,10 +131,13 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-wasm:test+test:crates/noble-wasm/tests/calculator_numeric_paths.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/calculator_profile.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/checked_u64.rs:test",
+    "noble-wasm:test+test:crates/noble-wasm/tests/core_live_code_owner.rs:test",
+    "noble-wasm:test+test:crates/noble-wasm/tests/declared_text.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/forged_effects.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/live_slot_admission.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/live_slot_artifact.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/nominal.rs:test",
+    "noble-wasm:test+test:crates/noble-wasm/tests/signed_self.rs:test",
     "noble-wasm:test+test:crates/noble-wasm/tests/text_cursor_reserved.rs:test",
   ],
   acyclic_extra_units | Array String = [
