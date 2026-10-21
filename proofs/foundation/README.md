@@ -474,6 +474,20 @@ Host refusal test does not close that edge. No arbitrary-host, async, reentrant,
 shared-memory or whole-engine isolation claim, conformance promotion, or
 proof-ledger change follows from this pilot. The completed #9 design stays closed.
 
+The [retained pilot evidence](../../verification/host-locality/evidence-71e4504.json)
+binds clean source `71e4504bb82fdab174a2650280a21e69f3979611`: 43 locality
+theorems, five reused M5 lemmas, 10 Wasmtime cases and the direct Host controls.
+Its identity check also rejects altered WIT, raw proof output, proof-source
+binding and source revision. Replay or verify from that exact clean revision;
+the subsequent evidence/documentation commit is not a new execution or proof run.
+
+The pinned gate sweep is **12 passed, 2 failed**, not global acceptance.
+`documents` retains 17 inherited local-link diagnostics (15 archived-file
+references and two directory links); `boundary-controls` fails the
+`acyclic-shell` artifact replay without retaining the early gate's stderr.
+Both failures and the earlier remote-builder failures remain in the evidence;
+no document, fixture, capacity, policy or acceptance rule was weakened.
+
 ## Phase 2: law/obligation matrix (pure MC1 model)
 
 Observation relations are kept separate:
