@@ -144,6 +144,7 @@ macro_rules! attempt {
 
 mod backend;
 mod build;
+mod c_backend;
 mod calculator;
 mod component;
 mod core;
@@ -207,6 +208,35 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "worker")
+        && arguments
+            .get(1)
+            .is_some_and(|argument| argument == "program")
+    {
+        return core::worker_program::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "worker")
+        && arguments.get(1).is_some_and(|argument| argument == "typed")
+    {
+        return core::worker_typed::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "worker")
+        && arguments.get(1).is_some_and(|argument| argument == "shell")
+    {
+        return core::worker_shell::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "worker")
+    {
+        return core::worker_scalar::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "run" || argument == "session" || argument == "compile")
     {
         return core::entry::run(&arguments);
@@ -245,7 +275,22 @@ fn main() -> std::process::ExitCode {
         .first()
         .is_some_and(|argument| argument == "build")
     {
+        if arguments.iter().any(|argument| argument == "--target")
+            || arguments.iter().any(|argument| argument == "--native")
+        {
+            return c_backend::run(&arguments);
+        }
         return build::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "execute")
+        && arguments.iter().any(|argument| argument == "--target")
+    {
+        eprintln!(
+            "native C execution is unavailable: no selected sandbox or source-to-ELF admission"
+        );
+        return std::process::ExitCode::from(2);
     }
     if arguments
         .first()

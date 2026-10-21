@@ -53,6 +53,169 @@ pub struct CheckedSelectedTarget<'a> {
     root: noble_kernel::untrusted::Checked,
     body: noble_kernel::untrusted::Checked,
     tree: &'a super::Tree,
+    name: &'a str,
+    /// Candidate NodeIds are compacted during inference; the source replay
+    /// retains authored and generated lexical NodeIds in a separate arena.
+    candidate_to_lexical: alloc::vec::Vec<u32>,
+    generated: core::ops::Range<u32>,
+    witnesses: alloc::vec::Vec<super::locals::GeneratedWitness>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CheckedGeneratedWitness {
+    generation: &'static str,
+    occurrence_node: Option<u32>,
+    binder_node: Option<u32>,
+}
+
+impl CheckedGeneratedWitness {
+    pub const fn generation(&self) -> &'static str {
+        self.generation
+    }
+    pub const fn occurrence_node(&self) -> Option<u32> {
+        self.occurrence_node
+    }
+    pub const fn binder_node(&self) -> Option<u32> {
+        self.binder_node
+    }
+}
+
+pub enum CheckedLexicalKind<'a> {
+    I64(i64),
+    Builtin(u32),
+    Quotation(&'a [u32]),
+}
+
+pub struct CheckedLexicalNode<'a> {
+    pub kind: CheckedLexicalKind<'a>,
+    pub authored_span: Option<crate::Span>,
+    pub generated_witness: Option<CheckedGeneratedWitness>,
+}
+
+pub struct CheckedOperationSite {
+    pub lexical_node: u32,
+    pub authored_span: Option<crate::Span>,
+    pub generated_witness: Option<CheckedGeneratedWitness>,
+}
+
+fn candidate_to_lexical(
+    candidate: &noble_kernel::untrusted::Candidate,
+    tree: &super::Tree,
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<u32>, SourceProofRefusal> {
+    use noble_kernel::untrusted::Node;
+    use SourceProofRefusal as Refusal;
+    let mut mapping = alloc::vec![u32::MAX; candidate.nodes.len()];
+    let mut pairs = alloc::vec::Vec::new();
+    if candidate.body.len() != tree.body.len() {
+        return Err(Refusal::MismatchedSource);
+    }
+    pairs.extend(
+        candidate
+            .body
+            .iter()
+            .zip(&tree.body)
+            .map(|(checked, source)| (checked.0, *source)),
+    );
+    while let Some((checked, lexical)) = pairs.pop() {
+        let slot = mapping
+            .get_mut(usize::try_from(checked).map_err(|_| Refusal::MismatchedSource)?)
+            .ok_or(Refusal::MismatchedSource)?;
+        if *slot != u32::MAX {
+            return Err(Refusal::MismatchedSource);
+        }
+        *slot = lexical;
+        let source = tree.node(lexical).map_err(|_| Refusal::MismatchedSource)?;
+        meter
+            .charge(1, source.span)
+            .map_err(|_| Refusal::MismatchedSource)?;
+        let checked = candidate
+            .nodes
+            .get(checked as usize)
+            .ok_or(Refusal::MismatchedSource)?;
+        match (&source.kind, checked) {
+            (super::Kind::Literal(a), Node::Literal { lit: b, .. }) if a == b => {}
+            (
+                super::Kind::Text(_),
+                Node::Literal {
+                    lit: noble_kernel::untrusted::Lit::Text,
+                    ..
+                },
+            ) => {}
+            (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
+                if *a == def.0 => {}
+            (super::Kind::Call(super::Target::Named(_)), Node::Invocation { .. }) => {}
+            (super::Kind::Call(super::Target::SelfOwner), Node::SignedSelf { .. }) => {}
+            (super::Kind::Quotation(source_body), Node::Quotation { body, .. })
+                if source_body.len() == body.len() =>
+            {
+                pairs.extend(
+                    body.iter()
+                        .zip(source_body)
+                        .map(|(checked, source)| (checked.0, *source)),
+                );
+            }
+            _ => return Err(Refusal::MismatchedSource),
+        }
+    }
+    if mapping.contains(&u32::MAX) {
+        return Err(Refusal::MismatchedSource);
+    }
+    Ok(mapping)
+}
+
+/// The replayed lexical span, its generated witnesses and their node map.
+type LexicalReplay = (
+    core::ops::Range<u32>,
+    alloc::vec::Vec<super::locals::GeneratedWitness>,
+    alloc::vec::Vec<u32>,
+);
+
+fn replay_lexical_source(
+    bytes: &[u8],
+    retained: &super::Named,
+    session: &super::Session,
+    definition_prefix: usize,
+    limits: crate::Limits,
+    candidate: &noble_kernel::untrusted::Candidate,
+) -> Result<LexicalReplay, SourceProofRefusal> {
+    use SourceProofRefusal as Refusal;
+    let mut meter = crate::Meter::new(limits);
+    let (mut replay, name) =
+        super::parsing::parse(bytes, &mut meter).map_err(|_| Refusal::MismatchedSource)?;
+    if name.as_deref() != Some(retained.name.as_str())
+        || replay.span != retained.tree.span
+        || replay.nodes.is_empty()
+    {
+        return Err(Refusal::MismatchedSource);
+    }
+    let original = u32::try_from(replay.nodes.len() - 1).map_err(|_| Refusal::MismatchedSource)?;
+    let mut witnesses = alloc::vec::Vec::new();
+    super::locals::lower_with_witness(&mut replay, &mut meter, &mut witnesses)
+        .map_err(|_| Refusal::MismatchedSource)?;
+    super::resolution::resolve_prefix(
+        &mut replay,
+        name.as_deref(),
+        session,
+        false,
+        definition_prefix,
+        &mut meter,
+    )
+    .map_err(|_| Refusal::MismatchedSource)?;
+    let end = u32::try_from(replay.nodes.len() - 1).map_err(|_| Refusal::MismatchedSource)?;
+    if replay != retained.tree {
+        return Err(Refusal::MismatchedSource);
+    }
+    if witnesses.len() != (end - original) as usize
+        || witnesses
+            .iter()
+            .enumerate()
+            .any(|(ordinal, witness)| witness.node != original + ordinal as u32)
+    {
+        return Err(Refusal::MismatchedSource);
+    }
+    let mapping = candidate_to_lexical(candidate, &replay, &mut meter)?;
+    Ok((original..end, witnesses, mapping))
 }
 
 impl CheckedSelectedTarget<'_> {
@@ -77,6 +240,66 @@ impl CheckedSelectedTarget<'_> {
     pub const fn body(&self) -> &noble_kernel::untrusted::Checked {
         &self.body
     }
+    pub const fn definition_name(&self) -> &str {
+        self.name
+    }
+    pub fn candidate_to_lexical(&self) -> &[u32] {
+        &self.candidate_to_lexical
+    }
+    pub fn lexical_body(&self) -> &[u32] {
+        &self.tree.body
+    }
+    pub fn lexical_nodes_len(&self) -> usize {
+        self.tree.nodes.len()
+    }
+    pub const fn original_lexical_nodes(&self) -> u32 {
+        self.generated.start
+    }
+    pub const fn generated_lexical_end(&self) -> u32 {
+        self.generated.end
+    }
+    pub fn lexical_source_node(&self, candidate: noble_kernel::untrusted::NodeId) -> Option<u32> {
+        self.candidate_to_lexical.get(candidate.0 as usize).copied()
+    }
+    fn lexical_witness(&self, node: u32) -> Option<CheckedGeneratedWitness> {
+        let at = node.checked_sub(self.generated.start)?;
+        let witness = self.witnesses.get(at as usize)?;
+        (witness.node == node).then_some(CheckedGeneratedWitness {
+            generation: witness.generation.as_str(),
+            occurrence_node: witness.occurrence_node,
+            binder_node: witness.binder_node,
+        })
+    }
+    pub fn checked_lexical_node(
+        &self,
+        lexical: u32,
+    ) -> Result<CheckedLexicalNode<'_>, SourceProofRefusal> {
+        let source = self
+            .tree
+            .node(lexical)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let kind = match &source.kind {
+            super::Kind::Literal(noble_kernel::untrusted::Lit::I64(value)) => {
+                CheckedLexicalKind::I64(*value)
+            }
+            super::Kind::Call(super::Target::Builtin(definition)) => {
+                CheckedLexicalKind::Builtin(*definition)
+            }
+            super::Kind::Quotation(body) => CheckedLexicalKind::Quotation(body),
+            _ => return Err(SourceProofRefusal::UnsupportedProfile),
+        };
+        Ok(CheckedLexicalNode {
+            kind,
+            authored_span: (!self.generated.contains(&lexical)).then_some(source.span),
+            generated_witness: self.lexical_witness(lexical),
+        })
+    }
+    /// Generated nodes have no authored instruction token: their authority is
+    /// the complete, independently replayed lowering of retained source.
+    pub fn is_generated_operation(&self, node: noble_kernel::untrusted::NodeId) -> bool {
+        self.lexical_source_node(node)
+            .is_some_and(|lexical| self.generated.contains(&lexical))
+    }
 
     #[expect(
         tigerstyle::compound_condition,
@@ -86,35 +309,21 @@ impl CheckedSelectedTarget<'_> {
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
     )]
-    /// Locate an operation in the original selected definition, including a
-    /// quotation body's operations. This is source correspondence only; the
-    /// compiler and host must still bind the emitted instruction and value.
-    pub fn checked_operation_span(
+    /// Locate an operation in the selected checked definition, mapping its
+    /// compact kernel index back to the complete replayed lexical arena.
+    /// Generated instructions have a witness, NEVER an authored byte span.
+    pub fn checked_operation_site(
         &self,
         node: noble_kernel::untrusted::NodeId,
-    ) -> Result<crate::Span, SourceProofRefusal> {
+    ) -> Result<CheckedOperationSite, SourceProofRefusal> {
         use noble_kernel::untrusted::{Lit, Node};
         let candidate = &self.definition.body.candidate;
-        // Parsing `def name [ body ]` retains the declaration's final,
-        // emptied quotation wrapper after extracting its body. Emission
-        // contains only its preceding executable nodes.
-        if self.tree.nodes.len() != candidate.nodes.len().saturating_add(1)
-            || !matches!(self.tree.nodes.last(),
-                Some(super::Node { kind: super::Kind::Quotation(body), .. })
-                    if body.is_empty())
-            || self.tree.body.len() != candidate.body.len()
-            || !self
-                .tree
-                .body
-                .iter()
-                .zip(&candidate.body)
-                .all(|(source, checked)| *source == checked.0)
-        {
-            return Err(SourceProofRefusal::MismatchedSource);
-        }
+        let lexical_node = self
+            .lexical_source_node(node)
+            .ok_or(SourceProofRefusal::MismatchedSource)?;
         let source = self
             .tree
-            .node(node.0)
+            .node(lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let checked = usize::try_from(node.0)
             .ok()
@@ -124,39 +333,51 @@ impl CheckedSelectedTarget<'_> {
             usize::try_from(source.span.start).map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let end =
             usize::try_from(source.span.end).map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let bytes = self
-            .source
-            .get(start..end)
-            .filter(|bytes| !bytes.is_empty())
-            .ok_or(SourceProofRefusal::MismatchedSource)?;
+        let generated = self.generated.contains(&lexical_node);
+        let bytes = if generated {
+            // A replayed projection or cleanup has no corresponding authored
+            // token. The entire immutable lowering was compared at selection.
+            &[][..]
+        } else {
+            self.source
+                .get(start..end)
+                .filter(|bytes| !bytes.is_empty())
+                .ok_or(SourceProofRefusal::MismatchedSource)?
+        };
         let is_valid = match (&source.kind, checked) {
             (
                 super::Kind::Literal(Lit::I64(a)),
                 Node::Literal {
                     lit: Lit::I64(b), ..
                 },
-            ) => a == b,
+            ) => !generated && a == b,
             (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
                 if *a == def.0 =>
             {
-                let expected = match a {
-                    0 => b"dup".as_slice(),
-                    1 => b"drop".as_slice(),
-                    2 => b"swap".as_slice(),
-                    4 => b"+".as_slice(),
-                    5 => b"-".as_slice(),
-                    6 => b"*".as_slice(),
-                    8 => b"quote".as_slice(),
-                    9 => b"compose".as_slice(),
-                    _ => return Err(SourceProofRefusal::UnsupportedProfile),
-                };
-                bytes == expected
+                generated || {
+                    let expected = match a {
+                        0 => b"dup".as_slice(),
+                        1 => b"drop".as_slice(),
+                        2 => b"swap".as_slice(),
+                        3 => b"dip".as_slice(),
+                        4 => b"+".as_slice(),
+                        5 => b"-".as_slice(),
+                        6 => b"*".as_slice(),
+                        8 => b"quote".as_slice(),
+                        9 => b"compose".as_slice(),
+                        10 => b"run".as_slice(),
+                        _ => return Err(SourceProofRefusal::UnsupportedProfile),
+                    };
+                    bytes == expected
+                }
             }
             (super::Kind::Quotation(source_body), Node::Quotation { body, .. }) => {
-                bytes.first() == Some(&b'[')
-                    && bytes.last() == Some(&b']')
+                (generated || (bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')))
                     && source_body.len() == body.len()
-                    && source_body.iter().zip(body).all(|(a, b)| *a == b.0)
+                    && source_body
+                        .iter()
+                        .zip(body)
+                        .all(|(a, b)| Some(*a) == self.lexical_source_node(*b))
             }
             _ => false,
         };
@@ -173,7 +394,11 @@ impl CheckedSelectedTarget<'_> {
         {
             return Err(SourceProofRefusal::IndependentCheckFailed);
         }
-        Ok(source.span)
+        Ok(CheckedOperationSite {
+            lexical_node,
+            authored_span: (!generated).then_some(source.span),
+            generated_witness: self.lexical_witness(lexical_node),
+        })
     }
 
     #[expect(
@@ -192,27 +417,11 @@ impl CheckedSelectedTarget<'_> {
         node: noble_kernel::untrusted::NodeId,
     ) -> Result<CheckedQuoteSite<'_>, SourceProofRefusal> {
         use noble_kernel::{contracts::Definition, types::Ty, untrusted::Node};
+        let site = self.checked_operation_site(node)?;
         let candidate = &self.definition.body.candidate;
-        if self.tree.body.len() != candidate.body.len()
-            || !self
-                .tree
-                .body
-                .iter()
-                .zip(&candidate.body)
-                .all(|(source, checked)| *source == checked.0)
-            || self
-                .tree
-                .body
-                .iter()
-                .filter(|source| **source == node.0)
-                .count()
-                != 1
-        {
-            return Err(SourceProofRefusal::MismatchedSource);
-        }
         let source_node = self
             .tree
-            .node(node.0)
+            .node(site.lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let (
             super::Kind::Call(super::Target::Builtin(8)),
@@ -228,13 +437,6 @@ impl CheckedSelectedTarget<'_> {
         else {
             return Err(SourceProofRefusal::UnsupportedProfile);
         };
-        let start = usize::try_from(source_node.span.start)
-            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let end = usize::try_from(source_node.span.end)
-            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        if self.source.get(start..end) != Some(b"quote".as_slice()) {
-            return Err(SourceProofRefusal::MismatchedSource);
-        }
         let mut derivations = self
             .body
             .derivations
@@ -244,7 +446,10 @@ impl CheckedSelectedTarget<'_> {
             .next()
             .ok_or(SourceProofRefusal::IndependentCheckFailed)?;
         if derivations.next().is_some()
-            || derived.interface.stack_in.last() != Some(&Ty::I64)
+            || !matches!(
+                derived.interface.stack_in.last(),
+                Some(Ty::I64 | Ty::Program(..))
+            )
             || !matches!(derived.interface.stack_out.last(), Some(Ty::Program(..)))
             || !derived.interface.effects.is_empty()
         {
@@ -254,7 +459,7 @@ impl CheckedSelectedTarget<'_> {
             definition_id: self.id,
             source_generation: self.generation,
             node,
-            span: source_node.span,
+            authored_span: site.authored_span,
             interface: &derived.interface,
         })
     }
@@ -266,7 +471,7 @@ pub struct CheckedQuoteSite<'a> {
     definition_id: CheckedDefinitionId,
     source_generation: u64,
     node: noble_kernel::untrusted::NodeId,
-    span: crate::Span,
+    authored_span: Option<crate::Span>,
     interface: &'a noble_kernel::untrusted::Interface,
 }
 
@@ -280,8 +485,8 @@ impl CheckedQuoteSite<'_> {
     pub const fn node(&self) -> noble_kernel::untrusted::NodeId {
         self.node
     }
-    pub const fn span(&self) -> crate::Span {
-        self.span
+    pub const fn authored_span(&self) -> Option<crate::Span> {
+        self.authored_span
     }
     pub const fn interface(&self) -> &noble_kernel::untrusted::Interface {
         self.interface
@@ -384,7 +589,7 @@ impl super::Session {
         if !self.is_current_namespace(prepared) {
             return Err(Refusal::StaleContext);
         }
-        let (index, retained) = self
+        let (retained_index, retained) = self
             .definitions
             .iter()
             .enumerate()
@@ -392,13 +597,24 @@ impl super::Session {
             .find(|(_, definition)| definition.name == name)
             .ok_or(Refusal::MissingTarget)?;
         let source = self
-            .definition_source(index)
+            .definition_source(retained_index)
             .map_err(|_| Refusal::MismatchedSource)?;
         let submission = prepared.submission().ok_or(Refusal::MissingTarget)?;
-        let [definition] = submission.definitions.as_slice() else {
+        // A selected root calls one named body, whose checked dependency closure
+        // may also contain earlier retained definitions.
+        let [Node::Invocation { def: root_def, .. }] = submission.body.candidate.nodes.as_slice()
+        else {
             return Err(Refusal::MismatchedDefinition);
         };
-        let index = u32::try_from(index).map_err(|_| Refusal::MismatchedDefinition)?;
+        let mut selected = submission
+            .definitions
+            .iter()
+            .filter(|definition| definition.definition == *root_def);
+        let definition = selected.next().ok_or(Refusal::MismatchedDefinition)?;
+        if selected.next().is_some() {
+            return Err(Refusal::MismatchedDefinition);
+        }
+        let index = u32::try_from(retained_index).map_err(|_| Refusal::MismatchedDefinition)?;
         if prepared.selected_root != Some(index)
             || definition.identity != retained.identity
             || submission.environment.kind(definition.definition) != Some(Behavior::Named)
@@ -408,9 +624,6 @@ impl super::Session {
                 != Some(&None)
             || !submission.body.texts.is_empty()
             || submission.body.candidate.body.len() != 1
-            || submission.body.candidate.nodes.len() != 1
-            || !matches!(submission.body.candidate.nodes.first(),
-                Some(Node::Invocation { def, .. }) if *def == definition.definition)
             || submission.body.candidate.body[0] != noble_kernel::untrusted::NodeId(0)
         {
             return Err(Refusal::MismatchedDefinition);
@@ -442,18 +655,31 @@ impl super::Session {
         {
             return Err(Refusal::MismatchedInterface);
         }
+        // Kernel request work is only a downstream reservation, not the source replay cap.
+        let (generated, witnesses, candidate_to_lexical) = replay_lexical_source(
+            source,
+            retained,
+            self,
+            retained_index,
+            prepared.limits,
+            &definition.body.candidate,
+        )?;
         Ok(CheckedSelectedTarget {
             id: CheckedDefinitionId {
                 index,
                 identity: retained.identity,
             },
             generation: self.generation,
+            name: &retained.name,
             source,
             submission,
             definition,
             root,
             body,
             tree: &retained.tree,
+            generated,
+            witnesses,
+            candidate_to_lexical,
         })
     }
 }

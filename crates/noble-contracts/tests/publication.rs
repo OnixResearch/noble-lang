@@ -49,7 +49,12 @@ fn publish(
 
 fn imported_chain() -> Result<noble_contracts::source::ModuleSession, String> {
     let (session, result) = publish(
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?,
+        noble_contracts::source::ModuleSession::new(
+            &[],
+            noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("valid legacy retained source cap"),
+        )
+        .map_err(|error| format!("{error:?}"))?,
         BASE,
         LIMITS,
     )?;

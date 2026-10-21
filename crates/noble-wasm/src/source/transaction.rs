@@ -3,8 +3,11 @@
 /// requires only these scalar positions and no second whole-state clone.
 pub(super) struct Base {
     live: bool,
+    declared_live: bool,
     text_cursor: bool,
+    declared_text: bool,
     calculator: bool,
+    worker_inputs: bool,
     generation: u32,
     functions: u32,
     text_end_bytes: u32,
@@ -35,8 +38,11 @@ impl Base {
     ) -> Self {
         Self {
             live: compiler.live,
+            declared_live: compiler.declared_live,
             text_cursor: compiler.text_cursor,
+            declared_text: compiler.declared_text,
             calculator: compiler.calculator,
+            worker_inputs: compiler.worker_inputs,
             generation: compiler.generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
@@ -68,10 +74,16 @@ impl Base {
         };
         self.live == current.live
             && self.live == next.live
+            && self.declared_live == current.declared_live
+            && self.declared_live == next.declared_live
             && self.text_cursor == current.text_cursor
             && self.text_cursor == next.text_cursor
+            && self.declared_text == current.declared_text
+            && self.declared_text == next.declared_text
             && self.calculator == current.calculator
             && self.calculator == next.calculator
+            && self.worker_inputs == current.worker_inputs
+            && self.worker_inputs == next.worker_inputs
             && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end

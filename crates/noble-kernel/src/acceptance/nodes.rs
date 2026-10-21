@@ -68,7 +68,15 @@ pub(super) fn fold_node(
             let joined = attempt!(super::parts::join(frame, &interface, at, context));
             Ok((cost, joined, interface, None))
         }
-        crate::untrusted::Node::Invocation { def, inst } => {
+        crate::untrusted::Node::Invocation { def, inst }
+        | crate::untrusted::Node::SignedSelf { def, inst } => {
+            if matches!(node, crate::untrusted::Node::SignedSelf { .. })
+                && context.signed_owner != Some(*def)
+            {
+                return Err(super::Fail::Unsupported(
+                    crate::untrusted::UnsupportedKind::NodeForm,
+                ));
+            }
             attempt!(visibility::check(*def, node_id, context));
             let scheme = match context.env.scheme(*def) {
                 Some(scheme) => scheme.clone(),
@@ -287,6 +295,7 @@ pub(super) fn open_quotation(
         crate::untrusted::Node::Quotation { body, inst } => (body, inst),
         crate::untrusted::Node::Literal { .. }
         | crate::untrusted::Node::Invocation { .. }
+        | crate::untrusted::Node::SignedSelf { .. }
         | crate::untrusted::Node::SlotInvoke { .. } => return Err(super::Fail::Internal),
     };
     let scheme = super::parts::instantiate::quotation_scheme();

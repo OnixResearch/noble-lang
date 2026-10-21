@@ -5,10 +5,25 @@ pub(super) fn admit(
     index: usize,
     identities: &mut alloc::vec::Vec<super::super::super::Identity>,
     calculator: bool,
+    signed: bool,
     work: &mut super::super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
-    let recipe = attempt!(super::encode(submission, &definition.body, work));
+    let signed_body = definition
+        .body
+        .candidate
+        .nodes
+        .iter()
+        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }));
+    if signed_body && !signed {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    let recipe = attempt!(super::encode(
+        submission,
+        &definition.body,
+        Some(definition.definition),
+        work,
+    ));
     attempt!(work.entries(identities.len()));
     let mut found = 0usize;
     while found < identities.len() && identities[found].id != definition.identity {

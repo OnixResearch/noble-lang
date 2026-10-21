@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { selectedVendor } from '../selected-vendor.mjs';
+import { reviewedLockNames, reviewedVendorRecipe, selectedVendor } from '../selected-vendor.mjs';
 import { Recorder, root, fileHash, sha256 } from './record.mjs';
 import { preparePlan, bindRevision } from './plan.mjs';
 import { librarySource, programs, bindings, canonicalCases, hostBinding } from './fixtures.mjs';
@@ -38,6 +38,8 @@ function buildProvenance(file) {
   const receipt = JSON.parse(fs.readFileSync(file));
   assert.equal(receipt.schema, 'noble-result-cli-build/v1');
   assert.equal(receipt.result, 'built');
+  assert.equal(receipt.tools?.vendor?.recipe?.exact_nine_lock_recipe, true,
+    'CLI build is not bound to the exact current nine-lock vendor recipe');
   assert.ok(receipt.binary && Array.isArray(receipt.commands), 'missing build binary/commands');
   assert.equal(path.resolve(receipt.binary.path), path.resolve(process.argv[2]));
   assert.equal(receipt.binary.path, path.join(buildRoot, 'target/debug/noble'),
@@ -62,9 +64,10 @@ function buildProvenance(file) {
   const builtCrates = Object.keys(receipt.sources).filter(name => name.startsWith('crates/')).sort();
   assert.deepEqual(builtCrates, expectedCrates,
     'fresh CLI build source inventory differs from reviewed acceptance crates');
-  const requiredInputs = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
+  const requiredInputs = ['Cargo.toml', ...reviewedLockNames,
+    'verification/worker-send/peer/Cargo.toml', 'rust-toolchain.toml',
     'policy/tool-selection.json', 'verification/m6/pins.json',
-    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
+    'nix/reviewed-vendor.nix', 'nix/vendor-only.nix', 'verification/selected-vendor.mjs',
     'verification/result-library/collect-build.mjs'];
   assert.deepEqual(Object.keys(receipt.sources).sort(), [...expectedCrates, ...requiredInputs].sort(),
     'fresh CLI build omitted or added a source/tool policy input');
@@ -79,6 +82,7 @@ function buildProvenance(file) {
   const selected = JSON.parse(fs.readFileSync(path.join(root, 'policy/tool-selection.json')));
   const m6 = JSON.parse(fs.readFileSync(path.join(root, 'verification/m6/pins.json')));
   const reviewedVendor = selectedVendor(m6);
+  const vendorRecipe = reviewedVendorRecipe(root, reviewedVendor);
   const expectedRust = selected.tool_paths.quality_rust.output;
   for (const tool of ['cargo', 'rustc']) {
     const expected = path.join(expectedRust, 'bin', tool);
@@ -92,6 +96,8 @@ function buildProvenance(file) {
     'CLI was not built against the reviewed offline vendor');
   assert.equal(receipt.tools.vendor.nar_hash, reviewedVendor.narHash,
     'CLI build did not authenticate the reviewed vendor NAR');
+  assert.deepEqual(receipt.tools.vendor.recipe, vendorRecipe,
+    'CLI build did not bind the exact nine-lock vendor provenance');
   const linker = fs.realpathSync(path.join(m6.linker_bin, 'ld'));
   const mold = fs.realpathSync(
     `/etc/profiles/per-user/${path.basename(process.env.HOME)}/bin/mold`);

@@ -123,7 +123,11 @@ pub(super) fn append_spelling(
     definition: noble_kernel::contracts::Definition,
     output: &mut alloc::string::String,
 ) {
-    let spelling = match definition.0 {
+    output.push_str(spelling(definition.0).unwrap_or("unknown"));
+}
+
+pub(super) const fn spelling(identity: u32) -> Option<&'static str> {
+    let name = match identity {
         0 => "dup",
         1 => "drop",
         2 => "swap",
@@ -148,7 +152,7 @@ pub(super) fn append_spelling(
         21 => "list.case",
         22 => "test.emit",
         23 => "test.abort",
-        _ => "unknown",
+        _ => return None,
     };
-    output.push_str(spelling);
+    Some(name)
 }

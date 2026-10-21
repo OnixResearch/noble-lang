@@ -16,6 +16,7 @@ struct Encoding {
 fn encode(
     submission: &noble_kernel::execution::Submission,
     body: &noble_kernel::execution::Body,
+    owner: Option<noble_kernel::contracts::Definition>,
     work: &mut super::super::Work,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     let mut encoding = Encoding {
@@ -30,7 +31,7 @@ fn encode(
     }
     let mut failure = None;
     while let Some(step) = encoding.todo.pop() {
-        match encoding.step(submission, body, step, work) {
+        match encoding.step(submission, body, owner, step, work) {
             Ok(()) => {}
             Err(problem) => {
                 failure = Some(problem);
@@ -49,6 +50,7 @@ impl Encoding {
         &mut self,
         submission: &noble_kernel::execution::Submission,
         body: &noble_kernel::execution::Body,
+        owner: Option<noble_kernel::contracts::Definition>,
         step: Option<noble_kernel::untrusted::NodeId>,
         work: &mut super::super::Work,
     ) -> Result<(), crate::Diagnostic> {
@@ -65,6 +67,15 @@ impl Encoding {
             noble_kernel::untrusted::Node::Literal { lit, .. } => {
                 literal(&mut self.out, lit, body, node)
             }
+            noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
+                if owner != Some(*def) {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                let index = attempt!(super::definition_index(submission, *def));
+                attempt!(self.out.append(b"S"));
+                attempt!(self.out.number(submission.definitions[index].identity));
+                self.out.append(b";")
+            }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
                 let is_byte_cursor =
                     submission.environment.text_cursor || submission.environment.calculator;
@@ -78,6 +89,17 @@ impl Encoding {
                         return Err(crate::Diagnostic::Invalid);
                     }
                     attempt!(self.out.append(b"b26"));
+                } else if submission.environment.text_cursor
+                    && !submission.environment.calculator
+                    && def.0 == 27
+                {
+                    if !submission.environment.declared_modules
+                        || submission.environment.kind(*def)
+                            != Some(noble_kernel::contracts::Behavior::I64Less)
+                    {
+                        return Err(crate::Diagnostic::Invalid);
+                    }
+                    attempt!(self.out.append(b"b27"));
                 } else if def.0 < super::super::builtin_count(&submission.environment) {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
@@ -91,7 +113,8 @@ impl Encoding {
                         }
                         Some(
                             noble_kernel::contracts::Behavior::BoundEmit(slot)
-                            | noble_kernel::contracts::Behavior::BoundClock(slot),
+                            | noble_kernel::contracts::Behavior::BoundClock(slot)
+                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot),
                         ) => {
                             let mut found = None;
                             let mut at = 0usize;
@@ -108,13 +131,10 @@ impl Encoding {
                                 None => return Err(crate::Diagnostic::Invalid),
                             };
                             attempt!(work.entries(binding.adapter_identity.len()));
-                            let marker = if matches!(
-                                behavior,
-                                Some(noble_kernel::contracts::Behavior::BoundClock(_))
-                            ) {
-                                b"c"
-                            } else {
-                                b"a"
+                            let marker = match behavior {
+                                Some(noble_kernel::contracts::Behavior::BoundClock(_)) => b"c",
+                                Some(noble_kernel::contracts::Behavior::BoundCodeExport(_)) => b"e",
+                                _ => b"a",
                             };
                             attempt!(self.out.append(marker));
                             attempt!(self.out.number(u64::from(slot)));
@@ -156,6 +176,7 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::TestEmit
                                 | noble_kernel::contracts::Behavior::Reserved
                                 | noble_kernel::contracts::Behavior::TextByte
+                                | noble_kernel::contracts::Behavior::I64Less
                                 | noble_kernel::contracts::Behavior::CalculatorIterate
                                 | noble_kernel::contracts::Behavior::CalculatorCompare
                                 | noble_kernel::contracts::Behavior::CalculatorDivRem
@@ -163,7 +184,8 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::CalculatorTextLength
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
-                                | noble_kernel::contracts::Behavior::BoundClock(_) => {
+                                | noble_kernel::contracts::Behavior::BoundClock(_)
+                                | noble_kernel::contracts::Behavior::BoundCodeExport(_) => {
                                     return Err(crate::Diagnostic::Invalid);
                                 }
                             };
@@ -249,11 +271,12 @@ pub(in crate::source) fn check(
     identities: &mut alloc::vec::Vec<super::super::Identity>,
     calculator: bool,
     work: &mut super::super::Work,
+    signed: bool,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match records::admit(submission, index, identities, calculator, work) {
+        match records::admit(submission, index, identities, calculator, signed, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);

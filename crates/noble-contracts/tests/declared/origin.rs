@@ -2,8 +2,8 @@ const SOURCE: &[u8] = b"module arithmetic@1 [ export increment def unrelated [ 1
 
 #[test]
 fn direct_contract_uses_lexical_provenance_not_kernel_slot() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(SOURCE, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -70,8 +70,8 @@ fn direct_contract_uses_lexical_provenance_not_kernel_slot() -> Result<(), Strin
 
 #[test]
 fn imported_contract_retains_original_owner_source_and_ordinal() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let source = session
         .prepare(SOURCE, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -131,8 +131,8 @@ fn imported_contract_retains_original_owner_source_and_ordinal() -> Result<(), S
 
 #[test]
 fn named_subject_cannot_claim_a_direct_builtin_only_mc1_body() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let named = b"module named@1 [ def helper [ 1 + ] def increment [ helper ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] ]";
     assert!(
         matches!(session.prepare(named, &[], super::LIMITS), Err(error)

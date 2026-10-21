@@ -23,7 +23,9 @@ impl super::World {
             }
         };
         let operation = &self.exports[index];
-        let session = attempt!(self.session());
+        let bindings = attempt!(super::bindings::make(self));
+        let callable_effects = bindings.effects;
+        let session = crate::source::Session::with_bindings(bindings);
         let input = attempt!(operation.input_types(self).ok_or_else(|| super::error(
             super::Stage::Binding,
             crate::DiagnosticKind::Invalid,
@@ -50,11 +52,27 @@ impl super::World {
                 "Noble export does not have the closed exact WIT interface",
             ));
         }
-        if prepared.submission().is_none() {
+        let submission = attempt!(prepared.submission().ok_or_else(|| super::error(
+            super::Stage::Export,
+            crate::DiagnosticKind::Internal,
+            "missing checked export body",
+        )));
+        // Type-known latent Program effects never become guest-callable imports.
+        if !submission
+            .request
+            .expected
+            .allowed_effects
+            .as_slice()
+            .iter()
+            .all(|effect| {
+                1u64.checked_shl(effect.0)
+                    .is_some_and(|bit| bit & callable_effects != 0)
+            })
+        {
             return Err(super::error(
                 super::Stage::Export,
-                crate::DiagnosticKind::Internal,
-                "missing checked export body",
+                crate::DiagnosticKind::Invalid,
+                "Noble export effect exceeds selected WIT imports",
             ));
         }
         Ok(super::CheckedExport {

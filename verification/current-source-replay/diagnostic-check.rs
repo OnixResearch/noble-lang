@@ -1,4 +1,4 @@
-use noble_contracts::source::{ModuleSession, Stage};
+use noble_contracts::source::{ModuleSession, RetainedSourceLimit, Stage};
 use noble_contracts::{DiagnosticKind, Limits, Span};
 use noble_kernel::contracts::FIXTURE_RESOURCE;
 use noble_kernel::types::{ResourceKind, Ty};
@@ -19,7 +19,9 @@ fn main() -> Result<(), String> {
     if FIXTURE_RESOURCE != ResourceKind(0) {
         return Err("the reserved test.counter resource kind changed".into());
     }
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let retained = RetainedSourceLimit::new(LIMITS.bytes)
+        .ok_or("legacy DX-01 source limit is invalid")?;
+    let session = ModuleSession::new(&[], retained).map_err(|error| format!("{error:?}"))?;
     let error = session
         .prepare(source.as_bytes(), &[Ty::Resource(FIXTURE_RESOURCE)], LIMITS)
         .expect_err("resource duplication produced a candidate");

@@ -12,6 +12,13 @@ pub(crate) mod live_slot;
 pub(crate) mod output;
 mod report;
 pub(crate) mod worker;
+pub(crate) mod worker_package;
+pub(crate) mod worker_program;
+mod worker_program_guest;
+pub(crate) mod worker_scalar;
+pub(crate) mod worker_shell;
+pub(crate) mod worker_typed;
+pub(crate) mod worker_value;
 
 pub(crate) const SOURCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
@@ -27,8 +34,12 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 };
 
 pub const USAGE: &str = "usage:
-  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N]
-  live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
+  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N] [--verify-source-before-execute] [--watch] [--declared-modules --bindings MANIFEST] [--max-retained-generations N]
+  live repl: newline-delimited source, :reload ABS_PATH, :grant-self-edit NAME N,
+    or :release-observed-roots (relinquishes all previously reported raw cell handles);
+    interpreter is unavailable
+  noble live watch --source ABS_PATH [--engine v8] [--declared-modules --bindings MANIFEST] [--max-retained-generations N]
+  live watch: Linux inotify complete-save rename + checked file ACK; in-place writes have no watch ACK
   noble live slot --engine v8 --authority ABS_PATH
   live slot: bounded JSONL define/install/candidate/publish/delete/rollback/invoke/reflect/trace/
     replay/policy/discard/release-program/release-replay/hold-checkpoint/resume-checkpoint;
@@ -41,6 +52,50 @@ pub const USAGE: &str = "usage:
     without independent target evidence; source text is never a control command.
   noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
   JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
+  noble worker scalar SOURCE --state I64 --delta I64
+  Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
+  bounded source-backed guest invocation, report its exact local outcome.
+  noble worker program build SOURCE --name NAME --effect-ceiling pure
+  Opted source-bound named Program builder: check and compile a module with two
+  reachable, compatible named Programs once, then
+  adapt, select, duplicate and compose typed handles under an explicit bound.
+  This local builder does not execute a guest, import/export packages or grant effects.
+  noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure
+  Selected pure WIT owner invokes the actual checked named Program cell in a
+  fresh, bounded source Wasm instance. Guest source and component are rebuilt;
+  this source-only path is not yet execution evidence without scoped Wasm tests.
+  noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure
+  Freshly import a checked pure package graph and invoke its selected installed
+  Program cell through the same WIT owner; package bytes are not executable.
+  noble worker program import PACKAGE --effect-ceiling pure
+  Freshly recheck a finite local v2 package's source, complete named closure
+  and checked recipe; Text aliases require fresh installed-cell rechecking.
+  Import is inert and is not an executable guest. Export is unavailable through
+  CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
+  A test.emit package/ceiling is refused: the host-only bound adapter and
+  revocable effect policy require an explicit embedder, never a CLI argument.
+  noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
+  Dedicated finite synthetic test embedder: built-in exact fixture source,
+  checked owner, adapter, destination and epoch are chosen before bounded
+  untrusted stdin; source mismatch denies before any issue. Only an installed
+  allowlisted test.emit cell may be issued. Both export paths always deny.
+  The ledger-byte-denial control retains four committed appends before the
+  fifth request fails without delivering a result; a caught after-append host
+  panic retains the prior append. The separate request-count control uses one
+  checked source cell and 257 host-selected iterations of the existing WIT
+  guest under one task, Store and issuer; the scoped real child observed 256
+  protected appends, a denied 257th request and no delivered final I64.
+  Canonical WORKER acceptance remains open.
+  emit-revoked revokes an issued cell before invocation.
+  It accepts no authority document or caller-selected export destination.
+  noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
+  Typed worker: host-select a source-checked WorkerData@1 module and two canonical
+  nominal values; check one exact local no-capture package and exported transition
+  before compiling and running one bounded State Event -- State List<Action> guest.
+  noble worker shell PACKAGE --schema SCHEMA --state STATE --submit EVENT --cancel EVENT --authority HOST_GRANT
+  Local synthetic-send shell: authorize checked inert Send against a separately
+  selected exact grant, then cancel a pinned native task before late completion.
+  No network send or portable package/export authority is provided.
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
   CLAIMS_JSON: {\"claimed_effects\":[]}; optional source/digest/allowed/trusted_correspondence are ignored
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
@@ -48,21 +103,42 @@ pub const USAGE: &str = "usage:
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
   noble compile SOURCE [--text-byte-cursor] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
+  noble compile SOURCE --declared-modules --signed-self-recursion --bindings HOST_FILE [--module MODULE_FILE ...]
+  noble compile SOURCE --declared-modules --text-byte-cursor [--signed-self-recursion] [--module MODULE_FILE ...]
   noble session [--text-byte-cursor] [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
+  noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
+  noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
+  Signed-Declared-Text-v1 framed control: :release-observed-roots STORE_UUID OBSERVATION_ID
+  sends no source submission; after the caller has compared an observed aggregate,
+  submit a checked `drop` expression first, then release that report's exact
+  source_store_id/source_observation_id. The worker releases every nested
+  observed handle in that receipt. A wrong, stale or foreign owner is refused.
+  An idle ownerless epoch retires checked Program/Recipe cells and source code
+  without restarting the session or changing the 4096-cell runtime maximum.
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
   Declared-Modules-v1 module/import/definition units link without running guest code.
-  Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
+  Preparation limits: --source-bytes N (0..=65536) --source-nodes N --source-depth N --source-work N
+  --retained-source-bytes N (1..=262144) requires declared compile or session;
+  sets the cumulative retained original-source budget independently of the per-input
+  --source-bytes limit; without it the cumulative budget equals --source-bytes.
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
---text-byte-cursor selects Text-Byte-Cursor-v1 for ordinary compile/session only;
+--text-byte-cursor alone selects Text-Byte-Cursor-v1 for ordinary compile/session;
 it adds pure text.byte, retaining Text and returning unsigned byte 0..255,
 EOF -1 at the byte length, negative-offset -2 or past-end -3. Increment
-the offset only after a nonnegative byte. It cannot combine with --declared-modules.
+the offset only after a nonnegative byte. With --declared-modules it selects a
+new pure declared-text profile with text.byte, signed I64 <, and no host
+bindings or ambient test effects. --signed-self-recursion also requires
+--declared-modules, an exported self word and an explicit fixed signature.
+Existing ordinary declared modules retain their explicit --bindings file.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
+Declared framed sessions drain a complete oversized frame up to 262144 bytes in
+bounded chunks, refuse it without checking or executing it, then read the next
+header; larger, malformed or incomplete frames terminate the input stream.
 Reports are JSON lines, ordered bottom-to-top. A static refusal preserves the
 session; a runtime trap or exhausted execution limit ends it with its effect prefix.
 --emit retains source, WAT, Wasm, tool bindings and runtime observations in a new
@@ -81,12 +157,27 @@ struct Session {
 
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
-        let declared = match &options.manifest {
-            Some(manifest) => Some(attempt!(noble_contracts::source::ModuleSession::new(
-                &manifest.operations()
-            )
-            .map_err(output::Failure::source))),
-            None => None,
+        let declared = if options.declared_modules {
+            let bindings = options
+                .manifest
+                .as_ref()
+                .map(|manifest| manifest.operations())
+                .unwrap_or_default();
+            let retained = options.retained_source_limit();
+            Some(attempt!(if options.declared_text() {
+                noble_contracts::source::ModuleSession::new_declared_text(
+                    &bindings,
+                    options.signed_self_recursion,
+                    retained,
+                )
+            } else if options.signed_self_recursion {
+                noble_contracts::source::ModuleSession::new_signed_self(&bindings, retained)
+            } else {
+                noble_contracts::source::ModuleSession::new(&bindings, retained)
+            }
+            .map_err(output::Failure::source)))
+        } else {
+            None
         };
         Ok(Self {
             frontend: if options.text_byte_cursor {
@@ -95,7 +186,9 @@ impl Session {
                 noble_contracts::source::Session::new()
             },
             declared,
-            compiler: if options.text_byte_cursor {
+            compiler: if options.declared_text() {
+                noble_wasm::source::Compiler::new_declared_text()
+            } else if options.text_byte_cursor {
                 noble_wasm::source::Compiler::new_text_cursor()
             } else {
                 noble_wasm::source::Compiler::new()
@@ -115,15 +208,7 @@ impl Session {
         source: &[u8],
         options: &arguments::Options,
     ) -> Result<output::Report, output::Failure> {
-        self.submissions = attempt!(self.submissions.checked_add(1).ok_or_else(|| {
-            output::Failure::new(
-                output::ErrorContext {
-                    stage: "session",
-                    outcome: "exhausted",
-                },
-                "submission counter exhausted",
-            )
-        }));
+        attempt!(self.advance_submission());
         if self.declared.is_some() {
             return self.submit_declared(source, options);
         }
@@ -196,5 +281,18 @@ impl Session {
             self.stack = output_types;
         }
         Ok(report)
+    }
+
+    fn advance_submission(&mut self) -> Result<u64, output::Failure> {
+        self.submissions = attempt!(self.submissions.checked_add(1).ok_or_else(|| {
+            output::Failure::new(
+                output::ErrorContext {
+                    stage: "session",
+                    outcome: "exhausted",
+                },
+                "submission counter exhausted",
+            )
+        }));
+        Ok(self.submissions)
     }
 }

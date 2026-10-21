@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { root, fileHash } from './record.mjs';
-import { selectedVendor } from '../selected-vendor.mjs';
+import { reviewedLockNames, reviewedVendorRecipe, selectedVendor } from '../selected-vendor.mjs';
 
 assert.equal(process.argv.length, 3,
   'usage: SELECTED_NODE verification/result-library/collect-build.mjs NEW_EXTERNAL_DIRECTORY');
@@ -27,6 +27,7 @@ const rustdoc = path.join(rust, 'bin/rustdoc');
 const linker = fs.realpathSync(path.join(pins.linker_bin, 'ld'));
 const mold = fs.realpathSync(`/etc/profiles/per-user/${path.basename(process.env.HOME)}/bin/mold`);
 const vendor = selectedVendor(pins);
+const vendorRecipe = reviewedVendorRecipe(root, vendor);
 function reviewedHead() {
   const git = spawnSync('/run/current-system/sw/bin/git', ['rev-parse', 'HEAD'],
     { cwd: root, env: { PATH: '/run/current-system/sw/bin' },
@@ -51,9 +52,10 @@ function snapshot() {
       else add(name);
     }
   };
-  for (const name of ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
+  for (const name of ['Cargo.toml', ...reviewedLockNames,
+    'verification/worker-send/peer/Cargo.toml', 'rust-toolchain.toml',
     'policy/tool-selection.json', 'verification/m6/pins.json',
-    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
+    'nix/reviewed-vendor.nix', 'nix/vendor-only.nix', 'verification/selected-vendor.mjs',
     'verification/result-library/collect-build.mjs']) add(name);
   for (const directory of ['crates/noble-contracts', 'crates/noble-kernel',
     'crates/noble-wasm', 'crates/noble-cli', 'crates/noble-syndicate']) walk(directory);
@@ -101,7 +103,8 @@ const receipt = {
   tools: { cargo: { path: cargo, sha256: fileHash(cargo) },
     rustc: { path: rustc, sha256: fileHash(rustc) },
     mold: { path: mold, sha256: fileHash(mold) },
-    vendor: { path: vendor.directory, nar_hash: vendor.narHash } },
+    vendor: { path: vendor.directory, nar_hash: vendor.narHash,
+      recipe: vendorRecipe } },
   commands: [{ argv, cwd: root, env: environment, status: run.status,
     signal: run.signal, error: run.error ? String(run.error) : null, ...logs }],
 };

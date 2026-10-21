@@ -25,14 +25,26 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 145 file digests across the flake and
+This source-only integration binds exact file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
-its typed export dependencies and manifest, and all eight Cargo locks
-consumed by the reviewed offline vendor, plus the separate test-only boundary
-fixture lock. These are source identities,
-not an executed proof.
+its typed export dependencies and manifest, all nine Cargo locks
+consumed by the reviewed offline vendor, the Worker peer manifest, guarded
+LIVE06 production-role sources, and MW1 issuer/MW2 Send/cancel source and
+controls, including direct Worker configuration, process, protocol, typed
+shell consumer, binding
+policy, declared-live publication, live ABI encoding and watched-file gate,
+component assembler/report, Wasm metadata emission and declared-live
+transaction ownership, the typed package parser, directly compiled Send WIT
+and dispatch source, and the inert C CLI build/backend and regressions,
+plus the separate test-only boundary
+fixture lock. The newly selected declared-module contracts and CLI files,
+their behavioral regressions, migrated Wasm constructor callsites, and active
+diagnostic replay source bind this candidate's retained-source change rather
+than treating a source-revision label or stale test receipt as equivalent proof.
+These are source identities, not an executed Octet check, runtime proof,
+or current release selection.
 In particular, the `noble-cli` package manifest binds the `noble` executable name, and the `noble-contracts` manifest binds the frontend's kernel dependency.
 `nix/tool-selection-files.nix` owns the observed file set; `policy/tool-selection-files.ncl` owns the corresponding reviewed hashes imported by the selection policy.
 The JSON export and observed file set must agree exactly. A check does not refresh its own expected values.
@@ -85,17 +97,28 @@ Noble owns the exact selection policy and the Nix composition code.
 
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
-Result-library, and declared-modules-v1 peer locks: eight locks in all. It
-rejects conflicting or missing registry checksums, checks all 238 distinct
-crate archive SHA-256 values, and produces `source-registry-0` plus a
-lock/archive provenance manifest. The locally realized candidate output
+Result-library, declared-modules-v1, and Worker Send peer locks: nine locks
+in all. The integrated candidate recipe binds the root lock SHA-256
+`87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b`,
+616 registry rows and 242 distinct packages. It rejects conflicting or
+missing checksums, verifies every crate archive SHA-256, and extracts only
+safe regular files and directories beneath the exact package root.
+Its output includes `source-registry-0` and the exact lock/archive manifest.
+
+The previously realized eight-lock candidate output
 `/nix/store/4bf1y4d9pqwpxkxb8n1clh6nsjm30lj8-noble-reviewed-offline-vendor`
 has measured NAR `sha256-4qbgvoXEoqILGYyj47Jkn2eJmSLmKK+D/jhV++WeiNU=`,
-bound in both candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
-These candidate-only pins are not a selected Nix, source-inventory, or
-native-assurance gate pass or independently verified signed-substitute proof.
+still bound in candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
+That manifest records the former root lock
+`5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3`
+and 238 packages; it cannot authenticate the integrated nine-lock recipe.
+No nine-lock output or replacement NAR is issued here. Keep those pins held
+rather than relabeling the older output. Neither source integration nor the
+existing pins establish a selected Nix, source-inventory, native-assurance,
+or independently verified signed-substitute gate pass.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
-gate before selecting Cargo's exact offline source replacement. Merely
+gate; the Result build additionally compares all nine lock hashes and the
+616-row/242-package provenance closure before invoking Cargo. Merely
 having a registry directory is not evidence of the reviewed vendor.
 Sandboxed Rust checks and the published inventory/native-assurance collectors
 declare the same hash-bound Wasmtime source and reviewed vendor, then install
@@ -110,33 +133,21 @@ when it resolves to immutable
 `/nix/store/7y0cmn79ilsaq0g7lgpmpa7sqjrkii16-cargo-config.toml`,
 with artifact-owned Cargo home and target; it never copies a curated source
 subset. Their `check` commands read the supplied inventory and policy without
-invoking Cargo. Boundary randomness cases retain their own ninth, test-only lock and
-complete fixture vendor; they do not change the eight-lock reviewed
+invoking Cargo.
+Boundary randomness cases retain their separate test-only lock and
+complete fixture vendor; they do not change the nine-lock reviewed
 production/peer vendor.
 
-On a host with the locked Nix inputs and all fixed-output archives already
-available, re-evaluate the recipe from the repository's locked Nixpkgs and
-realize its derivation offline:
-
-```sh
-export NIX_CONFIG='min-free = 0
-max-free = 0
-builders =
-sandbox = true
-require-sigs = true'
-drv="$(nix eval --offline --impure --raw --expr \
-  'let flake = builtins.getFlake ("path:" + toString ./.);
-       pkgs = import flake.inputs.nixpkgs { system = "x86_64-linux"; };
-   in (import ./nix/reviewed-vendor.nix { inherit pkgs; root = ./.; }).drvPath')"
-nix build --offline --no-link --print-out-paths "$drv^out"
-```
-
-The path-flake expression can see worktree-only files. Git-flake evaluation
-requires the recipe and verifier to be tracked in the same reviewed commit,
-while the source pins must still match those exact committed bytes. Offline
-reconstruction fails closed if a fixed archive is missing.
-Do not substitute a mutable Cargo registry, invoke shared Nix GC, or build
-without at least 5 GiB free disk and 20 GiB `MemAvailable` throughout.
+`nix/vendor-only.nix` is a parameterized vendor-only expression. Its caller
+must supply an independently NAR-matched selected Nixpkgs source at an
+explicit absolute path (including an owner-only private rootless store); it
+does not choose a local candidate, evaluate the entire flake, or authorize a
+build. Source-origin coverage now includes the Worker peer lock/manifest and
+the LIVE06 production-role feature body
+`crates/noble-cli/src/core/runtime/live-test-barrier.mjs`, together with
+`core/live.rs`, `core/worker.rs`, and the `live_repl.rs` integration test.
+The embedded JavaScript is a source input, not a Rust Octet package envelope.
+No vendor realization, pin rebind, Cargo or guest execution is claimed here.
 
 The source-bound intrinsic collector builds the production CLI and its
 independent peer from fresh external Cargo home/target directories. It pins

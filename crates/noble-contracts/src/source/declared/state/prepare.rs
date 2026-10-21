@@ -6,6 +6,8 @@ struct StagedUnit {
     pending: Option<crate::intrinsic::ProofBatch>,
 }
 
+const DECLARED_INPUT_SOURCE_BYTES: u32 = 65_536;
+
 impl super::ModuleSession {
     pub fn prepare(
         &self,
@@ -13,6 +15,14 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<super::ModulePrepared, crate::source::Error> {
+        // DX-MODULE-05 caps ordinary declared inputs; the separately selected
+        // calculator profile keeps its own per-input and clone budgets.
+        if !self.source.calculator && limits.bytes > DECLARED_INPUT_SOURCE_BYTES {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Parse,
+                "declared per-input source byte limit exceeds 65,536",
+            ));
+        }
         let limit_bytes = attempt!(usize::try_from(limits.bytes).map_err(|_| {
             crate::source::declared::error(
                 crate::source::Stage::Parse,
@@ -27,7 +37,7 @@ impl super::ModuleSession {
         }
         // Only modules retain the candidate source. If the aggregate would overflow,
         // classify the first lexical token before parsing or cloning prior sources.
-        if let Err(error) = self.check_retained_module_bytes(input_bytes.len(), limits) {
+        if let Err(error) = self.check_retained(input_bytes.len()) {
             let mut meter = crate::Meter::new(limits);
             let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
                 input_bytes,
@@ -53,6 +63,18 @@ impl super::ModuleSession {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             })
         );
+        if matches!(
+            &unit,
+            crate::source::declared::parsing::ParsedUnit::Definition
+        ) {
+            let extra = attempt!(input_bytes.len().checked_add(4).ok_or_else(|| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "retained definition source length overflow",
+                )
+            }));
+            attempt!(self.check_retained(extra));
+        }
         if self.source.calculator {
             let environment = attempt!(self.source.declared.as_ref().ok_or_else(|| {
                 crate::source::declared::diagnostic(
@@ -108,7 +130,7 @@ impl super::ModuleSession {
             }
         }
         let StagedUnit {
-            session: staged,
+            session: mut staged,
             kind,
             submission,
             output,
@@ -130,19 +152,58 @@ impl super::ModuleSession {
                 ),
             ));
         }
-        attempt!(staged.retained(limits));
-        Ok(super::ModulePrepared {
+        let rebuilt_import_definitions = if kind == super::ModuleKind::Import {
+            attempt!(self.rebuild_import_alias(&mut staged, limits))
+        } else {
+            None
+        };
+        attempt!(staged.check_retained(0));
+        let signed_expression = if kind == super::ModuleKind::Expression
+            && (self
+                .source
+                .declared
+                .as_ref()
+                .is_some_and(|context| context.declared_text)
+                || submission.as_ref().is_some_and(|program| {
+                    program.definitions.iter().any(|definition| {
+                        definition.body.candidate.nodes.iter().any(|node| {
+                            matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+                        })
+                    })
+                })) {
+            input_bytes.to_vec()
+        } else {
+            alloc::vec::Vec::new()
+        };
+        let mut prepared = super::ModulePrepared {
             kind,
             generation: self.generation,
             limits,
+            previous_source_generation: self.source.generation,
+            previous_source_definitions_len: self.source.definitions.len(),
             previous_modules: self.modules.clone(),
             previous_aliases: self.aliases.clone(),
+            previous_next_module_identity: self.next_module_identity,
             previous_history: self.source.history.clone(),
             staged,
             submission,
             output,
             pending,
-        })
+            signed_expression,
+            rebuilt_import_definitions,
+        };
+        if !prepared.signed_expression.is_empty() {
+            attempt!(prepared.verify_signed_origins());
+            let submission = prepared.submission.as_ref().ok_or_else(|| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "signed expression lacks its concrete checked submission",
+                )
+            })?;
+            prepared.staged = attempt!(prepared.staged.record_signed_certified(submission));
+            attempt!(prepared.staged.check_retained(0));
+        }
+        Ok(prepared)
     }
 
     fn stage_unit(
@@ -152,6 +213,10 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<StagedUnit, crate::source::Error> {
+        let expression = matches!(
+            &unit,
+            crate::source::declared::parsing::ParsedUnit::Expression
+        );
         let (kind, submission, output, pending) = match unit {
             crate::source::declared::parsing::ParsedUnit::Module {
                 name,
@@ -184,12 +249,26 @@ impl super::ModuleSession {
             }
             crate::source::declared::parsing::ParsedUnit::Definition
             | crate::source::declared::parsing::ParsedUnit::Expression => {
-                let mut prepared = attempt!(self.source.prepare(input_bytes, inputs, limits));
+                if expression {
+                    self = attempt!(self.pending_signed_expression_words());
+                }
+                let mut prepared = attempt!(self.source.prepare_with_retention(
+                    input_bytes,
+                    inputs,
+                    limits,
+                    self.retained_source_limit,
+                ));
                 let kind = if prepared.is_definition() {
                     super::ModuleKind::Definition
                 } else {
                     super::ModuleKind::Expression
                 };
+                if expression != (kind == super::ModuleKind::Expression) {
+                    return Err(crate::source::declared::error(
+                        crate::source::Stage::Check,
+                        "source unit changed between module and expression parsing",
+                    ));
+                }
                 if prepared
                     .definition
                     .as_ref()
@@ -203,7 +282,7 @@ impl super::ModuleSession {
                 let submission = prepared.submission.take();
                 let output = core::mem::take(&mut prepared.output);
                 attempt!(self.source.commit(prepared));
-                if kind == super::ModuleKind::Definition {
+                if kind == super::ModuleKind::Definition || expression {
                     self = attempt!(self.outside_words());
                 }
                 (kind, submission, output, None)
@@ -242,6 +321,15 @@ impl super::ModuleSession {
                 )),
             );
         }
+        if self.import_rebind_required(&prepared) && prepared.rebuilt_import_definitions.is_none() {
+            return (
+                self,
+                Err(crate::source::declared::error(
+                    crate::source::Stage::Acceptance,
+                    "import rebind lacks its checked transitive dependent rebuild",
+                )),
+            );
+        }
         let Some(next) = self.generation.checked_add(1) else {
             return (
                 self,
@@ -261,10 +349,31 @@ impl super::ModuleSession {
     )]
     fn current_snapshot(&self, prepared: &super::ModulePrepared) -> bool {
         self.generation == prepared.generation
+            && self.retained_source_limit == prepared.staged.retained_source_limit
+            && self.source.generation == prepared.previous_source_generation
             && self.source.calculator == prepared.staged.source.calculator
+            && self.source.definitions.len() == prepared.previous_source_definitions_len
+            && prepared
+                .staged
+                .source
+                .definitions
+                .get(..prepared.previous_source_definitions_len)
+                == Some(self.source.definitions.as_slice())
+            && self
+                .source
+                .declared
+                .as_ref()
+                .map(|context| (context.signed_self, context.declared_text))
+                == prepared
+                    .staged
+                    .source
+                    .declared
+                    .as_ref()
+                    .map(|context| (context.signed_self, context.declared_text))
             && self.bindings == prepared.staged.bindings
             && self.modules == prepared.previous_modules
             && self.aliases == prepared.previous_aliases
+            && self.next_module_identity == prepared.previous_next_module_identity
             && self.source.history == prepared.previous_history
     }
 

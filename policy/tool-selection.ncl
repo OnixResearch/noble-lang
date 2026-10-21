@@ -48,6 +48,9 @@ let Pin = { rev | String, narHash | String } in
     miri_rust | String = "nightly-2026-08-18",
     miri_flags | Array String = ["-Zmiri-strict-provenance"],
     features | Array String = [],
+    # Reviewed workspace names, separate from explicitly listed features;
+    # cargo_args --all-features still enables them in non-kernel extraction.
+    workspace_features | Array String = ["live-test-barrier", "safety-observe"],
     all_features | Bool = true,
     default_features | Bool = true,
     panic | String = "unwind",

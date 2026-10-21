@@ -7,6 +7,14 @@ pub(super) fn build(
 
 /// Artifact admission never inherits a declared binding or persistent session.
 pub(super) fn admission(optimized: bool) -> std::string::String {
+    worker(optimized, false)
+}
+
+pub(super) fn typed() -> std::string::String {
+    worker(false, true)
+}
+
+fn worker(optimized: bool, declared: bool) -> std::string::String {
     crate::workflow::encoding::object([
         (
             "selection",
@@ -20,13 +28,16 @@ pub(super) fn admission(optimized: bool) -> std::string::String {
         ("artifacts", crate::workflow::encoding::Json::Null),
         (
             "declared_modules",
-            crate::workflow::encoding::Json::Bool(false),
+            crate::workflow::encoding::Json::Bool(declared),
         ),
         (
             "bindings",
             crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
         ),
-        ("declared_extension", crate::workflow::encoding::Json::Null),
+        (
+            "declared_extension",
+            crate::workflow::encoding::optional_string(declared.then_some(super::DECLARED_ABI)),
+        ),
     ])
     .encode()
 }
@@ -57,6 +68,37 @@ pub(super) fn live() -> std::string::String {
         ),
     ])
     .encode()
+}
+
+/// Host-selected declared profile: bindings are the parsed manifest's original
+/// immutable slot identities and permissions, not guest-provided policy.
+pub(super) fn live_declared(
+    manifest: &super::super::arguments::bindings::Manifest,
+) -> Result<std::string::String, super::super::output::Failure> {
+    let bindings = attempt!(manifest.worker());
+    Ok(crate::workflow::encoding::object([
+        (
+            "selection",
+            crate::workflow::encoding::string(super::SELECTION),
+        ),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(false)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        (
+            "declared_modules",
+            crate::workflow::encoding::Json::Bool(true),
+        ),
+        ("bindings", bindings),
+        (
+            "declared_extension",
+            crate::workflow::encoding::string(super::DECLARED_ABI),
+        ),
+        (
+            "in_process_live",
+            crate::workflow::encoding::Json::Bool(true),
+        ),
+    ])
+    .encode())
 }
 
 /// Independent opt-in slot profile; Core and legacy live modes are unchanged.
@@ -177,7 +219,7 @@ fn payload(
     let abi = crate::workflow::encoding::string(super::ABI);
     let artifacts = crate::workflow::encoding::optional_string(destination);
     let bindings = attempt!(bindings(options));
-    Ok(crate::workflow::encoding::object([
+    let mut configuration = crate::workflow::encoding::object([
         ("selection", selection),
         ("abi", abi),
         (
@@ -200,8 +242,17 @@ fn payload(
                 options.declared_modules.then_some(super::DECLARED_ABI),
             ),
         ),
-    ])
-    .encode())
+    ]);
+    // Ordinary worker configuration bytes retain their exact prior shape.
+    if options.signed_self_recursion {
+        if let crate::workflow::encoding::Json::Object(fields) = &mut configuration {
+            fields.push((
+                "signed_self_recursion",
+                crate::workflow::encoding::Json::Bool(true),
+            ));
+        }
+    }
+    Ok(configuration.encode())
 }
 
 fn bindings(

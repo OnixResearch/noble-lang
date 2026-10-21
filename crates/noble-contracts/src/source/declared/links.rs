@@ -38,7 +38,10 @@ fn has_word(module: &super::Module, word: &str) -> bool {
 pub(super) fn valid_binding(binding: &super::BoundOperation) -> bool {
     super::parsing::name(&binding.module_name)
         && binding.module_version != 0
-        && matches!(binding.operation.as_str(), "test.emit" | "test.clock")
+        && matches!(
+            binding.operation.as_str(),
+            "test.emit" | "test.clock" | "test.code-export"
+        )
         && !binding.adapter_identity.is_empty()
 }
 pub(super) fn duplicate_binding(

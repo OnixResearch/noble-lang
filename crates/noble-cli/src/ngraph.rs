@@ -302,7 +302,7 @@ fn submissions(
     let mut reader = std::io::Cursor::new(source);
     let mut out = std::vec::Vec::new();
     loop {
-        match crate::core::framing::read_submission(&mut reader, framed, files::SUBMISSION_BYTES) {
+        match crate::core::framing::read_source(&mut reader, framed, files::SUBMISSION_BYTES) {
             Ok(Some(s)) => {
                 if framed || !s.iter().all(u8::is_ascii_whitespace) {
                     out.push(s);

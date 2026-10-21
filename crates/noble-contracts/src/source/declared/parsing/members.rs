@@ -578,7 +578,16 @@ fn require(
         ));
     }
     let (cursor, input) = attempt!(cursor.next());
-    let input = alloc::string::String::from(input);
+    let (cursor, input) = if input == "Text"
+        && super::word(cursor.tokens.get(cursor.at), cursor.span).ok() == Some("Text")
+    {
+        (
+            attempt!(cursor.expected("Text")),
+            alloc::string::String::from("Text Text"),
+        )
+    } else {
+        (cursor, alloc::string::String::from(input))
+    };
     let cursor = attempt!(cursor.expected("--"));
     let cursor = attempt!(cursor.expected("!"));
     let (cursor, operation) = attempt!(cursor.next());

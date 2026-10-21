@@ -148,8 +148,11 @@
         postUnpack = ''
           ln -s ${reviewedVendor}/source-registry-0 "$sourceRoot/reviewed-vendor"
         '';
-        cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--all-features" ];
-        cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--all-features" ];
+        # Neither the exported CLI nor the package's pre-install test build may
+        # contain live-test-barrier or LIVE-05 host grants. The all-feature
+        # suite is the separate rust-tests check, not the installed artifact.
+        cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--no-default-features" ];
+        cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--no-default-features" ];
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
       };

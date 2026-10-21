@@ -33,8 +33,22 @@ fn accept(
     env: &noble_kernel::contracts::Env,
     request: &noble_kernel::untrusted::Request,
     body: &noble_kernel::execution::Body,
+    signed_owner: Option<(
+        noble_kernel::contracts::Definition,
+        &noble_kernel::words::Inst,
+    )>,
 ) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
-    let checked = match noble_kernel::acceptance::check(env, request, &body.candidate) {
+    let outcome = match signed_owner {
+        Some((owner, owner_inst)) => noble_kernel::acceptance::check_signed_structure(
+            env,
+            request,
+            &body.candidate,
+            owner,
+            owner_inst,
+        ),
+        None => noble_kernel::acceptance::check(env, request, &body.candidate),
+    };
+    let checked = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => checked,
         noble_kernel::untrusted::Outcome::Invalid(_) => return Err(crate::Diagnostic::Invalid),
         noble_kernel::untrusted::Outcome::Unsupported(_) => {
@@ -172,20 +186,20 @@ pub(super) fn definition_index(
 
 fn bounds(
     submission: &noble_kernel::execution::Submission,
-    environment_work: u64,
     calculator: bool,
+    signed: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut totals = metadata::Totals { nodes: 0, bytes: 0 };
     attempt!(metadata::check(&submission.body, &mut totals, work));
     attempt!(definitions::bounds(
         submission,
-        environment_work,
         calculator,
+        signed,
         &mut totals,
         work
     ));
-    dependencies::check(submission, work)
+    dependencies::check(submission, signed, work)
 }
 
 #[expect(
@@ -243,16 +257,26 @@ fn calculator_environment_allowance(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
 )]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-wasm-maintainers; each selected compiler profile flag is a separate trusted admission input, and an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    declared_text: bool,
+    signed: bool,
     work: &mut super::Work,
 ) -> Result<Accepted, crate::Diagnostic> {
     attempt!(work.charge(1));
-    if (submission.environment.declared_modules || calculator) && (live || text_cursor) {
+    // Only the combined declared-text profile pairs declared modules with the
+    // text cursor; live and the calculator never do.
+    if (submission.environment.declared_modules || calculator)
+        && (live || (text_cursor && (calculator || !declared_text)))
+    {
         return Err(crate::Diagnostic::Invalid);
     }
     let environment_work = attempt!(environment::work(&submission.environment, calculator, work));
@@ -262,7 +286,8 @@ pub(super) fn check(
         live,
         live_slots,
         text_cursor,
-        calculator
+        calculator,
+        declared_text
     ));
     if calculator {
         attempt!(calculator_environment_allowance(
@@ -271,9 +296,9 @@ pub(super) fn check(
             work
         ));
     }
-    attempt!(bounds(submission, environment_work, calculator, work));
+    attempt!(bounds(submission, calculator, signed, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
-    let definitions = attempt!(definitions::accept(submission, limits, work));
+    let definitions = attempt!(definitions::accept(submission, limits, signed, work));
     let root = attempt!(accept_root(submission, limits, work));
     Ok(Accepted { definitions, root })
 }
@@ -289,7 +314,12 @@ fn accept_root(
         expected: submission.request.expected.clone(),
         limits,
     };
-    accept(&submission.environment, &root_request, &submission.body)
+    accept(
+        &submission.environment,
+        &root_request,
+        &submission.body,
+        None,
+    )
 }
 
 #[path = "admission/nodes.rs"]

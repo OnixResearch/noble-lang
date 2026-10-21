@@ -148,6 +148,12 @@ impl Nodes {
                     inst: inst.ok_or_else(|| crate::internal(draft.span))?,
                 }
             }
+            crate::source::inference::DraftKind::SignedSelf(def) => {
+                noble_kernel::untrusted::Node::SignedSelf {
+                    def: *def,
+                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                }
+            }
             crate::source::inference::DraftKind::Quotation(body) => {
                 noble_kernel::untrusted::Node::Quotation {
                     body: core::mem::take(body),

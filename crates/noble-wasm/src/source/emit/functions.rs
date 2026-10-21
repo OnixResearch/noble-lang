@@ -104,6 +104,7 @@ fn instruction(
         super::super::plan::Action::Program(program) => push_program(out, program),
         super::super::plan::Action::Word(definition) => word_call(out, definition),
         super::super::plan::Action::TextByte => out.append(b"(call $op_text_byte"),
+        super::super::plan::Action::I64Less => out.append(b"(call $op_i64_less"),
         super::super::plan::Action::CalculatorIterate => out.append(b"(call $op_iterate"),
         super::super::plan::Action::CalculatorCompare => out.append(b"(call $op_calc_compare"),
         super::super::plan::Action::CalculatorDivRem => out.append(b"(call $op_calc_div_rem"),
@@ -154,6 +155,7 @@ fn instruction(
             ),
         super::super::plan::Action::EmitBound(slot) => bound_call(out, slot),
         super::super::plan::Action::ClockBound(slot) => clock_call(out, slot),
+        super::super::plan::Action::CodeExportBound(slot) => code_export_call(out, slot),
         super::super::plan::Action::LivePropose(owner) => {
             attempt!(out.append(b"(call $op_live_propose "));
             out.i64(owner as i64)
@@ -233,6 +235,11 @@ fn bound_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::D
 
 fn clock_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(call $op_clock_bound "));
+    out.i32(slot)
+}
+
+fn code_export_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call $op_code_export_bound "));
     out.i32(slot)
 }
 

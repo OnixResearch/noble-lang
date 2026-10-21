@@ -590,7 +590,7 @@
       "required_requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "B-LIVE-01", "BE-LIVE-01", "DX-LIVE-01", "S-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
       "acceptance_cases": ["LIVE-01", "LIVE-02", "LIVE-03", "LIVE-04", "LIVE-05", "LIVE-06", "LIVE-07", "LIVE-08"],
       "acceptance_status": "not-started",
-      "non_claims": ["Automatic watch is unavailable: a selected-basename rename event cannot authenticate inode bytes against later writable mappings or out-of-directory hardlinks. Automatic H-LIVE-01 and complete LIVE-05/watch acceptance, including declared-module/effectful watch, full in-flight source-change controls and code retirement, remain open; complete source-bound LIVE-02 acceptance, interpreter execution, executed LIVE cases, source-to-VM proof and any revision to historical M4/MC1/MC2/DXM1 evidence also remain absent."]
+      "non_claims": ["Cooperative paired-rename watch and selected declared snapshots do not authenticate later bytes against outside writable mappings or hardlinks; complete H-LIVE-01 and LIVE-05/watch acceptance, effectful/general transitions and full in-flight controls remain open. Integrated source 8b1504b passed 55 live CLI tests and five finite selected compiled guest traces including one-to-zero exact queued proposal root release after trap/quota, but not LIVE-02 active in-flight reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke, general LIVE-10 cancellation assurance or canonical case acceptance; complete source-bound LIVE-02, interpreter execution, source-to-VM proof and any revision to historical M4/MC1/MC2/DXM1 evidence remain absent."]
     },
     {
       "id": "MCB",
@@ -601,7 +601,7 @@
       "required_requirements": ["CB-SCOPE-01", "CB-BUILD-01", "CB-IDENTITY-01", "CB-NUM-01", "CB-VALUE-01", "CB-ORDER-01", "CB-LIMIT-01", "CB-HOST-01", "CB-SANDBOX-01", "CB-ADMIT-01", "CB-GATE-01"],
       "acceptance_cases": ["CB-CASE-01", "CB-CASE-02", "CB-CASE-03", "CB-CASE-04", "CB-CASE-05", "CB-CASE-06", "CB-CASE-07", "CB-CASE-08", "CB-CASE-09", "CB-CASE-10"],
       "acceptance_status": "not-started",
-      "non_claims": ["No C emitter, native runtime, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists."]
+      "non_claims": ["Only restricted nonselected I64/Bool/Unit/Text-result checked C11 source emission with bounded internal Pair/Sum/List exists in this integrated source; recursive duplicate JSON members refuse, but ancestor-sealed input/output native admission remains absent. No native compiler selection, ELF execution/runtime admission, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists. CB-CASE-01 includes limits.list_length and remains absent/not-run; the current source-only policy refuses that field rather than ignoring it."]
     }
   ]
 }

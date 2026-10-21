@@ -9,6 +9,12 @@ use wasmparser::{
     ElementItems, ElementKind, KnownCustom, Name, Operator, Parser, Payload, Validator,
 };
 
+#[path = "live_slot_returned_dag.rs"]
+mod returned_dag;
+pub(super) use returned_dag::{
+    anonymous_target_identity, checked_code_donor_manifest, supports_anonymous_target,
+};
+
 fn denied(reason: &str) -> String {
     format!("selected origin binary correspondence refused: {reason}")
 }
@@ -115,10 +121,10 @@ fn function_plan(
                 .map_err(|_| denied("invalid I64 source literal"))?;
             expected.extend([format!("i64.const {value}"), "call push_i64".to_owned()]);
         }
-        "add" | "sub" | "mul" | "dup" | "swap" | "drop" | "compose" => {
+        "add" | "sub" | "mul" | "dup" | "swap" | "drop" | "dip" | "run" | "compose" => {
             expected.push(format!("call op_{kind}"));
         }
-        "quote-i64" => {
+        "quote-i64" | "quote-program" => {
             expected.extend([
                 format!("i32.const {}", number(operation, "quote_input_signature")?),
                 format!("i32.const {}", number(operation, "quote_output_signature")?),
@@ -148,7 +154,335 @@ fn function_plan(
     Ok(expected)
 }
 
-pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<(), String> {
+#[expect(
+    clippy::cmp_owned,
+    reason = "Owner: noble-maintainers; reports encode I64 literals as canonical decimal JSON strings; comparing a JSON Value with the integer itself would test a JSON number instead."
+)]
+fn lexical_operation(node: &Value, operation: &Value) -> Result<(), String> {
+    let kind = text(operation, "kind")?;
+    let builtin = match kind {
+        "dup" => Some(0),
+        "drop" => Some(1),
+        "swap" => Some(2),
+        "dip" => Some(3),
+        "add" => Some(4),
+        "sub" => Some(5),
+        "mul" => Some(6),
+        "quote-i64" | "quote-program" => Some(8),
+        "compose" => Some(9),
+        "run" => Some(10),
+        "i64" => {
+            let value = text(operation, "value")?
+                .parse::<i64>()
+                .map_err(|_| denied("source I64 literal is out of range"))?;
+            if node["kind"] != "i64"
+                || node["value"] != value.to_string()
+                || operation["value"] != value.to_string()
+            {
+                return Err(denied("I64 instruction differs from replayed literal node"));
+            }
+            None
+        }
+        "static-program" => {
+            if node["kind"] != "quotation" || !node["body"].is_array() {
+                return Err(denied(
+                    "static Program does not originate at a replayed quotation",
+                ));
+            }
+            None
+        }
+        _ => {
+            return Err(denied(
+                "selected instruction has no replayed lexical action",
+            ))
+        }
+    };
+    if let Some(expected) = builtin {
+        if node["kind"] != "builtin" || node["definition"].as_u64() != Some(expected) {
+            return Err(denied(
+                "selected instruction differs from replayed builtin node",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn reachable_quotations(
+    body: &[Value],
+    nodes: &[Value],
+    depth: usize,
+    found: &mut BTreeSet<usize>,
+) -> Result<(), String> {
+    if depth >= 32 {
+        return Err(denied("replayed lexical quotation exceeds depth bound"));
+    }
+    for lexical in body {
+        let index = lexical
+            .as_u64()
+            .and_then(|value| usize::try_from(value).ok())
+            .ok_or_else(|| denied("replayed body has an invalid lexical NodeId"))?;
+        let node = nodes
+            .get(index)
+            .ok_or_else(|| denied("replayed body is truncated"))?;
+        if node["kind"] == "quotation" {
+            let children = rows(node, "body")?;
+            if !found.insert(index) {
+                return Err(denied("replayed quotation body has duplicate reachability"));
+            }
+            reachable_quotations(children, nodes, depth + 1, found)?;
+        }
+    }
+    Ok(())
+}
+
+#[expect(
+    clippy::cmp_owned,
+    reason = "Owner: noble-maintainers; reports encode I64 literals as canonical decimal JSON strings; comparing a JSON Value with the integer itself would test a JSON number instead."
+)]
+fn verify_lexical_replay(
+    origin: &Value,
+    expected_replay: &Value,
+    programs: &[Value],
+    root_index: u32,
+) -> Result<(), String> {
+    let replay = origin
+        .get("lexical_replay")
+        .ok_or_else(|| denied("selected origin lacks independent lexical replay"))?;
+    if replay != expected_replay {
+        return Err(denied(
+            "serialized lexical replay differs from independently checked source",
+        ));
+    }
+    let source = text(replay, "source")?;
+    let digest = crate::workflow::intrinsic::sha256(source.as_bytes());
+    if replay["source_sha256"] != digest
+        || origin["selected_source_sha256"] != digest
+        || text(replay, "definition_name")?.is_empty()
+    {
+        return Err(denied(
+            "replayed lexical source bytes or name differ from checked selection",
+        ));
+    }
+    let nodes = rows(replay, "nodes")?;
+    let generated_start = number(replay, "generated_start")? as usize;
+    let generated_end = number(replay, "generated_end")? as usize;
+    if nodes.is_empty()
+        || nodes.len() > 512
+        || number(replay, "original_nodes")? as usize != generated_start
+        || generated_start > generated_end
+        || generated_end.checked_add(1) != Some(nodes.len())
+    {
+        return Err(denied(
+            "replayed original/generated lexical node bounds differ",
+        ));
+    }
+    let candidate = rows(replay, "candidate_to_lexical")?;
+    if candidate.len() > 128 {
+        return Err(denied(
+            "replayed candidate source occurrence exceeds selected bound",
+        ));
+    }
+    for (index, node) in nodes.iter().enumerate() {
+        if number(node, "node")? as usize != index {
+            return Err(denied(
+                "replayed lexical NodeIds are not complete and ordered",
+            ));
+        }
+        let generated = (generated_start..generated_end).contains(&index);
+        let span = &node["authored_span"];
+        let witness = &node["generated_witness"];
+        if generated {
+            if !span.is_null() || !witness.is_object() {
+                return Err(denied("generated lexical node lacks exact replay witness"));
+            }
+            let generation = text(witness, "generation")?;
+            if !matches!(
+                generation,
+                "binding-swap"
+                    | "projection-dup"
+                    | "projection-swap"
+                    | "capture-quote"
+                    | "capture-compose"
+                    | "wrap-quotation"
+                    | "wrap-dip"
+                    | "cleanup-drop"
+            ) {
+                return Err(denied("unknown generated lexical occurrence witness"));
+            }
+            for field in ["occurrence_node", "binder_node"] {
+                if !witness[field].is_null() && number(witness, field)? as usize >= nodes.len() {
+                    return Err(denied(
+                        "generated binder/occurrence anchor is outside lexical AST",
+                    ));
+                }
+            }
+        } else if !witness.is_null()
+            || span.is_null()
+            || number(span, "start")? >= number(span, "end")?
+            || number(span, "end")? as usize > source.len()
+        {
+            return Err(denied(
+                "authored lexical node lacks exact bounded source bytes",
+            ));
+        }
+        match text(node, "kind")? {
+            "i64" => {
+                let value = text(node, "value")?
+                    .parse::<i64>()
+                    .map_err(|_| denied("replayed I64 literal is out of range"))?;
+                if generated || node["value"] != value.to_string() {
+                    return Err(denied("generated or noncanonical replayed I64 literal"));
+                }
+            }
+            "builtin" => {
+                if !matches!(
+                    number(node, "definition")?,
+                    0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 | 10
+                ) {
+                    return Err(denied("unknown replayed builtin instruction"));
+                }
+            }
+            "quotation" => {
+                for child in rows(node, "body")? {
+                    if child
+                        .as_u64()
+                        .and_then(|id| usize::try_from(id).ok())
+                        .is_none_or(|id| id >= nodes.len())
+                    {
+                        return Err(denied("replayed quotation has a foreign child"));
+                    }
+                }
+            }
+            _ => return Err(denied("unknown replayed lexical node kind")),
+        }
+    }
+    let named = number(origin, "named_program_index")? as usize;
+    if named >= programs.len()
+        || root_index as usize >= programs.len()
+        || named == root_index as usize
+    {
+        return Err(denied(
+            "selected lexical named/root Program indices are ambiguous",
+        ));
+    }
+    let mut seen_candidate = vec![false; candidate.len()];
+    let mut seen_bodies = BTreeSet::new();
+    let mut quoted = BTreeMap::new();
+    for (index, program) in programs.iter().enumerate() {
+        let selection = index as u32 == root_index;
+        let named_program = index == named;
+        let body = if selection {
+            if program["source_artifact"] != "selection" || !program["body_node"].is_null() {
+                return Err(denied(
+                    "selected caller wrapper has a lexical quotation owner",
+                ));
+            }
+            continue;
+        } else if named_program {
+            if program["source_artifact"] != "definition" || !program["body_node"].is_null() {
+                return Err(denied(
+                    "selected named definition has a foreign quotation owner",
+                ));
+            }
+            rows(replay, "body")?
+        } else {
+            let body_node = number(program, "body_node")? as usize;
+            let source = nodes
+                .get(body_node)
+                .ok_or_else(|| denied("selected static Program has a foreign quotation node"))?;
+            if source["kind"] != "quotation"
+                || !seen_bodies.insert(body_node)
+                || program["source_artifact"] != "definition"
+            {
+                return Err(denied(
+                    "selected static Program has an ambiguous lexical body",
+                ));
+            }
+            quoted.insert(body_node, index);
+            rows(source, "body")?
+        };
+        let operations = rows(program, "operations")?;
+        if operations.len() != body.len() {
+            return Err(denied(
+                "selected Program omits or adds lexical body operations",
+            ));
+        }
+        for (operation, expected) in operations.iter().zip(body) {
+            let lexical = number(operation, "lexical_node")? as usize;
+            if expected.as_u64() != Some(lexical as u64) {
+                return Err(denied(
+                    "selected Program operation order differs from replayed body",
+                ));
+            }
+            let source = nodes
+                .get(lexical)
+                .ok_or_else(|| denied("compiled instruction has no replayed lexical node"))?;
+            let checked = number(operation, "node")? as usize;
+            let slot = seen_candidate.get_mut(checked).ok_or_else(|| {
+                denied("compiled candidate NodeId lacks independent source binding")
+            })?;
+            if *slot || candidate[checked].as_u64() != Some(lexical as u64) {
+                return Err(denied(
+                    "compiled candidate NodeId or lexical binding was reused",
+                ));
+            }
+            *slot = true;
+            if operation["generated"].as_bool()
+                != Some((generated_start..generated_end).contains(&lexical))
+                || operation["authored_span"] != source["authored_span"]
+                || operation["generated_witness"] != source["generated_witness"]
+            {
+                return Err(denied(
+                    "compiled operation differs from replayed source/generation witness",
+                ));
+            }
+            lexical_operation(source, operation)?;
+        }
+    }
+    if seen_candidate.iter().any(|seen| !seen) {
+        return Err(denied(
+            "selected source omits a checked candidate operation",
+        ));
+    }
+    for program in programs
+        .iter()
+        .filter(|program| program["source_artifact"] == "definition")
+    {
+        for operation in rows(program, "operations")? {
+            if operation["kind"] == "static-program"
+                && quoted.get(&(number(operation, "lexical_node")? as usize))
+                    != Some(&(number(operation, "static_program_index")? as usize))
+            {
+                return Err(denied(
+                    "source quotation body differs from installed static Program",
+                ));
+            }
+        }
+    }
+    let mut reachable = BTreeSet::new();
+    reachable_quotations(rows(replay, "body")?, nodes, 0, &mut reachable)?;
+    if quoted.len() + 2 != programs.len()
+        || reachable != quoted.keys().copied().collect::<BTreeSet<_>>()
+    {
+        return Err(denied(
+            "selected source has an orphan or duplicated quotation Program",
+        ));
+    }
+    Ok(())
+}
+
+pub(super) fn verify(
+    bytes: &[u8],
+    origin: &Value,
+    install: &Value,
+    expected_replay: &Value,
+) -> Result<(), String> {
+    let root_index = number(origin, "root_program_index")?;
+    let programs = rows(origin, "programs")?;
+    if programs.is_empty() || programs.len() > 128 {
+        return Err(denied("incomplete selected program map"));
+    }
+    verify_lexical_replay(origin, expected_replay, programs, root_index)?;
     Validator::new()
         .validate_all(bytes)
         .map_err(|_| denied("invalid WebAssembly module"))?;
@@ -166,13 +500,11 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
             return Err(denied("selected definition identity differs"));
         }
     }
-    let root_index = number(origin, "root_program_index")?;
     if root_index != number(&install["target_metadata"], "root_program_index")? {
         return Err(denied("root program index differs"));
     }
-    let programs = rows(origin, "programs")?;
     let metadata = rows(install, "program_metadata")?;
-    if programs.is_empty() || programs.len() > 128 || programs.len() != metadata.len() {
+    if programs.len() != metadata.len() {
         return Err(denied("incomplete selected program map"));
     }
     let span = &install["code_span"];
@@ -430,19 +762,53 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
             {
                 return Err(denied("selected operation order/table entry differs"));
             }
+            let generated = operation
+                .get("generated")
+                .and_then(Value::as_bool)
+                .ok_or_else(|| {
+                    denied("selected operation lacks checked generation classification")
+                })?;
             if text(program, "source_artifact")? == "selection" {
                 if index as u32 != root_index
                     || operations.len() != 1
                     || number(operation, "node")? != 0
                     || text(operation, "kind")? != "call-selected"
-                    || !operation["source_span"].is_null()
+                    || generated
+                    || !operation["lexical_node"].is_null()
+                    || !operation["authored_span"].is_null()
+                    || !operation["generated_witness"].is_null()
                 {
                     return Err(denied("ambiguous selected caller wrapper"));
                 }
             } else if text(program, "source_artifact")? == "definition" {
-                let range = &operation["source_span"];
-                if number(range, "start")? >= number(range, "end")? {
-                    return Err(denied("missing selected source span"));
+                let kind = text(operation, "kind")?;
+                if generated {
+                    if !operation["authored_span"].is_null()
+                        || !matches!(
+                            kind,
+                            "dup"
+                                | "swap"
+                                | "drop"
+                                | "dip"
+                                | "static-program"
+                                | "quote-i64"
+                                | "quote-program"
+                                | "compose"
+                        )
+                    {
+                        return Err(denied(
+                            "generated operation has an authored span or foreign action",
+                        ));
+                    }
+                } else if kind == "dip"
+                    || operation["authored_span"].is_null()
+                    || number(&operation["authored_span"], "start")?
+                        >= number(&operation["authored_span"], "end")?
+                    || !operation["generated_witness"].is_null()
+                {
+                    return Err(denied(
+                        "authored operation lacks an exact nonempty source span",
+                    ));
                 }
             } else {
                 return Err(denied("unknown selected source artifact"));
@@ -589,70 +955,6 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     Ok(())
 }
 
-// Experimental local IDs for exactly one returned `quote(I64) [ + ] compose`
-// target. This is deliberately narrower than SelectedOriginMetadata: its
-// general quote/compose grammar has no checked logical-alias or lexical-owner
-// witness. A missing witness never becomes an anonymous target ID.
-fn anonymous_shape<'a>(
-    origin: &'a Value,
-    contracts: &[super::ProgramContract],
-    position: usize,
-    descriptor: &str,
-    root_inputs: &[Value],
-) -> Result<Option<(&'a Value, &'a Value, &'a Value)>, String> {
-    let outputs = rows(origin, "outputs")?;
-    if outputs.len() != 1 || root_inputs.len() > 1 || descriptor != "Program([I64]->[I64]!{})" {
-        return Ok(None);
-    }
-    let selected = &outputs[0];
-    if number(selected, "stack_position")? as usize != position {
-        return Ok(None);
-    }
-    let result = &selected["result"];
-    if result["kind"] != "compose"
-        || result["left"]["kind"] != "quote-i64"
-        || result["right"]["kind"] != "static-program"
-    {
-        return Ok(None);
-    }
-    let right = number(&result["right"], "program_index")? as usize;
-    let static_program = rows(origin, "programs")?
-        .get(right)
-        .ok_or_else(|| denied("anonymous target static dependency is missing"))?;
-    let static_operations = rows(static_program, "operations")?;
-    let static_contract = contracts
-        .get(right)
-        .ok_or_else(|| denied("anonymous target static contract is missing"))?;
-    if static_operations.len() != 1
-        || static_operations[0]["kind"] != "add"
-        || static_program["source_artifact"] != "definition"
-        || static_contract.input != ["I64", "I64"]
-        || static_contract.output != ["I64"]
-        || !static_contract.effects.is_empty()
-        || static_program["effect_mask"] != 0
-        || static_operations[0]["effect_mask"] != 0
-    {
-        return Ok(None);
-    }
-    let operand = &result["left"]["operand"];
-    if !(operand["kind"] == "fixed-i64"
-        || operand["kind"] == "root-i64" && operand["position"] == 0 && root_inputs.len() == 1)
-    {
-        return Ok(None);
-    }
-    Ok(Some((result, static_program, operand)))
-}
-
-pub(super) fn supports_anonymous_target(
-    origin: &Value,
-    contracts: &[super::ProgramContract],
-    position: usize,
-    descriptor: &str,
-    root_inputs: &[Value],
-) -> Result<bool, String> {
-    Ok(anonymous_shape(origin, contracts, position, descriptor, root_inputs)?.is_some())
-}
-
 pub(super) fn checked_saved_owner_inspection<'a>(
     owner: &str,
     saved_handle: u32,
@@ -671,175 +973,6 @@ pub(super) fn checked_saved_owner_inspection<'a>(
     receipt
         .get("selected_graph")
         .ok_or_else(|| denied("retained owner has no complete graph observation"))
-}
-
-pub(super) fn anonymous_target_identity(
-    origin: &Value,
-    contracts: &[super::ProgramContract],
-    position: usize,
-    descriptor: &str,
-    saved: &Value,
-    inspected_graph: &Value,
-    root_inputs: &[Value],
-) -> Result<Option<Value>, String> {
-    use serde_json::json;
-    let Some((result, static_program, operand)) =
-        anonymous_shape(origin, contracts, position, descriptor, root_inputs)?
-    else {
-        return Ok(None);
-    };
-    let (varying, actual) = match operand["kind"].as_str() {
-        Some("root-i64") if operand["position"] == 0 && root_inputs.len() == 1 => {
-            let input = &root_inputs[0];
-            if input["kind"] != "i64" {
-                return Err(denied("anonymous root capture is not checked I64"));
-            }
-            (true, text(input, "value")?)
-        }
-        Some("fixed-i64") => (false, text(operand, "value")?),
-        _ => return Ok(None),
-    };
-    let value = actual
-        .parse::<i64>()
-        .map_err(|_| denied("anonymous I64 operand is out of range"))?;
-    let actual = value.to_string();
-    if operand["kind"] == "fixed-i64" && text(operand, "value")? != actual {
-        return Err(denied(
-            "checked fixed I64 operand lacks a canonical representation",
-        ));
-    }
-
-    // The trusted worker re-reads the complete immutable VM graph from the
-    // retained saved owner after the root stack is cleared. Check its entire
-    // topology, node payloads, packed interfaces and effects, and inert recipe
-    // against the separately checked source/compiled-site plan. This is not
-    // attestation against a malicious worker or arbitrary replacement helpers.
-    let named = rows(origin, "programs")?
-        .get(number(origin, "named_program_index")? as usize)
-        .ok_or_else(|| denied("anonymous builder operation map is missing"))?;
-    let operations = rows(named, "operations")?;
-    let quote_op = operations
-        .iter()
-        .find(|op| {
-            op["kind"] == "quote-i64"
-                && op["node"] == result["left"]["node"]
-                && op["table_entry"] == result["left"]["table_entry"]
-        })
-        .ok_or_else(|| denied("anonymous quote lacks checked source site"))?;
-    let compose_op = operations
-        .iter()
-        .find(|op| {
-            op["kind"] == "compose"
-                && op["node"] == result["node"]
-                && op["table_entry"] == result["table_entry"]
-        })
-        .ok_or_else(|| denied("anonymous compose lacks checked source site"))?;
-    if quote_op["effect_mask"] != 0 || compose_op["effect_mask"] != 0 {
-        return Err(denied("anonymous target is not pure"));
-    }
-    let add = &rows(static_program, "operations")?[0];
-    let expected = json!([
-        {"kind":4,"payload":"0","x":2,"y":quote_op["quote_input_signature"],
-            "z":static_program["output_signature"],"w":2,"n":2,
-            "a":1,"b":2,"c":3,"textBytes":null},
-        {"kind":4,"payload":"0","x":1,"y":quote_op["quote_input_signature"],
-            "z":quote_op["quote_output_signature"],"w":1,"n":1,
-            "a":4,"b":null,"c":5,"textBytes":null},
-        {"kind":4,"payload":"0","x":static_program["entry"],
-            "y":static_program["input_signature"],"z":static_program["output_signature"],
-            "w":1,"n":1,"a":null,"b":null,"c":6,"textBytes":null},
-        {"kind":9,"payload":"0","x":0,"y":0,"z":0,"w":0,"n":0,
-            "a":5,"b":6,"c":null,"textBytes":null},
-        {"kind":1,"payload":actual,"x":0,"y":0,"z":0,"w":0,"n":0,
-            "a":null,"b":null,"c":null,"textBytes":null},
-        {"kind":8,"payload":actual,"x":1,"y":0,"z":0,"w":0,"n":0,
-            "a":null,"b":null,"c":null,"textBytes":null},
-        {"kind":8,"payload":"4","x":2,"y":add["input_signature"],
-            "z":add["output_signature"],"w":0,"n":0,
-            "a":null,"b":null,"c":null,"textBytes":null}
-    ]);
-    if inspected_graph != &expected {
-        return Err(denied(
-            "retained anonymous owner graph differs from checked source and interface",
-        ));
-    }
-    // Existing public child observations must agree with the separately
-    // re-read full owner graph; they never substitute for it.
-    let captures = rows(saved, "capture_values")?;
-    if captures.len() != 2 || captures[0]["field"] != "cell_a" || captures[1]["field"] != "cell_b" {
-        return Err(denied("anonymous target capture graph is truncated"));
-    }
-    let left = captures[0]["value"]
-        .as_array()
-        .ok_or_else(|| denied("anonymous quote graph is missing"))?;
-    let right_graph = captures[1]["value"]
-        .as_array()
-        .ok_or_else(|| denied("anonymous static child graph is missing"))?;
-    let expected = expected
-        .as_array()
-        .ok_or_else(|| denied("internal anonymous graph projection is missing"))?;
-    let rebased = |observed: &Value, original: &Value, a: Option<u32>, c: u32| {
-        observed
-            .as_object()
-            .zip(original.as_object())
-            .is_some_and(|(node, checked)| {
-                node.len() == checked.len()
-                    && checked.iter().all(|(field, value)| match field.as_str() {
-                        "a" if a.is_some() => node[field] == a.unwrap_or_default(),
-                        "c" => node[field] == c,
-                        _ => node[field] == *value,
-                    })
-            })
-    };
-    if left.len() != 3
-        || right_graph.len() != 2
-        || !rebased(&left[0], &expected[1], Some(1), 2)
-        || left[1] != expected[4]
-        || left[2] != expected[5]
-        || !rebased(&right_graph[0], &expected[2], None, 1)
-        || right_graph[1] != expected[6]
-    {
-        return Err(denied(
-            "public capture graphs differ from retained owner graph",
-        ));
-    }
-
-    // This is an explicitly local, strict I64 quote/add/compose projection,
-    // NOT the portable G-03 encoding. Domain separation prevents a template
-    // digest from being mistaken for the captured program-value digest.
-    // The checked source lineage decides the operand tag; the identical VM
-    // literal alone cannot distinguish a fixed source constant from an input.
-    let mut template =
-        blake3::Hasher::new_derive_key("noble experimental anonymous definition template v2");
-    template.update(b"core-bootstrap:i64-quote-add-compose\0");
-    template.update(b"I64--I64!{}\0builtin:i64.add:4\0");
-    if varying {
-        template.update(b"root-input:0:I64");
-    } else {
-        template.update(b"fixed:I64");
-        template.update(&value.to_le_bytes());
-    }
-    let definition_digest = template.finalize();
-    let definition_id = format!(
-        "anonymous-template-experimental-v2-blake3:{}",
-        definition_digest.to_hex()
-    );
-    let interface = json!({"input":["I64"],"output":["I64"],"effects":[]});
-    let dependencies = json!(["builtin:i64.add"]);
-    let captured = json!([{"type":"I64","value":actual}]);
-    let mut program =
-        blake3::Hasher::new_derive_key("noble experimental anonymous program value v2");
-    program.update(b"template-blake3:32\0capture:I64:1\0");
-    program.update(definition_digest.as_bytes());
-    program.update(&value.to_le_bytes());
-    let program_value_id = format!(
-        "anonymous-program-experimental-v2-blake3:{}",
-        program.finalize().to_hex()
-    );
-    Ok(Some(json!({"definition_id":definition_id,
-        "program_value_id":program_value_id,"captures":captured,
-        "interface":interface,"effects":[],"dependencies":dependencies,
-        "artifact_sha256":null})))
 }
 
 #[cfg(test)]
@@ -885,11 +1018,13 @@ mod tests {
             "named_program_index":bound.named_program_index,
             "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())
         });
+        let expected_replay = super::super::lexical_replay_json(&selected)?;
         let origin = super::super::selected_origin_json(
             prepared
                 .selected_origin()
                 .ok_or("missing classified selected source")?,
             &target,
+            &expected_replay,
         )?;
         let metadata = prepared
             .program_metadata()
@@ -912,17 +1047,50 @@ mod tests {
             "program_metadata":metadata
         });
         let binary = super::super::assemble_slot(prepared.wat())?;
-        verify(&binary, &origin, &install)?;
+        verify(&binary, &origin, &install, &expected_replay)?;
 
         let mut wrong_site = origin.clone();
         wrong_site["programs"][0]["operations"][0]["table_entry"] =
             serde_json::json!(span.start + 1);
-        if verify(&binary, &wrong_site, &install).is_ok() {
+        if verify(&binary, &wrong_site, &install, &expected_replay).is_ok() {
             return Err("wrong selected quote site acquired origin".into());
+        }
+        let mut wrong_node = origin.clone();
+        wrong_node["programs"][0]["operations"][0]["node"] =
+            serde_json::json!(number(&origin["programs"][0]["operations"][0], "node")? + 1000);
+        if verify(&binary, &wrong_node, &install, &expected_replay).is_ok() {
+            return Err("changed lexical source NodeId acquired checked origin".into());
+        }
+        let mut wrong_lexical = origin.clone();
+        wrong_lexical["programs"][0]["operations"][0]["lexical_node"] =
+            serde_json::json!(number(&origin["programs"][0]["operations"][0], "lexical_node")? + 1);
+        if verify(&binary, &wrong_lexical, &install, &expected_replay).is_ok() {
+            return Err("rebound kernel-to-lexical NodeId acquired checked origin".into());
+        }
+        let mut wrong_bytes = origin.clone();
+        wrong_bytes["lexical_replay"]["source"] =
+            serde_json::json!(format!("{} ", text(&origin["lexical_replay"], "source")?));
+        if verify(&binary, &wrong_bytes, &install, &expected_replay).is_ok() {
+            return Err("changed retained lexical source bytes acquired checked origin".into());
+        }
+        let mut wrong_span = origin.clone();
+        let authored = &origin["programs"][0]["operations"][0]["authored_span"];
+        wrong_span["programs"][0]["operations"][0]["authored_span"]["start"] =
+            serde_json::json!(number(authored, "start")? + 1);
+        wrong_span["programs"][0]["operations"][0]["authored_span"]["end"] =
+            serde_json::json!(number(authored, "end")? + 1);
+        if verify(&binary, &wrong_span, &install, &expected_replay).is_ok() {
+            return Err("shifted authored source span acquired checked origin".into());
+        }
+        let mut forged_generated = origin.clone();
+        forged_generated["programs"][0]["operations"][0]["generated"] = serde_json::json!(true);
+        forged_generated["programs"][0]["operations"][0]["authored_span"] = Value::Null;
+        if verify(&binary, &forged_generated, &install, &expected_replay).is_ok() {
+            return Err("authored quote relabeled as generated acquired checked origin".into());
         }
         let mut wrong_action = origin.clone();
         wrong_action["programs"][0]["operations"][2]["kind"] = serde_json::json!("drop");
-        if verify(&binary, &wrong_action, &install).is_ok() {
+        if verify(&binary, &wrong_action, &install, &expected_replay).is_ok() {
             return Err("wrong selected compose operation acquired origin".into());
         }
         let mut extra = origin.clone();
@@ -931,7 +1099,7 @@ mod tests {
             .as_array_mut()
             .ok_or("origin operations missing")?
             .push(duplicate);
-        if verify(&binary, &extra, &install).is_ok() {
+        if verify(&binary, &extra, &install, &expected_replay).is_ok() {
             return Err("extra ambiguous selected instruction acquired origin".into());
         }
 
@@ -942,6 +1110,7 @@ mod tests {
                 &super::super::assemble_slot(changed_code.as_bytes())?,
                 &origin,
                 &install,
+                &expected_replay,
             )
             .is_ok()
         {
@@ -957,6 +1126,7 @@ mod tests {
             &super::super::assemble_slot(changed_table.as_bytes())?,
             &origin,
             &install,
+            &expected_replay,
         )
         .is_ok()
         {
@@ -988,6 +1158,7 @@ mod tests {
             &super::super::assemble_slot(forged_initializer.as_bytes())?,
             &origin,
             &install,
+            &expected_replay,
         )
         .is_ok()
         {
@@ -1008,6 +1179,7 @@ mod tests {
             &super::super::assemble_slot(forged_helper.as_bytes())?,
             &origin,
             &install,
+            &expected_replay,
         )
         .is_ok()
         {
@@ -1034,6 +1206,7 @@ mod tests {
                 .selected_origin()
                 .ok_or("later selected source lacks classified origin")?,
             &target,
+            &expected_replay,
         )?;
         let mut later_install = install.clone();
         later_install["code_span"] = serde_json::json!({
@@ -1053,6 +1226,7 @@ mod tests {
             &super::super::assemble_slot(later_wat.as_bytes())?,
             &later_origin,
             &later_install,
+            &expected_replay,
         )?;
         let late_init = format!(
             "(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n\
@@ -1076,12 +1250,307 @@ mod tests {
             &super::super::assemble_slot(forged.as_bytes())?,
             &later_origin,
             &later_install,
+            &expected_replay,
         )
         .is_ok()
         {
             return Err(
                 "later-generation forged native core segment acquired selected origin".into(),
             );
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn selected_binary_rejects_forged_generated_dip_source_witness() -> Result<(), String> {
+        use serde_json::json;
+        let environment = noble_kernel::contracts::environment()
+            .map_err(|error| format!("environment: {error:?}"))?
+            .enable_live_slots();
+        let mut source = noble_contracts::source::Session::new_live_slots(environment)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let definition = source
+            .prepare(
+                b"def builder [ quote [ + ] compose let q q q compose [ 0 + ] compose ]",
+                &[],
+                LIMITS,
+            )
+            .map_err(|error| error.diagnostic().message.clone())?;
+        source
+            .commit(definition)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let call = source
+            .prepare(b"builder", &[Ty::I64], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let selected = source
+            .checked_selected_target(&call, "builder")
+            .map_err(|error| format!("selected source: {error:?}"))?;
+        let prepared = noble_wasm::source::Compiler::new_live_slots()
+            .prepare_checked_selected(&selected)
+            .map_err(|_| "generated source compilation refused".to_owned())?;
+        let bound = prepared
+            .selected_target()
+            .ok_or("missing checked generated selection")?;
+        let target = json!({"definition_index":bound.definition_id.index(),
+            "definition_identity":bound.definition_id.identity().to_string(),
+            "source_generation":bound.source_generation.to_string(),
+            "named_program_index":bound.named_program_index,
+            "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())});
+        let expected_replay = super::super::lexical_replay_json(&selected)?;
+        let origin = super::super::selected_origin_json(
+            prepared
+                .selected_origin()
+                .ok_or("missing generated selected origin")?,
+            &target,
+            &expected_replay,
+        )?;
+        let metadata = prepared
+            .program_metadata()
+            .iter()
+            .map(|program| {
+                json!({
+                    "entry":program.entry,"program_index":program.program_index,
+                    "input_signature":program.input_signature,
+                    "output_signature":program.output_signature,"effect_mask":program.effect_mask
+                })
+            })
+            .collect::<Vec<_>>();
+        let selected_target = prepared
+            .target_metadata()
+            .ok_or("missing generated root metadata")?;
+        let span = prepared.code_span();
+        let install = json!({"selected_target":target,
+            "target_metadata":{"root_program_index":selected_target.root_program_index,
+                "stack_out":super::super::canonical_stack(&selected_target.stack_out,0)?},
+            "code_span":{"start":span.start,"length":span.slots,"generation":span.generation},
+            "program_metadata":metadata});
+        let binary = super::super::assemble_slot(prepared.wat())?;
+        verify(&binary, &origin, &install, &expected_replay)?;
+
+        let mut dip = None;
+        for (program_index, program) in rows(&origin, "programs")?.iter().enumerate() {
+            for (operation_index, operation) in rows(program, "operations")?.iter().enumerate() {
+                if operation["kind"] == "dip"
+                    && operation["generated"] == true
+                    && operation["generated_witness"]["binder_node"]
+                        .as_u64()
+                        .is_some()
+                {
+                    dip = Some((program_index, operation_index));
+                    break;
+                }
+            }
+            if dip.is_some() {
+                break;
+            }
+        }
+        let (program_index, operation_index) =
+            dip.ok_or("selected source omitted witnessed generated dip")?;
+        let op = &origin["programs"][program_index]["operations"][operation_index];
+        let mut forged_span = origin.clone();
+        forged_span["programs"][program_index]["operations"][operation_index]["authored_span"] =
+            json!({"start":0,"end":1});
+        if verify(&binary, &forged_span, &install, &expected_replay).is_ok() {
+            return Err("generated dip gained forged authored source bytes".into());
+        }
+        let mut forged_binder = origin.clone();
+        let binder = number(&op["generated_witness"], "binder_node")?;
+        forged_binder["programs"][program_index]["operations"][operation_index]
+            ["generated_witness"]["binder_node"] = json!(if binder == 0 { 1 } else { 0 });
+        if verify(&binary, &forged_binder, &install, &expected_replay).is_ok() {
+            return Err("generated dip rebound its lexical binder".into());
+        }
+        let mut forged_candidate = origin.clone();
+        let lexical = number(op, "lexical_node")?;
+        let mut forged_lexical_witness = origin.clone();
+        forged_lexical_witness["lexical_replay"]["nodes"][lexical as usize]["generated_witness"]
+            ["binder_node"] = json!(if binder == 0 { 1 } else { 0 });
+        if verify(&binary, &forged_lexical_witness, &install, &expected_replay).is_ok() {
+            return Err("generated dip accepted a forged independent binder witness".into());
+        }
+        forged_candidate["lexical_replay"]["candidate_to_lexical"][number(op, "node")? as usize] =
+            json!(if lexical == 0 { 1 } else { 0 });
+        if verify(&binary, &forged_candidate, &install, &expected_replay).is_ok() {
+            return Err("generated dip rebound its checked candidate NodeId".into());
+        }
+        let mut forged_source = origin.clone();
+        forged_source["lexical_replay"]["source"] =
+            json!(format!("{} ", text(&expected_replay, "source")?));
+        if verify(&binary, &forged_source, &install, &expected_replay).is_ok() {
+            return Err("generated dip accepted changed lexical source bytes".into());
+        }
+        let authored = rows(&expected_replay, "nodes")?
+            .iter()
+            .position(|node| node["authored_span"].is_object())
+            .ok_or("selected source lacks authored AST span")?;
+        let mut forged_ast_span = origin.clone();
+        let original_end = number(&expected_replay["nodes"][authored]["authored_span"], "end")?;
+        forged_ast_span["lexical_replay"]["nodes"][authored]["authored_span"]["start"] =
+            json!(original_end);
+        if verify(&binary, &forged_ast_span, &install, &expected_replay).is_ok() {
+            return Err("generated dip accepted a shifted original AST span".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn alias_binary_rejects_second_quote_and_nested_compose_site_substitution() -> Result<(), String>
+    {
+        use serde_json::json;
+        let environment = noble_kernel::contracts::environment()
+            .map_err(|error| format!("environment: {error:?}"))?
+            .enable_live_slots();
+        let mut source = noble_contracts::source::Session::new_live_slots(environment)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let definition = source
+            .prepare(
+                b"def aliased [ drop dup quote swap quote compose [ + + + ] compose ]",
+                &[],
+                LIMITS,
+            )
+            .map_err(|error| error.diagnostic().message.clone())?;
+        source
+            .commit(definition)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let call = source
+            .prepare(b"aliased", &[Ty::I64, Ty::I64], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let selected = source
+            .checked_selected_target(&call, "aliased")
+            .map_err(|error| format!("selected source: {error:?}"))?;
+        let prepared = noble_wasm::source::Compiler::new_live_slots()
+            .prepare_checked_selected(&selected)
+            .map_err(|_| "checked alias compilation refused".to_owned())?;
+        let bound = prepared.selected_target().ok_or("missing selected alias")?;
+        let target = json!({"definition_index":bound.definition_id.index(),
+            "definition_identity":bound.definition_id.identity().to_string(),
+            "source_generation":bound.source_generation.to_string(),
+            "named_program_index":bound.named_program_index,
+            "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())});
+        let expected_replay = super::super::lexical_replay_json(&selected)?;
+        let origin = super::super::selected_origin_json(
+            prepared
+                .selected_origin()
+                .ok_or("missing classified alias source")?,
+            &target,
+            &expected_replay,
+        )?;
+        let span = prepared.code_span();
+        let install = json!({"selected_target":target,
+            "target_metadata":{"root_program_index":prepared.target_metadata()
+                .ok_or("missing alias root metadata")?.root_program_index,
+                "stack_out":["Program([I64,I64]->[I64]!{})"]},
+            "code_span":{"start":span.start,"length":span.slots,"generation":span.generation},
+            "program_metadata":prepared.program_metadata().iter().map(|program| json!({
+                "entry":program.entry,"program_index":program.program_index,
+                "input_signature":program.input_signature,
+                "output_signature":program.output_signature,"effect_mask":program.effect_mask
+            })).collect::<Vec<_>>()});
+        let binary = super::super::assemble_slot(prepared.wat())?;
+        verify(&binary, &origin, &install, &expected_replay)?;
+        let contracts = prepared
+            .program_metadata()
+            .iter()
+            .map(|program| {
+                Ok(super::super::ProgramContract {
+                    input: super::super::canonical_stack(&program.stack_in, 0)?,
+                    output: super::super::canonical_stack(&program.stack_out, 0)?,
+                    effects: super::super::effects(&program.effects)?,
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let root_inputs = [
+            json!({"kind":"i64","value":"2"}),
+            json!({"kind":"i64","value":"2"}),
+        ];
+        if !supports_anonymous_target(
+            &origin,
+            &contracts,
+            0,
+            "Program([I64,I64]->[I64]!{})",
+            &root_inputs,
+        )? {
+            return Err("two checked root-binding quotations remained opaque".into());
+        }
+        let named = number(&origin, "named_program_index")? as usize;
+        let source_ops = rows(&origin["programs"][named], "operations")?;
+        let quotes = source_ops
+            .iter()
+            .enumerate()
+            .filter(|(_, op)| op["kind"] == "quote-i64")
+            .map(|(at, _)| at)
+            .collect::<Vec<_>>();
+        let composes = source_ops
+            .iter()
+            .enumerate()
+            .filter(|(_, op)| op["kind"] == "compose")
+            .map(|(at, _)| at)
+            .collect::<Vec<_>>();
+        if quotes.len() != 2 || composes.len() != 2 {
+            return Err("alias source lost distinct quote and compose sites".into());
+        }
+        let mut owner_claim = origin.clone();
+        owner_claim["programs"][named]["operations"][0]["kind"] = json!("recursive-self");
+        if supports_anonymous_target(
+            &owner_claim,
+            &contracts,
+            0,
+            "Program([I64,I64]->[I64]!{})",
+            &root_inputs,
+        )? {
+            return Err("unverified lexical self-reference acquired anonymous identity".into());
+        }
+        let mut substituted_quote = origin.clone();
+        substituted_quote["programs"][named]["operations"][quotes[1]]["table_entry"] =
+            origin["programs"][named]["operations"][quotes[0]]["table_entry"].clone();
+        if verify(&binary, &substituted_quote, &install, &expected_replay).is_ok() {
+            return Err("second alias quotation borrowed the first checked code site".into());
+        }
+        let mut substituted_compose = origin.clone();
+        substituted_compose["programs"][named]["operations"][composes[0]]["kind"] = json!("drop");
+        if verify(&binary, &substituted_compose, &install, &expected_replay).is_ok() {
+            return Err("inner alias composition borrowed a different compiled action".into());
+        }
+        let wat = std::str::from_utf8(prepared.wat()).map_err(|error| error.to_string())?;
+        let native = "(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)";
+        if !wat.contains(native) {
+            return Err("selected native donor has no core entry list".into());
+        }
+        let swapped = wat.replacen(
+            native,
+            "(elem $core func $empty_entry $compose_entry $quote_entry $restore_entry)",
+            1,
+        );
+        if verify(
+            &super::super::assemble_slot(swapped.as_bytes())?,
+            &origin,
+            &install,
+            &expected_replay,
+        )
+        .is_ok()
+        {
+            return Err(
+                "rewritten native quote/compose table entry acquired code donor identity".into(),
+            );
+        }
+        let selected_entry = format!("(table.init $code (i32.const {})", span.start);
+        if !wat.contains(&selected_entry) {
+            return Err("selected static donor has no checked table initializer".into());
+        }
+        let moved = wat.replacen(
+            &selected_entry,
+            &format!("(table.init $code (i32.const {})", span.start + 1),
+            1,
+        );
+        if verify(
+            &super::super::assemble_slot(moved.as_bytes())?,
+            &origin,
+            &install,
+            &expected_replay,
+        )
+        .is_ok()
+        {
+            return Err("rewritten static add table entry acquired code donor identity".into());
         }
         Ok(())
     }
@@ -1119,9 +1588,11 @@ mod tests {
             "named_program_index":bound.named_program_index,
             "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())
         });
+        let expected_replay = super::super::lexical_replay_json(&selected)?;
         let origin = super::super::selected_origin_json(
             prepared.selected_origin().ok_or("missing checked origin")?,
             &target,
+            &expected_replay,
         )?;
         let contracts = prepared
             .program_metadata()
@@ -1170,7 +1641,7 @@ mod tests {
         left["c"] = json!(2);
         let mut static_child = graph[2].clone();
         static_child["c"] = json!(1);
-        let saved = json!({"capture_values":[
+        let saved = json!({"capture_status":"checked-selected-origin","capture_values":[
             {"field":"cell_a","value":[left, graph[4], graph[5]]},
             {"field":"cell_b","value":[static_child, graph[6]]}
         ]});
@@ -1189,6 +1660,27 @@ mod tests {
         if admitted(&graph)?.is_none() {
             return Err("checked bounded graph fixture did not reach the anonymous target".into());
         }
+        let mut zero_graph = graph.clone();
+        zero_graph[4]["payload"] = json!("0");
+        zero_graph[5]["payload"] = json!("0");
+        let mut zero_saved = saved.clone();
+        zero_saved["capture_values"][0]["value"][1]["payload"] = json!("0");
+        zero_saved["capture_values"][0]["value"][2]["payload"] = json!("0");
+        let zero = |spelling| {
+            anonymous_target_identity(
+                &origin,
+                &contracts,
+                0,
+                "Program([I64]->[I64]!{})",
+                &zero_saved,
+                &zero_graph,
+                &[json!({"kind":"i64","value":spelling})],
+            )
+        };
+        let zero_id = zero("0")?.ok_or("canonical zero acquired no checked identity")?;
+        if zero("-0")? != Some(zero_id) {
+            return Err("same signed I64 root value changed returned Program identity".into());
+        }
         for (name, node, field, forged) in [
             ("extra recipe edge", 3, "c", json!(4)),
             (
@@ -1198,6 +1690,7 @@ mod tests {
                 json!(number(static_program, "entry")? + 1),
             ),
             ("wrong captured value", 4, "payload", json!("3")),
+            ("wrong static recipe opcode", 6, "payload", json!("5")),
             ("wrong static output signature", 2, "z", json!(123456)),
             ("wrong effect mask", 2, "payload", json!("1")),
             ("wrong outer interface", 0, "y", json!(123456)),
@@ -1215,6 +1708,95 @@ mod tests {
             .pop();
         if admitted(&truncated).is_ok() {
             return Err("truncated retained graph acquired an anonymous target identity".into());
+        }
+        let mut extra = graph.clone();
+        extra
+            .as_array_mut()
+            .ok_or("graph is not an array")?
+            .push(graph[4].clone());
+        if admitted(&extra).is_ok() {
+            return Err("extra retained graph cell acquired an anonymous target identity".into());
+        }
+        let mut cyclic = graph.clone();
+        cyclic[3]["a"] = json!(3);
+        if admitted(&cyclic).is_ok() {
+            return Err("cyclic retained recipe acquired an anonymous target identity".into());
+        }
+        let mut forged_capture = saved.clone();
+        forged_capture["capture_values"][0]["value"][1]["payload"] = json!("3");
+        if anonymous_target_identity(
+            &origin,
+            &contracts,
+            0,
+            "Program([I64]->[I64]!{})",
+            &forged_capture,
+            &graph,
+            &input,
+        )
+        .is_ok()
+        {
+            return Err("forged public child capture acquired an anonymous target identity".into());
+        }
+        for (name, replacement) in [
+            (
+                "forward Program alias",
+                json!({"kind":"reference","alias":1}),
+            ),
+            (
+                "wrong Program operand",
+                json!({"kind":"quote-program","alias":1,
+                "node":result["left"]["node"],"table_entry":result["left"]["table_entry"],
+                "operand":result["right"]}),
+            ),
+            (
+                "fabricated fixed expression for root capture",
+                json!({"kind":"quote-i64","alias":1,
+                    "node":result["left"]["node"],
+                    "table_entry":result["left"]["table_entry"],
+                    "operand":{"kind":"fixed-i64","value":"2",
+                        "recipe":{"kind":"literal","value":"2"}}}),
+            ),
+        ] {
+            let mut forged = origin.clone();
+            forged["outputs"][0]["result"]["left"] = replacement;
+            if supports_anonymous_target(
+                &forged,
+                &contracts,
+                0,
+                "Program([I64]->[I64]!{})",
+                &input,
+            )? {
+                return Err(format!("{name} acquired a checked source identity"));
+            }
+        }
+        let mut effectful = origin.clone();
+        effectful["programs"][right]["effect_mask"] = json!(1);
+        if supports_anonymous_target(
+            &effectful,
+            &contracts,
+            0,
+            "Program([I64]->[I64]!{})",
+            &input,
+        )? {
+            return Err("effectful static continuation acquired pure returned identity".into());
+        }
+        let mut unchecked_capture = saved.clone();
+        unchecked_capture["capture_status"] =
+            json!("backend-observed-source-occurrence-unavailable");
+        if anonymous_target_identity(
+            &origin,
+            &contracts,
+            0,
+            "Program([I64]->[I64]!{})",
+            &unchecked_capture,
+            &graph,
+            &input,
+        )
+        .is_ok()
+        {
+            return Err(
+                "unchecked capture provenance acquired an anonymous target identity".into(),
+            );
         }
         let receipt = json!({"outcome":"saved-program-inspected","owner":"program-1",
             "saved_handle":4096,"guest_requests":0,"protected_operations":0,

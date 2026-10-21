@@ -13,6 +13,10 @@ pub(crate) fn bootstrap_word(word: &[u8]) -> Option<noble_kernel::contracts::Def
     words::bootstrap(word)
 }
 
+pub(crate) const fn bootstrap_spelling(identity: u32) -> Option<&'static str> {
+    words::spelling(identity)
+}
+
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; spelling appends directly to the caller-owned diagnostic String, requiring growable capacity rather than a borrowed str and avoiding an intermediate allocation."
@@ -220,7 +224,47 @@ pub(crate) fn check(
     spans: &[crate::Span],
     span: crate::Span,
 ) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
-    match noble_kernel::acceptance::check(env, request, candidate) {
+    check_with_owner(env, candidate, request, spans, span, None)
+}
+
+/// This remains a structural check, not a source-authorizing entry point.
+pub(crate) fn check_signed_structure(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    request: &noble_kernel::untrusted::Request,
+    spans: &[crate::Span],
+    span: crate::Span,
+    owner: noble_kernel::contracts::Definition,
+    owner_inst: &noble_kernel::words::Inst,
+) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
+    check_with_owner(
+        env,
+        candidate,
+        request,
+        spans,
+        span,
+        Some((owner, owner_inst)),
+    )
+}
+
+fn check_with_owner(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    request: &noble_kernel::untrusted::Request,
+    spans: &[crate::Span],
+    span: crate::Span,
+    owner: Option<(
+        noble_kernel::contracts::Definition,
+        &noble_kernel::words::Inst,
+    )>,
+) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
+    let outcome = match owner {
+        Some((owner, owner_inst)) => noble_kernel::acceptance::check_signed_structure(
+            env, request, candidate, owner, owner_inst,
+        ),
+        None => noble_kernel::acceptance::check(env, request, candidate),
+    };
+    match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => Ok(checked),
         noble_kernel::untrusted::Outcome::Invalid(diagnostic) => {
             let at = match diagnostic.node {

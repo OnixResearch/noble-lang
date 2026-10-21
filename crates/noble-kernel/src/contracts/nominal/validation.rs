@@ -34,6 +34,7 @@ impl super::super::Env {
             return false;
         }
         bootstrap_matches(self)
+            && (!self.text_cursor || !self.declared_modules || declared_text_prefix_matches(self))
             && super::super::live::catalog_valid(self)
             && (!self.declared_modules || fixed_definitions_match(self))
             && counts_match(self)
@@ -53,6 +54,31 @@ impl super::super::Env {
         }
         matches
     }
+}
+
+/// The combined declared-text profile is exactly the fixed cursor prefix plus
+/// signed comparison at 27; no row from 23 onward may be relabeled or owned.
+fn declared_text_prefix_matches(env: &super::super::Env) -> bool {
+    let Ok(fixed) = super::super::declared_text_environment() else {
+        return false;
+    };
+    if env.defs.len() < fixed.defs.len()
+        || env.kinds.len() < fixed.kinds.len()
+        || env.deps.len() < fixed.defs.len()
+        || env.definition_owners.len() < fixed.defs.len()
+    {
+        return false;
+    }
+    let mut index = 23;
+    let mut is_matching = true;
+    while index < fixed.defs.len() && is_matching {
+        is_matching = env.kinds[index] == fixed.kinds[index]
+            && super::schemes::same_scheme(&env.defs[index], &fixed.defs[index])
+            && env.deps[index].is_empty()
+            && env.definition_owners[index].is_none();
+        index += 1;
+    }
+    is_matching
 }
 
 #[expect(
@@ -125,6 +151,10 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
         || (row.input.is_empty()
             && row.output.as_slice() == [crate::types::Ty::I64]
             && row.effects.as_slice() == [super::super::TEST_CLOCK])
+        || (row.adapter_identity == super::super::TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            && row.input.as_slice() == [crate::types::Ty::Text, crate::types::Ty::Text]
+            && row.output.is_empty()
+            && row.effects.as_slice() == [super::super::TEST_CODE_EXPORT])
 }
 
 #[expect(
@@ -143,14 +173,20 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         .kinds
         .iter()
         .any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
+    let has_code_export = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, super::super::Behavior::BoundCodeExport(_)));
     env.resource_kinds.len() == 1usize.saturating_add(env.live_resource_nominals.len())
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
         && env.effects.len()
             == 1usize
                 .saturating_add(usize::from(has_clock))
+                .saturating_add(usize::from(has_code_export))
                 .saturating_add(usize::from(env.live_slots))
         && env.effects[0].0 == super::super::TEST_EMIT.0
         && env.effects.contains(&super::super::TEST_CLOCK) == has_clock
+        && env.effects.contains(&super::super::TEST_CODE_EXPORT) == has_code_export
         && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
@@ -285,6 +321,7 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
         super::super::Behavior::ListCase => None,
         super::super::Behavior::TestEmit => None,
         super::super::Behavior::TextByte => None,
+        super::super::Behavior::I64Less => None,
         super::super::Behavior::CalculatorIterate => None,
         super::super::Behavior::CalculatorCompare => None,
         super::super::Behavior::CalculatorDivRem => None,
@@ -293,6 +330,7 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
         super::super::Behavior::Reserved => None,
         super::super::Behavior::BoundEmit(_) => None,
         super::super::Behavior::BoundClock(_) => None,
+        super::super::Behavior::BoundCodeExport(_) => None,
         super::super::Behavior::NominalNew(_) => None,
         super::super::Behavior::NominalInto(_) => None,
         super::super::Behavior::NominalLeft(_) => None,
@@ -308,10 +346,13 @@ fn kind_matches_definition(
     kind: super::super::Behavior,
 ) -> bool {
     if let super::super::Behavior::BoundEmit(slot) = kind {
-        return bound_definition_matches(env, index, slot, false);
+        return bound_definition_matches(env, index, slot, super::super::TEST_EMIT);
     }
     if let super::super::Behavior::BoundClock(slot) = kind {
-        return bound_definition_matches(env, index, slot, true);
+        return bound_definition_matches(env, index, slot, super::super::TEST_CLOCK);
+    }
+    if let super::super::Behavior::BoundCodeExport(slot) = kind {
+        return bound_definition_matches(env, index, slot, super::super::TEST_CODE_EXPORT);
     }
     if let Some(id) = generic_operation_id(kind) {
         return generic_definition_matches(env, index, kind, id);
@@ -374,12 +415,21 @@ fn declared_definition_matches(
     tigerstyle::assertion_density,
     reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
 )]
-fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, clock: bool) -> bool {
-    if !(if clock {
+fn bound_definition_matches(
+    env: &super::super::Env,
+    index: usize,
+    slot: u32,
+    effect: crate::types::EffId,
+) -> bool {
+    let valid_scheme = if effect == super::super::TEST_EMIT {
+        super::schemes::valid_emit_scheme(&env.defs[index])
+    } else if effect == super::super::TEST_CLOCK {
         super::schemes::valid_clock_scheme(&env.defs[index])
     } else {
-        super::schemes::valid_emit_scheme(&env.defs[index])
-    }) {
+        effect == super::super::TEST_CODE_EXPORT
+            && super::schemes::valid_code_export_scheme(&env.defs[index])
+    };
+    if !valid_scheme {
         return false;
     }
     let Ok(def) = u32::try_from(index) else {
@@ -392,7 +442,7 @@ fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, cl
     else {
         return false;
     };
-    if clock != (row.effects.as_slice() == [super::super::TEST_CLOCK]) {
+    if row.effects.as_slice() != [effect] {
         return false;
     }
     matches!(
@@ -414,7 +464,8 @@ fn bound_adapters_unique(env: &super::super::Env) -> bool {
         is_unique = matches!(
             env.kind(definition),
             Some(super::super::Behavior::BoundEmit(actual)
-                | super::super::Behavior::BoundClock(actual)) if actual == slot
+                | super::super::Behavior::BoundClock(actual)
+                | super::super::Behavior::BoundCodeExport(actual)) if actual == slot
         );
         let mut prior = 0;
         while prior < index && is_unique {

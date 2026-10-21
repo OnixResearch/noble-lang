@@ -1,7 +1,7 @@
 //! Declared-Modules-v1 namespace transactions and selected-worker expression execution.
 
 impl super::Session {
-    fn commit_declared(
+    pub(super) fn commit_declared(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
     ) -> Result<Result<(), noble_contracts::source::Error>, super::output::Failure> {
@@ -19,7 +19,7 @@ impl super::Session {
         Ok(outcome)
     }
 
-    fn commit_declared_proofs(
+    pub(super) fn commit_declared_proofs(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
         source: &[u8],
@@ -40,6 +40,22 @@ impl super::Session {
                 "declared namespace is unavailable",
             )
         }));
+        let (next, outcome, report) =
+            Self::prepared_declared_proofs(previous, prepared, source, limits);
+        self.declared = Some(next);
+        Ok((outcome, report))
+    }
+
+    pub(super) fn prepared_declared_proofs(
+        previous: noble_contracts::source::ModuleSession,
+        prepared: noble_contracts::source::ModulePrepared,
+        source: &[u8],
+        limits: noble_contracts::Limits,
+    ) -> (
+        noble_contracts::source::ModuleSession,
+        Result<(), noble_contracts::source::Error>,
+        crate::workflow::encoding::Json,
+    ) {
         let mut report = crate::workflow::encoding::Json::Null;
         let (next, outcome) = previous.commit_verified(prepared, |batch| {
             let (checked, evidence, _) = crate::workflow::intrinsic::verify_with_evidence(
@@ -53,8 +69,7 @@ impl super::Session {
             report = crate::workflow::intrinsic::session_proof_report(batch, &checked, &evidence);
             Ok(checked)
         });
-        self.declared = Some(next);
-        Ok((outcome, report))
+        (next, outcome, report)
     }
 
     pub(super) fn submit_declared(
@@ -69,6 +84,8 @@ impl super::Session {
                 return Ok(super::output::Report::declared_source_error(
                     &error,
                     self.submissions,
+                    options.signed_self_recursion,
+                    options.declared_text(),
                 ))
             }
         };
@@ -77,7 +94,9 @@ impl super::Session {
             | noble_contracts::source::ModuleKind::Import => {
                 self.link_declared(prepared, source, options)
             }
-            noble_contracts::source::ModuleKind::Definition => self.define_declared(prepared),
+            noble_contracts::source::ModuleKind::Definition => {
+                self.define_declared(prepared, options)
+            }
             noble_contracts::source::ModuleKind::Expression => {
                 self.execute_declared(prepared, source, options)
             }
@@ -250,6 +269,8 @@ impl super::Session {
         match committed {
             Ok(()) => Ok(super::output::Report::declared_link(
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
                 message,
                 module,
                 binding,
@@ -259,6 +280,8 @@ impl super::Session {
             Err(error) => Ok(super::output::Report::declared_source_error(
                 &error,
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
             )),
         }
     }
@@ -270,12 +293,19 @@ impl super::Session {
     fn define_declared(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
+        options: &super::arguments::Options,
     ) -> Result<super::output::Report, super::output::Failure> {
         match attempt!(self.commit_declared(prepared)) {
-            Ok(()) => Ok(super::output::Report::declared_definition(self.submissions)),
+            Ok(()) => Ok(super::output::Report::declared_definition(
+                self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
+            )),
             Err(error) => Ok(super::output::Report::declared_source_error(
                 &error,
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
             )),
         }
     }
@@ -300,12 +330,26 @@ impl super::Session {
                     },
                     "declared expression produced no candidate",
                 )));
-        let compiled = match self.compiler.prepare(submission) {
+        let compiled = if options.declared_text() {
+            match prepared.declared_text_source_owner() {
+                Some(ref owner) => self.compiler.prepare_declared_text(owner),
+                None => Err(noble_wasm::Diagnostic::Invalid),
+            }
+        } else {
+            let signed = prepared.signed_source_owner();
+            match signed {
+                Some(ref owner) => self.compiler.prepare_signed(owner),
+                None => self.compiler.prepare(submission),
+            }
+        };
+        let compiled = match compiled {
             Ok(compiled) => compiled,
             Err(error) => {
                 return Ok(super::output::Report::declared_backend_error(
                     error,
                     self.submissions,
+                    options.signed_self_recursion,
+                    options.declared_text(),
                 ))
             }
         };
@@ -334,13 +378,133 @@ impl super::Session {
             .map_err(super::output::Failure::backend));
         let committed = attempt!(self.commit_declared(prepared));
         attempt!(committed.map_err(super::output::Failure::source));
-        let report = attempt!(self
+        let mut report = attempt!(self
             .declared_worker()
             .and_then(super::worker::Engine::execute));
         if report.outcome == "normal" {
             self.stack = output;
+            if options.declared_text() && options.signed_self_recursion {
+                if let Some(receipt) = attempt!(self.try_retire_declared_text_epoch()) {
+                    let mut frame: serde_json::Value = attempt!(serde_json::from_str(&report.json)
+                        .map_err(|_| Self::epoch_failure("invalid signed source report")));
+                    frame["source_epoch_retirement"] = receipt;
+                    report.json = frame.to_string();
+                }
+            }
         }
         Ok(report)
+    }
+
+    fn epoch_failure(message: &'static str) -> super::output::Failure {
+        super::output::Failure::new(
+            super::output::ErrorContext {
+                stage: "wasm",
+                outcome: "internal-failure",
+            },
+            message,
+        )
+    }
+
+    fn try_retire_declared_text_epoch(
+        &mut self,
+    ) -> Result<Option<serde_json::Value>, super::output::Failure> {
+        let (generation, end) = attempt!(self
+            .compiler
+            .declared_text_epoch_state()
+            .ok_or_else(|| Self::epoch_failure("unselected source epoch compiler")));
+        let retired = attempt!(self.declared_worker()?.retire_source_epoch(generation, end));
+        if retired.outcome == "source-epoch-owned" {
+            return Ok(None);
+        }
+        if retired.outcome != "source-epoch-retired" {
+            return Err(Self::epoch_failure("unexpected source epoch disposition"));
+        }
+        let receipt: serde_json::Value = attempt!(serde_json::from_str(&retired.json)
+            .map_err(|_| Self::epoch_failure("invalid source epoch receipt")));
+        let cells = receipt["released_cells"].as_u64();
+        let before = receipt["released_bytes_before"].as_u64();
+        let after = receipt["released_bytes_after"].as_u64();
+        if receipt["schema"] != "noble-source-epoch-retirement/v1"
+            || receipt["generation"].as_u64() != Some(u64::from(generation))
+            || receipt["code_end"].as_u64() != Some(u64::from(end))
+            || receipt["heap_cells_after"].as_u64() != Some(0)
+            || receipt["heap_cells_before"].as_u64() != cells
+            || receipt["cleared_code_entries"].as_u64() != Some(u64::from(end - 4))
+            || receipt["source_epoch_before"]
+                .as_u64()
+                .and_then(|epoch| epoch.checked_add(1))
+                != receipt["source_epoch_after"].as_u64()
+            || receipt["source_store_id"]
+                .as_str()
+                .is_none_or(|store| store.len() != 36)
+            || receipt["retained_core_entries"].as_u64() != Some(4)
+            || cells.is_none_or(|count| count > 4096)
+            || before
+                .zip(cells)
+                .and_then(|(bytes, count)| bytes.checked_add(count * 48))
+                != after
+            || receipt["released_programs"]
+                .as_u64()
+                .is_none_or(|count| count > 4096)
+        {
+            return Err(Self::epoch_failure(
+                "source epoch did not prove checked code and cell retirement",
+            ));
+        }
+        attempt!(self
+            .compiler
+            .retire_declared_text_epoch(generation, end)
+            .map_err(super::output::Failure::backend));
+        Ok(Some(receipt))
+    }
+
+    pub(super) fn release_declared_observation(
+        &mut self,
+        store: &str,
+        id: u64,
+        options: &super::arguments::Options,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        if !options.declared_text() || !options.signed_self_recursion {
+            return Err(Self::epoch_failure(
+                "observed-source release requires signed declared text",
+            ));
+        }
+        if !self.stack.is_empty() {
+            return Ok(super::output::Report {
+                outcome: "source-observation-refused".into(),
+                json: serde_json::json!({
+                    "schema": "noble-core-report/v1", "profile": "Signed-Declared-Text-v1",
+                    "stage": "wasm", "outcome": "source-observation-refused",
+                    "diagnostic": "checked source stack still owns observed values",
+                    "guest_requests": 0, "protected_operations": 0,
+                    "candidate_prepare_requests": 0, "session_state": "retained",
+                })
+                .to_string(),
+            });
+        }
+        let mut released = attempt!(self
+            .declared_worker()?
+            .release_source_observation(id, store));
+        if released.outcome != "source-observation-released" {
+            return Ok(released);
+        }
+        let mut receipt: serde_json::Value = attempt!(serde_json::from_str(&released.json)
+            .map_err(|_| Self::epoch_failure("invalid source observation receipt")));
+        if receipt["source_observation_id"].as_u64() != Some(id)
+            || receipt["source_store_id"].as_str() != Some(store)
+            || receipt["released_handles"]
+                .as_u64()
+                .is_none_or(|count| count == 0)
+        {
+            return Err(Self::epoch_failure(
+                "source observation release lacked owner proof",
+            ));
+        }
+        if let Some(epoch) = attempt!(self.try_retire_declared_text_epoch()) {
+            receipt["source_epoch_retirement"] = epoch;
+            released.json = receipt.to_string();
+        }
+        Ok(released)
     }
 
     fn prepare_declared_worker(

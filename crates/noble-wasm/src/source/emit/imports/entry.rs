@@ -73,6 +73,15 @@ pub(in crate::source::emit) fn runtime(
             out,
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
         ));
+        if plan.core_live {
+            attempt!(super::fragment(
+                out,
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/runtime/core-live-owners.wat"
+                ))
+            ));
+        }
     }
     attempt!(super::fragment(
         out,
@@ -105,6 +114,12 @@ pub(in crate::source::emit) fn runtime(
                 env!("CARGO_MANIFEST_DIR"),
                 "/runtime/text-byte.wat"
             ))
+        ));
+    }
+    if plan.has_i64_less {
+        attempt!(super::fragment(
+            out,
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/i64-less.wat"))
         ));
     }
     if plan.has_core_emit {
@@ -147,7 +162,27 @@ pub(in crate::source::emit) fn runtime(
     if plan.has_bound_clock {
         attempt!(out.append(b"(func $op_clock_bound (param $slot i32) (local $status i32) (local $value i64)\n (global.set $failure (i32.const 5))\n (call $host_clock_bound (local.get $slot))\n (local.set $value)\n (local.set $status)\n (if (i32.eqz (local.get $status)) (then\n   (global.set $failure (i32.const 0))\n   (call $push_i64 (local.get $value)))))\n"));
     }
-    if plan.has_live_propose {
+    if plan.has_bound_code_export {
+        attempt!(out.append(b"(func $op_code_export_bound (param $slot i32)\n (if (global.get $failure) (then (return)))\n ;; A source-bound export request is deny-only: poison first, send only its slot, and never let host success clear the failure.\n (global.set $failure (i32.const 5))\n (drop (call $host_code_export_bound (local.get $slot))))\n"));
+    }
+    if plan.has_live_propose && plan.core_live {
+        attempt!(out.append(
+            b"(func $op_live_propose (param $owner i64)
+ (local $program i32) (local $expected i64) (local $approved i32)
+ (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
+ (local.set $expected (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ ;; Permit provisional saved-Program roots only in this exact host callback.
+ (global.set $failure (i32.const 5))
+ (global.set $core_live_proposal_callback_active (i32.const 1))
+ (local.set $approved
+  (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
+ (global.set $core_live_proposal_callback_active (i32.const 0))
+ (if (i32.eqz (local.get $approved))
+  (then (global.set $failure (i32.const 0)) (call $push_unit))))
+"
+        ));
+    } else if plan.has_live_propose {
         attempt!(out.append(b"(func $op_live_propose (param $owner i64)
  (local $program i32) (local $expected i64)
  (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
@@ -185,6 +220,15 @@ pub(in crate::source::emit) fn runtime(
             include_str!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/runtime/live-source.wat"
+            ))
+        ));
+    }
+    if plan.worker_inputs {
+        attempt!(super::fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/worker-input.wat"
             ))
         ));
     }

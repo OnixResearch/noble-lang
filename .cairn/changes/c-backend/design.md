@@ -2,7 +2,41 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. The new native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 status paragraph still excludes the new internal aggregate slice, pending independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+
+The isolated source-only emitter now lowers checked pure `dip` and `if`
+as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
+The checker binds `dip` to Definition 3: save the value below a Program,
+run the Program on the remaining stack, then restore that immutable value.
+Definition 18 `if` consumes the otherwise Program, then Program and Bool
+in top-to-deeper order, then runs exactly one selected branch. The
+emitted C uses bounded frames and charges a step for each dispatch,
+branch frame and `dip` restore, not the selected Wasm fuel schedule.
+The independent kernel checks both branches and rejects unsupported
+quotation bodies before emission; no C branch is a source evaluator.
+These source-only semantics remain unexecuted as C native code.
+
+The source-only path now verifies one UTF-8 `Body.texts` payload per checked
+`Lit::Text` node, rejects duplicate/orphan metadata, and emits immutable
+static bytes with bounded JSON escaping. Contract/policy JSON now rejects
+duplicate member names recursively before interpretation. These corrections
+are not native admission or executed C semantics.
+The source-only WIP also lowers checked internal `pair`/`unpair`,
+`inl`/`inr`/`case` and `nil`/`cons`/`list.case` with immutable bounded
+tagged arena references, exact per-node Core type-shape preflights and
+iterative step-charged nested capture accounting. Its fixed 255-element
+List ceiling is not a supplied policy: `limits.list_length` still refuses.
+Final aggregates remain unsupported. The complete CB-SCOPE/CB-VALUE/
+CB-LIMIT contracts remain open: inert Syntax/`reflect`, supplied List
+limits, typed runtime input, definitions, `test.emit`
+and current host authority require distinct checked representations
+or a real mediator. The source-only policy has only
+`stack_slots`/`steps`/`output_bytes`, not the native list/aggregate/
+CPU/memory/wall limits or equal Wasm gas. It refuses the extra
+`limits.list_length` in CB-CASE-01 rather than ignoring it. None of
+these missing obligations can be filled by a C token parser or by
+claiming source syntax as differential execution. r[CB-SCOPE-01]
+r[CB-VALUE-01] r[CB-LIMIT-01] r[CB-GATE-01]
 
 ## Decisions
 
@@ -22,6 +56,189 @@
 
 **Choice:** Restrict guest effects to the exact independently checked `test.emit` identity through a narrow synchronous checked text ABI. Inside the sandbox, a pinned C shim checks and copies bounded bytes into framed private request/response IPC FDs. A separate trusted host mediator revalidates exact operation, effect, frame, invocation and current authority, copies into host-owned storage, then alone dispatches protected work. Guest pointers/callable host pointers and authority never cross address spaces. Partial/oversized frames, forged operation/context and after-revocation requests fail closed with zero protected actions. An ELF can issue syscalls independent of ABI or source policy, so require a separately pinned Linux runner/worker: closed unrelated FDs, no ambient secrets, confined filesystem, no network/clock/process/exec authority, explicit loader/static-link and syscall profile, finite memory/CPU/wall time. The emitted source/runtime shim, runner and mediator are distinct pinned subjects. Explicitly refuse execution on a host without this runner. Hostile admitted test ELF syscall attempts, framed-IPC/ABI mutation and retention, quota boundaries and a benign same-sandbox control are necessary but finite evidence, not a universal sandbox proof. r[CB-HOST-01] r[CB-SANDBOX-01] r[CB-LIMIT-01]
 
+### Native admission and runner prerequisite
+
+**Choice:** `flake.lock` inherits selected `nixpkgs` through `octet/nixpkgs`;
+the host's cached bubblewrap/libseccomp packages, the Lean proof runner,
+compiler, loader, native runtime and host mediator are distinct trust
+subjects. `nix/tool-selection.nix` enforces an exact selected `tool_paths`
+key set. Do not weaken that comparison or turn C into a default selected
+verification tool. A separate default-disabled C-native policy/observation
+must compare reviewed derivation, output and byte identities for compiler,
+linker, sysroot, runtime/startup, runner, syscall-filter generator/profile,
+loader choice and mediator, with mismatch tests; derive proposed tools from
+the already selected `octet/nixpkgs`, not a host-system package. Preserve all
+selected Wasm/Lean pins and claims. r[CB-SANDBOX-01]
+
+**Choice:** Open bounded, lexically absolute normalized host-selected paths
+relative to trusted directory FDs, reject ancestor symlinks/magic links,
+hard-linked mutable artifacts and directory-swap races, and snapshot exact
+source, contract, policy, C and ELF bytes into sealed FDs. Independently
+accept the selected source and resolved environment, re-emit and byte-compare
+all C, compile the trusted C reproducibly under pinned flags, linker,
+sysroot, runtime and ABI, then inspect and byte-compare the *complete*
+candidate ELF, including inert sections. Launch the same admitted sealed
+bytes without reopening the mutable path. Neither manifest hashes nor
+successful compiler exit grant correspondence. r[CB-ADMIT-01]
+
+**Choice:** A future owner-reviewed native launcher must use an explicit
+FD table, read-only exact executable/loader closure, no ambient secrets,
+reviewed namespace and cgroup limits, and a pinned syscall filter. No
+bubblewrap command line or user-namespace behavior is selected:
+`--unshare-all` expands to `--unshare-user-try` and
+`--unshare-cgroup-try` among other namespace options; a `-try` option
+may omit isolation if unavailable. A future reviewed runner MUST verify
+that every required namespace actually exists and fail closed, not rely
+on the flag spelling. `--share-net` can override network isolation and
+`--not-a-security-boundary` explicitly disclaims it; neither belongs
+in a confinement claim.
+Initial executable load and later no-exec filtering need independently
+reviewed ordering before candidate instructions. Seccomp cannot intercept
+vDSO clock reads, direct vvar mapping reads or x86 `rdtsc`/`rdtscp`; a
+static ELF or TSC-only trap/offset does not close all host time and
+elapsed-time paths. Until the owner selects and reviews a complete
+VM/virtualized-clock boundary or equally demonstrated native
+clock/vvar/TSC and loader barrier, native execution MUST refuse.
+Namespace/sandbox escape attempts MUST refuse or terminate with zero
+protected operations. Do not run a hostile test ELF outside a
+separately authorized sealed test-only lane. r[CB-SANDBOX-01]
+
+| Negative control (not executed) | Insufficient shortcut | Required gate |
+|---|---|---|
+| Cached bubblewrap/libseccomp or the Lean proof sandbox | Package availability is not native runner selection | Reviewed separate default-disabled C policy, exact pins and owner approval |
+| `../`, ancestor symlink, hardlink or swapped parent | `canonicalize`, final-component `O_NOFOLLOW` and pathname digest race | Descriptor-anchored no-symlink walk and sealed byte snapshot |
+| Forged C comment or ELF inert-section change | Syntax, manifest flag or `.text` hash cannot establish native correspondence | Trusted C re-emission and reproducible full-ELF byte equality |
+| `PT_INTERP`, `LD_PRELOAD`, writable loader or executable mapping | Outside code runs despite admitted ELF bytes | Reviewed static startup or exact immutable loader/ABI closure and post-load filter |
+| Deny all `execve` before initial load, or allow it afterward | First prevents launch; second permits substitution | Trusted initial-load versus final no-exec stage before guest instructions |
+| vDSO `clock_gettime`/`time`/`gettimeofday`, coarse clocks, direct vvar reads, x86 `rdtsc`/`rdtscp` | All bypass syscall seccomp/bubblewrap namespace flags; TSC-only trap/offset leaves host time or elapsed time | Reviewed complete clock/vvar/TSC barrier or equivalent; otherwise no native launch |
+| Inherited secret FD, `/proc/self/fd` or revoked `test.emit` grant | Direct disclosure or forged/stale protected request | Fixed private FD allowlist, bounded IPC, independent mediator checking current authority on every request |
+| Crash, timeout, leaked descendant or partial JSON | Partial output is not Noble completion | Parent-owned cgroup limits, kill/reap entire worker set and typed failure without post-failure effects |
+
+The owner must approve exact runner/compiler/mediator pins, kernel and clock
+assumptions, reproducible source-to-static-ELF correspondence and separately
+authorize any native or hostile test execution. No package presence or C
+syntax-only check authorizes MCB acceptance. r[CB-ADMIT-01] r[CB-GATE-01]
+
+### Source-only candidate security design for independent review (HOLD)
+
+This is a review plan, **not** a selected runner, compiler, VM, executable
+recipe or authorization to launch a guest. The checked source-only emitter
+does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its ancestor/output
+path races remain open despite strict duplicate-key decoding. `--native` and
+`execute --target c` continue to refuse. Canonical C text and all case
+evidence remain HOLD until a separate owner decision.
+
+1. **Pin an inert build service first.** Derive the proposed C11 compiler,
+   linker, headers/sysroot, libc/startup and static runtime from the already
+   selected `octet/nixpkgs`; review exact Nix derivation/output paths and
+   byte hashes, fixed target, ABI, flags, linker script, locale and build
+   environment. A host `cc`, existing Rust/Wasm component linker or
+   successful syntax-only check is not that selection. Compile only trusted
+   re-emitted C with an argument vector under a separately bounded,
+   networkless compiler-service boundary. Record complete stdout/stderr,
+   argv, diagnostics and tool bytes; build never launches the result.
+   Prefer a reviewed static startup/ELF with zero dynamic imports. If
+   dynamic imports are proposed, every loader/library byte and import must
+   instead be pinned and admitted; missing or unreviewed imports refuse
+   before guest instructions and before protected operations.
+2. **Bind source and all native bytes independently.** Open host-selected
+   SOURCE, contract, policy and candidate artifacts via trusted directory
+   descriptors, rejecting ancestor symlinks, magic links, mutable hard
+   links and replacement. Snapshot checked bytes in sealed read-only
+   descriptors; reject duplicate JSON members before interpreting limits.
+   Independently check the exact source/resolved contracts, re-emit C under
+   the pinned emitter/runtime and compare *all* C bytes. Compile that
+   trusted C in a hermetic fixed environment and compare *all* ELF bytes,
+   including inert sections, to the sealed candidate; inspect target,
+   program headers, mappings, relocations and imports. A digest, compiler
+   success or signed manifest alone is not acceptance. The launch handle
+   must refer to the same sealed ELF, not reopen an output pathname.
+   Attestation records input/contract/policy and semantic identities,
+   emitter/runtime/tool derivations and byte hashes, compiler argv,
+   sysroot/ABI/static loader choice, full C/ELF hashes, runner/kernel/image
+   policy and failed as well as successful observations. Current host C
+   output cannot supply this attestation.
+3. **Review a VM clock boundary rather than assume KVM is a clock
+   barrier.** Aspen3 currently exposes
+   `/nix/store/7yilgp2sawl51a36g2si9nnwfrliplxz-qemu-11.1.1/bin/qemu-system-x86_64`
+   and an accessible `/dev/kvm`; those are host availability facts,
+   not Noble pins or a tested barrier. An owner might evaluate a minimal,
+   independently pinned QEMU machine and read-only kernel/initrd/root image
+   with no host filesystem passthrough, guest network interface, RTC
+   backed by host time or arbitrary devices. The guest sees only a
+   bounded private request/response channel to a separate host mediator.
+   The host VM process has no protected FDs/credentials and is confined
+   in verified mount/user/net namespaces. Its startup and post-start syscall
+   profiles must be separately reviewed: only an actually measured,
+   fail-closed post-load allowlist may deny later host `execve`/`execveat`,
+   network, file opens and namespace changes without breaking required
+   QEMU operations. An unverified seccomp allowlist is not a barrier.
+   A VM-image build, boot transcript, machine model, virtual-device list
+   and QEMU/kernel/firmware byte pins are required. Ordinary KVM TSC
+   offset/scaling still reveals elapsed host time; a TSC-only trap
+   cannot stop vDSO/coarse `time` or direct vvar reads. A candidate
+   deterministic virtual-time engine, such as independently evaluated
+   software-emulated instruction time, is acceptable only after sealed
+   hostile `__vdso_clock_gettime`,
+   `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct vvar,
+   `rdtsc` and `rdtscp` controls prove no host wall or elapsed time
+   disclosure in the actual pinned guest. A specific **unselected**
+   software-emulation candidate for review is single-thread TCG with
+   fixed `-icount shift=N,sleep=off,align=off`, a fixed-date
+   `-rtc base=<reviewed-date>,clock=vm`, one vCPU and an enumerated
+   minimal device set. Do not use `shift=auto`, `sleep=on`, `align=on`
+   or a host-time RTC as a claimed deterministic clock: QEMU documents
+   host-clock adjustment or synchronization for those modes. `icount`
+   instruction time is not cycle-accurate, and this candidate has not
+   been tested for guest TSC/vDSO/vvar nondisclosure or hypervisor
+   escapes. It is not a KVM configuration; the host KVM device alone
+   cannot establish an instruction-time barrier. Review the exact
+   selected QEMU release and guest kernel, not only upstream
+   [TCG icount](https://www.qemu.org/docs/master/devel/tcg-icount.html),
+   [invocation](https://www.qemu.org/docs/master/system/invocation.html)
+   and [KVM clock](https://www.qemu.org/docs/master/system/i386/kvm-pv.html)
+   descriptions. No such VM, instruction-time behavior or equivalent
+   sealed-loader barrier is currently verified.
+4. **Fail closed on guest authority and resources.** Any guest loader
+   setup must finish before a reviewed no-exec/no-writable-executable
+   policy is active and before untrusted instructions; rejecting initial
+   `execve` too early prevents launch, while permitting later exec or
+   writable executable mappings permits substitution. Deny guest direct
+   file, network, process/namespace, unreviewed clock and host-secret-FD
+   paths. A successful guest `unshare` is not evidence of host namespace
+   escape safety: attempt mount/user/net breakout under the actual VM and
+   host runner and require refusal/termination with zero protected
+   operations. The private mediator independently validates complete
+   bounded frames, typed `test.emit`, invocation and current/revoked
+   authority before dispatch. Missing or unreviewed ELF imports refuse
+   admission; a missing/unknown guest ABI operation traps without a
+   fallback host function and with zero protected operations. Malformed
+   frames, crashes and partial output likewise cause no protected action.
+   Charge candidate, stack, aggregate, list, recipe, text, output and
+   step limits before growth. Separately apply parent-owned cgroup
+   memory/CPU/task/output caps and a monotonic wall deadline; kill and
+   reap the whole VM/process tree on failure. A language trap, in-guest
+   quota, host kill/timeout, admission refusal and denial
+   remain distinct; guest time cannot read the host monotonic budget.
+
+For CB-CASE-01..10, a later differential harness must run the *same
+independently accepted source and typed inputs* through selected Node/V8
+managed-linear-memory Wasm and the separately admitted emitted-C/full-ELF
+guest under identical checked contracts and explicitly recorded limits.
+Compare ordered typed stack values (including signed I64 and immutable
+Program recipes), traces and protected-action prefixes, normal/trap/quota/
+denial classifications and both C optimization modes. Preserve the
+different accounting of C source-only steps and Wasm fuel rather than
+falsely calling unequal budgets equal. CB-01's supplied `list_length: 2`
+still refuses under the present exact three-key source-only policy; CB-02 needs values
+and runtime inputs not yet emitted; CB-03/07 need a real mediator; CB-04/05
+need exact tool/ELF admission; CB-06 needs list quotas; CB-08 needs the
+sealed hostile VM lane; CB-09/10 need scope and stale-receipt review.
+None of the ten case designs has executed or been promoted. C source
+syntax, compiler success, finite differential matches and M4 Wasm receipts
+are not a C lowering, loader, confinement or refinement proof.
+r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-HOST-01] r[CB-SANDBOX-01]
+r[CB-ADMIT-01] r[CB-GATE-01]
 ### Evidence and proof
 
 **Choice:** Require execution of actual emitted and pinned-C-compiled code in sandbox versus actual selected managed-linear-memory Wasm under existing Node/V8 profile for identical accepted source and inputs, including exact values/signed rendering, recipes, effect prefix, authorization, traps and quota classifications at agreed bounds. Run off/on optimizations, sanitizer and adversarial ABI controls, retain all source/tool/native bytes and failures. Never import M4 receipt, selected Wasm PO-17/18 or an unexecuted scenario as C success. C lowering, compiler, native loader, host and sandbox refinement remain OPEN until separately discharged and selected. r[CB-GATE-01]

@@ -207,9 +207,19 @@ let
       "release"
       "overflow-checks"
     ] false)
-    (badObservation "missing declared observer feature" "feature-scope-mismatch" [ "features" ] [ ])
-    (badObservation "extra declared feature" "feature-scope-mismatch" [ "features" ] [ "safety-observe" "extra" ])
-    (badPolicy "explicit feature selection" "feature-scope-mismatch" [ "configuration" "features" ] [ "safety-observe" ])
+    (badObservation "unreviewed workspace feature" "feature-scope-mismatch" [ "features" ]
+      [ "live-test-barrier" "safety-observe" "extra" ])
+    (badObservation "missing workspace feature" "feature-scope-mismatch" [ "features" ]
+      [ "live-test-barrier" ])
+    (badObservation "missing private barrier feature" "feature-scope-mismatch" [ "features" ]
+      [ "safety-observe" ])
+    (reject "coordinated unreviewed workspace feature" "feature-scope-mismatch"
+      (set policy [ "configuration" "workspace_features" ]
+        [ "live-test-barrier" "safety-observe" "extra" ])
+      (set observation [ "features" ]
+        [ "live-test-barrier" "safety-observe" "extra" ]))
+    (badPolicy "enabled extraction feature" "feature-scope-mismatch"
+      [ "configuration" "features" ] [ "live-test-barrier" ])
     (badPolicy "missing Lean artifact hash" "lean-artifact-pin" [ "lean" "archive_sha256" ] null)
     (badPolicy "selection promoted to acceptance" "selection-claim-limits"
       [ "claims" ]

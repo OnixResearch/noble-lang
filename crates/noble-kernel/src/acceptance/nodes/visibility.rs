@@ -40,12 +40,19 @@ fn visible_behavior(
     }
     if matches!(
         kind,
-        crate::contracts::Behavior::BoundEmit(_) | crate::contracts::Behavior::BoundClock(_)
+        crate::contracts::Behavior::BoundEmit(_)
+            | crate::contracts::Behavior::BoundClock(_)
+            | crate::contracts::Behavior::BoundCodeExport(_)
     ) {
         return !env.calculator && bound_emit_visible(env, def);
     }
     if kind == crate::contracts::Behavior::TextByte {
-        return ((env.text_cursor && !env.declared_modules) || env.calculator) && def.0 == 26;
+        // Standalone cursor, declared text (whose fixed prefix contract
+        // validation checks) and the calculator; ordinary modules never.
+        return (env.text_cursor || env.calculator) && def.0 == 26;
+    }
+    if kind == crate::contracts::Behavior::I64Less {
+        return env.text_cursor && env.declared_modules && !env.calculator && def.0 == 27;
     }
     if env.calculator {
         match kind {
@@ -96,6 +103,7 @@ const fn generic_access(
         crate::contracts::Behavior::ListCase => None,
         crate::contracts::Behavior::TestEmit => None,
         crate::contracts::Behavior::TextByte => None,
+        crate::contracts::Behavior::I64Less => None,
         crate::contracts::Behavior::CalculatorIterate => None,
         crate::contracts::Behavior::CalculatorCompare => None,
         crate::contracts::Behavior::CalculatorDivRem => None,
@@ -104,6 +112,7 @@ const fn generic_access(
         crate::contracts::Behavior::Reserved => None,
         crate::contracts::Behavior::BoundEmit(_) => None,
         crate::contracts::Behavior::BoundClock(_) => None,
+        crate::contracts::Behavior::BoundCodeExport(_) => None,
         crate::contracts::Behavior::NominalNew(_) => None,
         crate::contracts::Behavior::NominalInto(_) => None,
         crate::contracts::Behavior::NominalLeft(_) => None,

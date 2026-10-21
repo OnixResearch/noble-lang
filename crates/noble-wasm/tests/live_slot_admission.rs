@@ -268,6 +268,9 @@ fn named_body_is_independently_checked_against_exact_slot_profile_contract() -> 
     named.definitions.push(ExecutableDefinition {
         definition: Definition(23),
         identity: 901,
+        source_identity: 901,
+        owner_slot: None,
+        owner_inst: None,
         body: named.body.clone(),
         expected: named.request.expected.clone(),
     });

@@ -25,6 +25,8 @@ impl crate::core::companions::Driver {
             inputs: std::vec::Vec::new(),
             modules: std::vec::Vec::new(),
             declared_modules: false,
+            retained_source_bytes: None,
+            signed_self_recursion: false,
             text_byte_cursor: false,
             bindings: None,
             manifest: None,

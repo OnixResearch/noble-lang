@@ -263,7 +263,7 @@ impl Traversal {
                 }
                 attempt!(host_effects(
                     effects,
-                    session.effect_universe(),
+                    session.program_type_effect_universe(),
                     span,
                     meter
                 ));

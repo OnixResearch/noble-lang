@@ -16,6 +16,11 @@ fn source_error(problem: noble_contracts::source::Error) -> anyhow::Error {
     anyhow::anyhow!("production source {:?}: {}", problem.stage(), problem.diagnostic().message)
 }
 
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(Limits::default().bytes)
+        .expect("default source limit")
+}
+
 fn hash(bytes: &[u8]) -> String { format!("{:x}", Sha256::digest(bytes)) }
 
 fn read_input(document: &Value, field: &str) -> Result<(Vec<u8>, Value)> {
@@ -85,7 +90,7 @@ fn run(workload_path: &Path) -> Result<Value> {
     ensure!(modules.len() >= 3, "library, bound trace and concrete helper modules required");
     let imports = workload["imports"].as_array().context("missing real import source list")?;
     let (operation, binding_source) = host_operation(&workload)?;
-    let mut session = ModuleSession::new(&[operation]).map_err(source_error)?;
+    let mut session = ModuleSession::new(&[operation], retained()).map_err(source_error)?;
     let mut source_inputs = Vec::new();
     for file in modules {
         let file = file.as_str().context("module path must be a string")?;

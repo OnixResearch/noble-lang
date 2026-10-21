@@ -463,11 +463,12 @@ fn bind_subject(
     let definition_source = attempt!(original.definition_source());
     let inputs = attempt!(types(&contract.inputs, &context.environment));
     let outputs = attempt!(types(&contract.outputs, &context.environment));
-    let mut prepared =
-        attempt!(request
-            .session
-            .source
-            .prepare(lookup.as_bytes(), &inputs, request.limits));
+    let mut prepared = attempt!(request.session.source.prepare_with_retention(
+        lookup.as_bytes(),
+        &inputs,
+        request.limits,
+        request.session.retained_source_limit,
+    ));
     if prepared.output() != outputs.as_slice() || prepared.submission().is_none() {
         return Err(at(
             crate::source::Stage::Check,
@@ -678,7 +679,7 @@ fn imported_module<'a>(
             .aliases
             .iter()
             .rev()
-            .find(|alias| alias.spelling == scope)
+            .find(|alias| !alias.pending && alias.spelling == scope)
             .and_then(|alias| session.modules.get(alias.module))
     };
     module.ok_or_else(|| {

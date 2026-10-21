@@ -7,6 +7,15 @@ mod identity;
 mod quota;
 mod report;
 
+/// Assemble an independently source-checked selected world without accepting
+/// caller-supplied component bytes as executable authority.
+pub(crate) fn assemble_checked_world(
+    world: &noble_contracts::component::World,
+    wat: &[u8],
+) -> Result<Vec<u8>, crate::workflow::output::Failure> {
+    Ok(artifacts::assemble(world, wat)?.binary)
+}
+
 pub(crate) const USAGE: &str = "usage:
   noble component bindings WIT WORLD
   noble component check-effect WIT WORLD WORD CLAIMED_EFFECT ...

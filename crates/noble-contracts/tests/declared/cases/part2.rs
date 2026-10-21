@@ -1,6 +1,7 @@
 #[test]
 fn public_constructor_cannot_expose_unexported_nominal_payload() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     let hidden=b"module ledger@1 [ opaque Secret I64 private opaque Wrapper Secret public export Wrapper export Wrapper.new ]";
     assert!(
         matches!(&session.prepare(hidden,&[],super::super::LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Link)
@@ -14,18 +15,21 @@ fn public_constructor_cannot_expose_unexported_nominal_payload() -> Result<(), S
 
 #[test]
 fn alias_rebinding_retains_each_checked_adapter_slot() -> Result<(), String> {
-    let mut session = noble_contracts::source::ModuleSession::new(&[
-        super::super::binding(super::super::Binding {
-            version: 1,
-            slot: 3,
-            adapter: "version-A",
-        }),
-        super::super::binding(super::super::Binding {
-            version: 2,
-            slot: 7,
-            adapter: "version-B",
-        }),
-    ])
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[
+            super::super::binding(super::super::Binding {
+                version: 1,
+                slot: 3,
+                adapter: "version-A",
+            }),
+            super::super::binding(super::super::Binding {
+                version: 2,
+                slot: 7,
+                adapter: "version-B",
+            }),
+        ],
+        super::super::retained(),
+    )
     .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(session,b"module ledger@1 [ require emit Text -- ! test.emit export handle def handle [ \"notice\" emit ] ]")?;
     session = super::super::commit(session,b"module ledger@2 [ require emit Text -- ! test.emit export handle def handle [ \"notice\" emit ] ]")?;
@@ -63,8 +67,8 @@ fn alias_rebinding_retains_each_checked_adapter_slot() -> Result<(), String> {
 
 #[test]
 fn largest_module_version_survives_direct_and_imported_resolution() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(
         session,
         b"module ledger@4294967295 [ export get def get [ 17 ] ]",
@@ -83,8 +87,8 @@ fn largest_module_version_survives_direct_and_imported_resolution() -> Result<()
 
 #[test]
 fn scoped_generic_types_resolve_forward_ordinals_without_cycles() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(session,b"module ledger@1 [ opaque Composite Pair<Base,Sum<Bool,List<I64>>> private opaque Base I64 private export Composite ]")?;
     let composite = session
         .resolve_type("ledger@1.Composite")
@@ -113,21 +117,23 @@ fn scoped_generic_types_resolve_forward_ordinals_without_cycles() -> Result<(), 
 #[test]
 fn adapter_selection_changes_linked_definition_not_module_schema() -> Result<(), String> {
     let source=b"module ledger@1 [ opaque Id I64 private export Id require emit Text -- ! test.emit export handle def handle [ \"event\" emit ] ]";
-    let mut first = noble_contracts::source::ModuleSession::new(&[super::super::binding(
-        super::super::Binding {
+    let mut first = noble_contracts::source::ModuleSession::new(
+        &[super::super::binding(super::super::Binding {
             version: 1,
             slot: 3,
             adapter: "version-A",
-        },
-    )])
+        })],
+        super::super::retained(),
+    )
     .map_err(|e| format!("{e:?}"))?;
-    let mut second = noble_contracts::source::ModuleSession::new(&[super::super::binding(
-        super::super::Binding {
+    let mut second = noble_contracts::source::ModuleSession::new(
+        &[super::super::binding(super::super::Binding {
             version: 1,
             slot: 3,
             adapter: "version-B",
-        },
-    )])
+        })],
+        super::super::retained(),
+    )
     .map_err(|e| format!("{e:?}"))?;
     first = super::super::commit(first, source)?;
     second = super::super::commit(second, source)?;
@@ -168,8 +174,8 @@ fn adapter_selection_changes_linked_definition_not_module_schema() -> Result<(),
 
 #[test]
 fn local_definitions_resolve_forward_without_accepting_cycles() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(
         session,
         b"module ledger@1 [ export first def first [ second ] def second [ 2 ] ]",
@@ -187,15 +193,15 @@ fn local_definitions_resolve_forward_without_accepting_cycles() -> Result<(), St
 
 #[test]
 fn aliases_do_not_silently_shadow_qualified_definitions() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(session, b"def account.get [ 1 ]")?;
     session = super::super::commit(session, b"module ledger@1 [ export get def get [ 2 ] ]")?;
     assert!(
         matches!(&session.prepare(b"import ledger@1 as account",&[],super::super::LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Resolve)
     );
-    let mut other =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut other = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     other = super::super::commit(other, b"module ledger@1 [ export get def get [ 2 ] ]")?;
     other = super::super::commit(other, b"import ledger@1 as account")?;
     assert!(
@@ -206,7 +212,8 @@ fn aliases_do_not_silently_shadow_qualified_definitions() -> Result<(), String> 
 
 #[test]
 fn full_bounded_module_source_is_counted_once() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     let mut source = String::from("module ledger@1 [ export get def get [ 1 # ");
     let closing = "\n ] ]";
     let padding = usize::try_from(super::super::LIMITS.bytes)

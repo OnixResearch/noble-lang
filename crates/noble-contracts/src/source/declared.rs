@@ -4,7 +4,10 @@ mod parsing;
 mod signatures;
 mod state;
 pub(super) mod types;
-pub use state::{ModuleKind, ModulePrepared, ModuleSession};
+pub use state::{
+    CheckedNominal, CheckedProgramInterface, CheckedProgramOwner, DeclaredTextSourceOwner,
+    ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner,
+};
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
 const MODULE_CAP: usize = 128;
@@ -26,7 +29,14 @@ pub struct BoundOperation {
 pub(super) struct Context {
     pub environment: noble_kernel::contracts::Env,
     pub words: alloc::vec::Vec<(alloc::string::String, crate::source::Target)>,
+    /// Active outside alias owners copied from the checked module namespace.
+    /// Module-owned definitions are tied to their own immutable alias snapshot.
+    pub aliases: alloc::vec::Vec<(alloc::string::String, u64)>,
     pub owner: Option<u64>,
+    /// Source selection only. Not an authority field in public kernel Env.
+    pub signed_self: bool,
+    /// Only the explicitly combined declared-text source ingress exposes text.byte.
+    pub declared_text: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -46,6 +56,9 @@ struct Module {
     adapter_slot: Option<u32>,
     source: alloc::vec::Vec<u8>,
     definition_spans: alloc::vec::Vec<DefinitionSource>,
+    /// Slots backed by at least one independently checked concrete owner
+    /// specialization; another instance must still be checked independently.
+    verified_signed_slots: alloc::vec::Vec<u32>,
     import_aliases: alloc::vec::Vec<ImportAlias>,
     contracts: alloc::vec::Vec<LogicalContract>,
     proof_exports: alloc::vec::Vec<alloc::string::String>,
@@ -100,6 +113,7 @@ impl PartialEq for Module {
             && self.adapter_slot == other.adapter_slot
             && self.source == other.source
             && self.definition_spans == other.definition_spans
+            && self.verified_signed_slots == other.verified_signed_slots
             && self.import_aliases == other.import_aliases
             && self.proof_exports == other.proof_exports
             && self.contracts.len() == other.contracts.len()
@@ -125,6 +139,7 @@ impl PartialEq for Module {
 struct Alias {
     spelling: alloc::string::String,
     module: usize,
+    pending: bool,
 }
 
 fn error(stage: crate::source::Stage, reason: &str) -> crate::source::Error {

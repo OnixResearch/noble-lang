@@ -71,6 +71,7 @@ pub(super) fn check(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    declared_text: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
     let definition_cap = if calculator {
@@ -80,6 +81,8 @@ pub(super) fn check(
     };
     let maximum_rows = if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else if declared_text {
+        definition_cap.saturating_add(28)
     } else {
         definition_cap.saturating_add(27)
     };
@@ -110,7 +113,13 @@ pub(super) fn check(
         || (env.live_test_hosts && !live_slots)
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
-        || (text_cursor && (live || env.declared_modules))
+        || (text_cursor && (live || env.declared_modules != declared_text))
+        || (declared_text
+            && (!text_cursor
+                || calculator
+                || !env.declared_modules
+                || !env.bound_adapters.is_empty()
+                || env.live_slots))
         || env.calculator != calculator
         || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
         || (!live_slots && !env.live_resource_nominals.is_empty());
@@ -132,7 +141,8 @@ pub(super) fn check(
         live,
         live_slots,
         text_cursor,
-        calculator
+        calculator,
+        declared_text
     ));
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
@@ -185,6 +195,10 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         .kinds
         .iter()
         .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_)));
+    let has_code_export = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundCodeExport(_)));
     if live_slots {
         // Clock registration may precede or follow the host's slot opt-in.
         // Both orderings are produced by the checked Env APIs, but no other
@@ -210,7 +224,7 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
                 ]
         };
     }
-    let mut effects = if count == 23 || count == 27 || count == 32 {
+    let mut effects = if count == 23 || count == 27 || count == 28 || count == 32 {
         alloc::vec![noble_kernel::contracts::TEST_EMIT]
     } else {
         alloc::vec![
@@ -218,12 +232,31 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
             noble_kernel::types::EffId(1)
         ]
     };
-    if has_clock {
-        effects.push(noble_kernel::contracts::TEST_CLOCK);
-    }
     if count == 26 {
         effects.push(noble_kernel::types::EffId(3));
         effects.push(noble_kernel::types::EffId(4));
+    }
+    if has_clock && has_code_export {
+        let Some(tail) = env.effects.get(effects.len()..) else {
+            return false;
+        };
+        return env.effects.starts_with(&effects)
+            && (tail
+                == [
+                    noble_kernel::contracts::TEST_CLOCK,
+                    noble_kernel::contracts::TEST_CODE_EXPORT,
+                ]
+                || tail
+                    == [
+                        noble_kernel::contracts::TEST_CODE_EXPORT,
+                        noble_kernel::contracts::TEST_CLOCK,
+                    ]);
+    }
+    if has_clock {
+        effects.push(noble_kernel::contracts::TEST_CLOCK);
+    }
+    if has_code_export {
+        effects.push(noble_kernel::contracts::TEST_CODE_EXPORT);
     }
     env.effects == effects
 }
@@ -242,6 +275,7 @@ fn canonical_prefix(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    declared_text: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
     if calculator {
         let fixed = attempt!(noble_kernel::contracts::calculator_environment()
@@ -263,13 +297,18 @@ fn canonical_prefix(
         return Ok((fixed, 32));
     }
     if text_cursor {
-        let fixed = attempt!(noble_kernel::contracts::text_cursor_environment()
-            .map_err(|_| crate::Diagnostic::Defective));
-        if env.defs.len() < 27 {
+        let fixed = attempt!((if declared_text {
+            noble_kernel::contracts::declared_text_environment()
+        } else {
+            noble_kernel::contracts::text_cursor_environment()
+        })
+        .map_err(|_| crate::Diagnostic::Defective));
+        let count = fixed.defs.len();
+        if env.defs.len() < count {
             return Err(crate::Diagnostic::Invalid);
         }
         let mut index = 0usize;
-        while index < 27 {
+        while index < count {
             let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
                 || env.kinds[index] != fixed.kinds[index]
                 || !env.deps[index].is_empty()
@@ -279,7 +318,7 @@ fn canonical_prefix(
             }
             index += 1;
         }
-        return Ok((fixed, 27));
+        return Ok((fixed, count));
     }
     let mut fixed = attempt!(bootstrap(env));
     attempt!(check_builtin_rows(env, &fixed));
@@ -382,26 +421,34 @@ pub(super) fn exact_contract(
     env: &noble_kernel::contracts::Env,
     def: noble_kernel::contracts::Definition,
     expected: &noble_kernel::untrusted::Expected,
+    signed_owner_inst: Option<&noble_kernel::words::Inst>,
+    work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let scheme = match env.scheme(def) {
         Some(value) => value,
         None => return Err(crate::Diagnostic::Invalid),
     };
-    if !scheme.var_kinds.is_empty() {
-        return Err(crate::Diagnostic::Invalid);
-    }
-    let inst = noble_kernel::words::Inst {
+    // The one-time full environment scan and each independent kernel
+    // acceptance reserve environment_work. This check substitutes only the
+    // selected definition's scheme, not every row in the environment.
+    attempt!(work.charge(attempt!(scheme_work(scheme))));
+    let empty = noble_kernel::words::Inst {
         bindings: alloc::vec::Vec::new(),
     };
-    let input = match scheme.subst_stack(&scheme.stack_in, &inst) {
+    let inst = match signed_owner_inst {
+        Some(inst) => inst,
+        None if scheme.var_kinds.is_empty() => &empty,
+        None => return Err(crate::Diagnostic::Invalid),
+    };
+    let input = match scheme.subst_stack(&scheme.stack_in, inst) {
         Ok(value) => value,
         Err(_) => return Err(crate::Diagnostic::Invalid),
     };
-    let output = match scheme.subst_stack(&scheme.stack_out, &inst) {
+    let output = match scheme.subst_stack(&scheme.stack_out, inst) {
         Ok(value) => value,
         Err(_) => return Err(crate::Diagnostic::Invalid),
     };
-    let effects = match scheme.subst_effects(&scheme.effects, &inst) {
+    let effects = match scheme.subst_effects(&scheme.effects, inst) {
         Ok(value) => value,
         Err(_) => return Err(crate::Diagnostic::Invalid),
     };
@@ -554,4 +601,143 @@ fn scheme_work(scheme: &noble_kernel::words::Scheme) -> Result<u64, crate::Diagn
         Err(_) => return Err(crate::Diagnostic::Exhausted),
     };
     Ok(parts.saturating_mul(512))
+}
+
+#[cfg(test)]
+mod contract_meter_tests {
+    use super::{exact_contract, scheme_work, work};
+    use crate::{source::Work, Diagnostic};
+    use noble_kernel::{
+        contracts::Definition,
+        types::{EffSet, Ty},
+        untrusted::Expected,
+    };
+
+    fn budget(remaining: u64) -> Work {
+        Work {
+            remaining,
+            issued: remaining,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    #[test]
+    fn local_contract_check_charges_its_scheme_without_rechecking_all_environment_rows() {
+        let env = noble_kernel::contracts::environment().expect("fixed environment");
+        let checked = Definition(0);
+        let cost = scheme_work(env.scheme(checked).expect("fixed scheme"))
+            .ok()
+            .expect("bounded scheme");
+        let mismatched = Expected {
+            stack_in: alloc::vec![Ty::Text],
+            stack_out: alloc::vec::Vec::new(),
+            allowed_effects: EffSet::empty(),
+        };
+        let mut insufficient = budget(cost - 1);
+        assert!(matches!(
+            exact_contract(&env, checked, &mismatched, None, &mut insufficient),
+            Err(Diagnostic::Exhausted)
+        ));
+        let mut sufficient = budget(cost);
+        assert!(matches!(
+            exact_contract(&env, checked, &mismatched, None, &mut sufficient),
+            Err(Diagnostic::Invalid)
+        ));
+        assert_eq!(sufficient.remaining, 0);
+        assert!(
+            work(&env, false, &mut budget(u64::MAX))
+                .ok()
+                .expect("full environment budget")
+                > cost
+        );
+    }
+
+    #[test]
+    fn oversized_scheme_still_exhausts_before_contract_or_kernel_checks() {
+        let mut env = noble_kernel::contracts::environment().expect("fixed environment");
+        let selected = env.defs.get_mut(0).expect("fixed scheme");
+        selected.stack_out = (0..=crate::source::NODE_LIMIT)
+            .map(|_| noble_kernel::shapes::Pattern::Unit)
+            .collect();
+        assert!(matches!(
+            work(&env, false, &mut budget(u64::MAX)),
+            Err(Diagnostic::Exhausted)
+        ));
+    }
+}
+
+#[cfg(test)]
+mod declared_text_profile_tests {
+    #[test]
+    fn merged_prefix_rejects_mutations_even_under_selected_profile() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid retained source cap");
+        let session =
+            noble_contracts::source::ModuleSession::new_declared_text(&[], false, retained)
+                .expect("selected source profile");
+        let expression = session
+            .prepare(b"\"7\" 0 text.byte", &[], limits)
+            .expect("source-checked explicit Text cursor");
+        let original = expression
+            .declared_text_source_owner()
+            .expect("checked source token")
+            .rederive()
+            .expect("source-checked expression");
+        // (submission, live, live_slots, text_cursor, calculator, declared_text)
+        assert!(super::check(&original, false, false, true, false, true).is_ok());
+        for index in 22..28 {
+            let mut forged = original.clone();
+            forged.environment.kinds[index] = if (23..=25).contains(&index) {
+                noble_kernel::contracts::Behavior::TextByte
+            } else {
+                noble_kernel::contracts::Behavior::Reserved
+            };
+            assert!(
+                super::check(&forged, false, false, true, false, true).is_err(),
+                "altered fixed row {index} passed merged admission"
+            );
+        }
+        let mut forged = original.clone();
+        forged.environment.deps[26].push(noble_kernel::contracts::Definition(0));
+        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        let mut forged = original.clone();
+        forged.environment.definition_owners[26] = Some(1);
+        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        let mut forged = original.clone();
+        forged.environment.defs[26].stack_in.clear();
+        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        let mut forged = original.clone();
+        forged.environment.text_cursor = false;
+        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        let mut forged = original.clone();
+        forged.environment.declared_modules = false;
+        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        for (text_cursor, calculator, declared_text) in [
+            (false, false, false),
+            (true, false, false),
+            (false, false, true),
+            (true, true, true),
+        ] {
+            assert!(
+                super::check(
+                    &original,
+                    false,
+                    false,
+                    text_cursor,
+                    calculator,
+                    declared_text
+                )
+                .is_err(),
+                "declared-text source was admitted through another compiler profile"
+            );
+        }
+    }
 }

@@ -33,6 +33,9 @@ fn alias_exports(
 ) -> Result<alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>, crate::source::Error>
 {
     let alias = &session.aliases[alias_slot];
+    if alias.pending {
+        return Ok(local_types);
+    }
     let Some(module) = session.modules.get(alias.module) else {
         return Ok(local_types);
     };

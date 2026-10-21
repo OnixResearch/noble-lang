@@ -46,12 +46,15 @@ fn selected_dynamic_owner_retains_actual_published_static_child() -> Result<(), 
     let [output] = origin.outputs.as_slice() else {
         return Err("selected builder must return one checked Program".into());
     };
-    let OriginProgramValue::Compose {
-        right_program_index,
-        ..
-    } = &output.result
-    else {
+    let OriginProgramValue::Compose { right, .. } = output.result.as_ref() else {
         return Err("selected saved Program lacks checked static child".into());
+    };
+    let OriginProgramValue::Static {
+        program_index: right_program_index,
+        ..
+    } = right.as_ref()
+    else {
+        return Err("selected saved Program lost its checked static child".into());
     };
     let child = prepared
         .program_metadata()

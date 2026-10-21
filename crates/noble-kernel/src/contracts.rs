@@ -21,6 +21,10 @@ pub struct Definition(pub u32);
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
 pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
+/// The reserved identity of the required, deny-only `test.code-export` effect.
+pub const TEST_CODE_EXPORT: crate::types::EffId = crate::types::EffId(6);
+/// Host-selected identity of the deny-only WORKER-12 source adapter.
+pub const TEST_CODE_EXPORT_ADAPTER_IDENTITY: &str = "worker-test-code-export@1.0.0";
 /// The reserved, opt-in effect of selecting a preadmitted live program.
 pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);
 
@@ -79,10 +83,13 @@ pub enum Behavior {
     Cons,
     /// `list.case`.
     ListCase,
+
     /// The supplied `test.emit` operation.
     TestEmit,
     /// Pure byte-offset inspection in standalone cursor or calculator.
     TextByte,
+    /// Pure signed comparison, visible only to the combined declared-text profile.
+    I64Less,
     /// Pure, budget-metered guest iteration in the opt-in calculator profile.
     CalculatorIterate,
     /// Signed comparison returning -1, 0 or 1.
@@ -99,6 +106,8 @@ pub enum Behavior {
     BoundEmit(u32),
     /// A required scripted `test.clock` binding, retaining its immutable slot.
     BoundClock(u32),
+    /// A required `test.code-export` binding, retaining its immutable slot.
+    BoundCodeExport(u32),
     /// Explicit opaque construction and conversion.
     NominalNew(crate::types::NominalTypeId),
     NominalInto(crate::types::NominalTypeId),
@@ -191,6 +200,16 @@ pub struct BoundEmitRegistration {
 
 /// Pending scripted clock binding; not authority to consult a real clock.
 pub struct BoundClockRegistration {
+    pub adapter_identity: alloc::string::String,
+    pub adapter_slot: u32,
+    pub owner: u64,
+    pub input: alloc::vec::Vec<crate::types::Ty>,
+    pub output: alloc::vec::Vec<crate::types::Ty>,
+    pub effects: crate::types::EffSet,
+}
+
+/// Pending code-export request; its checked effect is not export authority.
+pub struct BoundCodeExportRegistration {
     pub adapter_identity: alloc::string::String,
     pub adapter_slot: u32,
     pub owner: u64,
@@ -446,6 +465,15 @@ impl Env {
         nominal::register_bound_clock(self, registration)
     }
 
+    /// Register only `Text Text -- ! test.code-export`. This checks a request,
+    /// never grants permission to serialize or export either Text.
+    pub fn declare_bound_code_export(
+        self,
+        registration: BoundCodeExportRegistration,
+    ) -> Result<(Self, Definition), NominalError> {
+        nominal::register_bound_code_export(self, registration)
+    }
+
     /// The scheme of a definition.
     pub fn scheme(&self, def: Definition) -> Option<&crate::words::Scheme> {
         match index(def) {
@@ -687,5 +715,30 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
         .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, rows));
+    Ok(env)
+}
+
+/// Pure declared text retains the immutable cursor at 26 and adds signed
+/// comparison at 27. Core, standalone cursor, ordinary modules and the
+/// separately selected calculator profile gain neither.
+pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
+    let mut env = text_cursor_environment()?;
+    let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
+    let less = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![
+            tail.clone(),
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::I64
+        ],
+        stack_out: alloc::vec![tail, crate::shapes::Pattern::Bool],
+        effects: alloc::vec![],
+    };
+    less.validate()?;
+    env.defs.push(less);
+    env.kinds.push(Behavior::I64Less);
+    env.deps.push(alloc::vec::Vec::new());
+    env.definition_owners.push(None);
+    env.declared_modules = true;
     Ok(env)
 }

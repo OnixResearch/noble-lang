@@ -8,6 +8,7 @@
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
 use alloc::borrow::Cow;
+pub(in crate::source) mod symbolic;
 
 impl super::Session {
     pub fn prepare(
@@ -16,7 +17,17 @@ impl super::Session {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<super::Prepared, super::Error> {
-        self.prepare_signed(source_bytes, inputs, None, limits)
+        self.prepare_signed(source_bytes, inputs, None, limits, limits.bytes)
+    }
+
+    pub(super) fn prepare_with_retention(
+        &self,
+        source_bytes: &[u8],
+        inputs: &[noble_kernel::types::Ty],
+        limits: crate::Limits,
+        retained_bytes: u32,
+    ) -> Result<super::Prepared, super::Error> {
+        self.prepare_signed(source_bytes, inputs, None, limits, retained_bytes)
     }
 
     pub(super) fn prepare_signed(
@@ -25,9 +36,10 @@ impl super::Session {
         inputs: &[noble_kernel::types::Ty],
         signature: Option<&noble_kernel::words::Scheme>,
         limits: crate::Limits,
+        retained_bytes: u32,
     ) -> Result<super::Prepared, super::Error> {
         let mut meter = crate::Meter::new(limits);
-        self.prepare_signed_metered(source_bytes, inputs, signature, &mut meter)
+        self.prepare_signed_metered(source_bytes, inputs, signature, retained_bytes, &mut meter)
     }
 
     #[expect(
@@ -39,6 +51,7 @@ impl super::Session {
         source_bytes: &[u8],
         inputs: &[noble_kernel::types::Ty],
         signature: Option<&noble_kernel::words::Scheme>,
+        retained_bytes: u32,
         meter: &mut crate::Meter,
     ) -> Result<super::Prepared, super::Error> {
         let parsed = if self.declared.is_some() {
@@ -50,9 +63,37 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if let Err(error) = super::resolution::resolve(&mut tree, name.as_deref(), self, meter) {
+        if self.live_slots.is_some()
+            || self
+                .declared
+                .as_ref()
+                .is_some_and(|context| context.declared_text)
+        {
+            attempt!(super::locals::lower(&mut tree, meter)
+                .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
+        }
+        let alias_candidates = if name.is_some() {
+            attempt!(alias_candidates(&tree, self, meter)
+                .map_err(|error| super::Error::at(super::Stage::Resolve, error)))
+        } else {
+            alloc::vec::Vec::new()
+        };
+        let signed_owner = signature.is_some()
+            && self
+                .declared
+                .as_ref()
+                .is_some_and(|context| context.signed_self);
+        if let Err(error) =
+            super::resolution::resolve(&mut tree, name.as_deref(), self, signed_owner, meter)
+        {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
+        let alias_uses = if alias_candidates.is_empty() {
+            alloc::vec::Vec::new()
+        } else {
+            attempt!(checked_alias_uses(&tree, self, &alias_candidates, meter)
+                .map_err(|error| super::Error::at(super::Stage::Check, error)))
+        };
         if name.is_some()
             && self.live_slots.is_some()
             && tree
@@ -83,34 +124,113 @@ impl super::Session {
         };
         let (extra, mode) = if name.is_some() {
             (
-                source_bytes.len().saturating_add(4),
+                attempt!(source_bytes.len().checked_add(4).ok_or_else(|| {
+                    super::Error::at(
+                        super::Stage::Check,
+                        super::exhausted(tree.span, "retained definition source length overflows"),
+                    )
+                })),
                 super::inference::Mode::Declaration,
             )
         } else {
             (0, super::inference::Mode::Submission)
         };
-        if let Err(error) = self.retained(extra, tree.span, meter) {
+        if let Err(error) = self.retained(extra, retained_bytes, tree.span, meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let environment = match self.environment() {
+        let mut environment = match self.environment() {
             Ok(environment) => environment,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
+        };
+        // An actual unpublished owner interface occupies this transaction's
+        // prospective Env row while its body is checked. It is never installed
+        // into the committed namespace or exposed as a raw graph self edge.
+        let prospective_owner = if signed_owner
+            && tree
+                .nodes
+                .iter()
+                .any(|node| matches!(node.kind, super::Kind::Call(super::Target::SelfOwner)))
+        {
+            let Some(scheme) = signature else {
+                return Err(super::Error::at(
+                    super::Stage::Check,
+                    crate::invalid(tree.span, "signed owner has no signature"),
+                ));
+            };
+            let Some(owner) = self.declared.as_ref().and_then(|context| context.owner) else {
+                return Err(super::Error::at(
+                    super::Stage::Check,
+                    crate::invalid(tree.span, "signed owner has no module"),
+                ));
+            };
+            let def = noble_kernel::contracts::Definition(attempt!(crate::index(
+                environment.defs.len(),
+                tree.span,
+            )
+            .map_err(|problem| super::Error::at(super::Stage::Check, problem))));
+            attempt!(meter
+                .node(tree.span)
+                .map_err(|problem| super::Error::at(super::Stage::Check, problem)));
+            // Copy-on-write: only a signed declaration pays for an owned
+            // prospective environment row.
+            let owned = environment.to_mut();
+            owned.defs.push(scheme.clone());
+            owned.kinds.push(noble_kernel::contracts::Behavior::Named);
+            owned.deps.push(alloc::vec::Vec::new());
+            owned.definition_owners.push(Some(owner));
+            Some(def)
+        } else {
+            None
         };
         let scope = super::inference::Scope {
             root: &tree,
             session: self,
             environment: &environment,
             root_signature: signature,
+            prospective_owner,
         };
         let state = match super::inference::infer(scope, mode, inputs, meter) {
             Ok(state) => state,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
+        let signed_relation = match prospective_owner {
+            Some(owner) => {
+                let scheme = signature.ok_or_else(|| {
+                    super::Error::at(
+                        super::Stage::Check,
+                        crate::invalid(tree.span, "signed owner has no signature"),
+                    )
+                })?;
+                Some(attempt!(symbolic::check(
+                    &tree,
+                    &state,
+                    scheme,
+                    source_bytes,
+                    owner,
+                    self,
+                    &environment,
+                    meter
+                )
+                .map_err(|problem| super::Error::at(
+                    super::Stage::Check,
+                    problem
+                ))))
+            }
+            None => None,
+        };
         let mut addition = alloc::vec::Vec::new();
         let (definition, submission, checked, output) = match name {
             Some(name) => {
-                let definition = match declaration(tree, name, source_bytes, signature, self, meter)
-                {
+                let definition = match declaration(
+                    tree,
+                    name,
+                    source_bytes,
+                    signature,
+                    signed_relation,
+                    alias_uses,
+                    self,
+                    meter,
+                ) {
                     Ok((definition, bytes)) => {
                         addition = bytes;
                         definition
@@ -172,6 +292,7 @@ impl super::Session {
                 let (submission, checked, output) = attempt!(super::emission::emit(
                     state,
                     environment.into_owned(),
+                    &self.definitions,
                     source_bytes.len(),
                     meter
                 ));
@@ -185,6 +306,7 @@ impl super::Session {
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             live_slots: self.live_slots.is_some(),
+            live_slot_owner: self.live_slots.as_ref().map(|slots| slots.owner.clone()),
             limits: meter.limits,
             calculator: self.calculator,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
@@ -229,21 +351,123 @@ impl super::Session {
     fn retained(
         &self,
         extra: usize,
+        retained_bytes: u32,
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
         let history_bytes = attempt!(crate::index(self.history.len(), span));
-        let limit_bytes = attempt!(crate::offset(meter.limits.bytes, span));
-        if self.history.len().saturating_add(extra) > limit_bytes {
+        let limit_bytes = attempt!(crate::offset(retained_bytes, span));
+        let total = attempt!(self.history.len().checked_add(extra).ok_or_else(|| {
+            super::exhausted(span, "retained definition history byte count overflows")
+        }));
+        if total > limit_bytes {
             return Err(super::exhausted(
                 span,
-                "retained namespace byte limit exceeded",
+                "retained definition history byte limit exceeded",
             ));
         }
         meter.charge(history_bytes, span)
     }
 }
 
+/// Preserve exact source node ordinals before resolution erases spellings.
+/// Only current outside aliases on a top-level named body are mutable;
+/// module-local imports belong to that module's immutable source snapshot.
+fn alias_candidates(
+    tree: &super::Tree,
+    session: &super::Session,
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<(u32, usize)>, crate::Diagnostic> {
+    let Some(context) = session.declared.as_ref() else {
+        return Ok(alloc::vec::Vec::new());
+    };
+    if context.owner.is_some() || context.aliases.is_empty() {
+        return Ok(alloc::vec::Vec::new());
+    }
+    let mut candidates = alloc::vec::Vec::new();
+    for (node_index, node) in tree.nodes.iter().enumerate() {
+        attempt!(meter.charge(1, node.span));
+        let super::Kind::Word(word) = &node.kind else {
+            continue;
+        };
+        for (alias_index, (alias, _)) in context.aliases.iter().enumerate() {
+            attempt!(meter.charge(1, node.span));
+            if word.len() > alias.len() + 1
+                && word.starts_with(alias.as_bytes())
+                && word[alias.len()] == b'.'
+            {
+                candidates.push((attempt!(crate::index(node_index, node.span)), alias_index));
+                break;
+            }
+        }
+    }
+    Ok(candidates)
+}
+
+fn checked_alias_uses(
+    tree: &super::Tree,
+    session: &super::Session,
+    candidates: &[(u32, usize)],
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<super::AliasUse>, crate::Diagnostic> {
+    let context = session
+        .declared
+        .as_ref()
+        .ok_or_else(|| crate::internal(tree.span))?;
+    let mut uses: alloc::vec::Vec<super::AliasUse> = alloc::vec::Vec::new();
+    for &(node_index, alias_index) in candidates {
+        let node = tree
+            .nodes
+            .get(attempt!(crate::offset(node_index, tree.span)))
+            .ok_or_else(|| crate::internal(tree.span))?;
+        let (alias, owner) = context
+            .aliases
+            .get(alias_index)
+            .ok_or_else(|| crate::internal(node.span))?;
+        let super::Kind::Call(target) = &node.kind else {
+            return Err(crate::invalid(
+                node.span,
+                "checked import alias lost its source word",
+            ));
+        };
+        match *target {
+            super::Target::Named(index) => {
+                let definition = session
+                    .definitions
+                    .get(attempt!(crate::offset(index, node.span)))
+                    .ok_or_else(|| crate::internal(node.span))?;
+                if definition.owner != Some(*owner) {
+                    return Err(crate::invalid(
+                        node.span,
+                        "checked alias call has a foreign module owner",
+                    ));
+                }
+            }
+            super::Target::Builtin(_) => {}
+            super::Target::SelfOwner | super::Target::SlotInvoke(_) => {
+                return Err(crate::invalid(
+                    node.span,
+                    "checked alias call has an unsupported target",
+                ));
+            }
+        }
+        attempt!(meter.charge(1, node.span));
+        if let Some(existing) = uses
+            .iter_mut()
+            .find(|entry| entry.spelling == alias.as_str() && entry.owner == *owner)
+        {
+            existing.nodes.push((node_index, *target));
+        } else {
+            attempt!(meter.node(node.span));
+            uses.push(super::AliasUse {
+                spelling: alias.clone(),
+                owner: *owner,
+                nodes: alloc::vec![(node_index, *target)],
+            });
+        }
+    }
+    Ok(uses)
+}
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
@@ -252,11 +476,17 @@ impl super::Session {
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn declaration(
     tree: super::Tree,
     name: alloc::string::String,
     source_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
+    signed: Option<super::SignedRelation>,
+    alias_uses: alloc::vec::Vec<super::AliasUse>,
     session: &super::Session,
     meter: &mut crate::Meter,
 ) -> Result<(super::Named, alloc::vec::Vec<u8>), crate::Diagnostic> {
@@ -277,6 +507,9 @@ fn declaration(
             owner: session.declared.as_ref().and_then(|context| context.owner),
             tree,
             signature: signature.cloned(),
+            signed,
+            alias_uses,
+            history_start: None,
         },
         addition,
     ))

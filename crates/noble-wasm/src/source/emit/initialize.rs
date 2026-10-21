@@ -14,71 +14,27 @@ fn atom(
     operation: &super::super::plan::Operation,
     witness: u32,
 ) -> Result<(), crate::Diagnostic> {
-    let action = operation.action;
-    let (tag, value, child, ordinal) = match action {
-        super::super::plan::Action::I64(value) => (1, value, None, 0),
-        super::super::plan::Action::Bool(value) => (4, i64::from(value), None, 0),
-        super::super::plan::Action::Unit => (5, 0, None, 0),
-        super::super::plan::Action::Program(child) => (3, 0, Some(child), 0),
-        super::super::plan::Action::Word(definition) => (2, i64::from(definition), None, 0),
-        super::super::plan::Action::TextByte => (2, 26, None, 0),
-        super::super::plan::Action::CalculatorIterate => (2, 27, None, 0),
-        super::super::plan::Action::CalculatorCompare => (2, 28, None, 0),
-        super::super::plan::Action::CalculatorDivRem => (2, 29, None, 0),
-        super::super::plan::Action::CalculatorTextFromAscii => (2, 30, None, 0),
-        super::super::plan::Action::CalculatorTextLength => (2, 31, None, 0),
-        super::super::plan::Action::Quote(_, _, _) => (2, 8, None, 0),
-        super::super::plan::Action::Call(_, identity) => {
-            (15, i64::from_le_bytes(identity.to_le_bytes()), None, 0)
-        }
-        super::super::plan::Action::NominalNew(module, ordinal, _) => {
-            (26, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
-        }
-        super::super::plan::Action::NominalInto(module, ordinal, _) => {
-            (27, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
-        }
-        super::super::plan::Action::NominalLeft(module, ordinal, _) => {
-            (28, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
-        }
-        super::super::plan::Action::NominalRight(module, ordinal, _) => {
-            (29, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
-        }
-        super::super::plan::Action::NominalMatch(module, ordinal, _, _, _) => {
-            (30, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
-        }
-        super::super::plan::Action::EmitBound(slot) => (31, i64::from(slot), None, 0),
-        super::super::plan::Action::ClockBound(slot) => (32, i64::from(slot), None, 0),
-        super::super::plan::Action::LivePropose(_) => (2, 24, None, 0),
-        super::super::plan::Action::LiveGeneration => (2, 25, None, 0),
-        super::super::plan::Action::SlotInvoke(_, borrowed_ordinal) => {
-            (33, i64::from(borrowed_ordinal), None, 0)
-        }
-        super::super::plan::Action::Text(address, length) => {
-            return text_atom(out, (address, length), witness);
-        }
-    };
+    let atom = super::super::plan::atom_metadata(operation, witness);
+    if let Some(text) = atom.text {
+        return text_atom(out, text, witness);
+    }
     attempt!(out.append(b"(local.set $atom (call $new (i32.const 8) "));
-    attempt!(out.i64(value));
+    attempt!(out.i64(atom.payload));
     attempt!(out.append(b" "));
-    match child {
+    match atom.child_program {
         Some(child) => attempt!(super::get_global(out, child)),
         None => attempt!(out.i32(0)),
     }
     attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
-    attempt!(out.i32(tag));
-    let has_immediate_operands = tag == 2 || tag == 15 || tag == 33 || tag.wrapping_sub(26) <= 6;
-    if has_immediate_operands {
-        attempt!(out.append(b" "));
-        attempt!(out.i32(operation.input));
-        attempt!(out.append(b" "));
-        attempt!(out.i32(operation.output));
-        attempt!(out.append(b" "));
-        attempt!(out.i32(operation.effects));
-    } else {
-        attempt!(out.append(b" (i32.const 0) (i32.const 0) (i32.const 0)"));
-    }
+    attempt!(out.i32(atom.tag));
     attempt!(out.append(b" "));
-    attempt!(out.i32(ordinal));
+    attempt!(out.i32(atom.input));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(atom.output));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(atom.effects));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(atom.ordinal));
     out.append(b"))\n")
 }
 
@@ -212,6 +168,13 @@ fn program(
         // of registry reachability and separately saved Program cells. Root
         // every program, including quotation/named bodies, before publication.
         attempt!(out.append(b"(if (call $storage_root_program "));
+        attempt!(super::get_global(out, id));
+        attempt!(out.append(b") (then (call $fail (i32.const 4)) (return)))\n"));
+    }
+    if plan.core_live {
+        // Core's append-only heap has distinct host and per-module root bytes.
+        // A quotation child stays owned after its wrapper has left the stack.
+        attempt!(out.append(b"(if (call $core_live_module_root "));
         attempt!(super::get_global(out, id));
         attempt!(out.append(b") (then (call $fail (i32.const 4)) (return)))\n"));
     }

@@ -1,7 +1,11 @@
 #[test]
 fn all_exported_public_arms_support_exact_two_branch_match() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ variant Status Ready I64 public Failed Text public export Status export Status.Ready export Status.Failed ]")?;
     let accepted = session
         .prepare(
@@ -31,8 +35,12 @@ fn all_exported_public_arms_support_exact_two_branch_match() -> Result<(), Strin
 
 #[test]
 fn result_source_definitions_instantiate_at_distinct_named_uses() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     let integers = session
         .resolve_type("result@1.Result<I64,Text>")
@@ -65,7 +73,12 @@ fn result_source_definitions_instantiate_at_distinct_named_uses() -> Result<(), 
 
 #[test]
 fn result_library_source_is_pinned_and_invalid_callbacks_reject() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     let forged = b"module result@1 [ variant Result<A,E> Ok A public Err E public ]";
     let refused = session.prepare(forged, &[], super::LIMITS);
     assert!(matches!(
@@ -94,8 +107,12 @@ fn result_library_source_is_pinned_and_invalid_callbacks_reject() -> Result<(), 
 
 #[test]
 fn signed_constructor_produces_concrete_result_for_checked_program() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -126,8 +143,8 @@ fn signed_constructor_produces_concrete_result_for_checked_program() -> Result<(
 
 #[test]
 fn local_concrete_nominal_signature_preserves_identity_at_calls() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     session = super::commit(
         session,
         b"module calc@1 [ opaque Cursor I64 public export Cursor export Cursor.new export Cursor.into signature advance forall<S:stack> [ S Cursor -- S Cursor ! pure ] export advance def advance [ Cursor.into 1 + Cursor.new ] ]",
@@ -167,8 +184,8 @@ fn local_concrete_nominal_signature_preserves_identity_at_calls() -> Result<(), 
 
 #[test]
 fn exported_concrete_nominal_signature_preserves_source_module_identity() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     session = super::commit(
         session,
         b"module numbers@1 [ opaque Exact I64 public export Exact export Exact.new export Exact.into ]",
@@ -202,8 +219,12 @@ fn exported_concrete_nominal_signature_preserves_source_module_identity() -> Res
 
 #[test]
 fn first_class_program_is_a_checked_result_payload() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -234,8 +255,12 @@ fn first_class_program_is_a_checked_result_payload() -> Result<(), String> {
 
 #[test]
 fn reflected_syntax_is_a_checked_error_payload() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -254,17 +279,26 @@ fn reflected_syntax_is_a_checked_error_payload() -> Result<(), String> {
 
 #[test]
 fn universal_source_signatures_reject_narrowed_value_and_effect() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|e| format!("{e:?}"))?;
     let narrowed_value = b"module bad@1 [ signature identity forall<S:stack,A:value> [ S A -- S A ! pure ] export identity def identity [ drop 0 ] ]";
     assert!(matches!(
         session.prepare(narrowed_value, &[], super::LIMITS),
         Err(error) if error.stage() == noble_contracts::source::Stage::Check
     ));
-    let session = noble_contracts::source::ModuleSession::new(&[super::binding(super::Binding {
-        version: 1,
-        slot: 3,
-        adapter: "version-A",
-    })])
+    let session = noble_contracts::source::ModuleSession::new(
+        &[super::binding(super::Binding {
+            version: 1,
+            slot: 3,
+            adapter: "version-A",
+        })],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
     .map_err(|e| format!("{e:?}"))?;
     let narrowed_effect = b"module ledger@1 [ require emit Text -- ! test.emit signature leak forall<S:stack,eps:effect> [ S -- S ! eps ] export leak def leak [ \"event\" emit ] ]";
     assert!(matches!(
@@ -288,3 +322,6 @@ mod part5;
 
 #[path = "cases/part6.rs"]
 mod part6;
+
+#[path = "cases/part7.rs"]
+mod part7;

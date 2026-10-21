@@ -13,16 +13,23 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
         }
     };
     let count = world.imports.len();
+    let extra_effect = usize::from(
+        world
+            .worker_program_effect
+            .is_some_and(|effect| !environment.effects.contains(&effect)),
+    );
     environment.defs.reserve(count);
     environment.kinds.reserve(count);
-    environment.effects.reserve(count);
+    environment
+        .effects
+        .reserve(count.saturating_add(extra_effect));
     environment.deps.reserve(count);
     let mut words = alloc::vec::Vec::with_capacity(count);
     let mut effects = 0u64;
     let mut at = 0usize;
     let mut failure = None;
     while at < count {
-        match install(&world.imports[at], &mut environment, &mut words) {
+        match install(&world.imports[at], world, &mut environment, &mut words) {
             Ok(bit) => effects |= bit,
             Err(problem) => {
                 failure = Some(problem);
@@ -34,11 +41,25 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
     if let Some(problem) = failure {
         return Err(problem);
     }
+    // The selected source Program's latent effect must be a known type
+    // identity to the guest checker, but it is never an imported WIT effect
+    // grant: only the three independently named imports contribute to the
+    // callable-effect bitset above.
+    if let Some(effect) = world.worker_program_effect {
+        if !environment.effects.contains(&effect) {
+            environment.effects.push(effect);
+        }
+    }
+    let program_type_effects = match world.worker_program_effect {
+        Some(effect) => 1u64.checked_shl(effect.0).ok_or_else(super::exhausted)?,
+        None => 0,
+    };
     environment.resource_kinds = resource_kinds(world);
     Ok(super::Bindings {
         environment,
         words,
         effects,
+        program_type_effects,
         key: world.build_context(),
     })
 }
@@ -127,6 +148,7 @@ const fn gather_types(
 )]
 fn install(
     operation: &super::Operation,
+    world: &super::World,
     environment: &mut noble_kernel::contracts::Env,
     words: &mut alloc::vec::Vec<(alloc::string::String, noble_kernel::contracts::Definition)>,
 ) -> Result<u64, super::Error> {
@@ -134,7 +156,7 @@ fn install(
         Ok(id) => noble_kernel::contracts::Definition(id),
         Err(_) => return Err(super::exhausted()),
     };
-    let (scheme, effect, bit) = attempt!(contract(operation, definition));
+    let (scheme, effect, bit) = attempt!(contract(operation, definition, world));
     environment.defs.push(scheme);
     environment
         .kinds
@@ -153,6 +175,7 @@ fn install(
 fn contract(
     operation: &super::Operation,
     definition: noble_kernel::contracts::Definition,
+    world: &super::World,
 ) -> Result<(noble_kernel::words::Scheme, noble_kernel::types::EffId, u64), super::Error> {
     let effect = match operation.effect {
         Some(effect) => effect,
@@ -161,7 +184,7 @@ fn contract(
     if operation.definition != Some(definition) {
         return Err(super::invalid("import definition identity mismatch"));
     }
-    let scheme = attempt!(scheme(operation));
+    let scheme = attempt!(scheme(operation, world));
     if scheme.validate().is_err() {
         return Err(super::invalid("invalid generated WIT import contract"));
     }
@@ -179,7 +202,10 @@ fn contract(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this bounded typed conversion threads borrowed owners in order and rejects missing operation identity with an owned diagnostic; it has no assertion preconditions on caller data."
 )]
-fn scheme(operation: &super::Operation) -> Result<noble_kernel::words::Scheme, super::Error> {
+fn scheme(
+    operation: &super::Operation,
+    world: &super::World,
+) -> Result<noble_kernel::words::Scheme, super::Error> {
     let tail = noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
     let input_count = operation.parameters.len().saturating_add(1);
     let mut stack_in = alloc::vec::Vec::with_capacity(input_count);
@@ -189,12 +215,17 @@ fn scheme(operation: &super::Operation) -> Result<noble_kernel::words::Scheme, s
     stack_out.push(tail);
     let mut at = 0usize;
     while at < operation.parameters.len() {
-        parameter(operation.parameters[at], &mut stack_in, &mut stack_out);
+        parameter(
+            operation.parameters[at],
+            world,
+            &mut stack_in,
+            &mut stack_out,
+        );
         at = at.saturating_add(1);
     }
     at = 0;
     while at < operation.results.len() {
-        stack_out.push(pattern(operation.results[at]));
+        stack_out.push(pattern(operation.results[at], world));
         at = at.saturating_add(1);
     }
     let effect = match operation.effect {
@@ -216,16 +247,17 @@ fn scheme(operation: &super::Operation) -> Result<noble_kernel::words::Scheme, s
 )]
 fn parameter(
     ty: super::Type,
+    world: &super::World,
     stack_in: &mut alloc::vec::Vec<noble_kernel::shapes::Pattern>,
     stack_out: &mut alloc::vec::Vec<noble_kernel::shapes::Pattern>,
 ) {
-    stack_in.push(pattern(ty));
+    stack_in.push(pattern(ty, world));
     if matches!(ty, super::Type::Borrow(_)) {
-        stack_out.push(pattern(ty));
+        stack_out.push(pattern(ty, world));
     }
 }
 
-fn pattern(ty: super::Type) -> noble_kernel::shapes::Pattern {
+fn pattern(ty: super::Type, world: &super::World) -> noble_kernel::shapes::Pattern {
     match ty {
         super::Type::Boolean => noble_kernel::shapes::Pattern::Bool,
         super::Type::S64 => noble_kernel::shapes::Pattern::I64,
@@ -248,6 +280,16 @@ fn pattern(ty: super::Type) -> noble_kernel::shapes::Pattern {
         super::Type::FutureS64 => noble_kernel::shapes::Pattern::Resource(super::FUTURE_S64_KIND),
         super::Type::FutureResultS64String => {
             noble_kernel::shapes::Pattern::Resource(super::FUTURE_RESULT_S64_STRING_KIND)
+        }
+        super::Type::Own(kind) if world.worker_program_kind() == Some(kind) => {
+            noble_kernel::shapes::Pattern::program(
+                alloc::vec![noble_kernel::shapes::Pattern::I64],
+                alloc::vec![noble_kernel::shapes::Pattern::I64],
+                match world.worker_program_effect {
+                    Some(effect) => alloc::vec![noble_kernel::shapes::EffectSlot::Effect(effect)],
+                    None => alloc::vec![],
+                },
+            )
         }
         super::Type::Own(kind) | super::Type::Borrow(kind) => {
             noble_kernel::shapes::Pattern::Resource(kind)

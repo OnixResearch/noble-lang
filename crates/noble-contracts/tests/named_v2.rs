@@ -21,8 +21,12 @@ fn fixture_for(
     ),
     String,
 > {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid retained source cap"),
+    )
+    .map_err(|error| format!("{error:?}"))?;
     for source in [
         b"module Definitions@5 [ export step def step [ 1 + ] ]".as_slice(),
         b"import Definitions@5 as d".as_slice(),

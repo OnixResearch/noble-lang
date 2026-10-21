@@ -1,0 +1,10 @@
+module WorkerData@1 [
+  opaque AttemptId I64 public
+  opaque State Pair<I64,Sum<Unit,AttemptId>> public
+  variant Event Submit Pair<AttemptId,Text> public Cancelled AttemptId public
+  variant Action Send Pair<AttemptId,Text> public Noop Unit public
+  export AttemptId export AttemptId.new export AttemptId.into
+  export State export State.new export State.into
+  export Event export Event.Submit export Event.Cancelled
+  export Action export Action.Send export Action.Noop
+]

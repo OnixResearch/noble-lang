@@ -309,8 +309,13 @@ fn resource() -> Case {
         Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE),
         Ty::I64,
     ];
-    let result = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|e| format!("{e:?}"))
+    let retained =
+        noble_contracts::source::RetainedSourceLimit::new(noble_contracts::Limits::default().bytes)
+            .ok_or_else(|| "default source limit exceeds the retained-source cap".to_string());
+    let result = retained
+        .and_then(|retained| {
+            noble_contracts::source::ModuleSession::new(&[], retained).map_err(|e| format!("{e:?}"))
+        })
         .and_then(|s| {
             s.prepare(b"swap", &inputs, noble_contracts::Limits::default())
                 .map_err(|e| format!("{e:?}"))

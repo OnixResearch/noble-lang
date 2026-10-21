@@ -52,8 +52,30 @@ pub(super) fn install(
             }
         )))
     };
+    // Per-definition length headers are transient: after graph installation
+    // the whole original module replaces these temporary history entries.
+    let headers = attempt!(count.checked_mul(4).ok_or_else(|| {
+        crate::source::declared::error(
+            crate::source::Stage::Check,
+            "temporary definition header count overflow",
+        )
+    }));
+    let temporary_retained_bytes = attempt!(session
+        .retained_source_limit
+        .checked_add(headers)
+        .ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "temporary definition retention bound overflow",
+            )
+        }));
     let history_start = session.source.history.len();
-    let graph = attempt!(graph::Schedule::setup(session, work, definition_limits));
+    let graph = attempt!(graph::Schedule::setup(
+        session,
+        work,
+        definition_limits,
+        temporary_retained_bytes,
+    ));
     let (session, work) = attempt!(graph.run());
     finish(session, work, history_start)
 }
@@ -179,6 +201,7 @@ struct DefinitionInput<'a> {
     /// Ordinary declared modules split the registration budget equally per
     /// definition; `None` selects the calculator's shared registration meter.
     limits: Option<crate::Limits>,
+    retained_bytes: u32,
     exports: &'a [alloc::string::String],
 }
 
@@ -207,6 +230,7 @@ fn install_one(
         &input.source,
         input.signature.as_ref(),
         input.limits,
+        input.retained_bytes,
         meter,
     ));
     let Some(context) = session.source.declared.as_mut() else {
@@ -247,6 +271,7 @@ fn commit_definition(
     definition_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
     limits: Option<crate::Limits>,
+    retained_bytes: u32,
     meter: &mut crate::Meter,
 ) -> Result<
     (
@@ -258,7 +283,7 @@ fn commit_definition(
     let prepared = if let Some(limits) = limits {
         session
             .source
-            .prepare_signed(definition_bytes, &[], signature, limits)
+            .prepare_signed(definition_bytes, &[], signature, limits, retained_bytes)
     } else {
         // Each calculator definition is a separate source-checking body. Its
         // nodes are bounded independently; rechecking a retained dependency
@@ -270,6 +295,7 @@ fn commit_definition(
             definition_bytes,
             &[],
             signature,
+            retained_bytes,
             &mut body_meter,
         );
         meter.work = body_meter.work;
@@ -280,6 +306,19 @@ fn commit_definition(
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,
             "module definition has executable initializer",
+        ));
+    }
+    if prepared
+        .definition
+        .as_ref()
+        .and_then(|definition| definition.signed.as_ref())
+        .is_some_and(|relation| {
+            usize::try_from(relation.source_slot).ok() != Some(session.source.definitions.len())
+        })
+    {
+        return Err(crate::source::declared::error(
+            crate::source::Stage::Check,
+            "prospective signed owner slot changed before module installation",
         ));
     }
     attempt!(session.source.commit(prepared));

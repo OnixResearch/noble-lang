@@ -14,7 +14,7 @@ Scenario clauses declare designs; the conformance ledger records execution and e
 Document: SPEC-BE002  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001, SPEC-BE001, SPEC-S001, SPEC-V001 and IMPL-V001 at 0.1.0-draft.5  
-Status: Proposed C-Backend-Draft contract; implementation, native sandbox, conformance evidence and backend proof absent
+Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool source emission exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
 
 ## Scope and selection
 
@@ -193,6 +193,14 @@ r[CB-LIMIT-01]
 
 The C lowering and runtime MUST assign finite checked limits and distinguished outcomes for input/candidate size, output C/binary bytes, stack slots, aggregate allocation/retained recipe bytes, list length, composition depth, steps, host text buffers, diagnostic output, and process memory/CPU/wall time. Charge before growth/traversal and avoid unbounded native call-stack recursion. An in-budget execution returns exactly its checked stack/recipe/effect trace; an exhausted execution reports its stage and exhausted quota, preserves already-issued effect prefix and performs bounded cleanup; a specified runtime trap is separate from quota and native signal/UB. No host request after a failed bound or fabricated success from partial output. The wrapper MAY terminate an isolated native process on a resource bound; it MUST distinguish that outcome from a language trap and record partial trace safely.
 
+A supplied `limits.list_length` is an exact policy value even for a source
+whose values happen to be only I64/Bool. Any profile accepting it MUST retain
+that exact supplied bound in its manifest/build subject and enforce it before
+list growth when lists are supported; a profile that cannot honor the field
+MUST refuse the policy before emission rather than silently strip the bound
+or advertise an unenforced no-op. CB-CASE-01 retains its supplied list bound
+and remains OPEN while the restricted source-only emitter refuses it.
+
 
 <!-- cairn:scenario-links:start -->
 #### Scenario: CB-CASE-06 for CB-LIMIT-01
@@ -239,7 +247,25 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before loading admitted bytes it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock and process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. A native crash cannot become a successful Noble result.
+
+The native runner MUST select a reviewed immutable derivation and policy
+separate from the proof-only Lean runner and any package merely cached on
+the host. It MUST enumerate and mount the exact sealed executable and
+loader/library closure read-only, with no writable executable path, close
+all but fixed private protocol/output FDs, and clear ambient secrets and
+credentials. Its initial ELF load requires a separately reviewed transition
+to a fail-closed post-load no-exec/no-writable-executable-mapping filter
+before untrusted instructions; a filter denying all `execve` before the
+initial load cannot launch the worker, and leaving `execve`/`execveat`
+available afterward permits substitution. It MUST deny unreviewed imports,
+loader escapes, direct file/network/process access and host-clock reads.
+Seccomp denial alone does NOT stop vDSO clock calls or x86 `rdtsc`; without
+an owner-selected and verified VM/virtualized-clock or equivalent clock/TSC
+and loader barrier, native execution MUST remain unavailable. A parent-owned
+cgroup/process-tree memory, CPU, task, output and monotonic wall deadline
+MUST kill and reap the entire worker tree; signal, crash, timeout or partial
+output MUST NOT count as success or authorize protected operations.
 
 
 <!-- cairn:scenario-links:start -->
@@ -259,6 +285,22 @@ r[CB-ADMIT-01]
 **CB-ADMIT-01.**
 
 Before native launch, the invoker MUST independently accept host-selected source/candidate/environment and compare emitted C bytes against its trusted pinned emission of that accepted subject. It MUST separately validate C11 syntax and the exact constrained emitter/runtime inventory; this source validation is not a backend correctness proof. Native ELF MUST separately pass target/ABI/loader checks and byte-for-byte comparison with a trusted reproducible build of that accepted C and pinned toolchain, or a separately reviewed equivalent authenticated trusted-build route. A claimed digest, declared source, manifest flag, parse-valid C, successful compiler exit or signature supplied by the candidate MUST NOT make forged bytes executable. Fail closed for malformed C, altered source/ELF (including executable and inert sections), wrong or stale subject, mismatched compiler/options, target and ABI, absent sandbox, and unexpected imports/relocations before any candidate-body effect. Record exact source, candidate, policy, emitted-C and ELF byte identities and admission decisions as separately scoped evidence. Reproducible-build or trusted-build correspondence is a gate, not an assertion that C lowering is semantically correct.
+
+For every build and execution request, the verifier MUST open the host-selected
+source, contract, policy, current authority and candidate through bounded,
+lexically absolute normalized paths under trusted descriptor-relative
+anchors. It MUST reject `.`/`..`, ancestor symlinks and magic links,
+unreviewed mutable hard links, directory retargeting and file replacement;
+path ownership or a prior pathname digest is insufficient. It MUST snapshot
+the exact bytes into sealed read-only descriptors and use those same bytes
+for independent kernel acceptance, trusted C re-emission, reproducible
+native compilation, full ELF inspection and comparison, and launch without
+reopening mutable candidate paths. The independent build MUST compare the
+complete ELF, including inert sections, under pinned deterministic flags,
+compiler, linker, sysroot, startup/runtime, ABI and environment. Unsupported
+architecture, interpreter, dynamic import, load segment, relocation or
+executable/writable mapping MUST refuse before effects, not pass because
+a manifest or syntax check succeeded.
 
 
 <!-- cairn:scenario-links:start -->

@@ -323,6 +323,42 @@ pub(super) fn register_bound_clock(
     Ok((env, def))
 }
 
+pub(super) fn register_bound_code_export(
+    env: super::Env,
+    registration: super::BoundCodeExportRegistration,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    if registration.adapter_identity != super::TEST_CODE_EXPORT_ADAPTER_IDENTITY
+        || registration.input.as_slice() != [crate::types::Ty::Text, crate::types::Ty::Text]
+        || !registration.output.is_empty()
+        || registration.effects.as_slice() != [super::TEST_CODE_EXPORT]
+        || env
+            .bound_adapters
+            .iter()
+            .any(|row| row.adapter_slot == registration.adapter_slot)
+    {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    let (mut env, def) = attempt!(append(
+        env,
+        schemes::code_export_scheme(),
+        super::Behavior::BoundCodeExport(registration.adapter_slot),
+        registration.owner,
+    ));
+    env.bound_adapters.push(super::BoundAdapter {
+        definition: def,
+        adapter_identity: registration.adapter_identity,
+        adapter_slot: registration.adapter_slot,
+        input: registration.input,
+        output: registration.output,
+        effects: registration.effects,
+    });
+    if !env.effects.contains(&super::TEST_CODE_EXPORT) {
+        env.effects.push(super::TEST_CODE_EXPORT);
+    }
+    env.declared_modules = true;
+    Ok((env, def))
+}
+
 fn checked_bound_registration(
     env: &super::Env,
     registration: super::BoundEmitRegistration,

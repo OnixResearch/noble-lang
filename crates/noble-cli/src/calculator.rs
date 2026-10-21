@@ -151,7 +151,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let mut input = std::io::BufReader::new(stdin.lock());
     let mut failed = false;
     loop {
-        let line = match crate::core::framing::read_submission(&mut input, framed, INPUT_LIMIT) {
+        let line = match crate::core::framing::read_source(&mut input, framed, INPUT_LIMIT) {
             Ok(Some(line)) => line,
             Ok(None) => break,
             Err(error) => {

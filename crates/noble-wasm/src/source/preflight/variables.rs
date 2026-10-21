@@ -421,7 +421,9 @@ fn node(
         | noble_kernel::untrusted::Node::Invocation { inst, .. }
         | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
         // The kernel refuses borrowed dispatch outside the live-slot profile.
-        noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+        // The calculator profile never authorizes signed self recursion.
+        noble_kernel::untrusted::Node::SlotInvoke { .. }
+        | noble_kernel::untrusted::Node::SignedSelf { .. } => {
             return Err(crate::Diagnostic::Unsupported)
         }
     };
@@ -503,7 +505,8 @@ fn node(
             quotation_input_height = 0;
             quotation_output_height = 0;
         }
-        noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+        noble_kernel::untrusted::Node::SlotInvoke { .. }
+        | noble_kernel::untrusted::Node::SignedSelf { .. } => {
             return Err(crate::Diagnostic::Unsupported)
         }
     }

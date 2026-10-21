@@ -194,6 +194,27 @@ impl Manifest {
             .collect()
     }
 
+    /// Match an already selected host policy row; guest declarations cannot
+    /// introduce an adapter slot or authorize a previously denied operation.
+    pub(in crate::core) fn revocable_slot(
+        &self,
+        module: &str,
+        version: u32,
+        adapter: &str,
+        effect: &str,
+    ) -> Option<u32> {
+        self.entries
+            .iter()
+            .find(|entry| {
+                entry.module == module
+                    && entry.version == version
+                    && entry.adapter == adapter
+                    && entry.operation == effect
+                    && entry.allowed
+            })
+            .map(|entry| entry.slot)
+    }
+
     /// Worker-owned policy and immutable slot identity, never guest source.
     pub fn worker(&self) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
         let bindings = self

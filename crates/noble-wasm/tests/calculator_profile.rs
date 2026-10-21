@@ -199,8 +199,12 @@ fn calculator_modules_do_not_publish_into_ordinary_declared_sessions() -> Result
     let pending = calculator
         .prepare(module, &[], limits())
         .map_err(|e| format!("{e:?}"))?;
-    let ordinary =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let ordinary = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .ok_or("invalid retained source cap")?,
+    )
+    .map_err(|e| format!("{e:?}"))?;
     let (ordinary, result) = ordinary.commit(pending);
     assert!(
         matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
@@ -1268,8 +1272,11 @@ fn calculator_refuses_maximum_named_clone_fanout_before_kernel_copy() -> Result<
         Named {
             definition: Definition(32),
             identity: 1,
+            source_identity: 1,
             body: hostile.body.clone(),
             expected: hostile.request.expected.clone(),
+            owner_slot: None,
+            owner_inst: None,
         };
         512
     ];

@@ -23,6 +23,10 @@
 
 use std::fs::{self, DirBuilder, File};
 use std::io::{BufRead, BufReader, Read, Write};
+#[cfg(target_os = "linux")]
+use std::io::{Seek, SeekFrom};
+#[cfg(target_os = "linux")]
+use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::{symlink, DirBuilderExt};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
@@ -93,6 +97,61 @@ impl LiveChild {
         Self::start_with_options(source, None)
     }
 
+    fn start_verified(source: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--verify-source-before-execute"]);
+        Self::spawn(command)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn start_watch(source: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        Self::start_watch_with_limit(source, None)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn start_watch_with_limit(
+        source: &Path,
+        retained_limit: Option<u64>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "watch", "--source"])
+            .arg(source)
+            .args(["--engine", "v8"]);
+        if let Some(limit) = retained_limit {
+            command.args(["--max-retained-generations", &limit.to_string()]);
+        }
+        Self::spawn(command)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn start_watch_declared(
+        source: &Path,
+        bindings: &Path,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "watch", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--declared-modules", "--bindings"])
+            .arg(bindings);
+        Self::spawn(command)
+    }
+
+    fn start_declared(source: &Path, bindings: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--declared-modules", "--bindings"])
+            .arg(bindings)
+            .arg("--verify-source-before-execute");
+        Self::spawn(command)
+    }
+
     fn start_with_grant(
         source: &Path,
         name: &str,
@@ -118,6 +177,28 @@ impl LiveChild {
                 &generation.to_string(),
             ]);
         }
+        Self::spawn(command)
+    }
+
+    fn start_with_guest_step_budget(
+        source: &Path,
+        name: &str,
+        steps: u32,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args([
+                "--engine",
+                "v8",
+                "--self-edit",
+                name,
+                "--expect-generation",
+                "1",
+                "--max-guest-steps",
+                &steps.to_string(),
+            ]);
         Self::spawn(command)
     }
 
@@ -183,12 +264,20 @@ impl LiveChild {
         self.report()
     }
 
-    fn finish(mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn finish(self) -> Result<(), Box<dyn std::error::Error>> {
+        self.finish_with_status(0)
+    }
+
+    fn finish_with_status(mut self, expected: i32) -> Result<(), Box<dyn std::error::Error>> {
         drop(self.stdin.take());
         let deadline = Instant::now() + DEADLINE;
         loop {
             if let Some(status) = self.child.try_wait()? {
-                assert!(status.success(), "live child failed on clean EOF: {status}");
+                assert_eq!(
+                    status.code(),
+                    Some(expected),
+                    "unexpected live child exit: {status}"
+                );
                 return Ok(());
             }
             assert!(Instant::now() < deadline, "live child did not exit on EOF");
@@ -245,6 +334,185 @@ fn number_field(report: &Value, key: &str) -> u64 {
         .unwrap_or_else(|| panic!("missing unsigned {key}: {report}"))
 }
 
+fn exact_guest_instance_identity(receipt: &Value, span: &Value, guest: &Value) -> bool {
+    receipt["code_span"] == *span
+        && receipt["guest_instance_owner"]
+            .as_u64()
+            .is_some_and(|id| id > 0)
+        && receipt["guest_source_sha256"] == guest["source_sha256"]
+        && receipt["guest_wat_sha256"] == guest["wat_sha256"]
+        && receipt["guest_wasm_sha256"] == guest["wasm_sha256"]
+        && receipt["bridge_wat_sha256"] == guest["bridge_wat_sha256"]
+        && receipt["bridge_wasm_sha256"] == guest["bridge_wasm_sha256"]
+        && receipt["signature_catalogue_sha256"] == guest["signature_catalogue_sha256"]
+        && receipt["source_generation"]
+            .as_str()
+            .is_some_and(|generation| generation.parse::<u64>().is_ok())
+        && receipt["guest_table_entries_remaining"] == 0
+        && receipt["guest_js_owner_edges_remaining"] == 0
+        && receipt["core_dispatch_bridge_owned"] == true
+        && receipt["guest_instance_releasable"] == true
+}
+
+fn released_guest_instance(receipt: &Value, span: &Value, guest: &Value) -> bool {
+    exact_guest_instance_identity(receipt, span, guest)
+        && receipt["outcome"] == "code-retired"
+        && receipt["code_owners"] == 0
+        && receipt["table_cleared"] == true
+}
+
+fn retired_empty_guest_instance(
+    receipt: &Value,
+    span: &Value,
+    guest: &Value,
+    source_generation: u64,
+) -> bool {
+    exact_guest_instance_identity(receipt, span, guest)
+        && receipt["outcome"] == "instance-retired"
+        && receipt["no_code_interval"] == true
+        && receipt["module_roots_released"] == true
+        && receipt.get("code_owners").is_none()
+        && receipt.get("table_cleared").is_none()
+        && receipt["source_generation"]
+            .as_str()
+            .and_then(|generation| generation.parse::<u64>().ok())
+            == Some(source_generation)
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+struct LiveBarrier {
+    directory: PathBuf,
+    point: &'static str,
+    expected: String,
+    reached: Receiver<Result<String, String>>,
+    reached_channel: File,
+    release_channel: File,
+    reader: Option<std::thread::JoinHandle<()>>,
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+impl LiveBarrier {
+    fn new(
+        directory: &Path,
+        point: &'static str,
+        expected: &str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let parent = File::open(directory)?;
+        for name in ["reached", "release"] {
+            rustix::fs::mkfifoat(
+                &parent,
+                name,
+                rustix::fs::Mode::RUSR | rustix::fs::Mode::WUSR,
+            )?;
+        }
+        // Linux FIFO O_RDWR opens without a rendezvous race. Both ends stay
+        // owned by this test until the real live child sends its exact event.
+        let reached_channel = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(directory.join("reached"))?;
+        let release_channel = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(directory.join("release"))?;
+        let reader_file = reached_channel.try_clone()?;
+        let (sender, reached) = mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            let mut event = String::new();
+            let result = BufReader::new(reader_file)
+                .read_line(&mut event)
+                .map(|_| event)
+                .map_err(|error| error.to_string());
+            let _ = sender.send(result);
+        });
+        Ok(Self {
+            directory: directory.to_path_buf(),
+            point,
+            expected: expected.to_owned(),
+            reached,
+            reached_channel,
+            release_channel,
+            reader: Some(reader),
+        })
+    }
+
+    fn configure(&self, command: &mut Command) {
+        command
+            .env("NOBLE_LIVE_TEST_BARRIER_DIR", &self.directory)
+            .env("NOBLE_LIVE_TEST_BARRIER_POINT", self.point)
+            .env("NOBLE_LIVE_TEST_BARRIER_EXPECTED", &self.expected);
+    }
+
+    fn configure_host_seal(&self, command: &mut Command) {
+        command
+            .env("NOBLE_LIVE_TEST_SEAL_BARRIER_DIR", &self.directory)
+            .env("NOBLE_LIVE_TEST_SEAL_BARRIER_SHA256", &self.expected);
+    }
+
+    fn configure_accepted_submission(&self, command: &mut Command) {
+        command
+            .env(
+                "NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_BARRIER_DIR",
+                &self.directory,
+            )
+            .env("NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_SHA256", &self.expected);
+    }
+
+    fn configure_explicit_reload(&self, command: &mut Command) {
+        let (directory, expected) = match self.point {
+            "before-snapshot" => (
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_SNAPSHOT_DIR",
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_SNAPSHOT_MATCH",
+            ),
+            "before-reconcile" => (
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_RECONCILE_DIR",
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_RECONCILE_MATCH",
+            ),
+            _ => panic!("not an explicit reload barrier: {}", self.point),
+        };
+        command
+            .env(directory, &self.directory)
+            .env(expected, &self.expected);
+    }
+
+    fn wait(&self) -> Result<Value, Box<dyn std::error::Error>> {
+        let line = self.reached.recv_timeout(DEADLINE)??;
+        let event: Value = serde_json::from_str(&line)?;
+        assert_eq!(text_field(&event, "point"), self.point);
+        assert_eq!(text_field(&event, "matched"), self.expected);
+        Ok(event)
+    }
+
+    fn release(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.release_channel.write_all(b"R")?;
+        self.release_channel.flush()?;
+        Ok(())
+    }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+impl Drop for LiveBarrier {
+    fn drop(&mut self) {
+        // A failing assertion may precede the child's barrier event. Wake the
+        // bounded reader so the suite never leaves a private test thread blocked.
+        let _ = (&self.reached_channel).write_all(b"{}\n");
+        if let Some(reader) = self.reader.take() {
+            let _ = reader.join();
+        }
+    }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+fn explicit_reload_barrier(
+    fixture: &Fixture,
+    point: &'static str,
+    expected: &str,
+) -> Result<LiveBarrier, Box<dyn std::error::Error>> {
+    let directory = fixture.directory.join(point);
+    DirBuilder::new().mode(0o700).create(&directory)?;
+    LiveBarrier::new(&directory, point, expected)
+}
+
 fn text_field<'a>(report: &'a Value, key: &str) -> &'a str {
     report
         .get(key)
@@ -295,17 +563,6 @@ fn assert_no_candidate_span(report: &Value) {
     );
 }
 
-fn effect_policy_refusal(report: &Value, stack: &[&str], generation: u64) {
-    assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
-    assert_eq!(text_field(report, "stage"), "admission");
-    assert_eq!(text_field(report, "outcome"), "effect-refused");
-    assert!(!text_field(report, "diagnostic").is_empty());
-    assert_eq!(number_field(report, "generation"), generation);
-    assert_stack(report, stack);
-    assert_eq!(number_field(report, "guest_requests"), 0);
-    assert_eq!(number_field(report, "protected_operations"), 0);
-}
-
 fn current_generation(
     live: &mut LiveChild,
     fixture: &Fixture,
@@ -336,6 +593,1792 @@ fn live_01_reload_ack_precedes_fresh_next_top_level_call() -> Result<(), Box<dyn
     assert_ne!(old_hash, new_hash, "changed source must have a new digest");
     normal(&live.submit("20 addone")?, &["21", "22"]);
     live.finish()
+}
+
+fn assert_source_change_refused(report: &Value, generation: u64, stack: &[&str], old_hash: &str) {
+    assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(report, "stage"), "admission");
+    assert_eq!(
+        text_field(report, "outcome"),
+        "source-change-refused",
+        "{report}"
+    );
+    assert_eq!(number_field(report, "generation"), generation);
+    assert_eq!(text_field(report, "selected_file_sha256"), old_hash);
+    assert_eq!(number_field(report, "guest_requests"), 0);
+    assert_eq!(number_field(report, "protected_operations"), 0);
+    assert_eq!(number_field(report, "candidate_prepare_requests"), 0);
+    assert_eq!(text_field(report, "prior_namespace"), "unchanged");
+    assert_stack(report, stack);
+}
+
+#[test]
+fn source_verification_requires_explicit_selected_file() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "repl", "--verify-source-before-execute"])
+        .stdin(Stdio::null())
+        .output()?;
+    assert_eq!(output.status.code(), Some(2));
+    let reports = String::from_utf8(output.stdout)?
+        .lines()
+        .map(serde_json::from_str::<Value>)
+        .collect::<Result<Vec<_>, _>>()?;
+    assert_eq!(reports.len(), 1);
+    assert_eq!(text_field(&reports[0], "outcome"), "reload-refused");
+    assert_eq!(number_field(&reports[0], "guest_requests"), 0);
+    assert_eq!(number_field(&reports[0], "protected_operations"), 0);
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_complete_rename_acks_only_checked_bytes_and_never_runs_partial_write(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::write(&fixture.source, "def addone [ 2 +")?;
+    assert!(
+        matches!(
+            live.reports.recv_timeout(Duration::from_millis(250)),
+            Err(mpsc::RecvTimeoutError::Timeout)
+        ),
+        "an in-place partial write must not produce a save ACK"
+    );
+    assert_source_change_refused(&live.submit("20 addone")?, old_generation, &[], &old_hash);
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.report()?;
+    let (fresh_generation, fresh_hash) = live_ack(&ack, &[]);
+    assert_eq!(fresh_generation, old_generation + 1);
+    assert_ne!(fresh_hash, old_hash);
+    assert_eq!(
+        text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot"
+    );
+    assert_eq!(
+        text_field(&ack, "source_freshness"),
+        "matched-at-watch-ack-check"
+    );
+    assert!(number_field(&ack, "watch_sequence") >= 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_host_seal_does_not_claim_producer_fsync_or_take_over_selected_inode(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let initial = live.report()?;
+    let (initial_generation, _) = live_ack(&initial, &[]);
+    assert!(
+        initial.get("watch_save_protocol").is_none(),
+        "initial file selection did not observe or seal an editor rename"
+    );
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut writer = File::create_new(&temporary)?;
+    writer.write_all(A.as_bytes())?;
+    // Deliberately neither close nor fsync the producer's descriptor. The
+    // report may attest only to the host's independently synced byte copy.
+    fs::rename(&temporary, &fixture.source)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    let ack = live.report()?;
+    let (generation, selected_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial_generation + 1);
+    assert_eq!(selected_hash, A_SHA256);
+    assert_eq!(
+        text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot"
+    );
+    assert_eq!(
+        text_field(&ack, "source_freshness"),
+        "matched-at-watch-ack-check"
+    );
+    assert_eq!(
+        fs::metadata(&fixture.source)?.ino(),
+        selected_inode,
+        "host byte sealing must not replace the editor's selected file"
+    );
+    assert_eq!(fs::read_to_string(&fixture.source)?, A);
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(b"def addone [ 9 + ]")?;
+    writer.flush()?;
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_source_change_refused(&live.submit("20 addone")?, generation, &[], &selected_hash);
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(A.as_bytes())?;
+    writer.flush()?;
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_rename_preserves_saved_old_program_and_uses_new_word_after_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "generation"), initial + 1);
+    assert_eq!(ack["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watch_flag_requires_explicit_selected_source() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "repl", "--watch"])
+        .stdin(Stdio::null())
+        .output()?;
+    assert_eq!(output.status.code(), Some(2));
+    let report: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(text_field(&report, "outcome"), "reload-refused");
+    assert_eq!(number_field(&report, "guest_requests"), 0);
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_missing_import_preserves_last_ack_and_old_definition(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    let previous = live.submit("7")?;
+    normal(&previous, &["7"]);
+
+    // Keep the canonical missing-import bytes. Core rejects the `@` in this word
+    // before declared-module import resolution; it is not a registry lookup.
+    fixture.replace("import missing@1 as m")?;
+    let rejected = live.report()?;
+    assert_eq!(refused_reload(&rejected, &["7"]), old_generation);
+    assert_eq!(
+        text_field(&rejected, "source_span_basis"),
+        "refused-candidate-file-byte-offsets"
+    );
+    assert_eq!(
+        rejected["source_span"],
+        serde_json::json!({"start": 7, "end": 16})
+    );
+    assert_eq!(rejected["stack"], previous["stack"]);
+    assert_generation_inspection(
+        &live.submit(":generation")?,
+        old_generation,
+        &previous["stack"],
+    );
+    // Watch sessions require the last ACKed selected bytes before executing
+    // again, even though the old immutable definition is still installed.
+    assert_source_change_refused(
+        &live.submit("20 addone")?,
+        old_generation,
+        &["7"],
+        &old_hash,
+    );
+    fs::write(&fixture.source, "def addone [ 1 + ]")?;
+    let old = live.submit("20 addone")?;
+    normal(&old, &["7", "21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert_eq!(number_field(&old, "guest_requests"), 0);
+    assert_eq!(number_field(&old, "protected_operations"), 0);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_symlink_escape_refuses_and_next_complete_save_recovers(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    let unselected = fixture
+        .directory
+        .parent()
+        .ok_or("no fixture parent")?
+        .join("unselected-watch-escape.noble");
+    let temporary = fixture.directory.join("math.noble.tmp");
+    symlink(&unselected, &temporary)?;
+    fs::rename(&temporary, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), old_generation);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    assert_source_change_refused(&live.submit("20 addone")?, old_generation, &[], &old_hash);
+    fixture.replace("def addone [ 3 + ]")?;
+    let ack = live.report()?;
+    assert_eq!(live_ack(&ack, &[]).0, old_generation + 1);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_unpaired_rename_cannot_ack_unselected_writer() -> Result<(), Box<dyn std::error::Error>>
+{
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (initial, hash) = live_ack(&live.report()?, &[]);
+    let unselected = fixture.directory.join("different-temp.noble");
+    let mut file = File::create_new(&unselected)?;
+    file.write_all(b"def addone [ 7 + ]")?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(&unselected, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &hash);
+    fixture.replace("def addone [ 2 + ]")?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, initial + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_hardlinked_temp_cannot_claim_immutable_complete_save(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let external = Fixture::new("unused")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (generation, hash) = live_ack(&live.report()?, &[]);
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut file = File::create_new(&temporary)?;
+    file.write_all(b"def addone [ 9 + ]")?;
+    file.sync_all()?;
+    drop(file);
+    fs::remove_file(&external.source)?;
+    fs::hard_link(&temporary, &external.source)?;
+    fs::rename(&temporary, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), generation);
+    assert_source_change_refused(&live.submit("20 addone")?, generation, &[], &hash);
+    fixture.replace("def addone [ 2 + ]")?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, generation + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_superseded_renames_and_buffered_input_report_accepted_generation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    fixture.replace("def addone [ 2 + ]")?;
+    fixture.replace("def addone [ 3 + ]")?;
+    // The writer completes both renames before these lines enter stdin. The
+    // watcher must drain the complete-save queue before consuming its buffered
+    // second top-level line, even if a first rename was staged already.
+    let input = live.stdin.as_mut().ok_or("missing child stdin")?;
+    input.write_all(b":generation\n20 addone\n")?;
+    input.flush()?;
+    let mut saw_final_ack = false;
+    let mut buffered_call = None;
+    let mut saw_inspection = false;
+    for _ in 0..8 {
+        let report = live.report()?;
+        match text_field(&report, "outcome") {
+            "reload-committed" if report["watch_save_protocol"].is_string() => {
+                assert_eq!(
+                    text_field(&report, "source_freshness"),
+                    "matched-at-watch-ack-check",
+                    "{report}"
+                );
+                if number_field(&report, "watch_sequence") >= 2 {
+                    saw_final_ack = true;
+                }
+            }
+            "watch-superseded" | "reload-refused" => {}
+            "generation-observed" => saw_inspection = true,
+            "normal" => {
+                assert!(saw_final_ack, "top-level ran before the final save ACK");
+                assert_stack(&report, &["23"]);
+                assert!(number_field(&report, "source_generation") > initial);
+                buffered_call = Some(true);
+            }
+            "source-change-refused" => {
+                assert_eq!(number_field(&report, "guest_requests"), 0);
+                buffered_call = Some(false);
+            }
+            other => panic!("unexpected watched report {other}: {report}"),
+        }
+        if saw_final_ack && saw_inspection && buffered_call.is_some() {
+            break;
+        }
+    }
+    assert!(
+        saw_final_ack && saw_inspection,
+        "last complete save was not acknowledged"
+    );
+    match buffered_call {
+        Some(true) => normal(&live.submit("20 addone")?, &["23", "23"]),
+        Some(false) => normal(&live.submit("20 addone")?, &["23"]),
+        None => panic!("buffered top-level command did not finish"),
+    }
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_retained_generation_budget_refuses_third_save_without_losing_old_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch_with_limit(&fixture.source, Some(2))?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let accepted = live.report()?;
+    assert_eq!(text_field(&accepted, "outcome"), "reload-committed");
+    assert_eq!(accepted["stack"], saved["stack"]);
+    let second = number_field(&accepted, "generation");
+    assert_eq!(second, initial + 1);
+    fixture.replace("def addone [ 3 + ]")?;
+    let refused = live.report()?;
+    assert_eq!(text_field(&refused, "outcome"), "reload-refused");
+    assert_eq!(number_field(&refused, "generation"), second);
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert!(text_field(&refused, "diagnostic").contains("retained generation budget"));
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    // No third generation was accepted. Restore exactly the last ACKed file
+    // bytes without a new rename so the source gate permits using the saved
+    // old Program and current second-generation definition again.
+    fs::write(&fixture.source, "def addone [ 2 + ]")?;
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_refuses_atomic_rename_until_explicit_reload(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    normal(&live.submit("20 addone")?, &["21"]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &["21"], &old_hash);
+    assert_ne!(text_field(&refused, "observed_source_sha256"), old_hash);
+    assert_generation_inspection(&live.submit(":generation")?, generation, &refused["stack"]);
+    let (after, next_hash) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?,
+        &["21"],
+    );
+    assert_eq!(after, generation + 1);
+    assert_eq!(text_field(&refused, "observed_source_sha256"), next_hash);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_definition_cannot_extend_namespace_while_selected_file_changed(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("def another [ 3 + ]")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    let (next, _) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?,
+        &[],
+    );
+    assert_eq!(next, generation + 1);
+    let unknown = live.submit("20 another")?;
+    assert_eq!(text_field(&unknown, "outcome"), "unbound-word", "{unknown}");
+    assert_eq!(text_field(&unknown, "stage"), "resolve");
+    assert_eq!(number_field(&unknown, "guest_requests"), 0);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_reload_retains_old_program_capture_after_source_change_refusal(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("run")?;
+    assert_eq!(
+        text_field(&refused, "outcome"),
+        "source-change-refused",
+        "{refused}"
+    );
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert_eq!(number_field(&refused, "generation"), generation);
+    assert_eq!(text_field(&refused, "selected_file_sha256"), old_hash);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "generation"), generation + 1);
+    assert_eq!(ack["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_detects_external_hardlink_mutation() -> Result<(), Box<dyn std::error::Error>>
+{
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let external = Fixture::new("unused")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::remove_file(&external.source)?;
+    fs::hard_link(&fixture.source, &external.source)?;
+    fs::write(&external.source, "def addone [ 9 + ]")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    assert_ne!(text_field(&refused, "observed_source_sha256"), old_hash);
+    fixture.replace("def addone [ 1 + ]")?;
+    normal(&live.submit("20 addone")?, &["21"]);
+    assert_eq!(
+        number_field(&live.submit(":generation")?, "generation"),
+        generation
+    );
+    live.finish()
+}
+
+#[test]
+fn verified_submission_refuses_unverifiable_selected_path_without_guest(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    let displaced = fixture.directory.join("displaced.noble");
+    fs::rename(&fixture.source, &displaced)?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    assert_eq!(refused["observed_source_sha256"], Value::Null);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    fs::rename(displaced, &fixture.source)?;
+    normal(&live.submit("20 addone")?, &["21"]);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_refuses_partial_in_place_bytes_before_guest(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::write(&fixture.source, "def addone [ 2 +")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    let stale = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&stale, "outcome"), "reload-refused", "{stale}");
+    assert_eq!(number_field(&stale, "generation"), generation);
+    assert_eq!(number_field(&stale, "guest_requests"), 0);
+    fixture.replace("def addone [ 2 + ]")?;
+    let (next, _) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?,
+        &[],
+    );
+    assert_eq!(next, generation + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[test]
+fn declared_module_snapshots_preserve_old_program_and_fresh_new_alias(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module Definitions@5 [ export step def step [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    let (initial_generation, old_hash) = live_ack(&initial, &[]);
+    assert_eq!(text_field(&initial, "declared_kind"), "module");
+    let linked = live.submit("import Definitions@5 as d")?;
+    assert_eq!(text_field(&linked, "outcome"), "namespace-committed");
+    assert_eq!(text_field(&linked, "declared_kind"), "import");
+    assert_eq!(number_field(&linked, "generation"), initial_generation + 1);
+    let saved = live.submit("20 [ d.step ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module Definitions@6 [ export step def step [ 2 + ] ]")?;
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "source-change-refused");
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    assert_eq!(text_field(&refused, "selected_file_sha256"), old_hash);
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert_eq!(text_field(&updated, "declared_kind"), "module");
+    assert_eq!(number_field(&updated, "generation"), initial_generation + 2);
+    assert_ne!(text_field(&updated, "source_sha256"), old_hash);
+    assert_eq!(updated["stack"], saved["stack"]);
+    let next = live.submit("import Definitions@6 as e")?;
+    assert_eq!(
+        text_field(&next, "outcome"),
+        "namespace-committed",
+        "{next}"
+    );
+    assert_eq!(number_field(&next, "generation"), initial_generation + 3);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 e.step")?, &["21", "22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_declared_module_save_preserves_old_program_and_imports_new_version(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export step def step [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_watch_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    live_ack(&initial, &[]);
+    assert_eq!(text_field(&initial, "declared_kind"), "module");
+    assert_eq!(
+        text_field(&live.submit("import m@1 as m")?, "outcome"),
+        "namespace-committed"
+    );
+    let saved = live.submit("20 [ m.step ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module m@2 [ export step def step [ 2 + ] ]")?;
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(
+        text_field(&ack, "source_freshness"),
+        "matched-at-watch-ack-check",
+        "{ack}"
+    );
+    assert_eq!(ack["stack"], saved["stack"]);
+    let imported = live.submit("import m@2 as next")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 next.step")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn declared_checked_rebind_replays_transitive_dependents_without_rewriting_saved_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    for source in [
+        "import m@1 as m",
+        "import m@1 as other",
+        "def once [ m.addone ]",
+        "def twice [ once once ]",
+    ] {
+        let receipt = live.submit(source)?;
+        assert_eq!(
+            text_field(&receipt, "outcome"),
+            "namespace-committed",
+            "{receipt}"
+        );
+    }
+    let saved = live.submit("20 [ m.addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert_eq!(updated["stack"], saved["stack"]);
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    assert_eq!(number_field(&rebound, "generation"), initial + 6);
+    let rebuilt = rebound["rebuilt_import_definitions"]
+        .as_array()
+        .ok_or("checked transitive rebind omitted replay receipts")?;
+    let rebuilt_names: std::collections::BTreeSet<_> = rebuilt
+        .iter()
+        .map(|entry| text_field(entry, "name"))
+        .collect();
+    assert_eq!(rebuilt_names, ["once", "twice"].into_iter().collect());
+    for entry in rebuilt {
+        assert_ne!(entry["previous_identity"], entry["new_identity"]);
+    }
+    assert_eq!(rebound["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 twice")?, &["21", "24"]);
+    normal(&live.submit("20 other.addone")?, &["21", "24", "21"]);
+    normal(&live.submit("20 m.addone")?, &["21", "24", "21", "22"]);
+    fixture.replace("module m@3 [ export addone def addone [ true ] ]")?;
+    let incompatible = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&incompatible, "outcome"),
+        "reload-committed",
+        "{incompatible}"
+    );
+    let rejected = live.submit("import m@3 as m")?;
+    assert_ne!(
+        text_field(&rejected, "outcome"),
+        "namespace-committed",
+        "{rejected}"
+    );
+    assert_eq!(
+        number_field(&live.submit(":generation")?, "generation"),
+        number_field(&incompatible, "generation")
+    );
+    normal(&live.submit("20 twice")?, &["21", "24", "21", "22", "24"]);
+    live.finish()
+}
+
+#[test]
+fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebinds(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    for declaration in [
+        "import m@1 as m",
+        "def once [ m.addone ]",
+        "def twice [ once once ]",
+    ] {
+        let receipt = live.submit(declaration)?;
+        assert_eq!(
+            text_field(&receipt, "outcome"),
+            "namespace-committed",
+            "{receipt}"
+        );
+    }
+    let saved = live.submit("[ [ 20 twice ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+
+    for (version, increment) in [(2, 2), (3, 3)] {
+        fixture.replace(&format!(
+            "module m@{version} [ export addone def addone [ {increment} + ] ]"
+        ))?;
+        let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+        assert_eq!(
+            text_field(&updated, "outcome"),
+            "reload-committed",
+            "{updated}"
+        );
+        assert_eq!(updated["stack"], saved["stack"]);
+        assert_eq!(number_field(&updated, "guest_requests"), 0);
+        assert_eq!(number_field(&updated, "protected_operations"), 0);
+        let rebound = live.submit(&format!("import m@{version} as m"))?;
+        assert_eq!(
+            text_field(&rebound, "outcome"),
+            "namespace-committed",
+            "{rebound}"
+        );
+        assert_eq!(rebound["stack"], saved["stack"]);
+    }
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
+    normal(&live.submit("run")?, &["22"]);
+    normal(&live.submit("20 twice")?, &["22", "26"]);
+    live.finish()
+}
+
+#[test]
+fn core_observed_root_release_before_first_guest_keeps_repl_usable(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "repl", "--engine", "v8"]);
+    let mut live = LiveChild::spawn(command)?;
+    let empty_release = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&empty_release, "outcome"),
+        "observed-roots-released",
+        "{empty_release}"
+    );
+    assert_eq!(number_field(&empty_release, "generation"), 0);
+    assert_eq!(number_field(&empty_release, "released_observed_roots"), 0);
+    assert_eq!(
+        empty_release["retired_code_spans"],
+        serde_json::json!([]),
+        "{empty_release}"
+    );
+    assert_eq!(number_field(&empty_release, "guest_requests"), 0);
+    assert_eq!(number_field(&empty_release, "protected_operations"), 0);
+
+    let saved = live.submit("[ 40 2 + ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    let observations = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&observations, "outcome"),
+        "observed-roots-released",
+        "{observations}"
+    );
+    assert!(
+        number_field(&observations, "released_observed_roots") > 0,
+        "{observations}"
+    );
+    assert!(
+        !observations["retired_code_spans"]
+            .as_array()
+            .ok_or("observed root release omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| entry["code_span"] == saved_span),
+        "{observations}"
+    );
+    normal(&live.submit("run")?, &["42"]);
+    live.finish()
+}
+
+#[test]
+fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_source(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let original = live.report()?;
+    let startup_stage = match original.get("stage").and_then(Value::as_str) {
+        Some("wasm-live") => "wasm-live",
+        Some("admission") => "admission",
+        _ => "unknown",
+    };
+    let startup_outcome = match original.get("outcome").and_then(Value::as_str) {
+        Some("reload-committed") => "reload-committed",
+        Some("internal-failure") => "internal-failure",
+        Some("reload-refused") => "reload-refused",
+        _ => "unknown",
+    };
+    let startup_phase = match original.get("startup_phase_code").and_then(Value::as_str) {
+        Some("worker-start") => "worker-start",
+        Some("declared-stage") => "declared-stage",
+        Some("declared-publish") => "declared-publish",
+        _ => "unknown",
+    };
+    assert!(original.get("schema").and_then(Value::as_str) == Some("noble-live-report/v1")
+        && startup_stage == "wasm-live" && startup_outcome == "reload-committed",
+        "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
+    let generation = original
+        .get("generation")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let digest = original.get("source_sha256").and_then(Value::as_str);
+    assert!(original.get("guest_requests").and_then(Value::as_u64) == Some(0)
+        && original.get("protected_operations").and_then(Value::as_u64) == Some(0)
+        && original.get("stack").and_then(Value::as_array).is_some_and(|stack| stack.is_empty())
+        && generation > 0
+        && digest.is_some_and(|value| value.len() == 64
+            && value.bytes().all(|byte| byte.is_ascii_hexdigit())),
+        "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
+    let empty_release = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&empty_release, "outcome"),
+        "observed-roots-released",
+        "{empty_release}"
+    );
+    assert_eq!(number_field(&empty_release, "generation"), generation);
+    assert_eq!(number_field(&empty_release, "released_observed_roots"), 0);
+    assert_eq!(
+        empty_release["retired_code_spans"],
+        serde_json::json!([]),
+        "{empty_release}"
+    );
+    assert_eq!(number_field(&empty_release, "guest_requests"), 0);
+    assert_eq!(number_field(&empty_release, "protected_operations"), 0);
+    assert_generation_inspection(&live.submit(":generation")?, generation, &original["stack"]);
+    assert_eq!(
+        text_field(&live.submit("import m@1 as m")?, "outcome"),
+        "namespace-committed"
+    );
+    let saved = live.submit("[ [ 20 m.addone ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+    let original_source = saved["source_module_versions"][0].clone();
+    assert_eq!(original_source["module"], "m", "{saved}");
+    assert_eq!(original_source["version"], 1, "{saved}");
+    assert_eq!(
+        original_source["sha256"], original["source_sha256"],
+        "{saved}"
+    );
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    assert_eq!(rebound["stack"], saved["stack"]);
+    for receipt in [&updated, &rebound] {
+        assert!(
+            !receipt["retired_code_spans"]
+                .as_array()
+                .ok_or("declared namespace omitted checked retirement receipts")?
+                .iter()
+                .any(|entry| entry["code_span"] == saved_span),
+            "{receipt}"
+        );
+    }
+
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
+    assert!(
+        !unwrapped["retired_code_spans"]
+            .as_array()
+            .ok_or("declared execution omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| entry["code_span"] == saved_span),
+        "{unwrapped}"
+    );
+
+    let observations = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&observations, "outcome"),
+        "observed-roots-released",
+        "{observations}"
+    );
+    assert!(
+        number_field(&observations, "released_observed_roots") > 0,
+        "{observations}"
+    );
+    assert_eq!(number_field(&observations, "guest_requests"), 0);
+    assert_eq!(number_field(&observations, "protected_operations"), 0);
+    assert!(
+        !observations["retired_code_spans"]
+            .as_array()
+            .ok_or("observed root release omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| entry["code_span"] == saved_span),
+        "{observations}"
+    );
+
+    let released = live.submit("run")?;
+    normal(&released, &["21"]);
+    assert!(
+        released["retired_code_spans"]
+            .as_array()
+            .ok_or("declared execution omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| released_guest_instance(entry, &saved_span, &saved["module"])),
+        "{released}"
+    );
+
+    let old_import = live.submit("import m@1 as old")?;
+    assert_eq!(
+        text_field(&old_import, "outcome"),
+        "namespace-committed",
+        "{old_import}"
+    );
+    assert_eq!(
+        number_field(&old_import, "retained_module_roots"),
+        2,
+        "{old_import}"
+    );
+    let recompiled = live.submit("20 old.addone")?;
+    normal(&recompiled, &["21", "21"]);
+    assert_eq!(
+        recompiled["source_module_versions"][0], original_source,
+        "{recompiled}"
+    );
+    assert!(
+        number_field(&recompiled["installed_code_span"], "generation")
+            > number_field(&saved_span, "generation"),
+        "{recompiled}"
+    );
+    assert_ne!(
+        recompiled["installed_code_span"], saved_span,
+        "{recompiled}"
+    );
+    assert_eq!(
+        number_field(&recompiled, "guest_requests"),
+        0,
+        "{recompiled}"
+    );
+    assert_eq!(
+        number_field(&recompiled, "protected_operations"),
+        0,
+        "{recompiled}"
+    );
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22"]);
+    fixture.replace("module m@3 [ export addone def addone [ 3 + ] ]")?;
+    assert_eq!(
+        text_field(
+            &live.submit(&format!(":reload {}", fixture.source.display()))?,
+            "outcome"
+        ),
+        "reload-committed"
+    );
+    assert_eq!(
+        text_field(&live.submit("import m@3 as m")?, "outcome"),
+        "namespace-committed"
+    );
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22", "23"]);
+    live.finish()
+}
+
+#[test]
+fn declared_namespace_reload_retires_unreferenced_current_code_without_source_eviction(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("import m@1 as m")?, "outcome"),
+        "namespace-committed"
+    );
+    let old = live.submit("20 m.addone")?;
+    normal(&old, &["21"]);
+    let old_span = old["installed_code_span"].clone();
+    let original_source = old["source_module_versions"][0].clone();
+    assert!(number_field(&old_span, "length") > 0, "{old}");
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert_eq!(
+        number_field(&updated, "retained_module_roots"),
+        2,
+        "{updated}"
+    );
+    assert!(
+        updated["retired_code_spans"]
+            .as_array()
+            .ok_or("declared reload omitted exact code retirement receipts")?
+            .iter()
+            .any(|entry| released_guest_instance(entry, &old_span, &old["module"])),
+        "{updated}"
+    );
+
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    normal(&live.submit("20 m.addone")?, &["21", "22"]);
+    assert_eq!(
+        text_field(&live.submit("import m@1 as old")?, "outcome"),
+        "namespace-committed"
+    );
+    let recompiled = live.submit("20 old.addone")?;
+    normal(&recompiled, &["21", "22", "21"]);
+    assert_eq!(
+        recompiled["source_module_versions"][0], original_source,
+        "{recompiled}"
+    );
+    assert!(
+        number_field(&recompiled["installed_code_span"], "generation")
+            > number_field(&old_span, "generation"),
+        "{recompiled}"
+    );
+    assert_eq!(
+        number_field(&recompiled, "guest_requests"),
+        0,
+        "{recompiled}"
+    );
+    assert_eq!(
+        number_field(&recompiled, "protected_operations"),
+        0,
+        "{recompiled}"
+    );
+    live.finish()
+}
+
+#[test]
+fn declared_retained_source_quota_refuses_two_individually_valid_modules_atomically(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let padded = |version: u32, addition: u32| {
+        format!(
+            "module m@{version} [ export addone def addone [ {addition} + ] ] #{}\n",
+            "x".repeat(40_000),
+        )
+    };
+    let first = padded(1, 1);
+    let too_large_together = padded(2, 2);
+    assert!(first.len() <= 65_536 && too_large_together.len() <= 65_536);
+    assert!(first.len() + too_large_together.len() > 65_536);
+    let fixture = Fixture::new(&first)?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    let imported = live.submit("import m@1 as m")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    let generation = number_field(&imported, "generation");
+    let old = live.submit("20 m.addone")?;
+    normal(&old, &["21"]);
+    let old_source = old["source_module_versions"][0].clone();
+
+    fixture.replace(&too_large_together)?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &["21"]), generation, "{refused}");
+    assert!(
+        text_field(&refused, "diagnostic")
+            .contains("retained module and definition byte limit exceeded"),
+        "{refused}"
+    );
+    assert_generation_inspection(&live.submit(":generation")?, generation, &old["stack"]);
+
+    fixture.replace(&first)?;
+    let still_old = live.submit("20 m.addone")?;
+    normal(&still_old, &["21", "21"]);
+    assert_eq!(
+        still_old["source_module_versions"][0], old_source,
+        "{still_old}"
+    );
+    assert_eq!(number_field(&still_old, "guest_requests"), 0, "{still_old}");
+    assert_eq!(
+        number_field(&still_old, "protected_operations"),
+        0,
+        "{still_old}"
+    );
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let admitted = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&admitted, "outcome"),
+        "reload-committed",
+        "{admitted}"
+    );
+    assert_eq!(
+        number_field(&admitted, "retained_module_roots"),
+        2,
+        "{admitted}"
+    );
+    assert_eq!(number_field(&admitted, "guest_requests"), 0, "{admitted}");
+    assert_eq!(
+        number_field(&admitted, "protected_operations"),
+        0,
+        "{admitted}"
+    );
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn declared_ownerless_code_retires_after_last_nested_program_is_consumed(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    let saved = live.submit("[ [ 20 1 + ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    assert_eq!(
+        saved["source_module_versions"],
+        serde_json::json!([]),
+        "{saved}"
+    );
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
+    assert!(
+        !unwrapped["retired_code_spans"]
+            .as_array()
+            .ok_or("declared execution omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| entry["code_span"] == saved_span),
+        "{unwrapped}"
+    );
+
+    let consumed = live.submit("run")?;
+    normal(&consumed, &["21"]);
+    assert!(
+        !consumed["retired_code_spans"]
+            .as_array()
+            .ok_or("declared execution omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| entry["code_span"] == saved_span),
+        "{consumed}"
+    );
+    let released = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&released, "outcome"),
+        "observed-roots-released",
+        "{released}"
+    );
+    assert!(
+        number_field(&released, "released_observed_roots") > 0,
+        "{released}"
+    );
+    assert!(
+        released["retired_code_spans"]
+            .as_array()
+            .ok_or("observed root release omitted checked retirement receipts")?
+            .iter()
+            .any(|entry| released_guest_instance(entry, &saved_span, &saved["module"])),
+        "{released}"
+    );
+    assert_eq!(number_field(&released, "guest_requests"), 0);
+    assert_eq!(number_field(&released, "protected_operations"), 0);
+    assert_eq!(
+        text_field(&live.submit("import m@1 as m")?, "outcome"),
+        "namespace-committed"
+    );
+    normal(&live.submit("20 m.addone")?, &["21", "21"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn declared_active_effect_frame_refuses_code_inventory_until_queued_reload_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-declared-emit", "emit-a")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "repl", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8", "--declared-modules", "--bindings"])
+        .arg(&bindings)
+        .arg("--verify-source-before-execute");
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed"
+    );
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"run\n")?;
+    stdin.flush()?;
+    let active = barrier.wait()?;
+    assert_eq!(text_field(&active, "source_generation"), "2", "{active}");
+    assert_eq!(active["guest_frame_active"], true, "{active}");
+    assert_eq!(active["active_code_query"], -1, "{active}");
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    assert!(
+        matches!(live.reports.try_recv(), Err(mpsc::TryRecvError::Empty)),
+        "an active declared Wasm frame acknowledged its queued reload"
+    );
+    barrier.release()?;
+
+    let old = live.report()?;
+    normal(&old, &[]);
+    assert_eq!(number_field(&old, "guest_requests"), 1);
+    assert_eq!(number_field(&old, "protected_operations"), 1);
+    assert_eq!(old["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(old["request_trace"][0]["text"], "A");
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    let fresh = live.submit("l.send")?;
+    normal(&fresh, &[]);
+    assert_eq!(number_field(&fresh, "guest_requests"), 1);
+    assert_eq!(fresh["request_trace"][0]["adapter_identity"], "emit-b");
+    assert_eq!(fresh["request_trace"][0]["text"], "B");
+    live.finish()
+}
+
+#[test]
+fn declared_same_version_changed_bytes_refuse_without_losing_old_owner(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let original = "module Definitions@5 [ export step def step [ 1 + ] ]";
+    let fixture = Fixture::new(original)?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("import Definitions@5 as d")?, "outcome"),
+        "namespace-committed"
+    );
+    fixture.replace("module Definitions@5 [ export step def step [ 2 + ] ]")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&refused, "outcome"),
+        "reload-refused",
+        "{refused}"
+    );
+    assert_eq!(number_field(&refused, "generation"), generation + 1);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    let blocked = live.submit("20 d.step")?;
+    assert_eq!(text_field(&blocked, "outcome"), "source-change-refused");
+    assert_eq!(text_field(&blocked, "selected_file_sha256"), old_hash);
+    fixture.replace(original)?;
+    normal(&live.submit("20 d.step")?, &["21"]);
+    assert_eq!(
+        number_field(&live.submit(":generation")?, "generation"),
+        generation + 1
+    );
+    live.finish()
+}
+
+#[test]
+fn declared_saved_adapter_keeps_old_identity_while_host_policy_allows_it(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    let (before, _) = live_ack(&initial, &[]);
+    assert_eq!(number_field(&initial, "guest_requests"), 0);
+    let imported = live.submit("import ledger@1 as l")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    assert_eq!(number_field(&saved, "guest_requests"), 0);
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert_eq!(number_field(&updated, "generation"), before + 2);
+    assert_eq!(updated["stack"], saved["stack"]);
+    let imported = live.submit("import ledger@2 as n")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    let old = live.submit("run")?;
+    normal(&old, &[]);
+    assert_eq!(number_field(&old, "guest_requests"), 1);
+    assert_eq!(number_field(&old, "protected_operations"), 1);
+    assert_eq!(old["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(old["request_trace"][0]["version"], 1);
+    assert_eq!(old["request_trace"][0]["text"], "A");
+    assert_eq!(old["request_trace"][0]["decision"], "allow");
+    let fresh = live.submit("n.send")?;
+    normal(&fresh, &[]);
+    assert_eq!(number_field(&fresh, "guest_requests"), 1);
+    assert_eq!(number_field(&fresh, "protected_operations"), 1);
+    assert_eq!(fresh["request_trace"][0]["adapter_identity"], "emit-b");
+    assert_eq!(fresh["request_trace"][0]["version"], 2);
+    assert_eq!(fresh["request_trace"][0]["text"], "B");
+    live.finish()
+}
+
+#[test]
+fn declared_rebound_alias_revokes_old_adapter_even_for_saved_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let linked = live.submit("import ledger@1 as l")?;
+    assert_eq!(
+        text_field(&linked, "outcome"),
+        "namespace-committed",
+        "{linked}"
+    );
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    assert_eq!(number_field(&rebound, "generation"), initial + 3);
+    assert_eq!(rebound["rebuilt_import_definitions"], serde_json::json!([]));
+    assert_eq!(rebound["stack"], saved["stack"]);
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "trap", "{refused}");
+    assert_eq!(number_field(&refused, "protected_operations"), 0);
+    assert_eq!(refused["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(refused["request_trace"][0]["decision"], "deny");
+    assert_eq!(
+        text_field(&refused, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    Ok(())
+}
+
+#[test]
+fn live06_a_active_controls_isolate_host_revocation_from_alias_rebind(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut allowed = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (generation, a_sha256) = live_ack(&allowed.report()?, &[]);
+    assert_eq!(
+        text_field(&allowed.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed"
+    );
+    let saved = allowed.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program");
+    assert_eq!(
+        saved["stack"][0]["interface"]["effects"],
+        serde_json::json!(["test.emit"])
+    );
+    let performed = allowed.submit("run")?;
+    normal(&performed, &[]);
+    assert_eq!(number_field(&performed, "guest_requests"), 1);
+    assert_eq!(number_field(&performed, "protected_operations"), 1);
+    assert_eq!(text_field(&performed, "session_state"), "retained");
+    assert_eq!(performed["request_trace"].as_array().map(Vec::len), Some(1));
+    assert_eq!(
+        text_field(&performed["request_trace"][0], "effect"),
+        "test.emit"
+    );
+    assert_eq!(
+        text_field(&performed["request_trace"][0], "module"),
+        "ledger"
+    );
+    assert_eq!(number_field(&performed["request_trace"][0], "version"), 1);
+    assert_eq!(
+        text_field(&performed["request_trace"][0], "adapter_identity"),
+        "emit-a"
+    );
+    assert_eq!(text_field(&performed["request_trace"][0], "text"), "A");
+    assert_eq!(
+        text_field(&performed["request_trace"][0], "decision"),
+        "allow"
+    );
+    allowed.finish()?;
+
+    // A second real worker has the identical checked source and A-active
+    // alias. Only the host policy transition differs; B is never imported.
+    let mut revoked = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (other_generation, other_sha256) = live_ack(&revoked.report()?, &[]);
+    assert_eq!(other_generation, generation);
+    assert_eq!(other_sha256, a_sha256);
+    assert_eq!(
+        text_field(&revoked.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed"
+    );
+    let saved_again = revoked.submit("[ l.send ]")?;
+    assert_eq!(
+        saved_again["stack"][0]["interface"],
+        saved["stack"][0]["interface"]
+    );
+    let host_event = revoked.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(text_field(&host_event, "outcome"), "host-policy-revoked");
+    assert_eq!(text_field(&host_event, "source_sha256"), a_sha256);
+    assert_eq!(host_event["binding_allowed_before"], true);
+    assert_eq!(host_event["binding_allowed_after"], false);
+    assert_eq!(host_event["active_slot_before"], true);
+    assert_eq!(host_event["active_slot_after"], false);
+    assert_eq!(host_event["selected_alias"], true);
+    assert_eq!(host_event["stack"], saved_again["stack"]);
+    assert_eq!(number_field(&host_event, "guest_requests"), 0);
+    assert_generation_inspection(
+        &revoked.submit(":generation")?,
+        generation + 1,
+        &saved_again["stack"],
+    );
+    let denied = revoked.submit("run")?;
+    assert_eq!(text_field(&denied, "outcome"), "trap", "{denied}");
+    assert_eq!(denied["stack"], serde_json::json!([]));
+    assert_eq!(
+        text_field(&denied, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    assert_eq!(number_field(&denied, "guest_requests"), 1);
+    assert_eq!(number_field(&denied, "protected_operations"), 0);
+    assert_eq!(denied["request_trace"].as_array().map(Vec::len), Some(1));
+    let request = &denied["request_trace"][0];
+    assert_eq!(text_field(request, "module"), "ledger");
+    assert_eq!(number_field(request, "version"), 1);
+    assert_eq!(text_field(request, "effect"), "test.emit");
+    assert_eq!(text_field(request, "adapter_identity"), "emit-a");
+    assert_eq!(text_field(request, "decision"), "deny");
+    assert_eq!(text_field(request, "reason"), "policy-denied");
+    Ok(())
+}
+
+#[test]
+fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, a_sha256) = live_ack(&live.report()?, &[]);
+    let imported = live.submit("import ledger@1 as l")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    assert_eq!(
+        saved["stack"][0]["interface"]["effects"],
+        serde_json::json!(["test.emit"])
+    );
+    assert_eq!(number_field(&saved, "guest_requests"), 0);
+    for foreign in [
+        ":revoke-effect ledger@01 emit-a test.emit",
+        ":revoke-effect ledger@+1 emit-a test.emit",
+        ":revoke-effect ledger@1 emit-b test.emit",
+        ":revoke-effect ledger@1 emit-a test.clock",
+        ":revoke-effect ledger@2 emit-b test.emit",
+        ":revoke-effect ledger@1 emit-a test.emit extra",
+    ] {
+        let refusal = live.submit(foreign)?;
+        assert_eq!(
+            text_field(&refusal, "outcome"),
+            "reload-refused",
+            "{foreign}: {refusal}"
+        );
+        assert_eq!(number_field(&refusal, "generation"), initial + 1);
+        assert_eq!(refusal["stack"], saved["stack"]);
+        assert_eq!(number_field(&refusal, "guest_requests"), 0);
+        assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    }
+
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert_eq!(updated["stack"], saved["stack"]);
+    assert_eq!(number_field(&updated, "guest_requests"), 0);
+    assert_eq!(number_field(&updated, "protected_operations"), 0);
+    let b_sha256 = text_field(&updated, "source_sha256");
+    assert_eq!(b_sha256.len(), 64);
+    assert_ne!(b_sha256, a_sha256);
+    let imported = live.submit("import ledger@2 as n")?;
+    assert_eq!(
+        text_field(&imported, "outcome"),
+        "namespace-committed",
+        "{imported}"
+    );
+    assert_eq!(imported["stack"], saved["stack"]);
+    assert_eq!(number_field(&imported, "guest_requests"), 0);
+    assert_eq!(number_field(&imported, "protected_operations"), 0);
+    // B is loaded under another alias; A remains selected and authorized
+    // until the host-only command changes the exact old source-bound slot.
+    let revoked = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(text_field(&revoked, "stage"), "host-policy");
+    assert_eq!(
+        text_field(&revoked, "outcome"),
+        "host-policy-revoked",
+        "{revoked}"
+    );
+    assert_eq!(text_field(&revoked, "module"), "ledger");
+    assert_eq!(number_field(&revoked, "version"), 1);
+    assert_eq!(text_field(&revoked, "effect"), "test.emit");
+    assert_eq!(text_field(&revoked, "adapter_identity"), "emit-a");
+    assert_eq!(text_field(&revoked, "source_sha256"), a_sha256);
+    assert_eq!(revoked["binding_allowed_before"], true);
+    assert_eq!(revoked["binding_allowed_after"], false);
+    assert_eq!(revoked["active_slot_before"], true);
+    assert_eq!(revoked["active_slot_after"], false);
+    assert_eq!(revoked["selected_alias"], true);
+    assert_eq!(revoked["previously_authorized"], true);
+    assert_eq!(revoked["currently_authorized"], false);
+    assert_eq!(revoked["stack"], saved["stack"]);
+    assert_eq!(
+        number_field(&revoked, "generation"),
+        number_field(&imported, "generation")
+    );
+    assert_eq!(number_field(&revoked, "guest_requests"), 0);
+    assert_eq!(number_field(&revoked, "protected_operations"), 0);
+    let again = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(
+        text_field(&again, "outcome"),
+        "host-policy-refused",
+        "{again}"
+    );
+    assert_eq!(again["stack"], saved["stack"]);
+    assert_eq!(
+        number_field(&again, "generation"),
+        number_field(&revoked, "generation")
+    );
+    assert_eq!(number_field(&again, "guest_requests"), 0);
+    let b_call = live.submit("n.send")?;
+    assert_eq!(text_field(&b_call, "outcome"), "normal", "{b_call}");
+    assert_eq!(b_call["stack"], saved["stack"]);
+    assert_eq!(number_field(&b_call, "guest_requests"), 1);
+    assert_eq!(number_field(&b_call, "protected_operations"), 1);
+    assert_eq!(
+        text_field(&b_call["request_trace"][0], "adapter_identity"),
+        "emit-b"
+    );
+    assert_eq!(text_field(&b_call["request_trace"][0], "text"), "B");
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(
+        text_field(&rebound, "outcome"),
+        "namespace-committed",
+        "{rebound}"
+    );
+    assert_eq!(rebound["stack"], saved["stack"]);
+
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "trap", "{refused}");
+    assert_eq!(refused["stack"], serde_json::json!([]), "{refused}");
+    assert_eq!(
+        text_field(&refused, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    assert_eq!(number_field(&refused, "guest_requests"), 1);
+    assert_eq!(number_field(&refused, "host_requests"), 1);
+    assert_eq!(number_field(&refused, "protected_operations"), 0);
+    assert_eq!(number_field(&refused, "candidate_prepare_requests"), 0);
+    assert_eq!(number_field(&refused, "ambient_fallback_calls"), 0);
+    assert_eq!(refused["effect_requests"], serde_json::json!(["test.emit"]));
+    assert_eq!(refused["request_trace_complete"], true);
+    assert_eq!(refused["declared_effect_preserved"], true);
+    assert_eq!(refused["request_trace"].as_array().map(Vec::len), Some(1));
+    let request = &refused["request_trace"][0];
+    assert_eq!(text_field(request, "module"), "ledger");
+    assert_eq!(number_field(request, "version"), 1);
+    assert_eq!(text_field(request, "effect"), "test.emit");
+    assert_eq!(text_field(request, "adapter_identity"), "emit-a");
+    assert_eq!(text_field(request, "decision"), "deny");
+    assert_eq!(text_field(request, "reason"), "policy-denied");
+    assert_ne!(text_field(request, "adapter_identity"), "emit-b");
+    assert_eq!(refused["request_trace"][0]["text"], serde_json::Value::Null);
+    let request_identity = format!(
+        "{}@{}:{}",
+        text_field(request, "module"),
+        number_field(request, "version"),
+        text_field(request, "effect"),
+    );
+    assert_eq!(request_identity, "ledger@1:test.emit");
+    Ok(())
+}
+
+#[test]
+fn revoked_declared_adapter_cannot_reauthorize_on_later_import(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed"
+    );
+    let revoked = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(
+        text_field(&revoked, "outcome"),
+        "host-policy-revoked",
+        "{revoked}"
+    );
+    assert_eq!(revoked["active_slot_before"], true);
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    assert_eq!(
+        text_field(
+            &live.submit(&format!(":reload {}", fixture.source.display()))?,
+            "outcome"
+        ),
+        "reload-committed"
+    );
+    assert_eq!(
+        text_field(&live.submit("import ledger@2 as l")?, "outcome"),
+        "namespace-committed"
+    );
+    let allowed_b = live.submit("l.send")?;
+    assert_eq!(text_field(&allowed_b, "outcome"), "normal", "{allowed_b}");
+    assert_eq!(number_field(&allowed_b, "protected_operations"), 1);
+    assert_eq!(
+        text_field(&allowed_b["request_trace"][0], "adapter_identity"),
+        "emit-b"
+    );
+    assert_eq!(
+        text_field(&live.submit("import ledger@1 as old")?, "outcome"),
+        "namespace-committed"
+    );
+    let denied_a = live.submit("old.send")?;
+    assert_eq!(text_field(&denied_a, "outcome"), "trap", "{denied_a}");
+    assert_eq!(
+        text_field(&denied_a, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    assert_eq!(number_field(&denied_a, "guest_requests"), 1);
+    assert_eq!(number_field(&denied_a, "protected_operations"), 0);
+    assert_eq!(
+        text_field(&denied_a["request_trace"][0], "adapter_identity"),
+        "emit-a"
+    );
+    assert_eq!(
+        text_field(&denied_a["request_trace"][0], "decision"),
+        "deny"
+    );
+    Ok(())
+}
+
+#[test]
+fn revoked_declared_clock_denies_remaining_scripted_effect(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module clock@1 [ require now -- I64 ! test.clock export read def read [ now ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind clock@1 test.clock clock-a -- I64 ! test.clock allow script 42,43\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("import clock@1 as c")?, "outcome"),
+        "namespace-committed"
+    );
+    let allowed = live.submit("c.read")?;
+    assert_eq!(text_field(&allowed, "outcome"), "normal", "{allowed}");
+    assert_eq!(number_field(&allowed, "guest_requests"), 1);
+    assert_eq!(number_field(&allowed, "protected_operations"), 1);
+    assert_eq!(
+        text_field(&allowed["request_trace"][0], "effect"),
+        "test.clock"
+    );
+    assert_eq!(
+        text_field(&allowed["request_trace"][0], "decision"),
+        "allow"
+    );
+    assert_eq!(text_field(&allowed["request_trace"][0], "value"), "42");
+    let revoked = live.submit(":revoke-effect clock@1 clock-a test.clock")?;
+    assert_eq!(
+        text_field(&revoked, "outcome"),
+        "host-policy-revoked",
+        "{revoked}"
+    );
+    assert_eq!(revoked["active_slot_before"], true);
+    assert_eq!(revoked["active_slot_after"], false);
+    assert_eq!(revoked["binding_allowed_before"], true);
+    assert_eq!(revoked["binding_allowed_after"], false);
+    assert_eq!(number_field(&revoked, "guest_requests"), 0);
+    assert_eq!(number_field(&revoked, "protected_operations"), 0);
+    let denied = live.submit("c.read")?;
+    assert_eq!(text_field(&denied, "outcome"), "trap", "{denied}");
+    assert_eq!(
+        text_field(&denied, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    assert_eq!(number_field(&denied, "guest_requests"), 1);
+    assert_eq!(number_field(&denied, "protected_operations"), 0);
+    assert_eq!(denied["effect_requests"], serde_json::json!(["test.clock"]));
+    assert_eq!(
+        text_field(&denied["request_trace"][0], "adapter_identity"),
+        "clock-a"
+    );
+    assert_eq!(text_field(&denied["request_trace"][0], "decision"), "deny");
+    assert_eq!(
+        text_field(&denied["request_trace"][0], "reason"),
+        "policy-denied"
+    );
+    assert_eq!(denied["request_trace"][0]["value"], serde_json::Value::Null);
+    Ok(())
 }
 
 #[test]
@@ -396,13 +2439,13 @@ fn generation_inspection_preserves_typed_program_and_tracks_only_publication(
     assert_generation_inspection(&live.submit(":generation")?, 3, &next["stack"]);
 
     let old = live.submit("drop dip")?;
-    assert_eq!(text_field(&old, "outcome"), "normal");
+    assert_eq!(text_field(&old, "outcome"), "normal", "{old}");
     assert_eq!(old["stack"][0]["value"], "21");
     assert_eq!(old["stack"][1]["value"], "keep");
     assert_generation_inspection(&live.submit(":generation")?, 3, &old["stack"]);
 
     let fresh = live.submit("20 twice")?;
-    assert_eq!(text_field(&fresh, "outcome"), "normal");
+    assert_eq!(text_field(&fresh, "outcome"), "normal", "{fresh}");
     assert_eq!(fresh["stack"][2]["value"], "24");
     assert_generation_inspection(&live.submit(":generation")?, 3, &fresh["stack"]);
     live.finish()
@@ -428,7 +2471,6 @@ fn unsupported_live_subcommand_refuses_before_publication() -> Result<(), Box<dy
     assert_eq!(text_field(&refused, "outcome"), "reload-refused");
     assert_eq!(number_field(&refused, "generation"), 0);
     assert_eq!(number_field(&refused, "guest_requests"), 0);
-    assert!(text_field(&refused, "diagnostic").contains("usage: noble live repl"));
     Ok(())
 }
 
@@ -591,17 +2633,22 @@ fn direct_effectful_submission_without_binding_never_enters_guest(
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    normal(&live.submit("7")?, &["7"]);
+    let pushed = live.submit("7")?;
+    normal(&pushed, &["7"]);
     let generation = current_generation(&mut live, &fixture, &["7"])?;
 
-    // Ordinary Core sessions permit test.emit; live's unbound, resource-free
-    // profile must refuse it before candidate execution instead.
-    effect_policy_refusal(&live.submit("\"x\" test.emit")?, &["7"], generation);
-    effect_policy_refusal(
-        &live.submit("def emit [ \"x\" test.emit ]")?,
-        &["7"],
-        generation,
-    );
+    // No-gift Core-live frontend cannot even resolve a test host effect. The
+    // selected worker must receive zero requests and preserve the old stack.
+    for source in ["\"x\" test.emit", "def emit [ \"x\" test.emit ]"] {
+        let refused = live.submit(source)?;
+        assert_eq!(text_field(&refused, "stage"), "resolve", "{refused}");
+        assert_eq!(text_field(&refused, "outcome"), "unbound-word", "{refused}");
+        assert_eq!(number_field(&refused, "guest_requests"), 0);
+        assert_eq!(number_field(&refused, "protected_operations"), 0);
+        assert_eq!(text_field(&refused, "prior_stack"), "unchanged");
+        assert_eq!(text_field(&refused, "prior_namespace"), "unchanged");
+        assert_generation_inspection(&live.submit(":generation")?, generation, &pushed["stack"]);
+    }
     let unbound = live.submit("emit")?;
     assert_eq!(text_field(&unbound, "stage"), "resolve");
     assert_eq!(text_field(&unbound, "outcome"), "unbound-word");
@@ -609,6 +2656,128 @@ fn direct_effectful_submission_without_binding_never_enters_guest(
     assert_eq!(text_field(&unbound, "prior_stack"), "unchanged");
     assert_eq!(text_field(&unbound, "prior_namespace"), "unchanged");
     normal(&live.submit("addone")?, &["8"]);
+    live.finish()
+}
+
+#[test]
+fn ten_real_reloads_preserve_checked_budget_and_reuse_cleared_code(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let initial = live.report()?;
+    live_ack(&initial, &[]);
+    let first_call = live.submit("20 addone")?;
+    normal(&first_call, &["21"]);
+    let first_span = &first_call["installed_code_span"];
+    assert!(number_field(first_span, "length") > 0, "{first_call}");
+    let mut generation = number_field(&initial, "generation");
+    let mut expected = vec!["21".to_string()];
+    for increment in 2..=11 {
+        fixture.replace(&format!("def addone [ {increment} + ]"))?;
+        let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+        assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+        assert_eq!(
+            ack["stack"].as_array().map(Vec::len),
+            Some(expected.len()),
+            "{ack}"
+        );
+        generation += 1;
+        assert_eq!(number_field(&ack, "generation"), generation, "{ack}");
+        if increment == 2 {
+            let retired = ack["retired_code_spans"]
+                .as_array()
+                .ok_or("checked live code retirement omitted worker receipts")?;
+            assert!(
+                retired.iter().any(|row| released_guest_instance(
+                    row,
+                    first_span,
+                    &first_call["module"]
+                )),
+                "{ack}"
+            );
+        }
+        let value = live.submit("20 addone")?;
+        assert_eq!(text_field(&value, "outcome"), "normal", "{value}");
+        expected.push((increment + 20).to_string());
+        let stack = value["stack"]
+            .as_array()
+            .ok_or("normal execution omitted guest stack")?;
+        assert_eq!(stack.len(), expected.len(), "{value}");
+        assert_eq!(
+            stack.last().and_then(|top| top["value"].as_str()),
+            expected.last().map(String::as_str),
+            "{value}"
+        );
+        if increment == 2 {
+            assert_eq!(
+                value["installed_code_span"]["start"], first_span["start"],
+                "{value}"
+            );
+        }
+    }
+    live.finish()
+}
+
+#[test]
+fn first_guest_core_dispatch_moves_to_bridge_before_instance_retirement(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let first = live.report()?;
+    live_ack(&first, &[]);
+    assert_eq!(
+        first["retired_code_spans"].as_array().map(Vec::len),
+        Some(0),
+        "current zero-code guest still owns its module root: {first}"
+    );
+    let old_span = &first["installed_code_span"];
+    assert_eq!(
+        number_field(old_span, "length"),
+        0,
+        "initial source publication owns no code yet must release its guest: {first}"
+    );
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&updated, "outcome"),
+        "reload-committed",
+        "{updated}"
+    );
+    assert!(
+        updated["retired_code_spans"]
+            .as_array()
+            .ok_or("first source retirement omitted checked instance receipt")?
+            .iter()
+            .any(|row| retired_empty_guest_instance(
+                row,
+                old_span,
+                &first["module"],
+                number_field(&first, "generation")
+            )),
+        "first guest must not remain pinned by core dispatch: {updated}"
+    );
+
+    let second_span = &updated["installed_code_span"];
+    assert_eq!(number_field(second_span, "length"), 0, "{updated}");
+    fixture.replace("def addone [ 3 + ]")?;
+    let third = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&third, "outcome"), "reload-committed", "{third}");
+    assert!(
+        third["retired_code_spans"]
+            .as_array()
+            .ok_or("subsequent zero-code guest omitted instance release")?
+            .iter()
+            .any(|row| retired_empty_guest_instance(
+                row,
+                second_span,
+                &updated["module"],
+                number_field(&updated, "generation")
+            )),
+        "subsequent empty guest must not be pinned by bridge or module root: {third}"
+    );
+    normal(&live.submit("20 addone")?, &["23"]);
+    normal(&live.submit("5 [ 3 + ] run")?, &["23", "8"]);
     live.finish()
 }
 
@@ -632,6 +2801,8 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program(
     );
     let saved = live.submit("[ addone ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program");
+    let saved_span = &saved["installed_code_span"];
+    assert!(number_field(saved_span, "length") > 0, "{saved}");
     let other = fixture.directory.join("unselected.noble");
     let probe = live.submit(&format!(":reload {}", other.display()))?;
     assert_eq!(text_field(&probe, "outcome"), "reload-refused");
@@ -644,6 +2815,14 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program(
     assert_eq!(number_field(&ack, "generation"), generation + 1);
     assert_eq!(ack["stack"], saved["stack"]);
     assert_eq!(number_field(&ack, "guest_requests"), 0);
+    assert!(
+        !ack["retired_code_spans"]
+            .as_array()
+            .ok_or("checked retirement receipts missing")?
+            .iter()
+            .any(|row| row["code_span"] == *saved_span),
+        "a saved old Program must pin its old code: {ack}"
+    );
     normal(&live.submit("20 swap run")?, &["21"]);
     normal(&live.submit("20 four")?, &["21", "28"]);
     normal(&live.submit("20 unrelated")?, &["21", "28", "30"]);
@@ -780,10 +2959,7 @@ fn dependent_rebuild_exceeding_retained_source_budget_refuses_atomically(
     fixture.replace("def addone [ 2 + ]")?;
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["22"]), generation);
-    assert!(
-        text_field(&refused, "diagnostic").contains("retained namespace byte limit"),
-        "{refused}"
-    );
+    assert_no_candidate_span(&refused);
     normal(&live.submit("20 twice")?, &["22", "22"]);
     live.finish()
 }
@@ -1072,11 +3248,158 @@ fn stale_expected_source_generation_denies_without_staging_candidate(
         denied["proposal_queued"], true,
         "stale callback cannot enqueue a proposal"
     );
+    assert_eq!(
+        denied["queued_proposal_roots"], 0,
+        "rejected callback before retain must not add a backend owner: {denied}"
+    );
     assert_eq!(denied["session_state"], "terminated-after-runtime-failure");
     assert_eq!(
         fs::read_to_string(&fixture.source)?,
         EVOLVE.replace("self.generation", "0")
     );
+    Ok(())
+}
+
+#[test]
+fn guest_denial_after_enqueuing_cancels_exact_backend_proposal_pin(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let source = "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose \
+        drop dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]";
+    let fixture = Fixture::new(source)?;
+    let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    let saved = live.submit("[ evolve ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let denied = live.submit("20 evolve")?;
+    assert_eq!(text_field(&denied, "outcome"), "trap", "{denied}");
+    assert_eq!(denied["session_state"], "terminated-after-runtime-failure");
+    assert_eq!(denied["proposal_queued"], false);
+    assert_eq!(
+        denied["cancelled_proposal_roots_before_cancel"], 1,
+        "actual backend queued owner must be present before cancellation: {denied}"
+    );
+    assert_eq!(
+        denied["cancelled_proposal_roots_remaining"], 0,
+        "backend must prove the exact queued proposal's pin is gone: {denied}"
+    );
+    assert_eq!(denied["queued_proposal_roots"], 0);
+    assert_eq!(denied["cancelled_proposal_release_status"], 0);
+    assert_eq!(
+        denied["cancelled_proposal_repeat_release_status"], 4,
+        "terminal cancellation must not release twice: {denied}"
+    );
+    assert_eq!(
+        denied["cancelled_proposal_root_state_after_repeat"],
+        denied["cancelled_proposal_root_state_after"],
+        "{denied}"
+    );
+    assert_eq!(
+        denied["cancelled_proposal_unrelated_root_release_status"], 4,
+        "old saved Program must remain pinned while poisoned: {denied}"
+    );
+    assert_eq!(
+        denied["cancelled_proposal_unrelated_root_state_before"],
+        denied["cancelled_proposal_unrelated_root_state_after"],
+        "{denied}"
+    );
+    let before = number_field(&denied, "cancelled_proposal_root_state_before");
+    let after = number_field(&denied, "cancelled_proposal_root_state_after");
+    assert_eq!(
+        before,
+        after + 1,
+        "exact backend root count, not a JS flag, must decrease by one: {denied}"
+    );
+    assert_eq!(after & 127, 0, "failed guest retained a host pin: {denied}");
+    assert_eq!(
+        before & 128,
+        after & 128,
+        "terminal cleanup must not resurrect or clear an independent module owner: {denied}"
+    );
+    assert_eq!(number_field(&denied, "protected_operations"), 0);
+    assert_eq!(number_field(&denied, "candidate_prepare_requests"), 0);
+    let trace = denied["request_trace"]
+        .as_array()
+        .ok_or("missing guest request trace")?;
+    assert!(
+        trace
+            .iter()
+            .any(|entry| entry == "live.propose:evolve:queued"),
+        "{denied}"
+    );
+    assert!(
+        trace
+            .iter()
+            .any(|entry| entry == "live.propose:denied:already-queued"),
+        "{denied}"
+    );
+    assert_eq!(fs::read_to_string(&fixture.source)?, source);
+    assert_eq!(live.child.wait()?.code(), Some(2));
+    Ok(())
+}
+
+#[test]
+fn guest_work_quota_after_enqueuing_cancels_exact_backend_proposal_pin(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let source = format!(
+        "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop{} ]",
+        " 1 +".repeat(80),
+    );
+    let fixture = Fixture::new(&source)?;
+    let mut positive = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&positive.report()?, &[]);
+    assert_grant(&positive, 1)?;
+    normal(&positive.submit("20 evolve")?, &["100"]);
+    assert_eq!(
+        text_field(&positive.report()?, "outcome"),
+        "proposal-pending"
+    );
+    assert_eq!(
+        text_field(&positive.report()?, "outcome"),
+        "proposal-committed"
+    );
+    positive.finish()?;
+
+    let mut quota = LiveChild::start_with_guest_step_budget(&fixture.source, "evolve", 300)?;
+    live_ack(&quota.report()?, &[]);
+    assert_grant(&quota, 1)?;
+    let exhausted = quota.submit("20 evolve")?;
+    assert_eq!(
+        text_field(&exhausted, "outcome"),
+        "runtime-exhausted",
+        "{exhausted}"
+    );
+    assert_eq!(
+        text_field(&exhausted, "session_state"),
+        "terminated-after-runtime-failure"
+    );
+    assert_eq!(exhausted["proposal_queued"], false);
+    assert_eq!(exhausted["queued_proposal_roots"], 0);
+    assert_eq!(
+        exhausted["cancelled_proposal_roots_before_cancel"], 1,
+        "work quota must follow actual guest proposal enqueue: {exhausted}"
+    );
+    assert_eq!(exhausted["cancelled_proposal_roots_remaining"], 0);
+    assert_eq!(exhausted["cancelled_proposal_release_status"], 0);
+    assert_eq!(exhausted["cancelled_proposal_repeat_release_status"], 4);
+    let before = number_field(&exhausted, "cancelled_proposal_root_state_before");
+    let after = number_field(&exhausted, "cancelled_proposal_root_state_after");
+    assert_eq!(before, after + 1, "{exhausted}");
+    assert_eq!(after & 127, 0, "{exhausted}");
+    assert_eq!(before & 128, after & 128, "{exhausted}");
+    let trace = exhausted["request_trace"]
+        .as_array()
+        .ok_or("missing quota request prefix")?;
+    assert!(
+        trace
+            .iter()
+            .any(|entry| entry == "live.propose:evolve:queued"),
+        "{exhausted}"
+    );
+    assert_eq!(number_field(&exhausted, "protected_operations"), 0);
+    assert_eq!(number_field(&exhausted, "candidate_prepare_requests"), 0);
+    assert_eq!(fs::read_to_string(&fixture.source)?, source);
+    assert_eq!(quota.child.wait()?.code(), Some(5));
     Ok(())
 }
 
@@ -1260,4 +3583,521 @@ fn interpreter_choice_refuses_at_startup_without_v8_fallback(
         }
         std::thread::sleep(Duration::from_millis(20));
     }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn old_active_wasm_frame_finishes_before_queued_reload_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ self.generation drop 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-generation", "1")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "repl", "--source"])
+        .arg(&fixture.source)
+        .args([
+            "--engine",
+            "v8",
+            "--self-edit",
+            "addone",
+            "--expect-generation",
+            "1",
+        ]);
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (old_generation, old_sha256) = live_ack(&live.report()?, &[]);
+    assert_eq!(old_generation, 1);
+    let grant = live.report()?;
+    assert_eq!(text_field(&grant, "outcome"), "grant-selected", "{grant}");
+    assert_eq!(text_field(&grant, "name"), "addone");
+
+    // No source mutation or queued reload before the actual Wasm frame
+    // reaches its host import. The child cannot finish this invocation until
+    // the test explicitly releases the private FIFO.
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"20 addone\n")?;
+    stdin.flush()?;
+    let frame = barrier.wait()?;
+    assert_eq!(text_field(&frame, "source_generation"), "1");
+    assert_eq!(frame["guest_frame_active"], true, "{frame}");
+    fixture.replace("def addone [ self.generation drop 2 + ]")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    barrier.release()?;
+
+    let old = live.report()?;
+    normal(&old, &["21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert!(number_field(&old, "guest_requests") >= 1, "{old}");
+    assert!(
+        old["request_trace"]
+            .as_array()
+            .ok_or("old frame omitted guest request trace")?
+            .iter()
+            .any(|entry| entry == "live.observe-generation:1"),
+        "{old}"
+    );
+    let ack = live.report()?;
+    let (new_generation, new_sha256) = live_ack(&ack, &["21"]);
+    assert_eq!(new_generation, old_generation + 1);
+    assert_ne!(new_sha256, old_sha256);
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+    let old_guest_wasm = text_field(&old["module"], "wasm_sha256");
+    assert_eq!(old_guest_wasm.len(), 64);
+    let regrant = live.submit(":grant-self-edit addone 2")?;
+    assert_eq!(
+        text_field(&regrant, "outcome"),
+        "grant-selected",
+        "{regrant}"
+    );
+    assert_eq!(number_field(&regrant, "source_generation"), new_generation);
+    let new = live.submit("20 addone")?;
+    normal(&new, &["21", "22"]);
+    assert_eq!(number_field(&new, "source_generation"), new_generation);
+    let new_guest_wasm = text_field(&new["module"], "wasm_sha256");
+    assert_eq!(new_guest_wasm.len(), 64);
+    println!(
+        "{}",
+        serde_json::json!({
+            "case": "old-active-frame-queued-reload",
+            "barrier_guest_frame_active": frame["guest_frame_active"],
+            "old_source_sha256": old_sha256,
+            "old_source_generation": old_generation,
+            "new_source_sha256": new_sha256,
+            "ack_generation": new_generation,
+            "old_guest_wasm_sha256": old_guest_wasm,
+            "new_guest_wasm_sha256": new_guest_wasm,
+            "old_guest_value": old["stack"][0]["value"],
+            "new_guest_value": new["stack"][1]["value"],
+        })
+    );
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn explicit_watch_reload_consumes_only_its_committed_rename_once(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 1);
+    assert_eq!(source_hash, A_SHA256);
+    assert!(
+        ack.get("watch_save_protocol").is_none(),
+        "explicit reload must not claim the automatic host seal"
+    );
+    let observed = live.submit(":generation")?;
+    assert_generation_inspection(&observed, generation, &ack["stack"]);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn explicit_reload_pending_a_cannot_republish_in_place_drift(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut after = explicit_reload_barrier(&fixture, "before-reconcile", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    after.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    after.wait()?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    fs::write(&fixture.source, B)?;
+    after.release()?;
+    let superseded = live.report()?;
+    assert_eq!(text_field(&superseded, "outcome"), "watch-superseded");
+    assert_eq!(number_field(&superseded, "generation"), initial + 1);
+    assert_eq!(text_field(&superseded, "source_sha256"), A_SHA256);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    let observed = live.submit(":generation")?;
+    assert_generation_inspection(&observed, initial + 1, &superseded["stack"]);
+    assert_source_change_refused(&live.submit("20 addone")?, initial + 1, &[], A_SHA256);
+    fs::write(&fixture.source, A)?;
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn newer_b_after_explicit_a_commit_remains_pending_for_automatic_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut after = explicit_reload_barrier(&fixture, "before-reconcile", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    after.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    after.wait()?;
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    let b_inode = fs::metadata(&fixture.source)?.ino();
+    after.release()?;
+    let superseded = live.report()?;
+    assert_eq!(text_field(&superseded, "outcome"), "watch-superseded");
+    assert_eq!(number_field(&superseded, "generation"), initial + 1);
+    assert_eq!(text_field(&superseded, "source_sha256"), A_SHA256);
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 2);
+    assert_eq!(source_hash, B_SHA256);
+    assert_eq!(
+        text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot"
+    );
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), b_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn second_complete_save_during_host_seal_preserves_editor_selected_b(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-sealed", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_host_seal(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    fixture.replace(A)?;
+    let reached = barrier.wait()?;
+    assert_eq!(text_field(&reached, "matched"), A_SHA256);
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    let b_inode = fs::metadata(&fixture.source)?.ino();
+    barrier.release()?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    assert_eq!(
+        fs::metadata(&fixture.source)?.ino(),
+        b_inode,
+        "host A must not replace the editor's newer B"
+    );
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 1);
+    assert_eq!(source_hash, B_SHA256);
+    assert_eq!(
+        text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot"
+    );
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), b_inode);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn writer_fd_mutation_during_host_seal_refuses_unselected_snapshot(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-sealed", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_host_seal(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (initial, old_hash) = live_ack(&live.report()?, &[]);
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut writer = File::create_new(&temporary)?;
+    writer.write_all(A.as_bytes())?;
+    writer.sync_all()?;
+    fs::rename(&temporary, &fixture.source)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    barrier.wait()?;
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(B.as_bytes())?;
+    writer.flush()?;
+    barrier.release()?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &old_hash);
+    fixture.replace(B)?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, initial + 1);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn failed_private_directory_sync_keeps_editor_source_and_old_generation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    // The feature-only fault is delivered after a real file write/fsync and
+    // before the private directory's sync. The source and VM remain real.
+    command.env("NOBLE_LIVE_TEST_SEAL_FAIL_DIRECTORY_SYNC", "1");
+    let mut live = LiveChild::spawn(command)?;
+    let (initial, old_hash) = live_ack(&live.report()?, &[]);
+    fixture.replace(A)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::read_to_string(&fixture.source)?, A);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &old_hash);
+    fixture.replace(B)?;
+    let ack = live.report()?;
+    assert_eq!(live_ack(&ack, &[]).0, initial + 1);
+    assert_eq!(
+        text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot"
+    );
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn watched_accepted_top_level_finishes_old_frame_before_new_save_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const SUBMISSION_SHA256: &str =
+        "9b407313ac8ea5fd7371d687299519af1f6c52d5a10d50f472232f27a1402107";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(
+        &fixture.directory,
+        "accepted-watch-submission",
+        SUBMISSION_SHA256,
+    )?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_accepted_submission(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live.report()?;
+    let (old_generation, old_hash) = live_ack(&initial, &[]);
+    assert_eq!(old_generation, 1);
+    assert_eq!(number_field(&initial, "watch_sequence"), 0);
+
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"20 addone\n")?;
+    stdin.flush()?;
+    let accepted = barrier.wait()?;
+    assert_eq!(number_field(&accepted, "watch_sequence"), 0);
+    assert_eq!(number_field(&accepted, "source_generation"), old_generation);
+    assert_eq!(text_field(&accepted, "selected_source_sha256"), old_hash);
+    assert!(
+        matches!(live.reports.try_recv(), Err(mpsc::TryRecvError::Empty)),
+        "a paused accepted top-level submission already received an ACK"
+    );
+
+    fixture.replace("def addone [ 2 + ]")?;
+    File::open(&fixture.directory)?.sync_all()?;
+    barrier.release()?;
+    let old = live.report()?;
+    normal(&old, &["21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert_eq!(number_field(&old, "guest_requests"), 0);
+    assert_eq!(number_field(&old, "protected_operations"), 0);
+    let ack = live.report()?;
+    let (new_generation, new_hash) = live_ack(&ack, &["21"]);
+    assert_eq!(new_generation, old_generation + 1);
+    assert_ne!(new_hash, old_hash);
+    assert_eq!(number_field(&ack, "watch_sequence"), 1);
+    assert_eq!(
+        text_field(&ack, "source_freshness"),
+        "matched-at-watch-ack-check"
+    );
+    let fresh = live.submit("20 addone")?;
+    normal(&fresh, &["21", "22"]);
+    assert_eq!(number_field(&fresh, "source_generation"), new_generation);
+    assert_eq!(number_field(&fresh, "guest_requests"), 0);
+    assert_eq!(number_field(&fresh, "protected_operations"), 0);
+    assert_generation_inspection(
+        &live.submit(":generation")?,
+        new_generation,
+        &fresh["stack"],
+    );
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // These are SHA-256 digests of precisely the two byte strings below
+    // (without trailing newlines), not values produced by the worker hook.
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-compiled", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "watch", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (initial_generation, _) = live_ack(&live.report()?, &[]);
+    fixture.replace(A)?;
+    let staged_a = barrier.wait()?;
+    assert_eq!(
+        text_field(&staged_a, "source_generation"),
+        initial_generation.to_string()
+    );
+    assert_eq!(staged_a["guest_frame_active"], false, "{staged_a}");
+    assert_eq!(staged_a["checked_wasm_module"], true, "{staged_a}");
+    let a_wasm_sha256 = text_field(&staged_a, "checked_wasm_sha256");
+    assert_eq!(a_wasm_sha256.len(), 64);
+    // A's checked WebAssembly.Module now exists, while stage_binary has not
+    // replied. This second complete, fsynced atomic save must defeat A's
+    // selected-file/sequence CAS and be the only accepted watch ACK.
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    barrier.release()?;
+    let mut b_ack = None;
+    for _ in 0..4 {
+        let report = live.report()?;
+        match text_field(&report, "outcome") {
+            "reload-refused" => {
+                assert_eq!(refused_reload(&report, &[]), initial_generation);
+            }
+            "watch-superseded" => {
+                assert_ne!(
+                    text_field(&report, "source_sha256"),
+                    A_SHA256,
+                    "A was published despite B's completed rename: {report}"
+                );
+            }
+            "reload-committed" => {
+                assert_eq!(
+                    text_field(&report, "source_sha256"),
+                    B_SHA256,
+                    "only candidate B can be acknowledged: {report}"
+                );
+                b_ack = Some(report);
+                break;
+            }
+            other => panic!("unexpected report while A was superseded: {other}: {report}"),
+        }
+    }
+    let ack = b_ack.ok_or("candidate B received no ACK after A was staged")?;
+    let generation = number_field(&ack, "generation");
+    assert_eq!(generation, initial_generation + 1);
+    assert!(number_field(&ack, "watch_sequence") >= 2, "{ack}");
+    assert_eq!(
+        text_field(&ack, "source_freshness"),
+        "matched-at-watch-ack-check"
+    );
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+
+    // An in-place partial write cannot form a watched complete save; the
+    // selected-byte gate refuses it before any guest request. Noncooperative
+    // MAP_SHARED drift is independently exercised by the existing external
+    // C helper + real-child tools/live-mmap-smoke.mjs, not by unsafe Rust.
+    fs::write(&fixture.source, "def addone [ 4 +")?;
+    let partial = live.submit("20 addone")?;
+    assert_source_change_refused(&partial, generation, &[], B_SHA256);
+    let partial_sha256 = text_field(&partial, "observed_source_sha256").to_owned();
+    assert_eq!(partial_sha256.len(), 64);
+    assert_ne!(partial_sha256, B_SHA256);
+    fs::write(&fixture.source, B)?;
+    let after_restore = live.submit("20 addone")?;
+    normal(&after_restore, &["23"]);
+    assert_eq!(
+        number_field(&after_restore, "source_generation"),
+        generation
+    );
+    let b_guest_wasm = text_field(&after_restore["module"], "wasm_sha256");
+    assert_eq!(b_guest_wasm.len(), 64);
+    let inspected = live.submit(":generation")?;
+    assert_generation_inspection(&inspected, generation, &after_restore["stack"]);
+    println!(
+        "{}",
+        serde_json::json!({
+            "case": "staged-candidate-superseded-by-complete-rename",
+            "compiled_candidate_a_sha256": A_SHA256,
+            "compiled_candidate_a_wasm_sha256": a_wasm_sha256,
+            "accepted_candidate_b_sha256": B_SHA256,
+            "accepted_b_guest_wasm_sha256": b_guest_wasm,
+            "watch_sequence": number_field(&ack, "watch_sequence"),
+            "ack_generation": generation,
+            "partial_in_place_sha256": partial_sha256,
+            "restored_source_generation": number_field(&after_restore, "source_generation"),
+            "guest_value": after_restore["stack"][0]["value"],
+        })
+    );
+    live.finish()
 }

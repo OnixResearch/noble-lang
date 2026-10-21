@@ -5,7 +5,11 @@ pub(super) fn validate(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
 ) -> Result<(), super::Fail> {
-    let ctx = super::parts::Ctx { env, request };
+    let ctx = super::parts::Ctx {
+        env,
+        request,
+        signed_owner: None,
+    };
     let mut index = 0;
     while index < env.defs.len() {
         attempt!(validate_scheme(&ctx, index));

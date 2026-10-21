@@ -1229,6 +1229,9 @@ function selfTest(base) {
       p.octet_adoption.implementation = 'absent';
       p.octet_adoption.execution = 'not-run';
       p.octet_adoption.proof = 'open';
+      p.worker_contracts.implementation = 'absent';
+      p.worker_contracts.execution = 'not-run';
+      p.worker_contracts.proof = 'open';
       for (const component of p.components) component.execution = 'not-run';
       const c = p.components.find(c => c.id === 'core-checker');
       c.implementation = 'implemented'; c.execution = 'passed';

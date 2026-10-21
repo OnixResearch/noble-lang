@@ -2,8 +2,8 @@
 
 #[test]
 fn private_arm_is_owner_only_but_owner_eliminator_is_callable() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ variant Status Ready I64 public Failed Text private export Status export Status.Ready export make export inspect def make [ \"err\" Status.Failed ] def inspect [ [ drop 1 ] [ drop 0 ] Status.match ] ]")?;
     let accepted = session
         .prepare(b"ledger@1.make ledger@1.inspect", &[], super::LIMITS)

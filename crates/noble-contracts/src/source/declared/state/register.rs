@@ -46,17 +46,22 @@ impl super::ModuleSession {
                 "duplicate module version or module count exceeded",
             ));
         }
-        attempt!(self.check_retained_module_bytes(request.source.len(), request.limits));
-        let identity = attempt!(u64::try_from(self.modules.len())
-            .ok()
-            .and_then(|n| n.checked_add(1))
-            .ok_or_else(|| super::super::error(
+        attempt!(self.check_retained(request.source.len()));
+        let identity = self.next_module_identity;
+        let next_module_identity =
+            attempt!(identity.checked_add(1).ok_or_else(|| super::super::error(
                 crate::source::Stage::Check,
                 "module identity limit exceeded"
             )));
+        let selected_locals = self
+            .source
+            .declared
+            .as_ref()
+            .is_some_and(|context| context.declared_text);
         let mut collected = attempt!(collection::Collected::collect(
             core::mem::take(&mut request.members),
-            request.limits
+            request.limits,
+            selected_locals,
         ));
         self = attempt!(self.outside_words());
         let (next, resolved, meter) =
@@ -140,45 +145,67 @@ impl super::ModuleSession {
             adapter_slot,
             source: request.source.to_vec(),
             definition_spans: core::mem::take(&mut collected.definition_spans),
+            verified_signed_slots: alloc::vec::Vec::new(),
             import_aliases,
             contracts: staged.contracts,
             proof_exports: staged.proof_exports,
             proofs: alloc::vec::Vec::new(),
         });
+        next.next_module_identity = next_module_identity;
         Ok((attempt!(next.outside_words()), staged.pending))
     }
 }
 
-#[expect(
-    tigerstyle::type_accumulation,
-    reason = "Owner: noble-contracts; the accumulator is the checked declaration this stage builds, not a free-form type bag"
-)]
-impl super::ModuleSession {
-    pub(super) fn check_retained_module_bytes(
-        &self,
-        candidate_bytes: usize,
-        limits: crate::Limits,
-    ) -> Result<(), crate::source::Error> {
-        #[expect(
-            tigerstyle::numeric_units,
-            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
-        )]
-        let limit = attempt!(self.retained_source_limit(limits));
-        let mut bytes = candidate_bytes;
-        for module in &self.modules {
-            bytes = attempt!(bytes.checked_add(module.source.len()).ok_or_else(|| {
-                super::super::error(
-                    crate::source::Stage::Check,
-                    "retained module byte count overflow",
-                )
-            }));
-        }
-        if bytes > limit {
-            return Err(super::super::error(
-                crate::source::Stage::Check,
-                "retained module source byte limit exceeded",
-            ));
-        }
-        Ok(())
+/// Re-parse the retained whole module, including the signature declaration
+/// paired by exact definition name, rather than trusting a staged Scheme.
+pub(super) fn original_signature(
+    session: &super::ModuleSession,
+    module: &super::super::Module,
+    definition: &str,
+    limits: crate::Limits,
+) -> Result<noble_kernel::words::Scheme, crate::source::Error> {
+    let parsed = attempt!(
+        crate::source::declared::parsing::parse(&module.source, limits)
+            .map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem))
+    );
+    let crate::source::declared::parsing::ParsedUnit::Module {
+        name,
+        version,
+        members,
+    } = parsed
+    else {
+        return Err(super::super::error(
+            crate::source::Stage::Check,
+            "signed owner original source is not a module",
+        ));
+    };
+    if name != module.name || version != module.version {
+        return Err(super::super::error(
+            crate::source::Stage::Check,
+            "signed owner original module identity differs",
+        ));
     }
+    let selected_locals = session
+        .source
+        .declared
+        .as_ref()
+        .is_some_and(|context| context.declared_text);
+    let collected = attempt!(collection::Collected::collect(
+        members,
+        limits,
+        selected_locals
+    ));
+    let families =
+        crate::source::declared::signatures::families(session, &collected.schemas, module.identity);
+    let (_, binders, words, _) = collected
+        .signatures
+        .iter()
+        .find(|(name, _, _, _)| name == definition)
+        .ok_or_else(|| {
+            super::super::error(
+                crate::source::Stage::Check,
+                "signed definition lacks its original signature",
+            )
+        })?;
+    crate::source::declared::signatures::parse(binders, words, &families)
 }

@@ -372,6 +372,7 @@ fn parse_callable_effects(
         let id = match word {
             "test.emit" => noble_kernel::contracts::TEST_EMIT,
             "test.clock" => noble_kernel::contracts::TEST_CLOCK,
+            "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
             "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
             _ => return Err(crate::invalid(span, "unknown callable effect bound")),
         };

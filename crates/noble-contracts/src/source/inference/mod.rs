@@ -11,6 +11,7 @@ mod validation;
 pub(super) enum DraftKind {
     Literal(noble_kernel::untrusted::Lit),
     Invocation(noble_kernel::contracts::Definition),
+    SignedSelf(noble_kernel::contracts::Definition),
     Quotation(alloc::vec::Vec<noble_kernel::untrusted::NodeId>),
     SlotInvoke {
         ref_ordinal: u32,
@@ -33,6 +34,8 @@ pub(super) struct Body {
     pub effect: u32,
     pub identity: Option<u64>,
     pub owner: Option<u64>,
+    pub owner_slot: Option<u32>,
+    pub owner_variables: Option<alloc::vec::Vec<crate::inference::Variable>>,
     pub span: crate::Span,
 }
 
@@ -106,6 +109,7 @@ pub(super) struct Scope<'a> {
     pub(super) session: &'a super::Session,
     pub(super) environment: &'a noble_kernel::contracts::Env,
     pub(super) root_signature: Option<&'a noble_kernel::words::Scheme>,
+    pub(super) prospective_owner: Option<noble_kernel::contracts::Definition>,
 }
 
 impl Scope<'_> {
@@ -165,13 +169,13 @@ pub(super) fn infer(
 ) -> Result<State, crate::Diagnostic> {
     let tree = scope.root;
     let mut state = attempt!(initial(tree, scope.session, mode, inputs, meter));
-    let signature = match scope.root_signature {
+    let (signature, owner_variables) = match scope.root_signature {
         Some(scheme) => {
             let input = match state.bodies.first() {
                 Some(body) => body.input,
                 None => return Err(crate::internal(tree.span)),
             };
-            let (output, effects) = attempt!(apply_signature(
+            let (output, effects, variables) = attempt!(apply_signature(
                 &mut state.arena,
                 scheme,
                 input,
@@ -179,11 +183,17 @@ pub(super) fn infer(
                 tree.span,
                 meter,
             ));
-            Some((output, effects, true))
+            (Some((output, effects, true)), Some(variables))
         }
-        None => None,
+        None => (None, None),
     };
-    state.definition_base = scope.environment.defs.len();
+    if let Some(body) = state.bodies.first_mut() {
+        body.owner_variables = owner_variables;
+    }
+    state.definition_base = match scope.prospective_owner {
+        Some(owner) => attempt!(crate::offset(owner.0, tree.span)),
+        None => scope.environment.defs.len(),
+    };
     attempt!(meter.node(tree.span));
     let mut frames = alloc::vec::Vec::with_capacity(1);
     let body = match state.bodies.first() {
@@ -237,7 +247,7 @@ fn apply_signature(
     rigid: bool,
     span: crate::Span,
     meter: &mut crate::Meter,
-) -> Result<(u32, u32), crate::Diagnostic> {
+) -> Result<(u32, u32, alloc::vec::Vec<crate::inference::Variable>), crate::Diagnostic> {
     let variables = if rigid {
         attempt!(arena.rigid_variables(&scheme.var_kinds, span, meter))
     } else {
@@ -247,7 +257,7 @@ fn apply_signature(
     attempt!(arena.unify(input, expected_input, span, meter));
     let expected_output = attempt!(arena.pattern_stack(&scheme.stack_out, &variables, span, meter));
     let effects = attempt!(arena.effect_pattern(&scheme.effects, &variables, span, meter));
-    Ok((expected_output, effects))
+    Ok((expected_output, effects, variables))
 }
 
 #[expect(
@@ -273,6 +283,9 @@ fn initial(
         session.effect_universe(),
         session.bindings.is_some() || session.declared.is_some() || session.live_slots.is_some(),
     );
+    if let Some(bindings) = &session.bindings {
+        arena.allow_program_type_effects(bindings.program_type_effects);
+    }
     if let Some(context) = &session.declared {
         let mut nominals = alloc::vec::Vec::with_capacity(context.environment.nominals.len());
         let mut at = 0usize;
@@ -354,6 +367,8 @@ fn initial(
         effect,
         identity: None,
         owner: session.declared.as_ref().and_then(|context| context.owner),
+        owner_slot: None,
+        owner_variables: None,
         span: tree.span,
     });
     Ok(State {

@@ -37,6 +37,9 @@ pub(super) fn imports(
     };
     if original_owner == request.identity {
         for alias in &request.session.aliases {
+            if alias.pending {
+                continue;
+            }
             let imported = request.session.modules.get(alias.module).ok_or_else(|| {
                 mismatch(
                     crate::Span { start: 0, end: 0 },

@@ -8,8 +8,8 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
       proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ]
       export base
     ]";
-    let module =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let module = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let staged = module
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -87,8 +87,8 @@ fn exact_increment_contract_binds_checked_definition_not_text_only() -> Result<(
         (mc1-true-eq-wrap)) ]
 ]
 ";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;

@@ -45,6 +45,10 @@ fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     if env.calculator && env.declared_modules {
         return 32;
     }
+    // Declared text extends the cursor prefix with signed I64 `<` at 27.
+    if env.text_cursor && env.declared_modules {
+        return 28;
+    }
     if env.declared_modules {
         return 23;
     }
@@ -201,9 +205,12 @@ pub struct CompileMetrics {
 #[derive(Clone, Debug)]
 pub struct Compiler {
     live: bool,
+    declared_live: bool,
     live_slots: bool,
     text_cursor: bool,
+    declared_text: bool,
     calculator: bool,
+    worker_inputs: bool,
     generation: u32,
     functions: u32,
     retention_revision: u64,
@@ -278,6 +285,22 @@ pub struct ProgramMetadata {
     pub capture_right: u32,
     pub recipe_depth: u32,
     pub recipe_leaves: u32,
+    /// Closed, source-checked atom sequence for exact installed c-recipe
+    /// correspondence. Only the Worker ingress retains these atoms.
+    pub runtime_atoms: alloc::vec::Vec<ProgramAtomMetadata>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ProgramAtomMetadata {
+    pub source_node: u32,
+    pub tag: u32,
+    pub payload: i64,
+    pub child_program: Option<usize>,
+    pub text: Option<(u32, u32)>,
+    pub input: u32,
+    pub output: u32,
+    pub effects: u32,
+    pub ordinal: u32,
 }
 
 /// D-neutral, source-checked lineage for a selected named caller's returned
@@ -293,15 +316,18 @@ pub struct SelectedOriginMetadata {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OriginClass {
+pub enum OriginSource {
     Definition,
     Selection,
 }
 
 #[derive(Clone, Debug)]
 pub struct OriginProgram {
-    pub source_artifact: OriginClass,
+    pub source_artifact: OriginSource,
     pub program_index: usize,
+    /// Source replay quotation NodeId; the named body and selection wrapper
+    /// are identified separately and have no quotation occurrence here.
+    pub body_node: Option<u32>,
     pub entry: u32,
     pub input_signature: u32,
     pub output_signature: u32,
@@ -318,11 +344,14 @@ pub enum OriginAction {
     Dup,
     Swap,
     Drop,
+    Dip,
+    Run,
     StaticProgram(usize),
-    QuoteI64 {
+    Quote {
         input: u32,
         output: u32,
         witness: u32,
+        program_operand: bool,
     },
     Compose,
     CallSelected(usize),
@@ -331,8 +360,14 @@ pub enum OriginAction {
 #[derive(Clone, Debug)]
 pub struct OriginOperation {
     pub node: noble_kernel::untrusted::NodeId,
-    /// None exclusively for the independently checked selection wrapper.
-    pub source_span: Option<noble_contracts::Span>,
+    /// Kernel/instruction indices are compacted; this is the separate exact
+    /// parsed-and-lowered lexical occurrence, absent for selection wrapper.
+    pub lexical_node: Option<u32>,
+    /// Only authored source tokens have a byte span. Synthetic cleanup,
+    /// projection, quote, and dip operations carry a replay witness instead.
+    pub authored_span: Option<noble_contracts::Span>,
+    pub generated: bool,
+    pub generated_witness: Option<noble_contracts::source::proof::CheckedGeneratedWitness>,
     pub ordinal: u32,
     pub table_entry: u32,
     pub input_signature: u32,
@@ -341,32 +376,63 @@ pub struct OriginOperation {
     pub action: OriginAction,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OriginI64 {
     RootInput(u32),
-    Fixed(i64),
+    Fixed {
+        value: i64,
+        recipe: alloc::rc::Rc<OriginFixedExpression>,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginFixedArithmetic {
+    Add,
+    Sub,
+    Mul,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OriginFixedExpression {
+    Literal(i64),
+    Arithmetic {
+        kind: OriginFixedArithmetic,
+        left: alloc::rc::Rc<Self>,
+        right: alloc::rc::Rc<Self>,
+        nodes: usize,
+        depth: usize,
+    },
 }
 
 #[derive(Clone, Debug)]
 pub enum OriginProgramValue {
-    QuoteI64 {
+    Static {
+        node: noble_kernel::untrusted::NodeId,
+        program_index: usize,
+    },
+    Quote {
         node: noble_kernel::untrusted::NodeId,
         table_entry: u32,
-        operand: OriginI64,
+        operand: OriginOperand,
     },
     Compose {
         node: noble_kernel::untrusted::NodeId,
         table_entry: u32,
-        left: alloc::boxed::Box<Self>,
-        right_node: noble_kernel::untrusted::NodeId,
-        right_program_index: usize,
+        left: alloc::rc::Rc<Self>,
+        right: alloc::rc::Rc<Self>,
     },
+}
+
+#[derive(Clone, Debug)]
+pub enum OriginOperand {
+    I64(OriginI64),
+    Program(alloc::rc::Rc<OriginProgramValue>),
 }
 
 #[derive(Clone, Debug)]
 pub struct OriginOutput {
     pub stack_position: usize,
-    pub result: OriginProgramValue,
+    pub result: alloc::rc::Rc<OriginProgramValue>,
 }
 
 /// An independently rechecked, emitted named definition, not the submission's
@@ -453,10 +519,65 @@ impl Prepared {
         self.metrics
     }
 
+    /// Source-free Core16 helper code over this checked prospective signature
+    /// catalogue. It has no submission, active segment or host-effect import.
+    pub fn runtime_bridge_wat(&self) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+        if !(self.next.live || self.next.declared_live) || self.next.live_slots {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        emit::runtime_bridge(&self.next.descriptors, self.next.declared_live)
+    }
+
+    /// Ordered id -> address, length, exact UTF-8 signature bytes for the
+    /// shared arena. These bytes come only from this prospective compiler.
+    pub fn runtime_signature_catalog(&self) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+        if !(self.next.live || self.next.declared_live)
+            || self.next.descriptors.len() != self.next.signatures.keys.len()
+            || self.next.descriptors.len() > crate::signatures::SOURCE_KEY_LIMIT
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let mut bytes = alloc::vec::Vec::new();
+        let count =
+            u32::try_from(self.next.descriptors.len()).map_err(|_| crate::Diagnostic::Exhausted)?;
+        bytes.extend_from_slice(&count.to_le_bytes());
+        for ((address, length), signature) in
+            self.next.descriptors.iter().zip(&self.next.signatures.keys)
+        {
+            if usize::try_from(*length).ok() != Some(signature.len())
+                || *address < TEXT_START
+                || address
+                    .checked_add(*length)
+                    .is_none_or(|end| end > MEMORY_BYTES)
+            {
+                return Err(crate::Diagnostic::Defective);
+            }
+            bytes.extend_from_slice(&address.to_le_bytes());
+            bytes.extend_from_slice(&length.to_le_bytes());
+            bytes.extend_from_slice(signature);
+        }
+        Ok(bytes)
+    }
+
     /// The exact table span installed by this module's successful submission.
-    /// An empty span installs no code and must not be retired.
+    /// An empty span installs no code and must not enter `retire_code`; its
+    /// originating guest instance still needs separate module-root release.
     pub const fn code_span(&self) -> CodeSpan {
         self.code_span
+    }
+
+    /// End of the prospective static literal arena.
+    pub const fn literal_end(&self) -> u32 {
+        self.next.text_end
+    }
+
+    /// Worker modules expose their checked literal arena only in that profile.
+    pub const fn worker_literal_end(&self) -> Option<u32> {
+        if self.next.worker_inputs {
+            Some(self.next.text_end)
+        } else {
+            None
+        }
     }
 
     /// Checked site contracts bound to the exact bytes returned by `wat()`.
@@ -541,7 +662,7 @@ impl Compiler {
             slots,
             generation: self.generation,
         };
-        if self.live_slots {
+        if self.live || self.declared_live || self.live_slots {
             self.installed_code.push(span);
         }
         Ok(span)
@@ -584,9 +705,12 @@ impl Compiler {
     pub fn new() -> Self {
         Self {
             live: false,
+            declared_live: false,
             live_slots: false,
             text_cursor: false,
+            declared_text: false,
             calculator: false,
+            worker_inputs: false,
             generation: 0,
             functions: 4,
             retention_revision: 0,
@@ -600,11 +724,21 @@ impl Compiler {
         }
     }
 
-    /// A separate admission profile: the ordinary compiler never emits the
-    /// proposal or generation imports.
+    /// The Core 16-page live profile has its own proposal/generation ingress
+    /// and root-checked code span ledger. Neither ordinary Core nor the
+    /// separate 20-page live-slot backend acquires these root exports.
     pub fn new_live() -> Self {
         Self {
             live: true,
+            ..Self::new()
+        }
+    }
+
+    /// The opt-in declared live worker uses the checked 16-page Program owner
+    /// graph without acquiring Core's self-edit effect/profile.
+    pub fn new_declared_live() -> Self {
+        Self {
+            declared_live: true,
             ..Self::new()
         }
     }
@@ -625,6 +759,15 @@ impl Compiler {
         }
     }
 
+    /// Distinct persistent code/identity pool for pure declared text modules.
+    pub fn new_declared_text() -> Self {
+        Self {
+            text_cursor: true,
+            declared_text: true,
+            ..Self::new()
+        }
+    }
+
     /// Independent calculator admission with one reserved trampoline slot.
     pub fn new_calculator() -> Self {
         let mut compiler = Self::new();
@@ -635,12 +778,82 @@ impl Compiler {
         compiler
     }
 
+    /// Opt-in pure declared-module ingress with host-owned value constructors.
+    pub fn new_worker() -> Self {
+        Self {
+            worker_inputs: true,
+            ..Self::new()
+        }
+    }
+
     /// Independently accept and lower without changing existing code identities.
     pub fn prepare(
         &self,
         submission: &noble_kernel::execution::Submission,
     ) -> Result<Prepared, crate::Diagnostic> {
-        self.prepare_from(submission, None, self.functions, false, false)
+        // The merged cursor/declared profile has no raw Submission ingress.
+        // A declared live compiler never accepts an ordinary submission.
+        if self.declared_text || (self.declared_live && !submission.environment.declared_modules) {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        self.prepare_from(submission, None, self.functions, false, false, false)
+    }
+
+    /// Rebuild a signed staged-source snapshot before authorizing `SignedSelf`.
+    /// A public Submission or Env cannot supply the owner instance witness.
+    pub fn prepare_signed(
+        &self,
+        source: &noble_contracts::source::SignedSourceOwner<'_>,
+    ) -> Result<Prepared, crate::Diagnostic> {
+        if self.live
+            || self.live_slots
+            || self.text_cursor
+            || self.declared_text
+            || self.calculator
+            || self.worker_inputs
+        {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        if !submission.environment.declared_modules
+            || submission.environment.live_slots
+            || submission.environment.text_cursor
+        {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        self.prepare_from(&submission, None, self.functions, false, false, true)
+    }
+
+    /// The merged cursor/declared profile has no raw Submission ingress.
+    /// Rebuild from the contracts-private source snapshot, including the
+    /// signed owner and all quotations, before the fixed-prefix admission audit.
+    pub fn prepare_declared_text(
+        &self,
+        source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
+    ) -> Result<Prepared, crate::Diagnostic> {
+        if !self.declared_text
+            || !self.text_cursor
+            || self.live
+            || self.declared_live
+            || self.live_slots
+            || self.calculator
+            || self.worker_inputs
+        {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        if !submission.environment.declared_modules || !submission.environment.text_cursor {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let signed = submission.definitions.iter().any(|definition| {
+            definition
+                .body
+                .candidate
+                .nodes
+                .iter()
+                .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
+        });
+        self.prepare_from(&submission, None, self.functions, false, false, signed)
     }
 
     /// Calculator-only preparation at a quiescent submission boundary: the
@@ -659,7 +872,14 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(submission, None, CALCULATOR_FUNCTION_BASE, true, false)
+        self.prepare_from(
+            submission,
+            None,
+            CALCULATOR_FUNCTION_BASE,
+            true,
+            false,
+            false,
+        )
     }
 
     /// Calculator-only preparation at a Program-free submission boundary: the
@@ -675,7 +895,14 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(submission, None, CALCULATOR_FUNCTION_BASE, true, true)
+        self.prepare_from(
+            submission,
+            None,
+            CALCULATOR_FUNCTION_BASE,
+            true,
+            true,
+            false,
+        )
     }
 
     fn prepare_from(
@@ -685,6 +912,7 @@ impl Compiler {
         functions: u32,
         quiescent: bool,
         program_free: bool,
+        signed: bool,
     ) -> Result<Prepared, crate::Diagnostic> {
         if self.calculator
             && u64::from(submission.request.limits.work) > CALCULATOR_COMPILER_WORK_LIMIT
@@ -700,6 +928,18 @@ impl Compiler {
         };
         attempt!(preflight::check(submission, self.calculator, &mut work));
         work.calculator_preflight = false;
+        if self.worker_inputs
+            && (!submission.environment.declared_modules
+                || submission.environment.live_slots
+                || submission.environment.text_cursor
+                || self.live
+                || self.live_slots
+                || self.text_cursor
+                || self.calculator
+                || signed)
+        {
+            return Err(crate::Diagnostic::Unsupported);
+        }
         let preflight_issued = work.issued;
         let checked = attempt!(admission::check(
             submission,
@@ -707,6 +947,8 @@ impl Compiler {
             self.live_slots,
             self.text_cursor,
             self.calculator,
+            self.declared_text,
+            signed,
             &mut work,
         ));
         let admission_issued = work.issued;
@@ -754,9 +996,12 @@ impl Compiler {
         ));
         let mut next = Self {
             live: self.live,
+            declared_live: self.declared_live,
             live_slots: self.live_slots,
             text_cursor: self.text_cursor,
+            declared_text: self.declared_text,
             calculator: self.calculator,
+            worker_inputs: self.worker_inputs,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
@@ -786,10 +1031,16 @@ impl Compiler {
             submission,
             &mut next.identities,
             next.calculator,
-            &mut work
+            &mut work,
+            signed,
         ));
         work.calculator_plan = self.calculator;
         let mut plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
+        // Worker literals share the scratch-region boundary used by calculator
+        // signature expansion; neither profile may let static Text overlap it.
+        if self.worker_inputs && next.text_end > CALCULATOR_TEXT_END {
+            return Err(crate::Diagnostic::Exhausted);
+        }
         // A calculator module publishes only the signatures new since the
         // committed compiler's descriptor table (all of its own after a
         // Program-free rewind); the trusted engine retains that published
@@ -817,7 +1068,7 @@ impl Compiler {
             slots: plan.functions - plan.first_function,
             generation: next.generation,
         };
-        let target_metadata = if self.live_slots {
+        let target_metadata = if self.live_slots || self.worker_inputs {
             let root = attempt!(plan
                 .programs
                 .get(plan.root)
@@ -835,7 +1086,7 @@ impl Compiler {
             None
         };
         let mut named_targets = alloc::vec::Vec::new();
-        if self.live_slots {
+        if self.live_slots || self.worker_inputs {
             for (index, definition) in submission.definitions.iter().enumerate() {
                 let checked_body = attempt!(checked
                     .definitions
@@ -872,10 +1123,20 @@ impl Compiler {
         }
         let selected_origin = selected.and_then(|selected| origin::build(selected, &plan));
         let mut program_metadata = alloc::vec::Vec::new();
-        if self.live_slots {
+        if self.live_slots || self.worker_inputs {
             program_metadata.reserve(plan.programs.len());
+            let text_witness = plan.text_witness;
             for (program_index, program) in plan.programs.iter_mut().enumerate() {
                 let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
+                let runtime_atoms = if self.worker_inputs {
+                    program
+                        .operations
+                        .iter()
+                        .map(|operation| plan::atom_metadata(operation, text_witness))
+                        .collect()
+                } else {
+                    alloc::vec::Vec::new()
+                };
                 program_metadata.push(ProgramMetadata {
                     program_index,
                     entry: program.entry,
@@ -889,6 +1150,7 @@ impl Compiler {
                     capture_right: 0,
                     recipe_depth: program.depth,
                     recipe_leaves: program.leaves,
+                    runtime_atoms,
                 });
             }
         }
@@ -987,7 +1249,8 @@ impl Compiler {
             Some(selected),
             self.functions,
             false,
-            false
+            false,
+            false,
         ));
         let id = selected.definition_id();
         let mut matches = prepared.named_targets.iter().filter(|named| {
@@ -1040,11 +1303,60 @@ impl Compiler {
         Ok(())
     }
 
-    /// Retire an installed code allocation only after the trusted runtime
-    /// verifies zero backend Program owners and clears every entry of its
-    /// physical shared table span. The callback must query the backend's
-    /// `code_owners(start, length)` (a negative result is a refusal), verify
-    /// the installed entries and clear them before returning success.
+    /// The selected worker has verified that its idle signed/Text arena has
+    /// no external or saved roots, cleared every source code entry and
+    /// released every module global before tombstoning the complete heap.
+    /// Source identities and generation remain monotone across this epoch.
+    pub fn retire_declared_text_epoch(
+        &mut self,
+        generation: u32,
+        code_end: u32,
+    ) -> Result<(), crate::Diagnostic> {
+        if !self.declared_text
+            || !self.text_cursor
+            || self.live
+            || self.declared_live
+            || self.live_slots
+            || self.calculator
+            || self.worker_inputs
+            || self.generation != generation
+            || self.functions != code_end
+            || self.retention_revision == u64::MAX
+            || !self.free_code.is_empty()
+            || !self.installed_code.is_empty()
+            || !self.static_literals.is_empty()
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.functions = 4;
+        self.text_end = TEXT_START;
+        self.signatures = crate::signatures::Pool::source();
+        self.descriptors.clear();
+        self.retention_revision += 1;
+        Ok(())
+    }
+
+    /// Current (generation, code end) of an exclusively declared-text compiler.
+    pub fn declared_text_epoch_state(&self) -> Option<(u32, u32)> {
+        (self.declared_text
+            && self.text_cursor
+            && !self.live
+            && !self.declared_live
+            && !self.live_slots
+            && !self.calculator
+            && !self.worker_inputs)
+            .then_some((self.generation, self.functions))
+    }
+
+    /// Retire an installed live-slot or Core-live allocation only after the
+    /// trusted runtime verifies zero backend Program owners and clears every
+    /// entry of its physical shared table span. The callback must query the
+    /// backend's `code_owners(start, length)` (negative means refusal), verify
+    /// exact installed entries, invalidate Core-live stale Program handles,
+    /// and clear the physical table span before returning success.
+    /// Core-live saved stack/host roots, observed values, and adapter leases
+    /// remain owners until their explicit release; an unknown host inventory
+    /// must refuse retirement rather than report a zero count.
     /// Validation precedes the callback, so stale or partial spans cannot
     /// cause table side effects.
     #[expect(
@@ -1056,7 +1368,10 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !self.live_slots || span.slots == 0 || span.start < 4 {
+        if !(self.live || self.declared_live || self.live_slots)
+            || span.slots == 0
+            || span.start < 4
+        {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {
@@ -1556,6 +1871,319 @@ mod tests {
             "steady module grew from {} to {} bytes with retained history",
             fresh_steady.len(),
             retained_steady.len()
+        );
+    }
+}
+
+#[cfg(test)]
+mod declared_text_ingress_tests {
+    use super::{admission, emit, plan, preflight, Compiler, Work};
+    use noble_contracts::source::ModuleSession;
+
+    fn budget(limit: u32) -> Work {
+        Work {
+            remaining: u64::from(limit),
+            issued: u64::from(limit),
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    #[test]
+    fn signed_owner_mutations_fail_selected_admission() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let session = ModuleSession::new_declared_text(
+            &[],
+            true,
+            noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("valid legacy retained source cap"),
+        )
+        .expect("pure declared text");
+        let result = session
+            .prepare(
+                include_bytes!("../../../noble-contracts/src/fixtures/result.noble"),
+                &[],
+                limits,
+            )
+            .expect("nominal Result declaration");
+        let (session, accepted) = session.commit(result);
+        accepted.expect("Result installed");
+        let digit = session
+            .prepare(
+                include_bytes!("../../../../verification/calculator-precursor/decimal-digit.noble"),
+                &[],
+                limits,
+            )
+            .expect("ASCII digit helper");
+        let (session, accepted) = session.commit(digit);
+        accepted.expect("digit helper installed");
+        let fold = session
+            .prepare(
+                include_bytes!("../../../../verification/calculator-precursor/decimal-fold.noble"),
+                &[],
+                noble_contracts::Limits {
+                    nodes: 8_192,
+                    ..limits
+                },
+            )
+            .expect("signed digit fold within reduced source-node budget");
+        let (session, accepted) = session.commit(fold);
+        accepted.expect("fold installed");
+        let prepared = session
+            .prepare(b"\"123\" 0 0 decimal_fold@1.fold", &[], limits)
+            .expect("checked Text cursor caller");
+        let owner = prepared.declared_text_source_owner().expect("source token");
+        let original = owner.rederive().expect("source rederivation");
+        let compiler = Compiler::new_declared_text();
+        let mut work = budget(original.request.limits.work);
+        assert!(
+            preflight::check(&original, false, &mut work).is_ok(),
+            "whole-source preflight exhausted before declared-text admission"
+        );
+        let checked = admission::check(&original, false, false, true, false, true, true, &mut work)
+            .ok()
+            .expect("declared-text whole-submission admission exhausted");
+        assert!(
+            admission::meter::compilation(&checked, &compiler.signatures, &mut work).is_ok(),
+            "checked derivation compilation meter exhausted"
+        );
+        let mut next = Compiler::new_declared_text();
+        next.generation = 1;
+        assert!(
+            admission::identity::check(&original, &mut next.identities, false, &mut work, true)
+                .is_ok(),
+            "source identity checks exhausted"
+        );
+        let plan = plan::lower(&original, &checked, &mut next, &mut work)
+            .ok()
+            .expect("checked program lowering exhausted");
+        assert!(
+            emit::module(&plan, 0, 0, &next.signatures.keys).is_ok(),
+            "source Wasm emission exhausted"
+        );
+        assert!(compiler.prepare_declared_text(&owner).is_ok());
+        assert!(compiler
+            .prepare_from(&original, None, compiler.functions, false, false, true)
+            .is_ok());
+        let signed_owner = prepared.signed_source_owner().expect("signed owner source");
+        assert!(
+            Compiler::new().prepare_signed(&signed_owner).is_err(),
+            "ordinary signed compiler must not import the selected cursor"
+        );
+
+        let mut changed = original.clone();
+        let definition = changed
+            .definitions
+            .iter_mut()
+            .find(|definition| definition.owner_inst.is_some())
+            .expect("signed fold specialization");
+        definition
+            .owner_inst
+            .as_mut()
+            .expect("rigid owner binder")
+            .bindings[0] =
+            noble_kernel::words::Binding::Stack(alloc::vec![noble_kernel::types::Ty::Bool]);
+        assert!(
+            compiler
+                .prepare_from(&changed, None, compiler.functions, false, false, true)
+                .is_err(),
+            "fresh or foreign self Inst cannot dispatch to checked owner"
+        );
+    }
+
+    #[test]
+    fn declared_text_compiler_accepts_second_checked_expression_in_one_session() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let mut session = ModuleSession::new_declared_text(
+            &[],
+            true,
+            noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("valid legacy retained source cap"),
+        )
+        .expect("pure declared text");
+        for module in [
+            include_bytes!("../../../noble-contracts/src/fixtures/result.noble").as_slice(),
+            include_bytes!("../../../../verification/calculator-precursor/decimal-digit.noble")
+                .as_slice(),
+            include_bytes!("../../../../verification/calculator-precursor/decimal-fold.noble")
+                .as_slice(),
+        ] {
+            let prepared = session
+                .prepare(module, &[], limits)
+                .expect("checked module");
+            let (next, accepted) = session.commit(prepared);
+            accepted.expect("registered immutable module");
+            session = next;
+        }
+        let mut compiler = Compiler::new_declared_text();
+        let mut stack = alloc::vec::Vec::new();
+        for source in [
+            b"\"0\" 0 0 decimal_fold@1.fold".as_slice(),
+            b"drop \"9\" 0 0 decimal_fold@1.fold".as_slice(),
+            b"drop \"1a\" 0 0 decimal_fold@1.fold".as_slice(),
+            b"drop \"12\" 0 0 decimal_fold@1.fold".as_slice(),
+        ] {
+            let prepared = session
+                .prepare(source, &stack, limits)
+                .expect("checked expression");
+            stack = prepared.output().to_vec();
+            let owner = prepared
+                .declared_text_source_owner()
+                .expect("source-bound declared text");
+            let compiled = compiler
+                .prepare_declared_text(&owner)
+                .ok()
+                .expect("one-session compiler exhausted valid fold");
+            compiler
+                .commit(compiled)
+                .ok()
+                .expect("matching prepared state");
+            let (next, accepted) = session.commit(prepared);
+            accepted.expect("checked expression installed");
+            session = next;
+        }
+    }
+}
+
+#[cfg(test)]
+mod signed_dispatch_tests {
+    use super::Compiler;
+    use crate::Diagnostic;
+    use noble_contracts::source::ModuleSession;
+    use noble_kernel::{
+        types::{EffSet, Ty},
+        untrusted::{Node, Outcome},
+    };
+
+    const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+        bytes: 65_536,
+        nodes: 16_384,
+        depth: 64,
+        work: 2_000_000,
+    };
+
+    /// Signed ingress over an already rederived submission.
+    fn signed(
+        submission: &noble_kernel::execution::Submission,
+    ) -> Result<super::Prepared, Diagnostic> {
+        let compiler = Compiler::new();
+        compiler.prepare_from(submission, None, compiler.functions, false, false, true)
+    }
+
+    fn prepared(
+        module: &[u8],
+        expression: &[u8],
+        input: &[Ty],
+    ) -> noble_kernel::execution::Submission {
+        let session = ModuleSession::new_signed_self(
+            &[],
+            noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("valid legacy retained source cap"),
+        )
+        .expect("signed source");
+        let staged = session
+            .prepare(module, &[], LIMITS)
+            .expect("original signed module");
+        let (session, linked) = session.commit(staged);
+        linked.expect("module link");
+        let expression = session
+            .prepare(expression, input, LIMITS)
+            .expect("checked concrete owner expression");
+        expression
+            .signed_source_owner()
+            .expect("sealed source owner")
+            .rederive()
+            .expect("source-bound concrete submission")
+    }
+
+    #[test]
+    fn an_otherwise_kernel_valid_fresh_generic_type_call_cannot_dispatch_a_different_compiled_owner(
+    ) {
+        let mut submission = prepared(
+            b"module binder@1 [ signature identity forall<S:stack,A:value> [ S A -- S A ! pure ] export identity def identity [ identity ] ]",
+            b"binder@1.identity",
+            &[Ty::I64],
+        );
+        assert!(signed(&submission).is_ok());
+        let Some(Node::Invocation { inst, .. }) = submission.body.candidate.nodes.first_mut()
+        else {
+            panic!("missing root owner invocation");
+        };
+        *inst.bindings.get_mut(1).expect("rank-1 value binder") =
+            noble_kernel::words::Binding::Value(Ty::Bool);
+        submission.request.expected.stack_in = alloc::vec![Ty::Bool];
+        submission.request.expected.stack_out = alloc::vec![Ty::Bool];
+        assert!(
+            matches!(
+                noble_kernel::acceptance::check(
+                    &submission.environment,
+                    &submission.request,
+                    &submission.body.candidate,
+                ),
+                Outcome::Accepted(_)
+            ),
+            "the alternate rank-1 call itself is well typed"
+        );
+        assert!(
+            matches!(signed(&submission), Err(Diagnostic::Invalid)),
+            "a valid generic Bool call cannot invoke the I64 body"
+        );
+    }
+
+    #[test]
+    fn an_otherwise_kernel_valid_fresh_generic_effect_call_cannot_dispatch_a_different_compiled_owner(
+    ) {
+        let mut submission = prepared(
+            b"module binder@1 [ signature loop forall<S:stack,E:effect> [ S -- S ! E ] export loop def loop [ loop ] ]",
+            b"binder@1.loop",
+            &[],
+        );
+        assert!(signed(&submission).is_ok());
+        let original = submission
+            .definitions
+            .iter()
+            .find_map(|definition| definition.owner_inst.as_ref())
+            .and_then(|inst| inst.bindings.get(1))
+            .expect("source owner effect binder");
+        let alternative = match original {
+            noble_kernel::words::Binding::Effect(effect) if effect.as_slice().is_empty() => {
+                EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT])
+            }
+            noble_kernel::words::Binding::Effect(_) => EffSet::empty(),
+            _ => panic!("source owner's second binder is not an effect"),
+        };
+        let Some(Node::Invocation { inst, .. }) = submission.body.candidate.nodes.first_mut()
+        else {
+            panic!("missing root owner invocation");
+        };
+        *inst.bindings.get_mut(1).expect("rank-1 effect binder") =
+            noble_kernel::words::Binding::Effect(alternative.clone());
+        submission.request.expected.allowed_effects = alternative;
+        assert!(
+            matches!(
+                noble_kernel::acceptance::check(
+                    &submission.environment,
+                    &submission.request,
+                    &submission.body.candidate,
+                ),
+                Outcome::Accepted(_)
+            ),
+            "the alternate rank-1 effect call itself is well typed"
+        );
+        assert!(
+            matches!(signed(&submission), Err(Diagnostic::Invalid)),
+            "a valid generic alternate effect cannot invoke the owner's checked ceiling"
         );
     }
 }

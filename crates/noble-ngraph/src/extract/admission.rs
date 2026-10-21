@@ -382,6 +382,14 @@ fn recompute_closure(
                     u32::try_from(n).ok(),
                     "live-slot dispatch selects its target at run time; no static closure exists",
                 )),
+                noble_kernel::untrusted::Node::SignedSelf { .. } => {
+                    return Err(at(
+                        crate::diag::Code::Recursion,
+                        body.identity,
+                        u32::try_from(n).ok(),
+                        "signed self recursion has no finite numeric-graph closure",
+                    ))
+                }
                 noble_kernel::untrusted::Node::Invocation { def, .. } => {
                     if let Some(t) = target_of(*def) {
                         out.push(t);

@@ -62,19 +62,24 @@ fn checked_word_count(count: Option<usize>) -> Result<usize, crate::source::Erro
     Ok(count)
 }
 
-fn word_capacity(session: &super::super::ModuleSession) -> Result<usize, crate::source::Error> {
+fn word_capacity(
+    session: &super::super::ModuleSession,
+    permit_signed: bool,
+) -> Result<usize, crate::source::Error> {
     let mut count = Some(session.source.definitions.len());
     let mut alias_slot = 0usize;
     while alias_slot < session.aliases.len() && count.is_some() {
         let module_slot = session.aliases[alias_slot].module;
-        if module_slot < session.modules.len() {
+        if !session.aliases[alias_slot].pending && module_slot < session.modules.len() {
             count = add_export_count(count, &session.modules[module_slot]);
         }
         alias_slot += 1;
     }
     let mut module_slot = 0usize;
     while module_slot < session.modules.len() && count.is_some() {
-        count = add_export_count(count, &session.modules[module_slot]);
+        if permit_signed || !session.module_has_unverified_signed_owner(module_slot) {
+            count = add_export_count(count, &session.modules[module_slot]);
+        }
         module_slot += 1;
     }
     checked_word_count(count)
@@ -126,7 +131,7 @@ fn append_alias_exports(
     let mut outcome = Ok(words);
     while alias_slot < session.aliases.len() && outcome.is_ok() {
         let module_slot = session.aliases[alias_slot].module;
-        if module_slot < session.modules.len() {
+        if !session.aliases[alias_slot].pending && module_slot < session.modules.len() {
             outcome = match outcome {
                 Ok(words) => project_alias_module(
                     &session.aliases[alias_slot],
@@ -182,14 +187,17 @@ fn project_alias_export(
 fn append_versioned_exports(
     session: &super::super::ModuleSession,
     words: alloc::vec::Vec<OutsideWord>,
+    permit_signed: bool,
 ) -> Result<alloc::vec::Vec<OutsideWord>, crate::source::Error> {
     let mut module_slot = 0usize;
     let mut outcome = Ok(words);
     while module_slot < session.modules.len() && outcome.is_ok() {
-        outcome = match outcome {
-            Ok(words) => project_versioned_module(&session.modules[module_slot], words),
-            Err(problem) => Err(problem),
-        };
+        if permit_signed || !session.module_has_unverified_signed_owner(module_slot) {
+            outcome = match outcome {
+                Ok(words) => project_versioned_module(&session.modules[module_slot], words),
+                Err(problem) => Err(problem),
+            };
+        }
         module_slot += 1;
     }
     outcome
@@ -248,9 +256,32 @@ fn project_versioned_export(
 
 impl super::super::ModuleSession {
     pub(in crate::source::declared::state) fn outside_words(
-        mut self,
+        self,
     ) -> Result<Self, crate::source::Error> {
-        let word_slots_count = attempt!(word_capacity(&self));
+        self.build_outside_words(false)
+    }
+
+    /// Pending signed exports are visible only inside an unpublished
+    /// expression's derivation; its owner must pass original-source and
+    /// concrete kernel checks before a prepared expression can escape.
+    pub(in crate::source::declared::state) fn pending_signed_expression_words(
+        self,
+    ) -> Result<Self, crate::source::Error> {
+        self.build_outside_words(true)
+    }
+
+    fn build_outside_words(mut self, permit_signed: bool) -> Result<Self, crate::source::Error> {
+        attempt!(self.refresh_outside_words(permit_signed));
+        Ok(self)
+    }
+
+    /// Refresh an unpublished successor after replaying a checked outside
+    /// definition; no repeated whole-session clone is needed per dependent.
+    pub(in crate::source::declared::state) fn refresh_outside_words(
+        &mut self,
+        permit_signed: bool,
+    ) -> Result<(), crate::source::Error> {
+        let word_slots_count = attempt!(word_capacity(self, permit_signed));
         let mut words = alloc::vec::Vec::with_capacity(word_slots_count);
         let mut definition_slot = 0usize;
         while definition_slot < self.source.definitions.len() {
@@ -262,13 +293,27 @@ impl super::super::ModuleSession {
             }
             definition_slot += 1;
         }
-        words = attempt!(append_alias_exports(&self, words));
-        words = attempt!(append_versioned_exports(&self, words));
+        words = attempt!(append_alias_exports(self, words));
+        words = attempt!(append_versioned_exports(self, words, permit_signed));
+        let mut aliases = alloc::vec::Vec::with_capacity(self.aliases.len());
+        for alias in &self.aliases {
+            if alias.pending {
+                continue;
+            }
+            let module = self.modules.get(alias.module).ok_or_else(|| {
+                super::super::super::error(
+                    crate::source::Stage::Check,
+                    "checked alias has no immutable module owner",
+                )
+            })?;
+            aliases.push((alias.spelling.clone(), module.identity));
+        }
         if let Some(context) = &mut self.source.declared {
             context.owner = None;
             context.environment.caller_module = None;
             context.words = words;
+            context.aliases = aliases;
         }
-        Ok(self)
+        Ok(())
     }
 }

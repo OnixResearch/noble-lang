@@ -1462,10 +1462,10 @@ fn specialization_evidence(
                 ("slot", encoding::Json::Number(u64::from(def.0))),
                 ("inst", inst_evidence(inst)),
             ]),
-            Node::Quotation { .. } | Node::SlotInvoke { .. } => {
+            Node::Quotation { .. } | Node::SlotInvoke { .. } | Node::SignedSelf { .. } => {
                 return Err(output::Failure::error(
                     "named-report-graph",
-                    "quoted or live-slot step body is outside named rule".into(),
+                    "quoted, signed-self or live-slot step body is outside named rule".into(),
                 ))
             }
         };
@@ -1559,8 +1559,10 @@ fn execute(
         ));
     }
     let limits = noble_contracts::Limits::default();
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| source_error(&error))?;
+    let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+        .expect("legacy verify-module retained source budget");
+    let mut session = noble_contracts::source::ModuleSession::new(&[], retained)
+        .map_err(|error| source_error(&error))?;
     let target = std::path::PathBuf::from(path);
     for module in modules.iter().chain(core::iter::once(&target)) {
         let source = super::artifacts::read_bounded(module, super::SOURCE_LIMIT, "module-source")?;

@@ -1,7 +1,7 @@
 #[test]
 fn stack_variables_in_value_positions_are_rejected() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     for ty in [
         "Pair<S,I64>",
         "Pair<I64,S>",
@@ -46,8 +46,8 @@ fn stack_variables_in_value_positions_are_rejected() -> Result<(), String> {
 
 #[test]
 fn value_binders_and_nested_program_stack_lists_remain_polymorphic() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let session = super::commit(
         session,
         b"module kinded@1 [ signature identity forall<T:stack,A:value> [ T A -- T A ! pure ] export identity def identity [ ] signature keep forall<T:stack,S:stack> [ T Pair<Program<S,S,pure>,I64> -- T Pair<Program<S,S,pure>,I64> ! pure ] export keep def keep [ ] ]",

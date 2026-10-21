@@ -2,6 +2,13 @@
 function readText(engine, offset, count) {
     integer(offset, engine.memory.buffer.byteLength, 'text offset');
     integer(count, engine.memory.buffer.byteLength - offset, 'text length');
+    if (engine.workerObservation) {
+      // Charge before decoding. UTF-16 representation plus worst-case JSON
+      // escaping can amplify one observed byte by more than its raw length.
+      const charge = count * 12;
+      if (charge > 1048576 - engine.observationBytes) fail('typed observation byte limit exhausted');
+      engine.observationBytes += charge;
+    }
     return utf8.decode(new Uint8Array(engine.memory.buffer, offset, count));
   }
 
@@ -37,30 +44,49 @@ function recordSignatures(engine, runtime) {
 function readStack(engine, runtime) {
     const count = integer(runtime.stack_length(), 128, 'stack height');
     engine.observationWork = 0;
+    engine.observationBytes = 0;
+    if (engine.sourceEpoch) engine.beginSourceObservation();
     // Every slot also reports its live cell handle (null for immediate
     // values), so a consumer can project a Program or pass a companion cell to
     // a later push without re-deriving the handle from the value's shape.
-    return Array.from({ length: count }, (_, at) => {
+    const stack = Array.from({ length: count }, (_, at) => {
       const kind = runtime.stack_kind(at);
       const raw = runtime.stack_value(at);
-      return {
-        handle: kind < 4 ? null : Number(BigInt.asUintN(64, raw)),
-        ...readValue(engine, runtime, kind, raw, 0),
-      };
+      const handle = kind < 4 ? null : Number(BigInt.asUintN(64, raw));
+      const value = readValue(engine, runtime, kind, raw, 0);
+      if (handle !== null) engine.retainExternalCodeRoot(runtime, handle);
+      return { handle, ...(handle !== null && engine.sourceEpoch
+        ? { source_epoch: engine.sourceEpochGeneration,
+          source_store_id: engine.sourceStoreId } : {}), ...value };
     });
+    if (engine.sourceEpoch) engine.finishSourceObservation();
+    return stack;
   }
 
 function chargeObservation(engine, depth) {
+    if (engine.workerObservation) {
+      // Charge before constructing the next JS object/array entry; even a
+      // guest's enormous non-Text list must not be materialized first.
+      if (depth > 32 || ++engine.observationWork > 4096) fail('typed observation work limit exhausted');
+      if (256 > 1048576 - engine.observationBytes) fail('typed observation byte limit exhausted');
+      engine.observationBytes += 256;
+      return;
+    }
     if (depth > 512 || ++engine.observationWork > MAX_OBSERVATION_WORK) fail('observation limit exhausted');
   }
 
-function readBoxed(engine, runtime, handle, depth) {
+function readBoxed(engine, runtime, handle, depth, visible = true) {
     integer(handle, engine.abi.limits_maximum.session_cells, 'cell handle');
     if (handle === 0 || handle > engine.shared.heap_cursor.value) fail('invalid live cell handle');
     const kind = runtime.cell_kind(handle);
     // A boxed value also reports its own live handle, so a consumer can pass the
     // same cell to a later push without re-deriving the handle from its shape.
-    return { handle, ...readValue(engine, runtime, kind, kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth) };
+    const value = readValue(engine, runtime, kind,
+      kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth);
+    if (kind >= 4) engine.retainExternalCodeRoot(runtime, handle, visible);
+    return { handle, ...(kind >= 4 && engine.sourceEpoch
+      ? { source_epoch: engine.sourceEpochGeneration,
+        source_store_id: engine.sourceStoreId } : {}), ...value };
   }
 
 function readValue(engine, runtime, kind, value, depth) {
@@ -99,7 +125,7 @@ function readValue(engine, runtime, kind, value, depth) {
       const marker = runtime.cell_w(handle);
       if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
-      if (engine.profile !== 'Declared-Modules-v1' && engine.profile !== 'Calculator-v1')
+      if (!engine.declaredModules && engine.profile !== 'Calculator-v1')
         fail('nominal value is outside a declared module profile');
       if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
       if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
@@ -161,16 +187,24 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
       else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
       else if (atom === 2) {
-        const maximum = engine.profile === 'Calculator-v1' ? 31
+        const declaredText = engine.profile === 'Declared-Text-v1'
+          || engine.profile === 'Signed-Declared-Text-v1';
+        const cursor = declaredText || engine.profile === 'Text-Byte-Cursor-v1';
+        const calculator = engine.profile === 'Calculator-v1';
+        const maximum = calculator ? 31 : declaredText ? 27
           : engine.profile === 'Text-Byte-Cursor-v1' ? 26 : 25;
         const id = integer(Number(value), maximum, 'builtin identity');
-        if ((engine.profile === 'Calculator-v1' || engine.profile === 'Text-Byte-Cursor-v1')
-          && id >= 22 && id <= 25)
-          fail('reserved builtin in observable recipe');
-        result.push({ invoke: `${id < 22 || id >= 26 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        if ((calculator || engine.profile === 'Text-Byte-Cursor-v1')
+          && id >= 22 && id <= 25) fail('reserved builtin in observable recipe');
+        if (id === 26 && cursor) result.push({ invoke: 'builtin:text.byte' });
+        else if (id === 27 && declaredText) result.push({ invoke: 'builtin:<' });
+        else if (id < names.length) {
+          result.push({ invoke: `${id < 22 || calculator && id >= 26
+            ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        } else fail('builtin identity is outside selected profile');
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
-        const program = readBoxed(engine, runtime, child, depth + 1);
+        const program = readBoxed(engine, runtime, child, depth + 1, false);
         if (program.type !== 'Program') fail('quotation recipe has no program');
         result.push({ quotation: program.recipe, interface: program.interface, witnesses: program.witnesses });
       }
@@ -178,7 +212,7 @@ function readRecipe(engine, runtime, root, depth) {
         ...readBoxed(engine, runtime, child, depth + 1),
         schema: readSignature(engine, runtime, runtime.cell_y(handle)),
       } });
-      else if (atom >= 26 && atom <= 32 && engine.profile !== 'Declared-Modules-v1') {
+      else if (atom >= 26 && atom <= 32 && !engine.declaredModules) {
         fail('nominal or bound operation recipe is outside Core-Bootstrap');
       }
       else if (atom >= 26 && atom <= 30) result.push({ invoke: {

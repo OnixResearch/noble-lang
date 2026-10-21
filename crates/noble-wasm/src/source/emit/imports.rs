@@ -40,6 +40,10 @@ pub(super) fn write(
     if plan.has_bound_clock {
         attempt!(out.append(b"(import \"noble\" \"test_clock_bound\" (func $host_clock_bound (param i32) (result i32 i64)))\n"));
     }
+    if plan.has_bound_code_export {
+        attempt!(out.append(b"(import \"noble\" \"test_code_export_bound\" (func $host_code_export_bound (param i32) (result i32)))\n"));
+    }
+
     if plan.has_live_propose {
         attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
     }
@@ -62,10 +66,28 @@ pub(super) fn write(
         attempt!(global_import(out, b"live_frame", b"i32"));
         attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
     }
+    if plan.core_live {
+        attempt!(out.append(
+            b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
+(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
+(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n"
+        ));
+    }
     attempt!(out.append(
         b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
     ));
-    if plan.calculator {
+    arena_limits(out, plan.calculator)
+}
+
+/// Per-profile arena bounds read by the shared runtime fragments. The Core16
+/// bridge shares memory with ordinary Core-live guests, so both use the
+/// ordinary bounds; only the calculator profile selects the larger arena.
+fn arena_limits(
+    out: &mut crate::output::Buffer,
+    calculator: bool,
+) -> Result<(), crate::Diagnostic> {
+    if calculator {
         out.append(b"(global $cell_limit i32 (i32.const 72362))\n(global $allocation_ceiling i32 (i32.const 1376208))\n")
     } else {
         out.append(b"(global $cell_limit i32 (i32.const 4096))\n(global $allocation_ceiling i32 (i32.const 196608))\n")
@@ -119,6 +141,79 @@ fn global_import(
 fn fragment(out: &mut crate::output::Buffer, text: &str) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(text.as_bytes()));
     out.append(b"\n")
+}
+
+pub(super) fn bridge(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(
+        b"(module\n(type $entry (func (param i32)))\n\
+(import \"noble\" \"memory\" (memory 16 16))\n\
+(import \"noble\" \"table\" (table 16384 16384 funcref))\n",
+    ));
+    attempt!(globals(out));
+    attempt!(global_import(out, b"allocated_total", b"i64"));
+    attempt!(global_import(out, b"released_total", b"i64"));
+    attempt!(out.append(
+        b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
+(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
+(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n\
+(global $source_reflection i32 (i32.const 1))\n\
+(export \"memory\" (memory 0))\n",
+    ));
+    arena_limits(out, false)
+}
+
+fn core_runtime(out: &mut crate::output::Buffer, core_live: bool) -> Result<(), crate::Diagnostic> {
+    // Same order as the ordinary guest runtime: Core live is never calculator.
+    for text in [
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/runtime/accounting.wat"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/runtime/linear-address.wat"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/runtime/linear-storage.wat"
+        )),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat")),
+    ] {
+        attempt!(fragment(out, text));
+    }
+    if core_live {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/core-live-owners.wat"
+            ))
+        ));
+    }
+    for text in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat")),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/runtime/operations.wat"
+        )),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat")),
+    ] {
+        attempt!(fragment(out, text));
+    }
+    Ok(())
+}
+
+pub(super) fn bridge_runtime(
+    out: &mut crate::output::Buffer,
+    declared_modules: bool,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(core_runtime(out, true));
+    attempt!(super::reflection::write(out, declared_modules));
+    fragment(
+        out,
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat")),
+    )
 }
 
 #[expect(

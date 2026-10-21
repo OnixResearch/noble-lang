@@ -96,6 +96,13 @@ impl super::Arena {
         self.add_effect(Effect::Rigid(identity), span, meter)
     }
 
+    pub(crate) fn is_rigid_effect(&self, id: u32, identity: u32) -> bool {
+        usize::try_from(id)
+            .ok()
+            .and_then(|index| self.effects.get(index))
+            .is_some_and(|effect| matches!(effect, Effect::Rigid(index) if *index == identity))
+    }
+
     pub fn effect_empty(
         &mut self,
         span: crate::Span,
@@ -110,6 +117,25 @@ impl super::Arena {
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<u32, crate::Diagnostic> {
+        self.effect_constant_with_type_effects(effects, span, meter, false)
+    }
+
+    pub(crate) fn program_type_effect_constant(
+        &mut self,
+        effects: &noble_kernel::types::EffSet,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<u32, crate::Diagnostic> {
+        self.effect_constant_with_type_effects(effects, span, meter, true)
+    }
+
+    fn effect_constant_with_type_effects(
+        &mut self,
+        effects: &noble_kernel::types::EffSet,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+        program_type: bool,
+    ) -> Result<u32, crate::Diagnostic> {
         let mut bits = 0;
         let effects = effects.as_slice();
         let mut at = 0usize;
@@ -120,7 +146,18 @@ impl super::Arena {
                 break;
             }
             match effect_bit(effect) {
-                Some(bit) if bit & self.effect_universe != 0 => bits |= bit,
+                Some(bit)
+                    if bit
+                        & (self.effect_universe
+                            | if program_type {
+                                self.program_type_effects
+                            } else {
+                                0
+                            })
+                        != 0 =>
+                {
+                    bits |= bit
+                }
                 Some(_) | None => {
                     failure = Some(crate::Diagnostic::new(
                         crate::DiagnosticKind::Unsupported,
@@ -154,6 +191,29 @@ impl super::Arena {
         } else {
             self.add_effect(Effect::Union(left, right), span, meter)
         }
+    }
+
+    fn program_type_effect_union(
+        &mut self,
+        left: u32,
+        right: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<u32, crate::Diagnostic> {
+        if left == right {
+            return Ok(left);
+        }
+        let upper =
+            attempt!(self.effect_bound(left, span)) | attempt!(self.effect_bound(right, span));
+        let id = attempt!(self.add_effect(Effect::Union(left, right), span, meter));
+        match self
+            .effect_bounds
+            .get_mut(attempt!(crate::offset(id, span)))
+        {
+            Some(bound) => *bound = upper,
+            None => return Err(crate::internal(span)),
+        }
+        Ok(id)
     }
 
     #[expect(
@@ -196,11 +256,36 @@ impl super::Arena {
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<u32, crate::Diagnostic> {
+        self.effect_pattern_with_type_effects(slots, variables, span, meter, false)
+    }
+
+    pub(crate) fn program_type_effect_pattern(
+        &mut self,
+        slots: &[noble_kernel::shapes::EffectSlot],
+        variables: &[super::Variable],
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<u32, crate::Diagnostic> {
+        self.effect_pattern_with_type_effects(slots, variables, span, meter, true)
+    }
+
+    fn effect_pattern_with_type_effects(
+        &mut self,
+        slots: &[noble_kernel::shapes::EffectSlot],
+        variables: &[super::Variable],
+        span: crate::Span,
+        meter: &mut crate::Meter,
+        program_type: bool,
+    ) -> Result<u32, crate::Diagnostic> {
         let mut effect = attempt!(self.effect_empty(span, meter));
         let mut at = 0usize;
         let mut failure = None;
         while at < slots.len() {
-            let result = match self.effect_slot(slots.get(at), variables, span, meter) {
+            let result = match self.effect_slot(slots.get(at), variables, span, meter, program_type)
+            {
+                Ok(next) if program_type => {
+                    self.program_type_effect_union(effect, next, span, meter)
+                }
                 Ok(next) => self.effect_union(effect, next, span, meter),
                 Err(problem) => Err(problem),
             };
@@ -229,12 +314,24 @@ impl super::Arena {
         variables: &[super::Variable],
         span: crate::Span,
         meter: &mut crate::Meter,
+        program_type: bool,
     ) -> Result<u32, crate::Diagnostic> {
         attempt!(meter.charge(1, span));
         match slot {
             Some(noble_kernel::shapes::EffectSlot::Effect(id)) => {
                 let bit = match effect_bit(*id) {
-                    Some(bit) if bit & self.effect_universe != 0 => bit,
+                    Some(bit)
+                        if bit
+                            & (self.effect_universe
+                                | if program_type {
+                                    self.program_type_effects
+                                } else {
+                                    0
+                                })
+                            != 0 =>
+                    {
+                        bit
+                    }
                     Some(_) | None => {
                         return Err(crate::invalid(span, "unknown source host effect"))
                     }

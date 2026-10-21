@@ -67,7 +67,13 @@ fn compile_expression(
         Checked::Ready(inputs) => inputs,
         Checked::Reported(exit) => return Ok(exit),
     };
-    let compiled = match attempt!(accepted_wat(frontend, source, &inputs, options.limits)) {
+    let compiled = match attempt!(accepted_wat(
+        frontend,
+        source,
+        &inputs,
+        options.limits,
+        options.signed_self_recursion,
+    )) {
         Checked::Ready(compiled) => compiled,
         Checked::Reported(exit) => return Ok(exit),
     };
@@ -85,7 +91,11 @@ fn declared_input_types(
     let mut inputs = std::vec::Vec::with_capacity(options.inputs.len());
     let mut requested = options.inputs.iter();
     while let Some(input) = requested.next() {
-        match attempt!(declared_input_type(frontend, input)) {
+        match attempt!(declared_input_type(
+            frontend,
+            input,
+            options.signed_self_recursion
+        )) {
             Checked::Ready(ty) => inputs.push(ty),
             Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
         }
@@ -100,13 +110,19 @@ fn declared_input_types(
 fn declared_input_type(
     frontend: &noble_contracts::source::ModuleSession,
     input: &super::super::arguments::InputType,
+    signed: bool,
 ) -> Result<Checked<noble_kernel::types::Ty>, super::super::output::Failure> {
     match input {
         super::super::arguments::InputType::Concrete(ty) => Ok(Checked::Ready(ty.clone())),
         super::super::arguments::InputType::Nominal(name) => match frontend.resolve_type(name) {
             Ok(ty) => Ok(Checked::Ready(ty)),
             Err(error) => {
-                let report = super::super::output::Report::declared_source_error(&error, 0);
+                let report = super::super::output::Report::declared_source_error(
+                    &error,
+                    0,
+                    signed,
+                    frontend.declared_text(),
+                );
                 reported(report)
             }
         },
@@ -123,16 +139,45 @@ fn accepted_wat(
     source: &[u8],
     inputs: &[noble_kernel::types::Ty],
     limits: noble_contracts::Limits,
+    signed_profile: bool,
 ) -> Result<Checked<noble_wasm::source::Prepared>, super::super::output::Failure> {
     let prepared = match frontend.prepare(source, inputs, limits) {
         Ok(prepared) => prepared,
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 1);
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                1,
+                signed_profile,
+                frontend.declared_text(),
+            );
             return reported(report);
         }
     };
     let submission = attempt!(expression_candidate(&prepared));
-    compile_wat(submission)
+    let compiled = if frontend.declared_text() {
+        match prepared.declared_text_source_owner() {
+            Some(ref owner) => {
+                noble_wasm::source::Compiler::new_declared_text().prepare_declared_text(owner)
+            }
+            None => Err(noble_wasm::Diagnostic::Invalid),
+        }
+    } else {
+        let compiler = noble_wasm::source::Compiler::new();
+        let signed = prepared.signed_source_owner();
+        match signed {
+            Some(ref owner) => compiler.prepare_signed(owner),
+            None => compiler.prepare(submission),
+        }
+    };
+    match compiled {
+        Ok(compiled) => Ok(Checked::Ready(compiled)),
+        Err(error) => reported(super::super::output::Report::declared_backend_error(
+            error,
+            1,
+            signed_profile,
+            frontend.declared_text(),
+        )),
+    }
 }
 
 fn expression_candidate(
@@ -151,22 +196,8 @@ fn expression_candidate(
 
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; independent Wasm compiler preparation allocates a checked prospective module, and refusal allocates a structured runtime diagnostic."
+    reason = "Owner: noble-maintainers; emitting WAT writes to an owned output stream or creates a worker and its artifact directory."
 )]
-fn compile_wat(
-    submission: &noble_kernel::execution::Submission,
-) -> Result<Checked<noble_wasm::source::Prepared>, super::super::output::Failure> {
-    let compiler = noble_wasm::source::Compiler::new();
-    let compiled = match compiler.prepare(submission) {
-        Ok(compiled) => compiled,
-        Err(error) => {
-            let report = super::super::output::Report::declared_backend_error(error, 1);
-            return reported(report);
-        }
-    };
-    Ok(Checked::Ready(compiled))
-}
-
 fn emit_declared_wat(
     options: &super::super::arguments::Options,
     source: &[u8],
@@ -190,19 +221,24 @@ fn emit_declared_wat(
 fn declared_frontend(
     options: &super::super::arguments::Options,
 ) -> Result<noble_contracts::source::ModuleSession, super::super::output::Failure> {
-    let manifest =
-        attempt!(options
-            .manifest
-            .as_ref()
-            .ok_or_else(|| super::super::output::Failure::new(
-                super::super::output::ErrorContext {
-                    stage: "arguments",
-                    outcome: "invalid-input"
-                },
-                "Declared-Modules-v1 requires an explicit host binding manifest",
-            )));
-    noble_contracts::source::ModuleSession::new(&manifest.operations())
-        .map_err(super::super::output::Failure::source)
+    let bindings = options
+        .manifest
+        .as_ref()
+        .map(|manifest| manifest.operations())
+        .unwrap_or_default();
+    let retained = options.retained_source_limit();
+    (if options.declared_text() {
+        noble_contracts::source::ModuleSession::new_declared_text(
+            &bindings,
+            options.signed_self_recursion,
+            retained,
+        )
+    } else if options.signed_self_recursion {
+        noble_contracts::source::ModuleSession::new_signed_self(&bindings, retained)
+    } else {
+        noble_contracts::source::ModuleSession::new(&bindings, retained)
+    })
+    .map_err(super::super::output::Failure::source)
 }
 
 /// Link every explicit source module before the executable expression. A
@@ -217,7 +253,12 @@ fn preload_modules(
 ) -> Result<Checked<noble_contracts::source::ModuleSession>, super::super::output::Failure> {
     let mut modules = options.modules.iter();
     while let Some(module_path) = modules.next() {
-        frontend = match attempt!(preload_module(frontend, module_path, options.limits)) {
+        frontend = match attempt!(preload_module(
+            frontend,
+            module_path,
+            options.limits,
+            options.signed_self_recursion,
+        )) {
             Checked::Ready(next) => next,
             Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
         };
@@ -233,9 +274,10 @@ fn preload_module(
     frontend: noble_contracts::source::ModuleSession,
     module_path: &std::path::Path,
     limits: noble_contracts::Limits,
+    signed: bool,
 ) -> Result<Checked<noble_contracts::source::ModuleSession>, super::super::output::Failure> {
     let module = attempt!(super::super::framing::read_file(module_path, limits.bytes));
-    let prepared = match attempt!(checked_module(&frontend, &module, limits)) {
+    let prepared = match attempt!(checked_module(&frontend, &module, limits, signed)) {
         Checked::Ready(prepared) => prepared,
         Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
     };
@@ -255,7 +297,12 @@ fn preload_module(
     match outcome {
         Ok(()) => Ok(Checked::Ready(next)),
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 0);
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                0,
+                signed,
+                next.declared_text(),
+            );
             reported(report)
         }
     }
@@ -269,6 +316,7 @@ fn checked_module(
     frontend: &noble_contracts::source::ModuleSession,
     module: &[u8],
     limits: noble_contracts::Limits,
+    signed: bool,
 ) -> Result<Checked<noble_contracts::source::ModulePrepared>, super::super::output::Failure> {
     match frontend.prepare(module, &[], limits) {
         Ok(prepared) if prepared.submission().is_none() => Ok(Checked::Ready(prepared)),
@@ -280,7 +328,12 @@ fn checked_module(
             "--module requires a source declaration without an executable root",
         )),
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 0);
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                0,
+                signed,
+                frontend.declared_text(),
+            );
             reported(report)
         }
     }

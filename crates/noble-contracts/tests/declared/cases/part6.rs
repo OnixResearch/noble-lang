@@ -2,10 +2,10 @@
 fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result<(), String> {
     let plain = b"module arithmetic@1 [ export increment def increment [ 1 + ] ]";
     let decorated = b"module arithmetic@1 [ export increment def increment [ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] ]";
-    let mut bare =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
-    let mut logical =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut bare = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let mut logical = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     bare = super::super::commit(bare, plain)?;
     logical = super::super::commit(logical, decorated)?;
     let input = [noble_kernel::types::Ty::I64];
@@ -29,8 +29,8 @@ fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result
 
 #[test]
 fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     session = super::super::commit(session, b"module logic@1 [ export value def value [ 1 ] ]")?;
     let staged = session.prepare(
         b"module theorem@1 [ proof 1 poly-refl : [ (Eq I64 0 0) # ordinary comment\n ] [ (refl 0) ] ]",
@@ -93,8 +93,8 @@ fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Resul
 fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() -> Result<(), String>
 {
     let source = b"module generic@1 [ def identity [ ] contract 1 identity-law [ subject identity input [ x I64 ] output [ y I64 ] requires [ (le (in x) 4) ] ensures [ (eq (out y) (in x)) ] ] export identity-law ]";
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -133,8 +133,8 @@ fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() 
 #[test]
 fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -187,8 +187,8 @@ fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), St
           [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Eq (Pair (List I64) I64) z z))) ]
           [ (intro (x I64) (intro (z (Pair (List I64) I64)) (apply (apply (apply (apply (use base) x) (refl x)) I64) z))) ]
     ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -241,8 +241,8 @@ fn nested_inferred_results(depth: usize) -> String {
 
 #[test]
 fn nested_inferred_results_refuse_descriptor_expansion_before_admission() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|e| format!("{e:?}"))?;
     session = super::super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     for depth in [1, 2, 4, 8] {
         let accepted = session

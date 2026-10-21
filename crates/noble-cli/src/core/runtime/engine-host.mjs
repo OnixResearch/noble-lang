@@ -1,22 +1,38 @@
 // Host-owned ABI, immutable adapter dispatch and effect accounting.
-function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings, text_byte_cursor,
-  calculator) {
+function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings,
+    text_byte_cursor, calculator, signed_self_recursion) {
+    if (typeof declared_modules !== 'boolean') fail('invalid declared module selection');
+    const declaredText = text_byte_cursor && declared_modules;
     if (typeof text_byte_cursor !== 'boolean'
-      || text_byte_cursor && (declared_modules || engine.inProcessLive)) {
-      fail('text byte cursor requires an ordinary session or compile');
+      || text_byte_cursor && engine.inProcessLive) {
+      fail('text byte cursor requires a session or compile');
     }
     if (typeof calculator !== 'boolean'
       || calculator && (declared_modules || text_byte_cursor || engine.inProcessLive)) {
       fail('selected runtime profiles are disjoint');
     }
-    engine.profile = calculator ? 'Calculator-v1' : declared_modules ? 'Declared-Modules-v1'
+    if (declaredText
+        && (engine.inProcessLive
+        || !Array.isArray(bindings) || bindings.length !== 0)) {
+      fail('declared text requires pure modules without host bindings');
+    }
+    if (typeof signed_self_recursion !== 'boolean'
+      || signed_self_recursion && (!declared_modules || engine.inProcessLive)) {
+      fail('signed recursion requires the declared module host boundary');
+    }
+    engine.declaredModules = declared_modules;
+    engine.profile = calculator ? 'Calculator-v1'
+      : declaredText ? signed_self_recursion
+        ? 'Signed-Declared-Text-v1' : 'Declared-Text-v1'
+      : signed_self_recursion ? 'Signed-Self-Modules-v1'
+      : declared_modules ? 'Declared-Modules-v1'
       : text_byte_cursor ? 'Text-Byte-Cursor-v1' : 'Core-Bootstrap';
     if (declared_modules) {
       if (typeof declared_extension !== 'string') fail('missing declared module ABI extension');
       engine.declaredExtension = JSON.parse(declared_extension);
       if (engine.declaredExtension.schema !== 'noble-declared-module-abi/v1'
         || engine.declaredExtension.base_profile !== abi.profile
-        || engine.declaredExtension.profile !== engine.profile
+        || engine.declaredExtension.profile !== 'Declared-Modules-v1'
         || !Array.isArray(engine.declaredExtension.host_functions)
         || engine.declaredExtension.host_functions.length !== 2
         || engine.declaredExtension.host_functions[0].name !== 'test_emit_bound'
@@ -32,15 +48,14 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
     } else if (declared_extension !== null || !Array.isArray(bindings) || bindings.length !== 0) {
       fail(`declared host boundary is unavailable in ${engine.profile}`);
     }
-    if (engine.inProcessLive && (declared_modules
-      || !Array.isArray(abi.live_host_functions)
+    if (engine.inProcessLive && (!Array.isArray(abi.live_host_functions)
       || abi.live_host_functions.length !== 2
       || abi.live_host_functions.some((fn, index) => fn.name !== ['live_propose', 'live_generation'][index]
         || fn.params?.join(',') !== ['i64,i64,i32', ''][index]
         || fn.result !== ['i32', 'i64'][index]))) {
       fail('invalid live host ABI');
     }
-    engine.hostFunctions = calculator ? [] : declared_modules
+    engine.hostFunctions = calculator || declaredText ? [] : declared_modules
       ? [...abi.host_functions.filter(fn => fn.name !== 'test_emit'), ...engine.declaredExtension.host_functions]
       : engine.inProcessLive ? [...abi.host_functions, ...abi.live_host_functions] : abi.host_functions;
 
@@ -54,6 +69,7 @@ function initializeHostState(engine, bindings) {
     engine.boundRequestsTotal = 0;
     engine.boundTraceExhausted = 0;
     engine.boundTraceTerminal = null;
+
     if (!Array.isArray(bindings) || bindings.length > 64) fail('invalid module adapter bindings');
     engine.boundAdapters = new Map();
     for (const row of bindings) {
@@ -132,13 +148,17 @@ function installTestHosts(engine, declared_modules) {
           slot, decision: 'deny', reason: 'trace-exhausted' };
         return 1;
       }
-      const text = binding?.operation === 'test.emit' ? readText(engine, offset, count) : null;
+      const text = binding?.operation === 'test.emit'
+        && (!engine.declaredLive || binding.allowed && engine.declaredLiveState.activeSlots.has(slot))
+        ? readText(engine, offset, count) : null;
       const request = { effect: 'test.emit', module: binding?.module ?? null,
         version: binding?.version ?? null, adapter_identity: binding?.adapter ?? null,
-        slot, decision: binding?.allowed && binding.operation === 'test.emit' ? 'allow' : 'deny',
+        slot, decision: binding?.allowed && binding.operation === 'test.emit'
+          && (!engine.declaredLive || engine.declaredLiveState.activeSlots.has(slot)) ? 'allow' : 'deny',
         ...(!binding ? { reason: 'missing-mapping' }
           : binding.operation !== 'test.emit' ? { reason: 'unexpected-operation' }
-          : !binding.allowed ? { reason: 'policy-denied' } : {}), text };
+          : !binding.allowed || engine.declaredLive && !engine.declaredLiveState.activeSlots.has(slot)
+            ? { reason: 'policy-denied' } : {}), text };
       engine.boundRequests.push(request);
       engine.trace.push(`test.emit:${binding?.adapter ?? 'unbound'}:${request.decision}:${text}`);
       if (request.decision !== 'allow') return 1;
@@ -163,6 +183,10 @@ function installTestHosts(engine, declared_modules) {
       let reason = null;
       if (!binding) reason = 'missing-mapping';
       else if (binding.operation !== 'test.clock') reason = 'unexpected-operation';
+      else if (engine.declaredLive
+        && (!binding.allowed || !engine.declaredLiveState.activeSlots.has(slot))) {
+        reason = 'policy-denied';
+      }
       else {
         const index = Math.min(binding.scriptIndex, binding.dispatch.length - 1);
         step = binding.dispatch[index];

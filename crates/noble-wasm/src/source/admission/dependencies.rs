@@ -9,6 +9,7 @@
 )]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut done = alloc::vec![false; submission.definitions.len()];
@@ -16,7 +17,7 @@ pub(super) fn check(
     let mut failure = None;
     while remaining != 0 {
         let before = remaining;
-        match schedule_round(submission, &mut done, remaining, work) {
+        match schedule_round(submission, &mut done, remaining, signed, work) {
             Ok(count) => remaining = count,
             Err(problem) => {
                 failure = Some(problem);
@@ -42,12 +43,13 @@ fn schedule_round(
     submission: &noble_kernel::execution::Submission,
     done: &mut [bool],
     mut remaining: usize,
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<usize, crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < done.len() {
-        match schedule_definition(submission, index, done, work) {
+        match schedule_definition(submission, index, done, signed, work) {
             Ok(true) => {
                 done[index] = true;
                 remaining = remaining.saturating_sub(1);
@@ -70,13 +72,14 @@ fn schedule_definition(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     done: &[bool],
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<bool, crate::Diagnostic> {
     attempt!(work.charge(1));
     if done[index] {
         Ok(false)
     } else {
-        is_ready(submission, index, done, work)
+        is_ready(submission, index, done, signed, work)
     }
 }
 
@@ -88,6 +91,7 @@ fn is_ready(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     done: &[bool],
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<bool, crate::Diagnostic> {
     let definition = &submission.definitions[index];
@@ -103,7 +107,9 @@ fn is_ready(
         match inspect_node(
             submission,
             &definition.body.candidate.nodes[node],
+            definition.definition,
             done,
+            signed,
             &mut seen,
             work,
         ) {
@@ -133,7 +139,9 @@ fn is_ready(
 fn inspect_node(
     submission: &noble_kernel::execution::Submission,
     node: &noble_kernel::untrusted::Node,
+    owner: noble_kernel::contracts::Definition,
     done: &[bool],
+    signed: bool,
     seen: &mut alloc::vec::Vec<noble_kernel::contracts::Definition>,
     work: &mut super::super::Work,
 ) -> Result<bool, crate::Diagnostic> {
@@ -144,6 +152,24 @@ fn inspect_node(
     ));
     let def = match node {
         noble_kernel::untrusted::Node::Invocation { def, .. } => *def,
+        noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
+            return if signed
+                && *def == owner
+                && submission.environment.kind(owner)
+                    == Some(noble_kernel::contracts::Behavior::Named)
+                && submission
+                    .environment
+                    .definition_owners
+                    .get(usize::try_from(owner.0).map_err(|_| crate::Diagnostic::Invalid)?)
+                    .copied()
+                    .flatten()
+                    .is_some()
+            {
+                Ok(true)
+            } else {
+                Err(crate::Diagnostic::Invalid)
+            }
+        }
         noble_kernel::untrusted::Node::Literal { .. }
         | noble_kernel::untrusted::Node::Quotation { .. }
         | noble_kernel::untrusted::Node::SlotInvoke { .. } => return Ok(true),

@@ -17,6 +17,35 @@ static ABI: LazyLock<Result<Value, String>> = LazyLock::new(|| {
     serde_json::from_str(ABI_JSON).map_err(|error| format!("invalid core ABI: {error}"))
 });
 
+#[derive(Clone, Copy)]
+enum ImportProfile {
+    CoreLive,
+    DeclaredLive,
+    RuntimeBridge,
+}
+
+const BRIDGE_CORE_EXPORTS: &[(&str, &str)] = &[
+    ("core_empty", "(environment:i32)->"),
+    ("core_quote", "(environment:i32)->"),
+    ("core_compose", "(environment:i32)->"),
+    ("core_restore", "(environment:i32)->"),
+];
+
+const CORE_LIVE_EXPORTS: &[(&str, &str)] = &[
+    ("signature_count", "()->count:i32"),
+    ("code_owners", "(start:i32,length:i32)->owners:i32"),
+    ("retain_code_root", "(handle:i32)->status:i32"),
+    ("release_code_root", "(handle:i32)->status:i32"),
+    ("queued_proposal_roots", "()->count:i32"),
+    ("code_root_state", "(handle:i32)->roots:i32"),
+    ("save_stack_code_root", "(index:i32)->handle:i32"),
+    ("clear_code_observation", "()->status:i32"),
+    ("retain_adapter_lease", "()->status:i32"),
+    ("release_adapter_lease", "()->status:i32"),
+    ("release_module_roots", "()->status:i32"),
+    ("invalidate_code_span", "(start:i32,length:i32)->status:i32"),
+];
+
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum EncodeError {
     HostEffect(String),
@@ -115,7 +144,15 @@ fn check_export_signature(actual: &FuncType, descriptor: &str, name: &str) -> Re
     )?;
     let result = result.split(';').next().unwrap_or("");
     let result = result.rsplit_once(':').map_or(result, |(_, kind)| kind);
-    if !matches_inputs || !matches_params(actual.results(), std::iter::once(result))? {
+    if !matches_inputs
+        || !matches_params(
+            actual.results(),
+            result
+                .split(',')
+                .filter(|part| !part.is_empty())
+                .map(|part| part.rsplit_once(':').map_or(part, |(_, kind)| kind)),
+        )?
+    {
         return Err(format!("invalid ABI export signature: {name}"));
     }
     Ok(())
@@ -151,20 +188,28 @@ fn check_import(
     import: Import<'_>,
     manifest: &Value,
     types: &[FuncType],
-    live: bool,
+    profile: ImportProfile,
 ) -> Result<Option<u32>, EncodeError> {
     if let TypeRef::Func(index) | TypeRef::FuncExact(index) = import.ty {
-        let required = match (live, import.module, import.name) {
-            (true, "noble", "live_propose") => Some((
-                &[ValType::I64, ValType::I64, ValType::I32][..],
-                ValType::I32,
-            )),
-            (true, "noble", "live_generation") => Some((&[][..], ValType::I64)),
+        let required: Option<(&[ValType], &[ValType])> = match (profile, import.module, import.name)
+        {
+            (ImportProfile::CoreLive, "noble", "live_propose") => {
+                Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32]))
+            }
+            (ImportProfile::CoreLive, "noble", "live_generation") => Some((&[], &[ValType::I64])),
+            (ImportProfile::DeclaredLive, "noble", "test_emit_bound") => {
+                Some((&[ValType::I32, ValType::I32, ValType::I32], &[ValType::I32]))
+            }
+            (ImportProfile::DeclaredLive, "noble", "test_clock_bound") => {
+                Some((&[ValType::I32], &[ValType::I32, ValType::I64]))
+            }
+            (ImportProfile::DeclaredLive, "noble", "test_abort") => Some((&[], &[ValType::I32])),
             _ => None,
         };
-        let actual = types.get(index as usize);
-        if !required.is_some_and(|(params, result)| {
-            actual.is_some_and(|ty| ty.params() == params && ty.results() == [result])
+        if !required.is_some_and(|(params, results)| {
+            types
+                .get(index as usize)
+                .is_some_and(|ty| ty.params() == params && ty.results() == results)
         }) {
             return Err(EncodeError::HostEffect(format!(
                 "unsupported effect import: {}.{}",
@@ -211,6 +256,7 @@ fn check_export(
     manifest: &Value,
     functions: &[u32],
     types: &[FuncType],
+    profile: ImportProfile,
 ) -> Result<(), String> {
     if name == string(&manifest["memory"], "name")? {
         if kind != ExternalKind::Memory || index != 0 {
@@ -218,9 +264,30 @@ fn check_export(
         }
         return Ok(());
     }
+    if matches!(profile, ImportProfile::RuntimeBridge)
+        && (name == "submit" || name == "release_module_roots")
+    {
+        return Err(format!("guest-only export in runtime bridge: {name}"));
+    }
     let descriptor = manifest["exports"]
         .get(name)
         .and_then(Value::as_str)
+        .or_else(|| {
+            CORE_LIVE_EXPORTS
+                .iter()
+                .find(|(entry, _)| *entry == name)
+                .map(|(_, signature)| *signature)
+        })
+        .or_else(|| {
+            matches!(profile, ImportProfile::RuntimeBridge)
+                .then(|| {
+                    BRIDGE_CORE_EXPORTS
+                        .iter()
+                        .find(|(entry, _)| *entry == name)
+                        .map(|(_, signature)| *signature)
+                })
+                .flatten()
+        })
         .ok_or_else(|| format!("undeclared Wasm export: {name}"))?;
     if kind != ExternalKind::Func {
         return Err(format!("invalid ABI export kind: {name}"));
@@ -228,7 +295,7 @@ fn check_export(
     check_export_signature(func_type(functions, types, index)?, descriptor, name)
 }
 
-fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), EncodeError> {
+fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Result<(), EncodeError> {
     let features = WasmFeatures::WASM1
         .difference(WasmFeatures::FLOATS)
         .difference(WasmFeatures::GC_TYPES)
@@ -263,7 +330,7 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
                     if !imports.insert(import.name) {
                         return Err(format!("duplicate Wasm import: {}", import.name).into());
                     }
-                    if let Some(index) = check_import(import, manifest, &types, live)? {
+                    if let Some(index) = check_import(import, manifest, &types, profile)? {
                         functions.push(index);
                     }
                 }
@@ -293,11 +360,15 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
                         manifest,
                         &functions,
                         &types,
+                        profile,
                     )?;
                 }
             }
             Payload::StartSection { .. } => return Err("Wasm start function is forbidden".into()),
             Payload::DataSection(section) => {
+                if matches!(profile, ImportProfile::RuntimeBridge) && section.count() != 0 {
+                    return Err("runtime bridge must not contain data segments".into());
+                }
                 for data in section {
                     if matches!(
                         data.map_err(|error| format!("invalid Wasm data segment: {error}"))?
@@ -309,6 +380,9 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
                 }
             }
             Payload::ElementSection(section) => {
+                if matches!(profile, ImportProfile::RuntimeBridge) && section.count() != 0 {
+                    return Err("runtime bridge must not contain element segments".into());
+                }
                 for element in section {
                     if matches!(
                         element
@@ -347,9 +421,25 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
     let functions = manifest["exports"]
         .as_object()
         .ok_or("missing core ABI exports")?;
-    for name in functions.keys() {
+    for name in functions.keys().filter(|name| {
+        !matches!(profile, ImportProfile::RuntimeBridge) || name.as_str() != "submit"
+    }) {
         if !exports.contains(name.as_str()) {
             return Err(format!("missing core function export: {name}").into());
+        }
+    }
+    for (name, _) in CORE_LIVE_EXPORTS.iter().filter(|(name, _)| {
+        !matches!(profile, ImportProfile::RuntimeBridge) || *name != "release_module_roots"
+    }) {
+        if !exports.contains(name) {
+            return Err(format!("missing live code owner export: {name}").into());
+        }
+    }
+    if matches!(profile, ImportProfile::RuntimeBridge) {
+        for (name, _) in BRIDGE_CORE_EXPORTS {
+            if !exports.contains(name) {
+                return Err(format!("missing core bridge entry: {name}").into());
+            }
         }
     }
     Ok(())
@@ -357,7 +447,7 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
 
 /// Only UTF-8 WAT, never a binary passed through `wat::parse_bytes`, may be
 /// encoded. Every byte and ABI check completes before any engine installation.
-fn encode(wat: &[u8], live: bool) -> Result<Vec<u8>, EncodeError> {
+fn encode(wat: &[u8], profile: ImportProfile) -> Result<Vec<u8>, EncodeError> {
     if wat.len() > MAX_BYTES {
         return Err("WAT exceeds 4 MiB".into());
     }
@@ -369,31 +459,140 @@ fn encode(wat: &[u8], live: bool) -> Result<Vec<u8>, EncodeError> {
     if !bytes.starts_with(b"\0asm\x01\0\0\0") {
         return Err("expected standard core Wasm v1 header".into());
     }
-    check_binary(&bytes, abi()?, live)?;
+    check_binary(&bytes, abi()?, profile)?;
     Ok(bytes)
-}
-
-/// Ordinary sessions have no live host imports, even when the WAT names them.
-pub(super) fn encode_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
-    encode(wat, false)
 }
 
 /// Live source is independently checked by the frontend before this encoding;
 /// only its two explicitly typed observation/proposal imports are admitted.
 pub(super) fn encode_live_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
-    encode(wat, true)
+    encode(wat, ImportProfile::CoreLive)
+}
+
+/// The declared live source boundary permits only bound adapter effects and
+/// typed abort. Core-live self-edit imports and ambient effects stay unavailable.
+pub(super) fn encode_declared_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::DeclaredLive)
+}
+
+/// The compiler's source-free helper has only the shared Core16 arena
+/// imports; its four exported functions replace the first guest's core slots.
+pub(super) fn encode_runtime_bridge_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::RuntimeBridge)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::encode_checked;
+    use super::{encode_live_checked, EncodeError, ImportProfile};
+    use wasmparser::{FuncType, Import, TypeRef, ValType};
+
+    fn effect(
+        module: &str,
+        name: &str,
+        params: &[ValType],
+        results: &[ValType],
+        profile: ImportProfile,
+    ) -> Result<Option<u32>, EncodeError> {
+        let types = [FuncType::new(
+            params.iter().copied(),
+            results.iter().copied(),
+        )];
+        super::check_import(
+            Import {
+                module,
+                name,
+                ty: TypeRef::Func(0),
+            },
+            super::abi().unwrap(),
+            &types,
+            profile,
+        )
+    }
+
+    #[test]
+    fn declared_imports_require_exact_bound_signatures_and_profile() {
+        for (name, params, results) in [
+            (
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "test_clock_bound",
+                &[ValType::I32][..],
+                &[ValType::I32, ValType::I64][..],
+            ),
+            ("test_abort", &[][..], &[ValType::I32][..]),
+        ] {
+            assert_eq!(
+                effect("noble", name, params, results, ImportProfile::DeclaredLive),
+                Ok(Some(0))
+            );
+            assert!(matches!(
+                effect("noble", name, params, results, ImportProfile::CoreLive),
+                Err(EncodeError::HostEffect(_))
+            ));
+        }
+        for (module, name, params, results) in [
+            (
+                "noble",
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "noble",
+                "test_clock_bound",
+                &[ValType::I32][..],
+                &[ValType::I64, ValType::I32][..],
+            ),
+            ("noble", "test_abort", &[][..], &[][..]),
+            (
+                "foreign",
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "noble",
+                "test_emit",
+                &[ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            ("noble", "live_generation", &[][..], &[ValType::I64][..]),
+            (
+                "noble",
+                "live_propose",
+                &[ValType::I64, ValType::I64, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+        ] {
+            assert!(
+                matches!(
+                    effect(module, name, params, results, ImportProfile::DeclaredLive),
+                    Err(EncodeError::HostEffect(_))
+                ),
+                "{module}.{name}"
+            );
+        }
+        assert_eq!(
+            effect(
+                "noble",
+                "live_generation",
+                &[],
+                &[ValType::I64],
+                ImportProfile::CoreLive,
+            ),
+            Ok(Some(0))
+        );
+    }
 
     #[test]
     fn rejects_non_text_and_unsupported_features() {
-        assert!(encode_checked(b"\0asm\x01\0\0\0").is_err());
-        assert!(encode_checked(b"\xff\xfe").is_err());
+        assert!(encode_live_checked(b"\0asm\x01\0\0\0").is_err());
+        assert!(encode_live_checked(b"\xff\xfe").is_err());
         assert!(
-            encode_checked(b"(module (func (drop (v128.const i32x4 0 0 0 0))))")
+            encode_live_checked(b"(module (func (drop (v128.const i32x4 0 0 0 0))))")
                 .unwrap_err()
                 .as_str()
                 .contains("unsupported or invalid core Wasm")
@@ -406,7 +605,7 @@ mod tests {
             &b"(module (import \"noble\" \"test_emit\" (func (param i32 i32) (result i32))))"[..],
             &b"(module (import \"foreign\" \"effect\" (func)))"[..],
         ] {
-            let problem = encode_checked(wat).unwrap_err();
+            let problem = encode_live_checked(wat).unwrap_err();
             assert!(
                 matches!(&problem, super::EncodeError::HostEffect(_)),
                 "{problem}"
@@ -416,14 +615,14 @@ mod tests {
 
     #[test]
     fn rejects_instantiation_mutations_before_abi_completion() {
-        let start = encode_checked(b"(module (func) (start 0))").unwrap_err();
+        let start = encode_live_checked(b"(module (func) (start 0))").unwrap_err();
         assert!(start.as_str().contains("start function"), "{start}");
-        let data = encode_checked(
+        let data = encode_live_checked(
             b"(module (import \"noble\" \"memory\" (memory 16 16)) (data (i32.const 0) \"x\"))",
         )
         .unwrap_err();
         assert!(data.as_str().contains("active Wasm data"), "{data}");
-        let element = encode_checked(
+        let element = encode_live_checked(
             b"(module (import \"noble\" \"table\" (table 16384 16384 funcref)) (func) (elem (i32.const 0) func 0))",
         )
         .unwrap_err();

@@ -44,6 +44,11 @@ pub(super) fn visit(
                 meter
             ));
         }
+        crate::source::Kind::Call(crate::source::Target::SelfOwner) => {
+            attempt!(super::operations::signed_self(
+                node.span, &mut frame, state, scope, meter
+            ));
+        }
         crate::source::Kind::Call(crate::source::Target::SlotInvoke(ordinal)) => {
             if !matches!(frame.origin, super::Origin::Root) {
                 return Err(crate::invalid(
@@ -155,9 +160,9 @@ fn named(
     let span = call.span;
     let input = frame.stack;
     let effect = attempt!(state.arena.effect_empty(span, meter));
-    let signature = match definition.signature.as_ref() {
+    let (signature, owner_variables) = match definition.signature.as_ref() {
         Some(scheme) => {
-            let (output, effects) = attempt!(super::apply_signature(
+            let (output, effects, variables) = attempt!(super::apply_signature(
                 &mut state.arena,
                 scheme,
                 input,
@@ -165,9 +170,9 @@ fn named(
                 span,
                 meter,
             ));
-            Some((output, effects, false))
+            (Some((output, effects, false)), Some(variables))
         }
-        None => None,
+        None => (None, None),
     };
     attempt!(meter.node(span));
     let body = state.bodies.len();
@@ -179,6 +184,8 @@ fn named(
         effect,
         identity: Some(definition.identity),
         owner: definition.owner,
+        owner_slot: Some(call.id),
+        owner_variables,
         span,
     });
     Ok(super::Frame {

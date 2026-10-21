@@ -6,8 +6,8 @@ fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<
     [ (intro (A Type0) (intro (x A) (refl x))) ]
 ]
 ";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(logic, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -70,8 +70,8 @@ fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<
 
 #[test]
 fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     session = super::super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
     let invalid = b"module bad@1 [ proof 1 unsound : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl missing)) ] ]";
@@ -194,8 +194,8 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
         bytes: short_bytes,
         ..super::super::LIMITS
     };
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     session = super::super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
     let prepared = session

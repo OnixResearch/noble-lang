@@ -31,7 +31,8 @@ async function protocol(config) {
       request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
       session_state: 'terminated-after-internal-failure' }
     : ({ schema: 'noble-core-report/v1',
-    profile: config.calculator === true ? 'Calculator-v1' : 'Core-Bootstrap',
+    profile: config.calculator === true ? 'Calculator-v1'
+      : engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
     backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
     diagnostic: `${error.name}: ${error.message}`,
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
@@ -53,6 +54,7 @@ async function protocol(config) {
     return true;
   };
   try {
+
     engine = config.slot_mode === true
       ? new SlotEngine(JSON.parse(config.selection), JSON.parse(config.abi), config)
       : new CoreEngine(JSON.parse(config.selection), JSON.parse(config.abi), config);
@@ -65,11 +67,16 @@ async function protocol(config) {
         if (command === null) {
           const newline = pending.indexOf(10);
           if (newline < 0) {
-            if (pending.length > 128) fail('engine header limit exceeded');
+            if (pending.length > 256) fail('engine header limit exceeded');
             break;
           }
+          if (newline > 256) fail('engine header limit exceeded');
           const header = utf8.decode(pending.subarray(0, newline));
           pending = pending.subarray(newline + 1);
+          if (engine.stagedDeclared && header !== 'publish-live-declared'
+            && header !== 'discard-live-declared') {
+            fail('staged declared live state requires publish or discard');
+          }
           if (header === 'shutdown') {
             emit('closed', { outcome: 'closed' }, true);
             return;
@@ -105,6 +112,14 @@ async function protocol(config) {
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
           }
+          if (header === 'publish-live-declared' || header === 'discard-live-declared') {
+            try {
+              const report = header === 'publish-live-declared'
+                ? engine.publishLiveDeclared() : engine.discardLiveDeclared();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'publish-bin' || header === 'discard-bin') {
             try {
               const report = header === 'publish-bin' ? engine.publishBinary() : engine.discardBinary();
@@ -112,11 +127,61 @@ async function protocol(config) {
             } catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           }
+          const declaredState = /^stage-live-declared ([0-9]+)$/.exec(header);
+          if (declaredState) {
+            if (!engine.declaredLive) fail('declared live state requires a declared live worker');
+            command = { kind: 'stage-live-declared',
+              bytes: integer(Number(declaredState[1]), 65536, 'declared live state frame') };
+            if (command.bytes === 0) fail('empty declared live state');
+            continue;
+          }
+          const revocation = /^revoke-live-effect ([0-9]+)$/.exec(header);
+          if (revocation) {
+            if (!engine.declaredLive) fail('host revocation requires a declared live worker');
+            command = { kind: 'revoke-live-effect',
+              bytes: integer(Number(revocation[1]), 1024, 'host revocation frame') };
+            if (command.bytes === 0) fail('empty host revocation selection');
+            continue;
+          }
+          if (header === 'discard-prepared-live') {
+            try {
+              const report = engine.discardPreparedLive();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'take-live-proposal') {
             try {
               const report = engine.takeLiveProposal();
               emit(report.outcome, report);
             } catch (error) { emit('internal-failure', reportError(error), true); return; }
+            continue;
+          }
+          if (header === 'release-superseded-live-module-roots') {
+            try {
+              const report = engine.sweepSupersededLiveModules();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          if (header === 'release-observed-roots') {
+            try {
+              const report = engine.releaseObservedRoots();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          const liveCode = /^(register-live-code|inspect-live-code|retire-live-code) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+          if (liveCode) {
+            try {
+              const span = { start: Number(liveCode[2]), length: Number(liveCode[3]),
+                generation: Number(liveCode[4]) };
+              const report = liveCode[1] === 'register-live-code'
+                ? engine.registerLiveCode(span)
+                : liveCode[1] === 'inspect-live-code'
+                  ? engine.inspectLiveCode(span) : engine.retireLiveCode(span);
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
           }
           const grant = /^live-grant ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
@@ -132,11 +197,36 @@ async function protocol(config) {
             const report = header === 'park' ? engine.park() : engine.restore();
             emit(report.outcome, report);
             continue;
+          } else if (/^retire-source-epoch [0-9]+ [0-9]+$/.test(header)) {
+            const [, generation, codeEnd] = /^retire-source-epoch ([0-9]+) ([0-9]+)$/.exec(header);
+            const report = engine.retireSourceEpoch(
+              integer(Number(generation), 4294967295, 'source generation'),
+              integer(Number(codeEnd), 16384, 'source code end'));
+            emit(report.outcome, report);
+            continue;
+          } else if (/^release-source-observation [0-9]+ [a-f0-9-]{36}$/.test(header)) {
+            const [, id, store] = /^release-source-observation ([0-9]+) ([a-f0-9-]{36})$/.exec(header);
+            const report = engine.releaseSourceObservation(store,
+              integer(Number(id), Number.MAX_SAFE_INTEGER, 'source observation'));
+            emit(report.outcome, report);
+            continue;
           } else if (header === 'execute') {
             command = { kind: 'execute', inputs: 0 };
+          } else if (/^execute-steps [0-9]+$/.test(header)) {
+            const steps = Number(header.slice('execute-steps '.length));
+            command = { kind: 'execute', inputs: 0,
+              steps: integer(steps, 100000, 'guest execution steps') };
+            if (command.steps === 0) fail('guest execution steps must be positive');
           } else if (/^execute [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute '.length));
             command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
+          } else if (/^execute-scalar [0-9]+$/.test(header)) {
+            const count = Number(header.slice('execute-scalar '.length));
+            command = { kind: 'execute-scalar', inputs: integer(count, 256, 'scalar input frame') };
+          } else if (/^execute-typed [0-9]+$/.test(header)) {
+            const count = Number(header.slice('execute-typed '.length));
+            command = { kind: 'execute-typed',
+              inputs: integer(Number(count), 131072, 'typed worker input frame') };
           } else if (/^observe [0-9]+$/.test(header)) {
             try { emit('observed', engine.observe(Number(header.slice('observe '.length)))); }
             catch (error) { emit('internal-failure', reportError(error), true); return; }
@@ -144,8 +234,12 @@ async function protocol(config) {
           } else if (/^push [0-9]+$/.test(header)) {
             const count = Number(header.slice('push '.length));
             command = { kind: 'push', inputs: integer(count, MAX_FRAME, 'injection frame') };
-          } else if (/^project [0-9]+$/.test(header)) {
-            try { emit('projected', engine.project(Number(header.slice('project '.length)))); }
+          } else if (/^project [0-9]+(?: [0-9]+ [a-f0-9-]{36})?$/.test(header)) {
+            const [, handle, epoch, store] =
+              /^project ([0-9]+)(?: ([0-9]+) ([a-f0-9-]{36}))?$/.exec(header);
+            try { emit('projected', engine.project(Number(handle),
+              epoch === undefined ? undefined : integer(Number(epoch), Number.MAX_SAFE_INTEGER, 'source epoch'),
+              store)); }
             catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           } else {
@@ -158,16 +252,46 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+))?$/.exec(header);
-              if (!match) fail('invalid engine command');
-              if (match[5] !== undefined && match[1] !== 'compile') fail('invalid engine command');
-              command = { kind: match[1],
-                bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
-                source: integer(Number(match[3]), 65536, 'source frame'),
-                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission'),
-                generation: match[5] === undefined ? null
-                  : integer(Number(match[5]), 0x7fffffff, 'submit generation') };
-              if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
+              const live = /^(compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9a-f]{64}) ([0-9a-f]{64})$/.exec(header);
+              if (live) {
+                command = { kind: live[1],
+                  bytes: integer(Number(live[2]), MAX_FRAME, 'module frame'),
+                  bridge: integer(Number(live[3]), MAX_FRAME, 'Core bridge frame'),
+                  signatures: integer(Number(live[4]), MAX_FRAME, 'signature frame'),
+                  source: integer(Number(live[5]), 65536, 'source frame'),
+                  submission: integer(Number(live[6]), Number.MAX_SAFE_INTEGER, 'submission'),
+                  span: { start: integer(Number(live[7]), 16384, 'code span start'),
+                    length: integer(Number(live[8]), 16384, 'code span length'),
+                    generation: integer(Number(live[9]), 0xffffffff, 'code span generation') },
+                  watSha256: live[10], bridgeWatSha256: live[11] };
+                if (command.bytes < 8 || command.bridge < 8 || command.signatures < 4
+                  || command.bytes + command.bridge + command.signatures + command.source
+                    > 2 * MAX_FRAME + 65536) fail('invalid bounded live module frame');
+              } else {
+                const match = /^(compile|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+)(?: ([0-9]+))?)?$/.exec(header);
+                if (!match) fail('invalid engine command');
+                if (match[1] === 'compile-typed') {
+                  if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
+                  command = { kind: match[1],
+                    bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
+                    source: integer(Number(match[3]), 65536, 'source frame'),
+                    submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission'),
+                    literalEnd: integer(Number(match[5]), 983040, 'worker literal end'),
+                    catalog: integer(Number(match[6]), 65536, 'worker schema frame') };
+                } else {
+                  if (match[5] !== undefined && (match[1] !== 'compile' || match[6] !== undefined))
+                    fail('invalid engine command');
+                  command = { kind: match[1],
+                    bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
+                    source: integer(Number(match[3]), 65536, 'source frame'),
+                    submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission'),
+                    generation: match[5] === undefined ? null
+                      : integer(Number(match[5]), 0x7fffffff, 'submit generation') };
+                  if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
+                  if (command.kind !== 'compile' && command.generation !== null)
+                    fail('unexpected submit generation');
+                }
+              }
             }
           }
         }
@@ -184,6 +308,28 @@ async function protocol(config) {
           } catch (error) { emit('internal-failure', reportError(error), true); return; }
           continue;
         }
+        if (command.kind === 'stage-live-declared') {
+          if (pending.length < command.bytes) break;
+          const bytes = pending.subarray(0, command.bytes);
+          pending = pending.subarray(command.bytes);
+          command = null;
+          try {
+            const report = engine.stageLiveDeclared(parseDeclaredLiveState(bytes));
+            emit(report.outcome, report);
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
+        }
+        if (command.kind === 'revoke-live-effect') {
+          if (pending.length < command.bytes) break;
+          const bytes = pending.subarray(0, command.bytes);
+          pending = pending.subarray(command.bytes);
+          command = null;
+          try {
+            const report = engine.revokeLiveEffect(parseDeclaredLiveState(bytes));
+            emit(report.outcome, report);
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
+        }
         if (command.kind === 'live-grant') {
           if (pending.length < command.bytes) break;
           const name = utf8.decode(pending.subarray(0, command.bytes));
@@ -193,15 +339,32 @@ async function protocol(config) {
           emit(report.outcome, report);
           continue;
         }
-        if (command.kind === 'execute') {
+        if (command.kind === 'execute' || command.kind === 'execute-scalar'
+          || command.kind === 'execute-typed') {
+          const scalar = command.kind === 'execute-scalar';
+          const typed = command.kind === 'execute-typed';
           if (pending.length < command.inputs) break;
+          const steps = command.steps;
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
           command = null;
           let terminal = false;
+          let report;
           try {
             const inputs = bytes.length ? JSON.parse(utf8.decode(bytes)) : [];
-            const report = engine.execute({ inputs });
+            if (scalar && (!Array.isArray(inputs) || inputs.length !== 2
+              || inputs.some(input => input?.type !== 'I64'
+                || typeof input.value !== 'string'
+                || !/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(input.value)
+                || BigInt.asIntN(64, BigInt(input.value)) !== BigInt(input.value)))) {
+              fail('invalid scalar worker inputs');
+            }
+            report = engine.execute(typed
+              ? { typedValues: inputs,
+                limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } }
+              : { inputs,
+                ...((scalar || steps) ? { limits: { steps: scalar
+                  ? Math.min(4096, engine.abi.limits_maximum.steps) : steps } } : {}) });
             terminal = engine.poisoned && !engine.calculatorRestorable();
             emit(report.outcome, report, terminal);
           } catch (error) { if (failed(error)) return; }
@@ -239,15 +402,29 @@ async function protocol(config) {
           } catch (error) { emit('internal-failure', reportError(error), true); return; }
           continue;
         }
-        if (pending.length < command.bytes + command.source) break;
+        if (pending.length < command.bytes + (command.bridge ?? 0)
+          + (command.signatures ?? 0) + command.source + (command.catalog ?? 0)) break;
         const bytes = pending.subarray(0, command.bytes);
-        const source = pending.subarray(command.bytes, command.bytes + command.source);
-        pending = pending.subarray(command.bytes + command.source);
+        const bridgeEnd = command.bytes + (command.bridge ?? 0);
+        const signaturesEnd = bridgeEnd + (command.signatures ?? 0);
+        const source = pending.subarray(signaturesEnd, signaturesEnd + command.source);
+        const policy = command.kind === 'compile-typed'
+          ? pending.subarray(signaturesEnd + command.source,
+            signaturesEnd + command.source + command.catalog) : null;
+        const bridge = command.bridge ? pending.subarray(command.bytes, bridgeEnd) : null;
+        const signatures = command.signatures ? pending.subarray(bridgeEnd, signaturesEnd) : null;
+        pending = pending.subarray(signaturesEnd + command.source + (command.catalog ?? 0));
         try {
-          const report = command.kind === 'compile'
-            ? engine.prepare(bytes, source, command.submission, command.generation)
-            : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
-              : engine.stageBinary(bytes, source, command.submission);
+          const report = command.kind === 'compile' || command.kind === 'compile-typed'
+            ? engine.prepare(bytes, source, command.submission,
+              command.kind === 'compile' ? command.generation : null,
+              command.kind === 'compile-typed' ? command.literalEnd : null,
+              policy === null ? null : JSON.parse(utf8.decode(policy)))
+            : command.kind === 'compile-bin'
+              ? engine.compileBinary(bytes, source, command.submission,
+                bridge, signatures, command.span, command.watSha256, command.bridgeWatSha256)
+              : engine.stageBinary(bytes, source, command.submission,
+                bridge, signatures, command.span, command.watSha256, command.bridgeWatSha256);
           emit(report.outcome, report);
         }
         catch (error) { if (failed(error)) return; }

@@ -112,6 +112,7 @@ pub(super) fn complete_frame(
                 Some(crate::untrusted::Node::Quotation { inst, .. }) => inst.clone(),
                 Some(crate::untrusted::Node::Literal { .. })
                 | Some(crate::untrusted::Node::Invocation { .. })
+                | Some(crate::untrusted::Node::SignedSelf { .. })
                 | Some(crate::untrusted::Node::SlotInvoke { .. })
                 | None => return Err(super::Fail::Internal),
             };

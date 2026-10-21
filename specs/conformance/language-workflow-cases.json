@@ -208,6 +208,58 @@
           "No MC2 owner-frozen law, actual Noble finite oracle measurement, strict proof, candidate execution, universal theorem, release authorization, backend or host refinement is claimed. Historical DX-10 is separate."
         ]
       }]
+    },
+    {
+      "id": "DX-14", "profile": "Declared-Modules-v1", "kind": "admission",
+      "requirements": ["DX-MODULE-05", "DX-MODULE-01", "DX-MODULE-02", "K-CHECK-07", "H-REPL-02"],
+      "input": {
+        "harness": "real-declared-module-and-outside-definition-source-admission-with-versioned-alias-replay",
+        "source_construction": {"module_template": "module pad@1 [ export one def one [ 1 ] ]", "outside_definition_template": "def kept [ 1 ]", "padding": "Insert ASCII space bytes just before the final closing bracket of each template until its exact original UTF-8 byte length equals the variant's module_bytes or outside_definition_bytes; preserve the template's tokens and compare raw bytes, not characters, parsed nodes, normalized text or hashes.", "isolation": "Run each boundary in a fresh declared session and each refusal/recovery pair in the same session."},
+        "accounting": "sum(len(each retained original whole-module source)) + len(all committed outside-definition history), where each outside definition contributes a four-byte length header plus its exact original source length",
+        "variants": [
+          {"case": "implicit-default-exact", "source_bytes": 65536, "module_bytes": 32768, "outside_definition_bytes": [32764], "retained_bytes": 65536, "outcome": "accept"},
+          {"case": "implicit-default-one-over", "source_bytes": 65536, "module_bytes": 32768, "outside_definition_bytes": [32765], "retained_bytes": 65537, "outcome": "exhausted-no-publication"},
+          {"case": "explicit-maximum-exact", "source_bytes": 65536, "retained_source_bytes": 262144, "module_bytes": 65536, "outside_definition_bytes": [65532, 65532, 65532], "retained_bytes": 262144, "outcome": "accept"},
+          {"case": "explicit-maximum-one-over", "source_bytes": 65536, "retained_source_bytes": 262144, "module_bytes": 65536, "outside_definition_bytes": [65532, 65532, 65533], "retained_bytes": 262145, "outcome": "exhausted-no-publication"},
+          {"case": "single-input-over-legacy-ceiling", "source_bytes": 65536, "retained_source_bytes": 262144, "module_bytes": 65537, "framed_follow_on": "same-session-valid-frame-runs-with-unchanged-prior-namespace-and-monotonic-submission", "outcome": "per-input-exhausted-no-publication"},
+          {"case": "framed-count-beyond-safe-drain", "frame_count": 4294967295, "safe_drain_ceiling": 262144, "outcome": "terminal-parse-exhausted-no-candidate"},
+          {"case": "framed-truncated-bounded-source", "frame_count": 65537, "body_bytes": 5, "outcome": "terminal-io-failure-no-candidate"},
+          {"case": "reduced-input-default-exact", "source_bytes": 1024, "module_bytes": 512, "outside_definition_bytes": [508], "retained_bytes": 1024, "outcome": "accept"},
+          {"case": "reduced-input-default-one-over", "source_bytes": 1024, "module_bytes": 512, "outside_definition_bytes": [509], "retained_bytes": 1025, "outcome": "exhausted-no-publication"},
+          {"case": "reduced-input-explicit-aggregate", "source_bytes": 1024, "retained_source_bytes": 2048, "module_bytes": 1024, "outside_definition_bytes": [1020], "retained_bytes": 2048, "outcome": "accept"},
+          {"case": "implicit-zero-closed-quota", "source_bytes": 0, "outcome": "valid-settings-nonempty-input-exhausted"},
+          {"case": "explicit-positive-zero-input-quota", "source_bytes": 0, "retained_source_bytes": 1, "outcome": "valid-settings-nonempty-input-exhausted"},
+          {"case": "explicit-zero-or-over-maximum", "retained_source_bytes": [0, 262145], "outcome": "option-refusal-before-source-admission"},
+          {"case": "flag-on-ordinary-or-standalone-profile", "profiles": ["ordinary-run", "ordinary-session", "standalone-text-byte-cursor", "live"], "outcome": "option-refusal-before-source-admission"},
+          {"case": "versioned-import-replay", "sources": ["module m@1 [ export addone def addone [ 1 + ] ]", "module m@2 [ export addone def addone [ 2 + ] ]", "import m@1 as m", "import m@1 as other", "def once [ m.addone ]", "def twice [ once once ]", "[ once ]", "import m@2 as m"], "retained_bytes_before_rebind": 146, "retained_bytes_after_rebind": 198, "retained_byte_breakdown": {"module_m1": 47, "module_m2": 47, "outside_once_original_and_replayed": 42, "outside_twice_original_and_replayed": 46, "outside_headers": 16}, "controls": ["old captured program and other.addone qualified owner retain m@1", "original module and outside-definition source bytes/digests/spans and checked owners agree across reparse", "changing the 1 token in original m@1 while presenting its stale digest and owner refuses", "shifting the m.addone call span by one byte while retaining its source refuses", "both replayed outside definitions append charged exact history with four-byte headers and do not evict m@1", "foreign prepared module from different source profile rejects despite same cap and generation", "same-profile same-generation/module/history/alias foreign prepared source rejects when the first historical d binds m@1 in one namespace and m@2 in the other"], "outcome": "only-original-source-checked-replay-publishes-atomically"}
+        ]
+      },
+      "expected": {
+        "stage": "declared-source-admission-and-import-replay",
+        "outcome": "each-variant-matches-exact-retained-and-per-input-accounting",
+        "default_retained_bytes": 65536,
+        "maximum_explicit_retained_bytes": 262144,
+        "maximum_per_input_bytes": 65536,
+        "maximum_recoverable_declared_frame_bytes": 262144,
+        "fixed_frame_drain_buffer_bytes": 8192,
+        "outside_definition_header_bytes_each": 4,
+        "retained_bytes_after_versioned_replay": 198,
+        "replay_reparses_original_source": true,
+        "old_resolved_owners_and_source_preserved": true,
+        "hash_only_or_normalized_source_allowed": false,
+        "eviction_allowed": false,
+        "replay_appends_charged_persistent_history": true,
+        "every_refused_candidate": "prior-stack-registry-alias-history-and-checked-programs-unchanged; subsequent-valid-submission-accepted, including bounded-over-input-65537-declared-frame",
+        "terminal_invalid_frames": "above-262144-count-or-incomplete-body-fails-without-candidate-or-follow-on; ordinary-session-framing-remains-unchanged",
+        "candidate_body_requests_on_refusal": 0,
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "guest_execution_claimed": false,
+        "runtime_or_host_quota_changed": false,
+        "independent_proof_claimed": false
+      },
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
     }
   ]
 }

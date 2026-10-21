@@ -28,8 +28,12 @@ fn module_submission(
     expression: &[u8],
     bindings: &[noble_contracts::source::BoundOperation],
 ) -> Result<noble_kernel::execution::Submission, String> {
-    let mut session = noble_contracts::source::ModuleSession::new(bindings)
-        .map_err(|error| error.diagnostic().message.clone())?;
+    let mut session = noble_contracts::source::ModuleSession::new(
+        bindings,
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|error| error.diagnostic().message.clone())?;
     for source in [module, b"import ledger@1 as account".as_slice()] {
         let prepared = session
             .prepare(source, &[], LIMITS)
@@ -64,8 +68,12 @@ fn source_submission() -> Result<noble_kernel::execution::Submission, String> {
 }
 
 fn result_session() -> Result<noble_contracts::source::ModuleSession, String> {
-    let session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| error.diagnostic().message.clone())?;
+    let session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|error| error.diagnostic().message.clone())?;
     let module = session
         .prepare(noble_contracts::source::RESULT_LIBRARY_SOURCE, &[], LIMITS)
         .map_err(|error| error.diagnostic().message.clone())?;
@@ -207,8 +215,12 @@ fn admitted_nominal_compiles_but_forged_bindings_and_shapes_do_not() -> Result<(
 
 fn session_with_validated_resource_schema() -> Result<noble_contracts::source::ModuleSession, String>
 {
-    let session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| error.diagnostic().message.clone())?;
+    let session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|error| error.diagnostic().message.clone())?;
     let module = session.prepare(
         b"module fixture@1 [ opaque Ticket Pair<I64,Resource<test.counter>> private export Ticket ]",
         &[],
@@ -310,6 +322,50 @@ fn first_declared_operation_does_not_alias_core_abort() -> Result<(), String> {
         !nominal_wat.contains("(call $op_abort)"),
         "first nominal constructor was mislowered as Core abort"
     );
+    Ok(())
+}
+
+#[test]
+fn bound_code_export_compiles_real_deny_only_slot_import() -> Result<(), String> {
+    use noble_kernel::contracts::TEST_CODE_EXPORT;
+    use noble_kernel::types::{EffSet, Ty};
+    let binding = noble_contracts::source::BoundOperation {
+        module_name: "ledger".into(),
+        module_version: 1,
+        operation: "test.code-export".into(),
+        adapter_identity: "worker-test-code-export@1.0.0".into(),
+        adapter_slot: 9,
+        input: vec![Ty::Text, Ty::Text],
+        output: vec![],
+        effects: vec![TEST_CODE_EXPORT],
+    };
+    let submission = module_submission(
+        b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]",
+        b"account.capture", &[binding],
+    )?;
+    assert_eq!(
+        submission
+            .environment
+            .kind(noble_kernel::contracts::Definition(23)),
+        Some(noble_kernel::contracts::Behavior::BoundCodeExport(9))
+    );
+    assert_eq!(
+        submission.request.expected.allowed_effects.as_slice(),
+        [TEST_CODE_EXPORT]
+    );
+    let compiled = noble_wasm::source::Compiler::new_worker()
+        .prepare(&submission)
+        .map_err(|error| format!("code-export source rejected: {}", wasm_diagnostic(error)))?;
+    let wat = core::str::from_utf8(compiled.wat()).map_err(|_| "code-export WAT is not UTF-8")?;
+    assert!(wat.contains("(import \"noble\" \"test_code_export_bound\" (func $host_code_export_bound (param i32) (result i32)))"));
+    assert!(wat.contains("(call $op_code_export_bound (i32.const 9))"));
+    assert!(!wat.contains("(import \"noble\" \"test_emit_bound\""));
+    let mut forged = submission;
+    forged.environment.bound_adapters[0].effects = EffSet::empty();
+    assert!(matches!(
+        noble_wasm::source::Compiler::new_worker().prepare(&forged),
+        Err(noble_wasm::Diagnostic::Invalid)
+    ));
     Ok(())
 }
 

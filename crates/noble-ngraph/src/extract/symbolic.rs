@@ -472,6 +472,14 @@ impl<'a, 's> Machine<'a, 's> {
                     "live-slot dispatch",
                 ));
             }
+            noble_kernel::untrusted::Node::SignedSelf { .. } => {
+                return Err(self.err(
+                    crate::diag::Code::Recursion,
+                    body,
+                    node,
+                    "signed self recursion",
+                ));
+            }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
                 self.invoke(body, node, *def, site, out_ty)?
             }
@@ -677,7 +685,8 @@ impl<'a, 's> Machine<'a, 's> {
             }
             noble_kernel::contracts::Behavior::TestEmit
             | noble_kernel::contracts::Behavior::BoundEmit(_)
-            | noble_kernel::contracts::Behavior::BoundClock(_) => {
+            | noble_kernel::contracts::Behavior::BoundClock(_)
+            | noble_kernel::contracts::Behavior::BoundCodeExport(_) => {
                 return Err(self.err(
                     crate::diag::Code::Effect,
                     body,
@@ -706,6 +715,7 @@ impl<'a, 's> Machine<'a, 's> {
             noble_kernel::contracts::Behavior::CalculatorIterate
             | noble_kernel::contracts::Behavior::CalculatorCompare
             | noble_kernel::contracts::Behavior::CalculatorDivRem
+            | noble_kernel::contracts::Behavior::I64Less
             | noble_kernel::contracts::Behavior::Reserved => {
                 return Err(self.err(
                     crate::diag::Code::Profile,
@@ -947,6 +957,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                         | noble_kernel::contracts::Behavior::ListCase
                         | noble_kernel::contracts::Behavior::TestEmit
                         | noble_kernel::contracts::Behavior::TextByte
+                        | noble_kernel::contracts::Behavior::I64Less
                         | noble_kernel::contracts::Behavior::CalculatorIterate
                         | noble_kernel::contracts::Behavior::CalculatorCompare
                         | noble_kernel::contracts::Behavior::CalculatorDivRem
@@ -955,6 +966,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                         | noble_kernel::contracts::Behavior::Reserved
                         | noble_kernel::contracts::Behavior::BoundEmit(_)
                         | noble_kernel::contracts::Behavior::BoundClock(_)
+                        | noble_kernel::contracts::Behavior::BoundCodeExport(_)
                         | noble_kernel::contracts::Behavior::NominalNew(_)
                         | noble_kernel::contracts::Behavior::NominalInto(_)
                         | noble_kernel::contracts::Behavior::NominalLeft(_)
@@ -967,6 +979,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                 },
                 noble_kernel::untrusted::Node::Literal { .. }
                 | noble_kernel::untrusted::Node::Quotation { .. }
+                | noble_kernel::untrusted::Node::SignedSelf { .. }
                 | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}
             }
         }

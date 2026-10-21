@@ -32,6 +32,59 @@ fn define(session: &mut noble_contracts::source::Session, source: &[u8]) -> Resu
 }
 
 #[test]
+fn core_interface_reuses_checked_nested_source_types_and_order() -> Result<(), String> {
+    use noble_kernel::types::{EffSet, Ty};
+    let parsed = noble_contracts::source::parse_core_interface(
+        "Pair<I64,Bool> Syntax -- List<Sum<Text,Program<empty,I64,pure>>>",
+    )
+    .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(
+        parsed.stack_in,
+        vec![Ty::Pair(Box::new(Ty::I64), Box::new(Ty::Bool)), Ty::Syntax]
+    );
+    assert_eq!(
+        parsed.stack_out,
+        vec![Ty::List(Box::new(Ty::Sum(
+            Box::new(Ty::Text),
+            Box::new(Ty::program(vec![], vec![Ty::I64], EffSet::empty())),
+        )))]
+    );
+    let source = prepare(
+        &noble_contracts::source::Session::without_test_hosts(),
+        b"[ 1 ]",
+    )?;
+    let inferred = noble_contracts::source::parse_core_interface("-- Program<empty,I64,pure>")
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(source.output(), inferred.stack_out.as_slice());
+    Ok(())
+}
+
+#[test]
+fn core_interface_rejects_ambiguous_or_non_core_contracts() {
+    for interface in [
+        "I64",
+        "-- Pair<I64>",
+        "-- Sum<I64,Bool,Text>",
+        "-- List<>",
+        "-- Program<empty,I64>",
+        "-- Program<empty,I64,test.emit>",
+        "-- Program<empty,I64,test.emit+test.emit>",
+        "-- LiveRef<empty,I64,pure>",
+        "-- Resource<test.counter>",
+        "-- Other",
+        "-- I64 -- Bool",
+    ] {
+        let error = noble_contracts::source::parse_core_interface(interface)
+            .expect_err("malformed, effectful, or unsupported Core interface must refuse");
+        assert_eq!(error.stage(), noble_contracts::source::Stage::Check);
+    }
+    let oversized_stack = format!("{}-- I64", "I64 ".repeat(129));
+    assert!(noble_contracts::source::parse_core_interface(&oversized_stack).is_err());
+    let oversized_bytes = format!("-- {}", "I64".repeat(1400));
+    assert!(noble_contracts::source::parse_core_interface(&oversized_bytes).is_err());
+}
+
+#[test]
 fn named_uses_are_fresh_but_duplicated_programs_are_monomorphic() -> Result<(), String> {
     let mut session = noble_contracts::source::Session::new();
     define(&mut session, b"def copy [ dup ]")?;
@@ -227,8 +280,12 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
 
 #[test]
 fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<(), String> {
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(
+        &[],
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("valid legacy retained source cap"),
+    )
+    .map_err(|error| format!("{error:?}"))?;
     let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
     let error = session
         .prepare(b"dup", core::slice::from_ref(&resource), limits())

@@ -5,13 +5,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { root, sha256, fileHash } from './record.mjs';
+import { reviewedLockNames } from '../selected-vendor.mjs';
 
 const caseFile = 'specs/conformance/developer-experience-cases.json';
 const libraryFile = 'crates/noble-contracts/src/fixtures/result.noble';
 const sourceFiles = [
-  'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'flake.lock', 'flake.nix',
+  'Cargo.toml', ...reviewedLockNames, 'verification/worker-send/peer/Cargo.toml',
+  'rust-toolchain.toml', 'flake.lock', 'flake.nix',
   'policy/tool-selection.json', 'verification/m6/pins.json',
-  'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
+  'nix/reviewed-vendor.nix', 'nix/vendor-only.nix', 'verification/selected-vendor.mjs',
   '.cairn/specs/developer-experience/spec.md',
   '.cairn/changes/bend-qcue-scoped-adaptations/design.md',
   '.cairn/changes/bend-qcue-scoped-adaptations/tasks.md', caseFile,

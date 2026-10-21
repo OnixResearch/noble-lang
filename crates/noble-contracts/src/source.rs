@@ -9,6 +9,7 @@ pub mod editor;
 mod emission;
 mod inference;
 mod lexer;
+mod locals;
 mod parsing;
 mod preflight;
 mod preparation;
@@ -23,11 +24,48 @@ mod resolution;
 pub(crate) use declared::{
     verify_definition_origin, verify_named_call_origin, verify_named_export, DefinitionOrigin,
 };
-pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
+pub use declared::{
+    BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner,
+    DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition,
+    SignedSourceOwner,
+};
+
+/// Core vocabulary resolved by the same checker as a worker's pure source.
+/// Test-host, live and selected cursor operations have different authority.
+pub const fn pure_builtin_spelling(identity: u32) -> Option<&'static str> {
+    if identity < 22 {
+        crate::program::bootstrap_spelling(identity)
+    } else {
+        None
+    }
+}
 
 /// Immutable source authority for the versioned Result interface. The same
 /// declaration bytes are checked through ordinary module registration.
 pub const RESULT_LIBRARY_SOURCE: &[u8] = include_bytes!("fixtures/result.noble");
+
+/// Host-selected aggregate of original module bytes and outside definition history.
+/// This does not raise the per-submission `Limits::bytes` parser bound.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedSourceLimit {
+    bytes: u32,
+}
+
+impl RetainedSourceLimit {
+    pub const MAX_BYTES: u32 = 262_144;
+
+    pub const fn new(bytes: u32) -> Option<Self> {
+        if bytes > Self::MAX_BYTES {
+            None
+        } else {
+            Some(Self { bytes })
+        }
+    }
+
+    pub const fn bytes(self) -> u32 {
+        self.bytes
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Stage {
@@ -56,14 +94,101 @@ impl Error {
     }
 }
 
+/// An independently supplied, ordered Core stack interface, not a checked
+/// candidate or permission to execute the indicated values.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CoreInterface {
+    pub stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
+}
+
+/// Parse host-selected Core interface words with the source type parser.
+/// The C source-only caller separately checks this against kernel acceptance
+/// and still refuses value forms its emitter cannot lower.
+pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
+    let span = crate::Span {
+        start: 0,
+        end: u32::try_from(text.len()).unwrap_or(u32::MAX),
+    };
+    if text.len() > 4096 {
+        return Err(Error::at(
+            Stage::Check,
+            crate::invalid(span, "Core interface bytes exhausted"),
+        ));
+    }
+    let mut stack_in = alloc::vec::Vec::new();
+    let mut stack_out = alloc::vec::Vec::new();
+    let mut separator = false;
+    for word in text.split_ascii_whitespace() {
+        if word == "--" {
+            if separator {
+                return Err(Error::at(
+                    Stage::Check,
+                    crate::invalid(span, "duplicate stack separator"),
+                ));
+            }
+            separator = true;
+            continue;
+        }
+        let stack = if separator {
+            &mut stack_out
+        } else {
+            &mut stack_in
+        };
+        if stack.len() >= 128 {
+            return Err(Error::at(
+                Stage::Check,
+                crate::invalid(span, "Core stack height exhausted"),
+            ));
+        }
+        let parsed = declared::types::parse_with_families(word, &[], &[], None, span)
+            .map_err(|error| Error::at(Stage::Check, error))?;
+        if !core_type(&parsed.ty) {
+            return Err(Error::at(
+                Stage::Check,
+                crate::invalid(span, "unsupported Core interface type"),
+            ));
+        }
+        stack.push(parsed.ty);
+    }
+    if !separator {
+        return Err(Error::at(
+            Stage::Check,
+            crate::invalid(span, "missing stack separator"),
+        ));
+    }
+    Ok(CoreInterface {
+        stack_in,
+        stack_out,
+    })
+}
+
+fn core_type(ty: &noble_kernel::types::Ty) -> bool {
+    use noble_kernel::types::Ty;
+    match ty {
+        Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text | Ty::Syntax => true,
+        Ty::List(item) => core_type(item),
+        Ty::Pair(left, right) | Ty::Sum(left, right) => core_type(left) && core_type(right),
+        Ty::Program(input, output, effects) => {
+            effects.as_slice().is_empty()
+                && input.iter().all(core_type)
+                && output.iter().all(core_type)
+        }
+        _ => false,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Target {
     Builtin(u32),
     Named(u32),
+    /// Finite lexical self occurrence; never a namespace lookup or an
+    /// installed-definition index until the entire owner is checked.
+    SelfOwner,
     SlotInvoke(Option<u32>),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Kind {
     Literal(noble_kernel::untrusted::Lit),
     Text(alloc::vec::Vec<u8>),
@@ -73,13 +198,13 @@ enum Kind {
     EditorHole,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct Node {
     kind: Kind,
     span: crate::Span,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct Tree {
     nodes: alloc::vec::Vec<Node>,
     body: alloc::vec::Vec<u32>,
@@ -188,11 +313,34 @@ fn replay_preserves_targets(
             (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
             (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
             (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
+            (Kind::Call(Target::SelfOwner), Kind::Call(Target::SelfOwner)) => true,
             (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => replacements
                 .get(*a as usize)
                 .is_some_and(|replacement| replacement.unwrap_or(*a as usize) == *b as usize),
             _ => false,
         })
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct SymbolicNode {
+    draft: u32,
+    span: crate::Span,
+    target: Option<Target>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct SignedRelation {
+    /// Source namespace slot reserved for the owner before it was installed.
+    source_slot: u32,
+    /// Every executable lexical node has exactly one rigid inferred draft;
+    /// `None` slots are independently re-lowered, non-executable lexical
+    /// binder/name syntax. The parser's final `def` envelope is omitted.
+    /// Concrete environments may use different specialization slots, so this
+    /// source-order relation, not a concrete Candidate, carries the rank-1
+    /// owner check across publication and signed-only compiler ingress.
+    symbolic_nodes: alloc::vec::Vec<Option<SymbolicNode>>,
+    /// Original self occurrences, including those inside quotations.
+    lexical_nodes: alloc::vec::Vec<u32>,
 }
 
 #[derive(Clone, Debug)]
@@ -202,6 +350,44 @@ struct Named {
     owner: Option<u64>,
     tree: Tree,
     signature: Option<noble_kernel::words::Scheme>,
+    signed: Option<SignedRelation>,
+    /// Original alias spellings and exact source nodes bound to their
+    /// independently resolved module owners at definition admission.
+    alias_uses: alloc::vec::Vec<AliasUse>,
+    /// Exact length-prefixed retained source offset assigned at successful
+    /// outside-definition publication. Module definitions instead retain
+    /// their own immutable whole-module source and have no history offset.
+    history_start: Option<usize>,
+}
+
+impl PartialEq for Named {
+    fn eq(&self, other: &Self) -> bool {
+        let same_signature = match (&self.signature, &other.signature) {
+            (Some(a), Some(b)) => {
+                a.var_kinds == b.var_kinds
+                    && a.stack_in == b.stack_in
+                    && a.stack_out == b.stack_out
+                    && a.effects == b.effects
+            }
+            (None, None) => true,
+            _ => false,
+        };
+        self.name == other.name
+            && self.identity == other.identity
+            && self.owner == other.owner
+            && self.tree == other.tree
+            && same_signature
+            && self.signed == other.signed
+            && self.alias_uses == other.alias_uses
+            && self.history_start == other.history_start
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct AliasUse {
+    spelling: alloc::string::String,
+    owner: u64,
+    nodes: alloc::vec::Vec<(u32, Target)>,
 }
 
 /// An immutable preparation. A declaration deliberately has no executable root.
@@ -213,6 +399,7 @@ pub struct Prepared {
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
     live_slots: bool,
+    live_slot_owner: Option<alloc::sync::Arc<()>>,
     limits: crate::Limits,
     calculator: bool,
     boundary: Option<alloc::vec::Vec<u8>>,
@@ -272,6 +459,7 @@ pub struct Session {
 struct LiveSlots {
     environment: noble_kernel::contracts::Env,
     resources: alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
+    owner: alloc::sync::Arc<()>,
 }
 
 impl Default for Session {
@@ -341,6 +529,7 @@ impl Session {
             live_slots: Some(LiveSlots {
                 environment,
                 resources: alloc::vec::Vec::new(),
+                owner: alloc::sync::Arc::new(()),
             }),
             ..Self::without_test_hosts()
         })
@@ -692,58 +881,58 @@ impl Session {
         Ok(successor)
     }
 
-    #[expect(
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-    )]
-    #[expect(
-        tigerstyle::numeric_units,
-        reason = "Owner: noble-contracts; the constant counts source elements, and its unit is stated by the surrounding type and call sites"
-    )]
-    /// Definition history is length-prefixed in precisely the append order of
-    /// `definitions`. Never reconstruct a dependent from its already-resolved
-    /// tree: that would silently keep calls to the prior generation.
+    /// Never reconstruct a dependent from its already-resolved tree: the
+    /// source offset was fixed when its original checked definition committed.
     fn definition_source(&self, index: usize) -> Result<&[u8], Error> {
         let span = crate::Span { start: 0, end: 0 };
-        if index >= self.definitions.len() {
-            return Err(Error::at(
-                Stage::Acceptance,
-                crate::invalid(span, "retained dependent has no source provenance"),
-            ));
-        }
-        let mut at = 0usize;
-        for position in 0..=index {
-            let header = self.history.get(at..at.saturating_add(4)).ok_or_else(|| {
+        let offset = self
+            .definitions
+            .get(index)
+            .and_then(|definition| definition.history_start)
+            .ok_or_else(|| {
                 Error::at(
                     Stage::Acceptance,
-                    crate::invalid(span, "retained dependent has no source provenance"),
+                    crate::invalid(span, "retained dependent has no outside source provenance"),
                 )
             })?;
-            let length = u32::from_le_bytes(<[u8; 4]>::try_from(header).map_err(|_| {
+        let header_end = offset.checked_add(4).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained source header overflows"),
+            )
+        })?;
+        let header = self.history.get(offset..header_end).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained source header is missing"),
+            )
+        })?;
+        let length = usize::try_from(u32::from_le_bytes(<[u8; 4]>::try_from(header).map_err(
+            |_| {
                 Error::at(
                     Stage::Acceptance,
                     crate::invalid(span, "invalid retained source length"),
                 )
-            })?) as usize;
-            at += 4;
-            let bytes = self
-                .history
-                .get(at..at.saturating_add(length))
-                .ok_or_else(|| {
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(span, "retained dependent source is incomplete"),
-                    )
-                })?;
-            if position == index {
-                return Ok(bytes);
-            }
-            at += length;
-        }
-        Err(Error::at(
-            Stage::Acceptance,
-            crate::invalid(span, "retained dependent has no source provenance"),
-        ))
+            },
+        )?))
+        .map_err(|_| {
+            Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained source length exceeds address space"),
+            )
+        })?;
+        let end = header_end.checked_add(length).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained source length overflows"),
+            )
+        })?;
+        self.history.get(header_end..end).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained dependent source is incomplete"),
+            )
+        })
     }
 
     #[expect(
@@ -821,15 +1010,12 @@ impl Session {
                 .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
         }
         if let Some(context) = &self.declared {
-            return if context
+            // Kernel validation binds non-bootstrap IDs to exact host-selected adapters.
+            return context
                 .environment
                 .effects
-                .contains(&noble_kernel::contracts::TEST_CLOCK)
-            {
-                1 | (1 << noble_kernel::contracts::TEST_CLOCK.0)
-            } else {
-                1
-            };
+                .iter()
+                .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
         }
         match &self.bindings {
             Some(bindings) => bindings.effects,
@@ -843,6 +1029,15 @@ impl Session {
                 }
             }
         }
+    }
+
+    fn program_type_effect_universe(&self) -> u64 {
+        let effects = self.effect_universe();
+        effects
+            | self
+                .bindings
+                .as_ref()
+                .map_or(0, |bindings| bindings.program_type_effects)
     }
 
     /// Consume a preparation as an explicit deterministic namespace transition.
@@ -878,7 +1073,10 @@ impl Session {
                 ))
             }
         };
-        if let Some(definition) = prepared.definition {
+        if let Some(mut definition) = prepared.definition {
+            if definition.owner.is_none() {
+                definition.history_start = Some(self.history.len());
+            }
             self.definitions.push(definition);
             self.history.extend_from_slice(&prepared.addition);
         }
@@ -895,6 +1093,11 @@ impl Session {
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
     )]
     fn is_current_namespace(&self, prepared: &Prepared) -> bool {
+        let live_slot_owner_matches = match (&self.live_slots, &prepared.live_slot_owner) {
+            (Some(slots), Some(owner)) => alloc::sync::Arc::ptr_eq(&slots.owner, owner),
+            (None, None) => true,
+            _ => false,
+        };
         if prepared.generation != self.generation
             || prepared.hosts != self.hosts
             || prepared.text_cursor != self.text_cursor
@@ -902,6 +1105,7 @@ impl Session {
             || prepared.live_slots != self.live_slots.is_some()
             || prepared.calculator != self.calculator
             || prepared.history != self.history
+            || !live_slot_owner_matches
         {
             return false;
         }

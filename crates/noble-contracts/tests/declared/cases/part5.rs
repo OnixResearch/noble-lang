@@ -11,8 +11,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
     (mc1-true-eq-wrap)) ]
 ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(source, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -46,8 +46,8 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
   contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
     requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
 ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(formatted, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -76,8 +76,8 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
             (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
         (mc1-true-eq-wrap)) ]
     ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let prepared = session
         .prepare(two, &[], super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -90,8 +90,8 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
     .map_err(|error| format!("{error:?}"))?;
 
     let named = b"module named@1 [ def one [ 1 ] export increment def increment [ one + ] ]";
-    let session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     let session = super::super::commit(session, named)?;
     let ordinary = session
         .prepare(
@@ -112,8 +112,8 @@ fn refuses_named_runtime_as_v1_theorem() -> Result<(), String> {
       contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
         requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
     ]";
-    let fresh =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let fresh = noble_contracts::source::ModuleSession::new(&[], super::super::retained())
+        .map_err(|error| format!("{error:?}"))?;
     assert!(
         fresh
             .prepare(named_contract, &[], super::super::LIMITS)

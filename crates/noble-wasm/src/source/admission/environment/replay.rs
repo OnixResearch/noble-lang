@@ -128,6 +128,9 @@ impl Cursor {
         if let noble_kernel::contracts::Behavior::BoundClock(slot) = env.kinds[index] {
             return self.append_bound_clock(env, index, slot);
         }
+        if let noble_kernel::contracts::Behavior::BoundCodeExport(slot) = env.kinds[index] {
+            return self.append_bound_code_export(env, index, slot);
+        }
         // Builtins and derived nominal/family operations cannot begin a declaration.
         Err(crate::Diagnostic::Invalid)
     }
@@ -203,6 +206,40 @@ impl Cursor {
         let (fixed, actual) = self
             .fixed
             .declare_bound_clock(registration)
+            .map_err(|_| crate::Diagnostic::Invalid)?;
+        if actual != def {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.fixed = fixed;
+        Ok(self)
+    }
+
+    fn append_bound_code_export(
+        mut self,
+        env: &noble_kernel::contracts::Env,
+        index: usize,
+        slot: u32,
+    ) -> Result<Self, crate::Diagnostic> {
+        let def = noble_kernel::contracts::Definition(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
+        );
+        let row = env
+            .bound_adapters
+            .iter()
+            .find(|row| row.definition == def && row.adapter_slot == slot)
+            .ok_or(crate::Diagnostic::Invalid)?;
+        let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
+        let registration = noble_kernel::contracts::BoundCodeExportRegistration {
+            adapter_identity: row.adapter_identity.clone(),
+            adapter_slot: slot,
+            owner,
+            input: row.input.clone(),
+            output: row.output.clone(),
+            effects: row.effects.clone(),
+        };
+        let (fixed, actual) = self
+            .fixed
+            .declare_bound_code_export(registration)
             .map_err(|_| crate::Diagnostic::Invalid)?;
         if actual != def {
             return Err(crate::Diagnostic::Invalid);

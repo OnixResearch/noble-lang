@@ -161,6 +161,7 @@ fn same_target(
 ) -> Result<bool, crate::Diagnostic> {
     match (left, right) {
         (crate::source::Target::Builtin(a), crate::source::Target::Builtin(b)) => Ok(a == b),
+        (crate::source::Target::SelfOwner, crate::source::Target::SelfOwner) => Ok(true),
         (crate::source::Target::SlotInvoke(a), crate::source::Target::SlotInvoke(b)) => Ok(a == b),
         (crate::source::Target::Named(a), crate::source::Target::Named(b)) => {
             let a = match session.definitions.get(attempt!(crate::offset(a, span))) {
@@ -173,15 +174,29 @@ fn same_target(
             };
             Ok(a.identity == b.identity)
         }
-        (crate::source::Target::Builtin(_), crate::source::Target::Named(_))
-        | (crate::source::Target::Named(_), crate::source::Target::Builtin(_))
-        | (
-            crate::source::Target::SlotInvoke(_),
-            crate::source::Target::Builtin(_) | crate::source::Target::Named(_),
+        (
+            crate::source::Target::Builtin(_),
+            crate::source::Target::Named(_)
+            | crate::source::Target::SlotInvoke(_)
+            | crate::source::Target::SelfOwner,
         )
         | (
-            crate::source::Target::Builtin(_) | crate::source::Target::Named(_),
+            crate::source::Target::Named(_),
+            crate::source::Target::Builtin(_)
+            | crate::source::Target::SlotInvoke(_)
+            | crate::source::Target::SelfOwner,
+        )
+        | (
             crate::source::Target::SlotInvoke(_),
+            crate::source::Target::Builtin(_)
+            | crate::source::Target::Named(_)
+            | crate::source::Target::SelfOwner,
+        )
+        | (
+            crate::source::Target::SelfOwner,
+            crate::source::Target::Builtin(_)
+            | crate::source::Target::Named(_)
+            | crate::source::Target::SlotInvoke(_),
         ) => Ok(false),
     }
 }

@@ -219,6 +219,15 @@ reviewed DXM1 inventory remain open; no nominal/module, host or engine proof
 is claimed. General Result, local names, invariant-bearing types, portable
 packages/cache, capability modules and MA/MW entry gates are unaffected.
 
+The active [declared retained-source change](../.cairn/changes/declared-retained-source-budget/proposal.md)
+specifies an optional bounded aggregate namespace-source capacity without
+altering DXM1's historical 65,536-byte default or its accepted evidence. Each
+input remains bounded independently, and original module/definition bytes
+remain necessary for replay and source-derived checking. Its new
+[DX-14 design](conformance/language-workflow-cases.json) is absent/not-run
+with proof open; document authoring and a future native Cairn sync do not
+establish guest execution or strengthen the DXM1 completion claim.
+
 ### M7 selected local synchronous service (bounded acceptance complete)
 
 The archived [M7 Cairn change](../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
@@ -353,8 +362,10 @@ services, Syndicate, distributed retries, or universal backend/host refinement.
 
 [WORKER-CONFORMANCE.md](WORKER-CONFORMANCE.md) connects kernel and host contracts
 without new agent syntax. The M6 receipt retains WORKER-08's local task-owner
-race slice; the broader actual worker/shell harness remains unimplemented and
-unaccepted. That local evidence does not promote MW1 or MW2.
+race slice. A separately opt-in source-checked pure typed worker and local-only
+WIT Send shell have scoped guest/send/cancellation controls; the broader portable
+worker/shell harness and canonical cases remain unaccepted. Neither local lane
+promotes MW1 or MW2.
 
 | Milestone | Depends on | Exit criterion |
 |---|---|---|
@@ -1423,31 +1434,53 @@ The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
 [active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
 an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
 source reload and narrowly host-granted guest self-edit. A guarded resident
-Node/V8 REPL and in-process Wasm byte emitter support Core-only atomic rebuild
+Node/V8 REPL and in-process Wasm byte emitter support atomic Core rebuild
 for tested acyclic dependents under explicit host-selected file reload/direct
-admission. Automatic watch is unavailable: a directory rename notification
-does not authenticate the inode's bytes at rename time, and a writable mapping
-or external hardlink can alter them without a selected-basename content event.
-Use explicit `:reload`; automatic H-LIVE-01 and complete LIVE-05/watch
-acceptance, including declared modules, effectful watch, full in-flight
-source-change controls and code retirement, remain open.
+admission. A cooperative Linux paired `.tmp` rename watch checks bounded
+selected bytes again before publication, but an outside writable mapping
+or hardlink remains unobservable to the selected-directory watcher.
+Selected declared-module snapshots and zero-owner Core table-span
+retirement/reuse passed the integrated 55-test CLI suite at source `8b1504b`.
+The same compiled binary SHA-256
+`2de6d8ebb2f99c48e370866a9e13892c96fbb8c0af0ec568a7ce4dbb505b4e39`
+passed five finite selected live guest traces; complete H-LIVE-01 and
+LIVE-05/watch acceptance and effectful/general transitions remain open.
 Bounded guest self-edit refuses any current effective dependent rather than
 rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped
 live-child checks; general proof and canonical LIVE case acceptance remain
 open. The guest may enqueue
 a checked pure Program candidate during Wasm execution, but only host-side
 post-return independent admission and a generation/definition-identity CAS
-may publish it. Guest publication leaves the selected file unchanged; LIVE-09
-and LIVE-10 remain unexecuted designs. The first target reuses selected
-Node/V8, which may JIT and
+may publish it. Guest publication leaves the selected file unchanged;
+integrated scoped guest execution does not promote canonical LIVE-09 or LIVE-10.
+The first target reuses selected Node/V8, which may JIT and
 does **not** establish strictly interpreted execution. A genuine interpreter
 engine remains separately unselected. The [MCB milestone](roadmap.json) follows
 M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
 [active change](../.cairn/changes/c-backend/proposal.md); native execution
 requires a pinned sandbox and separately checked source/C/ELF admission.
-Full watch-case acceptance, declared-module snapshots, complete source-bound
-LIVE-02 acceptance and code retirement remain open despite the guarded
-Core-only rebuild.
+Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
+is present in this isolated source-only integration, including internal
+Pair/Sum/List construction/elimination, exact checked value-shape preflights
+and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
+final results, supplied list-length policies, reflect, runtime inputs and host
+mediation remain unsupported. The fixed internal List ceiling is 255, not
+CB-CASE-01/06 admission. The held canonical CB-BUILD-01 still describes a
+narrower route; the reconciled active delta cannot replace it before
+independent owner review and legal sync. `--native` and `execute --target c`
+refuse. CB-CASE-01 supplies `limits.list_length` and remains open because the
+exact source-only policy rejects it. Recursive duplicate JSON members refuse
+before policy interpretation, but this is not native admission or case
+evidence. The current source-only path does not satisfy CB-ADMIT-01's sealed,
+ancestor-anchored native build contract.
+Full watch-case acceptance and complete source-bound LIVE-02 remain open
+despite the guarded partial runtime. Integrated real guests observed only
+the historical exact queued proposal root released after a terminal trap
+(62 guest steps) or quota (300 guest steps), each from one root to zero; the
+paired watch save advanced sequence zero to one. LIVE-02 active in-flight
+reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke and general
+LIVE-10 cancellation/retirement assurance remain open in those historical
+receipts; source-only LIVE03 integration is not a new JS-instance receipt.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
