@@ -13,6 +13,13 @@
 }:
 let
   policy = builtins.fromJSON (builtins.readFile ../policy/boundary-controls.json);
+  # The reviewed --all-features plan rows for the selected target; the
+  # comparator accepts these or the default configuration, nothing else.
+  declaredFeatureSets = map (row: row.features) (
+    builtins.filter (row: row.triple == selection.configuration.target) (
+      builtins.fromJSON (builtins.readFile ../policy/architecture.json)
+    ).production.targets
+  );
   files = builtins.listToAttrs (
     map
       (name: {
@@ -114,7 +121,11 @@ let
         export HOME="$TMPDIR/home"
         export CARGO_HOME="$HOME/cargo"
         export CARGO_TARGET_DIR="$TMPDIR/deny-target"
-        export CARGO_BUILD_JOBS=1
+        # Build parallelism changes scheduling only; every unit still yields its
+        # own complete shard, and the comparator requires the exact roster.
+        jobs="$NIX_BUILD_CORES"
+        if [ -z "$jobs" ] || [ "$jobs" -le 0 ]; then jobs=$(nproc); fi
+        export CARGO_BUILD_JOBS="$jobs"
         export NIX_CONFIG='experimental-features = nix-command'
         unset RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTFLAGS CARGO_ENCODED_RUSTFLAGS DYLINT_RUSTFLAGS
         mkdir -p "$CARGO_HOME" "$out"
@@ -204,6 +215,7 @@ let
             policy = builtins.fromJSON (builtins.readFile ${../policy/boundary-controls.json});
             selection = builtins.fromJSON (builtins.readFile ${../policy/tool-selection.json});
             case = builtins.fromJSON (builtins.readFile ${pkgs.writeText "boundary-case.json" (builtins.toJSON case)});
+            declaredFeatureSets = builtins.fromJSON (builtins.readFile ${pkgs.writeText "boundary-declared-features.json" (builtins.toJSON declaredFeatureSets)});
           }
         ' > "$out/validated.txt"
       '';
@@ -216,7 +228,7 @@ let
 in
 assert builtins.deepSeq selfTests true;
 assert policy.schema_version == "noble-boundary-controls/v1";
-assert policy.timeout_seconds > 0 && policy.timeout_seconds <= 180;
+assert policy.timeout_seconds > 0 && policy.timeout_seconds <= 1800;
 assert policy.target == selection.configuration.target;
 assert policy.randomness_dependency.name == "getrandom";
 assert policy.test_source.escaped == "crates/noble-kernel/src/" + policy.test_source.relative;

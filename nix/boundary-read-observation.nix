@@ -4,6 +4,7 @@
   case,
   policy,
   selection,
+  declaredFeatureSets ? [ selection.configuration.features ],
 }:
 let
   read = name: builtins.fromJSON (builtins.readFile (directory + "/" + name));
@@ -59,6 +60,7 @@ let
       policy
       selection
       observed
+      declaredFeatureSets
       ;
   };
 in

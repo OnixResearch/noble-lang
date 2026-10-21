@@ -298,7 +298,7 @@
     "path": "crates/noble-kernel/tests/support/production_import.rs",
     "relative": "../tests/support/production_import.rs"
   },
-  "timeout_seconds": 180,
+  "timeout_seconds": 1800,
   "units": [
     "noble-cli:bin+test:crates/noble-cli/src/main.rs:composition-root",
     "noble-cli:bin:crates/noble-cli/src/main.rs:composition-root",

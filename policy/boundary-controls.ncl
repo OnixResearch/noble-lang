@@ -21,7 +21,12 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
 {
   schema_version | String = "noble-boundary-controls/v1",
   owner | String = "noble-maintainers",
-  timeout_seconds | Number = 180,
+  # Each case compiles the complete reviewed workspace under the deny-all gate,
+  # including the selected Wasmtime source. The original 180-second bound was
+  # set for the 17-unit M3 workspace and now expires before compilation ends,
+  # so every case failed on a missing artifact instead of its boundary. A
+  # timeout, unrelated compiler error or missing artifact still never passes.
+  timeout_seconds | Number = 1800,
   target | String = "x86_64-unknown-linux-gnu",
   kernel_source | String = "crates/noble-kernel/src/lib.rs",
   randomness_dependency = {

@@ -5,6 +5,11 @@
   selection,
   case,
   observed,
+  # Feature sets of the reviewed architecture policy rows for the selected
+  # target. The deny-all gate builds --all-features, so a package declaring
+  # features observes that plan while every other unit keeps the default
+  # configuration. Octet separately rejects a plan that differs from the row.
+  declaredFeatureSets ? [ selection.configuration.features ],
 }:
 let
   inherit (builtins)
@@ -162,7 +167,7 @@ let
         ++ require (all (
           u:
           u.target_triple == selection.configuration.target
-          && u.features == selection.configuration.features
+          && (u.features == selection.configuration.features || elem u.features declaredFeatureSets)
           && u.default_features == selection.configuration.default_features
         ) units) "compiler-configuration"
         ++ require (builtins.length kernels == 2 && all itemPresent kernels) "kernel-ownership"
