@@ -358,7 +358,9 @@ It runs these stages:
 6. `--emi --verify` on its fresh receipt;
 7. replay of the EMI control's retained minimal discrepancy;
 8. verification of the replay receipt;
-9. a stale-evidence control: the retained `receipts/898cfe1` receipt must be
+9. the one-call named linking pilot in both optimization modes;
+10. verification of its exact subject/dependency/artifact receipt;
+11. a stale-evidence control: the retained `receipts/898cfe1` receipt must be
    refused.
 
 It writes `summary.txt` and exits nonzero if any stage fails.
@@ -388,6 +390,29 @@ A sandbox check becomes feasible once reviewed offline Lean sources and
 either a rebuilt Mathlib `.olean` set or an authenticated cache are pinned
 as store inputs. The `check` and `differential` stages need only Lean,
 Cargo (offline) and Node, so they could move into the sandbox first.
+
+## Conditional named-call linking (issue #52)
+
+[`NobleFoundation/LinkBoundary.lean`](NobleFoundation/LinkBoundary.lean) imports
+the existing pinned `NobleContracts.NamedV1` model. Its two-result callee is
+`[ - 7 ]`; the one-call caller is `c.split -`. It proves source-model normal
+results, models the private operand/continuation ABI, and states conditional
+horizontal linking with exact source/dependency/table/artifact bindings.
+`vertical_simulation_compose` is a separate local-simulation composition rule.
+All new theorem statements and transitive axioms enter the existing inventory
+and checker; the checker also hashes `NamedSubject.lean`.
+
+The [executable pilot](../../verification/linking/README.md) maps each boundary
+to the actual embedded-callee path, retains exact-byte receipts and exercises
+body/order/return-target/dependency/substitution controls. It explicitly models
+engine-owned shared memory/table/globals, not a fictional separate module ABI.
+The runtime relation projects Bool/I64 operands, continuations, table and
+`sp`/`cp`; it does not claim the engine's other accounting globals are unchanged.
+
+The source and helper-transcription theorems are model results. The real
+lowering and loading simulations needed to instantiate the conditional linker
+remain premises: C8 and O1/O3/O7 are not discharged, and #7/#10 remain completed
+designs. No existing conformance or proof-ledger status changes.
 
 ## Phase 2: law/obligation matrix (pure MC1 model)
 

@@ -132,6 +132,12 @@ generated programs with opt off and on, and Lean kernel-checks every
 expected value. Both remain model theorems plus finite tests. The README
 there lists every unproved edge to the executed Wasm.
 
+The separate [one-call linking pilot](verification/linking/README.md) (#52)
+models the existing same-artifact named-call stack/continuation boundary and
+states conditional horizontal and vertical composition rules. It retains exact
+source/dependency/artifact identities and finite off/on executions; real
+lowering and loading correspondence remain open.
+
 To retain the source, reports, WAT, Wasm, and tool observations:
 
 ```sh

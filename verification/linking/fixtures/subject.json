@@ -1,0 +1,18 @@
+{
+  "schema": "noble-linking-fixture/v1",
+  "callee": {
+    "module": "LinkCallee",
+    "version": 1,
+    "export": "split",
+    "definition": "split",
+    "definition_slot": 0,
+    "input": ["I64", "I64"],
+    "output": ["I64", "I64"],
+    "semantics": "[x,y] -> [wrap64(x-y),7]"
+  },
+  "import": "import LinkCallee@1 as c",
+  "caller_root": "c.split -",
+  "boundary_root": "c.split",
+  "preserved_prefix": "Bool",
+  "same_artifact_internal_dispatch": true
+}

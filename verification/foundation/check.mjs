@@ -155,6 +155,7 @@ try {
     'proofs/foundation/inventory.json', 'proofs/foundation/lakefile.toml',
     'proofs/foundation/lake-manifest.json', 'proofs/foundation/lean-toolchain',
     'proofs/m3/MathlibI64.lean', 'proofs/mc1/NobleContracts/Model.lean',
+    'proofs/mc1/NobleContracts/NamedSubject.lean',
     'proofs/mc1/NobleContracts/Rules.lean', 'proofs/mc1/NobleContracts/Obligation.lean',
     'proofs/mc1/NobleContracts/Composition.lean', 'proofs/mc1/NobleContracts/Examples.lean',
     'policy/tool-selection.json', 'verification/foundation/check.mjs',
