@@ -24,16 +24,19 @@ are not native admission or executed C semantics.
 The source-only WIP also lowers checked internal `pair`/`unpair`,
 `inl`/`inr`/`case` and `nil`/`cons`/`list.case` with immutable bounded
 tagged arena references, exact per-node Core type-shape preflights and
-iterative step-charged nested capture accounting. Its fixed 255-element
-List ceiling is not a supplied policy: `limits.list_length` still refuses.
+iterative step-charged nested capture accounting. The maximum 255-element
+List ceiling now accepts an optional exact `limits.list_length` from 0 to 255;
+the effective bound is emitted as `LIST_LIMIT` and retained in the manifest,
+with `cons` checking it before List growth.
 Final aggregates remain unsupported. The complete CB-SCOPE/CB-VALUE/
-CB-LIMIT contracts remain open: inert Syntax/`reflect`, supplied List
-limits, typed runtime input, definitions, `test.emit`
+CB-LIMIT contracts remain open: inert Syntax/`reflect`, native List quota
+outcomes, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations
 or a real mediator. The source-only policy has only
-`stack_slots`/`steps`/`output_bytes`, not the native list/aggregate/
-CPU/memory/wall limits or equal Wasm gas. It refuses the extra
-`limits.list_length` in CB-CASE-01 rather than ignoring it. None of
+`stack_slots`/`steps`/`output_bytes` plus optional `list_length`, not the full
+native aggregate/CPU/memory/wall limits or equal Wasm gas. The supplied
+`limits.list_length: 2` in CB-CASE-01 is preserved for source-only emission,
+but no native runtime evidence follows. None of
 these missing obligations can be filled by a C token parser or by
 claiming source syntax as differential execution. r[CB-SCOPE-01]
 r[CB-VALUE-01] r[CB-LIMIT-01] r[CB-GATE-01]
@@ -230,9 +233,11 @@ Program recipes), traces and protected-action prefixes, normal/trap/quota/
 denial classifications and both C optimization modes. Preserve the
 different accounting of C source-only steps and Wasm fuel rather than
 falsely calling unequal budgets equal. CB-01's supplied `list_length: 2`
-still refuses under the present exact three-key source-only policy; CB-02 needs values
-and runtime inputs not yet emitted; CB-03/07 need a real mediator; CB-04/05
-need exact tool/ELF admission; CB-06 needs list quotas; CB-08 needs the
+now participates in the source-only C limit and manifest, but has not been
+executed as a native quota or compared to Wasm; CB-02 needs values and runtime
+inputs not yet emitted; CB-03/07 need a real mediator; CB-04/05
+need exact tool/ELF admission; CB-06 needs native List quota outcomes and
+hostile ABI controls; CB-08 needs the
 sealed hostile VM lane; CB-09/10 need scope and stale-receipt review.
 None of the ten case designs has executed or been promoted. C source
 syntax, compiler success, finite differential matches and M4 Wasm receipts

@@ -50,8 +50,9 @@ The proposed explicit interface is `noble build SOURCE --target c --out DIR --co
 
 The current nonselected **source-only** route is narrower: it accepts checked,
 effect-free Core-Bootstrap expressions with no runtime inputs, definitions
-or host contracts and one I64/Bool/Unit/Text result, with the exact three-key
-`stack_slots`/`steps`/`output_bytes` limits policy. The host-supplied
+or host contracts and one I64/Bool/Unit/Text result, with
+`stack_slots`/`steps`/`output_bytes` and an optional exact `list_length`
+from 0 to 255 (default 255). The host-supplied
 `expected_interface` is parsed with the existing bounded checked Core type
 grammar into ordered input/output stacks; those stacks and the empty effect
 bound are compared against source preparation and independent kernel acceptance.
@@ -62,12 +63,13 @@ lowers checked `pair`/`unpair`, `inl`/`inr`/`case` and
 256-slot aggregate arena. Interned exact checked Core type shapes
 preflight operand order and kind before each supported operation;
 Pair/Sum/List cells and static/dynamic Program values retain checked
-shape identities. List cells retain their exact length with a fixed
-255-element source-only ceiling, and an iterative step-charged walk
-accounts for nested quotation captures. This fixed ceiling is NOT
-acceptance of a supplied `limits.list_length`: the exact three-key
-source-only policy still refuses that field before emission, so
-CB-CASE-01/06 are not satisfied by the internal List implementation.
+shape identities. List cells retain their exact length, with a maximum
+255-element source-only ceiling and an effective policy bound enforced
+before `cons` growth. The exact supplied policy bytes participate in the
+build subject, and the effective bound is retained in the manifest and
+emitted C. An iterative step-charged walk accounts for nested quotation
+captures. This source-only policy acceptance does NOT satisfy the
+CB-CASE-01/06 native runtime, quota or C/Wasm observations.
 Final Pair/Sum/List/Syntax/Program results, `reflect`, typed runtime
 inputs, named definitions and host effects still refuse.
 It emits source and manifest without compiler/ELF pin or compile argv, and
@@ -77,9 +79,10 @@ unsupported contract, policy, type, effect and target inputs refuse. The
 source-only control decoder rejects duplicate JSON object member names
 recursively, including escaped spellings of the same key, before interpreting
 limits; an earlier bound cannot silently disappear through last-wins decoding.
-This fixes only that source-only input-integrity defect. The complete
-CB-LIMIT-01 limits and CB-BUILD-01 native build contract remain open; this
-is not native compilation, execution, sandbox or artifact admission evidence.
+These source-only input-integrity and List-bound changes do not close the
+complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
+open. This is not native compilation, execution, sandbox or artifact admission
+evidence.
 
 
 <!-- cairn:scenario-links:start -->
@@ -214,7 +217,8 @@ that exact supplied bound in its manifest/build subject and enforce it before
 list growth when lists are supported; a profile that cannot honor the field
 MUST refuse the policy before emission rather than silently strip the bound
 or advertise an unenforced no-op. CB-CASE-01 retains its supplied list bound
-and remains OPEN while the restricted source-only emitter refuses it.
+and remains OPEN despite restricted source-only emission accepting that
+policy field; no native runtime or selected-Wasm comparison has run.
 Contract and policy JSON MUST reject
 duplicate object member names at every nesting level so an earlier supplied
 bound cannot be overwritten by a later value before validation.

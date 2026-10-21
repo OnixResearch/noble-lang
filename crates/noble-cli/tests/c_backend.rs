@@ -446,7 +446,6 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     let source = scratch.file("source.noble", b"1 2 +")?;
     let wrong_target = scratch.file("wrong-target.json", br#"{"profile":"Core-Bootstrap","target":"aarch64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
     let effects = scratch.file("effect-policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":["test.emit"],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
-    let list_limit = scratch.file("unadmitted-list-limit.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024,"list_length":1}}"#)?;
     let pure = scratch.file("pure-policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
     let tiny_output = scratch.file("tiny-output.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":128}}"#)?;
     let out_of_range = scratch.file("out-of-range.noble", b"9223372036854775808")?;
@@ -461,7 +460,6 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     for (index, (source, policy)) in [
         (&source, &wrong_target),
         (&source, &effects),
-        (&source, &list_limit),
         (&source, &tiny_output),
         (&out_of_range, &pure),
         (&invalid_utf8, &pure),
@@ -516,5 +514,101 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     let refusal = build(&source, &contract, &pure, &occupied)?;
     assert_eq!(refusal.status.code(), Some(2));
     assert_eq!(std::fs::read(&prior)?, b"host-owned");
+    Ok(())
+}
+
+#[test]
+fn supplied_list_length_changes_source_only_c_with_an_exact_manifest_bound(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let contract = scratch.file(
+        "contract.json",
+        br#"{"expected_interface":"-- I64","resolved_host_contracts":{}}"#,
+    )?;
+    let scalar = scratch.file("scalar.noble", b"1 2 +")?;
+    let list = scratch.file("list.noble", b"20 nil cons [ 0 ] [ drop ] list.case")?;
+    let build_with_limit = |name: &str,
+                            source: &Path,
+                            requested: Option<u64>|
+     -> Result<String, Box<dyn std::error::Error>> {
+        let mut policy = serde_json::json!({
+            "profile": "Core-Bootstrap",
+            "target": "x86_64-unknown-linux-gnu",
+            "allowed_effects": [],
+            "limits": {"stack_slots": 8, "steps": 100, "output_bytes": 1024}
+        });
+        if let Some(bound) = requested {
+            policy["limits"]["list_length"] = serde_json::json!(bound);
+        }
+        let policy = scratch.file(
+            &format!("{name}-policy.json"),
+            &serde_json::to_vec(&policy)?,
+        )?;
+        let out = scratch.0.join(format!("{name}-out"));
+        let result = build(source, &contract, &policy, &out)?;
+        assert!(
+            result.status.success(),
+            "{name}: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(
+            manifest["runtime_limits"]["list_length"].as_u64(),
+            Some(requested.unwrap_or(255)),
+            "{name}: effective List bound"
+        );
+        Ok(manifest["c_sha256"]
+            .as_str()
+            .expect("source-only C digest")
+            .to_owned())
+    };
+
+    build_with_limit("scalar-two", &scalar, Some(2))?;
+    let zero = build_with_limit("list-zero", &list, Some(0))?;
+    let one = build_with_limit("list-one", &list, Some(1))?;
+    let max = build_with_limit("list-max", &list, Some(255))?;
+    let default = build_with_limit("list-default", &list, None)?;
+    assert_ne!(zero, one, "List bound must change the emitted C");
+    assert_ne!(one, max, "List bound must change the emitted C");
+    assert_eq!(max, default, "omitted List bound defaults to 255");
+    Ok(())
+}
+
+#[test]
+fn invalid_or_unknown_list_length_refuses_before_source_only_emission(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let source = scratch.file("source.noble", b"20 nil cons [ 0 ] [ drop ] list.case")?;
+    let contract = scratch.file(
+        "contract.json",
+        br#"{"expected_interface":"-- I64","resolved_host_contracts":{}}"#,
+    )?;
+    for (name, field, value) in [
+        ("over-cap", "list_length", serde_json::json!(256)),
+        ("negative", "list_length", serde_json::json!(-1)),
+        ("fractional", "list_length", serde_json::json!(1.5)),
+        ("string", "list_length", serde_json::json!("1")),
+        ("boolean", "list_length", serde_json::json!(true)),
+        ("null", "list_length", serde_json::Value::Null),
+        ("unknown", "list_len", serde_json::json!(1)),
+    ] {
+        let mut policy = serde_json::json!({
+            "profile": "Core-Bootstrap",
+            "target": "x86_64-unknown-linux-gnu",
+            "allowed_effects": [],
+            "limits": {"stack_slots": 8, "steps": 100, "output_bytes": 1024}
+        });
+        policy["limits"][field] = value;
+        let policy = scratch.file(
+            &format!("{name}-policy.json"),
+            &serde_json::to_vec(&policy)?,
+        )?;
+        let out = scratch.0.join(format!("{name}-out"));
+        let result = build(&source, &contract, &policy, &out)?;
+        assert_eq!(result.status.code(), Some(2), "{name}");
+        assert!(result.stdout.is_empty(), "{name}");
+        assert!(!out.exists(), "{name}: malformed policy emitted output");
+    }
     Ok(())
 }

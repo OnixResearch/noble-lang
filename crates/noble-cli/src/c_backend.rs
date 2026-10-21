@@ -581,6 +581,7 @@ struct Limits {
     slots: usize,
     steps: u64,
     output: usize,
+    list_length: usize,
 }
 
 struct UniqueValue(Value);
@@ -709,8 +710,10 @@ fn controls(
     let limits = policy["limits"]
         .as_object()
         .ok_or("missing finite C limits")?;
-    if limits.len() != 3 {
-        return Err("C limits require exactly stack_slots, steps, output_bytes".into());
+    if limits.len() != 3 && (limits.len() != 4 || !limits.contains_key("list_length")) {
+        return Err(
+            "C limits require stack_slots, steps, output_bytes and optional list_length".into(),
+        );
     }
     let slots = limits
         .get("stack_slots")
@@ -724,10 +727,15 @@ fn controls(
         .get("output_bytes")
         .and_then(Value::as_u64)
         .ok_or("invalid output_bytes")?;
+    let list_length = match limits.get("list_length") {
+        Some(value) => value.as_u64().ok_or("invalid list_length")?,
+        None => LIST_MAX as u64,
+    };
     if !(1..=256).contains(&slots)
         || !(1..=4096).contains(&steps)
         || !(128..=16384).contains(&output)
         || output < 128 + slots * 64
+        || list_length > LIST_MAX as u64
     {
         return Err("C limits exceed the supported bounded slice".into());
     }
@@ -737,6 +745,7 @@ fn controls(
             slots: slots as usize,
             steps,
             output: output as usize,
+            list_length: list_length as usize,
         },
     ))
 }
@@ -1091,7 +1100,7 @@ fn emit(
     let mut c = format!(
         "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define LIST_LIMIT {}\n#define SHAPES {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
         limits.slots, limits.steps, limits.output,
-        PROGRAM_MAX, AGGREGATE_MAX, LIST_MAX, shapes.len(), FRAME_MAX,
+        PROGRAM_MAX, AGGREGATE_MAX, limits.list_length, shapes.len(), FRAME_MAX,
         RECIPE_MAX, PROGRAM_DEPTH_MAX,
         programs.len(), texts.len().max(1)
     );
@@ -1239,7 +1248,8 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         "build_key":digest(&subject), "native_artifact":null,
         "runtime_limits":{"stack_slots":limits.slots, "steps":limits.steps,
             "output_bytes":limits.output, "program_slots":PROGRAM_MAX,
-            "aggregate_slots":AGGREGATE_MAX, "list_length_cap":LIST_MAX,
+            "aggregate_slots":AGGREGATE_MAX, "list_length":limits.list_length,
+            "list_length_cap":LIST_MAX,
             "type_shapes":SHAPE_MAX, "frame_slots":FRAME_MAX,
             "recipe_leaves":RECIPE_MAX,
             "program_depth":PROGRAM_DEPTH_MAX},

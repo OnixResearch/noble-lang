@@ -74,6 +74,7 @@ The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 incompatible tools produce an explicit refusal. The development shell alone
 does not install these runtime tools.
 
+
 ### Independent Mathlib comparison for implemented I64 arithmetic
 
 `verification/mathlib-i64/compare.mjs` compiles
