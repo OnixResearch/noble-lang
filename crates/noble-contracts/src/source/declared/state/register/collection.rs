@@ -34,6 +34,7 @@ impl Collected {
         members: alloc::vec::Vec<crate::source::declared::parsing::Member>,
         limits: crate::Limits,
         selected_locals: bool,
+        request_work: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
     ) -> Result<Self, crate::source::Error> {
         let count = members.len();
         let mut collected = Ok(Self {
@@ -96,6 +97,7 @@ impl Collected {
                         body_span,
                         limits,
                         selected_locals,
+                        request_work,
                     ),
                     crate::source::declared::parsing::Member::Contract(contract) => {
                         collected.add_contract(contract)
@@ -275,6 +277,7 @@ impl Collected {
     )]
     #[expect(
         tigerstyle::too_many_parameters,
+        clippy::too_many_arguments,
         reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
     )]
     fn add_definition(
@@ -285,8 +288,9 @@ impl Collected {
         body_span: crate::Span,
         limits: crate::Limits,
         selected_locals: bool,
+        request_work: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
     ) -> Result<Self, crate::source::Error> {
-        let mut meter = crate::Meter::new(limits);
+        let mut meter = crate::Meter::pooled(limits, request_work);
         let parsed = crate::source::parsing::parse_declared(&bytes, &mut meter);
         let (mut tree, parsed_name) = attempt!(parsed.map_err(|problem| {
             crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)

@@ -27,26 +27,29 @@ pub(super) fn apply(
             "explicit word witness has the wrong number of bindings",
         ));
     }
-    let resolved =
-        match noble_kernel::words::resolve::bindings(explicit.kinds, explicit.inst, meter.work) {
-            Ok((resolved, spent)) => {
-                attempt!(meter.charge(spent, explicit.span));
-                resolved
-            }
-            Err(noble_kernel::words::InstError::WalkExhausted) => {
-                return Err(crate::Diagnostic::new(
-                    crate::DiagnosticKind::Exhausted,
-                    explicit.span,
-                    "explicit witness resolution exhausted its work limit",
-                ))
-            }
-            Err(_) => {
-                return Err(crate::invalid(
-                    explicit.span,
-                    "explicit word witness has a cycle, unknown reference, or wrong binding kind",
-                ))
-            }
-        };
+    let resolved = match noble_kernel::words::resolve::bindings(
+        explicit.kinds,
+        explicit.inst,
+        meter.available(),
+    ) {
+        Ok((resolved, spent)) => {
+            attempt!(meter.charge(spent, explicit.span));
+            resolved
+        }
+        Err(noble_kernel::words::InstError::WalkExhausted) => {
+            return Err(crate::Diagnostic::new(
+                crate::DiagnosticKind::Exhausted,
+                explicit.span,
+                "explicit witness resolution exhausted its work limit",
+            ))
+        }
+        Err(_) => {
+            return Err(crate::invalid(
+                explicit.span,
+                "explicit word witness has a cycle, unknown reference, or wrong binding kind",
+            ))
+        }
+    };
     let bindings = Bindings {
         values: &resolved.bindings,
         variables: explicit.variables,

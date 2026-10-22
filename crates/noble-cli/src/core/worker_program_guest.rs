@@ -1711,7 +1711,7 @@ fn import_under_policy(policy: &WorkerHostPolicy) -> Result<serde_json::Value> {
         !package.is_empty() && package.len() <= limit,
         "Worker package byte bound"
     );
-    let mut trace = super::worker_program::ImportTrace::default();
+    let mut trace = super::worker_program::AdmissionTrace::default();
     let imported = ProgramStore::import(
         &package,
         Some(policy.clone()),

@@ -254,8 +254,9 @@ impl<'a> Cursor<'a> {
 pub(super) fn parse(
     input_bytes: &[u8],
     limits: crate::Limits,
+    request_work: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
 ) -> Result<ParsedUnit, crate::Diagnostic> {
-    let (tokens, span) = attempt!(scan(input_bytes, limits));
+    let (tokens, span) = attempt!(scan(input_bytes, limits, request_work));
     let first = tokens.first();
     let is_module = declaration_word(first, b"module");
     let is_import = declaration_word(first, b"import");
@@ -409,8 +410,9 @@ fn scan_context(
 fn scan(
     input_bytes: &[u8],
     limits: crate::Limits,
+    request_work: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
 ) -> Result<(alloc::vec::Vec<crate::source::lexer::Token>, crate::Span), crate::Diagnostic> {
-    let mut meter = crate::Meter::new(limits);
+    let mut meter = crate::Meter::pooled(limits, request_work);
     let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
         input_bytes,
         &mut meter

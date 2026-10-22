@@ -9,21 +9,51 @@ impl crate::Meter {
             limits,
             work: limits.work,
             nodes: 0,
+            pool: None,
         }
     }
 
+    /// A meter whose work also draws from `pool`, the remaining work of the
+    /// request it belongs to. Without a pool it is an ordinary meter.
+    pub fn pooled(
+        limits: crate::Limits,
+        pool: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
+    ) -> Self {
+        let mut meter = Self::new(limits);
+        if let Some(pool) = pool {
+            meter.work = meter.work.min(pool.get());
+            meter.pool = Some(alloc::rc::Rc::clone(pool));
+        }
+        meter
+    }
+
+    /// The shared request pool this meter draws from, if any.
+    pub fn pool(&self) -> Option<&alloc::rc::Rc<core::cell::Cell<u32>>> {
+        self.pool.as_ref()
+    }
+
+    /// Work this meter can still charge: its own share, further capped by
+    /// what remains of a shared request.
+    pub fn available(&self) -> u32 {
+        self.pool
+            .as_ref()
+            .map_or(self.work, |pool| self.work.min(pool.get()))
+    }
+
     pub fn charge(&mut self, amount: u32, span: crate::Span) -> Result<(), crate::Diagnostic> {
-        match self.work.checked_sub(amount) {
-            Some(remaining) => {
-                self.work = remaining;
-                Ok(())
-            }
-            None => Err(crate::Diagnostic::new(
+        let exhausted = || {
+            crate::Diagnostic::new(
                 crate::DiagnosticKind::Exhausted,
                 span,
                 "frontend work limit exceeded",
-            )),
+            )
+        };
+        let remaining = self.work.checked_sub(amount).ok_or_else(exhausted)?;
+        if let Some(pool) = &self.pool {
+            pool.set(pool.get().checked_sub(amount).ok_or_else(exhausted)?);
         }
+        self.work = remaining;
+        Ok(())
     }
 
     pub fn node(&mut self, span: crate::Span) -> Result<(), crate::Diagnostic> {

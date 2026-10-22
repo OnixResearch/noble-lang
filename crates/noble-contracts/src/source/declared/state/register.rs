@@ -66,6 +66,7 @@ impl super::ModuleSession {
             core::mem::take(&mut request.members),
             request.limits,
             is_selected_locals,
+            self.source.request_work(),
         ));
         self = attempt!(self.outside_words());
         let (next, resolved, meter) =
@@ -172,10 +173,12 @@ pub(super) fn original_signature(
     definition: &str,
     limits: crate::Limits,
 ) -> Result<noble_kernel::words::Scheme, crate::source::Error> {
-    let parsed = attempt!(
-        crate::source::declared::parsing::parse(&module.source, limits)
-            .map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem))
-    );
+    let parsed = attempt!(crate::source::declared::parsing::parse(
+        &module.source,
+        limits,
+        session.source.request_work()
+    )
+    .map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem)));
     let crate::source::declared::parsing::ParsedUnit::Module {
         name,
         version,
@@ -201,7 +204,8 @@ pub(super) fn original_signature(
     let collected = attempt!(collection::Collected::collect(
         members,
         limits,
-        is_selected_locals
+        is_selected_locals,
+        session.source.request_work()
     ));
     let families =
         crate::source::declared::signatures::families(session, &collected.schemas, module.identity);

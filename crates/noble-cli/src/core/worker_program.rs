@@ -38,12 +38,22 @@ pub(crate) enum Refusal {
     Exhausted,
 }
 
-/// Observations of one import attempt that remain meaningful when the import
-/// is refused.
+/// Observations of one admission (source check or package import) that
+/// remain meaningful when it is refused.
 #[derive(Default)]
-pub(crate) struct ImportTrace {
+pub(crate) struct AdmissionTrace {
     /// Locally compiled source modules installed to reattest captured Text.
     pub(crate) installations: u32,
+    /// The source checker's own diagnostic for a refused candidate. Hosts
+    /// bound it before reporting; the primary outcome never depends on it.
+    pub(crate) diagnostic: Option<String>,
+    /// Checking work shared by every checking stage, and what was left when
+    /// admission ended, if it got that far.
+    pub(crate) checking_work_shared: Option<u32>,
+    pub(crate) checking_work_left: Option<u32>,
+    /// Package tokens and decoding memory estimate measured before decoding.
+    pub(crate) package_tokens: Option<usize>,
+    pub(crate) package_memory_estimate: Option<usize>,
 }
 
 struct Node {
@@ -143,7 +153,25 @@ impl Store {
         input: &[Ty],
         work: usize,
     ) -> Result<(Self, Handle), Refusal> {
-        Self::prepare_selected(source, name, input, None, work)
+        Self::prepare_selected(
+            source,
+            name,
+            input,
+            None,
+            work,
+            &mut AdmissionTrace::default(),
+        )
+    }
+
+    /// `prepare` that records what admission observed, for host reports.
+    pub(crate) fn prepare_traced(
+        source: &[u8],
+        name: &str,
+        input: &[Ty],
+        work: usize,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Self, Handle), Refusal> {
+        Self::prepare_selected(source, name, input, None, work, trace)
     }
 
     /// Only a host embedder may opt in to a checked, bound operation. A typed
@@ -155,7 +183,14 @@ impl Store {
         policy: super::worker_program_guest::WorkerHostPolicy,
         work: usize,
     ) -> Result<(Self, Handle), Refusal> {
-        Self::prepare_selected(source, name, input, Some(policy), work)
+        Self::prepare_selected(
+            source,
+            name,
+            input,
+            Some(policy),
+            work,
+            &mut AdmissionTrace::default(),
+        )
     }
 
     fn prepare_selected(
@@ -164,6 +199,7 @@ impl Store {
         input: &[Ty],
         policy: Option<super::worker_program_guest::WorkerHostPolicy>,
         work: usize,
+        trace: &mut AdmissionTrace,
     ) -> Result<(Self, Handle), Refusal> {
         if source.len() > SOURCE_LIMITS.bytes as usize
             || input.len() > 64
@@ -205,16 +241,30 @@ impl Store {
         });
         let retained = noble_contracts::source::RetainedSourceLimit::new(limits.bytes)
             .ok_or(Refusal::Exhausted)?;
-        let session = match &policy {
+        let mut session = match &policy {
             // A host-bound Program keeps the unsigned grammar.
             Some(_) => noble_contracts::source::ModuleSession::new(bindings, retained),
             // A pure Program may contain signed, scoped self recursion.
             None => noble_contracts::source::ModuleSession::new_signed_self(bindings, retained),
         }
         .map_err(source_refusal)?;
+        // Every checking stage (module check, closure walks, invocation check)
+        // and every meter inside them draws from these slices together; the
+        // per-stage limit only caps one meter's share.
+        let checking_slices = u32::try_from(slices.checked_sub(1).ok_or(Refusal::Exhausted)?)
+            .map_err(|_| Refusal::Exhausted)?;
+        let checking_work = stage_work
+            .checked_mul(checking_slices)
+            .ok_or(Refusal::Exhausted)?;
+        session.share_request_work(checking_work);
+        trace.checking_work_shared = Some(checking_work);
+        let refused = |trace: &mut AdmissionTrace, problem: noble_contracts::source::Error| {
+            trace.diagnostic = Some(problem.diagnostic().message.clone());
+            source_refusal(problem)
+        };
         let module = session
             .prepare(source, &[], limits)
-            .map_err(source_refusal)?;
+            .map_err(|problem| refused(trace, problem))?;
         if module.kind() != noble_contracts::source::ModuleKind::Module
             || module.proof_obligations().is_some()
             || (policy.is_none() && !module.bindings().is_empty())
@@ -232,7 +282,7 @@ impl Store {
             Some(selected) => {
                 let closure = module
                     .checked_program_closure_for_binding(name, selected.binding())
-                    .map_err(closure_refusal)?;
+                    .map_err(|problem| closure_refused(trace, problem))?;
                 let owner = module
                     .checked_program_owner_for_binding(name, selected.binding())
                     .ok_or(Refusal::Invalid)?;
@@ -243,7 +293,7 @@ impl Store {
         let (module_identity, module_name, version) =
             module.resolved_module().ok_or(Refusal::Invalid)?;
         let (session, committed) = session.commit(module);
-        committed.map_err(source_refusal)?;
+        committed.map_err(|problem| refused(trace, problem))?;
         if let (Some(selected), Some((owner, _))) = (&policy, &bound) {
             if !selected.matches_source(source, owner.definition_identity(), session.generation()) {
                 return Err(Refusal::Invalid);
@@ -252,13 +302,14 @@ impl Store {
         let invocation = format!("{module_name}@{version}.{name}");
         let prepared = session
             .prepare(invocation.as_bytes(), input, limits)
-            .map_err(source_refusal)?;
+            .map_err(|problem| refused(trace, problem))?;
         let (owner, closure) = match bound {
             Some(checked) => checked,
             None => prepared
                 .checked_invocation_closure(module_identity, name)
-                .map_err(closure_refusal)?,
+                .map_err(|problem| closure_refused(trace, problem))?,
         };
+        trace.checking_work_left = session.remaining_request_work();
         if closure.is_empty() {
             return Err(Refusal::Invalid);
         }
@@ -307,7 +358,10 @@ impl Store {
             None => compiler.prepare(submission),
         }
         .map_err(|problem| match problem {
-            noble_wasm::Diagnostic::Exhausted => Refusal::Exhausted,
+            noble_wasm::Diagnostic::Exhausted => {
+                trace.diagnostic = Some("Worker compilation exceeded its request share".into());
+                Refusal::Exhausted
+            }
             _ => Refusal::Invalid,
         })?;
         let mut nodes = Vec::with_capacity(closure.len());
@@ -359,6 +413,10 @@ impl Store {
             if metadata.recipe_depth > RECIPE_DEPTH_LIMIT
                 || metadata.recipe_leaves > RECIPE_LEAF_LIMIT
             {
+                trace.diagnostic = Some(format!(
+                    "checked recipe depth {} or leaves {} exceed {RECIPE_DEPTH_LIMIT} or {RECIPE_LEAF_LIMIT}",
+                    metadata.recipe_depth, metadata.recipe_leaves
+                ));
                 return Err(Refusal::Exhausted);
             }
             let root_reachable = dependency.definition_slot() == owner.definition_slot();
@@ -760,67 +818,18 @@ impl Store {
         bytes: &[u8],
         policy: Option<super::worker_program_guest::WorkerHostPolicy>,
         work: usize,
-        trace: &mut ImportTrace,
+        trace: &mut AdmissionTrace,
     ) -> Result<(Self, Handle), Refusal> {
-        if bytes.len() > PACKAGE_BYTES {
-            return Err(Refusal::Exhausted);
-        }
-        let mut depth = 0usize;
-        let mut quoted = false;
-        let mut escaped = false;
-        let mut tokens = 0usize;
-        for byte in bytes {
-            if quoted {
-                if escaped {
-                    escaped = false;
-                } else if *byte == b'\\' {
-                    escaped = true;
-                } else if *byte == b'"' {
-                    quoted = false;
-                }
-                continue;
-            }
-            match byte {
-                b'"' => {
-                    quoted = true;
-                    tokens = tokens.checked_add(1).ok_or(Refusal::Exhausted)?;
-                }
-                b'{' | b'[' => {
-                    depth = depth.checked_add(1).ok_or(Refusal::Exhausted)?;
-                    if depth > PACKAGE_DEPTH {
-                        return Err(Refusal::Exhausted);
-                    }
-                    tokens = tokens.checked_add(1).ok_or(Refusal::Exhausted)?;
-                }
-                b'}' | b']' => {
-                    depth = depth.checked_sub(1).ok_or(Refusal::Invalid)?;
-                }
-                b',' => {
-                    tokens = tokens.checked_add(1).ok_or(Refusal::Exhausted)?;
-                }
-                _ => {}
-            }
-            if tokens > GRAPH_LIMIT * 8 {
-                return Err(Refusal::Exhausted);
-            }
-        }
-        if depth != 0 || quoted {
-            return Err(Refusal::Invalid);
-        }
-        let memory = bytes
-            .len()
-            .checked_mul(3)
-            .and_then(|base| tokens.checked_mul(128)?.checked_add(base))
-            .ok_or(Refusal::Exhausted)?;
-        if memory > 1_048_576 {
-            return Err(Refusal::Exhausted);
-        }
-        let parser_work = bytes
-            .len()
-            .checked_mul(3)
-            .and_then(|base| tokens.checked_mul(8)?.checked_add(base))
-            .ok_or(Refusal::Exhausted)?;
-        let remaining = work.checked_sub(parser_work).ok_or(Refusal::Exhausted)?;
+        let scanned = prescan(bytes).map_err(|(problem, why)| {
+            trace.diagnostic = Some(why.into());
+            problem
+        })?;
+        trace.package_tokens = Some(scanned.tokens);
+        trace.package_memory_estimate = Some(scanned.memory);
+        let remaining = work.checked_sub(scanned.parser_work).ok_or_else(|| {
+            trace.diagnostic = Some("package decoding work exceeds the request".into());
+            Refusal::Exhausted
+        })?;
         let document: Value = serde_json::from_slice(bytes).map_err(|_| Refusal::Invalid)?;
         if serde_json::to_vec(&document).map_err(|_| Refusal::Invalid)? != bytes {
             return Err(Refusal::Invalid);
@@ -843,8 +852,14 @@ impl Store {
         }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
-        let (mut store, _root) =
-            Self::prepare_selected(source.as_bytes(), name, &[Ty::I64], policy, remaining)?;
+        let (mut store, _root) = Self::prepare_selected(
+            source.as_bytes(),
+            name,
+            &[Ty::I64],
+            policy,
+            remaining,
+            trace,
+        )?;
         let graph = document["graph"].as_array().ok_or(Refusal::Invalid)?;
         if graph.len() < store.recipe_nodes() {
             return Err(Refusal::Invalid);
@@ -1167,12 +1182,111 @@ fn source_refusal(problem: noble_contracts::source::Error) -> Refusal {
     }
 }
 
+/// What the bounded pre-decode scan of package bytes measured.
+pub(crate) struct Prescan {
+    pub(crate) tokens: usize,
+    /// Estimated decoding memory: three units per byte, 128 per token.
+    pub(crate) memory: usize,
+    pub(crate) parser_work: usize,
+}
+
+const PACKAGE_MEMORY: usize = 1_048_576;
+
+/// Checks package bytes, nesting, token count and the decoding memory
+/// estimate before serde allocates anything; each limit names itself.
+pub(crate) fn prescan(bytes: &[u8]) -> Result<Prescan, (Refusal, &'static str)> {
+    let exhausted = |why| (Refusal::Exhausted, why);
+    if bytes.len() > PACKAGE_BYTES {
+        return Err(exhausted("package bytes exceed 262144"));
+    }
+    let mut depth = 0usize;
+    let mut quoted = false;
+    let mut escaped = false;
+    let mut tokens = 0usize;
+    for byte in bytes {
+        if quoted {
+            if escaped {
+                escaped = false;
+            } else if *byte == b'\\' {
+                escaped = true;
+            } else if *byte == b'"' {
+                quoted = false;
+            }
+            continue;
+        }
+        match byte {
+            b'"' => {
+                quoted = true;
+                tokens = tokens
+                    .checked_add(1)
+                    .ok_or(exhausted("package tokens overflow"))?;
+            }
+            b'{' | b'[' => {
+                depth = depth
+                    .checked_add(1)
+                    .ok_or(exhausted("package nesting overflow"))?;
+                if depth > PACKAGE_DEPTH {
+                    return Err(exhausted("package nesting exceeds 32"));
+                }
+                tokens = tokens
+                    .checked_add(1)
+                    .ok_or(exhausted("package tokens overflow"))?;
+            }
+            b'}' | b']' => {
+                depth = depth
+                    .checked_sub(1)
+                    .ok_or((Refusal::Invalid, "unbalanced package nesting"))?;
+            }
+            b',' => {
+                tokens = tokens
+                    .checked_add(1)
+                    .ok_or(exhausted("package tokens overflow"))?;
+            }
+            _ => {}
+        }
+        if tokens > GRAPH_LIMIT * 8 {
+            return Err(exhausted("package tokens exceed 32768"));
+        }
+    }
+    if depth != 0 || quoted {
+        return Err((Refusal::Invalid, "unterminated package"));
+    }
+    let memory = bytes
+        .len()
+        .checked_mul(3)
+        .and_then(|base| tokens.checked_mul(128)?.checked_add(base))
+        .ok_or(exhausted("package memory estimate overflow"))?;
+    if memory > PACKAGE_MEMORY {
+        return Err(exhausted("package memory estimate exceeds 1048576"));
+    }
+    let parser_work = bytes
+        .len()
+        .checked_mul(3)
+        .and_then(|base| tokens.checked_mul(8)?.checked_add(base))
+        .ok_or(exhausted("package decoding work overflow"))?;
+    Ok(Prescan {
+        tokens,
+        memory,
+        parser_work,
+    })
+}
+
 fn closure_refusal(problem: noble_contracts::source::ProgramClosureError) -> Refusal {
     match problem {
         noble_contracts::source::ProgramClosureError::Exhausted => Refusal::Exhausted,
         noble_contracts::source::ProgramClosureError::Unsupported => Refusal::Unsupported,
         noble_contracts::source::ProgramClosureError::Invalid => Refusal::Invalid,
     }
+}
+
+fn closure_refused(
+    trace: &mut AdmissionTrace,
+    problem: noble_contracts::source::ProgramClosureError,
+) -> Refusal {
+    if problem == noble_contracts::source::ProgramClosureError::Exhausted {
+        trace.diagnostic = Some("dependency closure traversal exceeded its limit".into());
+    }
+    closure_refusal(problem)
 }
 
 fn type_names(types: &[Ty]) -> Result<Vec<&'static str>, Refusal> {
@@ -1206,11 +1320,10 @@ fn runtime_refusal(problem: anyhow::Error) -> Refusal {
 }
 
 fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
-    if arguments.len() != 6 || arguments[4] != "--effect-ceiling" {
-        return Err((
-            "invalid-input",
-            "usage: noble worker program import PACKAGE --effect-ceiling pure",
-        ));
+    const USAGE: &str =
+        "usage: noble worker program import PACKAGE --effect-ceiling pure [--work N]";
+    if arguments.len() < 6 || arguments[4] != "--effect-ceiling" {
+        return Err(("invalid-input", USAGE));
     }
     if arguments[5] != "pure" {
         return Err((
@@ -1218,24 +1331,25 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
             "Worker host effect policy unavailable to CLI",
         ));
     }
+    let work = requested_work(arguments, 6, USAGE)?;
     let package = super::worker_typed::read_bounded_regular_file(
         std::path::Path::new(&arguments[3]),
         PACKAGE_BYTES,
     )
-    .map_err(|_| ("invalid-input", "package file admission failed"))?;
-    let mut trace = ImportTrace::default();
-    let (store, root) = match Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace) {
+    .map_err(|problem| (problem.context.outcome, "package file admission failed"))?;
+    let mut trace = AdmissionTrace::default();
+    let (store, root) = match Store::import(&package, None, work, &mut trace) {
         Ok(imported) => imported,
         // A refusal still reports how many source modules were installed
         // before it, so a hostile package cannot hide a partial admission.
         Err(problem) => {
-            let (outcome, diagnostic) = refusal(problem);
-            return Ok(
-                json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
-                "outcome":outcome,"diagnostic":diagnostic,
-                "source_installations":trace.installations,"guest_requests":0,
-                "protected_operations":0,"executable_guest_installed":false}),
-            );
+            return Ok(admission_refusal(
+                "noble-worker-program-import/v2",
+                "import-admission",
+                problem,
+                &trace,
+                work,
+            ));
         }
     };
     Ok(
@@ -1244,7 +1358,96 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
         "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
         "dependencies":store.closure.len(),"guest_requests":0,
         "protected_operations":0,"executable_guest_installed":false,
-        "source_installations":trace.installations}),
+        "source_installations":trace.installations,"limits":{"work":work},
+        "checking_work_shared":trace.checking_work_shared,"checking_work_left":trace.checking_work_left,
+        "package_tokens":trace.package_tokens,
+        "package_memory_estimate":trace.package_memory_estimate}),
+    )
+}
+
+/// Host-selected request work: an optional trailing `--work N` after the
+/// `fixed` arguments; the default is the CLI's full request budget.
+fn requested_work(
+    arguments: &[std::ffi::OsString],
+    fixed: usize,
+    usage: &'static str,
+) -> Result<usize, (&'static str, &'static str)> {
+    match arguments.get(fixed..) {
+        Some([]) => Ok(RUNTIME_REQUEST_WORK),
+        Some([flag, value]) if flag == "--work" => value
+            .to_str()
+            .and_then(|text| text.parse::<usize>().ok())
+            .filter(|work| (1..=RUNTIME_REQUEST_WORK).contains(work))
+            .ok_or(("invalid-input", "--work must be between 1 and 50000000")),
+        _ => Err(("invalid-input", usage)),
+    }
+}
+
+/// A refused admission keeps its primary outcome; the checker's own
+/// diagnostic, when there is one, is reported within the output bound.
+fn admission_refusal(
+    schema: &str,
+    stage: &str,
+    problem: Refusal,
+    trace: &AdmissionTrace,
+    work: usize,
+) -> Value {
+    let (outcome, fallback) = refusal(problem);
+    let detail = trace.diagnostic.as_deref().unwrap_or(fallback);
+    let bounded = super::worker_typed::bounded_diagnostic(detail);
+    json!({"schema":schema,"stage":stage,"outcome":outcome,"diagnostic":bounded,
+        "diagnostic_truncated":bounded.len() < detail.len(),
+        "diagnostic_bytes":serde_json::to_string(detail).map_or(0, |text| text.len()),
+        "limits":{"work":work},"checking_work_shared":trace.checking_work_shared,"checking_work_left":trace.checking_work_left,
+        "package_tokens":trace.package_tokens,
+        "package_memory_estimate":trace.package_memory_estimate,
+        "source_installations":trace.installations,"guest_requests":0,
+        "protected_operations":0,"executable_guest_installed":false})
+}
+
+/// Admission only: check and compile a pure named Program under one
+/// host-selected request budget, without installing or running a guest.
+fn check(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
+    const USAGE: &str =
+        "usage: noble worker program check SOURCE --name NAME --effect-ceiling pure [--work N]";
+    if arguments.len() < 8 || arguments[4] != "--name" || arguments[6] != "--effect-ceiling" {
+        return Err(("invalid-input", USAGE));
+    }
+    if arguments[7] != "pure" {
+        return Err((
+            "unsupported",
+            "Worker host effect policy unavailable to CLI",
+        ));
+    }
+    let work = requested_work(arguments, 8, USAGE)?;
+    let name = arguments[5]
+        .to_str()
+        .ok_or(("invalid-input", "invalid named Program"))?;
+    let source = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]),
+        SOURCE_LIMITS.bytes as usize,
+    )
+    .map_err(|problem| (problem.context.outcome, "source file admission failed"))?;
+    let mut trace = AdmissionTrace::default();
+    let (store, root) = match Store::prepare_traced(&source, name, &[Ty::I64], work, &mut trace) {
+        Ok(prepared) => prepared,
+        Err(problem) => {
+            return Ok(admission_refusal(
+                "noble-worker-program-check/v2",
+                "admission",
+                problem,
+                &trace,
+                work,
+            ))
+        }
+    };
+    Ok(
+        json!({"schema":"noble-worker-program-check/v2","stage":"admission","outcome":"ready",
+        "source_sha256":crate::workflow::intrinsic::sha256(&store.source),
+        "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
+        "dependencies":store.closure.len(),"limits":{"work":work},
+        "checking_work_shared":trace.checking_work_shared,"checking_work_left":trace.checking_work_left,"guest_requests":0,
+        "protected_operations":0,"executable_guest_installed":false}),
     )
 }
 
@@ -1297,7 +1500,7 @@ fn guest_package(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static st
         PACKAGE_BYTES,
     )
     .map_err(|_| ("invalid-input", "package file admission failed"))?;
-    let mut trace = ImportTrace::default();
+    let mut trace = AdmissionTrace::default();
     let (mut store, root) =
         Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace).map_err(refusal)?;
     guest_report(&mut store, root, operand, "fresh-package")
@@ -1352,6 +1555,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = (|| {
         match arguments.get(2).and_then(|value| value.to_str()) {
             Some("import") => return import(arguments),
+            Some("check") => return check(arguments),
             Some("guest") => return guest(arguments),
             Some("guest-package") => return guest_package(arguments),
             _ => {}
@@ -1541,7 +1745,7 @@ mod tests {
             &encoded,
             None,
             RUNTIME_REQUEST_WORK,
-            &mut ImportTrace::default(),
+            &mut AdmissionTrace::default(),
         )
         .expect("freshly attested Text package");
         assert_eq!(
@@ -1558,7 +1762,7 @@ mod tests {
                 &forged,
                 None,
                 RUNTIME_REQUEST_WORK,
-                &mut ImportTrace::default()
+                &mut AdmissionTrace::default()
             ),
             Err(Refusal::Invalid)
         ));
@@ -1584,7 +1788,7 @@ mod tests {
             &package,
             None,
             RUNTIME_REQUEST_WORK,
-            &mut ImportTrace::default(),
+            &mut AdmissionTrace::default(),
         )
         .unwrap();
         assert_eq!(imported.capture_wire().unwrap()[0]["text_utf8"], "nested");
@@ -1608,7 +1812,7 @@ mod tests {
                     &forged,
                     None,
                     RUNTIME_REQUEST_WORK,
-                    &mut ImportTrace::default()
+                    &mut AdmissionTrace::default()
                 ),
                 Err(Refusal::Invalid)
             ),
@@ -1873,7 +2077,7 @@ mod tests {
             &encoded,
             None,
             RUNTIME_REQUEST_WORK,
-            &mut ImportTrace::default(),
+            &mut AdmissionTrace::default(),
         )
         .expect("fresh locally checked package import");
         assert_eq!(
@@ -1893,7 +2097,7 @@ mod tests {
                     &serde_json::to_vec(&forged_selection).unwrap(),
                     None,
                     RUNTIME_REQUEST_WORK,
-                    &mut ImportTrace::default()
+                    &mut AdmissionTrace::default()
                 ),
                 Err(Refusal::Unsupported)
             ),
@@ -1957,7 +2161,7 @@ mod tests {
         ] {
             let bytes = serde_json::to_vec(&altered).expect(label);
             assert!(
-                matches!(Store::import(&bytes, None, RUNTIME_REQUEST_WORK, &mut ImportTrace::default()),
+                matches!(Store::import(&bytes, None, RUNTIME_REQUEST_WORK, &mut AdmissionTrace::default()),
                 Err(refusal) if refusal == expected),
                 "{label}"
             );
@@ -2046,7 +2250,7 @@ mod tests {
         }));
         assert_eq!(package["captures"][0]["schema"], "Text");
 
-        let mut trace = ImportTrace::default();
+        let mut trace = AdmissionTrace::default();
         let (imported, selected) = Store::import(
             &encoded,
             Some(policy.clone()),
@@ -2060,7 +2264,7 @@ mod tests {
             &EffSet::from_ids(&[TEST_EMIT])
         );
 
-        let mut trace = ImportTrace::default();
+        let mut trace = AdmissionTrace::default();
         assert!(
             Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace).is_err(),
             "the pure import path cannot admit a host-bound package"
@@ -2090,7 +2294,7 @@ mod tests {
         ] {
             let mut altered = package.clone();
             *altered.pointer_mut(path).expect(label) = substitute;
-            let mut trace = ImportTrace::default();
+            let mut trace = AdmissionTrace::default();
             assert_eq!(
                 Store::import(
                     &serde_json::to_vec(&altered).unwrap(),
@@ -2117,7 +2321,7 @@ mod tests {
         let encoded = granted_export(&mut store, root);
         let package: Value = serde_json::from_slice(&encoded).unwrap();
         assert_eq!(package["captures"][0]["text_utf8"], "tag");
-        let mut trace = ImportTrace::default();
+        let mut trace = AdmissionTrace::default();
         Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace)
             .expect("the exact locally checked closure and witness import");
         assert_eq!(trace.installations, 1);
@@ -2201,7 +2405,7 @@ mod tests {
                 Refusal::Invalid,
             ),
         ] {
-            let mut trace = ImportTrace::default();
+            let mut trace = AdmissionTrace::default();
             assert_eq!(
                 Store::import(
                     &serde_json::to_vec(&altered).unwrap(),
@@ -2223,7 +2427,7 @@ mod tests {
         // reattestation of the installed Text can refuse it.
         let mut misbound = package.clone();
         misbound["capture_binding_blake3"] = json!("0".repeat(64));
-        let mut trace = ImportTrace::default();
+        let mut trace = AdmissionTrace::default();
         assert_eq!(
             Store::import(
                 &serde_json::to_vec(&misbound).unwrap(),
@@ -2253,7 +2457,7 @@ mod tests {
         let exact = package(0);
         let one_more = package(1);
         let import = |bytes: &[u8], work: usize| {
-            let mut trace = ImportTrace::default();
+            let mut trace = AdmissionTrace::default();
             Store::import(bytes, None, work, &mut trace).map(|_| ())
         };
         assert!(import(&one_more, RUNTIME_REQUEST_WORK).is_ok());
@@ -2292,7 +2496,7 @@ mod tests {
         assert_eq!(count["owner"], package["root"]["owner"]);
         assert_eq!(count["self_owner"], count["owner"]);
         assert_eq!(dec["self_owner"], Value::Null);
-        let mut trace = ImportTrace::default();
+        let mut trace = AdmissionTrace::default();
         let (mut imported, selected) =
             Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace)
                 .expect("the exact recursive package imports");
@@ -2328,7 +2532,7 @@ mod tests {
         ] {
             let mut altered = package.clone();
             *altered.pointer_mut(path).expect(label) = value;
-            let mut trace = ImportTrace::default();
+            let mut trace = AdmissionTrace::default();
             assert_eq!(
                 Store::import(
                     &serde_json::to_vec(&altered).unwrap(),

@@ -932,3 +932,62 @@ fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String>
 }
 #[path = "declared/owners.rs"]
 mod owners;
+
+/// One shared request budget spans the module check and the invocation
+/// check: the later stage draws from what the earlier one left, never from a
+/// fresh allowance.
+#[test]
+fn shared_request_work_spans_nested_checking_stages() -> Result<(), String> {
+    use noble_contracts::source::ModuleSession;
+    use noble_contracts::DiagnosticKind;
+    const SOURCE: &[u8] =
+        b"module m@1 [ def a [ 1 + ] def b [ a 2 + ] def c [ b 3 + ] export d def d [ c 4 + ] ]";
+    // Checks the module with `module_work` shared work, then the invocation
+    // with what is left, or with a fresh `invocation_work` when given.
+    let run = |module_work: u32, invocation_work: Option<u32>| {
+        let mut session =
+            ModuleSession::new(&[], retained()).map_err(|error| format!("{error:?}"))?;
+        session.share_request_work(module_work);
+        let module = match session.prepare(SOURCE, &[], LIMITS) {
+            Ok(module) => module,
+            Err(error) => return Ok((Err(error.diagnostic().kind), Ok(()))),
+        };
+        let (mut session, committed) = session.commit(module);
+        committed.map_err(|error| format!("{error:?}"))?;
+        if let Some(fresh) = invocation_work {
+            session.share_request_work(fresh);
+        }
+        let invocation = session
+            .prepare(b"m@1.d", &[noble_kernel::types::Ty::I64], LIMITS)
+            .map(|_| ())
+            .map_err(|error| error.diagnostic().kind);
+        Ok::<_, String>((Ok(()), invocation))
+    };
+    let admits = |total: u32| -> Result<bool, String> {
+        let (module, invocation) = run(total, None)?;
+        Ok(module.is_ok() && invocation.is_ok())
+    };
+    let (mut short, mut enough) = (0u32, 10_000_000u32);
+    assert!(admits(enough)?);
+    while enough - short > 1 {
+        let middle = short + (enough - short) / 2;
+        if admits(middle)? {
+            enough = middle;
+        } else {
+            short = middle;
+        }
+    }
+    let (module, invocation) = run(short, None)?;
+    assert!(module.is_ok(), "the module check fits {short} shared work");
+    assert_eq!(
+        invocation,
+        Err(DiagnosticKind::Exhausted),
+        "the invocation check exhausts what the module left"
+    );
+    let (module, invocation) = run(u32::MAX, Some(short))?;
+    assert!(
+        module.is_ok() && invocation.is_ok(),
+        "the same invocation check fits a fresh allowance of {short}"
+    );
+    Ok(())
+}

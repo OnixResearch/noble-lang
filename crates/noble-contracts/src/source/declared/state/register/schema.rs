@@ -97,13 +97,14 @@ impl<'a> Resolution<'a> {
         let mut resolved: Resolved = alloc::vec::Vec::with_capacity(collected.schemas.len());
         resolved.resize_with(collected.schemas.len(), || None);
         let local_types = attempt!(names::available(&session, collected.schemas.len()));
+        let meter = crate::Meter::pooled(limits, session.source.request_work());
         Ok(Self {
             local_types,
             local_generics: alloc::vec::Vec::new(),
             session: Some(session),
             resolved,
             type_nodes: 0,
-            meter: crate::Meter::new(limits),
+            meter,
             identity,
             limits,
             collected,

@@ -270,7 +270,7 @@ fn allowance(
     let body_count = attempt!(crate::index(body_count, span));
     let work = match body_count
         .checked_mul(4)
-        .and_then(|count| meter.work.checked_div(count))
+        .and_then(|count| meter.available().checked_div(count))
     {
         Some(allowance) => allowance,
         None => return Err(crate::internal(span)),

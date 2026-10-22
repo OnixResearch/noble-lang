@@ -258,6 +258,10 @@ pub(crate) struct Meter {
     pub limits: Limits,
     work: u32,
     nodes: u32,
+    /// Remaining work of one shared request. When present, every charge also
+    /// draws from it, so meters cut from one request can never restart its
+    /// budget; `limits.work` then only caps this meter's share.
+    pool: Option<alloc::rc::Rc<core::cell::Cell<u32>>>,
 }
 
 pub(crate) fn invalid(span: Span, message: &str) -> Diagnostic {

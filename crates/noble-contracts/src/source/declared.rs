@@ -38,6 +38,9 @@ pub(super) struct Context {
     pub signed_self: bool,
     /// Only the explicitly combined declared-text source ingress exposes text.byte.
     pub declared_text: bool,
+    /// Remaining work of one host-selected request shared by every stage of
+    /// this session's checking. Absent unless a host opts in.
+    pub request_work: Option<alloc::rc::Rc<core::cell::Cell<u32>>>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -177,6 +180,16 @@ pub(crate) fn verify_definition_origin(
     definition_source: &[u8],
     limits: crate::Limits,
 ) -> Result<crate::Span, crate::Diagnostic> {
+    verify_definition_origin_in_request(origin, definition_source, limits, None)
+}
+
+/// `verify_definition_origin` whose reparse draws from a shared request.
+pub(super) fn verify_definition_origin_in_request(
+    origin: DefinitionOrigin<'_>,
+    definition_source: &[u8],
+    limits: crate::Limits,
+    request_work: Option<&alloc::rc::Rc<core::cell::Cell<u32>>>,
+) -> Result<crate::Span, crate::Diagnostic> {
     let DefinitionOrigin {
         module_source,
         module,
@@ -185,7 +198,7 @@ pub(crate) fn verify_definition_origin(
         ordinal,
         span: source_span,
     } = origin;
-    let parsed = attempt!(parsing::parse(module_source, limits));
+    let parsed = attempt!(parsing::parse(module_source, limits, request_work));
     let parsing::ParsedUnit::Module {
         name,
         version: parsed_version,
@@ -344,7 +357,7 @@ pub(crate) fn verify_named_export(
     definition_span: crate::Span,
     limits: crate::Limits,
 ) -> Result<(), crate::Diagnostic> {
-    let parsed = attempt!(parsing::parse(module_source, limits));
+    let parsed = attempt!(parsing::parse(module_source, limits, None));
     let parsing::ParsedUnit::Module {
         name,
         version: parsed_version,

@@ -297,7 +297,7 @@ fn commit_definition(
         // nodes are bounded independently; rechecking a retained dependency
         // must not consume every later body's node allowance. Validation
         // work, unlike nodes, remains shared across the whole registration.
-        let mut body_meter = crate::Meter::new(meter.limits);
+        let mut body_meter = crate::Meter::pooled(meter.limits, meter.pool());
         body_meter.work = meter.work;
         let prepared = session.source.prepare_signed_metered(
             definition_bytes,

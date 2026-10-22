@@ -105,7 +105,9 @@ fn definition_step<'a>(
     let (depth, is_closed) = attempt!(super::super::quotation_step(depth, token)
         .ok_or_else(|| super::parse_diagnostic(cursor.span, "invalid module quotation nesting")));
     if depth > limits.depth {
-        return Err(super::parse_diagnostic(
+        // A limit, not a malformed body: exhaustion never proves invalidity.
+        return Err(crate::Diagnostic::new(
+            crate::DiagnosticKind::Exhausted,
             cursor.span,
             "module quotation depth exceeded",
         ));

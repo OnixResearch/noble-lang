@@ -112,7 +112,7 @@ impl super::ModuleSession {
             }
         }
         let mut dependents = Vec::new();
-        let mut meter = crate::Meter::new(limits);
+        let mut meter = crate::Meter::pooled(limits, self.source.request_work());
         for (index, definition) in self.source.definitions.iter().enumerate() {
             if definition.owner.is_some() {
                 continue;

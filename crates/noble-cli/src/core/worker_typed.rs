@@ -75,7 +75,7 @@ fn interface_failure(problem: InterfaceReject) -> Failure {
     }
 }
 
-fn bounded_diagnostic(message: &str) -> &str {
+pub(super) fn bounded_diagnostic(message: &str) -> &str {
     // Bound the serialized JSON string, including its quotes. Escaping a
     // control byte can cost six bytes even when the input is shorter than 512.
     let mut encoded = 2;

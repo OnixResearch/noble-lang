@@ -38,7 +38,7 @@ impl super::ModuleSession {
         // Only modules retain the candidate source. If the aggregate would overflow,
         // classify the first lexical token before parsing or cloning prior sources.
         if let Err(error) = self.check_retained(input_bytes.len()) {
-            let mut meter = crate::Meter::new(limits);
+            let mut meter = crate::Meter::pooled(limits, self.source.request_work());
             let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
                 input_bytes,
                 &mut meter,
@@ -58,11 +58,14 @@ impl super::ModuleSession {
                 return Err(error);
             }
         }
-        let unit = attempt!(
-            crate::source::declared::parsing::parse(input_bytes, limits).map_err(|problem| {
-                crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
-            })
-        );
+        let unit = attempt!(crate::source::declared::parsing::parse(
+            input_bytes,
+            limits,
+            self.source.request_work()
+        )
+        .map_err(|problem| {
+            crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
+        }));
         if matches!(
             &unit,
             crate::source::declared::parsing::ParsedUnit::Definition

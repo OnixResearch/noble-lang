@@ -551,8 +551,13 @@ impl ModulePrepared {
         module: &super::Module,
         owner: &CheckedProgramOwner,
     ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
-        if module.definition_spans.is_empty() || module.definition_spans.len() > super::MODULE_CAP {
+        if module.definition_spans.is_empty() {
             return Err(ProgramClosureError::Invalid);
+        }
+        // The closure traversal is bounded by the definition cap; a larger
+        // module exhausts the traversal, it is not thereby invalid.
+        if module.definition_spans.len() > super::MODULE_CAP {
+            return Err(ProgramClosureError::Exhausted);
         }
         let named = &self.staged.source.definitions;
         let root_index =
@@ -560,7 +565,7 @@ impl ModulePrepared {
         let mut visited = alloc::vec![false; named.len()];
         let mut enqueued = alloc::vec![false; named.len()];
         let mut pending = alloc::vec![root_index];
-        let mut meter = crate::Meter::new(self.limits);
+        let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
         *enqueued
             .get_mut(root_index)
             .ok_or(ProgramClosureError::Invalid)? = true;
@@ -825,7 +830,7 @@ impl ModulePrepared {
                     "signed definition lies outside original module",
                 ));
             };
-            let lexical_body = attempt!(super::verify_definition_origin(
+            let lexical_body = attempt!(super::verify_definition_origin_in_request(
                 super::DefinitionOrigin {
                     module_source: &module.source,
                     module: &module.name,
@@ -839,6 +844,7 @@ impl ModulePrepared {
                 },
                 bytes,
                 self.limits,
+                self.staged.source.request_work(),
             )
             .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
             if lexical_body != span.body_span {
@@ -847,7 +853,7 @@ impl ModulePrepared {
                     "signed body differs from original module",
                 ));
             }
-            let mut meter = crate::Meter::new(self.limits);
+            let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
             attempt!(meter
                 .charge(
                     attempt!(
@@ -1441,6 +1447,7 @@ impl ModuleSession {
             owner: None,
             signed_self,
             declared_text,
+            request_work: None,
         });
         Ok(Self {
             source: source_session,
@@ -1484,6 +1491,21 @@ impl ModuleSession {
     /// A proof recheck or worker proposal can commit to the copy without
     /// changing the retained session; its owner must revalidate its external
     /// safepoint before replacing the retained session with this successor.
+    /// Share one host-selected request budget across every checking stage
+    /// this session and the sessions staged from it perform: each internal
+    /// meter then draws from the same remaining work instead of restarting
+    /// from its own limit, which only caps that meter's share.
+    pub fn share_request_work(&mut self, work: u32) {
+        if let Some(context) = self.source.declared.as_mut() {
+            context.request_work = Some(alloc::rc::Rc::new(core::cell::Cell::new(work)));
+        }
+    }
+
+    /// Remaining shared request work, if the host opted in.
+    pub fn remaining_request_work(&self) -> Option<u32> {
+        self.source.request_work().map(|remaining| remaining.get())
+    }
+
     pub fn snapshot(&self) -> Self {
         Self {
             source: crate::source::Session {

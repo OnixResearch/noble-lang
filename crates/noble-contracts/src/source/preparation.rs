@@ -38,8 +38,14 @@ impl super::Session {
         limits: crate::Limits,
         retained_bytes: u32,
     ) -> Result<super::Prepared, super::Error> {
-        let mut meter = crate::Meter::new(limits);
+        let mut meter = crate::Meter::pooled(limits, self.request_work());
         self.prepare_signed_metered(source_bytes, inputs, signature, retained_bytes, &mut meter)
+    }
+
+    /// Remaining work of the host-selected request this session shares
+    /// across every checking stage, if the host opted in.
+    pub(crate) fn request_work(&self) -> Option<&alloc::rc::Rc<core::cell::Cell<u32>>> {
+        self.declared.as_ref()?.request_work.as_ref()
     }
 
     #[expect(
