@@ -25,6 +25,10 @@ pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
 pub const TEST_CODE_EXPORT: crate::types::EffId = crate::types::EffId(6);
 /// Host-selected identity of the deny-only WORKER-12 source adapter.
 pub const TEST_CODE_EXPORT_ADAPTER_IDENTITY: &str = "worker-test-code-export@1.0.0";
+/// The reserved identity of the required, host-observed `test.send` effect.
+pub const TEST_SEND: crate::types::EffId = crate::types::EffId(7);
+/// Host-selected identity of the WORKER-10 observed-send source adapter.
+pub const TEST_SEND_ADAPTER_IDENTITY: &str = "worker-test-send@1.0.0";
 /// The reserved, opt-in effect of selecting a preadmitted live program.
 pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);
 
@@ -108,6 +112,8 @@ pub enum Behavior {
     BoundClock(u32),
     /// A required `test.code-export` binding, retaining its immutable slot.
     BoundCodeExport(u32),
+    /// A required `test.send` binding, retaining its immutable slot.
+    BoundSend(u32),
     /// Explicit opaque construction and conversion.
     NominalNew(crate::types::NominalTypeId),
     NominalInto(crate::types::NominalTypeId),
@@ -210,6 +216,16 @@ pub struct BoundClockRegistration {
 
 /// Pending code-export request; its checked effect is not export authority.
 pub struct BoundCodeExportRegistration {
+    pub adapter_identity: alloc::string::String,
+    pub adapter_slot: u32,
+    pub owner: u64,
+    pub input: alloc::vec::Vec<crate::types::Ty>,
+    pub output: alloc::vec::Vec<crate::types::Ty>,
+    pub effects: crate::types::EffSet,
+}
+
+/// Pending send request; its checked effect is not send authority.
+pub struct BoundSendRegistration {
     pub adapter_identity: alloc::string::String,
     pub adapter_slot: u32,
     pub owner: u64,
@@ -472,6 +488,15 @@ impl Env {
         registration: BoundCodeExportRegistration,
     ) -> Result<(Self, Definition), NominalError> {
         nominal::register_bound_code_export(self, registration)
+    }
+
+    /// Register only `Text -- ! test.send`. This checks a request; the host
+    /// alone authorizes, admits and observes each attempt.
+    pub fn declare_bound_send(
+        self,
+        registration: BoundSendRegistration,
+    ) -> Result<(Self, Definition), NominalError> {
+        nominal::register_bound_send(self, registration)
     }
 
     /// The scheme of a definition.

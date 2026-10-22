@@ -159,6 +159,9 @@ pub(in crate::source::emit) fn runtime(
     if plan.has_bound_code_export {
         attempt!(out.append(b"(func $op_code_export_bound (param $slot i32)\n (if (global.get $failure) (then (return)))\n ;; A source-bound export request is deny-only: poison first, send only its slot, and never let host success clear the failure.\n (global.set $failure (i32.const 5))\n (drop (call $host_code_export_bound (local.get $slot))))\n"));
     }
+    if plan.has_bound_send {
+        attempt!(super::fragment(out, include_str!("../bound-send.wat")));
+    }
     if plan.has_live_propose && plan.core_live {
         attempt!(out.append(
             b"(func $op_live_propose (param $owner i64)

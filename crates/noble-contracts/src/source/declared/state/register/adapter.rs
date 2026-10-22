@@ -48,6 +48,7 @@ enum Registration {
     Emit(noble_kernel::contracts::BoundEmitRegistration),
     Clock(noble_kernel::contracts::BoundClockRegistration),
     CodeExport(noble_kernel::contracts::BoundCodeExportRegistration),
+    Send(noble_kernel::contracts::BoundSendRegistration),
 }
 
 struct BindingStep {
@@ -166,6 +167,15 @@ fn bound_registration(
             output: binding.output.clone(),
             effects: noble_kernel::types::EffSet::from_ids(&binding.effects),
         })
+    } else if binding.operation == "test.send" {
+        Registration::Send(noble_kernel::contracts::BoundSendRegistration {
+            adapter_identity: binding.adapter_identity.clone(),
+            adapter_slot: binding.adapter_slot,
+            owner: identity,
+            input: binding.input.clone(),
+            output: binding.output.clone(),
+            effects: noble_kernel::types::EffSet::from_ids(&binding.effects),
+        })
     } else {
         Registration::Emit(noble_kernel::contracts::BoundEmitRegistration {
             adapter_identity: binding.adapter_identity.clone(),
@@ -190,7 +200,8 @@ fn binding_index(
     let (_, input, operation) = requirement;
     if !((input == "Text" && operation == "test.emit")
         || (input.is_empty() && operation == "test.clock")
-        || (input == "Text Text" && operation == "test.code-export"))
+        || (input == "Text Text" && operation == "test.code-export")
+        || (input == "Text" && operation == "test.send"))
     {
         return Err(crate::source::declared::error(
             crate::source::Stage::Link,
@@ -263,6 +274,7 @@ fn install_registration(
         Registration::Emit(binding) => environment.declare_bound_emit(binding),
         Registration::Clock(binding) => environment.declare_bound_clock(binding),
         Registration::CodeExport(binding) => environment.declare_bound_code_export(binding),
+        Registration::Send(binding) => environment.declare_bound_send(binding),
     };
     let (environment, target) = attempt!(result.map_err(|_| {
         crate::source::declared::error(

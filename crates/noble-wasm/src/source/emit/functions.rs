@@ -156,6 +156,7 @@ fn instruction(
         super::super::plan::Action::EmitBound(slot) => bound_call(out, slot),
         super::super::plan::Action::ClockBound(slot) => clock_call(out, slot),
         super::super::plan::Action::CodeExportBound(slot) => code_export_call(out, slot),
+        super::super::plan::Action::SendBound(slot) => send_call(out, slot),
         super::super::plan::Action::LivePropose(owner) => {
             attempt!(out.append(b"(call $op_live_propose "));
             out.i64(owner as i64)
@@ -240,6 +241,11 @@ fn clock_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::D
 
 fn code_export_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(call $op_code_export_bound "));
+    out.i32(slot)
+}
+
+fn send_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call $op_send_bound "));
     out.i32(slot)
 }
 

@@ -243,6 +243,18 @@ impl World {
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_CODE_EXPORT))
     }
 
+    /// The host-observed send request has its own exact checked source
+    /// effect. WIT selection alone authorizes, admits and observes nothing.
+    pub fn select_worker_program_for_test_send(
+        self,
+        source: &crate::source::CheckedProgramInterface,
+    ) -> Result<Self, Error> {
+        if !source.is_test_send_i64_endomorphism() {
+            return Err(unsupported("Worker WIT requires checked test.send Program"));
+        }
+        self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_SEND))
+    }
+
     #[expect(
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."

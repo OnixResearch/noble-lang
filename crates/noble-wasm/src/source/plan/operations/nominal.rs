@@ -91,6 +91,26 @@ impl<'a> Output<'a> {
         Err(crate::Diagnostic::Invalid)
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
+    pub(super) fn send_action(self, slot: u32) -> Result<super::super::Action, crate::Diagnostic> {
+        if !self.compiler.worker_inputs {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        for row in &self.env.bound_adapters {
+            if row.adapter_slot == slot
+                && row.input.as_slice() == [noble_kernel::types::Ty::Text]
+                && row.output.is_empty()
+                && row.effects.as_slice() == [noble_kernel::contracts::TEST_SEND]
+            {
+                return Ok(super::super::Action::SendBound(slot));
+            }
+        }
+        Err(crate::Diagnostic::Invalid)
+    }
+
     pub(super) fn into_action(
         self,
         id: noble_kernel::types::NominalTypeId,

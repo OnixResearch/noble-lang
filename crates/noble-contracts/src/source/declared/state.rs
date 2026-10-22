@@ -160,6 +160,12 @@ impl CheckedProgramInterface {
             && self.effects.as_slice() == [noble_kernel::contracts::TEST_CODE_EXPORT]
     }
 
+    pub fn is_test_send_i64_endomorphism(&self) -> bool {
+        self.input.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.output.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.effects.as_slice() == [noble_kernel::contracts::TEST_SEND]
+    }
+
     pub fn ty(&self) -> noble_kernel::types::Ty {
         noble_kernel::types::Ty::program(
             self.input.clone(),
@@ -515,7 +521,10 @@ impl ModulePrepared {
     ) -> Option<&noble_kernel::contracts::BoundAdapter> {
         if self.pending.is_some()
             || self.staged.bindings.as_slice() != core::slice::from_ref(binding)
-            || !matches!(binding.operation.as_str(), "test.emit" | "test.code-export")
+            || !matches!(
+                binding.operation.as_str(),
+                "test.emit" | "test.code-export" | "test.send"
+            )
             || module.name != binding.module_name
             || module.version != binding.module_version
             || module.adapter_slot != Some(binding.adapter_slot)
@@ -540,7 +549,11 @@ impl ModulePrepared {
                     || matches!(environment.kind(adapter.definition),
                         Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
                             if slot == binding.adapter_slot
-                                && binding.operation == "test.code-export"))
+                                && binding.operation == "test.code-export")
+                    || matches!(environment.kind(adapter.definition),
+                        Some(noble_kernel::contracts::Behavior::BoundSend(slot))
+                            if slot == binding.adapter_slot
+                                && binding.operation == "test.send"))
         });
         let adapter = matching.next()?;
         matching.next().is_none().then_some(adapter)
@@ -1097,7 +1110,11 @@ impl ModulePrepared {
                             || matches!(submission.environment.kind(actual.definition),
                         Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
                             if slot == binding.adapter_slot
-                                && binding.operation == "test.code-export"))
+                                && binding.operation == "test.code-export")
+                            || matches!(submission.environment.kind(actual.definition),
+                        Some(noble_kernel::contracts::Behavior::BoundSend(slot))
+                            if slot == binding.adapter_slot
+                                && binding.operation == "test.send"))
                 })
                 .count()
                 != 1
@@ -1288,7 +1305,8 @@ impl ModulePrepared {
                         if let Some(
                             noble_kernel::contracts::Behavior::BoundEmit(slot)
                             | noble_kernel::contracts::Behavior::BoundClock(slot)
-                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot),
+                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot)
+                            | noble_kernel::contracts::Behavior::BoundSend(slot),
                         ) = submission.environment.kind(*def)
                         {
                             if selected.is_some_and(|previous| previous != slot) {

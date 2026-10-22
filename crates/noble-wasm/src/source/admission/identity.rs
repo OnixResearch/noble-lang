@@ -114,7 +114,8 @@ impl Encoding {
                         Some(
                             noble_kernel::contracts::Behavior::BoundEmit(slot)
                             | noble_kernel::contracts::Behavior::BoundClock(slot)
-                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot),
+                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot)
+                            | noble_kernel::contracts::Behavior::BoundSend(slot),
                         ) => {
                             let mut found = None;
                             let mut at = 0usize;
@@ -134,6 +135,8 @@ impl Encoding {
                             let marker = match behavior {
                                 Some(noble_kernel::contracts::Behavior::BoundClock(_)) => b"c",
                                 Some(noble_kernel::contracts::Behavior::BoundCodeExport(_)) => b"e",
+                                // "s" already prefixes Text literals.
+                                Some(noble_kernel::contracts::Behavior::BoundSend(_)) => b"o",
                                 Some(_) | None => b"a",
                             };
                             attempt!(self.out.append(marker));
@@ -185,7 +188,8 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
                                 | noble_kernel::contracts::Behavior::BoundClock(_)
-                                | noble_kernel::contracts::Behavior::BoundCodeExport(_) => {
+                                | noble_kernel::contracts::Behavior::BoundCodeExport(_)
+                                | noble_kernel::contracts::Behavior::BoundSend(_) => {
                                     return Err(crate::Diagnostic::Invalid);
                                 }
                             };

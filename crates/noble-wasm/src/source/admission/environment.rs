@@ -207,6 +207,10 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         .kinds
         .iter()
         .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundCodeExport(_)));
+    let has_send = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundSend(_)));
     if live_slots {
         // Clock registration may precede or follow the host's slot opt-in.
         // Both orderings are produced by the checked Env APIs, but no other
@@ -244,29 +248,21 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         effects.push(noble_kernel::types::EffId(3));
         effects.push(noble_kernel::types::EffId(4));
     }
-    if has_clock && has_code_export {
-        let Some(tail) = env.effects.get(effects.len()..) else {
-            return false;
-        };
-        return env.effects.starts_with(&effects)
-            && (tail
-                == [
-                    noble_kernel::contracts::TEST_CLOCK,
-                    noble_kernel::contracts::TEST_CODE_EXPORT,
-                ]
-                || tail
-                    == [
-                        noble_kernel::contracts::TEST_CODE_EXPORT,
-                        noble_kernel::contracts::TEST_CLOCK,
-                    ]);
-    }
-    if has_clock {
-        effects.push(noble_kernel::contracts::TEST_CLOCK);
-    }
-    if has_code_export {
-        effects.push(noble_kernel::contracts::TEST_CODE_EXPORT);
-    }
-    env.effects == effects
+    // Each bound operation's effect is appended once, in registration order,
+    // so the tail is exactly a permutation of the registered bound effects.
+    let optional = [
+        (has_clock, noble_kernel::contracts::TEST_CLOCK),
+        (has_code_export, noble_kernel::contracts::TEST_CODE_EXPORT),
+        (has_send, noble_kernel::contracts::TEST_SEND),
+    ];
+    let Some(tail) = env.effects.get(effects.len()..) else {
+        return false;
+    };
+    env.effects.starts_with(&effects)
+        && tail.len() == optional.iter().filter(|(present, _)| *present).count()
+        && optional
+            .iter()
+            .all(|(present, effect)| tail.contains(effect) == *present)
 }
 
 #[expect(

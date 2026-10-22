@@ -43,6 +43,7 @@ fn visible_behavior(
         crate::contracts::Behavior::BoundEmit(_)
             | crate::contracts::Behavior::BoundClock(_)
             | crate::contracts::Behavior::BoundCodeExport(_)
+            | crate::contracts::Behavior::BoundSend(_)
     ) {
         return !env.calculator && bound_emit_visible(env, def);
     }
@@ -113,6 +114,7 @@ const fn generic_access(
         crate::contracts::Behavior::BoundEmit(_) => None,
         crate::contracts::Behavior::BoundClock(_) => None,
         crate::contracts::Behavior::BoundCodeExport(_) => None,
+        crate::contracts::Behavior::BoundSend(_) => None,
         crate::contracts::Behavior::NominalNew(_) => None,
         crate::contracts::Behavior::NominalInto(_) => None,
         crate::contracts::Behavior::NominalLeft(_) => None,

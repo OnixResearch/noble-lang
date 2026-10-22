@@ -263,6 +263,11 @@ fn parse_effect(
             noble_kernel::contracts::TEST_CODE_EXPORT
         )]);
     }
+    if word == "test.send" {
+        return Ok(alloc::vec![EffectSlot::Effect(
+            noble_kernel::contracts::TEST_SEND
+        )]);
+    }
     let Some((index, _)) = binders
         .iter()
         .enumerate()

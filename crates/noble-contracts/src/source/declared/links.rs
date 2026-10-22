@@ -40,7 +40,7 @@ pub(super) fn valid_binding(binding: &super::BoundOperation) -> bool {
         && binding.module_version != 0
         && matches!(
             binding.operation.as_str(),
-            "test.emit" | "test.clock" | "test.code-export"
+            "test.emit" | "test.clock" | "test.code-export" | "test.send"
         )
         && !binding.adapter_identity.is_empty()
 }

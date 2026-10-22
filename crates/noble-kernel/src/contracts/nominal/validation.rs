@@ -160,6 +160,10 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
             && row.input.as_slice() == [crate::types::Ty::Text, crate::types::Ty::Text]
             && row.output.is_empty()
             && row.effects.as_slice() == [super::super::TEST_CODE_EXPORT])
+        || (row.adapter_identity == super::super::TEST_SEND_ADAPTER_IDENTITY
+            && row.input.as_slice() == [crate::types::Ty::Text]
+            && row.output.is_empty()
+            && row.effects.as_slice() == [super::super::TEST_SEND])
 }
 
 #[expect(
@@ -182,16 +186,22 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         .kinds
         .iter()
         .any(|kind| matches!(kind, super::super::Behavior::BoundCodeExport(_)));
+    let has_send = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, super::super::Behavior::BoundSend(_)));
     env.resource_kinds.len() == 1usize.saturating_add(env.live_resource_nominals.len())
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
         && env.effects.len()
             == 1usize
                 .saturating_add(usize::from(has_clock))
                 .saturating_add(usize::from(has_code_export))
+                .saturating_add(usize::from(has_send))
                 .saturating_add(usize::from(env.live_slots))
         && env.effects[0].0 == super::super::TEST_EMIT.0
         && env.effects.contains(&super::super::TEST_CLOCK) == has_clock
         && env.effects.contains(&super::super::TEST_CODE_EXPORT) == has_code_export
+        && env.effects.contains(&super::super::TEST_SEND) == has_send
         && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
@@ -336,6 +346,7 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
         super::super::Behavior::BoundEmit(_) => None,
         super::super::Behavior::BoundClock(_) => None,
         super::super::Behavior::BoundCodeExport(_) => None,
+        super::super::Behavior::BoundSend(_) => None,
         super::super::Behavior::NominalNew(_) => None,
         super::super::Behavior::NominalInto(_) => None,
         super::super::Behavior::NominalLeft(_) => None,
@@ -358,6 +369,9 @@ fn kind_matches_definition(
     }
     if let super::super::Behavior::BoundCodeExport(slot) = kind {
         return bound_definition_matches(env, index, slot, super::super::TEST_CODE_EXPORT);
+    }
+    if let super::super::Behavior::BoundSend(slot) = kind {
+        return bound_definition_matches(env, index, slot, super::super::TEST_SEND);
     }
     if let Some(id) = generic_operation_id(kind) {
         return generic_definition_matches(env, index, kind, id);
@@ -430,6 +444,8 @@ fn bound_definition_matches(
         super::schemes::valid_emit_scheme(&env.defs[index])
     } else if effect == super::super::TEST_CLOCK {
         super::schemes::valid_clock_scheme(&env.defs[index])
+    } else if effect == super::super::TEST_SEND {
+        super::schemes::valid_send_scheme(&env.defs[index])
     } else {
         effect == super::super::TEST_CODE_EXPORT
             && super::schemes::valid_code_export_scheme(&env.defs[index])
@@ -470,7 +486,8 @@ fn bound_adapters_unique(env: &super::super::Env) -> bool {
             env.kind(definition),
             Some(super::super::Behavior::BoundEmit(actual)
                 | super::super::Behavior::BoundClock(actual)
-                | super::super::Behavior::BoundCodeExport(actual)) if actual == slot
+                | super::super::Behavior::BoundCodeExport(actual)
+                | super::super::Behavior::BoundSend(actual)) if actual == slot
         );
         let mut prior = 0;
         while prior < index && is_unique {

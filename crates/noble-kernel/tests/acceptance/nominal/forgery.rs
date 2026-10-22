@@ -213,6 +213,75 @@ fn code_export_effect_requires_exact_text_pair_and_owner() -> Result<(), String>
     Ok(())
 }
 
+#[test]
+fn send_effect_requires_exact_text_identity_and_owner() -> Result<(), String> {
+    use noble_kernel::contracts::{Behavior, BoundSendRegistration, NominalError, TEST_SEND};
+    use noble_kernel::types::Ty;
+    let env = required!(super::env(), "bootstrap");
+    let registration = || BoundSendRegistration {
+        adapter_identity: "worker-test-send@1.0.0".to_owned(),
+        adapter_slot: 9,
+        owner: 31,
+        input: vec![Ty::Text],
+        output: vec![],
+        effects: super::super::support::ids(&[TEST_SEND.0]),
+    };
+    for incorrect in [
+        BoundSendRegistration {
+            input: vec![Ty::Text, Ty::Text],
+            ..registration()
+        },
+        BoundSendRegistration {
+            output: vec![Ty::Bool],
+            ..registration()
+        },
+        BoundSendRegistration {
+            effects: super::super::support::ids(&[0]),
+            ..registration()
+        },
+        BoundSendRegistration {
+            adapter_identity: "worker-test-emit@1.0.0".to_owned(),
+            ..registration()
+        },
+    ] {
+        assert_eq!(
+            env.clone().declare_bound_send(incorrect).err(),
+            Some(NominalError::InvalidRepresentation)
+        );
+    }
+    let (mut env, def) = required!(env.declare_bound_send(registration()), "exact send binding");
+    assert_eq!(env.kind(def), Some(Behavior::BoundSend(9)));
+    assert_eq!(
+        env.clone().declare_bound_send(registration()).err(),
+        Some(NominalError::InvalidRepresentation),
+        "a used slot cannot be registered twice"
+    );
+    let request = super::super::support::request(vec![Ty::Text], vec![], &[TEST_SEND.0]);
+    let candidate = super::single(def, vec![super::super::support::segment(vec![])]);
+    super::rejected(
+        super::check(&env, request.clone(), candidate.clone()),
+        noble_kernel::untrusted::Constraint::PrivateDefinition(def),
+    );
+    env.caller_module = Some(31);
+    assert!(matches!(
+        super::check(&env, request.clone(), candidate.clone()),
+        noble_kernel::untrusted::Outcome::Accepted(_)
+    ));
+    let mut forged = env.clone();
+    forged.bound_adapters[0].effects = super::super::support::ids(&[0]);
+    super::rejected(
+        super::check(&forged, request.clone(), candidate.clone()),
+        noble_kernel::untrusted::Constraint::InvalidContract,
+    );
+    let mut forged = env;
+    forged.bound_adapters[0].adapter_identity = "other-adapter".to_owned();
+    super::rejected(
+        super::check(&forged, request, candidate),
+        noble_kernel::untrusted::Constraint::InvalidContract,
+    );
+    Ok(())
+}
+
 fn reject_forged_nominals(
     env: &noble_kernel::contracts::Env,
     ops: noble_kernel::contracts::NominalOps,

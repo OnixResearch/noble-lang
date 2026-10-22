@@ -773,6 +773,9 @@ impl Store {
             Some(policy) if policy.binding().operation == "test.code-export" => {
                 world.select_worker_program_for_test_code_export(&self.checked_interface)
             }
+            Some(policy) if policy.binding().operation == "test.send" => {
+                world.select_worker_program_for_test_send(&self.checked_interface)
+            }
             Some(_) => return Err(Refusal::Unsupported),
             None => world.select_worker_program(&self.checked_interface),
         }
@@ -1347,6 +1350,7 @@ impl Store {
             names.push(match *effect {
                 noble_kernel::contracts::TEST_EMIT => "test.emit",
                 noble_kernel::contracts::TEST_CODE_EXPORT => "test.code-export",
+                noble_kernel::contracts::TEST_SEND => "test.send",
                 _ => return Err(Refusal::Unsupported),
             });
         }

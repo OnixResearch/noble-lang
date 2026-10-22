@@ -373,6 +373,7 @@ fn parse_callable_effects(
             "test.emit" => noble_kernel::contracts::TEST_EMIT,
             "test.clock" => noble_kernel::contracts::TEST_CLOCK,
             "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
+            "test.send" => noble_kernel::contracts::TEST_SEND,
             "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
             _ => return Err(crate::invalid(span, "unknown callable effect bound")),
         };

@@ -32,6 +32,7 @@ pub(super) enum Action {
     EmitBound(u32),
     ClockBound(u32),
     CodeExportBound(u32),
+    SendBound(u32),
     LivePropose(u64),
     LiveGeneration,
     SlotInvoke(u32, u32),
@@ -117,13 +118,21 @@ pub(super) fn atom_metadata(
         Action::EmitBound(slot) => (31, i64::from(slot), None, None, 0),
         Action::ClockBound(slot) => (32, i64::from(slot), None, None, 0),
         Action::CodeExportBound(slot) => (34, i64::from(slot), None, None, 0),
+        // 35..=38 are reflection event codes; a send atom must not alias them.
+        Action::SendBound(slot) => (39, i64::from(slot), None, None, 0),
         Action::LivePropose(_) => (2, 24, None, None, 0),
         Action::LiveGeneration => (2, 25, None, None, 0),
         Action::SlotInvoke(_, borrowed_ordinal) => (33, i64::from(borrowed_ordinal), None, None, 0),
     };
     let (input, output, effects) = if text.is_some() {
         (text_witness, 0, 0)
-    } else if tag == 2 || tag == 15 || tag == 33 || (26..=32).contains(&tag) || tag == 34 {
+    } else if tag == 2
+        || tag == 15
+        || tag == 33
+        || (26..=32).contains(&tag)
+        || tag == 34
+        || tag == 39
+    {
         (operation.input, operation.output, operation.effects)
     } else {
         (0, 0, 0)
@@ -178,6 +187,7 @@ impl Action {
             | Self::EmitBound(_)
             | Self::ClockBound(_)
             | Self::CodeExportBound(_)
+            | Self::SendBound(_)
             | Self::LivePropose(_)
             | Self::LiveGeneration
             | Self::SlotInvoke(..) => false,
@@ -254,6 +264,7 @@ pub(super) struct Layout {
     pub(super) has_bound_emit: bool,
     pub(super) has_bound_clock: bool,
     pub(super) has_bound_code_export: bool,
+    pub(super) has_bound_send: bool,
     pub(super) has_live_propose: bool,
     pub(super) has_live_generation: bool,
 }
@@ -280,6 +291,7 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
             5 => mask |= 32,
             4 => mask |= 16,
             6 => mask |= 64,
+            7 => mask |= 128,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
                 break;
@@ -382,6 +394,7 @@ fn start(
         has_bound_emit: false,
         has_bound_clock: false,
         has_bound_code_export: false,
+        has_bound_send: false,
         has_live_propose: false,
         has_live_generation: false,
     };
@@ -422,6 +435,7 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
                 Action::EmitBound(_) => layout.has_bound_emit = true,
                 Action::ClockBound(_) => layout.has_bound_clock = true,
                 Action::CodeExportBound(_) => layout.has_bound_code_export = true,
+                Action::SendBound(_) => layout.has_bound_send = true,
                 Action::LivePropose(_) => layout.has_live_propose = true,
                 Action::LiveGeneration => layout.has_live_generation = true,
                 _ => {}

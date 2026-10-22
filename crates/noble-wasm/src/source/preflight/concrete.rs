@@ -23,7 +23,7 @@ fn type_children(ty: &noble_kernel::types::Ty) -> Result<usize, crate::Diagnosti
         | noble_kernel::types::Ty::LiveRef(input, output, effects) => {
             if input.len() > super::STACK_LIMIT
                 || output.len() > super::STACK_LIMIT
-                || effects.as_slice().len() > 7
+                || effects.as_slice().len() > 8
             {
                 return Err(crate::Diagnostic::Exhausted);
             }

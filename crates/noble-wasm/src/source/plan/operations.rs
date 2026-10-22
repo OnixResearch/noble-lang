@@ -312,6 +312,7 @@ impl Input<'_> {
                 noble_kernel::contracts::Behavior::BoundCodeExport(slot) => {
                     output.code_export_action(slot)
                 }
+                noble_kernel::contracts::Behavior::BoundSend(slot) => output.send_action(slot),
                 noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
                 noble_kernel::contracts::Behavior::NominalInto(id) => {
                     let ty = attempt!(nominal::Output::checked_input(

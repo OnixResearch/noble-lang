@@ -17,6 +17,7 @@ pub(crate) mod worker_package;
 pub(crate) mod worker_program;
 mod worker_program_guest;
 pub(crate) mod worker_scalar;
+mod worker_send;
 pub(crate) mod worker_shell;
 pub(crate) mod worker_typed;
 pub(crate) mod worker_value;
@@ -91,6 +92,14 @@ pub const USAGE: &str = "usage:
   candidate. The kernel checker runs at most once and only an accepted
   candidate is published. candidate-fault injects a host fault inside the
   acceptance stage.
+  noble worker program test-host send-observe|send-observe-rows|send-observe-diagnostic < FIXTURE_SOURCE
+  Run the built-in three-request test.send fixture once. The host authorizes
+  each request against its own exact-plan grants, admits and starts it through
+  the kernel authority table and hands it to a synthetic in-process peer; the
+  guest learns no outcome. A lost acknowledgement is followed by the host's
+  cancellation. The record keeps invocation and attempt correlation, counts
+  and kernel outcomes; rows beyond the selected bound (6 for -rows) and a
+  diagnostic beyond its bound (48 bytes for -diagnostic) are marked omitted.
   noble worker program test-host emit-import < PACKAGE
   Import an untrusted package under the same preselected test.emit binding;
   only that exact host-contract row can match, and importing issues nothing.

@@ -89,7 +89,8 @@ fn selected_slot(
         if let Some(
             noble_kernel::contracts::Behavior::BoundEmit(slot)
             | noble_kernel::contracts::Behavior::BoundClock(slot)
-            | noble_kernel::contracts::Behavior::BoundCodeExport(slot),
+            | noble_kernel::contracts::Behavior::BoundCodeExport(slot)
+            | noble_kernel::contracts::Behavior::BoundSend(slot),
         ) = environment.kind(*definition)
         {
             return Some(slot);

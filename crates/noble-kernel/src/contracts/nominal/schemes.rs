@@ -243,6 +243,7 @@ pub(super) fn expected_generic_scheme(
         super::super::Behavior::BoundEmit(_) => None,
         super::super::Behavior::BoundClock(_) => None,
         super::super::Behavior::BoundCodeExport(_) => None,
+        super::super::Behavior::BoundSend(_) => None,
         super::super::Behavior::NominalNew(_) => None,
         super::super::Behavior::NominalInto(_) => None,
         super::super::Behavior::NominalLeft(_) => None,
@@ -313,6 +314,22 @@ pub(super) fn valid_code_export_scheme(actual: &crate::words::Scheme) -> bool {
             == [crate::shapes::EffectSlot::Effect(
                 super::super::TEST_CODE_EXPORT,
             )]
+}
+
+pub(super) fn send_scheme() -> crate::words::Scheme {
+    crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![stack(0), crate::shapes::Pattern::Text],
+        stack_out: alloc::vec![stack(0)],
+        effects: alloc::vec![crate::shapes::EffectSlot::Effect(super::super::TEST_SEND)],
+    }
+}
+
+pub(super) fn valid_send_scheme(actual: &crate::words::Scheme) -> bool {
+    actual.var_kinds.as_slice() == [crate::words::VariableKind::Stack]
+        && actual.stack_in.as_slice() == [stack(0), crate::shapes::Pattern::Text]
+        && actual.stack_out.as_slice() == [stack(0)]
+        && actual.effects.as_slice() == [crate::shapes::EffectSlot::Effect(super::super::TEST_SEND)]
 }
 
 pub(super) fn same_scheme(actual: &crate::words::Scheme, expected: &crate::words::Scheme) -> bool {

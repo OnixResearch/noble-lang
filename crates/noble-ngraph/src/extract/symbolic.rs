@@ -686,7 +686,8 @@ impl<'a, 's> Machine<'a, 's> {
             noble_kernel::contracts::Behavior::TestEmit
             | noble_kernel::contracts::Behavior::BoundEmit(_)
             | noble_kernel::contracts::Behavior::BoundClock(_)
-            | noble_kernel::contracts::Behavior::BoundCodeExport(_) => {
+            | noble_kernel::contracts::Behavior::BoundCodeExport(_)
+            | noble_kernel::contracts::Behavior::BoundSend(_) => {
                 return Err(self.err(
                     crate::diag::Code::Effect,
                     body,
@@ -967,6 +968,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                         | noble_kernel::contracts::Behavior::BoundEmit(_)
                         | noble_kernel::contracts::Behavior::BoundClock(_)
                         | noble_kernel::contracts::Behavior::BoundCodeExport(_)
+                        | noble_kernel::contracts::Behavior::BoundSend(_)
                         | noble_kernel::contracts::Behavior::NominalNew(_)
                         | noble_kernel::contracts::Behavior::NominalInto(_)
                         | noble_kernel::contracts::Behavior::NominalLeft(_)

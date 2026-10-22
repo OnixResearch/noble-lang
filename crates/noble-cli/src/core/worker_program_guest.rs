@@ -14,7 +14,7 @@ use super::worker_program::{Handle, Refusal, Store as ProgramStore};
 
 const INTERFACE: &str = "noble-test:worker-program/programs@2.0.0";
 pub(super) const FUEL: u64 = 10_000_000;
-const EFFECT_REQUEST_LIMIT: u32 = 256;
+pub(super) const EFFECT_REQUEST_LIMIT: u32 = 256;
 const EFFECT_TEXT_LIMIT: usize = 65_536;
 const LEDGER_BYTES_LIMIT: usize = 262_144;
 const BATCH_ITERATION_LIMIT: u16 = 512;
@@ -44,6 +44,8 @@ struct PolicyState {
     denied: u32,
     ledger_bytes: usize,
     ledger: Vec<String>,
+    /// The WORKER-10 observation record of a selected `test.send` policy.
+    send: Option<super::worker_send::Recorder>,
     #[cfg(test)]
     pre_commit: Option<(
         std::sync::Arc<std::sync::Barrier>,
@@ -122,7 +124,12 @@ impl WorkerHostPolicy {
                             == noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY
                         && binding.input
                             == [noble_kernel::types::Ty::Text, noble_kernel::types::Ty::Text]
-                        && binding.effects == [noble_kernel::contracts::TEST_CODE_EXPORT])),
+                        && binding.effects == [noble_kernel::contracts::TEST_CODE_EXPORT])
+                    || (binding.operation == "test.send"
+                        && binding.adapter_identity
+                            == noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY
+                        && binding.input == [noble_kernel::types::Ty::Text]
+                        && binding.effects == [noble_kernel::contracts::TEST_SEND])),
             "unsupported selected Worker bound adapter"
         );
         Ok(Self {
@@ -142,6 +149,7 @@ impl WorkerHostPolicy {
                     denied: 0,
                     ledger_bytes: 0,
                     ledger: Vec::new(),
+                    send: None,
                     #[cfg(test)]
                     pre_commit: None,
                 }),
@@ -175,7 +183,10 @@ impl WorkerHostPolicy {
             source
                 .host_policy()
                 .is_some_and(|selected| std::sync::Arc::ptr_eq(&selected.inner, &self.inner))
-                && self.inner.binding.operation == "test.emit"
+                && matches!(
+                    self.inner.binding.operation.as_str(),
+                    "test.emit" | "test.send"
+                )
                 && source.node_index(root).is_some()
                 && source.root_owner_identity() == self.inner.owner_identity
                 && cell.scope == source.instance_id()
@@ -196,6 +207,13 @@ impl WorkerHostPolicy {
                 && state.issued.is_none(),
             "Worker host issue is stale or revoked"
         );
+        if self.inner.binding.operation == "test.send" {
+            state
+                .send
+                .as_mut()
+                .context("selected send policy has no observation record")?
+                .begin(cell.scope)?;
+        }
         state.issued = Some(cell);
         Ok(())
     }
@@ -301,6 +319,84 @@ impl WorkerHostPolicy {
         Ok(())
     }
 
+    /// Attach the host-selected observation record before any issue.
+    fn attach_send(&self, scenario: super::worker_send::Scenario) -> Result<()> {
+        let mut state = self
+            .inner
+            .state
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        ensure!(
+            self.inner.binding.operation == "test.send"
+                && state.send.is_none()
+                && state.issued.is_none(),
+            "send observation record must be selected before issue"
+        );
+        state.send = Some(super::worker_send::Recorder::new(scenario));
+        Ok(())
+    }
+
+    /// One send request, decided and observed under the policy lock so a
+    /// revocation or cancellation cannot interleave with its admission.
+    fn send(
+        &self,
+        cell: ProgramCell,
+        slot: u32,
+        text: &str,
+        task: &TaskOwner,
+    ) -> Result<super::worker_send::Status> {
+        let mut state = self
+            .inner
+            .state
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        let admissible = state.issued == Some(cell)
+            && !state.revoked
+            && state.current_epoch == self.inner.epoch
+            && task.running().unwrap_or(false)
+            && slot == self.inner.binding.adapter_slot
+            && text.len() <= EFFECT_TEXT_LIMIT;
+        state
+            .send
+            .as_mut()
+            .context("send request without an observation record")?
+            .request(text, admissible)
+    }
+
+    fn note_task_cancellation(&self, acknowledged: bool) -> Result<()> {
+        self.inner
+            .state
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?
+            .send
+            .as_mut()
+            .context("send cancellation without an observation record")?
+            .note_task_cancellation(acknowledged)
+    }
+
+    fn send_record(
+        &self,
+        guest_completed: bool,
+        build_context: serde_json::Value,
+        profile: serde_json::Value,
+    ) -> Result<serde_json::Value> {
+        let state = self
+            .inner
+            .state
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        state
+            .send
+            .as_ref()
+            .context("no send observation record")?
+            .record(
+                guest_completed,
+                state.issued.is_none(),
+                build_context,
+                profile,
+            )
+    }
+
     #[cfg(test)]
     fn counts(&self) -> Result<(u32, u32)> {
         let state = self
@@ -374,6 +470,24 @@ impl HostWorkerIssuer {
         Ok(Self {
             policy: WorkerHostPolicy::select_checked(source, name, destination, epoch, binding)?,
         })
+    }
+
+    /// The WORKER-10 issuer: the exact `test.send` binding plus its
+    /// host-selected observation bounds, fixed before any candidate is read.
+    fn select_send_checked(
+        source: &[u8],
+        name: &str,
+        destination: &str,
+        binding: noble_contracts::source::BoundOperation,
+        scenario: super::worker_send::Scenario,
+    ) -> Result<Self> {
+        ensure!(
+            binding.operation == "test.send",
+            "Worker send issuer requires the test.send binding"
+        );
+        let policy = WorkerHostPolicy::select_checked(source, name, destination, 1, binding)?;
+        policy.attach_send(scenario)?;
+        Ok(Self { policy })
     }
 
     pub(crate) fn prepare(
@@ -644,45 +758,54 @@ fn core_module(engine: &Engine, source_wat: &[u8]) -> Result<Module> {
     Module::new(engine, bytes.as_ref()).context("checked source Wasm validation")
 }
 
+/// The bounded UTF-8 Text a bound import names by byte offset and length.
+fn guest_text<'a>(caller: &'a mut Caller<'_, Host>, offset: i32, length: i32) -> Result<&'a str> {
+    let start = usize::try_from(offset)?;
+    let end = start
+        .checked_add(usize::try_from(length)?)
+        .context("Worker effect Text bound overflow")?;
+    ensure!(
+        end - start <= EFFECT_TEXT_LIMIT,
+        "Worker effect Text exceeds bound"
+    );
+    let memory = caller
+        .get_export("memory")
+        .and_then(wasmtime::Extern::into_memory)
+        .context("checked source memory missing")?;
+    std::str::from_utf8(
+        memory
+            .data(&*caller)
+            .get(start..end)
+            .context("Worker effect Text out of memory bounds")?,
+    )
+    .context("Worker effect Text is not UTF-8")
+}
+
+/// The installed cell, policy and task of a bound import's own Store.
+fn bound_subject(host: &mut Host) -> Result<(Installed, WorkerHostPolicy, TaskOwner)> {
+    host.effect_requests = host
+        .effect_requests
+        .checked_add(1)
+        .context("Worker effect request count overflow")?;
+    let installed = host.installed.context("uninstalled bound Program")?;
+    let policy = host.policy.clone().context("unissued bound host policy")?;
+    ensure!(
+        installed.cell.scope == host.scope
+            && installed.cell.definition_identity == policy.inner.owner_identity
+            && policy.inner.source_generation != 0
+            && !policy.inner.destination.is_empty(),
+        "bound host policy differs from installed Program owner"
+    );
+    Ok((installed, policy, host.task.clone()))
+}
+
 /// Source calls the checked bound adapter with byte offset, length, then slot.
 /// The import only exists in a host-selected bound Store. Denial returns a
 /// nonzero status, which the source runtime turns into a failed invocation.
 fn bound_emit(mut caller: Caller<'_, Host>, offset: i32, length: i32, slot: i32) -> i32 {
     let request = (|| -> Result<EffectOutcome> {
-        let host = caller.data_mut();
-        host.effect_requests = host
-            .effect_requests
-            .checked_add(1)
-            .context("Worker effect request count overflow")?;
-        let installed = host.installed.context("uninstalled bound Program")?;
-        let policy = host.policy.clone().context("unissued bound host policy")?;
-        ensure!(
-            installed.cell.scope == host.scope
-                && installed.cell.definition_identity == policy.inner.owner_identity
-                && policy.inner.source_generation != 0
-                && !policy.inner.destination.is_empty(),
-            "bound host policy differs from installed Program owner"
-        );
-        let task = host.task.clone();
-        let start = usize::try_from(offset)?;
-        let end = start
-            .checked_add(usize::try_from(length)?)
-            .context("Worker effect Text bound overflow")?;
-        ensure!(
-            end - start <= EFFECT_TEXT_LIMIT,
-            "Worker effect Text exceeds bound"
-        );
-        let memory = caller
-            .get_export("memory")
-            .and_then(wasmtime::Extern::into_memory)
-            .context("checked source memory missing")?;
-        let text = std::str::from_utf8(
-            memory
-                .data(&caller)
-                .get(start..end)
-                .context("Worker effect Text out of memory bounds")?,
-        )
-        .context("Worker effect Text is not UTF-8")?;
+        let (installed, policy, task) = bound_subject(caller.data_mut())?;
+        let text = guest_text(&mut caller, offset, length)?;
         policy.emit(installed.cell, u32::try_from(slot)?, text, &task)
     })();
     match request {
@@ -701,6 +824,32 @@ fn bound_emit(mut caller: Caller<'_, Host>, offset: i32, length: i32, slot: i32)
             }
             1
         }
+    }
+}
+
+/// Source calls the checked `test.send` adapter with byte offset, length and
+/// slot. Status 0 only says the host recorded the request: the guest learns
+/// no operation outcome. A nonzero status ends the invocation.
+fn bound_send(mut caller: Caller<'_, Host>, offset: i32, length: i32, slot: i32) -> i32 {
+    let request = (|| -> Result<(super::worker_send::Status, WorkerHostPolicy, TaskOwner)> {
+        let (installed, policy, task) = bound_subject(caller.data_mut())?;
+        let text = guest_text(&mut caller, offset, length)?;
+        let status = policy.send(installed.cell, u32::try_from(slot)?, text, &task)?;
+        Ok((status, policy, task))
+    })();
+    match request {
+        Ok((super::worker_send::Status::Recorded, _, _)) => 0,
+        Ok((super::worker_send::Status::Terminated, policy, task)) => {
+            // The terminal event retires the task outside the policy lock,
+            // keeping the policy-then-task order of `TaskOwner::cancel`.
+            let acknowledged = task.cancel(task.scope).unwrap_or(false);
+            // An unrecorded acknowledgement makes the record report a refused
+            // execution rather than a cancellation.
+            match policy.note_task_cancellation(acknowledged) {
+                Ok(()) | Err(_) => 1,
+            }
+        }
+        Err(_) => 1,
     }
 }
 
@@ -771,6 +920,16 @@ fn install_core(store: &mut Store<Host>, module: &Module) -> Result<wasmtime::In
                         .is_some_and(|policy| policy.binding().operation == "test.code-export") =>
             {
                 linker.func_wrap("noble", name, denied_code_export_bound)?;
+            }
+            ExternType::Func(_)
+                if name == "test_send_bound"
+                    && store
+                        .data()
+                        .policy
+                        .as_ref()
+                        .is_some_and(|policy| policy.binding().operation == "test.send") =>
+            {
+                linker.func_wrap("noble", name, bound_send)?;
             }
             _ => bail!("unapproved Worker source Wasm import {name}"),
         }
@@ -1695,6 +1854,8 @@ const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text T
 /// WORKER-03: a pure `I64 -- I64 ! {}` Program and a bound
 /// `I64 -- I64 ! {test.emit}` Program in one checked source closure.
 const HOST_BUILDER_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit def increment [ 1 + ] export plus def plus [ \"builder-ledger-marker\" emit increment ] ]";
+/// WORKER-10: three bound `test.send` requests in one invocation.
+const HOST_SEND_SOURCE: &[u8] = b"module Sender@1 [ require send Text -- ! test.send export plus def plus [ \"w10-a\" send \"w10-b\" send \"w10-c\" send 1 + ] ]";
 
 /// The synthetic ledger's exact host-selected `test.emit` bound adapter.
 fn emit_binding() -> noble_contracts::source::BoundOperation {
@@ -1708,6 +1869,97 @@ fn emit_binding() -> noble_contracts::source::BoundOperation {
         output: vec![],
         effects: vec![noble_kernel::contracts::TEST_EMIT],
     }
+}
+
+/// The synthetic peer's exact host-selected `test.send` bound adapter.
+fn send_binding() -> noble_contracts::source::BoundOperation {
+    noble_contracts::source::BoundOperation {
+        module_name: "Sender".into(),
+        module_version: 1,
+        operation: "test.send".into(),
+        adapter_identity: noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY.into(),
+        adapter_slot: 5,
+        input: vec![noble_kernel::types::Ty::Text],
+        output: vec![],
+        effects: vec![noble_kernel::contracts::TEST_SEND],
+    }
+}
+
+/// WORKER-10: run the preselected send fixture once under host-selected
+/// observation bounds. The host's record, not the guest, reports outcomes.
+fn send_observation(
+    scenario: super::worker_send::Scenario,
+    guest_attempted: &mut bool,
+) -> Result<serde_json::Value> {
+    use std::io::Read;
+    let binding = send_binding();
+    let issuer = HostWorkerIssuer::select_send_checked(
+        HOST_SEND_SOURCE,
+        "plus",
+        "synthetic-peer",
+        binding.clone(),
+        scenario,
+    )?;
+    let mut source = Vec::new();
+    std::io::stdin()
+        .lock()
+        .take(u64::from(super::SOURCE_LIMITS.bytes) + 1)
+        .read_to_end(&mut source)?;
+    ensure!(
+        source == HOST_SEND_SOURCE,
+        "Worker candidate differs from the preselected fixture source"
+    );
+    let (mut selected, root) = issuer
+        .prepare(&source, "plus", 160_000_000)
+        .map_err(|_| anyhow::anyhow!("Worker send Program refused"))?;
+    let world = selected
+        .selected_world()
+        .map_err(|_| anyhow::anyhow!("Worker send WIT selection refused"))?;
+    let policy = &issuer.policy.inner;
+    let build_context = serde_json::json!({
+        "source_sha256": policy.source_sha256,
+        "definition_identity": policy.owner_identity.to_string(),
+        "source_generation": policy.source_generation,
+        "program_interface": selected
+            .interface_text(root)
+            .map_err(|_| anyhow::anyhow!("Worker send interface unavailable"))?,
+        "adapter_identity": binding.adapter_identity,
+        "adapter_slot": binding.adapter_slot,
+        "policy_epoch": policy.epoch,
+        "module_wat_sha256": crate::workflow::intrinsic::sha256(selected.wat()),
+        "guest_world_context_sha256": crate::workflow::intrinsic::sha256(&world.build_context()),
+    });
+    let profile = serde_json::json!({
+        "revision": "worker-program-v2/test-send-observation-v1",
+        "fuel": FUEL, "epoch_deadline": 1, "memory_bytes": 4_194_304,
+        "table_elements": 16_384, "effect_request_limit": EFFECT_REQUEST_LIMIT,
+        "effect_text_bytes": EFFECT_TEXT_LIMIT,
+        "host_operation": "synchronous in-process hand-off; at most one outstanding",
+        "payload_export": "withheld",
+    });
+    selected
+        .reserve_guest()
+        .map_err(|_| anyhow::anyhow!("Worker send work exhausted"))?;
+    let task = TaskOwner::for_source(&selected);
+    *guest_attempted = true;
+    let completed = execute_reserved_with_task(
+        &selected,
+        root,
+        41,
+        BatchIterations::ONE,
+        &task,
+        GuestAction::Invoke,
+        true,
+        false,
+    )
+    .is_ok();
+    let record = issuer
+        .policy
+        .send_record(completed, build_context, profile)?;
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","stage":"host-outcome-record",
+        "outcome":record["primary_outcome"],"operation":"test.send","record":record,
+    }))
 }
 
 /// The checked pure Program of the builder fixture closure.
@@ -2050,7 +2302,10 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "emit-import",
                         "builders",
                         "candidate",
-                        "candidate-fault"
+                        "candidate-fault",
+                        "send-observe",
+                        "send-observe-rows",
+                        "send-observe-diagnostic"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -2061,6 +2316,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                 .context("invalid Worker test host mode")?;
             if mode == "candidate" || mode == "candidate-fault" {
                 return candidate_admission(mode == "candidate-fault");
+            }
+            if let Some(scenario) = super::worker_send::Scenario::for_mode(mode) {
+                return send_observation(scenario, &mut guest_attempted);
             }
             let emit = mode.starts_with("emit") || mode == "builders";
             // The fixture source, unlike stdin, is chosen before evaluating any

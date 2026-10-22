@@ -19,6 +19,9 @@ impl super::World {
             Some(noble_kernel::contracts::TEST_CODE_EXPORT) => {
                 b"worker-program-v2:Program([I64]->[I64]!{test.code-export})"
             }
+            Some(noble_kernel::contracts::TEST_SEND) => {
+                b"worker-program-v2:Program([I64]->[I64]!{test.send})"
+            }
             Some(_) | None => b"worker-program-v2:Program([I64]->[I64]!{})",
         };
         let capacity_bytes = profile

@@ -78,6 +78,9 @@ fn host_functions(
     if plan.has_bound_code_export {
         attempt!(out.append(b"(import \"noble\" \"test_code_export_bound\" (func $host_code_export_bound (param i32) (result i32)))\n"));
     }
+    if plan.has_bound_send {
+        attempt!(out.append(b"(import \"noble\" \"test_send_bound\" (func $host_send_bound (param i32 i32 i32) (result i32)))\n"));
+    }
 
     if plan.worker_interruption {
         attempt!(out.append(b"(import \"noble\" \"worker_interrupt_check\" (func $host_interrupt_check (param i32) (result i32)))\n"));
