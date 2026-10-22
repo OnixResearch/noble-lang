@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 551,
   "scenarios": 221,
-  "scenarios_executed": 131,
+  "scenarios_executed": 132,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -2168,7 +2168,7 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
-      "sha256": "8d336192d9446c209b6cdddfaada52545c5a17b266c7f7ac121954e482b00cc2"
+      "sha256": "06fb9bb373117617882edb604bee7b6819cfc9fdf8c492e8967ca050dc592e67"
     },
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
@@ -2372,7 +2372,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "2a399bad2689fde316f6f0eddfd9badf8752e8008eb98cef90057246396cd351"
+      "sha256": "082ae4b5d817bb3e9cd051272f6b1d40976ee5a1ee23895b46a54aa1ecb71c9b"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2424,7 +2424,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "255dec9c15fab8bde08b9dd51cff26092a7ce2a3ac2121337e69a714af0ae8b7"
+      "sha256": "59439a50fe24bc3bfa2a05a82307ffe37beb75a5c66021a3ce7318a167bb5e46"
     },
     {
       "file": "specs/SAFETY.md",

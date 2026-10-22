@@ -199,7 +199,26 @@
       "requirements": ["P-PACK-01", "K-SCOPE-05", "H-HOST-02", "S-EFFECT-03"],
       "input": {"harness": "captured-data-export-authority", "capture": "synthetic-private-text", "declared_effects": ["test.code-export"], "destination_authority": "denied", "program_valid": true, "digest_valid": true},
       "expected": {"stage": "export-authorization", "outcome": "denied", "guest_requests": 1, "protected_operations": 0, "capture_published": false, "capturability_grants_export_authority": false, "candidate_body_requests": 0, "denial_recorded": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "The installed, checked private-capture Program's one request-code-export to the default-deny Worker test embedder is denied at export authorization with one guest request, zero protected operations and zero candidate-body requests; no captured Text reaches the host's working directory, stdout or stderr. This is not a positive exporter or a production export issuer.",
+        "subject": "WORKER-12", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:a2f16675dda7d442085922a4c5b5831bc0f697a6e08ed2c83749b9580c7f1b3c",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "captured-data-export-authority", "receipt": "../../verification/worker12/acceptance.json",
+          "receipt_sha256": "3b85e92a270e5065394274d90d8f00a22f62cb2394464210727e0d8fdeee15ff",
+          "gate": "verification/worker12/gate.mjs", "case": "WORKER-12", "tested_commit": "70e9939c22f12e90e8e6d9781d898a88fa1e21d3",
+          "binary_sha256": "646aff69fb5cd58279ad142626289d9a39076fd717a252e2ea88b585923eda4b",
+          "command": "noble worker program test-host wit-export < verification/worker12/fixtures/export.noble",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 19add24980ac9d60f1e5e31639391436fb9b7ed6d5627116a33038e9d7c5b33d); raw stdout and stderr of the WIT, Core and unselected-source runs retained under verification/worker12."
+        },
+        "assumptions": [
+          "capture_published is observed outside the host process: each run starts in a fresh empty working directory that must stay empty, and no captured Text literal may appear on stdout or stderr. Channels outside the host process are not observed.",
+          "capturability_grants_export_authority is derived from the denied outcome, the recorded denial and zero protected operations, or any observed publication; the guest cannot branch on the returned boolean.",
+          "program_valid and digest_valid are realized by the preselected fixture source being checked, compiled, installed and bound, with its capture cell attested against the checked Text; no package digest is involved in this path.",
+          "An unselected source is refused before any guest request, so the denial is attributable to the missing export authority. The separate always-denied Core bound effect is checked as a second path."
+        ]
+      }]
     }
   ]
 }
