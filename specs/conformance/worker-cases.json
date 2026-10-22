@@ -280,7 +280,26 @@
         {"attempt": "attempt-3", "observations": ["requested", "admitted", "externally-unknown"]}
       ], "terminal_event": "cancellation", "variants": ["sufficient-observation-budget", "observation-output-exhausted", "diagnostic-output-exhausted"]},
       "expected": {"stage": "host-outcome-record", "outcome": "cancelled-with-prior-effects-retained", "required_fields": ["invocation", "program-build-context", "execution-profile", "primary-outcome", "ownership-disposition", "operation-attempt-correlation", "omitted-observation-scope", "unknown-operation-outcomes"], "primary_outcome": "cancelled", "guest_requests": 3, "protected_operation_admissions": 2, "completed_operations": 1, "denied_attempt_counted_as_request": true, "attempt_3_outcome": "unknown", "omission_marked_when_exhausted": true, "prior_effects_rolled_back": false, "effect_plan_counts_as_completion": false, "missing_observations_imply_no_effects": false, "automatic_retry": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "A host that selects the exact test.send binding, its own exact-plan grants, a synthetic peer and the output bounds records invocation-1's three requests, one authorization denial, two kernel admissions, one completion and attempt-3's externally unknown outcome after it cancels the invocation, with invocation and attempt correlation on every row. The rows variant marks its omitted tail and still reports attempt-3 admitted and unknown; the diagnostic variant marks its omitted bytes; the complete record marks nothing; no payload Text is exported.",
+        "subject": "WORKER-10", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:8c7d5f371e031b5d40826ac727f45a1545a327ea483664d55829b5f17221d64c",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "bounded-operation-observation", "receipt": "../../verification/worker10/acceptance.json",
+          "receipt_sha256": "9cc23babab50bf72dca7bcbf1018d8249e077c3a3628f2a5e8b7b3a05834ec2c",
+          "gate": "verification/worker10/gate.mjs", "case": "WORKER-10", "tested_commit": "8f6fbb23bc05bb1fde86945728b51623c28decd0",
+          "binary_sha256": "94c8c7cfa06b9c8388430726b9dd415a18217890c8c386fe4006ce3a7c73100b",
+          "command": "noble worker program test-host send-observe|send-observe-rows|send-observe-diagnostic < verification/worker10/fixtures/sender.noble",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 feb4912918f1986687613977a93f2ff1932eac3b3044518fa1a1e13e5493e66a); the fixtures and every raw report are retained under verification/worker10."
+        },
+        "assumptions": [
+          "attempt-N is the host-assigned N-th request. attempt-2's denial comes only from the host grant table through the kernel authority; the general S-EFFECT-03 clauses apply, its filesystem-profile clauses do not.",
+          "The three variants share one expected record: counters, kernel-retained attempt outcomes and the unknown-outcome list stay outside the bounded rows and remain exact when rows or diagnostic bytes are omitted.",
+          "attempt-3 is a synchronous hand-off to a synthetic in-process peer whose acknowledgement is lost, and the host-selected cancellation fires while it is outstanding; no native work is in flight, and late completion is WORKER-01 (MW2).",
+          "observation-output-exhausted bounds the retained rows; requests past the bound are still decided, not denied."
+        ]
+      }]
     },
     {
       "id": "WORKER-11", "profile": "Worker-Design", "kind": "review",

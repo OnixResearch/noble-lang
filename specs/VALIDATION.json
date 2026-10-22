@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 551,
   "scenarios": 221,
-  "scenarios_executed": 137,
+  "scenarios_executed": 138,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -1479,6 +1479,22 @@
       "sha256": "b1b08e2b46357eb58e28ef85808fc8e356908cecc4657890efaefbffd9436761"
     },
     {
+      "file": ".cairn/archive/2026-10-22-worker-test-send-observation/design.md",
+      "sha256": "a07dc29443fa2243a4a4c8d0bfa49a2100381c176bbe8c9b9cafbcc81928c4b3"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-test-send-observation/proposal.md",
+      "sha256": "aeaa3349c32303d2949b9f5077eaf3398b8f26be068da1ca78b037f0cc7c4e1b"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-test-send-observation/specs/language/spec.md",
+      "sha256": "814a806653580dc95a5332297c404b9da77b9229f566ec38c1ef1df20888bf94"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-test-send-observation/tasks.md",
+      "sha256": "3881af9247c105dafecd6da6b4a69c9c3e1759db55c8e4d22d7ca03233a2be62"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2256,7 +2272,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "af6a6c9b19d8b963a64b745a958736d2eef6fa2028087dfb9ab27ad17983dfd0"
+      "sha256": "dd107fbdf62c1f4f9229427caf582b25ddabbeaa5ae00c258b312be343f042e4"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -2404,7 +2420,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "55d9a7c83172113f734e6a150eaf427ec68cf811f0a6024f0ea49a8734d6eb7f"
+      "sha256": "02e2dc051528b30d8d977adf6dac4cd5080441942d4d8163fb4e2400606eecba"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2456,7 +2472,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "039790c822faa5beb9225036eeff67bd0b143fe9aa1920f7c4a98f09d85db95f"
+      "sha256": "180a40516026afcf50dc88addcdb3d0ec6e0cf942204e6f2f6d9d37c7757d3cf"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2468,7 +2484,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "7a9f909704c4199aad990aee178e05fe9110bc329d86508afece3400926a45bc"
+      "sha256": "d8a1f37a48db5a66563616e3a1588c11234f617806374a3f8231051cea1de944"
     },
     {
       "file": "specs/spec-family.json",
