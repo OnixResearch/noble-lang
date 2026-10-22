@@ -291,7 +291,7 @@ fn checked_program(
         )));
     let closure = attempt!(declared
         .checked_program_closure("transition")
-        .ok_or_else(|| failure(
+        .map_err(|_| failure(
             "invalid-input",
             "package has a cyclic, foreign, or unreachable definition"
         )));
@@ -888,7 +888,7 @@ mod tests {
             .ok_or("checked owner absent")?;
         let closure = declared
             .checked_program_closure("transition")
-            .ok_or("checked closure absent")?;
+            .map_err(|_| "checked closure absent")?;
         let source_sha = crate::workflow::intrinsic::sha256(source.as_bytes());
         let definitions: Vec<Value> = closure
             .iter()
@@ -1194,7 +1194,7 @@ mod tests {
         if same_body
             .checked_program_owner("transition")
             .is_none_or(|owner| owner.definition_slot() != 1)
-            || same_body.checked_program_closure("transition").is_some()
+            || same_body.checked_program_closure("transition").is_ok()
         {
             return Err("equal-body Named slots were collapsed or unused decoy admitted".into());
         }

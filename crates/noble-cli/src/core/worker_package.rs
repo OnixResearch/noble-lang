@@ -9,7 +9,7 @@ const NODE_LIMIT: usize = 4_096;
 const DEPTH_LIMIT: usize = 32;
 const MEMORY_LIMIT: usize = 1_048_576;
 const PARSER_WORK: usize = 1_000_000;
-const REVISION: &str = "0.1.0-draft.5";
+pub(super) const REVISION: &str = "0.1.0-draft.5";
 
 pub(crate) struct Package {
     document: Value,

@@ -116,6 +116,19 @@ pub struct CheckedProgramOwner {
     definition_slot: u32,
 }
 
+/// Why a closed Worker Program closure was not established. Exhaustion stays
+/// distinct so a caller's shared request budget keeps its primary outcome.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProgramClosureError {
+    /// The walk ran out of the work limit this preparation was given.
+    Exhausted,
+    /// A scoped self-owner or slot invocation: recursive graph shapes are not
+    /// closed Worker Program closures.
+    Unsupported,
+    /// A missing, foreign, unverified, unexported or unreachable definition.
+    Invalid,
+}
+
 /// Source-checked, owner-bound Program interface for a separately selected
 /// Worker WIT resource mapping. A type token is not an installed guest cell,
 /// host-operation authority or portable package acceptance.
@@ -324,6 +337,7 @@ impl ModulePrepared {
         }
         let module = self.staged.modules.last()?;
         self.checked_program_bound_closure(module, name, binding)
+            .ok()
             .map(|(owner, _)| owner)
     }
 
@@ -373,9 +387,15 @@ impl ModulePrepared {
     pub fn checked_program_closure(
         &self,
         root: &str,
-    ) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
-        let owner = self.checked_program_owner(root)?;
-        let module = self.staged.modules.last()?;
+    ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
+        let owner = self
+            .checked_program_owner(root)
+            .ok_or(ProgramClosureError::Invalid)?;
+        let module = self
+            .staged
+            .modules
+            .last()
+            .ok_or(ProgramClosureError::Invalid)?;
         self.checked_program_closure_source(module, &owner)
     }
 
@@ -385,11 +405,15 @@ impl ModulePrepared {
         &self,
         root: &str,
         binding: &super::BoundOperation,
-    ) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
+    ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
         if self.kind != ModuleKind::Module || self.pending.is_some() {
-            return None;
+            return Err(ProgramClosureError::Invalid);
         }
-        let module = self.staged.modules.last()?;
+        let module = self
+            .staged
+            .modules
+            .last()
+            .ok_or(ProgramClosureError::Invalid)?;
         self.checked_program_bound_closure(module, root, binding)
             .map(|(_, closure)| closure)
     }
@@ -399,12 +423,20 @@ impl ModulePrepared {
         module: &super::Module,
         root: &str,
         binding: &super::BoundOperation,
-    ) -> Option<(CheckedProgramOwner, alloc::vec::Vec<CheckedProgramOwner>)> {
-        let adapter = self.checked_bound_adapter(module, binding)?;
-        let owner = self.checked_program_owner_source(module, root)?;
+    ) -> Result<(CheckedProgramOwner, alloc::vec::Vec<CheckedProgramOwner>), ProgramClosureError>
+    {
+        let adapter = self
+            .checked_bound_adapter(module, binding)
+            .ok_or(ProgramClosureError::Invalid)?;
+        let owner = self
+            .checked_program_owner_source(module, root)
+            .ok_or(ProgramClosureError::Invalid)?;
         let closure = self.checked_program_closure_source(module, &owner)?;
-        self.closure_invokes_bound(&closure, adapter.definition)
-            .then_some((owner, closure))
+        if self.closure_invokes_bound(&closure, adapter.definition) {
+            Ok((owner, closure))
+        } else {
+            Err(ProgramClosureError::Invalid)
+        }
     }
 
     #[expect(
@@ -477,66 +509,82 @@ impl ModulePrepared {
         &self,
         module: &super::Module,
         owner: &CheckedProgramOwner,
-    ) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
+    ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
         if module.definition_spans.is_empty() || module.definition_spans.len() > super::MODULE_CAP {
-            return None;
+            return Err(ProgramClosureError::Invalid);
         }
         let named = &self.staged.source.definitions;
-        let root_index = usize::try_from(owner.definition_slot).ok()?;
+        let root_index =
+            usize::try_from(owner.definition_slot).map_err(|_| ProgramClosureError::Invalid)?;
         let mut visited = alloc::vec![false; named.len()];
         let mut enqueued = alloc::vec![false; named.len()];
         let mut pending = alloc::vec![root_index];
         let mut meter = crate::Meter::new(self.limits);
-        enqueued[root_index] = true;
+        *enqueued
+            .get_mut(root_index)
+            .ok_or(ProgramClosureError::Invalid)? = true;
         while let Some(index) = pending.pop() {
-            let definition = named.get(index)?;
+            let definition = named.get(index).ok_or(ProgramClosureError::Invalid)?;
             if definition.owner != Some(module.identity)
                 || definition.signed.is_some()
                     && !module
                         .verified_signed_slots
-                        .contains(&u32::try_from(index).ok()?)
+                        .contains(&u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?)
             {
-                return None;
+                return Err(ProgramClosureError::Invalid);
             }
             if visited[index] {
                 continue;
             }
             visited[index] = true;
             for node in &definition.tree.nodes {
-                meter.charge(1, node.span).ok()?;
+                meter
+                    .charge(1, node.span)
+                    .map_err(|_| ProgramClosureError::Exhausted)?;
                 match &node.kind {
                     crate::source::Kind::Call(crate::source::Target::Named(target)) => {
-                        let next = usize::try_from(*target).ok()?;
-                        if !*enqueued.get(next)? {
+                        let next =
+                            usize::try_from(*target).map_err(|_| ProgramClosureError::Invalid)?;
+                        if !*enqueued.get(next).ok_or(ProgramClosureError::Invalid)? {
                             enqueued[next] = true;
                             pending.push(next);
                         }
                     }
                     crate::source::Kind::Call(
                         crate::source::Target::SlotInvoke(_) | crate::source::Target::SelfOwner,
-                    ) => return None,
+                    ) => return Err(ProgramClosureError::Unsupported),
                     _ => {}
                 }
             }
         }
         let mut closure = alloc::vec::Vec::with_capacity(module.definition_spans.len());
         for (ordinal, entry) in module.definition_spans.iter().enumerate() {
-            meter.charge(1, super::SPAN).ok()?;
-            let index = named.iter().position(|definition| {
-                definition.name == entry.name && definition.owner == Some(module.identity)
-            })?;
+            meter
+                .charge(1, super::SPAN)
+                .map_err(|_| ProgramClosureError::Exhausted)?;
+            let index = named
+                .iter()
+                .position(|definition| {
+                    definition.name == entry.name && definition.owner == Some(module.identity)
+                })
+                .ok_or(ProgramClosureError::Invalid)?;
             if !visited[index] {
-                return None;
+                return Err(ProgramClosureError::Invalid);
             }
             closure.push(CheckedProgramOwner {
                 module_identity: module.identity,
                 module_version: module.version,
-                definition_ordinal: u32::try_from(ordinal).ok()?,
+                definition_ordinal: u32::try_from(ordinal)
+                    .map_err(|_| ProgramClosureError::Invalid)?,
                 definition_identity: named[index].identity,
-                definition_slot: u32::try_from(index).ok()?,
+                definition_slot: u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?,
             });
         }
-        (visited.iter().filter(|seen| **seen).count() == closure.len()).then_some(closure)
+        if visited.iter().filter(|seen| **seen).count() == closure.len() {
+            Ok(closure)
+        } else {
+            Err(ProgramClosureError::Invalid)
+        }
     }
 
     pub fn declared_text_source_owner(&self) -> Option<DeclaredTextSourceOwner<'_>> {
@@ -969,7 +1017,7 @@ impl ModulePrepared {
     ) -> Option<CheckedProgramInterface> {
         let (submission, definition, module) = self.checked_program_invocation(owner)?;
         let adapter = self.checked_bound_adapter(module, binding)?;
-        let closure = self.checked_program_closure_source(module, owner)?;
+        let closure = self.checked_program_closure_source(module, owner).ok()?;
         if !self.closure_invokes_bound(&closure, adapter.definition)
             || submission.request.expected.allowed_effects != adapter.effects
             || definition.expected.allowed_effects != adapter.effects

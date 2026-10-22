@@ -26,8 +26,8 @@ pub(crate) use declared::{
 };
 pub use declared::{
     BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner,
-    DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition,
-    SignedSourceOwner,
+    DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, ProgramClosureError,
+    RebuiltImportDefinition, SignedSourceOwner,
 };
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.

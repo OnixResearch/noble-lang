@@ -6,7 +6,8 @@ mod state;
 pub(super) mod types;
 pub use state::{
     CheckedNominal, CheckedProgramInterface, CheckedProgramOwner, DeclaredTextSourceOwner,
-    ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner,
+    ModuleKind, ModulePrepared, ModuleSession, ProgramClosureError, RebuiltImportDefinition,
+    SignedSourceOwner,
 };
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };

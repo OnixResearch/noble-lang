@@ -176,7 +176,7 @@ fn assert_pure_candidate(session: &noble_contracts::source::ModuleSession) -> Re
 
 #[test]
 fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Result<(), String> {
-    use noble_contracts::source::{pure_builtin_spelling, ModuleSession};
+    use noble_contracts::source::{pure_builtin_spelling, ModuleSession, ProgramClosureError};
     assert_eq!(pure_builtin_spelling(0), Some("dup"));
     assert_eq!(pure_builtin_spelling(21), Some("list.case"));
     for forbidden in [22, 23, 26, 27] {
@@ -210,7 +210,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     assert!(prepared.checked_program_owner("missing").is_none());
     let closure = prepared
         .checked_program_closure("root")
-        .ok_or("closed package refused")?;
+        .map_err(|error| format!("closed package refused: {error:?}"))?;
     assert_eq!(
         closure
             .iter()
@@ -227,7 +227,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
         .map_err(|error| format!("{error:?}"))?;
     assert!(decoy.checked_program_owner("root").is_some());
     assert!(
-        decoy.checked_program_closure("root").is_none(),
+        decoy.checked_program_closure("root").err() == Some(ProgramClosureError::Invalid),
         "an uncalled source definition cannot enter a closed worker package"
     );
     let external = commit(
@@ -243,7 +243,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
         .map_err(|error| format!("{error:?}"))?;
     assert!(foreign.checked_program_owner("root").is_some());
     assert!(
-        foreign.checked_program_closure("root").is_none(),
+        foreign.checked_program_closure("root").err() == Some(ProgramClosureError::Invalid),
         "a foreign checked source owner is not inside this worker package"
     );
     let signed = ModuleSession::new_declared_text(&[], true, retained())
@@ -254,7 +254,8 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     ).map_err(|error| format!("{error:?}"))?;
     assert!(unchecked_self.checked_program_owner("forever").is_none());
     assert!(
-        unchecked_self.checked_program_closure("forever").is_none(),
+        unchecked_self.checked_program_closure("forever").err()
+            == Some(ProgramClosureError::Invalid),
         "an unverified signed self cycle cannot enter a closed worker package"
     );
     let bound = ModuleSession::new(
@@ -275,7 +276,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     assert!(host_module.checked_nominals().is_none());
     assert!(host_module.checked_program_owner("handle").is_none());
     assert!(
-        host_module.checked_program_closure("handle").is_none(),
+        host_module.checked_program_closure("handle").err() == Some(ProgramClosureError::Invalid),
         "an independently linked host adapter must not enter a pure worker package"
     );
     Ok(())
@@ -283,7 +284,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
 
 #[test]
 fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Result<(), String> {
-    use noble_contracts::source::{BoundOperation, ModuleSession};
+    use noble_contracts::source::{BoundOperation, ModuleSession, ProgramClosureError};
     use noble_kernel::types::{EffSet, Ty};
 
     let selected = binding(Binding {
@@ -298,13 +299,16 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
         .prepare(source, &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert!(module.checked_program_owner("plus").is_none());
-    assert!(module.checked_program_closure("plus").is_none());
+    assert_eq!(
+        module.checked_program_closure("plus").err(),
+        Some(ProgramClosureError::Invalid)
+    );
     let owner = module
         .checked_program_owner_for_binding("plus", &selected)
         .ok_or("bound export lost checked source owner")?;
     let closure = module
         .checked_program_closure_for_binding("plus", &selected)
-        .ok_or("bound export lost closed source graph")?;
+        .map_err(|error| format!("bound export lost closed source graph: {error:?}"))?;
     assert_eq!(
         closure
             .iter()
@@ -351,9 +355,12 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
         assert!(module
             .checked_program_owner_for_binding("plus", wrong)
             .is_none());
-        assert!(module
-            .checked_program_closure_for_binding("plus", wrong)
-            .is_none());
+        assert_eq!(
+            module
+                .checked_program_closure_for_binding("plus", wrong)
+                .err(),
+            Some(ProgramClosureError::Invalid)
+        );
     }
     let extra = binding(Binding {
         version: 2,
@@ -371,7 +378,8 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
     assert!(
         multiple_module
             .checked_program_closure_for_binding("plus", &selected)
-            .is_none(),
+            .err()
+            == Some(ProgramClosureError::Invalid),
         "one matching row among several staged bindings is not an exact host selection"
     );
     let clock = BoundOperation {
@@ -392,7 +400,7 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
         .map_err(|error| format!("{error:?}"))?;
     assert!(clock_staged.checked_program_owner("plus").is_none());
     assert!(
-        clock_staged.checked_program_closure("plus").is_none(),
+        clock_staged.checked_program_closure("plus").err() == Some(ProgramClosureError::Invalid),
         "pure getters must reject even an unused non-emit host binding"
     );
     let inert = session
@@ -415,7 +423,8 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
     assert!(
         partial
             .checked_program_closure_for_binding("plus", &selected)
-            .is_none(),
+            .err()
+            == Some(ProgramClosureError::Invalid),
         "an unused source definition cannot enter a bound Worker package"
     );
 

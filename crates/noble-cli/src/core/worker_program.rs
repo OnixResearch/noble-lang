@@ -19,8 +19,15 @@ const RECIPE_DEPTH_LIMIT: u32 = 32;
 const RECIPE_LEAF_LIMIT: u32 = 256;
 const PACKAGE_BYTES: usize = 262_144;
 const PACKAGE_DEPTH: usize = 32;
+/// format, semantic_revision, wit_world, source_utf8, root, graph,
+/// selected_node, selected_graph_blake3, definitions, builtins, interface,
+/// host_contracts, captures, capture_binding_blake3 and artifact.
+const PACKAGE_FIELDS: usize = 15;
+/// The pure builtin table is the checker's core vocabulary; each package row
+/// binds one builtin spelling to this kernel semantic revision.
+const BUILTIN_COUNT: u32 = 22;
 const RUNTIME_REQUEST_WORK: usize = 50_000_000;
-const PACKAGE_REVISION: &str = "0.1.0-draft.9";
+const PACKAGE_REVISION: &str = "0.1.0-draft.10";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
@@ -29,6 +36,14 @@ pub(crate) enum Refusal {
     Invalid,
     Unsupported,
     Exhausted,
+}
+
+/// Observations of one import attempt that remain meaningful when the import
+/// is refused.
+#[derive(Default)]
+pub(crate) struct ImportTrace {
+    /// Locally compiled source modules installed to reattest captured Text.
+    pub(crate) installations: u32,
 }
 
 struct Node {
@@ -80,6 +95,15 @@ struct ExportGrant<'a> {
     source_sha256: &'a str,
     capture_sha256: &'a str,
     allowed: bool,
+}
+
+/// An export denial is its own outcome: it never reads as a source-check
+/// failure, and a refused package is never a successful no-op.
+#[cfg(test)]
+#[derive(Debug, PartialEq, Eq)]
+enum ExportRefusal {
+    Denied,
+    Refused(Refusal),
 }
 
 /// A Program's graph index and its *adapted* interface witness are distinct.
@@ -148,9 +172,19 @@ impl Store {
         {
             return Err(Refusal::Exhausted);
         }
-        // Reserve from one request meter: module check, selected invocation
-        // check and Wasm compilation cannot each refresh a full 3M allowance.
-        let stage_work = u32::try_from((work / 4).min(SOURCE_LIMITS.work as usize))
+        // Reserve one slice of the request meter for each bounded checking
+        // stage: the module check, every closure walk (the closure alone for
+        // a pure root; the closure, owner and interface walks for a
+        // host-selected binding), the selected invocation check and Wasm
+        // compilation. Each walk runs under at most one slice, so no nested
+        // stage receives an uncharged fresh allowance.
+        let walks: usize = if policy.is_some() { 3 } else { 1 };
+        let slices = walks.checked_add(3).ok_or(Refusal::Exhausted)?;
+        let share = slices
+            .checked_add(1)
+            .and_then(|divisor| work.checked_div(divisor))
+            .ok_or(Refusal::Exhausted)?;
+        let stage_work = u32::try_from(share.min(SOURCE_LIMITS.work as usize))
             .map_err(|_| Refusal::Exhausted)?;
         if stage_work == 0 {
             return Err(Refusal::Exhausted);
@@ -161,7 +195,7 @@ impl Store {
         };
         let reserved = usize::try_from(stage_work)
             .map_err(|_| Refusal::Exhausted)?
-            .checked_mul(3)
+            .checked_mul(slices)
             .ok_or(Refusal::Exhausted)?;
         let mut work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
         let bindings = policy.as_ref().map_or(&[][..], |selection| {
@@ -183,19 +217,22 @@ impl Store {
         {
             return Err(Refusal::Unsupported);
         }
+        // The closure walk runs first so its exhaustion stays the primary
+        // outcome; the bound owner walk below repeats an admitted walk.
+        let closure = match &policy {
+            Some(selected) => module.checked_program_closure_for_binding(name, selected.binding()),
+            None => module.checked_program_closure(name),
+        }
+        .map_err(closure_refusal)?;
         let owner = match &policy {
             Some(selected) => module.checked_program_owner_for_binding(name, selected.binding()),
             None => module.checked_program_owner(name),
         }
         .ok_or(Refusal::Invalid)?;
-        let closure = match &policy {
-            Some(selected) => module.checked_program_closure_for_binding(name, selected.binding()),
-            None => module.checked_program_closure(name),
-        }
-        .ok_or(Refusal::Invalid)?;
         if closure.is_empty() {
             return Err(Refusal::Invalid);
         }
+        // Retaining the source and matching each dependency below.
         work_left = work_left
             .checked_sub(source.len())
             .and_then(|left| left.checked_sub(closure.len().checked_mul(8)?))
@@ -417,9 +454,24 @@ impl Store {
         for alias in &self.text_aliases {
             let text = std::str::from_utf8(&alias.bytes).map_err(|_| Refusal::Invalid)?;
             values.push(json!({"owner_identity":alias.owner_identity.to_string(),
-                "source_node":alias.node,"text_utf8":text}));
+                "source_node":alias.node,"schema":"Text","text_utf8":text}));
         }
         Ok(Value::Array(values))
+    }
+
+    /// Digest of the exact checked captures, computed without serializing
+    /// them, so a host can bind an export grant to one capture set.
+    #[cfg(test)]
+    fn capture_digest(&self) -> Result<String, Refusal> {
+        let mut preimage = Vec::new();
+        for alias in &self.text_aliases {
+            let length = u64::try_from(alias.bytes.len()).map_err(|_| Refusal::Exhausted)?;
+            preimage.extend_from_slice(&alias.owner_identity.to_le_bytes());
+            preimage.extend_from_slice(&alias.node.to_le_bytes());
+            preimage.extend_from_slice(&length.to_le_bytes());
+            preimage.extend_from_slice(&alias.bytes);
+        }
+        Ok(crate::workflow::intrinsic::sha256(&preimage))
     }
 
     fn selected_graph_blake3(&self, selected: usize) -> Result<String, Refusal> {
@@ -511,7 +563,24 @@ impl Store {
         Ok(())
     }
 
+    #[cfg(test)]
     fn package(&self, handle: Handle) -> Result<Value, Refusal> {
+        let capture_binding = match self.attested_capture_hash {
+            Some(hash) => Some(crate::workflow::encoding::hex(&hash)),
+            None if self.text_aliases.is_empty() => None,
+            None => return Err(Refusal::Invalid),
+        };
+        self.package_document(handle, capture_binding)
+    }
+
+    /// Every field except the capture binding derives from this store's
+    /// checked source, closure, selected policy and graph. Import compares a
+    /// claimed binding here before any Wasm is installed to reattest it.
+    fn package_document(
+        &self,
+        handle: Handle,
+        capture_binding: Option<String>,
+    ) -> Result<Value, Refusal> {
         self.require_selected_root(handle)?;
         let root = self.node_handle(self.root_index).ok_or(Refusal::Invalid)?;
         let target = self.named(root).ok_or(Refusal::Invalid)?;
@@ -522,15 +591,27 @@ impl Store {
         {
             return Err(Refusal::Unsupported);
         }
+        // The host-selected binding, if any, is the only effect a package
+        // can carry; it is described here, never issued by import.
+        let (allowed, effect_names, host_contracts) = match &self.host_policy {
+            Some(policy) => {
+                let binding = policy.binding();
+                (
+                    EffSet::from_ids(&binding.effects),
+                    vec![binding.operation.clone()],
+                    vec![contract_wire(binding)?],
+                )
+            }
+            None => (EffSet::empty(), Vec::new(), Vec::new()),
+        };
         let witness = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
-        if witness.input != [Ty::I64] || witness.output != [Ty::I64] || !witness.effects.is_empty()
-        {
+        if witness.input != [Ty::I64] || witness.output != [Ty::I64] || witness.effects != allowed {
             return Err(Refusal::Unsupported);
         }
         if self.nodes.iter().any(|node| {
             self.witnesses
                 .get(node.original)
-                .is_none_or(|original| !original.effects.is_empty())
+                .is_none_or(|original| !original.effects.is_subset_of(&allowed))
         }) {
             return Err(Refusal::Unsupported);
         }
@@ -560,11 +641,13 @@ impl Store {
             });
         }
         let captures = self.capture_wire()?;
-        let capture_binding_blake3 = match self.attested_capture_hash {
-            Some(hash) => Some(crate::workflow::encoding::hex(&hash)),
-            None if self.text_aliases.is_empty() => None,
-            None => return Err(Refusal::Invalid),
-        };
+        let mut builtins = Vec::with_capacity(BUILTIN_COUNT as usize);
+        for ordinal in 0..BUILTIN_COUNT {
+            let name =
+                noble_contracts::source::pure_builtin_spelling(ordinal).ok_or(Refusal::Invalid)?;
+            builtins.push(json!({"ordinal":ordinal,"name":name,
+                "semantic_revision":super::worker_package::REVISION}));
+        }
         Ok(json!({
             "format":"noble-worker-program-package/v2",
             "semantic_revision":PACKAGE_REVISION,
@@ -575,38 +658,52 @@ impl Store {
             "graph":graph,"selected_node":handle.node,
             "selected_graph_blake3":self.selected_graph_blake3(handle.node)?,
             "definitions":definitions,
-            "interface":{"input":["I64"],"output":["I64"],"effects":[]},
-            "host_contracts":[],
+            "builtins":builtins,
+            "interface":{"input":["I64"],"output":["I64"],"effects":effect_names},
+            "host_contracts":host_contracts,
             "captures":captures,
-            "capture_binding_blake3":capture_binding_blake3,
+            "capture_binding_blake3":capture_binding,
             "artifact":null
         }))
     }
 
-    /// Authorization precedes even package construction/serialization.
-    /// A grant to another destination or capture digest never transfers.
+    /// Authorization precedes package construction and serialization: only a
+    /// host-built grant for this exact destination, source and capture digest
+    /// admits an export, and a denial is reported as a denial. There is no
+    /// CLI route: file or argument bytes cannot construct a grant.
     #[cfg(test)]
     fn export(
         &mut self,
         handle: Handle,
         destination: &str,
         grant: &ExportGrant<'_>,
-    ) -> Result<Vec<u8>, Refusal> {
-        let captures = serde_json::to_vec(&self.capture_wire()?).map_err(|_| Refusal::Invalid)?;
+    ) -> Result<Vec<u8>, ExportRefusal> {
+        let captures = self.capture_digest().map_err(ExportRefusal::Refused)?;
         if !grant.allowed
             || destination != grant.destination
             || grant.source_sha256 != crate::workflow::intrinsic::sha256(&self.source)
-            || grant.capture_sha256 != crate::workflow::intrinsic::sha256(&captures)
+            || grant.capture_sha256 != captures
         {
-            return Err(Refusal::Invalid);
+            return Err(ExportRefusal::Denied);
         }
+        self.export_authorized(handle)
+            .map_err(ExportRefusal::Refused)
+    }
+
+    #[cfg(test)]
+    fn export_authorized(&mut self, handle: Handle) -> Result<Vec<u8>, Refusal> {
         self.require_selected_root(handle)?;
+        let capture_bytes = self
+            .text_aliases
+            .iter()
+            .try_fold(0usize, |total, alias| total.checked_add(alias.bytes.len()))
+            .ok_or(Refusal::Exhausted)?;
         let package_work = self
             .nodes
             .len()
             .checked_mul(16)
             .and_then(|count| count.checked_add(self.source.len()))
-            .and_then(|count| count.checked_add(captures.len()))
+            .and_then(|count| count.checked_add(capture_bytes))
             .ok_or(Refusal::Exhausted)?;
         self.charge(package_work)?;
         if !self.text_aliases.is_empty() {
@@ -622,10 +719,18 @@ impl Store {
         Ok(encoded)
     }
 
-    /// Import never accepts a package's digest, flags or artifact as proof:
-    /// compare every bounded field with a newly checked, emitted pure source
-    /// package. Nonempty host contracts have no issuer and do not import.
-    pub(crate) fn import(bytes: &[u8], work: usize) -> Result<(Self, Handle), Refusal> {
+    /// Import never accepts a package's digest, flags or artifact as proof.
+    /// Every bounded field is compared with a package regenerated from a
+    /// fresh local check under the host-selected policy, if any, before any
+    /// Wasm is installed; only then is a claimed Text binding reattested.
+    /// A host contract row matches only the same independently selected
+    /// binding, and importing it issues nothing.
+    pub(crate) fn import(
+        bytes: &[u8],
+        policy: Option<super::worker_program_guest::WorkerHostPolicy>,
+        work: usize,
+        trace: &mut ImportTrace,
+    ) -> Result<(Self, Handle), Refusal> {
         if bytes.len() > PACKAGE_BYTES {
             return Err(Refusal::Exhausted);
         }
@@ -696,13 +801,16 @@ impl Store {
         }
         if document["artifact"] != Value::Null
             || document["wit_world"] != WIT_WORLD
-            || document.as_object().is_none_or(|fields| fields.len() != 14)
+            || document
+                .as_object()
+                .is_none_or(|fields| fields.len() != PACKAGE_FIELDS)
         {
             return Err(Refusal::Unsupported);
         }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
-        let (mut store, _root) = Self::prepare(source.as_bytes(), name, &[Ty::I64], remaining)?;
+        let (mut store, _root) =
+            Self::prepare_selected(source.as_bytes(), name, &[Ty::I64], policy, remaining)?;
         let graph = document["graph"].as_array().ok_or(Refusal::Invalid)?;
         if graph.len() < store.recipe_nodes() {
             return Err(Refusal::Invalid);
@@ -741,14 +849,28 @@ impl Store {
             .and_then(|count| count.checked_add(bytes.len()))
             .ok_or(Refusal::Exhausted)?;
         store.charge(comparison_work)?;
-        if !store.text_aliases.is_empty() {
+        let claimed = match &document["capture_binding_blake3"] {
+            Value::Null => None,
+            Value::String(binding) => Some(binding.clone()),
+            _ => return Err(Refusal::Invalid),
+        };
+        if claimed.is_some() == store.text_aliases.is_empty()
+            || store.package_document(selected, claimed.clone())? != document
+        {
+            return Err(Refusal::Invalid);
+        }
+        if let Some(claimed) = claimed {
             store.reserve_attestation()?;
+            trace.installations = trace
+                .installations
+                .checked_add(1)
+                .ok_or(Refusal::Exhausted)?;
             let attested =
                 super::worker_program_guest::attest(&store, selected).map_err(runtime_refusal)?;
+            if crate::workflow::encoding::hex(&attested) != claimed {
+                return Err(Refusal::Invalid);
+            }
             store.attested_capture_hash = Some(attested);
-        }
-        if store.package(selected)? != document {
-            return Err(Refusal::Invalid);
         }
         Ok((store, selected))
     }
@@ -1011,6 +1133,36 @@ fn source_refusal(problem: noble_contracts::source::Error) -> Refusal {
     }
 }
 
+fn closure_refusal(problem: noble_contracts::source::ProgramClosureError) -> Refusal {
+    match problem {
+        noble_contracts::source::ProgramClosureError::Exhausted => Refusal::Exhausted,
+        noble_contracts::source::ProgramClosureError::Unsupported => Refusal::Unsupported,
+        noble_contracts::source::ProgramClosureError::Invalid => Refusal::Invalid,
+    }
+}
+
+fn type_names(types: &[Ty]) -> Result<Vec<&'static str>, Refusal> {
+    types
+        .iter()
+        .map(|ty| match ty {
+            Ty::I64 => Ok("I64"),
+            Ty::Text => Ok("Text"),
+            _ => Err(Refusal::Unsupported),
+        })
+        .collect()
+}
+
+/// The exact host-selected bound adapter a packaged Program was checked
+/// against. A row describes the contract; it never issues the effect.
+fn contract_wire(binding: &noble_contracts::source::BoundOperation) -> Result<Value, Refusal> {
+    Ok(
+        json!({"module_name":binding.module_name,"module_version":binding.module_version,
+        "operation":binding.operation,"adapter_identity":binding.adapter_identity,
+        "adapter_slot":binding.adapter_slot,"input":type_names(&binding.input)?,
+        "output":type_names(&binding.output)?,"effects":[binding.operation]}),
+    )
+}
+
 fn runtime_refusal(problem: anyhow::Error) -> Refusal {
     if problem.downcast_ref::<wasmtime::Trap>() == Some(&wasmtime::Trap::OutOfFuel) {
         Refusal::Exhausted
@@ -1037,13 +1189,16 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
         PACKAGE_BYTES,
     )
     .map_err(|_| ("invalid-input", "package file admission failed"))?;
-    let (store, root) = Store::import(&package, RUNTIME_REQUEST_WORK).map_err(refusal)?;
+    let mut trace = ImportTrace::default();
+    let (store, root) =
+        Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace).map_err(refusal)?;
     Ok(
         json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
         "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
         "dependencies":store.closure.len(),"guest_requests":0,
-        "protected_operations":0,"executable_guest_installed":false}),
+        "protected_operations":0,"executable_guest_installed":false,
+        "source_installations":trace.installations}),
     )
 }
 
@@ -1096,7 +1251,9 @@ fn guest_package(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static st
         PACKAGE_BYTES,
     )
     .map_err(|_| ("invalid-input", "package file admission failed"))?;
-    let (mut store, root) = Store::import(&package, RUNTIME_REQUEST_WORK).map_err(refusal)?;
+    let mut trace = ImportTrace::default();
+    let (mut store, root) =
+        Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace).map_err(refusal)?;
     guest_report(&mut store, root, operand, "fresh-package")
 }
 
@@ -1310,9 +1467,8 @@ mod tests {
         let source = b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]";
         let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("checked Text source");
-        let captures = serde_json::to_vec(&store.capture_wire().unwrap()).unwrap();
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let capture_sha256 = crate::workflow::intrinsic::sha256(&captures);
+        let capture_sha256 = store.capture_digest().unwrap();
         let denied = ExportGrant {
             destination: "private",
             source_sha256: &source_sha256,
@@ -1321,7 +1477,7 @@ mod tests {
         };
         assert_eq!(
             store.export(root, "private", &denied),
-            Err(Refusal::Invalid)
+            Err(ExportRefusal::Denied)
         );
         let grant = ExportGrant {
             destination: "private",
@@ -1335,8 +1491,13 @@ mod tests {
         let mut document: Value = serde_json::from_slice(&encoded).unwrap();
         assert_eq!(document["captures"][0]["text_utf8"], "tag");
         assert!(document["capture_binding_blake3"].as_str().is_some());
-        let (mut imported, selected) =
-            Store::import(&encoded, RUNTIME_REQUEST_WORK).expect("freshly attested Text package");
+        let (mut imported, selected) = Store::import(
+            &encoded,
+            None,
+            RUNTIME_REQUEST_WORK,
+            &mut ImportTrace::default(),
+        )
+        .expect("freshly attested Text package");
         assert_eq!(
             crate::core::worker_program_guest::execute(&mut imported, selected, 41, 1)
                 .unwrap()
@@ -1347,7 +1508,12 @@ mod tests {
         document["captures"][0]["text_utf8"] = json!("forged");
         let forged = serde_json::to_vec(&document).unwrap();
         assert!(matches!(
-            Store::import(&forged, RUNTIME_REQUEST_WORK),
+            Store::import(
+                &forged,
+                None,
+                RUNTIME_REQUEST_WORK,
+                &mut ImportTrace::default()
+            ),
             Err(Refusal::Invalid)
         ));
     }
@@ -1360,8 +1526,7 @@ mod tests {
         let double = store.checked_root(0).unwrap();
         let composed = store.compose(root, double).unwrap();
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let captures = serde_json::to_vec(&store.capture_wire().unwrap()).unwrap();
-        let capture_sha256 = crate::workflow::intrinsic::sha256(&captures);
+        let capture_sha256 = store.capture_digest().unwrap();
         let grant = ExportGrant {
             destination: "private",
             source_sha256: &source_sha256,
@@ -1369,7 +1534,13 @@ mod tests {
             allowed: true,
         };
         let package = store.export(composed, "private", &grant).unwrap();
-        let (mut imported, selected) = Store::import(&package, RUNTIME_REQUEST_WORK).unwrap();
+        let (mut imported, selected) = Store::import(
+            &package,
+            None,
+            RUNTIME_REQUEST_WORK,
+            &mut ImportTrace::default(),
+        )
+        .unwrap();
         assert_eq!(imported.capture_wire().unwrap()[0]["text_utf8"], "nested");
         assert_eq!(
             imported.recipe_edges(selected),
@@ -1387,7 +1558,12 @@ mod tests {
         let forged = serde_json::to_vec(&claim).unwrap();
         assert!(
             matches!(
-                Store::import(&forged, RUNTIME_REQUEST_WORK),
+                Store::import(
+                    &forged,
+                    None,
+                    RUNTIME_REQUEST_WORK,
+                    &mut ImportTrace::default()
+                ),
                 Err(Refusal::Invalid)
             ),
             "a still-rooted but forged edge cannot pass graph attestation"
@@ -1577,7 +1753,7 @@ mod tests {
             Err(Refusal::Invalid)
         ));
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
+        let capture_sha256 = current.capture_digest().unwrap();
         let grant = ExportGrant {
             destination: "local-test",
             source_sha256: &source_sha256,
@@ -1587,7 +1763,7 @@ mod tests {
         assert!(
             matches!(
                 current.export(stale, "local-test", &grant),
-                Err(Refusal::Invalid)
+                Err(ExportRefusal::Refused(Refusal::Invalid))
             ),
             "a same-source retired handle cannot borrow a new grant"
         );
@@ -1603,7 +1779,7 @@ mod tests {
         let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("checked package source");
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
+        let capture_sha256 = store.capture_digest().unwrap();
         let grant = ExportGrant {
             destination: "local-test",
             source_sha256: &source_sha256,
@@ -1614,14 +1790,15 @@ mod tests {
             allowed: false,
             ..grant
         };
-        assert!(matches!(
+        assert_eq!(
             store.export(root, "local-test", &denied),
-            Err(Refusal::Invalid)
-        ));
-        assert!(matches!(
+            Err(ExportRefusal::Denied)
+        );
+        assert_eq!(
             store.export(root, "other", &grant),
-            Err(Refusal::Invalid)
-        ));
+            Err(ExportRefusal::Denied),
+            "a grant for another destination never transfers"
+        );
         let alternate = (0..store.recipe_nodes())
             .filter_map(|index| store.checked_root(index))
             .find(|candidate| candidate.node != root.node)
@@ -1629,7 +1806,7 @@ mod tests {
         assert!(
             matches!(
                 store.export(alternate, "local-test", &grant),
-                Err(Refusal::Unsupported)
+                Err(ExportRefusal::Refused(Refusal::Unsupported))
             ),
             "a different named root cannot inherit export authority"
         );
@@ -1639,15 +1816,20 @@ mod tests {
         assert!(
             matches!(
                 store.export(dependency_only, "local-test", &grant),
-                Err(Refusal::Unsupported)
+                Err(ExportRefusal::Refused(Refusal::Unsupported))
             ),
             "composition without the selected root cannot inherit export authority"
         );
         let encoded = store
             .export(root, "local-test", &grant)
             .expect("explicit export grant");
-        let (imported, restored) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
-            .expect("fresh locally checked package import");
+        let (imported, restored) = Store::import(
+            &encoded,
+            None,
+            RUNTIME_REQUEST_WORK,
+            &mut ImportTrace::default(),
+        )
+        .expect("fresh locally checked package import");
         assert_eq!(
             imported.named(restored).unwrap().checked_recipe,
             store.named(root).unwrap().checked_recipe
@@ -1663,7 +1845,9 @@ mod tests {
             matches!(
                 Store::import(
                     &serde_json::to_vec(&forged_selection).unwrap(),
-                    RUNTIME_REQUEST_WORK
+                    None,
+                    RUNTIME_REQUEST_WORK,
+                    &mut ImportTrace::default()
                 ),
                 Err(Refusal::Unsupported)
             ),
@@ -1727,10 +1911,303 @@ mod tests {
         ] {
             let bytes = serde_json::to_vec(&altered).expect(label);
             assert!(
-                matches!(Store::import(&bytes, RUNTIME_REQUEST_WORK),
+                matches!(Store::import(&bytes, None, RUNTIME_REQUEST_WORK, &mut ImportTrace::default()),
                 Err(refusal) if refusal == expected),
                 "{label}"
             );
         }
+    }
+
+    /// Host-selected exact `test.emit` binding for the `Ledger@1.plus` fixture.
+    fn emit_policy(source: &[u8]) -> super::super::worker_program_guest::WorkerHostPolicy {
+        let binding = noble_contracts::source::BoundOperation {
+            module_name: "Ledger".into(),
+            module_version: 1,
+            operation: "test.emit".into(),
+            adapter_identity: "worker-test-emit@1.0.0".into(),
+            adapter_slot: 4,
+            input: vec![Ty::Text],
+            output: vec![],
+            effects: vec![TEST_EMIT],
+        };
+        let retained = noble_contracts::source::RetainedSourceLimit::new(SOURCE_LIMITS.bytes)
+            .expect("selected Worker source limit");
+        let session =
+            noble_contracts::source::ModuleSession::new(std::slice::from_ref(&binding), retained)
+                .unwrap();
+        let module = session.prepare(source, &[], SOURCE_LIMITS).unwrap();
+        let owner = module
+            .checked_program_owner_for_binding("plus", &binding)
+            .expect("host-selected exact checked owner");
+        let (session, committed) = session.commit(module);
+        committed.unwrap();
+        super::super::worker_program_guest::WorkerHostPolicy::select(
+            crate::workflow::intrinsic::sha256(source),
+            owner.definition_identity(),
+            session.generation(),
+            "local-test-destination".into(),
+            1,
+            binding,
+        )
+        .unwrap()
+    }
+
+    /// Export `handle` under a host grant for exactly this store's source and
+    /// captures.
+    fn granted_export(store: &mut Store, handle: Handle) -> Vec<u8> {
+        let source_sha256 = crate::workflow::intrinsic::sha256(&store.source);
+        let capture_sha256 = store.capture_digest().unwrap();
+        let grant = ExportGrant {
+            destination: "local-test",
+            source_sha256: &source_sha256,
+            capture_sha256: &capture_sha256,
+            allowed: true,
+        };
+        store.export(handle, "local-test", &grant).unwrap()
+    }
+
+    #[test]
+    fn bound_package_records_exact_versions_and_imports_only_under_its_binding() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = emit_policy(source);
+        let (mut store, root) = Store::prepare_with_policy(
+            source,
+            "plus",
+            &[Ty::I64],
+            policy.clone(),
+            RUNTIME_REQUEST_WORK,
+        )
+        .unwrap();
+        let encoded = granted_export(&mut store, root);
+        let package: Value = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(package["interface"]["effects"], json!(["test.emit"]));
+        assert_eq!(
+            package["host_contracts"],
+            json!([{"module_name":"Ledger","module_version":1,"operation":"test.emit",
+                "adapter_identity":"worker-test-emit@1.0.0","adapter_slot":4,
+                "input":["Text"],"output":[],"effects":["test.emit"]}])
+        );
+        let builtins = package["builtins"].as_array().unwrap();
+        assert_eq!(builtins.len(), 22);
+        assert!(builtins.iter().enumerate().all(|(ordinal, row)| {
+            row["ordinal"] == ordinal
+                && row["semantic_revision"] == "0.1.0-draft.5"
+                && row["name"]
+                    == noble_contracts::source::pure_builtin_spelling(
+                        u32::try_from(ordinal).unwrap(),
+                    )
+                    .unwrap()
+        }));
+        assert_eq!(package["captures"][0]["schema"], "Text");
+
+        let mut trace = ImportTrace::default();
+        let (imported, selected) = Store::import(
+            &encoded,
+            Some(policy.clone()),
+            RUNTIME_REQUEST_WORK,
+            &mut trace,
+        )
+        .expect("the same host binding rechecks the package");
+        assert_eq!(trace.installations, 1, "only Text reattestation installs");
+        assert_eq!(
+            imported.interface(selected).unwrap().2,
+            &EffSet::from_ids(&[TEST_EMIT])
+        );
+
+        let mut trace = ImportTrace::default();
+        assert!(
+            Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace).is_err(),
+            "the pure import path cannot admit a host-bound package"
+        );
+        assert_eq!(trace.installations, 0);
+        for (label, path, substitute) in [
+            (
+                "substituted host-contract version",
+                "/host_contracts/0/adapter_identity",
+                json!("worker-test-emit@1.0.1"),
+            ),
+            (
+                "substituted adapter slot",
+                "/host_contracts/0/adapter_slot",
+                json!(5),
+            ),
+            (
+                "substituted builtin revision",
+                "/builtins/4/semantic_revision",
+                json!("0.1.0-draft.6"),
+            ),
+            (
+                "substituted capture schema",
+                "/captures/0/schema",
+                json!("Bytes"),
+            ),
+        ] {
+            let mut altered = package.clone();
+            *altered.pointer_mut(path).expect(label) = substitute;
+            let mut trace = ImportTrace::default();
+            assert_eq!(
+                Store::import(
+                    &serde_json::to_vec(&altered).unwrap(),
+                    Some(policy.clone()),
+                    RUNTIME_REQUEST_WORK,
+                    &mut trace,
+                )
+                .err(),
+                Some(Refusal::Invalid),
+                "{label}"
+            );
+            assert_eq!(
+                trace.installations, 0,
+                "{label} installed Wasm before refusal"
+            );
+        }
+    }
+
+    #[test]
+    fn hostile_text_package_alternatives_reject_before_any_installation() {
+        let source = b"module Worker@1 [ def minus [ \"tag\" drop 1 - ] export plus def plus [ minus 1 + ] ]";
+        let (mut store, root) =
+            Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK).unwrap();
+        let encoded = granted_export(&mut store, root);
+        let package: Value = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(package["captures"][0]["text_utf8"], "tag");
+        let mut trace = ImportTrace::default();
+        Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace)
+            .expect("the exact locally checked closure and witness import");
+        assert_eq!(trace.installations, 1);
+
+        let foreign_owner = package["definitions"][0]["owner"].clone();
+        assert_ne!(foreign_owner, package["root"]["owner"]);
+        for (label, altered, expected) in [
+            (
+                "missing transitive definition",
+                {
+                    let mut value = package.clone();
+                    value["definitions"].as_array_mut().unwrap().remove(0);
+                    value
+                },
+                Refusal::Invalid,
+            ),
+            (
+                "foreign self owner",
+                {
+                    let mut value = package.clone();
+                    value["root"]["owner"] = foreign_owner.clone();
+                    value
+                },
+                Refusal::Invalid,
+            ),
+            (
+                "unrelated artifact",
+                {
+                    let mut value = package.clone();
+                    value["artifact"] = json!({"wasm":"claimed-accepted"});
+                    value
+                },
+                Refusal::Unsupported,
+            ),
+            (
+                "accepted flag",
+                {
+                    let mut value = package.clone();
+                    value["accepted"] = json!(true);
+                    value
+                },
+                Refusal::Unsupported,
+            ),
+            (
+                "forged captured Text",
+                {
+                    let mut value = package.clone();
+                    value["captures"][0]["text_utf8"] = json!("forged");
+                    value
+                },
+                Refusal::Invalid,
+            ),
+            (
+                "Text without a claimed binding",
+                {
+                    let mut value = package.clone();
+                    value["capture_binding_blake3"] = Value::Null;
+                    value
+                },
+                Refusal::Invalid,
+            ),
+        ] {
+            let mut trace = ImportTrace::default();
+            assert_eq!(
+                Store::import(
+                    &serde_json::to_vec(&altered).unwrap(),
+                    None,
+                    RUNTIME_REQUEST_WORK,
+                    &mut trace,
+                )
+                .err(),
+                Some(expected),
+                "{label}"
+            );
+            assert_eq!(
+                trace.installations, 0,
+                "{label} installed Wasm before refusal"
+            );
+        }
+
+        // A wrong binding claim matches every derived field, so only the
+        // reattestation of the installed Text can refuse it.
+        let mut misbound = package.clone();
+        misbound["capture_binding_blake3"] = json!("0".repeat(64));
+        let mut trace = ImportTrace::default();
+        assert_eq!(
+            Store::import(
+                &serde_json::to_vec(&misbound).unwrap(),
+                None,
+                RUNTIME_REQUEST_WORK,
+                &mut trace,
+            )
+            .err(),
+            Some(Refusal::Invalid)
+        );
+        assert_eq!(trace.installations, 1);
+    }
+
+    #[test]
+    fn import_admits_an_exact_shared_budget_and_exhausts_one_charged_node_over() {
+        let source = b"module Worker@1 [ def double [ \"nested\" drop 2 * ] export plus def plus [ double 1 + ] ]";
+        let package = |extra_compositions: usize| -> Vec<u8> {
+            let (mut store, root) =
+                Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK).unwrap();
+            let double = store.checked_root(0).unwrap();
+            let selected = store.compose(root, double).unwrap();
+            for _ in 0..extra_compositions {
+                store.compose(root, double).unwrap();
+            }
+            granted_export(&mut store, selected)
+        };
+        let exact = package(0);
+        let one_more = package(1);
+        let import = |bytes: &[u8], work: usize| {
+            let mut trace = ImportTrace::default();
+            Store::import(bytes, None, work, &mut trace).map(|_| ())
+        };
+        assert!(import(&one_more, RUNTIME_REQUEST_WORK).is_ok());
+
+        // Every budget below the minimum must refuse as exhausted: no stage
+        // reports a smaller budget as a different primary outcome.
+        let (mut short, mut enough) = (0usize, RUNTIME_REQUEST_WORK);
+        while enough - short > 1 {
+            let middle = short + (enough - short) / 2;
+            match import(&exact, middle) {
+                Ok(()) => enough = middle,
+                Err(Refusal::Exhausted) => short = middle,
+                Err(other) => panic!("budget {middle} refused as {other:?}"),
+            }
+        }
+        assert!(import(&exact, enough).is_ok());
+        assert_eq!(import(&exact, enough - 1).err(), Some(Refusal::Exhausted));
+        assert_eq!(
+            import(&one_more, enough).err(),
+            Some(Refusal::Exhausted),
+            "one more decoded graph node must not fit the exact budget"
+        );
     }
 }
