@@ -198,7 +198,7 @@ fn schema_module(
 
 /// The checked catalog of exactly the four local WorkerData@1 nominal types,
 /// with State, Event, Action and AttemptId resolved from the module's exports.
-fn schema_catalog(
+pub(super) fn schema_catalog(
     checked: &noble_contracts::source::ModulePrepared,
 ) -> Result<(Vec<Schema>, [Ty; 4]), Failure> {
     let (module_id, _, _) = attempt!(checked
@@ -260,7 +260,7 @@ fn schema_catalog(
 }
 
 /// The catalog rows of the selected interface's State, Event and Action.
-fn interface_rows<'rows>(
+pub(super) fn interface_rows<'rows>(
     catalog: &'rows [Schema],
     types: &[Ty; 4],
 ) -> Result<[&'rows Schema; 3], Failure> {

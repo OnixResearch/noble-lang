@@ -20,14 +20,14 @@ const RECIPE_LEAF_LIMIT: u32 = 256;
 pub(super) const PACKAGE_BYTES: usize = 262_144;
 const PACKAGE_DEPTH: usize = 32;
 /// format, semantic_revision, wit_world, source_utf8, root, graph,
-/// selected_node, selected_graph_blake3, definitions, builtins, interface,
-/// host_contracts, captures, capture_binding_blake3 and artifact.
-const PACKAGE_FIELDS: usize = 15;
+/// selected_node, selected_graph_blake3, definitions, builtins, schemas,
+/// interface, host_contracts, captures, capture_binding_blake3 and artifact.
+const PACKAGE_FIELDS: usize = 16;
 /// The pure builtin table is the checker's core vocabulary; each package row
 /// binds one builtin spelling to this kernel semantic revision.
 const BUILTIN_COUNT: u32 = 22;
 pub(super) const RUNTIME_REQUEST_WORK: usize = 50_000_000;
-const PACKAGE_REVISION: &str = "0.1.0-draft.11";
+const PACKAGE_REVISION: &str = "0.1.0-draft.12";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
@@ -118,6 +118,26 @@ enum ExportRefusal {
     Refused(Refusal),
 }
 
+/// The host-selected interface of a Program's named root. The candidate and
+/// any package only make claims about it.
+#[derive(Clone, Copy)]
+pub(crate) enum HostInterface<'selection> {
+    /// An exact input stack; the root's checked output is retained.
+    Stack(&'selection [Ty]),
+    /// `State Event -- State List<Action> ! {}` resolved from this exact
+    /// `WorkerData@1` schema module source.
+    Transition(&'selection [u8]),
+}
+
+/// A host-selected `WorkerData@1` schema module, checked and committed in the
+/// Program's session before its root.
+struct SelectedSchema {
+    source: Vec<u8>,
+    catalog: Vec<super::worker_value::Schema>,
+    /// State, Event, Action and AttemptId, resolved from the schema's exports.
+    types: [Ty; 4],
+}
+
 /// A Program's graph index and its *adapted* interface witness are distinct.
 /// The graph node retains its original, source-derived interface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -130,6 +150,7 @@ pub(crate) struct Handle {
 pub(crate) struct Store {
     instance: u64,
     host_policy: Option<super::worker_program_guest::WorkerHostPolicy>,
+    schema: Option<SelectedSchema>,
     compiled: Compiled,
     checked_interface: noble_contracts::source::CheckedProgramInterface,
     source: Vec<u8>,
@@ -156,7 +177,7 @@ impl Store {
         Self::prepare_selected(
             source,
             name,
-            input,
+            HostInterface::Stack(input),
             None,
             work,
             &mut AdmissionTrace::default(),
@@ -171,7 +192,26 @@ impl Store {
         work: usize,
         trace: &mut AdmissionTrace,
     ) -> Result<(Self, Handle), Refusal> {
-        Self::prepare_selected(source, name, input, None, work, trace)
+        Self::prepare_selected(source, name, HostInterface::Stack(input), None, work, trace)
+    }
+
+    /// A pure transition Program over a host-selected `WorkerData@1` schema
+    /// module (DX-MODULE-03). The schema shares the request budget.
+    pub(crate) fn prepare_transition(
+        source: &[u8],
+        name: &str,
+        schema: &[u8],
+        work: usize,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Self, Handle), Refusal> {
+        Self::prepare_selected(
+            source,
+            name,
+            HostInterface::Transition(schema),
+            None,
+            work,
+            trace,
+        )
     }
 
     /// Only a host embedder may opt in to a checked, bound operation. A typed
@@ -186,7 +226,7 @@ impl Store {
         Self::prepare_selected(
             source,
             name,
-            input,
+            HostInterface::Stack(input),
             Some(policy),
             work,
             &mut AdmissionTrace::default(),
@@ -196,13 +236,18 @@ impl Store {
     fn prepare_selected(
         source: &[u8],
         name: &str,
-        input: &[Ty],
+        interface: HostInterface<'_>,
         policy: Option<super::worker_program_guest::WorkerHostPolicy>,
         work: usize,
         trace: &mut AdmissionTrace,
     ) -> Result<(Self, Handle), Refusal> {
+        let (stack, schema_source) = match interface {
+            HostInterface::Stack(input) => (input, None),
+            HostInterface::Transition(schema) => (&[][..], Some(schema)),
+        };
         if source.len() > SOURCE_LIMITS.bytes as usize
-            || input.len() > 64
+            || schema_source.is_some_and(|schema| schema.len() > SOURCE_LIMITS.bytes as usize)
+            || stack.len() > 64
             || name.len() > 128
             || !name
                 .bytes()
@@ -216,8 +261,17 @@ impl Store {
         // host-selected binding), the selected invocation check and Wasm
         // compilation. Each walk runs under at most one slice, so no nested
         // stage receives an uncharged fresh allowance.
+        // A schema selects only pure transitions; a host-bound Program keeps
+        // its exact I64 binding contract.
+        if schema_source.is_some() && policy.is_some() {
+            return Err(Refusal::Unsupported);
+        }
         let walks: usize = if policy.is_some() { 3 } else { 1 };
-        let slices = walks.checked_add(3).ok_or(Refusal::Exhausted)?;
+        // A selected schema module is one more checking stage.
+        let slices = walks
+            .checked_add(3)
+            .and_then(|count| count.checked_add(usize::from(schema_source.is_some())))
+            .ok_or(Refusal::Exhausted)?;
         let share = slices
             .checked_add(1)
             .and_then(|divisor| work.checked_div(divisor))
@@ -239,7 +293,13 @@ impl Store {
         let bindings = policy.as_ref().map_or(&[][..], |selection| {
             std::slice::from_ref(selection.binding())
         });
-        let retained = noble_contracts::source::RetainedSourceLimit::new(limits.bytes)
+        // The schema and root are distinct retained modules in one session.
+        let retained_bytes = if schema_source.is_some() {
+            limits.bytes.checked_mul(2).ok_or(Refusal::Exhausted)?
+        } else {
+            limits.bytes
+        };
+        let retained = noble_contracts::source::RetainedSourceLimit::new(retained_bytes)
             .ok_or(Refusal::Exhausted)?;
         let mut session = match &policy {
             // A host-bound Program keeps the unsigned grammar.
@@ -261,6 +321,24 @@ impl Store {
         let refused = |trace: &mut AdmissionTrace, problem: noble_contracts::source::Error| {
             trace.diagnostic = Some(problem.diagnostic().message.clone());
             source_refusal(problem)
+        };
+        let (session, schema) = match schema_source {
+            Some(schema_source) => {
+                let (session, selected) =
+                    Self::commit_schema(session, schema_source, limits, trace)?;
+                (session, Some(selected))
+            }
+            None => (session, None),
+        };
+        let (input, transition_output) = match &schema {
+            Some(selected) => {
+                let [state, event, action, _] = &selected.types;
+                (
+                    vec![state.clone(), event.clone()],
+                    Some(vec![state.clone(), Ty::List(Box::new(action.clone()))]),
+                )
+            }
+            None => (stack.to_vec(), None),
         };
         let module = session
             .prepare(source, &[], limits)
@@ -301,8 +379,16 @@ impl Store {
         }
         let invocation = format!("{module_name}@{version}.{name}");
         let prepared = session
-            .prepare(invocation.as_bytes(), input, limits)
+            .prepare(invocation.as_bytes(), &input, limits)
             .map_err(|problem| refused(trace, problem))?;
+        if transition_output
+            .as_deref()
+            .is_some_and(|expected| prepared.output() != expected)
+        {
+            trace.diagnostic =
+                Some("transition differs from State Event -- State List<Action>".into());
+            return Err(Refusal::Invalid);
+        }
         let (owner, closure) = match bound {
             Some(checked) => checked,
             None => prepared
@@ -480,6 +566,7 @@ impl Store {
         let store = Self {
             instance,
             host_policy: policy,
+            schema,
             checked_interface,
             source: source.to_vec(),
             root_name: name.to_owned(),
@@ -505,6 +592,50 @@ impl Store {
                 instance,
                 node: root,
                 witness: root,
+            },
+        ))
+    }
+
+    /// Check a host-selected `WorkerData@1` schema module under its slice of
+    /// the shared request budget, build its catalog with the Worker-Typed
+    /// rules and commit it ahead of the root.
+    fn commit_schema(
+        session: noble_contracts::source::ModuleSession,
+        schema: &[u8],
+        limits: noble_contracts::Limits,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(noble_contracts::source::ModuleSession, SelectedSchema), Refusal> {
+        let checked = session.prepare(schema, &[], limits).map_err(|problem| {
+            trace.diagnostic = Some(problem.diagnostic().message.clone());
+            source_refusal(problem)
+        })?;
+        if checked.kind() != noble_contracts::source::ModuleKind::Module
+            || checked.proof_obligations().is_some()
+            || !checked.bindings().is_empty()
+        {
+            return Err(Refusal::Unsupported);
+        }
+        let (catalog, types) =
+            super::worker_typed::schema_catalog(&checked).map_err(|problem| {
+                let refusal = match problem.context.outcome {
+                    "unsupported" => Refusal::Unsupported,
+                    "exhausted" => Refusal::Exhausted,
+                    _ => Refusal::Invalid,
+                };
+                trace.diagnostic = Some(problem.message);
+                refusal
+            })?;
+        let (session, committed) = session.commit(checked);
+        committed.map_err(|problem| {
+            trace.diagnostic = Some(problem.diagnostic().message.clone());
+            source_refusal(problem)
+        })?;
+        Ok((
+            session,
+            SelectedSchema {
+                source: schema.to_vec(),
+                catalog,
+                types,
             },
         ))
     }
@@ -560,6 +691,15 @@ impl Store {
         let mut digest = blake3::Hasher::new();
         digest.update(b"noble-worker-checked-graph-v2\0");
         digest.update(&self.source);
+        if let Some(selected) = &self.schema {
+            digest.update(b"schema\0");
+            digest.update(
+                &u64::try_from(selected.source.len())
+                    .map_err(|_| Refusal::Exhausted)?
+                    .to_le_bytes(),
+            );
+            digest.update(&selected.source);
+        }
         digest.update(
             &u64::try_from(selected)
                 .map_err(|_| Refusal::Exhausted)?
@@ -611,6 +751,11 @@ impl Store {
     /// creation still requires source-to-installed-cell correspondence and a
     /// host owner table in the selected component instance.
     pub(crate) fn selected_world(&self) -> Result<noble_contracts::component::World, Refusal> {
+        // The selected guest world maps only I64 Programs; a transition over
+        // a host-selected schema has no WIT mapping yet.
+        if self.schema.is_some() {
+            return Err(Refusal::Unsupported);
+        }
         let bytes = include_bytes!("../../../noble-wasm/wit/worker-program.wit");
         let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
             .map_err(|_| Refusal::Unsupported)?;
@@ -687,9 +832,39 @@ impl Store {
             None => (EffSet::empty(), Vec::new(), Vec::new()),
         };
         let witness = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
-        if witness.input != [Ty::I64] || witness.output != [Ty::I64] || witness.effects != allowed {
-            return Err(Refusal::Unsupported);
-        }
+        let (input, output, schemas) = match &self.schema {
+            Some(selected) => {
+                let [state, event, action] =
+                    super::worker_typed::interface_rows(&selected.catalog, &selected.types)
+                        .map_err(|_| Refusal::Invalid)?;
+                let [state_ty, event_ty, action_ty, _] = &selected.types;
+                if witness.input != [state_ty.clone(), event_ty.clone()]
+                    || witness.output != [state_ty.clone(), Ty::List(Box::new(action_ty.clone()))]
+                    || witness.effects != allowed
+                {
+                    return Err(Refusal::Unsupported);
+                }
+                let digest = crate::workflow::intrinsic::sha256(&selected.source);
+                (
+                    json!([state.wire(), event.wire()]),
+                    json!([state.wire(), {"list":action.wire()}]),
+                    selected
+                        .catalog
+                        .iter()
+                        .map(|row| row.package_row(&digest))
+                        .collect::<Vec<_>>(),
+                )
+            }
+            None => {
+                if witness.input != [Ty::I64]
+                    || witness.output != [Ty::I64]
+                    || witness.effects != allowed
+                {
+                    return Err(Refusal::Unsupported);
+                }
+                (json!(["I64"]), json!(["I64"]), Vec::new())
+            }
+        };
         if self.nodes.iter().any(|node| {
             self.witnesses
                 .get(node.original)
@@ -748,7 +923,8 @@ impl Store {
             "selected_graph_blake3":self.selected_graph_blake3(handle.node)?,
             "definitions":definitions,
             "builtins":builtins,
-            "interface":{"input":["I64"],"output":["I64"],"effects":effect_names},
+            "schemas":schemas,
+            "interface":{"input":input,"output":output,"effects":effect_names},
             "host_contracts":host_contracts,
             "captures":captures,
             "capture_binding_blake3":capture_binding,
@@ -820,6 +996,27 @@ impl Store {
         work: usize,
         trace: &mut AdmissionTrace,
     ) -> Result<(Self, Handle), Refusal> {
+        Self::import_selected(bytes, policy, None, work, trace)
+    }
+
+    /// Import a transition package only under the same host-selected
+    /// `WorkerData@1` schema module; every schema row is regenerated.
+    pub(crate) fn import_transition(
+        bytes: &[u8],
+        schema: &[u8],
+        work: usize,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Self, Handle), Refusal> {
+        Self::import_selected(bytes, None, Some(schema), work, trace)
+    }
+
+    fn import_selected(
+        bytes: &[u8],
+        policy: Option<super::worker_program_guest::WorkerHostPolicy>,
+        schema: Option<&[u8]>,
+        work: usize,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Self, Handle), Refusal> {
         let scanned = prescan(bytes).map_err(|(problem, why)| {
             trace.diagnostic = Some(why.into());
             problem
@@ -850,16 +1047,24 @@ impl Store {
         {
             return Err(Refusal::Invalid);
         }
+        // Schema rows describe a host-selected module; a package cannot
+        // select one for a host that selected none.
+        match (schema, document["schemas"].as_array()) {
+            (_, None) => return Err(Refusal::Invalid),
+            (None, Some(rows)) if !rows.is_empty() => {
+                trace.diagnostic = Some("package names schemas but the host selected none".into());
+                return Err(Refusal::Unsupported);
+            }
+            _ => {}
+        }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
-        let (mut store, _root) = Self::prepare_selected(
-            source.as_bytes(),
-            name,
-            &[Ty::I64],
-            policy,
-            remaining,
-            trace,
-        )?;
+        let interface = match schema {
+            Some(schema) => HostInterface::Transition(schema),
+            None => HostInterface::Stack(&[Ty::I64]),
+        };
+        let (mut store, _root) =
+            Self::prepare_selected(source.as_bytes(), name, interface, policy, remaining, trace)?;
         let graph = document["graph"].as_array().ok_or(Refusal::Invalid)?;
         if graph.len() < store.recipe_nodes() {
             return Err(Refusal::Invalid);
@@ -1321,7 +1526,7 @@ fn runtime_refusal(problem: anyhow::Error) -> Refusal {
 
 fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
     const USAGE: &str =
-        "usage: noble worker program import PACKAGE --effect-ceiling pure [--work N]";
+        "usage: noble worker program import PACKAGE --effect-ceiling pure [--work N] [--schema SCHEMA]";
     if arguments.len() < 6 || arguments[4] != "--effect-ceiling" {
         return Err(("invalid-input", USAGE));
     }
@@ -1331,14 +1536,19 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
             "Worker host effect policy unavailable to CLI",
         ));
     }
-    let work = requested_work(arguments, 6, USAGE)?;
+    let HostOptions { work, schema } = host_options(arguments, 6, USAGE)?;
     let package = super::worker_typed::read_bounded_regular_file(
         std::path::Path::new(&arguments[3]),
         PACKAGE_BYTES,
     )
     .map_err(|problem| (problem.context.outcome, "package file admission failed"))?;
+    let schema = read_schema(schema)?;
     let mut trace = AdmissionTrace::default();
-    let (store, root) = match Store::import(&package, None, work, &mut trace) {
+    let imported = match &schema {
+        Some(schema) => Store::import_transition(&package, schema, work, &mut trace),
+        None => Store::import(&package, None, work, &mut trace),
+    };
+    let (store, root) = match imported {
         Ok(imported) => imported,
         // A refusal still reports how many source modules were installed
         // before it, so a hostile package cannot hide a partial admission.
@@ -1355,6 +1565,7 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
     Ok(
         json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
+        "schema_source_sha256":schema.as_deref().map(crate::workflow::intrinsic::sha256),
         "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
         "dependencies":store.closure.len(),"guest_requests":0,
         "protected_operations":0,"executable_guest_installed":false,
@@ -1365,22 +1576,57 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
     )
 }
 
-/// Host-selected request work: an optional trailing `--work N` after the
-/// `fixed` arguments; the default is the CLI's full request budget.
-fn requested_work(
-    arguments: &[std::ffi::OsString],
+/// Host-selected options trailing the `fixed` arguments, each at most once
+/// and in either order: `--work N` (default: the CLI's full request budget)
+/// and `--schema SCHEMA`, an exact `WorkerData@1` module for a transition.
+struct HostOptions<'arguments> {
+    work: usize,
+    schema: Option<&'arguments std::ffi::OsStr>,
+}
+
+fn host_options<'arguments>(
+    arguments: &'arguments [std::ffi::OsString],
     fixed: usize,
     usage: &'static str,
-) -> Result<usize, (&'static str, &'static str)> {
-    match arguments.get(fixed..) {
-        Some([]) => Ok(RUNTIME_REQUEST_WORK),
-        Some([flag, value]) if flag == "--work" => value
-            .to_str()
-            .and_then(|text| text.parse::<usize>().ok())
-            .filter(|work| (1..=RUNTIME_REQUEST_WORK).contains(work))
-            .ok_or(("invalid-input", "--work must be between 1 and 50000000")),
-        _ => Err(("invalid-input", usage)),
+) -> Result<HostOptions<'arguments>, (&'static str, &'static str)> {
+    let rest = arguments.get(fixed..).ok_or(("invalid-input", usage))?;
+    let mut work = None;
+    let mut schema = None;
+    for pair in rest.chunks(2) {
+        match pair {
+            [flag, value] if flag == "--work" && work.is_none() => {
+                work = Some(
+                    value
+                        .to_str()
+                        .and_then(|text| text.parse::<usize>().ok())
+                        .filter(|work| (1..=RUNTIME_REQUEST_WORK).contains(work))
+                        .ok_or(("invalid-input", "--work must be between 1 and 50000000"))?,
+                );
+            }
+            [flag, value] if flag == "--schema" && schema.is_none() => {
+                schema = Some(value.as_os_str());
+            }
+            _ => return Err(("invalid-input", usage)),
+        }
     }
+    Ok(HostOptions {
+        work: work.unwrap_or(RUNTIME_REQUEST_WORK),
+        schema,
+    })
+}
+
+fn read_schema(
+    schema: Option<&std::ffi::OsStr>,
+) -> Result<Option<Vec<u8>>, (&'static str, &'static str)> {
+    schema
+        .map(|path| {
+            super::worker_typed::read_bounded_regular_file(
+                std::path::Path::new(path),
+                SOURCE_LIMITS.bytes as usize,
+            )
+            .map_err(|problem| (problem.context.outcome, "schema file admission failed"))
+        })
+        .transpose()
 }
 
 /// A refused admission keeps its primary outcome; the checker's own
@@ -1409,7 +1655,7 @@ fn admission_refusal(
 /// host-selected request budget, without installing or running a guest.
 fn check(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
     const USAGE: &str =
-        "usage: noble worker program check SOURCE --name NAME --effect-ceiling pure [--work N]";
+        "usage: noble worker program check SOURCE --name NAME --effect-ceiling pure [--work N] [--schema SCHEMA]";
     if arguments.len() < 8 || arguments[4] != "--name" || arguments[6] != "--effect-ceiling" {
         return Err(("invalid-input", USAGE));
     }
@@ -1419,7 +1665,7 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'sta
             "Worker host effect policy unavailable to CLI",
         ));
     }
-    let work = requested_work(arguments, 8, USAGE)?;
+    let HostOptions { work, schema } = host_options(arguments, 8, USAGE)?;
     let name = arguments[5]
         .to_str()
         .ok_or(("invalid-input", "invalid named Program"))?;
@@ -1428,8 +1674,13 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'sta
         SOURCE_LIMITS.bytes as usize,
     )
     .map_err(|problem| (problem.context.outcome, "source file admission failed"))?;
+    let schema = read_schema(schema)?;
     let mut trace = AdmissionTrace::default();
-    let (store, root) = match Store::prepare_traced(&source, name, &[Ty::I64], work, &mut trace) {
+    let checked = match &schema {
+        Some(schema) => Store::prepare_transition(&source, name, schema, work, &mut trace),
+        None => Store::prepare_traced(&source, name, &[Ty::I64], work, &mut trace),
+    };
+    let (store, root) = match checked {
         Ok(prepared) => prepared,
         Err(problem) => {
             return Ok(admission_refusal(
@@ -1444,6 +1695,7 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'sta
     Ok(
         json!({"schema":"noble-worker-program-check/v2","stage":"admission","outcome":"ready",
         "source_sha256":crate::workflow::intrinsic::sha256(&store.source),
+        "schema_source_sha256":schema.as_deref().map(crate::workflow::intrinsic::sha256),
         "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
         "dependencies":store.closure.len(),"limits":{"work":work},
         "checking_work_shared":trace.checking_work_shared,"checking_work_left":trace.checking_work_left,"guest_requests":0,
@@ -2571,5 +2823,265 @@ mod tests {
                 "{label} was admitted"
             );
         }
+    }
+
+    const WORKER_SCHEMA: &[u8] = include_bytes!("../../tests/fixtures/worker-data.noble");
+    const WORKER_TRANSITION: &[u8] = include_bytes!("../../tests/fixtures/worker-transition.noble");
+
+    fn import_transition(bytes: &[u8], schema: &[u8]) -> (Result<(), Refusal>, u32) {
+        let mut trace = AdmissionTrace::default();
+        let result =
+            Store::import_transition(bytes, schema, RUNTIME_REQUEST_WORK, &mut trace).map(|_| ());
+        (result, trace.installations)
+    }
+
+    fn schema_text() -> String {
+        String::from_utf8(WORKER_SCHEMA.to_vec()).unwrap()
+    }
+
+    /// A transition's interface comes from the host-selected schema module,
+    /// never from the candidate: the root must check at exactly
+    /// `State Event -- State List<Action> ! {}`.
+    #[test]
+    fn transition_root_must_check_at_the_host_selected_schema_interface() {
+        let admit = |source: &[u8], schema: &[u8]| {
+            Store::prepare_transition(
+                source,
+                "transition",
+                schema,
+                RUNTIME_REQUEST_WORK,
+                &mut AdmissionTrace::default(),
+            )
+            .map(|_| ())
+        };
+        assert!(admit(WORKER_TRANSITION, WORKER_SCHEMA).is_ok());
+        let reversed = b"module worker@1 [ export transition \
+            def transition [ swap drop unit WorkerData@1.Action.Noop nil cons ] ]";
+        let extra = b"module worker@1 [ export transition \
+            def transition [ drop unit WorkerData@1.Action.Noop nil cons 0 ] ]";
+        assert_eq!(admit(reversed, WORKER_SCHEMA).err(), Some(Refusal::Invalid));
+        assert_eq!(admit(extra, WORKER_SCHEMA).err(), Some(Refusal::Invalid));
+        // Without a selected schema the same root has no State to check at.
+        assert!(Store::prepare(
+            WORKER_TRANSITION,
+            "transition",
+            &[Ty::I64],
+            RUNTIME_REQUEST_WORK
+        )
+        .is_err());
+        // Only an exact catalog of four local WorkerData@1 types is a schema.
+        let renamed = schema_text().replacen("module WorkerData@1", "module OtherData@1", 1);
+        assert_eq!(
+            admit(WORKER_TRANSITION, renamed.as_bytes()).err(),
+            Some(Refusal::Unsupported)
+        );
+        let crowded = schema_text().replacen(
+            "export AttemptId ",
+            "opaque Extra I64 public export Extra export AttemptId ",
+            1,
+        );
+        assert_ne!(crowded, schema_text());
+        assert_eq!(
+            admit(WORKER_TRANSITION, crowded.as_bytes()).err(),
+            Some(Refusal::Unsupported)
+        );
+    }
+
+    /// The schema check draws from the same request budget as the root,
+    /// closure and invocation checks, so a longer schema leaves less of it.
+    #[test]
+    fn selected_schema_check_charges_the_shared_request_budget() {
+        let consumed = |schema: &[u8]| {
+            let mut trace = AdmissionTrace::default();
+            Store::prepare_transition(
+                WORKER_TRANSITION,
+                "transition",
+                schema,
+                RUNTIME_REQUEST_WORK,
+                &mut trace,
+            )
+            .unwrap();
+            trace.checking_work_shared.unwrap() - trace.checking_work_left.unwrap()
+        };
+        let commented = schema_text().replacen(
+            "opaque AttemptId I64 public",
+            &format!("# {}\n  opaque AttemptId I64 public", "c".repeat(20_000)),
+            1,
+        );
+        assert!(consumed(commented.as_bytes()) > consumed(WORKER_SCHEMA));
+    }
+
+    /// Equal data layout under different nominal identities never shares a
+    /// witness (K-PROG-09): AttemptId comes from the selected schema module and
+    /// Ticket from the root, both opaque over I64. Only an explicit checked
+    /// source adapter yields a common witness.
+    #[test]
+    fn builders_keep_schema_identities_apart_until_an_explicit_adapter() {
+        let source = b"module worker@1 [
+            opaque Ticket I64 public
+            export Ticket export Ticket.new export Ticket.into
+            def wrap_attempt [ WorkerData@1.AttemptId.new ]
+            def wrap_ticket [ Ticket.new ]
+            def same_attempt [ WorkerData@1.AttemptId.into WorkerData@1.AttemptId.new ]
+            def same_ticket [ Ticket.into Ticket.new ]
+            def attempt_ticket [ WorkerData@1.AttemptId.into Ticket.new ]
+            export transition
+            def transition [
+                0 wrap_attempt same_attempt attempt_ticket same_ticket drop
+                0 wrap_ticket drop
+                drop unit WorkerData@1.Action.Noop nil cons
+            ]
+        ]";
+        let (mut store, _root) = Store::prepare_transition(
+            source,
+            "transition",
+            WORKER_SCHEMA,
+            RUNTIME_REQUEST_WORK,
+            &mut AdmissionTrace::default(),
+        )
+        .unwrap();
+        let attempt = store.schema.as_ref().unwrap().types[3].clone();
+        // Each helper's witness is instantiated at its call site under the
+        // transition's State and Event, so it is identified by its top type.
+        let named = |store: &Store, input: &Ty, output: &dyn Fn(&Ty) -> bool| {
+            (0..store.recipe_nodes())
+                .filter_map(|index| store.checked_root(index))
+                .find(|handle| {
+                    let (from, to, _) = store.interface(*handle).unwrap();
+                    from.len() == 3
+                        && to.len() == 3
+                        && from.last() == Some(input)
+                        && to.last().is_some_and(output)
+                })
+                .unwrap()
+        };
+        let top = |store: &Store, handle: Handle| store.interface(handle).unwrap().1[2].clone();
+        let wrap_attempt = named(&store, &Ty::I64, &|ty| ty == &attempt);
+        let wrap_ticket = named(&store, &Ty::I64, &|ty| {
+            ty != &attempt && matches!(ty, Ty::Nominal(..))
+        });
+        let ticket = top(&store, wrap_ticket);
+        let (Ty::Nominal(_, attempt_shape), Ty::Nominal(_, ticket_shape)) = (&attempt, &ticket)
+        else {
+            panic!("both types are nominal");
+        };
+        assert_eq!(attempt_shape, ticket_shape, "the layouts are equal");
+        let same_ticket = named(&store, &ticket, &|ty| ty == &ticket);
+        let attempt_ticket = named(&store, &attempt, &|ty| ty == &ticket);
+        let nodes = store.recipe_nodes();
+
+        assert_eq!(
+            store.select(&[wrap_attempt, wrap_ticket], 0),
+            Err(Refusal::Invalid)
+        );
+        assert_eq!(
+            store.compose(wrap_attempt, same_ticket),
+            Err(Refusal::Invalid)
+        );
+        assert_eq!(
+            store.recipe_nodes(),
+            nodes,
+            "a refused builder adds no node"
+        );
+
+        let adapted = store.compose(wrap_attempt, attempt_ticket).unwrap();
+        assert_eq!(top(&store, adapted), ticket);
+        assert_eq!(store.select(&[adapted, wrap_ticket], 1), Ok(wrap_ticket));
+        assert_eq!(top(&store, wrap_attempt), attempt);
+    }
+
+    /// A transition package records the selected schema's rows and wires;
+    /// import regenerates them under the host's own schema selection.
+    #[test]
+    fn transition_package_imports_only_under_its_exact_schema() {
+        let (mut store, root) = Store::prepare_transition(
+            WORKER_TRANSITION,
+            "transition",
+            WORKER_SCHEMA,
+            RUNTIME_REQUEST_WORK,
+            &mut AdmissionTrace::default(),
+        )
+        .unwrap();
+        let package = granted_export(&mut store, root);
+        let document: Value = serde_json::from_slice(&package).unwrap();
+        let schema_sha = crate::workflow::intrinsic::sha256(WORKER_SCHEMA);
+        let rows = document["schemas"].as_array().unwrap();
+        assert_eq!(rows.len(), 4);
+        assert!(rows.iter().all(|row| row["source_sha256"] == schema_sha));
+        let mut state_row = document["interface"]["input"][0].clone();
+        state_row["source_sha256"] = json!(schema_sha);
+        assert!(rows.contains(&state_row), "interface rows are schema wires");
+        assert_eq!(import_transition(&package, WORKER_SCHEMA), (Ok(()), 0));
+
+        // A host that selected no schema cannot take one from the package.
+        let mut trace = AdmissionTrace::default();
+        assert_eq!(
+            Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace).err(),
+            Some(Refusal::Unsupported)
+        );
+        assert_eq!(trace.installations, 0);
+
+        // Another schema source or declaration order changes the regenerated
+        // rows, so each is refused before any installation.
+        let commented = format!("# host revision 2\n{}", schema_text());
+        let reordered = schema_text().replacen(
+            "  variant Event Submit Pair<AttemptId,Text> public Cancelled AttemptId public\n  \
+             variant Action Send Pair<AttemptId,Text> public Noop Unit public\n",
+            "  variant Action Send Pair<AttemptId,Text> public Noop Unit public\n  \
+             variant Event Submit Pair<AttemptId,Text> public Cancelled AttemptId public\n",
+            1,
+        );
+        assert_ne!(reordered, schema_text());
+        for alternative in [commented.as_bytes(), reordered.as_bytes()] {
+            assert_eq!(
+                import_transition(&package, alternative),
+                (Err(Refusal::Invalid), 0)
+            );
+        }
+
+        // Each forged schema claim is refused before any installation.
+        let forge = |edit: &dyn Fn(&mut Value)| {
+            let mut forged = document.clone();
+            edit(&mut forged);
+            serde_json::to_vec(&forged).unwrap()
+        };
+        let forged = [
+            forge(&|value| value["schemas"][0]["shape_sha256"] = json!("0".repeat(64))),
+            forge(&|value| value["schemas"].as_array_mut().unwrap().swap(0, 1)),
+            forge(&|value| value["schemas"][1]["version"] = json!(2)),
+            forge(&|value| {
+                value["interface"]["input"]
+                    .as_array_mut()
+                    .unwrap()
+                    .swap(0, 1);
+            }),
+            forge(&|value| value["interface"]["input"][0]["module_id"] = json!("9")),
+            forge(&|value| value["schemas"] = json!([])),
+            forge(&|value| {
+                value.as_object_mut().unwrap().remove("schemas");
+            }),
+        ];
+        for bytes in &forged {
+            assert_eq!(
+                import_transition(bytes, WORKER_SCHEMA),
+                (Err(Refusal::Invalid), 0)
+            );
+        }
+    }
+
+    /// The selected WIT guest world maps only I64 Programs; a transition is
+    /// refused as unsupported before any guest is installed.
+    #[test]
+    fn transition_program_guest_execution_is_unsupported() {
+        let (store, root) = Store::prepare_transition(
+            WORKER_TRANSITION,
+            "transition",
+            WORKER_SCHEMA,
+            RUNTIME_REQUEST_WORK,
+            &mut AdmissionTrace::default(),
+        )
+        .unwrap();
+        assert!(store.require_selected_root(root).is_ok());
+        assert_eq!(store.selected_world().err(), Some(Refusal::Unsupported));
     }
 }

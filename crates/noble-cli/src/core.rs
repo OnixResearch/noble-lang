@@ -60,10 +60,12 @@ pub const USAGE: &str = "usage:
   reachable, compatible named Programs once, then
   adapt, select, duplicate and compose typed handles under an explicit bound.
   This local builder does not execute a guest, import/export packages or grant effects.
-  noble worker program check SOURCE --name NAME --effect-ceiling pure [--work N]
+  noble worker program check SOURCE --name NAME --effect-ceiling pure [--work N] [--schema SCHEMA]
   Admission only: check and compile a pure named Program under one
   host-selected request budget (default 50000000); every checking stage and
   meter draws from the same share, and nothing is installed or run.
+  --schema selects an exact WorkerData@1 module, checked first under the same
+  budget; NAME must then be State Event -- State List<Action> ! {}.
   noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure
   A pure Program may use signed, scoped self recursion (`signature` plus
   a self call); host-bound Programs may not.
@@ -73,7 +75,7 @@ pub const USAGE: &str = "usage:
   noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure
   Freshly import a checked pure package graph and invoke its selected installed
   Program cell through the same WIT owner; package bytes are not executable.
-  noble worker program import PACKAGE --effect-ceiling pure [--work N]
+  noble worker program import PACKAGE --effect-ceiling pure [--work N] [--schema SCHEMA]
   Freshly recheck a finite local v2 package's source, complete named closure
   and checked recipe; Text aliases require fresh installed-cell rechecking.
   Import is inert and is not an executable guest. Export is unavailable through
