@@ -1,5 +1,29 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-22 (all fourteen checks pass at `6e6f6ed`)
+
+The [receipt](receipt-6e6f6ed.json) records **14 PASS / 0 FAIL** at
+`6e6f6ed94d99d9275cb0dac88d9b555c1a01f6e2`, after the WORKER-12 adapter
+closeout, the WORKER-02 acceptance, the Worker Program v2 package-encoding
+work and the boundary aggregate change. `rust-tests` reports 85 binaries, 774
+passed, 0 failed and 7 ignored. `octet` is clean in both phases. The renewed
+inventory accounts for 14350 production paths. `boundary-controls` passes all
+18 cases.
+
+The boundary aggregate now links each case bundle instead of copying it. Its
+NAR fell from 7.6 GiB to 7.9 KiB, and the case bundles stay in its closure.
+The verification run at `b1ef5886` took 3232 s; the passing `9a15fc5` run
+had needed a further 2799 s just to copy the old aggregate back. Of three
+invocations at `6e6f6ed`, the first ran beside the other thirteen checks and
+stopped at the 3600 s tool limit. The second failed five cases with exit 127
+because the builder could not find `gnutar-1.35/bin/tar`. The third rebuilt
+those cases without that error and passed. A replay of the WORKER-02 gate at
+`6e6f6ed` gives the same nine outcomes as its accepted run.
+
+Commits `3e5f4a51` through `adb26c43` edited tool-selection-bound files without
+re-pinning, so they do not evaluate; `8b25bcb6` restores evaluation. The pass
+binds `6e6f6ed` only and is not milestone acceptance.
+
 ## Checking change log — 2026-10-21 (all fourteen checks pass at `9a15fc5`)
 
 The [receipt](receipt-9a15fc5.json) records **14 PASS / 0 FAIL** at

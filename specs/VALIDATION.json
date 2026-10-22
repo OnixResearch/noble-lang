@@ -2444,7 +2444,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "76d66d106ad1a1f9cf259004c5544614cd13d580cf9dd1eabfb9da9e6f6857e7"
+      "sha256": "fd4a5eedff7d8c6a3c40abc0acb702e6f7e3f69c0b54905573894429bbb7c496"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2612,7 +2612,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "f80d0d0771012af28de555a1c758d1d3b952bf06d14b7f1bdc2ee1fb8432c4fe"
+      "sha256": "09120dd8742c1c8f6a311dbdf47a10a1a5d609358749d840c8aefe15acded6b2"
     },
     {
       "file": "verification/native-assurance.md",

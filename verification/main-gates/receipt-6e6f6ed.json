@@ -1,0 +1,195 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "tested_commit": "6e6f6ed94d99d9275cb0dac88d9b555c1a01f6e2",
+  "base_upstream_commit": "fddccd69774fb7b40b7482453b4ba3ff391d0fc9",
+  "flake_note": "All fourteen flake checks pass at 6e6f6ed9 after the WORKER-12 adapter closeout, WORKER-02 acceptance, Worker Program v2 package encoding and the boundary aggregate change. Each check ran from a clean detached worktree with nix build .#checks.x86_64-linux.<check> on the configured leviathan builder; boundary-controls needed three invocations (see its observation). No check was weakened.",
+  "run": {
+    "date": "2026-10-22",
+    "worktree": "/var/tmp/noble-gate-6e6f",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check>",
+    "options": [
+      "--option min-free 0",
+      "--option max-free 0"
+    ],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/6e6f6ed9"
+  },
+  "flake_checks": [
+    {
+      "check": "policy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 75,
+      "log_sha256": "324aa2db7bb4150d179bdfdb96478032a6ed9e07d38f3d1bd4cdb9f4cd137a3a"
+    },
+    {
+      "check": "tool-selection",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 20,
+      "log_sha256": "e2a34f644db8fde22cde4b62eba65fb6621df2161c88177c82e1b248e9dfba0b"
+    },
+    {
+      "check": "tool-overrides",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 17,
+      "log_sha256": "0c37be92797afcea139afd20d56762dc414222d1f3075c2ab7e2b920a118e23f"
+    },
+    {
+      "check": "tool-versions",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 17,
+      "log_sha256": "5f2a8a37a40e51d9ca01309459587da0f642b8c2a02c8687baae16d58364de5b"
+    },
+    {
+      "check": "format",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 25,
+      "log_sha256": "d3d477b9e49904e6ac486a837a69e6e8a84a622d9596168934bbe651b1313464"
+    },
+    {
+      "check": "clippy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 69,
+      "log_sha256": "dff521c7f10920a7b81cacb33494e984df6f3f06ba76e3078b8c74189d844728"
+    },
+    {
+      "check": "documents",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 182,
+      "log_sha256": "df8a8bbb33886a556ef9aebe00a8916b11257849cf4d1ae864d37b91ea7561b4"
+    },
+    {
+      "check": "cairn",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 15,
+      "log_sha256": "626945d535d72bacce1f064082793ac33f5a09c96d9210528ef10314173d1aef"
+    },
+    {
+      "check": "source-inventory-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 9,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observation": "The derivation builds silently; the empty log is its whole output."
+    },
+    {
+      "check": "octet",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 523,
+      "log_sha256": "1ba70d1fd47a779564b6e1c19dcb10d02a270a3205241e11eeb417e08d962fa7",
+      "observation": "noble-octet-gate --workspace -- --all-targets --all-features: status clean, lint phase clean, architecture phase clean, 0 findings."
+    },
+    {
+      "check": "source-coverage",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 863,
+      "log_sha256": "d45c25e46fff0fc7caca00735e8451d89e3bea22ea47e1a4662835c8b9e70928",
+      "observation": "Sandboxed all-features inventory collection matches the renewed accounting in policy/source-inventory.ncl (14350 production paths = 7367 body/open + 4000 generated + 2983 structural; 4931 test-only paths)."
+    },
+    {
+      "check": "native-assurance",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 15,
+      "log_sha256": "3a55859cf2d722b26ffe88f9c25e81d4bff176c43c867162786de3c3d09b20ae"
+    },
+    {
+      "check": "rust-tests",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 1164,
+      "log_sha256": "e31b310178f1f1a620792784e4938becd4b5edd43ed6f5fb2fef6b081c94a833",
+      "observation": "85 test binaries, 774 passed, 0 failed, 7 ignored, including the five tests added for this work."
+    },
+    {
+      "check": "boundary-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 2412,
+      "log_sha256": "e6e9094136b0f155e6ab932a45227989a9c9b0de5d8f8a534910d972f3a956a0",
+      "output": "/nix/store/3nsr2r10305yjg4cx3cvifkzg4hmdl6f-noble-boundary-controls",
+      "output_nar_hash": "sha256-XkWdgMeNF+el0kROO5PFIFsU1YF+vK0B/vSGWw1azEM=",
+      "output_nar_size": "7.9 KiB",
+      "output_closure_size": "16.0 GiB",
+      "observation": "All 18 cases report 'passed (not M1 acceptance)': 2 positive baselines (workspace, acyclic-shell) and 16 rejected fixtures. The aggregate now links each case bundle instead of copying it (b1ef5886). Attempt 1 (log a9107af0…) ran beside the other thirteen checks and was stopped by the 3600 s tool limit after twelve case outputs were copied back; attempt 2 (log 16965142…) failed five cases with exit 127 because the builder could not find /nix/store/isva9q9z…-gnutar-1.35/bin/tar; attempt 3 rebuilt those five cases and the aggregate with no such error and is the passing run."
+    }
+  ],
+  "rust_tests": {
+    "binaries": 85,
+    "passed": 774,
+    "failed": 0,
+    "ignored": 7,
+    "log_sha256": "e31b310178f1f1a620792784e4938becd4b5edd43ed6f5fb2fef6b081c94a833"
+  },
+  "additional_verification": [
+    {
+      "subject": "WORKER-02 acceptance replay",
+      "commit": "6e6f6ed9",
+      "result": "passed",
+      "command": "node verification/worker02/gate.mjs --out /var/tmp/worker02-replay-6e6f (pinned devShell)",
+      "receipt_sha256": "5be72772f697b350410376915ba22a5d13e50fc677508b4e4fcfb0d14bc6491c",
+      "observation": "Baseline normal; all six variants and both program controls refused at admission with the case outcomes. The accepted evidence stays bound to 34d59769."
+    },
+    {
+      "subject": "boundary aggregate links (b1ef5886)",
+      "commit": "b1ef5886",
+      "result": "passed",
+      "log_sha256": "d002c1df368ce9249c48bbf4df45d5a0c38be86cb5a14772ef23ade48781c30d",
+      "observation": "18 of 18 cases passed in 3232 s; the aggregate NAR fell from 7.6 GiB to 7.9 KiB while its closure still holds every case bundle."
+    }
+  ],
+  "repairs": [
+    {
+      "commit": "b1ef5886",
+      "fix": "Link boundary case outputs from the aggregate instead of copying them."
+    },
+    {
+      "commit": "3e5f4a51",
+      "fix": "Run the WORKER-12 deny-only export against a success-reporting and a throwing host."
+    },
+    {
+      "commit": "4cc1157b",
+      "fix": "Archive the WORKER-12 code-export adapter change with its scoped-test receipt."
+    },
+    {
+      "commit": "34d59769",
+      "fix": "Add the WORKER-02 interface-rejection acceptance gate."
+    },
+    {
+      "commit": "19a77b19",
+      "fix": "Accept WORKER-02 through the production typed admission."
+    },
+    {
+      "commit": "adb26c43",
+      "fix": "Version v2 packages exactly, compare claims before installing Wasm, report export denial distinctly and meter every closure walk."
+    },
+    {
+      "commit": "8b25bcb6",
+      "fix": "Re-pin the eight edited tool-selection files."
+    },
+    {
+      "commit": "62d4e35e",
+      "fix": "Split the hostile-host test for the deny-all lints."
+    },
+    {
+      "commit": "6e6f6ed9",
+      "fix": "Renew source-inventory accounting (14350 production paths)."
+    }
+  ],
+  "non_claims": [
+    "Not M1, MW1 or any milestone acceptance; every check binds 6e6f6ed9 only.",
+    "All 7367 authored production bodies remain open refinement obligations; inventory accounting is not proof.",
+    "WORKER-02 is the only newly promoted case; WORKER-12 and the other MW1 cases stay absent/not-run.",
+    "Worker Program v2 packaging is partial: recursive self-owner packages and nominal schema rows are not encoded.",
+    "The intermediate commits 3e5f4a51 through adb26c43 carry stale tool-selection pins and do not evaluate; 8b25bcb6 restores evaluation."
+  ]
+}
