@@ -2204,7 +2204,7 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
-      "sha256": "ebfc970eef6217d75c36f201ce2c32736ad1f90d2a1d4d96fbf6a7c5b015dbb0"
+      "sha256": "8a35cd322d5aac9e3721b0a8dac80215e8ed403e0b0431dfdff55c0e72d86ad1"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
@@ -2420,7 +2420,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "02e2dc051528b30d8d977adf6dac4cd5080441942d4d8163fb4e2400606eecba"
+      "sha256": "c5a8a63b40fac3c6af4dc990d6ba9a7c317e00ace00dee6eb493c1a97a3c6620"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2472,7 +2472,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "180a40516026afcf50dc88addcdb3d0ec6e0cf942204e6f2f6d9d37c7757d3cf"
+      "sha256": "909a93428247c2fb4bd0a6d7306fc45c2740f7f0885d65e4736e3f3a19a293cd"
     },
     {
       "file": "specs/SAFETY.md",

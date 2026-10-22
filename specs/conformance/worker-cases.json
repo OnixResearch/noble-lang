@@ -97,7 +97,28 @@
       "requirements": ["P-ROUND-01", "P-ROUND-02", "P-PACK-01", "P-PACK-02", "P-ID-04"],
       "input": {"harness": "program-round-trip-and-import", "expected_interface": "unchanged-instantiated-interface", "context": "same-exact-semantic-dependencies", "captured_data": "runtime-supplied-text", "self_reference": "retained-owner-identity", "preparation_authority": "explicit", "export_authority": "explicit-for-destination-and-capture", "limits": "sufficient", "variants": ["reflect-prepare", "export-import", "rebound-display-name-original-dependency-retained", "different-optimizer-same-semantics"]},
       "expected": {"stage": "identity-after-local-admission", "outcome": "preserve-each-variant", "normalized_recipe": "same", "interface_witnesses": "same", "captures": "same", "dependency_identities": "same", "recursive_owner": "same", "abstract_program_value_identity": "same", "artifact_bytes_required_identical": false, "budget_outcomes_required_identical": false, "unchecked_acceptance_transferred": false, "proof_applicability_transferred": false, "live_authority_transferred": false, "stable_wire_encoding_claimed": false, "candidate_body_requests": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "partial", "execution": "not-run", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Two of the four WORKER-04 variants run on the production binary. export-import: a host-granted export and two separate-process imports at different request budgets report the same experimental program-value identity, normalized recipe, interface witness, captures, dependencies and recursive owner. different-optimizer-same-semantics: two independent checks installed under Cranelift opt levels none and speed produce different native artifacts and the same identity. No body is invoked; altered packages with an accepted flag, a proof evidence row, a changed capture or a changed builtin revision are refused, and a refusing grant emits no bytes. The case is not passed: reflect-prepare and rebound-display-name-original-dependency-retained have no implementation.",
+        "subject": "WORKER-04", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:e01f1c3a24beb2444e7990a0b3518607b2c6989ba14351c99c3a18fe86a7c379",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "program-round-trip-and-import", "receipt": "../../verification/worker04/acceptance.json",
+          "receipt_sha256": "ce1979af88906b0660f0d3d00459c9b75d97bcb3a8e080a930aa6c4f25a0e6a6",
+          "gate": "verification/worker04/gate.mjs", "case": "WORKER-04", "tested_commit": "47a5ab2e5f88fb15e39b8490c5ec4cd300c04f99",
+          "binary_sha256": "47bcf367c9c9c0078f29931c7e0f11928dfc937b6b1c6629666f31fa4ff62ec9",
+          "executed_variants": ["export-import", "different-optimizer-same-semantics"],
+          "not_run_variants": ["reflect-prepare", "rebound-display-name-original-dependency-retained"],
+          "command": "noble worker program test-host export|export-denied|optimizer < verification/worker04/fixtures/recursive.noble; noble worker program import PACKAGE --effect-ceiling pure [--work 25000000]",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 55b2a9e4c79ae6f702b1ab68c7c517ad1255b09bc208606b8728f465dd8d3733); the fixture, the exported package and every raw report are retained under verification/worker04."
+        },
+        "assumptions": [
+          "The program-value identity is a local experimental projection (P-ID-04) of the checked package fields; identities match across sessions because each admission commits the same module in the same order.",
+          "runtime-supplied-text is the source Text literal bound to its installed runtime cell by attestation.",
+          "The optimizer is Cranelift's opt level over the same checked Wasm text; semantic preservation is Wasmtime's obligation and is not shown by identity equality.",
+          "Authority non-transfer is observed as the absence of an issue route in a pure-ceiling import, not as a refused issue."
+        ]
+      }]
     },
     {
       "id": "WORKER-05", "profile": "Worker-Design", "kind": "admission",
