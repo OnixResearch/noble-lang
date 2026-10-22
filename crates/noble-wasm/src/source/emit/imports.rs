@@ -26,7 +26,7 @@ pub(super) fn write(
 (import \"noble\" \"resource_bind_validate\" (func $host_resource_bind_validate (param i32 i32 i32 i32 i32 i32) (result i32)))\n"
         ));
     }
-    attempt!(host_function_imports(out, plan));
+    attempt!(host_functions(out, plan));
     attempt!(globals(out));
     if plan.calculator {
         // Immutable and per instance: the compiler generation this module was
@@ -57,7 +57,7 @@ pub(super) fn write(
 
 /// Imported host functions selected by the plan's effects and profile, in
 /// their fixed declaration order.
-fn host_function_imports(
+fn host_functions(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
