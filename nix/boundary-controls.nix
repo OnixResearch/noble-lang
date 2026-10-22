@@ -215,9 +215,12 @@ let
         ' > "$out/validated.txt"
       '';
   outputs = builtins.mapAttrs (_: mkCase) cases;
+  # Each case output is already a store path, so the aggregate references it
+  # instead of duplicating its ~0.5 GiB artifact bundle; the references keep
+  # every case bundle in the aggregate's closure.
   shellLinks = pkgs.lib.concatStringsSep "\n" (
     map (id: ''
-      cp -r ${outputs.${id}} "$out/${id}"
+      ln -s ${outputs.${id}} "$out/${id}"
     '') caseNames
   );
 in
