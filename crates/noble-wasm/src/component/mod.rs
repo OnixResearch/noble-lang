@@ -358,4 +358,44 @@ mod tests {
             "selected code-export imports must compile without granting a direct effect"
         );
     }
+
+    #[test]
+    fn selected_program_owner_is_moved_never_duplicated_or_dropped() {
+        let pure = checked_interface(
+            b"module plain@1 [ export plus def plus [ 1 + ] ]",
+            b"plain@1.plus",
+            "plus",
+            None,
+        );
+        let world = World::parse(
+            include_bytes!("../../wit/worker-program.wit"),
+            "guest",
+            LIMITS,
+        )
+        .unwrap()
+        .select_worker_program(&pure)
+        .unwrap();
+        let moved = world
+            .prepare_export("compute", b"programs.admit swap programs.invoke", LIMITS)
+            .unwrap();
+        assert!(super::compile(&world, core::slice::from_ref(&moved)).is_ok());
+        // A checked Noble Program is copyable Data, so both guests typecheck;
+        // lowering alone must refuse aliasing or abandoning the WIT owner.
+        for (label, guest) in [
+            (
+                "duplicated owner",
+                b"programs.admit dup drop swap programs.invoke".as_slice(),
+            ),
+            ("dropped owner", b"programs.admit drop".as_slice()),
+        ] {
+            let checked = world.prepare_export("compute", guest, LIMITS).unwrap();
+            assert!(
+                matches!(
+                    super::compile(&world, core::slice::from_ref(&checked)),
+                    Err(crate::Diagnostic::Invalid)
+                ),
+                "{label} lowered"
+            );
+        }
+    }
 }

@@ -254,7 +254,6 @@ fn wit_owner_request_and_core_bound_effect_are_separately_denied(
     assert!(wit["denial"]["candidate_body_requests"] == 0);
     assert!(wit["denial"]["protected_operations"] == 0);
     assert!(wit["denial"]["denial_recorded"] == true);
-    assert!(wit["denial"]["capture_published"] == false);
     redacted(
         &stdout,
         &stderr,
@@ -272,7 +271,6 @@ fn wit_owner_request_and_core_bound_effect_are_separately_denied(
     assert!(core["denial"]["core_denials"] == 1);
     assert!(core["denial"]["protected_operations"] == 0);
     assert!(core["denial"]["completed_invocations"] == 0);
-    assert!(core["denial"]["capture_published"] == false);
     redacted(
         &stdout,
         &stderr,

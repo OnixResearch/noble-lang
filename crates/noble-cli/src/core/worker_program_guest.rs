@@ -622,7 +622,6 @@ struct Host {
     protected_operations: u32,
     code_export_requests: u32,
     code_export_denials: u32,
-    capture_published: bool,
 }
 #[expect(
     tigerstyle::type_accumulation,
@@ -1351,7 +1350,6 @@ pub(super) struct Observation {
     pub(super) protected_operations: u32,
     pub(super) code_export_requests: u32,
     pub(super) code_export_denials: u32,
-    pub(super) capture_published: bool,
 }
 
 #[derive(Debug)]
@@ -1421,6 +1419,29 @@ fn install_selected(
             next.checked_add(1)
         })
         .map_err(|_| anyhow::anyhow!("Worker installation IDs exhausted"))?;
+    let (mut store, instance) = instantiate_source(engine, source, task)?;
+    let mut cell = bind_installed(&mut store, instance, source, root)?;
+    cell.installation = installation;
+    let host = store.data_mut();
+    if source
+        .host_policy()
+        .is_some_and(|policy| policy.binding().operation == "test.code-export")
+        && !source.text_aliases().is_empty()
+    {
+        host.export_capture = Some(cell);
+    }
+    host.installed = Some(Installed { instance, cell });
+    Ok(store)
+}
+
+/// Instantiates the locally compiled source module and runs its inert install
+/// step. Nothing is bound: the installed cells are untrusted until
+/// `bind_installed` checks them against the independently checked metadata.
+fn instantiate_source(
+    engine: &Engine,
+    source: &ProgramStore,
+    task: TaskOwner,
+) -> Result<(Store<Host>, wasmtime::Instance)> {
     let core = core_module(engine, source.wat())?;
     let mut store = Store::new(
         engine,
@@ -1444,7 +1465,6 @@ fn install_selected(
             protected_operations: 0,
             code_export_requests: 0,
             code_export_denials: 0,
-            capture_published: false,
         },
     );
     store.limiter(|host| &mut host.limits);
@@ -1463,18 +1483,7 @@ fn install_selected(
         install.call(&mut store, ())? == 0,
         "source Program install failed"
     );
-    let mut cell = bind_installed(&mut store, instance, source, root)?;
-    cell.installation = installation;
-    let host = store.data_mut();
-    if source
-        .host_policy()
-        .is_some_and(|policy| policy.binding().operation == "test.code-export")
-        && !source.text_aliases().is_empty()
-    {
-        host.export_capture = Some(cell);
-    }
-    host.installed = Some(Installed { instance, cell });
-    Ok(store)
+    Ok((store, instance))
 }
 
 /// Inspect actual runtime Text cells before accepting a portable capture
@@ -1593,6 +1602,8 @@ pub(super) fn execute_with_task(
 /// Real typed WIT host request, but no positive production exporter exists:
 /// the bound private source cell is checked and installed before the one
 /// default-denied request; no capture/source/package bytes are serialized.
+/// The report states only what the host counts. Whether capture bytes were
+/// published is observed outside the host, over every channel it can write.
 pub(crate) fn request_code_export(
     source: &mut ProgramStore,
     root: Handle,
@@ -1633,8 +1644,6 @@ pub(crate) fn request_code_export(
         "stage":"export-authorization","outcome":"denied",
         "guest_requests":observation.code_export_requests,
         "protected_operations":observation.protected_operations,
-        "capture_published":observation.capture_published,
-        "capturability_grants_export_authority":observation.protected_operations != 0,
         "denial_recorded":observation.code_export_denials == 1,
         "candidate_body_requests":observation.invokes
     }))
@@ -1672,7 +1681,6 @@ pub(crate) fn request_core_code_export(
         "outcome":"denied","core_requests":observed.code_export_requests,
         "core_denials":observed.code_export_denials,
         "protected_operations":observed.protected_operations,
-        "capture_published":observed.capture_published,
         "completed_invocations":observed.invokes,
     }))
 }
@@ -2142,7 +2150,6 @@ fn execute_reserved_with_task(
                         && host.code_export_requests == 1
                         && host.code_export_denials == 1
                         && host.protected_operations == 0
-                        && !host.capture_published
                         && host.invokes == 0,
                     "source effect failed without an exact denied Core export request"
                 );
@@ -2155,7 +2162,6 @@ fn execute_reserved_with_task(
                     protected_operations: host.protected_operations,
                     code_export_requests: host.code_export_requests,
                     code_export_denials: host.code_export_denials,
-                    capture_published: host.capture_published,
                 });
             }
             Err(problem) => return Err(problem),
@@ -2177,8 +2183,7 @@ fn execute_reserved_with_task(
                     && host.live_owners == 0
                     && host.code_export_requests == 1
                     && host.code_export_denials == 1
-                    && host.protected_operations == 0
-                    && !host.capture_published,
+                    && host.protected_operations == 0,
                 "code-export request did not remain a single protected-work-free denial"
             );
         }
@@ -2198,7 +2203,6 @@ fn execute_reserved_with_task(
         protected_operations: host.protected_operations,
         code_export_requests: host.code_export_requests,
         code_export_denials: host.code_export_denials,
-        capture_published: host.capture_published,
     })
 }
 
@@ -2552,8 +2556,6 @@ mod tests {
         assert_eq!(report["outcome"], "denied");
         assert_eq!(report["guest_requests"], 1);
         assert_eq!(report["protected_operations"], 0);
-        assert_eq!(report["capture_published"], false);
-        assert_eq!(report["capturability_grants_export_authority"], false);
         assert_eq!(report["denial_recorded"], true);
         assert!(!report.to_string().contains("synthetic-private-text"));
         assert!(!report.to_string().contains("module ledger"));
@@ -3124,5 +3126,114 @@ mod tests {
             execute_with_task(&mut source, root, 7, 1, &delivered).is_err(),
             "one delivered task must not mint a second Program owner"
         );
+    }
+
+    /// How a hostile embedder or memory fault alters an installed module
+    /// between `worker_install` and correspondence checking.
+    #[derive(Clone, Copy, Debug)]
+    enum Tamper {
+        None,
+        TextByte,
+        CellEntry,
+        AtomPayload,
+    }
+
+    fn u32_at(memory: &[u8], at: usize) -> Option<u32> {
+        let bytes = memory.get(at..at.checked_add(4)?)?;
+        Some(u32::from_le_bytes(bytes.try_into().ok()?))
+    }
+
+    fn field(record: usize, offset: usize, width: usize) -> std::ops::Range<usize> {
+        let start = record.checked_add(offset).unwrap();
+        start..start.checked_add(width).unwrap()
+    }
+
+    /// Linear cell record of `handle`: kind at +0, published handle at +4,
+    /// payload at +8, entry (`x`) at +28.
+    fn cell_record(memory: &[u8], handle: u32, kind: u32, entry: u32) -> Option<usize> {
+        (0..memory.len().saturating_sub(48)).step_by(4).find(|&at| {
+            u32_at(memory, at) == Some(kind)
+                && at.checked_add(4).and_then(|next| u32_at(memory, next)) == Some(handle)
+                && at.checked_add(28).and_then(|next| u32_at(memory, next)) == Some(entry)
+        })
+    }
+
+    /// First recipe atom (kind 8) reachable from an installed Program cell.
+    fn first_atom(store: &mut Store<Host>, instance: wasmtime::Instance, program: u32) -> u32 {
+        let mut at = cell_field(store, instance, "cell_c", program).unwrap();
+        for _ in 0..64 {
+            if cell_field(store, instance, "cell_kind", at).unwrap() != 9 {
+                break;
+            }
+            at = cell_field(store, instance, "cell_a", at).unwrap();
+        }
+        assert_eq!(cell_field(store, instance, "cell_kind", at).unwrap(), 8);
+        at
+    }
+
+    fn tamper(store: &mut Store<Host>, instance: wasmtime::Instance, kind: Tamper) {
+        let named = instance
+            .get_typed_func::<i32, i32>(&mut *store, "worker_named_handle")
+            .unwrap()
+            .call(&mut *store, 0)
+            .unwrap();
+        let program = u32::try_from(named).unwrap();
+        let is_atom = matches!(kind, Tamper::AtomPayload);
+        let handle = if is_atom {
+            first_atom(store, instance, program)
+        } else {
+            program
+        };
+        let entry = cell_field(store, instance, "cell_x", handle).unwrap();
+        let memory = instance.get_memory(&mut *store, "memory").unwrap();
+        let data = memory.data_mut(&mut *store);
+        let record = cell_record(data, handle, if is_atom { 8 } else { 4 }, entry)
+            .expect("installed cell record");
+        if matches!(kind, Tamper::TextByte) {
+            let at = data
+                .windows(3)
+                .position(|window| window == b"tag")
+                .expect("installed Text literal");
+            data[at] = b'x';
+        } else if matches!(kind, Tamper::CellEntry) {
+            let changed = entry.checked_add(1).unwrap().to_le_bytes();
+            data[field(record, 28, 4)].copy_from_slice(&changed);
+        } else if is_atom {
+            let payload = i64::from_le_bytes(data[field(record, 8, 8)].try_into().unwrap());
+            let changed = payload.checked_add(1).unwrap().to_le_bytes();
+            data[field(record, 8, 8)].copy_from_slice(&changed);
+        }
+    }
+
+    #[test]
+    fn tampered_installed_text_cell_or_atom_is_refused_before_owner_binding() {
+        let (source, root) = ProgramStore::prepare(
+            b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]",
+            "plus",
+            &[Ty::I64],
+            80_000_000,
+        )
+        .unwrap();
+        let mut config = Config::new();
+        config.consume_fuel(true).epoch_interruption(true);
+        let engine = Engine::new(&config).unwrap();
+        for kind in [
+            Tamper::None,
+            Tamper::TextByte,
+            Tamper::CellEntry,
+            Tamper::AtomPayload,
+        ] {
+            let (mut store, instance) =
+                instantiate_source(&engine, &source, TaskOwner::for_source(&source)).unwrap();
+            tamper(&mut store, instance, kind);
+            let bound = bind_installed(&mut store, instance, &source, root);
+            if matches!(kind, Tamper::None) {
+                assert!(bound.is_ok(), "the untampered installation must bind");
+            } else {
+                assert!(bound.is_err(), "{kind:?} reached a bound Program owner");
+            }
+            assert!(store.data().installed.is_none());
+            assert_eq!(store.data().live_owners, 0);
+        }
     }
 }
