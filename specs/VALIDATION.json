@@ -2,10 +2,10 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "e61cea67a768d60fa15e3c76e70f5f0acbf48d9195b19929dcbd62fdd09f2440",
+    "sha256": "5917a5fb0d9a2d6193798b6f3a04c692f553950124e239120d166d798d8394ff",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "5a75c586f7ab4d3065a71c1259ea1d835d896b663173a8c83300c6c47f7feeea"
+      "sha256": "98cc360fc506ed092b62ef232a19cc9a6ef61805e9d9f2d8c467bea714735129"
     }
   },
   "lane": "document-validation-only",
@@ -14,11 +14,11 @@
     "bun": "1.3.10",
     "node_api": "24.3.0"
   },
-  "documents": 13,
-  "requirements": 543,
-  "scenarios": 213,
+  "documents": 14,
+  "requirements": 551,
+  "scenarios": 221,
   "scenarios_executed": 130,
-  "open_test_design": 193,
+  "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [
@@ -1383,6 +1383,22 @@
       "sha256": "a5f4d62f221e7d41a25bd55dafb20c25306cc3f8409cf07166861f72360aec50"
     },
     {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/design.md",
+      "sha256": "aac0eb38c4d996f2f1155f496d6941cfb95520fb3e26e92349a3528c6d97b353"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/proposal.md",
+      "sha256": "ff10d43ef8396f71cbaa0be4f5b1a01d0f883c4c358085d4d2fd8012d00b81ba"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/specs/erlang-abstract-backend/spec.md",
+      "sha256": "9246638500166fe4e680831a741652332d3074360be8368bda9936301830b50b"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/tasks.md",
+      "sha256": "3e61932aeaa4f0a5ad9a02808892862448b5cb8a43dfb43e09f3dddd748ae47c"
+    },
+    {
       "file": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
       "sha256": "0da1f38903c3be3d28f9605cb9ef553aaed9b8554bab7e78b33614b380226125"
     },
@@ -1415,6 +1431,22 @@
       "sha256": "c64bb3273c95f6a5817b4c60651b504699a1ce30f9f5537d143993586e95a9ad"
     },
     {
+      "file": ".cairn/archive/2026-10-21-worker-code-export-bound-effect/design.md",
+      "sha256": "1df285fbdadb5e66d97202e2781ee0fdafd0a513a4ce18072e2246411da3029e"
+    },
+    {
+      "file": ".cairn/archive/2026-10-21-worker-code-export-bound-effect/proposal.md",
+      "sha256": "0612ed789d9abccba9496cc755badf982b8d6ae2f17b5bcaafe30c122610b449"
+    },
+    {
+      "file": ".cairn/archive/2026-10-21-worker-code-export-bound-effect/specs/language/spec.md",
+      "sha256": "0aece58a6912ad501092435c17d631ff3869b92299d295e05d6efd3d6377e680"
+    },
+    {
+      "file": ".cairn/archive/2026-10-21-worker-code-export-bound-effect/tasks.md",
+      "sha256": "07bc8719f5ab199130bffa27db3a88aea6b70963e65654ff79a3bfe7fa02b40a"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -1440,7 +1472,7 @@
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/design.md",
-      "sha256": "b1326cd7f6a91e104702c4f850b814683bc84f8105ec9c46372dc2221070cd9e"
+      "sha256": "6338ed31abc43dc54af80221265965a40761129d78f6351ed530c6252499cb64"
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/proposal.md",
@@ -1520,19 +1552,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "6bb5850a37150a195c457209a71a5764a36d5949c689a4c655b5ae8438413a30"
+      "sha256": "5784f19c795f39b9260c64669a3c7998471abbd104b20a5a82ac7a36caf1c585"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "af445c5e9f469788406c7f3543766f54f7ee1c5a153a103996c6b3f3aea996c4"
+      "sha256": "259d937e320ced20376dff47ca16af9f352befa732578860f4e0fb53d943f482"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "5b325053353f5f076f5657c5345d8dbddc2c2aa67117be69042120445cfe391b"
+      "sha256": "d126d7c495c1a4912ee70df9d6997bd7637a29b9615781855ff0a3d51b1ef2da"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "eb9dd821960f374b20a53f2cdd03ad05b26aeb1e5660b2e4d4815bab9ba9b44c"
+      "sha256": "86ff7b0e6cb3260b648f35f1a92bc42d0a78de7327ca2eeaec4145766d751e55"
     },
     {
       "file": ".cairn/changes/calculator-v1/design.md",
@@ -1567,6 +1599,22 @@
       "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
     },
     {
+      "file": ".cairn/changes/declared-retained-source-budget/design.md",
+      "sha256": "847755d87af037e8df78e4c1fe91cdc89fefdefd5c748934224127a40de98110"
+    },
+    {
+      "file": ".cairn/changes/declared-retained-source-budget/proposal.md",
+      "sha256": "f77dd1e72eea144c4fa68101996e6d61009da7e2d046eabf7e583e68036bbd6d"
+    },
+    {
+      "file": ".cairn/changes/declared-retained-source-budget/specs/developer-experience/spec.md",
+      "sha256": "31ce41fec8587b1256af8d619cf0aef291c489be4fb0d919e15637d546d2c454"
+    },
+    {
+      "file": ".cairn/changes/declared-retained-source-budget/tasks.md",
+      "sha256": "0a9255fc73a622e6745bd2db6ccc0560aebb961d78bd707be110bc5212da8946"
+    },
+    {
       "file": ".cairn/changes/editor-hole-transport/design.md",
       "sha256": "17fb51d6b7517220b0f28613068bd328aa8c38a7399009b88234a777171fe3df"
     },
@@ -1581,6 +1629,22 @@
     {
       "file": ".cairn/changes/editor-hole-transport/tasks.md",
       "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
+    },
+    {
+      "file": ".cairn/changes/effect-oracle/design.md",
+      "sha256": "5dad80a33bb8fd1d0ae5cbf73e52332595e334b2eb17a387a69c5390e9d21f70"
+    },
+    {
+      "file": ".cairn/changes/effect-oracle/proposal.md",
+      "sha256": "0c5a166e1cf8f9a36b39e98d01159b0ae9b480a2de916eee20a6f71fe7653c9a"
+    },
+    {
+      "file": ".cairn/changes/effect-oracle/specs/verification/spec.md",
+      "sha256": "424b860b86ec3d912f0a2ae98c0f6624ea49b3cb4048d11030a504834a68507f"
+    },
+    {
+      "file": ".cairn/changes/effect-oracle/tasks.md",
+      "sha256": "3b3d39d464c9ae002fd010355c8654430501d8ab950ef03bc088b98786066cd6"
     },
     {
       "file": ".cairn/changes/explicit-live-references/design.md",
@@ -1617,6 +1681,26 @@
     {
       "file": ".cairn/changes/explicit-live-references/tasks.md",
       "sha256": "e8dc11b9ba308242eb7e6f861e8732ed2b69bb81dc2a7366072c1c5a8646c290"
+    },
+    {
+      "file": ".cairn/changes/finite-subtyping/design.md",
+      "sha256": "a2c43d35423e63e63bc3b1cde45ac931cfe9fe4ec2f9a64ef572681e70a4ea8e"
+    },
+    {
+      "file": ".cairn/changes/finite-subtyping/proposal.md",
+      "sha256": "87b3f5cf6d7422fd953711f202414ff72772e3721da2c713ccf12ce4e311286f"
+    },
+    {
+      "file": ".cairn/changes/finite-subtyping/specs/language/spec.md",
+      "sha256": "22f863879d36ea9e294ccf60a7c17ced9d94e87e29ff467b0c247ca01c29acb1"
+    },
+    {
+      "file": ".cairn/changes/finite-subtyping/specs/verification/spec.md",
+      "sha256": "b845c6037e6535f6f49f5fc5768d1e7e798c6f976b9fdea7486bba1096d08f63"
+    },
+    {
+      "file": ".cairn/changes/finite-subtyping/tasks.md",
+      "sha256": "068145f4cc18aaeaef60579e6f9e72c8211e20c90b20bf484b044731a272a24d"
     },
     {
       "file": ".cairn/changes/gpu-offload-research/design.md",
@@ -1708,11 +1792,11 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
-      "sha256": "c43fc11cc1622e30fe1fbaf8f7e533cb533dc4e0a538df85239c38a77e5e4574"
+      "sha256": "3a25623f96ba102d70a92f60f7aea98dd9b19542d39cd6b4285cfcd810fcf65b"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/proposal.md",
-      "sha256": "347cfecf41a080ac303c31c56052eb1cefe3c98697148e7dbe8715022e25fd49"
+      "sha256": "f6b8bb29abf105f5b32f7a96ff77d100171da672389c3a51c2184bfd86c9394f"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/backend-experiments/spec.md",
@@ -1732,7 +1816,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/language/spec.md",
-      "sha256": "b4e3e0eb566f706551ee775eeb25850338231d43ff62424ff124d9a27feb8f53"
+      "sha256": "ec1b8fbe8a5b4a0f3ccf7c3000b27f926262c38bfaf4c6211519699cfd4e7f9e"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/safety/spec.md",
@@ -1744,11 +1828,39 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "fdde2d45feb8a466b51b47879d58b961e142909a43a4a1629f1ea74d93c1c0b5"
+      "sha256": "551d1f53aacbe32dc4a73e04e9390a434fcc6e6401e81e4bbe376451951c9996"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/design.md",
+      "sha256": "0b806ecea7ff5e44a7367e0b4c1d50fcef00dc58659114ac871ee1331b52593c"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/proposal.md",
+      "sha256": "95a269ae6f3b4327f74f73a5be95486c9eb92748272f24be6ce8380dc734e912"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/calculator/spec.md",
+      "sha256": "713e6818130007f3d60755b77747deabd25e4639462566a5a7e245e828ca9caa"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/core-bootstrap/spec.md",
+      "sha256": "e2944b5744703df1b8f4ce04459f8c8d26834d52b666c80884c1c2c3defd8f93"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/developer-experience/spec.md",
+      "sha256": "f82d829d1ab9a71578199dce11afd0fe1fa96434d2d8a9d478cb9326401f93a7"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/language/spec.md",
+      "sha256": "20183e79f156e1897391b7d8eaa4cfb8b348d5aa9472a5f1727d4fb5e0faa12d"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/tasks.md",
+      "sha256": "421e9ca3794c02a1aded4159bc59f653b2d7df413a5d0c1d5fe7e7c00cd4711e"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "af0ad0c3ddb509c07d38f0de855b4021df65f6c35dd907c26caa448c973b7044"
+      "sha256": "dd18cd2c16c9cfa1456eaa339df5756c16c6ed78b3c7540f4102cbbfc17e0e04"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/proposal.md",
@@ -1840,7 +1952,7 @@
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/design.md",
-      "sha256": "38978ea892d06ba798671717f2199ced724aa3e948b3f25b90035dcc7f6071a4"
+      "sha256": "383964cf352aba7e1b764b73f5da7474749ebafec9ae2c0bc4851d7e9cbef38c"
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/proposal.md",
@@ -1864,7 +1976,7 @@
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/design.md",
-      "sha256": "014f3cb1920902547f1d0f49fa989b3763e24c1909c7aa9662ab18379d90af9e"
+      "sha256": "e3262517e521dd1577cc117a5a361918849327888c6ac94a3f7e5a136172cd6f"
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/proposal.md",
@@ -1876,7 +1988,7 @@
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/tasks.md",
-      "sha256": "c0a331d6a9231e59007779a195fcd892caa35eaeebced7261dc5822c3ab344a0"
+      "sha256": "78ec68af3ec310e25f924e791ccc1cbeba0fc4aac918f296b260b7731416b566"
     },
     {
       "file": ".cairn/changes/safety-artifact-correspondence/design.md",
@@ -2007,6 +2119,26 @@
       "sha256": "4c4836c88d2f682bb6397cc332b01dadf782f94aae2c6e5fae18c5a734f771ce"
     },
     {
+      "file": ".cairn/changes/semantic-merge-verification/design.md",
+      "sha256": "e1fd8b333c123307fc9b87360bc550869126fb46a7bb5c19ed7ddfe8432ba434"
+    },
+    {
+      "file": ".cairn/changes/semantic-merge-verification/proposal.md",
+      "sha256": "2321d0b571fb9be30c70304e1cfb31ec2b5614ad58c897f81da78cd7320e17a2"
+    },
+    {
+      "file": ".cairn/changes/semantic-merge-verification/specs/program-contracts/spec.md",
+      "sha256": "e379c88ff80e038c29d9b1e5400c2944539428e8a6a117eee274caaf8064b2b1"
+    },
+    {
+      "file": ".cairn/changes/semantic-merge-verification/specs/verification/spec.md",
+      "sha256": "2fbdce498e9ba4f2c484c87c7f6347d8db5e41d064408e20d1c86ff9d8f97843"
+    },
+    {
+      "file": ".cairn/changes/semantic-merge-verification/tasks.md",
+      "sha256": "7c41569c58b8592b4d150566f90d5ff92277fae14066f7e3de3573d6483b7c68"
+    },
+    {
       "file": ".cairn/changes/text-byte-cursor/design.md",
       "sha256": "38df731633f8c7430a9e02abdf9e8b934dd6ea33a1aa71c9c1e46311faea03fa"
     },
@@ -2021,6 +2153,22 @@
     {
       "file": ".cairn/changes/text-byte-cursor/tasks.md",
       "sha256": "6de7ef9938777ba920fd4cb62ecd8144ece64d051a117f645a2961b18e3d7546"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
+      "sha256": "9c34c6cc0a07491cdc056ba4cc01902364215997cf6665885172c81f3f89d9dc"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
+      "sha256": "d2573e68273e7fd8ab34ea12232f6ca4e0bc18e6bd0df939eaf6ea07b2d4b43a"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/specs/language/spec.md",
+      "sha256": "a24d70b8954762d022b8ad23965c4693809cf8523a8c0e7f946cecd927ed0637"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
+      "sha256": "7d3c94e49e0ea8668831bfde1620603a380ad67ccd07def0383edfd32e164a38"
     },
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
@@ -2044,7 +2192,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "ff977a055f82fc657abe6e64bbb7dfc3c528319e1d1149424f6fd56aa33c4951"
+      "sha256": "883e7a5331fbe00880e94b0d70200d413957223cccc46c8f45d673b19708fcb2"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -2052,7 +2200,7 @@
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "f6c35caf200c386b8515d895c572449d75cdeb650508af152d34a7b5a7fd33da"
+      "sha256": "a86a5bffa73a71eafa6b377ba99e8c8b46696823b2e80d14713c931d54f3c8b8"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -2064,7 +2212,11 @@
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "916e78f16311d72936978be689b95793eebbe31c30f028f484eb8b8ae43b3f84"
+      "sha256": "68d4261a53bcafccf17f3aaa3ef1351882e69ba1def2226ce446255960a111db"
+    },
+    {
+      "file": ".cairn/specs/erlang-abstract-backend/spec.md",
+      "sha256": "373620f479dc935f9df23e3583a9dca6099707781f22e73d42a4e3d643b11de4"
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
@@ -2072,7 +2224,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "38535234ffca36cf4cb0a3acfd32570bf00e06a3bb24d3238d72e6908ce5902a"
+      "sha256": "7096d1a00341d7d0cce797864ed69ee5dbb1ffc8d13ecf0d5979671cdec28652"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -2124,7 +2276,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "302b117affa06953a8f746df7058d06041771f4c04b0bbb41124c8da6762b08d"
+      "sha256": "eeb8bcf2ad039513e0b0d6001370eba5cb94127c48379969ba910da7d4b4b77c"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2132,7 +2284,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "8e5a2b383c2d04dd2038c9d66776e664c9d46e880fcabac9d1750d7498c7d983"
+      "sha256": "3fd45a6f09689eb0191c0c77e4140b1ced4dc6adda53be3a47240d4721c102b9"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2140,7 +2292,7 @@
     },
     {
       "file": "specs/C-BACKEND.md",
-      "sha256": "e1272a7e060d649a2a831495898f2b07feb9dfc7ff77c45766ffaedf349ead9a"
+      "sha256": "a8d396b0565a296e25a99e32ca5abc694491bfc4928db9dbe93ba1cf3caa24d1"
     },
     {
       "file": "specs/CALCULATOR.md",
@@ -2152,7 +2304,7 @@
     },
     {
       "file": "specs/conformance/c-backend-cases.json",
-      "sha256": "904246ed09cabb510ae843a334732790f2dae1c4c53531e2d7615c55df85d698"
+      "sha256": "713aab9db90d13ebd4bbac222780b873645732bd9a3dcdcb36accf2b5af66ced"
     },
     {
       "file": "specs/conformance/calculator-cases.json",
@@ -2171,12 +2323,16 @@
       "sha256": "760239624d082559738a7ae2f3018f8960bea1cf9ab7666e3a22e80e7e55e89e"
     },
     {
+      "file": "specs/conformance/erlang-abstract-cases.json",
+      "sha256": "7e0daf547a964834603e81d3c7087b241b1031c3163b20b1e5acf13a136bec01"
+    },
+    {
       "file": "specs/conformance/identity-cases.json",
       "sha256": "2b3ff7e7e74ea4347586bcdd0ca0761081759b294ac4747dc8fac02d9523cf8b"
     },
     {
       "file": "specs/conformance/language-workflow-cases.json",
-      "sha256": "7dd4ab0c4920beb2bfff49a4ec9ec85bdfa5f4947aa6f8d90be9a653144e653f"
+      "sha256": "f64ac6aee1dbd42a26828f0ab7950d2e74e5f7bb4b00f8cd1657e5994c4b229d"
     },
     {
       "file": "specs/conformance/live-reference-cases.json",
@@ -2228,7 +2384,11 @@
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
-      "sha256": "77395da7e97c4a58b71cec1ebf15b9b31778e335826d00b5c4760d8b0d2ef05e"
+      "sha256": "89652cf69de9a80ae91b930cefe9dee037fbae4906fb97b8f8676dc729ce43ea"
+    },
+    {
+      "file": "specs/ERLANG-ABSTRACT-BACKEND.md",
+      "sha256": "f2f2bc5316c907e60bd99fd5b1265f600cd1d07e1ad1f6919aef60e062fde582"
     },
     {
       "file": "specs/EVIDENCE.md",
@@ -2244,11 +2404,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "d701488a0cc64616818f3bf3b81136924c1bccb70e4be64b7e51c989325a5014"
+      "sha256": "d7e8364a4311e198f8916f0f6d48aa7bfae3f0e1384c7840073fd5f401819315"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "fa29e9d02d8d2e2953ee2e08f55b68e21543e28a34cd3f1ab960040128b36f85"
+      "sha256": "56d79b19dc95eee21e0214ab5aca6c2b4fce8f32a607672e0eaa3d072a1a7cee"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -2260,11 +2420,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "f86e49497dce6d3bd6cd37848bd1abddfab9be25ff566ec79bb668cf262f3e3b"
+      "sha256": "61040a65b69d6c937142e9bec468b40d428418c39ed250716b54f2b431c57595"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "aa20654df7beb9a04540d9a6d38e4f970743be2e316e7dfc092c29f23246bd01"
+      "sha256": "3afc7bf2c02d2cf3c3555de0cbf24496d516f1e96dd0709171fde56abe38820b"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2276,15 +2436,15 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "785df26e8db1e4e76d9347cb88ecdf1ca3a2f178e84d29d08d1b97d8b5c7f045"
+      "sha256": "f7ce356b793c62a1c6d254ea959fef22488f3332dff8a5e52f8668744d0a6ed6"
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "013e8858b53bc661a93bc4f742f392ded56f55c7a1c2d81beb4ede210c39ddf1"
+      "sha256": "3302b8911a7a9d284c501e4aa473ebab7b0a447fde11dbb84b33b41394bbf65b"
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "89e2036ef984c86443762d400cd13836493c39979bea1365419ed1a7965328bd"
+      "sha256": "76d66d106ad1a1f9cf259004c5544614cd13d580cf9dd1eabfb9da9e6f6857e7"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2312,7 +2472,7 @@
     },
     {
       "file": "verification/boundary-controls.md",
-      "sha256": "ef8aafdd25fa0da0223c4ffac8d3f081599e06c5615b227392fea678615f8326"
+      "sha256": "cc0a1b4557ed338e62627a89865f89b112e5133f3e3e1fc30d60657885418881"
     },
     {
       "file": "verification/calculator-errors/README.md",
@@ -2328,7 +2488,7 @@
     },
     {
       "file": "verification/calculator-v1/calc-12-results.md",
-      "sha256": "b552bfd504fcb94dad6bef83a1841678fcd427d250cf2ba738c1ed2c8565f0f4"
+      "sha256": "9e6a39b8363795b305fb2e6cb3e3e83ccc3aec47400abb30beeb06cbc853e5e2"
     },
     {
       "file": "verification/calculator-v1/calc-13-review.md",
@@ -2348,7 +2508,7 @@
     },
     {
       "file": "verification/calculator-v1/oracle/README.md",
-      "sha256": "6ce3806d878349b29f1190c3ede15dccb3013f5802193eb8f83a0ddb2345198b"
+      "sha256": "7018160a77443aa0df594d0144e6725393d138c1893bef03699f144f65aa5b9b"
     },
     {
       "file": "verification/calculator-v1/pm-operand-order/README.md",
@@ -2363,12 +2523,12 @@
       "sha256": "de4434634b629cace1aca425fda2c2afd06b585fa9d75998ca953004507bb21d"
     },
     {
-      "file": "verification/calculator-v1/wolfram/README.md",
-      "sha256": "71d1814eb0582a869b0ec124faf4dcb279ea1827a0407662e5f2c0c5455d28dc"
+      "file": "verification/calculator-v1/woxi/README.md",
+      "sha256": "8f2bbe6bc81836cea98804b7d01bf36ebb4a263548f5de9781abbe6f34179311"
     },
     {
-      "file": "verification/calculator-v1/wolfram/results.md",
-      "sha256": "87304abbf1d8cce9a3bc8551da831d77a7dc25cfed26195142e25b279614a68b"
+      "file": "verification/calculator-v1/woxi/results.md",
+      "sha256": "aeb8c951a2e32b95254baaa5b035a02dde62fb1df340e2f6ad04df7d03f18c40"
     },
     {
       "file": "verification/component-review.md",
@@ -2380,11 +2540,15 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "0a8d0f3dfcfcb254b9d02817a88e569cae2b111fc8f9ee74a9db3432116436f2"
+      "sha256": "8845f7ca1c5fa24410cc404b8c264de99d492b6849120f9bc7f430c925d51aa6"
+    },
+    {
+      "file": "verification/linking/README.md",
+      "sha256": "0a610b93fdc58f5c767f9de35fa7238d220b5275a46d38f5c1454538c7ababc3"
     },
     {
       "file": "verification/m1-controls.md",
-      "sha256": "414cc380beb7ee37f9a6a0a914353456e6744f38aaa4facec71aae0587e4029f"
+      "sha256": "f0ba38db3e3213ff17f41c47d42e3003ca285c5ea79add33c077ab72addf1cc3"
     },
     {
       "file": "verification/m1-runbook.md",
@@ -2408,7 +2572,7 @@
     },
     {
       "file": "verification/m2-fragment.md",
-      "sha256": "8ababda14b992979b762fb511c5314f2338b796b0cbd73f81c3cd1d4590abfab"
+      "sha256": "04e70d93796a027f8709879d237451434c7c5c29549362679eab5539b34970b7"
     },
     {
       "file": "verification/m2-proof-evidence.md",
@@ -2448,27 +2612,63 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "55be263aad4c7f5bc7f263ab098a60e3e915e3bb9834e5764c72b50a9ff20bfb"
+      "sha256": "f80d0d0771012af28de555a1c758d1d3b952bf06d14b7f1bdc2ee1fb8432c4fe"
     },
     {
       "file": "verification/native-assurance.md",
       "sha256": "e6e381ad2ea608278dbefff5aed19cea444dd7487f19c33bec3253f999a125ac"
     },
     {
+      "file": "verification/ngraph-bytes-issue-31/README.md",
+      "sha256": "5892a19d00619e44e6d4480c7057c4a8c12b4cbddcd737bf87d7c20c3011966f"
+    },
+    {
       "file": "verification/ngraph/README.md",
       "sha256": "6bcee6d9286974bb1252700e0929181f2d7ee2bf9a49e9bc94714659af3dc999"
+    },
+    {
+      "file": "verification/numeric-graph-v1/architecture-exceptions.md",
+      "sha256": "2d7422589a2ed158eabbe594f2941bdfcc4a3e1e91849c4323bbf1d1a805aec0"
+    },
+    {
+      "file": "verification/numeric-graph-v1/ignored-result.md",
+      "sha256": "fe6761b04e8e18f7a038cf8ed31c4438d747fead4d9ba9005243ae4f0f8d0afa"
+    },
+    {
+      "file": "verification/numeric-graph-v1/output-buffer-arguments.md",
+      "sha256": "0f7aeb40038406e1276607d00fbdafdc413c9a4e0dfa36f25c2ad733bd3af82e"
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
       "sha256": "72b4fa9a4ed7a97abe7840744daead9061ddba0e5dd47003e011746c0fba9585"
     },
     {
+      "file": "verification/numeric-graph-v1/sentinel-fallback.md",
+      "sha256": "1de6e6d0f4065b90dba110f82eb6b6959f4585b12643d7d582f2dd2aa575cfd3"
+    },
+    {
+      "file": "verification/numeric-graph-v1/unchecked-narrowing.md",
+      "sha256": "6d44f8657dacadfe3d4d6656b7396e92dc0acbafea9fefc5205abb4bbb833641"
+    },
+    {
+      "file": "verification/octet-lint-clearance/README.md",
+      "sha256": "40cc865c18ccae3e95a72e39ac1f6e1831e2eabe32146685066d61e4a2124cd1"
+    },
+    {
+      "file": "verification/octet-plan-equivalence-20261019/README.md",
+      "sha256": "6e6ffb731ebd4cc5464da4d9055e4cc8b1ae163d6338d8652f50edaf3ffd8083"
+    },
+    {
       "file": "verification/source-inventory.md",
       "sha256": "ecdaee17164bc84f0e1578c036e5802137ab28210ae14e13233e5b1382d6bb50"
     },
     {
+      "file": "verification/stage2-guard-deadline/README.md",
+      "sha256": "f3de7e20bd52be044e215306ee57663995afe354be3f859112b77a368b201c89"
+    },
+    {
       "file": "verification/tool-selection.md",
-      "sha256": "07526daae6547b432a530bcb81817dd8f9dab40c0f903ad122d7e44af0a316b5"
+      "sha256": "f74efca39f7866167f975336a4e8107bb3296d0eb5c00051c9cb9a2f7654b28f"
     },
     {
       "file": "verification/wi03/README.md",

@@ -1,0 +1,78 @@
+{
+  "schema": "noble-scoped-test-receipt/v1",
+  "change": "worker-code-export-bound-effect",
+  "requirement": "H-HOST-02",
+  "scenario": "WORKER-12 source-bound denial adapter",
+  "tested_commit": "3e5f4a51bd922908e3d79a606838fcaf81164f00",
+  "run": {
+    "date": "2026-10-21",
+    "toolchain": {
+      "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+      "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)"
+    },
+    "environment": "pinned flake devShell (nix print-dev-env .#default) on a clean checkout of tested_commit",
+    "invocation": "cargo test <target> <test> -- --exact --nocapture, once per row below",
+    "log": "/home/brittonr/.cache/noble-issues/logs/worker12/scoped-3e5f4a51.log",
+    "log_sha256": "89731103d92b2b40aaf9f20153d41a4146ed28f15b0617ec0b02b75e1f90699f"
+  },
+  "tests": [
+    {
+      "target": "-p noble-wasm --test nominal",
+      "test": "bound_code_export_compiles_real_deny_only_slot_import",
+      "result": "ok",
+      "observes": "Typed emission: the invoked bound operation imports exactly noble/test_code_export_bound (i32) -> i32 and calls it with slot 9 only; the test.emit import is absent; a forged empty effect row is Invalid before emission."
+    },
+    {
+      "target": "-p noble-wasm --test nominal",
+      "test": "bound_code_export_stays_failed_when_host_reports_success",
+      "result": "ok",
+      "observes": "Real Wasmtime execution of the compiled ledger@1.capture fixture: with a host import that returns 0 and with one that traps, the host sees exactly one request carrying only slot 9 and the invocation's $failure stays at terminal code 5."
+    },
+    {
+      "target": "-p noble-wasm --lib",
+      "test": "component::tests::selected_pure_and_code_export_compile_only_exact_program_owners",
+      "result": "ok",
+      "observes": "A pure checked Program compiles through the worker-program own<program> ABI; the checked ledger@1.capture Program is refused by the test.emit selection, its latent code-export effect stays noncallable through programs.admit run, and only the request-code-export guest compiles without granting a direct effect."
+    },
+    {
+      "target": "-p noble-kernel --test acceptance",
+      "test": "nominal::forgery::code_export_effect_requires_exact_text_pair_and_owner",
+      "result": "ok",
+      "observes": "Kernel registration refuses mismatched code-export adapter rows as InvalidRepresentation, admits the exact row as Behavior::BoundCodeExport(9) and refuses a forged effect row."
+    },
+    {
+      "target": "-p noble-contracts --test declared",
+      "test": "cases::part7::code_export_binding_checks_capture_destination_and_owner_effect",
+      "result": "ok",
+      "observes": "Source checking yields the code-export I64 endomorphism interface (not the test.emit one) and refuses the source when the host-selected adapter binding is absent."
+    },
+    {
+      "target": "-p noble-contracts --test component",
+      "test": "worker_code_export_requires_exact_checked_effect_and_consumed_program_owner",
+      "result": "ok",
+      "observes": "The checked I64 -- I64 ! test.code-export interface is refused by the pure and test.emit selections; the code-export selection's request-code-export import takes own<program> and a string and returns a boolean; the effect is known but its witness grants no import authority."
+    },
+    {
+      "target": "-p noble-cli --bin noble",
+      "test": "core::worker_program_guest::tests::checked_private_text_code_export_request_is_redacted_and_default_denied",
+      "result": "ok",
+      "observes": "Real installed guest: the WIT export request is denied at export authorization with 1 guest request, 0 protected operations, no capture publication and a recorded denial; the private Text never appears in the report; the source-bound Core invocation is denied."
+    },
+    {
+      "target": "-p noble-cli --test worker_host_child",
+      "test": "wit_owner_request_and_core_bound_effect_are_separately_denied",
+      "result": "ok",
+      "observes": "The noble worker program test-host child runs the compiled guest: the WIT owner request and the Core bound effect are separately denied (core_requests 1, core_denials 1, protected_operations 0, completed_invocations 0, capture_published false) and stdout/stderr never contain the private markers."
+    }
+  ],
+  "summary": {
+    "tests": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "non_claims": [
+    "WORKER-12 stays implementation absent, execution not-run, proof open and trust unassessed: this receipt covers the adapter slice, not the case's independent component scenario.",
+    "No positive code export, issuer or package publication exists or is exercised.",
+    "Scoped tests are not a gate pass and discharge no proof obligation."
+  ]
+}
