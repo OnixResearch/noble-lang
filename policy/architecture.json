@@ -48,7 +48,7 @@
     "max_artifact_bytes": 268435456,
     "max_calls": 65536,
     "max_configurations": 4096,
-    "max_constructors": 32768,
+    "max_constructors": 65536,
     "max_effects": 4096,
     "max_expansions": 16384,
     "max_function_safety_facts": 4096,

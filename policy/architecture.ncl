@@ -408,6 +408,14 @@ let contracts = import "./architecture.contracts.ncl" in
     # constructors, 8,857 expansions, 4,398 items, 2,196 configuration facts
     # and at least 39,624 distinct fact spans; the five exceeded caps below are
     # doubled once and every other cap is unchanged.
+    # MW1 entry gates (2026-10-22): the worker preparation service, declared
+    # v2 schema modules and the typed worker's bounded execution profile grow
+    # the same shard. A scratch collection of 174310c4 with every count cap
+    # quadrupled observed expected=96, observed=96, 0 missing, 0 invalid
+    # shards, status=complete, and a 232,698,608-byte IR. The CLI noble
+    # bin+test shard had 32,926 constructors, over the 32,768 cap, with 38,339
+    # calls, 9,263 expansions, 4,630 items, 2,275 configuration facts and at
+    # least 41,366 distinct fact spans; only the constructor cap is doubled.
     max_units = 96,
     max_shards = 96,
     # M7's kernel dataspace module pushes both kernel library shards over the
@@ -424,7 +432,7 @@ let contracts = import "./architecture.contracts.ncl" in
     # Double both bounds for one complete re-collection; truncation is never
     # an inventory.
     max_calls = 65536,
-    max_constructors = 32768,
+    max_constructors = 65536,
     max_effects = 4096,
     max_expansions = 16384,
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
