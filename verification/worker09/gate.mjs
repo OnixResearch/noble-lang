@@ -123,8 +123,11 @@ function main() {
     if (!report) { failures.push(`${variant.case}: no retained report`); continue; }
     const observed = report.outcome;
     const typedOutput = report.typed_output !== null && report.typed_output !== undefined;
-    rows.push({ variant: variant.case, row: ROW[variant.case], expected: variant.outcome, observed,
-      typed_output: typedOutput, diagnostic: report.diagnostic ?? null, interruption: report.interruption ?? null });
+    const matches = observed === OUTCOME[variant.outcome] && typedOutput === variant.typed_output
+      && report.stage === 'execution';
+    rows.push({ variant: variant.case, row: ROW[variant.case], execution: matches ? 'passed' : 'failed',
+      expected: variant.outcome, observed, typed_output: typedOutput, diagnostic: report.diagnostic ?? null,
+      interruption: report.interruption ?? null });
     if (observed !== OUTCOME[variant.outcome]) failures.push(`${variant.case}: expected ${variant.outcome}, observed ${observed}`);
     if (typedOutput !== variant.typed_output) failures.push(`${variant.case}: typed_output ${typedOutput}`);
     if (report.stage !== 'execution') failures.push(`${variant.case}: stopped at stage ${report.stage}`);
