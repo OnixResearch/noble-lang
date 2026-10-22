@@ -225,6 +225,15 @@ fn main() -> std::process::ExitCode {
     if arguments
         .first()
         .is_some_and(|argument| argument == "worker")
+        && arguments
+            .get(1)
+            .is_some_and(|argument| argument == "prepare")
+    {
+        return core::worker_typed::run_prepare(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "worker")
         && arguments.get(1).is_some_and(|argument| argument == "shell")
     {
         return core::worker_shell::run(&arguments);

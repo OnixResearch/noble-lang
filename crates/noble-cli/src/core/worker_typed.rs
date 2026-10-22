@@ -10,6 +10,11 @@ use serde_json::{json, Value};
 
 const USAGE: &str =
     "usage: noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON";
+const PREPARE_USAGE: &str = "usage: noble worker prepare SOURCE --schema SCHEMA --out PACKAGE";
+const PACKAGE_BYTES: usize = 262_144;
+/// The typed engine refuses a worker literal arena that ends beyond this.
+const LITERAL_ARENA_END: u32 = 983_040;
+const BUILTIN_COUNT: u32 = 22;
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
     nodes: 4_096,
@@ -171,10 +176,30 @@ fn report(
     }
 }
 
-fn selected_schema(
-    checked: &noble_contracts::source::ModulePrepared,
-    package: &Package,
+/// The host schema must be one ordinary checked module.
+fn schema_module(
+    session: &noble_contracts::source::ModuleSession,
     schema_source: &[u8],
+) -> Result<noble_contracts::source::ModulePrepared, Failure> {
+    let checked = attempt!(session
+        .prepare(schema_source, &[], LIMITS)
+        .map_err(Failure::source));
+    if checked.kind() != noble_contracts::source::ModuleKind::Module
+        || checked.proof_obligations().is_some()
+        || !checked.bindings().is_empty()
+    {
+        return Err(failure(
+            "unsupported",
+            "host schema requires an ordinary checked module",
+        ));
+    }
+    Ok(checked)
+}
+
+/// The checked catalog of exactly the four local WorkerData@1 nominal types,
+/// with State, Event, Action and AttemptId resolved from the module's exports.
+fn schema_catalog(
+    checked: &noble_contracts::source::ModulePrepared,
 ) -> Result<(Vec<Schema>, [Ty; 4]), Failure> {
     let (module_id, _, _) = attempt!(checked
         .resolved_module()
@@ -231,43 +256,53 @@ fn selected_schema(
             ));
         }
     }
+    Ok((catalog, [state, event, action, attempt_id]))
+}
+
+/// The catalog rows of the selected interface's State, Event and Action.
+fn interface_rows<'rows>(
+    catalog: &'rows [Schema],
+    types: &[Ty; 4],
+) -> Result<[&'rows Schema; 3], Failure> {
+    let row = |ty: &Ty, missing: &'static str| {
+        catalog
+            .iter()
+            .find(|row| &row.ty == ty)
+            .ok_or_else(|| failure("invalid-input", missing))
+    };
+    Ok([
+        attempt!(row(&types[0], "missing State schema")),
+        attempt!(row(&types[1], "missing Event schema")),
+        attempt!(row(&types[2], "missing Action schema")),
+    ])
+}
+
+/// The host catalog, bound to a package's schema rows and declared
+/// interface claim (WORKER-02).
+fn selected_schema(
+    checked: &noble_contracts::source::ModulePrepared,
+    package: &Package,
+    schema_source: &[u8],
+) -> Result<(Vec<Schema>, [Ty; 4]), Failure> {
+    let (catalog, types) = attempt!(schema_catalog(checked));
     attempt!(package.bind_schemas(&catalog, schema_source).map_err(|_| {
         failure(
             "schema-reject",
             "package schema rows differ from the checked host schema catalog",
         )
     }));
-    let state_schema = catalog
-        .iter()
-        .find(|row| row.ty == state)
-        .ok_or_else(|| failure("invalid-input", "missing State schema"))?;
-    let event_schema = catalog
-        .iter()
-        .find(|row| row.ty == event)
-        .ok_or_else(|| failure("invalid-input", "missing Event schema"))?;
-    let action_schema = catalog
-        .iter()
-        .find(|row| row.ty == action)
-        .ok_or_else(|| failure("invalid-input", "missing Action schema"))?;
+    let [state, event, action] = attempt!(interface_rows(&catalog, &types));
     attempt!(package
-        .check_interface(&catalog, state_schema, event_schema, action_schema)
+        .check_interface(&catalog, state, event, action)
         .map_err(interface_failure));
-    Ok((catalog, [state, event, action, attempt_id]))
+    Ok((catalog, types))
 }
 
-fn checked_program(
-    session: noble_contracts::source::ModuleSession,
-    package: &Package,
-    input: &[Ty; 4],
-) -> Result<
-    (
-        noble_contracts::source::ModulePrepared,
-        noble_contracts::source::CheckedProgramOwner,
-        noble_contracts::source::ModuleSession,
-    ),
-    Failure,
-> {
-    let source = package.source().as_bytes();
+/// The root must be one ordinary pure module that declares no nominal types.
+fn root_module(
+    session: &noble_contracts::source::ModuleSession,
+    source: &[u8],
+) -> Result<noble_contracts::source::ModulePrepared, Failure> {
     let declared = attempt!(session
         .prepare(source, &[], LIMITS)
         .map_err(Failure::source));
@@ -283,19 +318,48 @@ fn checked_program(
             "worker package must contain one ordinary pure module",
         ));
     }
-    let owner = attempt!(declared
-        .checked_program_owner("transition")
-        .ok_or_else(|| failure(
+    Ok(declared)
+}
+
+/// The checked owner of the exported `transition` Program.
+fn root_owner(
+    declared: &noble_contracts::source::ModulePrepared,
+) -> Result<noble_contracts::source::CheckedProgramOwner, Failure> {
+    declared.checked_program_owner("transition").ok_or_else(|| {
+        failure(
             "invalid-input",
-            "package has no checked exported transition Program"
-        )));
-    let closure = attempt!(declared
-        .checked_program_closure("transition")
-        .map_err(|_| failure(
+            "package has no checked exported transition Program",
+        )
+    })
+}
+
+/// The checked, acyclic local closure of the exported `transition`.
+fn root_closure(
+    declared: &noble_contracts::source::ModulePrepared,
+) -> Result<Vec<noble_contracts::source::CheckedProgramOwner>, Failure> {
+    declared.checked_program_closure("transition").map_err(|_| {
+        failure(
             "invalid-input",
-            "package has a cyclic, foreign, or unreachable definition"
-        )));
-    attempt!(package.bind_owner(&owner, &closure).map_err(value_failure));
+            "package has a cyclic, foreign, or unreachable definition",
+        )
+    })
+}
+
+/// Commit the checked root and check its exact invocation against the
+/// selected `State Event -- State List<Action> ! {}` interface.
+fn checked_transition(
+    session: noble_contracts::source::ModuleSession,
+    declared: noble_contracts::source::ModulePrepared,
+    owner: noble_contracts::source::CheckedProgramOwner,
+    input: &[Ty; 4],
+) -> Result<
+    (
+        noble_contracts::source::ModulePrepared,
+        noble_contracts::source::CheckedProgramOwner,
+        noble_contracts::source::ModuleSession,
+    ),
+    Failure,
+> {
     let (module_id, module_name, version) = attempt!(declared
         .resolved_module()
         .ok_or_else(|| failure("invalid-input", "missing checked root module")));
@@ -365,6 +429,305 @@ fn checked_program(
     Ok((prepared, owner, session))
 }
 
+fn checked_program(
+    session: noble_contracts::source::ModuleSession,
+    package: &Package,
+    input: &[Ty; 4],
+) -> Result<
+    (
+        noble_contracts::source::ModulePrepared,
+        noble_contracts::source::CheckedProgramOwner,
+        noble_contracts::source::ModuleSession,
+    ),
+    Failure,
+> {
+    let declared = attempt!(root_module(&session, package.source().as_bytes()));
+    let owner = attempt!(root_owner(&declared));
+    let closure = attempt!(root_closure(&declared));
+    attempt!(package.bind_owner(&owner, &closure).map_err(value_failure));
+    checked_transition(session, declared, owner, input)
+}
+
+fn owner_record(owner: &noble_contracts::source::CheckedProgramOwner) -> Value {
+    json!({"module_id":owner.module_identity().to_string(),
+        "version":owner.module_version(),"definition_ordinal":owner.definition_ordinal(),
+        "definition_identity":owner.definition_identity().to_string(),
+        "checked_named_slot":owner.definition_slot()})
+}
+
+/// The local v1 package for one checked root. Every field derives from the
+/// checked owner and closure, the host catalog and the selected interface;
+/// admission re-derives and compares each of them.
+fn package_manifest(
+    source: &str,
+    schema_source: &[u8],
+    catalog: &[Schema],
+    types: &[Ty; 4],
+    owner: &noble_contracts::source::CheckedProgramOwner,
+    closure: &[noble_contracts::source::CheckedProgramOwner],
+) -> Result<Value, Failure> {
+    let [state, event, action] = attempt!(interface_rows(catalog, types));
+    let schema_sha = crate::workflow::intrinsic::sha256(schema_source);
+    let source_sha = crate::workflow::intrinsic::sha256(source.as_bytes());
+    let definitions: Vec<Value> = closure
+        .iter()
+        .map(|definition| {
+            json!({
+                "module_id":definition.module_identity().to_string(),
+                "version":definition.module_version(),
+                "definition_ordinal":definition.definition_ordinal(),
+                "definition_identity":definition.definition_identity().to_string(),
+                "source_utf8":source,"source_sha256":source_sha
+            })
+        })
+        .collect();
+    let mut builtins = Vec::with_capacity(BUILTIN_COUNT as usize);
+    for ordinal in 0..BUILTIN_COUNT {
+        let name = attempt!(noble_contracts::source::pure_builtin_spelling(ordinal)
+            .ok_or_else(|| failure("internal-failure", "pure builtin table is incomplete")));
+        builtins.push(json!({"ordinal":ordinal,"name":name,
+            "semantic_revision":super::worker_package::REVISION}));
+    }
+    Ok(json!({
+        "format":"noble-worker-local-package/v1",
+        "semantic_revision":super::worker_package::REVISION,
+        "root":{"source_utf8":source,"module_id":owner.module_identity().to_string(),
+            "version":owner.module_version(),"definition_ordinal":owner.definition_ordinal(),
+            "definition_identity":owner.definition_identity().to_string()},
+        "definitions":definitions,
+        "schemas":catalog.iter().map(|row| row.package_row(&schema_sha)).collect::<Vec<_>>(),
+        "builtins":builtins,
+        "host_contracts":[],"captures":[],"artifact":null,
+        "interface":{"inputs":[state.wire(),event.wire()],
+            "outputs":[state.wire(),{"list":action.wire()}],"effects":[]}
+    }))
+}
+
+/// Service effects of one explicit preparation, each counted where the
+/// service does that work. They are the host compiler service's effects,
+/// never the candidate's latent effects: the service starts no engine.
+#[derive(Default)]
+pub(super) struct PreparationTrace {
+    stage: &'static str,
+    input_files_read: u32,
+    source_checks: u32,
+    closure_walks: u32,
+    backend_compilations: u32,
+    packages_written: u32,
+    owner: Option<Value>,
+    wat_sha256: Option<String>,
+}
+
+impl PreparationTrace {
+    fn enter(&mut self, stage: &'static str) {
+        self.stage = stage;
+    }
+    fn count(counter: &mut u32) {
+        *counter = counter.saturating_add(1);
+    }
+}
+
+/// The explicit host preparation service of the local Worker-Typed profile.
+/// Only `source` comes from the candidate. The host selects the schema
+/// module, the exact `State Event -- State List<Action> ! {}` interface, the
+/// `transition` root, the limits and the encoding. Each stage runs only after
+/// the previous one succeeded, so a refusal enters no later stage, and the
+/// returned package is exactly what admission accepts.
+pub(super) fn prepare(
+    source: &[u8],
+    schema: &[u8],
+    trace: &mut PreparationTrace,
+) -> Result<Vec<u8>, Failure> {
+    trace.enter("inputs");
+    let text = attempt!(std::str::from_utf8(source)
+        .map_err(|_| failure("invalid-input", "worker source must be UTF-8 text")));
+    let retained = attempt!(noble_contracts::source::RetainedSourceLimit::new(
+        RETAINED_SCHEMA_ROOT_BYTES
+    )
+    .ok_or_else(|| failure("internal-failure", "Worker retained source limit")));
+    let session = attempt!(
+        noble_contracts::source::ModuleSession::new(&[], retained).map_err(Failure::source)
+    );
+    trace.enter("schema-check");
+    PreparationTrace::count(&mut trace.source_checks);
+    let schema_checked = attempt!(schema_module(&session, schema));
+    let (catalog, types) = attempt!(schema_catalog(&schema_checked));
+    let (session, linked) = session.commit(schema_checked);
+    attempt!(linked.map_err(Failure::source));
+    trace.enter("root-check");
+    PreparationTrace::count(&mut trace.source_checks);
+    let declared = attempt!(root_module(&session, source));
+    let owner = attempt!(root_owner(&declared));
+    trace.owner = Some(owner_record(&owner));
+    PreparationTrace::count(&mut trace.closure_walks);
+    let closure = attempt!(root_closure(&declared));
+    trace.enter("transition-check");
+    PreparationTrace::count(&mut trace.source_checks);
+    let (checked, owner, _session) = attempt!(checked_transition(session, declared, owner, &types));
+    let submission = attempt!(checked
+        .submission()
+        .ok_or_else(|| failure("invalid-input", "checked Program body absent")));
+    trace.enter("backend");
+    PreparationTrace::count(&mut trace.backend_compilations);
+    let compiled = attempt!(noble_wasm::source::Compiler::new_worker()
+        .prepare(submission)
+        .map_err(Failure::backend));
+    if compiled
+        .worker_literal_end()
+        .is_none_or(|end| end > LITERAL_ARENA_END)
+    {
+        return Err(failure(
+            "exhausted",
+            "worker literal arena exceeds the typed engine bound",
+        ));
+    }
+    trace.wat_sha256 = Some(crate::workflow::intrinsic::sha256(compiled.wat()));
+    trace.enter("encode");
+    let manifest = attempt!(package_manifest(
+        text, schema, &catalog, &types, &owner, &closure
+    ));
+    let bytes = attempt!(serde_json::to_vec(&manifest)
+        .map_err(|_| failure("internal-failure", "worker package encoding failed")));
+    if bytes.len() > PACKAGE_BYTES {
+        return Err(failure(
+            "exhausted",
+            "worker package exceeds its byte limit",
+        ));
+    }
+    attempt!(Package::parse(&bytes).map_err(value_failure));
+    Ok(bytes)
+}
+
+fn preparation_report(
+    outcome: &str,
+    trace: &PreparationTrace,
+    source: Option<&[u8]>,
+    schema: Option<&[u8]>,
+    package: Option<&[u8]>,
+    diagnostic: Option<&str>,
+) -> Report {
+    let value = json!({
+        "schema":"noble-worker-preparation/v1", "profile":"Worker-Typed-Local",
+        "service":"worker-prepare", "stage":trace.stage, "outcome":outcome,
+        "interface":"State Event -- State List<Action> ! {}", "root_export":"transition",
+        "limits":{"bytes":LIMITS.bytes,"nodes":LIMITS.nodes,"depth":LIMITS.depth,
+            "work":LIMITS.work,"retained_source_bytes":RETAINED_SCHEMA_ROOT_BYTES,
+            "package_bytes":PACKAGE_BYTES},
+        "candidate_source_sha256":source.map(crate::workflow::intrinsic::sha256),
+        "schema_source_sha256":schema.map(crate::workflow::intrinsic::sha256),
+        "service_effects":{"input_files_read":trace.input_files_read,
+            "source_checks":trace.source_checks,"closure_walks":trace.closure_walks,
+            "backend_compilations":trace.backend_compilations,
+            "packages_written":trace.packages_written},
+        "checked_program_owner":trace.owner, "wat_sha256":trace.wat_sha256,
+        "package_sha256":package.map(crate::workflow::intrinsic::sha256),
+        "package_bytes":package.map(<[u8]>::len),
+        "diagnostic":diagnostic.map(bounded_diagnostic),
+    });
+    Report {
+        outcome: outcome.to_owned(),
+        json: value.to_string(),
+    }
+}
+
+/// Publish only a new file. An existing destination is never overwritten.
+fn publish(destination: &std::path::Path, bytes: &[u8]) -> Result<(), Failure> {
+    let mut file = match std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(destination)
+    {
+        Ok(file) => file,
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            return Err(failure(
+                "invalid-input",
+                "package destination already exists",
+            ))
+        }
+        Err(error) => return Err(super::framing::io_error(error)),
+    };
+    std::io::Write::write_all(&mut file, bytes).map_err(super::framing::io_error)
+}
+
+fn prepare_command(arguments: &[std::ffi::OsString], trace: &mut PreparationTrace) -> Report {
+    trace.enter("inputs");
+    if arguments.len() != 7 || arguments[3] != "--schema" || arguments[5] != "--out" {
+        return preparation_report(
+            "invalid-input",
+            trace,
+            None,
+            None,
+            None,
+            Some(PREPARE_USAGE),
+        );
+    }
+    let mut inputs = Vec::with_capacity(2);
+    for index in [2, 4] {
+        match read_bounded_regular_file(std::path::Path::new(&arguments[index]), 65_536) {
+            Ok(bytes) => {
+                PreparationTrace::count(&mut trace.input_files_read);
+                inputs.push(bytes);
+            }
+            Err(problem) => {
+                return preparation_report(
+                    problem.context.outcome,
+                    trace,
+                    None,
+                    None,
+                    None,
+                    Some(&problem.message),
+                )
+            }
+        }
+    }
+    let (source, schema) = (inputs[0].as_slice(), inputs[1].as_slice());
+    let package = match prepare(source, schema, trace) {
+        Ok(package) => package,
+        Err(problem) => {
+            return preparation_report(
+                problem.context.outcome,
+                trace,
+                Some(source),
+                Some(schema),
+                None,
+                Some(&problem.message),
+            )
+        }
+    };
+    trace.enter("publish");
+    if let Err(problem) = publish(std::path::Path::new(&arguments[6]), &package) {
+        return preparation_report(
+            problem.context.outcome,
+            trace,
+            Some(source),
+            Some(schema),
+            None,
+            Some(&problem.message),
+        );
+    }
+    PreparationTrace::count(&mut trace.packages_written);
+    preparation_report(
+        "ready",
+        trace,
+        Some(source),
+        Some(schema),
+        Some(&package),
+        None,
+    )
+}
+
+/// `noble worker prepare`: one explicit host preparation, reported as its
+/// own service trace. It never evaluates; `noble worker typed` re-admits the
+/// published package in a separate invocation.
+pub(crate) fn run_prepare(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    let result = prepare_command(arguments, &mut PreparationTrace::default());
+    if let Err(error) = super::output::print(&result) {
+        eprintln!("noble: {}", error.message);
+        return std::process::ExitCode::from(error.exit());
+    }
+    std::process::ExitCode::from(result.exit())
+}
+
 pub(super) fn execute(
     package_bytes: &[u8],
     schema_bytes: &[u8],
@@ -377,18 +740,7 @@ pub(super) fn execute(
     let session = attempt!(
         noble_contracts::source::ModuleSession::new(&[], retained).map_err(Failure::source)
     );
-    let schema_checked = attempt!(session
-        .prepare(schema_bytes, &[], LIMITS)
-        .map_err(Failure::source));
-    if schema_checked.kind() != noble_contracts::source::ModuleKind::Module
-        || schema_checked.proof_obligations().is_some()
-        || !schema_checked.bindings().is_empty()
-    {
-        return Err(failure(
-            "unsupported",
-            "host schema requires an ordinary checked module",
-        ));
-    }
+    let schema_checked = attempt!(schema_module(&session, schema_bytes));
     let (catalog, types) = attempt!(selected_schema(&schema_checked, &package, schema_bytes));
     let (session, linked) = session.commit(schema_checked);
     attempt!(linked.map_err(Failure::source));
@@ -407,10 +759,7 @@ pub(super) fn execute(
     let compiled = attempt!(noble_wasm::source::Compiler::new_worker()
         .prepare(submission)
         .map_err(Failure::backend));
-    let owner_record = json!({"module_id":owner.module_identity().to_string(),
-        "version":owner.module_version(),"definition_ordinal":owner.definition_ordinal(),
-        "definition_identity":owner.definition_identity().to_string(),
-        "checked_named_slot":owner.definition_slot()});
+    let owner_record = owner_record(&owner);
     let input = attempt!(serde_json::to_string(&values)
         .map_err(|_| failure("internal-failure", "validated input encoding failed")));
     let mut engine = match super::worker::Engine::start_typed_worker() {
@@ -835,6 +1184,9 @@ mod tests {
     const WORKER_SCHEMA: &str = include_str!("../../tests/fixtures/worker-data.noble");
     const WORKER_TRANSITION: &str = include_str!("../../tests/fixtures/worker-transition.noble");
 
+    /// A package from the production encoder over a checked root owner and
+    /// closure. The transition-interface check is deliberately skipped so a
+    /// hostile control can carry a checked owner whose interface is wrong.
     fn fixture_with_source(
         schema_source: &str,
         source: &str,
@@ -846,76 +1198,29 @@ mod tests {
                 .expect("combined Worker schema and root source limit"),
         )
         .map_err(|error| format!("{error:?}"))?;
-        let checked = session
-            .prepare(schema_source.as_bytes(), &[], LIMITS)
-            .map_err(|error| format!("{error:?}"))?;
-        let selected = checked
-            .checked_nominals()
-            .ok_or("missing selected schema catalog")?;
-        let mut catalog = selected
-            .map(|declaration| Schema::checked(&declaration))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| format!("{error:?}"))?;
-        catalog.sort_by_key(|row| (row.id().module, row.id().ordinal));
-        let [state_ty, event_ty, action_ty, attempt_ty] = ["State", "Event", "Action", "AttemptId"]
-            .map(|name| {
-                checked
-                    .resolve_type(&format!("WorkerData@1.{name}"))
-                    .map_err(|error| format!("{error:?}"))
-            });
-        let state_ty = state_ty?;
-        let event_ty = event_ty?;
-        let action_ty = action_ty?;
-        let attempt_ty = attempt_ty?;
-        let selected_row = |ty: &Ty| -> Result<&Schema, String> {
-            catalog
-                .iter()
-                .find(|row| &row.ty == ty)
-                .ok_or("missing expected nominal".into())
-        };
-        let state_schema = selected_row(&state_ty)?;
-        let event_schema = selected_row(&event_ty)?;
-        let action_schema = selected_row(&action_ty)?;
-        let attempt_schema = selected_row(&attempt_ty)?;
-        let schema_sha = crate::workflow::intrinsic::sha256(schema_source.as_bytes());
+        let checked =
+            schema_module(&session, schema_source.as_bytes()).map_err(|error| error.message)?;
+        let (catalog, types) = schema_catalog(&checked).map_err(|error| error.message)?;
         let (session, linked) = session.commit(checked);
         linked.map_err(|error| format!("{error:?}"))?;
-        let declared = session
-            .prepare(source.as_bytes(), &[], LIMITS)
-            .map_err(|error| format!("{error:?}"))?;
-        let owner = declared
-            .checked_program_owner("transition")
-            .ok_or("checked owner absent")?;
-        let closure = declared
-            .checked_program_closure("transition")
-            .map_err(|_| "checked closure absent")?;
-        let source_sha = crate::workflow::intrinsic::sha256(source.as_bytes());
-        let definitions: Vec<Value> = closure
+        let declared = root_module(&session, source.as_bytes()).map_err(|error| error.message)?;
+        let owner = root_owner(&declared).map_err(|error| error.message)?;
+        let closure = root_closure(&declared).map_err(|error| error.message)?;
+        let manifest = package_manifest(
+            source,
+            schema_source.as_bytes(),
+            &catalog,
+            &types,
+            &owner,
+            &closure,
+        )
+        .map_err(|error| error.message)?;
+        let [state_schema, event_schema, _] =
+            interface_rows(&catalog, &types).map_err(|error| error.message)?;
+        let attempt_schema = catalog
             .iter()
-            .map(|definition| {
-                json!({
-                    "module_id":definition.module_identity().to_string(),
-                    "version":definition.module_version(),
-                    "definition_ordinal":definition.definition_ordinal(),
-                    "definition_identity":definition.definition_identity().to_string(),
-                    "source_utf8":source,"source_sha256":source_sha
-                })
-            })
-            .collect();
-        let manifest = json!({
-            "format":"noble-worker-local-package/v1","semantic_revision":"0.1.0-draft.5",
-            "root":{"source_utf8":source,"module_id":owner.module_identity().to_string(),
-                "version":owner.module_version(),"definition_ordinal":owner.definition_ordinal(),
-                "definition_identity":owner.definition_identity().to_string()},
-            "definitions":definitions,
-            "schemas":catalog.iter().map(|row| row.package_row(&schema_sha)).collect::<Vec<_>>(),
-            "builtins":(0..22).map(|id| json!({"ordinal":id,
-                "name":noble_contracts::source::pure_builtin_spelling(id).unwrap(),
-                "semantic_revision":"0.1.0-draft.5"})).collect::<Vec<_>>(),
-            "host_contracts":[],"captures":[],"artifact":null,
-            "interface":{"inputs":[state_schema.wire(),event_schema.wire()],
-                "outputs":[state_schema.wire(),{"list":action_schema.wire()}],"effects":[]}
-        });
+            .find(|row| row.ty == types[3])
+            .ok_or("missing AttemptId schema")?;
         let state = json!({"format":"noble-worker-value/v1","expected_schema":state_schema.wire(),
             "value":{"tag":"opaque","schema":state_schema.wire(),
                 "value":{"tag":"pair","left":{"tag":"i64","value":"0"},
@@ -1616,6 +1921,195 @@ mod tests {
             let outcome = refused(&variant.manifest, SCHEMA)?;
             if outcome != "interface-reject" {
                 return Err(format!("{name}: expected interface-reject, got {outcome}"));
+            }
+        }
+        Ok(())
+    }
+
+    /// The accepted WORKER-02 baseline package (sha256 of
+    /// `verification/worker02/fixtures/package.json`).
+    const ACCEPTED_BASELINE_PACKAGE_SHA256: &str =
+        "8a1bb3c6ac496a19246663cfd42211be6aa45d52deafc7284fa318af32d62681";
+
+    #[test]
+    fn preparation_service_reproduces_the_accepted_baseline_that_admission_runs(
+    ) -> Result<(), String> {
+        let mut trace = PreparationTrace::default();
+        let package = prepare(SOURCE.as_bytes(), SCHEMA.as_bytes(), &mut trace)
+            .map_err(|problem| problem.message)?;
+        assert_eq!(
+            crate::workflow::intrinsic::sha256(&package),
+            ACCEPTED_BASELINE_PACKAGE_SHA256
+        );
+        assert_eq!(
+            (
+                trace.source_checks,
+                trace.closure_walks,
+                trace.backend_compilations
+            ),
+            (3, 1, 1)
+        );
+        let repeated = prepare(
+            SOURCE.as_bytes(),
+            SCHEMA.as_bytes(),
+            &mut PreparationTrace::default(),
+        )
+        .map_err(|problem| problem.message)?;
+        assert_eq!(repeated, package, "preparation is deterministic");
+        // Evaluation re-admits the untrusted package and runs exactly the
+        // module the service compiled.
+        let frames = fixture()?;
+        let report = execute(&package, SCHEMA.as_bytes(), &frames.state, &frames.event)
+            .map_err(|problem| problem.message)?;
+        let report: Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        assert_eq!(report["outcome"], "normal");
+        assert_eq!(report["guest_requests"], 0);
+        assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
+
+        // The multi-definition transition table: three closure rows, one
+        // compilation, and admission runs the prepared package.
+        let mut trace = PreparationTrace::default();
+        let table = prepare(
+            WORKER_TRANSITION.as_bytes(),
+            WORKER_SCHEMA.as_bytes(),
+            &mut trace,
+        )
+        .map_err(|problem| problem.message)?;
+        let document: Value = serde_json::from_slice(&table).map_err(|error| error.to_string())?;
+        assert_eq!(document["definitions"].as_array().map(Vec::len), Some(3));
+        let frames = fixture_with_source(
+            WORKER_SCHEMA,
+            WORKER_TRANSITION,
+            json!({"tag":"i64","value":"1"}),
+        )?;
+        let state = worker_state(&frames, 0, None)?;
+        let event = worker_event(&frames, 1, Some("ping"))?;
+        let report = execute(&table, WORKER_SCHEMA.as_bytes(), &state, &event)
+            .map_err(|problem| problem.message)?;
+        let report: Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        assert_eq!(report["outcome"], "normal");
+        assert_eq!(report["typed_output"]["actions"]["items"][0]["arm"], "left");
+        assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
+        Ok(())
+    }
+
+    /// A refused candidate returns no package, and its trace shows the stage
+    /// that refused it and no work of any later stage.
+    #[test]
+    fn preparation_refusals_stop_at_their_stage_without_a_package() -> Result<(), String> {
+        let other_schema = SCHEMA.replacen("module WorkerData@1", "module OtherData@1", 1);
+        let reversed = "module worker@1 [ export transition \
+            def transition [ swap drop unit WorkerData@1.Action.Noop nil cons ] ]";
+        let extra = "module worker@1 [ export transition \
+            def transition [ drop unit WorkerData@1.Action.Noop nil cons 0 ] ]";
+        let nominal = "module worker@1 [ opaque Hidden I64 public export transition \
+            def transition [ drop unit WorkerData@1.Action.Noop nil cons ] ]";
+        let unexported =
+            "module worker@1 [ def transition [ drop unit WorkerData@1.Action.Noop nil cons ] ]";
+        // Name, candidate source, host schema, refusing stage, outcome, and
+        // the checker stages, closure walks and compilations entered.
+        type Case<'case> = (
+            &'case str,
+            &'case [u8],
+            &'case str,
+            &'case str,
+            &'case str,
+            (u32, u32, u32),
+        );
+        let cases: [Case<'_>; 9] = [
+            (
+                "non-UTF-8 source",
+                b"module worker@1 [ \xff ]",
+                SCHEMA,
+                "inputs",
+                "invalid-input",
+                (0, 0, 0),
+            ),
+            (
+                "schema outside WorkerData@1",
+                SOURCE.as_bytes(),
+                &other_schema,
+                "schema-check",
+                "unsupported",
+                (1, 0, 0),
+            ),
+            (
+                "unterminated root",
+                b"module worker@1 [ export transition def transition [ drop",
+                SCHEMA,
+                "root-check",
+                "reject",
+                (2, 0, 0),
+            ),
+            (
+                "unbound word",
+                b"module worker@1 [ export transition def transition [ frobnicate ] ]",
+                SCHEMA,
+                "root-check",
+                "unbound-word",
+                (2, 0, 0),
+            ),
+            (
+                "root declares a nominal type",
+                nominal.as_bytes(),
+                SCHEMA,
+                "root-check",
+                "unsupported",
+                (2, 0, 0),
+            ),
+            (
+                "no exported transition",
+                unexported.as_bytes(),
+                SCHEMA,
+                "root-check",
+                "invalid-input",
+                (2, 0, 0),
+            ),
+            (
+                "unused equal-body decoy",
+                COLLISION_SOURCE.as_bytes(),
+                SCHEMA,
+                "root-check",
+                "invalid-input",
+                (2, 1, 0),
+            ),
+            (
+                "reversed State Event stack",
+                reversed.as_bytes(),
+                SCHEMA,
+                "transition-check",
+                "interface-reject",
+                (3, 1, 0),
+            ),
+            (
+                "extra output value",
+                extra.as_bytes(),
+                SCHEMA,
+                "transition-check",
+                "interface-reject",
+                (3, 1, 0),
+            ),
+        ];
+        for (name, source, schema, stage, outcome, work) in cases {
+            let mut trace = PreparationTrace::default();
+            match prepare(source, schema.as_bytes(), &mut trace) {
+                Ok(_) => return Err(format!("{name}: a package was produced")),
+                Err(problem) => {
+                    assert_eq!(problem.context.outcome, outcome, "{name}");
+                    assert_eq!(trace.stage, stage, "{name}");
+                    assert_eq!(
+                        (
+                            trace.source_checks,
+                            trace.closure_walks,
+                            trace.backend_compilations
+                        ),
+                        work,
+                        "{name}"
+                    );
+                    assert!(trace.wat_sha256.is_none(), "{name}");
+                }
             }
         }
         Ok(())

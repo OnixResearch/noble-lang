@@ -101,6 +101,11 @@ pub const USAGE: &str = "usage:
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition
   before compiling and running one bounded State Event -- State List<Action> guest.
+  noble worker prepare SOURCE --schema SCHEMA --out PACKAGE
+  Explicit host preparation service: check candidate SOURCE against the host-selected
+  WorkerData@1 schema and the exact State Event -- State List<Action> ! {} transition,
+  compile it once, then write a new local package (never overwriting). Its JSON
+  trace counts only service effects; it starts no engine and runs no candidate body.
   noble worker shell PACKAGE --schema SCHEMA --state STATE --submit EVENT --cancel EVENT --authority HOST_GRANT
   Local synthetic-send shell: authorize checked inert Send against a separately
   selected exact grant, then cancel a pinned native task before late completion.
