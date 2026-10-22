@@ -93,7 +93,26 @@
         {"case": "unsupported-format-revision", "outcome": "unsupported"}
       ], "dependency_fetch_authority": "absent"},
       "expected": {"stage": "import-admission", "outcome": "no-variant-admitted", "guest_requests": 0, "protected_operations": 0, "implicit_fetches": 0, "version_substitutions": 0, "partial_programs_published": 0, "signature_or_digest_bypasses_checks": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Each of the seven declared hostile Worker Program v2 package variants is refused at import admission by the production importer, six as invalid and the unsupported revision as unsupported, with no source module installed, no file left behind and no guest run, while the three unmodified base packages import; this is not WORKER-04 identity preservation or a positive exporter.",
+        "subject": "WORKER-05", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:de7006ac3c4ef1fded76b430cd1af87d3307af7782bd70a9854061ed3bc7c1dd",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "hostile-worker-package", "receipt": "../../verification/worker05/acceptance.json",
+          "receipt_sha256": "10a5ee45edc610202734c9297a7e323a0562a1c0c4484ceacd6a278078208df7",
+          "gate": "verification/worker05/gate.mjs", "case": "WORKER-05", "tested_commit": "8719fa1b7cdeaab8f17601c24641a07a56215f0d",
+          "binary_sha256": "994be5d346e82709a341ccb2945107757e6658b013baff6b01de0b34442d7e97",
+          "command": "noble worker program import PACKAGE --effect-ceiling pure; noble worker program test-host emit-import < PACKAGE",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 15a7dfe0e3fbf089d9946ac6de1e4c748be43827944ea41450c173e30ced28d6); every mutated package and raw stdout/stderr retained under verification/worker05."
+        },
+        "assumptions": [
+          "Each variant mutates one claim of a valid canonical base package (pure Text, pure signed-recursive or host-bound test.emit) exported once by the in-crate test exporter; no CLI export route exists.",
+          "The host-contract variant is imported under the synthetic test embedder's preselected binding, the only binding such a row can match; the pure importer selects none.",
+          "implicit_fetches, version_substitutions and signature_or_digest_bypasses_checks are observed as refusals of the missing-dependency, wrong-version and invalid-body-with-digest variants; the importer has no fetch facility.",
+          "foreign-scoped-self-owner names another definition as the recursive definition's scoped self owner in package revision 0.1.0-draft.11; recursion is admitted only for pure Programs."
+        ]
+      }]
     },
     {
       "id": "WORKER-06", "profile": "Worker-Design", "kind": "admission",
