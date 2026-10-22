@@ -2476,7 +2476,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "fd4a5eedff7d8c6a3c40abc0acb702e6f7e3f69c0b54905573894429bbb7c496"
+      "sha256": "cc20571b3e6cc3813d0bd33693802ecfa62c91f885c10a2b2c86b4ded0a69658"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2644,7 +2644,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "09120dd8742c1c8f6a311dbdf47a10a1a5d609358749d840c8aefe15acded6b2"
+      "sha256": "a326feefa0408dff58f6b97b4dff9c06f18bfd37bb7493488fe8ee8ab9861769"
     },
     {
       "file": "verification/native-assurance.md",

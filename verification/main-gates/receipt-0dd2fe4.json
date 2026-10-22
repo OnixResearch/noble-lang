@@ -1,0 +1,200 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "tested_commit": "0dd2fe41c3f32de490e2502346c58a50085a1b24",
+  "base_upstream_commit": "bc3668121b4d3c0228b65355bff1d33165f709c3",
+  "flake_note": "All fourteen flake checks pass at 0dd2fe41 after the WORKER-12, T1, WORKER-05 and WORKER-06 work and the three remaining MW1 entry gates (Worker-Typed preparation service, declared WorkerData@1 schema modules for Worker Program v2, the typed worker's bounded execution profile). Each check ran from a clean detached worktree with nix build .#checks.x86_64-linux.<check> on the configured leviathan builder.",
+  "run": {
+    "date": "2026-10-22",
+    "worktree": "/var/tmp/noble-gate-0dd2",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check> (boundary-controls with --out-link /var/tmp/noble-bc-0dd2)",
+    "options": [
+      "--option min-free 0",
+      "--option max-free 0"
+    ],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/0dd2fe41"
+  },
+  "flake_checks": [
+    {
+      "check": "policy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 138,
+      "log_sha256": "51c75920ff6c57bc16d0b3dabde1132b43a60dab9aef5e8e6e9f690d6414b0df"
+    },
+    {
+      "check": "tool-selection",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 16,
+      "log_sha256": "0fca0b5b925b78df4aa30dc31ed43f617d548c704933cd145c200ad923264a88"
+    },
+    {
+      "check": "tool-overrides",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 689,
+      "log_sha256": "9245b0929845085ce75e7a5875c033c42f72e72b699c36f417280ecf85c80c38"
+    },
+    {
+      "check": "tool-versions",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 16,
+      "log_sha256": "15b8c0fd8a8a801c5584e18b3a58359c490e1d97f60121f7f07e8b7e75e05735"
+    },
+    {
+      "check": "format",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 25,
+      "log_sha256": "fc2cdd56db8efb77fd9c24a2b370cc5235fa491480a74584a033b4d1418eb58e"
+    },
+    {
+      "check": "clippy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 68,
+      "log_sha256": "6e4c7d2cd80690afea514b9068f358a19d41c6564be3821288411e4052ae87b3"
+    },
+    {
+      "check": "documents",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 55,
+      "log_sha256": "063ee0df9fbbcbbc33d9db9be7aa122ef8de8cb79dd33f62c9c85408b9ef68f1"
+    },
+    {
+      "check": "cairn",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 18,
+      "log_sha256": "9bebf8f9882c6d25ae3dd1cb81c7ec55ee9d4a913aa87a23c6c92f8bf0b33b11"
+    },
+    {
+      "check": "source-inventory-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 10,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observation": "The derivation builds silently; the empty log is its whole output."
+    },
+    {
+      "check": "octet",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 638,
+      "log_sha256": "892963b4f5f6126db0adff8a47bbce63d2a151d0dd0165ca4475d807b7b30ceb",
+      "observation": "noble-octet-gate --workspace -- --all-targets --all-features: status clean, lint phase clean, architecture phase clean, 0 architecture findings. Reaching clean took the reviewed request-budget expectations (71e6f430), two length/naming fixes (8dc625a0, d3fa394d), a split CLI test (174310c4) and one doubled constructor cap (f99b1d4a)."
+    },
+    {
+      "check": "source-coverage",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 832,
+      "log_sha256": "cd10483df06b802183d4b8157efc0cfc9b86537b1abef34a32570c795ccefc37",
+      "observation": "Sandboxed all-features inventory collection (96 of 96 units, complete) matches the renewed accounting in policy/source-inventory.ncl: 14520 production paths = 7495 body/open + 4031 generated + 2994 structural; 4955 test-only paths; 88 macro origins."
+    },
+    {
+      "check": "native-assurance",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 16,
+      "log_sha256": "ac0e92133b09779251985fc90a67488ee4deed3ee4187c5d528fdea91677b3d0",
+      "observation": "Valid with 0 diagnostics against the same collection; no dependency edge changed."
+    },
+    {
+      "check": "rust-tests",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 906,
+      "log_sha256": "198c7322188685788953bdc3edd1a7d636fa90abc0f4aa7e3f9a295f10b52b73",
+      "observation": "85 test binaries, 788 passed, 0 failed, 7 ignored. Includes the preparation, declared-schema and bounded-execution tests added for the MW1 entry gates."
+    },
+    {
+      "check": "boundary-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 3499,
+      "log_sha256": "901d1b64499d50730abe955dc0b2c5ba1d69ab0de2402cb8adab38ada2cb77a0",
+      "output": "/nix/store/756qkj4959sn8vwb0fxr15fwzfv7livv-noble-boundary-controls",
+      "output_nar_hash": "sha256-/AIvTUh1ulb6hAsqZXCrkdg3icIuzDNr+9xpcE+jM2c=",
+      "output_nar_size": "7.9 KiB",
+      "output_closure_size": "16.1 GiB",
+      "observation": "All 18 cases report passed (not M1 acceptance): 2 positive baselines and 16 rejected fixtures. The single invocation ran beside the other thirteen checks and finished in 3499 s, inside its 3500 s timeout."
+    }
+  ],
+  "rust_tests": {
+    "binaries": 85,
+    "passed": 788,
+    "failed": 0,
+    "ignored": 7,
+    "log_sha256": "198c7322188685788953bdc3edd1a7d636fa90abc0f4aa7e3f9a295f10b52b73"
+  },
+  "additional_verification": [
+    {
+      "subject": "WORKER-02, WORKER-05, WORKER-06 and WORKER-12 acceptance replays",
+      "commit": "0dd2fe41",
+      "result": "passed",
+      "command": "node verification/<case>/gate.mjs --out /var/tmp/<case>-final (pinned devShell)",
+      "receipt_sha256": {
+        "worker02": "27ebcdde335a6176a4f77c8e69e41a9bc2840c293be45443ba9af2269ed102bd",
+        "worker05": "a9f853360b025939ee0ab755886845ffc398598ddb10c6737800b793f8f70f04",
+        "worker06": "c1de3c45ab183612953aa034c34239adbcaeae60a075484e5b2adab4c2e1371c",
+        "worker12": "68ca8e87d7478e4fb6f34f750dbdf7ab546bad498a45e7832ce3b89807bd140e"
+      },
+      "observation": "Each gate rebuilt noble from the clean source scope and matched its case; the accepted evidence stays bound to each case's own receipt."
+    },
+    {
+      "subject": "MW1 entry-gate CLI smoke",
+      "commit": "0dd2fe41",
+      "result": "passed",
+      "observation": "noble worker prepare published a package (3 checker stages, 1 closure walk, 1 compilation, 1 write); noble worker program check --schema admitted the WorkerData@1 transition (3 dependencies); noble worker typed ran the WORKER-02 baseline normally under worker-typed/step-4096/interrupt-8 with 5 interruption checks and an observed maximum of 8 units between them."
+    }
+  ],
+  "repairs": [
+    {
+      "commit": "7215cbf7",
+      "fix": "Explicit Worker-Typed preparation service with a separate service trace; the prepared WORKER-02 baseline is byte-identical to the accepted package."
+    },
+    {
+      "commit": "ab9b9b0d",
+      "fix": "Declared WorkerData@1 schema modules for Worker Program v2; package revision 0.1.0-draft.12 records schema rows; WORKER-05/06 gate inputs regenerated."
+    },
+    {
+      "commit": "2a08beb2",
+      "fix": "Bounded execution profile for the typed worker: host interruption every eighth charged unit and distinct cancelled, host-deadline, trap and internal-failure outcomes."
+    },
+    {
+      "commit": "71e6f430",
+      "fix": "Reviewed Octet expectations for the K-CHECK-07 request budget (Rc<Cell<u32>>) and moved origin-replay expectations with their body."
+    },
+    {
+      "commit": "8dc625a0",
+      "fix": "Keep the emitted import writer under 70 lines; drop an unfulfilled expectation."
+    },
+    {
+      "commit": "d3fa394d",
+      "fix": "Rename the import helper so it does not repeat its module name."
+    },
+    {
+      "commit": "174310c4",
+      "fix": "Split the preparation CLI test and its compound assertion."
+    },
+    {
+      "commit": "f99b1d4a",
+      "fix": "Double only max_constructors (CLI bin+test shard measured 32,926 constructors)."
+    },
+    {
+      "commit": "0dd2fe41",
+      "fix": "Renew source-inventory accounting from the gate's own complete collection."
+    }
+  ],
+  "non_claims": [
+    "Not M1, MW1 or any milestone acceptance; every check binds 0dd2fe41 only.",
+    "All 7495 authored production bodies remain open refinement obligations; inventory accounting is not proof.",
+    "The three entry gates are recorded as partial; WORKER-11 still lists all five MW1 entry gates as open, and WORKER-09 (two MW2 rows) is not promoted.",
+    "The K-CHECK-07 request budget keeps interior mutability in noble-contracts under reviewed Octet expectations; it is not an explicit-state design.",
+    "Worker Program v2 transition Programs cannot run as guests; the bounded execution profile covers only the typed worker engine."
+  ]
+}

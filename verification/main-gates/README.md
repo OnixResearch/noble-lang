@@ -1,5 +1,27 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-22 (all fourteen checks pass at `0dd2fe4`)
+
+The [receipt](receipt-0dd2fe4.json) records **14 PASS / 0 FAIL** at
+`0dd2fe41c3f32de490e2502346c58a50085a1b24`, after the WORKER-12, T1,
+WORKER-05 and WORKER-06 work and the three remaining MW1 entry gates: the
+Worker-Typed preparation service, declared `WorkerData@1` schema modules for
+Worker Program v2, and the typed worker's bounded execution profile.
+`rust-tests` reports 85 binaries, 788 passed, 0 failed and 7 ignored.
+`octet` is clean in both phases. The renewed inventory accounts for 14520
+production paths. `boundary-controls` passes all 18 cases in one 3499 s
+invocation beside the other thirteen checks.
+
+Reaching a clean `octet` took four lint repairs and one capacity change. The
+K-CHECK-07 request budget from `2d263eaf` is an `Rc<Cell<u32>>` in
+`noble-contracts`; its fields, impls and parameters now carry reviewed
+expectations (`71e6f430`) rather than an explicit-state redesign. The
+emitted import writer and the preparation CLI test were split (`8dc625a0`,
+`d3fa394d`, `174310c4`). The CLI `noble` bin+test shard grew to 32,926
+constructors, so only `max_constructors` doubles (`f99b1d4a`). Replays of
+the WORKER-02, 05, 06 and 12 gates at `0dd2fe41` pass. The pass binds
+`0dd2fe4` only and is not milestone acceptance.
+
 ## Checking change log — 2026-10-22 (all fourteen checks pass at `6e6f6ed`)
 
 The [receipt](receipt-6e6f6ed.json) records **14 PASS / 0 FAIL** at
