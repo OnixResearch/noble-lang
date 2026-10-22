@@ -45,7 +45,26 @@
         {"case": "heterogeneous-list-without-adapter", "outcome": "interface-reject"}
       ]},
       "expected": {"stage": "static", "outcome": "reject-each-variant", "guest_requests": 0, "protected_operations": 0, "dynamic_Any_fallback": false, "implicit_schema_conversion": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "All six declared WORKER-02 interface-rejection variants, and two checked-Program stack controls, are refused at admission by the production `noble worker typed` checker before any module is compiled or guest starts, with zero guest requests and zero protected operations; this is not WORKER-03 effect adaptation or v2 package admission.",
+        "subject": "WORKER-02", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:73297d975847350f2f3ee13dff2111262c2c2427a044053e8606ba27e41c3c76",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "worker-interface-rejection", "receipt": "../../verification/worker02/acceptance.json",
+          "receipt_sha256": "67a99ee3f580694ce425ca998871f22adcf80bef65132a0fc3605c17ecd9f84e",
+          "gate": "verification/worker02/gate.mjs", "case": "WORKER-02", "tested_commit": "34d5976997ee950d0aeecd0f8322b2a4ee71599e",
+          "binary_sha256": "3d60f98f6d0e3b6448b618de96716f7af55f8fba2cfb7d2f14a02a1defa48df2",
+          "command": "noble worker typed PACKAGE --schema SCHEMA --state STATE --event EVENT",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 4c2b784c6e5f1b330593e36af5cc5d88c15fc92a3b21015bc83d247447c6d422); raw stdout, stderr and package bytes retained under verification/worker02."
+        },
+        "assumptions": [
+          "The host selects the WorkerData@1 schema module and the exact State Event -- State List<Action> ! {} interface; the package and its declared interface are untrusted claims checked against them.",
+          "The six variants mutate one consumer-selected canonical local package; the two program controls are separately checked transitions whose own stacks are reversed or carry an extra output.",
+          "Worker v1 admits no captures, effects or adapters, so positive effect widening and adapter admission (WORKER-03) and v2 packages are not exercised.",
+          "dynamic_Any_fallback and implicit_schema_conversion are observed as refusals of the heterogeneous-list and same-layout variants, not as a general absence proof."
+        ]
+      }]
     },
     {
       "id": "WORKER-03", "profile": "Worker-Design", "kind": "runtime",
