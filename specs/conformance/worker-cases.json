@@ -231,7 +231,26 @@
         {"case": "runtime-internal-failure", "outcome": "internal-failure", "typed_output": false}
       ]},
       "expected": {"stage": "bounded-execution", "outcome": "each-outcome-distinct", "observed_max_guest_work_between_checks": 8, "pure_code_exempt_from_limits": false, "nested_budget_reset": false, "failed_output_exposed_as_T": false, "host_deadline_is_deterministic_fuel": false, "exhaustion_proves_divergence": false, "budget_silently_increased": false, "cross_backend_budget_equality_required": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "partial", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Under the typed worker profile worker-typed/step-4096/interrupt-8, the eight MW1 variants each produce their own outcome through the real engine: a finite step and a domain error arm return typed output; a pure runtime loop, an over-limit builder and outer plus nested run work exhaust at exactly 4096 steps while each part alone returns; a guest trap, cancellation at an interruption check and a host fault are distinct non-normal outcomes without typed output; the host observed at most 8 units of guest work between checks. The two native-async variants were not run.",
+        "subject": "WORKER-09", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:8615d8120292ab640bc7941b65fe5e9e25e213ffcedcf488967d1853cf6192b6",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "bounded-worker-execution", "receipt": "../../verification/worker09/acceptance.json",
+          "receipt_sha256": "a0fa7cdaa8f2cf53523b99c8f7df22891357cb10d8ac8a24e22d9df64f27529b",
+          "gate": "verification/worker09/gate.mjs", "case": "WORKER-09", "tested_commit": "0561841cb271e72fd1c3be1837dc0b6538a71519",
+          "binary_sha256": "fd0c4c8272f3cc724794ff533bde19c831f791a2982d232ba878523ab89b38b5",
+          "command": "noble unit-test binary: core::worker_typed::tests::bounded_execution_profile_keeps_each_outcome_distinct --exact (NOBLE_WORKER09_REPORT_DIR set)",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 7552f1899178c76ddcb3453cd88edd920be8d81cda6def511a07ff1b5d1ed3f5); every row and control report is retained under verification/worker09/raw."
+        },
+        "assumptions": [
+          "Coverage is the MW1 rows: host-deadline-native-work-outstanding and permitted-suspension need native task ownership and stay MW2 obligations with not-run results; implementation is therefore partial.",
+          "symbolic-test-profile-v1 maps to worker-typed/step-4096/interrupt-8; the case outcome names map to normal, runtime-exhausted, trap, cancelled and internal-failure.",
+          "Cancellation, the guest trap and the host fault are host-selected fault points in the test build; a zero wall-clock deadline shows host-deadline differing from deterministic exhaustion.",
+          "domain-Result-error uses an Action error arm because the worker schema catalog does not admit result@1.Result; the pure loop is runtime run amplification because pure source has no unbounded loop."
+        ]
+      }]
     },
     {
       "id": "WORKER-10", "profile": "Worker-Design", "kind": "runtime",
