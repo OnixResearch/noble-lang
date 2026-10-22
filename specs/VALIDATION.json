@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 551,
   "scenarios": 221,
-  "scenarios_executed": 134,
+  "scenarios_executed": 135,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -2404,7 +2404,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "b8991d447ab7389264a0cefe9fdee484d64121e38a62d41cf77fd272e15f37df"
+      "sha256": "58b0039c992e19611f414858c51f7f74932fccd381155587bb71593999ab2a3f"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2456,7 +2456,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "17c51ff20e6e42da5ac9cb226ae04650fab6971d96c0d8335b3ed82213dc142f"
+      "sha256": "2166df440585c49a1801c05a9457268b9a78c1e5ee15285e4151e438fc313d03"
     },
     {
       "file": "specs/SAFETY.md",

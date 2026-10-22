@@ -71,7 +71,26 @@
       "requirements": ["K-PROG-09", "K-PROG-10", "K-EFFECT-05", "K-PROG-06"],
       "input": {"harness": "runtime-selected-effect-adaptation", "operands_supplied_after_compilation": true, "compiler_service": "disabled", "program_interfaces": ["I64 -- I64 ! {}", "I64 -- I64 ! {test.emit}"], "destination_interface": "I64 -- I64 ! {test.emit}", "adaptation": "prechecked-effect-inclusion-rule", "operations": ["adapt", "store-in-list", "select", "duplicate", "compose"]},
       "expected": {"stage": "runtime-builders", "outcome": "checked-common-interface", "source_compiler_calls": 0, "guest_requests": 0, "protected_operations": 0, "recipe_nodes_unchanged_by_widening": true, "original_interface_unchanged": true, "destination_witness_retained": true, "duplicate_interfaces": "same-instantiation", "authority_created": false, "identity_comparison_includes_interface_witness": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "After one compilation of a closure holding a pure I64 -- I64 ! {} Program and a host-bound I64 -- I64 ! {test.emit} Program, the pure Program is adapted to the selected {test.emit} witness and both are listed, selected, duplicated and composed with no source compilation, guest request, protected operation or issued allowance; widening adds no recipe node, the original interface is unchanged, duplicates keep the adapted instantiation and handle identity includes the witness.",
+        "subject": "WORKER-03", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:55625d581a06574577655619c70ecf5e5cd28ce4795dcf29e96981592c9f8de0",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "runtime-selected-effect-adaptation", "receipt": "../../verification/worker03/acceptance.json",
+          "receipt_sha256": "2b495c6e16fda4228f7311b6b83a92693b20ca96881da9ec5ed3d6768bd4f76f",
+          "gate": "verification/worker03/gate.mjs", "case": "WORKER-03", "tested_commit": "33492ca22abef69600e61992fde12fe7124c83aa",
+          "binary_sha256": "48b03b889b41e64af3615e711b82f525cdb064fda6025629eeea619146d9fc09",
+          "command": "noble worker program test-host builders < verification/worker03/fixtures/builders.noble",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 7ce2d1bc7295126b4ad6ef6a583e8beab6f23ac5dd940f9d861333bc55199269); the raw builder report and the unselected-source control are retained under verification/worker03."
+        },
+        "assumptions": [
+          "The Programs are Worker Program v2 handles from one preselected fixture closure in the synthetic test embedder; the {test.emit} Program is checked against the embedder's host-selected bound adapter.",
+          "source_compiler_calls is the Store's own count of source compilations after admission, together with an unchanged compiled WAT digest.",
+          "guest_requests, protected_operations and authority_created come from the synthetic ledger receipt: effect requests, protected appends, ledger entries and whether an allowance is issued.",
+          "Neither Program is executed; the gate makes no claim about running the adapted pure Program under the bound host."
+        ]
+      }]
     },
     {
       "id": "WORKER-04", "profile": "Worker-Design", "kind": "identity",
