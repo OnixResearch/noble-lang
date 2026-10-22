@@ -82,10 +82,13 @@ pub const USAGE: &str = "usage:
   CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
   A test.emit package/ceiling is refused: the host-only bound adapter and
   revocable effect policy require an explicit embedder, never a CLI argument.
-  noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
+  noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export|builders < FIXTURE_SOURCE
   noble worker program test-host emit-import < PACKAGE
   Import an untrusted package under the same preselected test.emit binding;
   only that exact host-contract row can match, and importing issues nothing.
+  builders adapts the fixture's pure Program to the bound Program's
+  {test.emit} witness, then lists, selects, duplicates and composes both
+  without compiling, invoking or issuing anything.
   Dedicated finite synthetic test embedder: built-in exact fixture source,
   checked owner, adapter, destination and epoch are chosen before bounded
   untrusted stdin; source mismatch denies before any issue. Only an installed

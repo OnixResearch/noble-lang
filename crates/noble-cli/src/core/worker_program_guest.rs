@@ -332,6 +332,7 @@ impl WorkerHostPolicy {
             "adapter_slot":self.inner.binding.adapter_slot,
             "effect_requests":state.attempted,"protected_operations":state.protected,
             "denied_requests":state.denied,"succeeded":state.protected,
+            "issued_allowance":state.issued.is_some(),
             "unknown_after_attempt":0,
             "ledger_entries":state.ledger.len(),"ledger_bytes":state.ledger_bytes,
         }))
@@ -1691,6 +1692,104 @@ pub(crate) fn request_core_code_export(
 const HOST_EMIT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 1 + ] ]";
 const HOST_WRONG_RESULT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 2 + ] ]";
 const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-export-marker\" \"hidden-capture-destination\" code_export ] ]";
+/// WORKER-03: a pure `I64 -- I64 ! {}` Program and a bound
+/// `I64 -- I64 ! {test.emit}` Program in one checked source closure.
+const HOST_BUILDER_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit def increment [ 1 + ] export plus def plus [ \"builder-ledger-marker\" emit increment ] ]";
+
+/// WORKER-03 runtime builders over Programs chosen after compilation. Every
+/// operation is checked against the Programs' instantiated witnesses; none
+/// compiles source, installs or invokes a guest, or issues an allowance.
+fn runtime_builders(
+    store: &mut ProgramStore,
+    root: Handle,
+    issuer: &HostWorkerIssuer,
+    subject: serde_json::Value,
+) -> Result<serde_json::Value> {
+    let refused = |problem: Refusal| anyhow::anyhow!("Worker builder refused: {problem:?}");
+    let pure = (0..store.recipe_nodes())
+        .filter_map(|index| store.checked_root(index))
+        .find(|handle| {
+            *handle != root
+                && store
+                    .interface(*handle)
+                    .is_some_and(|(_, _, effects)| effects.is_empty())
+        })
+        .context("fixture closure has no pure checked Program")?;
+    let destination = noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]);
+    let pure_interface = store.interface_text(pure).map_err(refused)?;
+    let interfaces = [
+        pure_interface.clone(),
+        store.interface_text(root).map_err(refused)?,
+    ];
+    let compilations = store.compilations();
+    let wat = crate::workflow::intrinsic::sha256(store.wat());
+    let admitted_nodes = store.recipe_nodes();
+    // Without adaptation the two witnesses differ, so no list admits both.
+    let unadapted_list_refused = store.select(&[pure, root], 0).is_err();
+    let adapted = store.adapt(pure, &destination).map_err(refused)?;
+    let widened_nodes = store.recipe_nodes();
+    let list = [adapted, root];
+    let selected = store.select(&list, 0).map_err(refused)?;
+    let other = store.select(&list, 1).map_err(refused)?;
+    let (first, second) = store.duplicate(selected).map_err(refused)?;
+    let composed = store.compose(first, other).map_err(refused)?;
+    let doubled = store.compose(first, second).map_err(refused)?;
+    let destination_text = store.interface_text(adapted).map_err(refused)?;
+    let original = store
+        .original(adapted)
+        .context("adapted Program lost its original")?;
+    let pure_original = store
+        .original(pure)
+        .context("pure Program lost its original")?;
+    let original_unchanged = original == pure_original
+        && original.2.is_empty()
+        && store.interface_text(pure).map_err(refused)? == pure_interface;
+    let same_recipe = store
+        .named(adapted)
+        .zip(store.named(pure))
+        .is_some_and(|(left, right)| left.checked_recipe == right.checked_recipe);
+    let duplicate_interfaces = if first == selected
+        && second == selected
+        && store.interface(first) == store.interface(adapted)
+    {
+        "same-instantiation"
+    } else {
+        "independent"
+    };
+    let composed_text = store.interface_text(composed).map_err(refused)?;
+    let receipt = issuer.receipt()?;
+    let authority_created = receipt["issued_allowance"] != false
+        || receipt["protected_operations"] != 0
+        || receipt["ledger_entries"] != 0;
+    let common = unadapted_list_refused
+        && selected == adapted
+        && other == root
+        && composed_text == destination_text
+        && store.interface_text(doubled).map_err(refused)? == destination_text;
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","operation":"runtime-builders",
+        "stage":"runtime-builders","outcome":if common {"normal"} else {"builder-mismatch"},
+        "builder_result":if common {"checked-common-interface"} else {"no-common-interface"},
+        "subject":subject,"program_interfaces":interfaces,
+        "destination_interface":destination_text,
+        "operations":["adapt","store-in-list","select","duplicate","compose"],
+        "unadapted_list_refused":unadapted_list_refused,
+        "source_compiler_calls":store.compilations().saturating_sub(compilations),
+        "compiled_module_unchanged":crate::workflow::intrinsic::sha256(store.wat()) == wat,
+        "recipe_nodes":{"admitted":admitted_nodes,"after_widening":widened_nodes,
+            "after_compose":store.recipe_nodes()},
+        "recipe_nodes_unchanged_by_widening":widened_nodes == admitted_nodes,
+        "original_interface_unchanged":original_unchanged,
+        "destination_witness_retained":store.interface(adapted).map(|(_, _, effects)| effects)
+            == Some(&destination),
+        "duplicate_interfaces":duplicate_interfaces,
+        "identity_comparison_includes_interface_witness":adapted != pure && same_recipe,
+        "composed":{"interface":composed_text,"edges":store.recipe_edges(composed)},
+        "guest_requests":receipt["effect_requests"],
+        "protected_operations":receipt["protected_operations"],
+        "authority_created":authority_created,"receipt":receipt,
+    }))
+}
 
 /// Imports an untrusted package from stdin under the preselected bound
 /// policy. Only the exact same independently selected binding can admit a
@@ -1762,7 +1861,8 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "emit-revoked",
                         "wit-export",
                         "core-export",
-                        "emit-import"
+                        "emit-import",
+                        "builders"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -1771,7 +1871,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             let mode = arguments[3]
                 .to_str()
                 .context("invalid Worker test host mode")?;
-            let emit = mode.starts_with("emit");
+            let emit = mode.starts_with("emit") || mode == "builders";
             // The fixture source, unlike stdin, is chosen before evaluating any
             // candidate bytes. No arbitrary checked candidate can select a grant.
             let trusted_source = match mode {
@@ -1779,6 +1879,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                 "emit-wrong" => HOST_WRONG_RESULT_SOURCE.to_vec(),
                 "emit-ledger-denied" => host_ledger_denial_source(),
                 "emit-panic" | "emit-revoked" => HOST_EMIT_SOURCE.to_vec(),
+                "builders" => HOST_BUILDER_SOURCE.to_vec(),
                 _ => HOST_EXPORT_SOURCE.to_vec(),
             };
             let (name, binding) = if emit {
@@ -1866,6 +1967,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             });
             if emit {
                 let issuer = HostWorkerIssuer { policy };
+                if mode == "builders" {
+                    return runtime_builders(&mut selected, root, &issuer, subject);
+                }
                 if mode == "emit-ledger-denied" || mode == "emit-request-denied" {
                     // These controls have distinct unchanged quotas. One source
                     // invocation reaches the fifth ledger-byte refusal; 257

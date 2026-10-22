@@ -163,6 +163,9 @@ pub(crate) struct Store {
     nodes: Vec<Node>,
     witnesses: Vec<Witness>,
     work_left: usize,
+    /// Source compilations this store performed. Only admission compiles;
+    /// runtime builders change witnesses and recipe nodes, never code.
+    compilations: u32,
 }
 
 impl Store {
@@ -585,6 +588,7 @@ impl Store {
             witnesses,
             compiled,
             work_left,
+            compilations: 1,
         };
         Ok((
             store,
@@ -642,6 +646,9 @@ impl Store {
 
     pub(crate) fn wat(&self) -> &[u8] {
         self.compiled.wat()
+    }
+    pub(crate) fn compilations(&self) -> u32 {
+        self.compilations
     }
     pub(crate) fn compiled(&self) -> &Compiled {
         &self.compiled
@@ -1321,6 +1328,34 @@ impl Store {
             node,
             witness: position,
         })
+    }
+
+    /// Duplicate a checked Program value. Both copies keep this handle's
+    /// exact instantiated witness, an adapted one included (K-EFFECT-05); no
+    /// independent instantiation is made from the node's original interface.
+    pub(crate) fn duplicate(&mut self, handle: Handle) -> Result<(Handle, Handle), Refusal> {
+        self.interface(handle).ok_or(Refusal::Invalid)?;
+        self.charge(1)?;
+        Ok((handle, handle))
+    }
+
+    /// `input -- output ! {effects}` for a handle's current witness.
+    pub(crate) fn interface_text(&self, handle: Handle) -> Result<String, Refusal> {
+        let (input, output, effects) = self.interface(handle).ok_or(Refusal::Invalid)?;
+        let mut names = Vec::with_capacity(effects.as_slice().len());
+        for effect in effects.as_slice() {
+            names.push(match *effect {
+                noble_kernel::contracts::TEST_EMIT => "test.emit",
+                noble_kernel::contracts::TEST_CODE_EXPORT => "test.code-export",
+                _ => return Err(Refusal::Unsupported),
+            });
+        }
+        Ok(format!(
+            "{} -- {} ! {{{}}}",
+            type_names(input)?.join(" "),
+            type_names(output)?.join(" "),
+            names.join(", ")
+        ))
     }
 
     /// Exact common witness, never a dynamic Any collection.
@@ -2081,7 +2116,7 @@ mod tests {
             RUNTIME_REQUEST_WORK,
         )
         .expect("source-checked named Program");
-        store.work_left = 5;
+        store.work_left = 6;
         let other = store
             .checked_root(0)
             .expect("checked reachable second Program");
@@ -2156,6 +2191,14 @@ mod tests {
             .adapt(other, &destination)
             .expect("second source-checked Program");
         assert_eq!(store.select(&[wider, second], 1), Ok(second));
+        let witnesses = store.witnesses.len();
+        assert_eq!(
+            store.duplicate(wider),
+            Ok((wider, wider)),
+            "duplication keeps the adapted instantiation"
+        );
+        assert_eq!(store.witnesses.len(), witnesses);
+        assert_eq!(store.interface(wider).unwrap().2, &destination);
         let composed = store
             .compose(wider, second)
             .expect("compatible checked stacks");
