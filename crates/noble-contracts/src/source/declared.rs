@@ -27,6 +27,10 @@ pub struct BoundOperation {
 }
 
 #[derive(Clone, Debug)]
+#[expect(
+    tigerstyle::interior_mutability_in_core,
+    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
+)]
 pub(super) struct Context {
     pub environment: noble_kernel::contracts::Env,
     pub words: alloc::vec::Vec<(alloc::string::String, crate::source::Target)>,
@@ -164,12 +168,8 @@ pub(crate) struct DefinitionOrigin<'a> {
 }
 
 #[expect(
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    tigerstyle::interior_mutability_in_core,
+    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
 )]
 /// Reparse a claimed module's source, not its specialization slots, to bind
 /// one lexical definition to its exact original bracketed body. This proves
@@ -183,6 +183,22 @@ pub(crate) fn verify_definition_origin(
     verify_definition_origin_in_request(origin, definition_source, limits, None)
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::interior_mutability_in_core,
+    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the only mutable input is the K-CHECK-07 request budget, a request-local counter debited by the meters of this checking stage; no source, published compiler state or caller value is mutated."
+)]
 /// `verify_definition_origin` whose reparse draws from a shared request.
 pub(super) fn verify_definition_origin_in_request(
     origin: DefinitionOrigin<'_>,

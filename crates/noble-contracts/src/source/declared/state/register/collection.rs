@@ -29,7 +29,15 @@ struct OpaqueDeclaration {
     public: bool,
 }
 
+#[expect(
+    tigerstyle::interior_mutability_in_core,
+    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
+)]
 impl Collected {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the only mutable input is the K-CHECK-07 request budget, a request-local counter debited by the meters of this checking stage; no source, published compiler state or caller value is mutated."
+    )]
     pub(super) fn collect(
         members: alloc::vec::Vec<crate::source::declared::parsing::Member>,
         limits: crate::Limits,
@@ -272,13 +280,13 @@ impl Collected {
     }
 
     #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
-    #[expect(
         tigerstyle::too_many_parameters,
         clippy::too_many_arguments,
         reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the only mutable input is the K-CHECK-07 request budget, a request-local counter debited by the meters of this checking stage; no source, published compiler state or caller value is mutated."
     )]
     fn add_definition(
         mut self,

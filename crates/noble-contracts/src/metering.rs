@@ -3,6 +3,10 @@
     reason = "Owner: noble-maintainers; Meter contains only limits and request-local work/node counters; these helpers perform checked work subtraction and limit-guarded node updates without access to source or published compiler state."
 )]
 
+#[expect(
+    tigerstyle::interior_mutability_in_core,
+    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
+)]
 impl crate::Meter {
     pub const fn new(limits: crate::Limits) -> Self {
         Self {
