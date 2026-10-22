@@ -1447,6 +1447,22 @@
       "sha256": "07bc8719f5ab199130bffa27db3a88aea6b70963e65654ff79a3bfe7fa02b40a"
     },
     {
+      "file": ".cairn/archive/2026-10-22-worker-preparation-service/design.md",
+      "sha256": "5ded436273ac04bc63880542a168f4653e3246078865280bf780a9671c47137a"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-preparation-service/proposal.md",
+      "sha256": "0166d34e748759dc20a5cf92db5183cb4e77e617cddca5b015b8a0e4e35243bc"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-preparation-service/specs/language/spec.md",
+      "sha256": "d532a062f52a911e7ed49852a683851d6f3da88ec9a6f6244c68bce78fbbfded"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-preparation-service/tasks.md",
+      "sha256": "b1b08e2b46357eb58e28ef85808fc8e356908cecc4657890efaefbffd9436761"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2224,7 +2240,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "7096d1a00341d7d0cce797864ed69ee5dbb1ffc8d13ecf0d5979671cdec28652"
+      "sha256": "9ea12b1dc8431571e53d51788dd958ab18f7b1570c2934c5bfaa80afe97f9b14"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -2424,7 +2440,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "c2ed07c5d90e99ec7099c84c0f659464619c05261a5dfd90bf23b0d7c8cd12f1"
+      "sha256": "da61b224cf86e35b3e326ecd063394bf2984f54b2170253ea834db81a33689aa"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2436,7 +2452,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "f7ce356b793c62a1c6d254ea959fef22488f3332dff8a5e52f8668744d0a6ed6"
+      "sha256": "15265df7420551f45f57b3e85670ae7ba6d1d1e078727fb0dc6ac5b732707726"
     },
     {
       "file": "specs/spec-family.json",
