@@ -2432,6 +2432,16 @@ mod tests {
             .map_err(|problem| format!("{label}: {}", problem.message))?;
             let report: Value =
                 serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            // The WORKER-09 gate retains each row's report from this run.
+            if let Some(directory) = std::env::var_os("NOBLE_WORKER09_REPORT_DIR") {
+                let mut file = std::fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(std::path::Path::new(&directory).join(format!("{label}.json")))
+                    .map_err(|error| error.to_string())?;
+                std::io::Write::write_all(&mut file, report.to_string().as_bytes())
+                    .map_err(|error| error.to_string())?;
+            }
             assert_eq!(report["outcome"], row.outcome, "{label}: {report}");
             assert_eq!(
                 report["typed_output"].is_null(),
