@@ -119,7 +119,26 @@
       "requirements": ["K-CHECK-07", "B-CHECK-07", "B-RESULT-01"],
       "input": {"harness": "admission-budget-boundaries", "scope": "supported-finite-candidate-subset", "limit_categories": ["input-bytes", "decoded-nodes", "nesting", "dependency-traversal", "type-stack-size", "checking-work", "memory", "diagnostic-output"], "other_limits": "sufficient", "cases_per_category": ["at-limit", "one-unit-over-limit"], "diagnostic_control": "invalid-candidate-at-limit-and-truncated-one-unit-over", "valid_candidate_categories": "all-except-diagnostic-output", "nested_stage_control": "shared-remaining-request-budget"},
       "expected": {"stage": "bounded-admission", "outcome": "each-boundary-matches", "at_limit_valid_candidate": "accepted", "over_limit_valid_candidate": "exhausted", "diagnostic_limit_on_invalid_candidate": "invalid-with-truncated-diagnostic", "guest_requests": 0, "protected_operations": 0, "over_limit_partial_programs": 0, "nested_budget_reset": false, "allocation_before_limit_check": false, "exhaustion_proves_invalidity": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "For each of the eight declared limit categories, a valid pure Worker Program v2 candidate exactly at the limit that binds it is admitted and the same candidate one unit over is exhausted, through the production admission (check and import); an invalid candidate whose diagnostic is exactly the 512-byte bound is reported whole and one byte over is truncated with its invalid outcome kept; no run installs or runs a guest.",
+        "subject": "WORKER-06", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:19537bf849393db28b071182b5381c867533232d84570d0cb6fafb07994a5b99",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "admission-budget-boundaries", "receipt": "../../verification/worker06/acceptance.json",
+          "receipt_sha256": "90972e82349e9db5e164a15a333a82ff2c2389030fb715419a8ee86b98b9abdb",
+          "gate": "verification/worker06/gate.mjs", "case": "WORKER-06", "tested_commit": "2d263eaf7efdfc5ea924232359d98c9a0ed8c1a8",
+          "binary_sha256": "34c175f32d4faad751f62e2284e5be5186837bacad8ae83296749d1673e53c3a",
+          "command": "noble worker program check SOURCE --name f --effect-ceiling pure [--work N]; noble worker program import PACKAGE --effect-ceiling pure",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 aacb58014f9e9e410502dbe784ec3a421422621436de5b060c120b2b07ff83c6); every boundary candidate and raw report retained under verification/worker06."
+        },
+        "assumptions": [
+          "The supported finite candidate subset is pure Worker Program v2: sources through `noble worker program check`, packages through `noble worker program import`; Worker v1 is closed and not exercised.",
+          "Each category is shown at the limit that binds a valid candidate on this path, with its unit named in the receipt: source bytes (one byte), the definition's node share (one `unit drop` pair), quotation depth (one level), the dependency closure the node shares can still check (one helper), type constructors (one), request work (one unit), the package decoding memory estimate (one byte, three estimate units) and diagnostic bytes (one). Nominal limits no valid candidate can reach are not exercised.",
+          "nested_budget_reset is observed as the same candidate being admitted at the smallest request work and exhausted one unit below it, with every checking stage drawing its internal meters from one shared share; rust-tests also runs the two-stage control shared_request_work_spans_nested_checking_stages.",
+          "allocation_before_limit_check is observed as 4 GiB sparse source and package files being refused as exhausted under a 512 MiB address space."
+        ]
+      }]
     },
     {
       "id": "WORKER-07", "profile": "Worker-Design", "kind": "admission",
