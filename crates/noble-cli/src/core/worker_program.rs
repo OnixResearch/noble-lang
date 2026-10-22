@@ -29,6 +29,9 @@ const BUILTIN_COUNT: u32 = 22;
 pub(super) const RUNTIME_REQUEST_WORK: usize = 50_000_000;
 const PACKAGE_REVISION: &str = "0.1.0-draft.12";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
+/// P-ID-04: no canonical byte format, encoding version or test vectors are
+/// specified, so a program-value identity is local and experimental.
+const IDENTITY_LABEL: &str = "worker-program-value-experimental-v1";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Debug, PartialEq, Eq)]
@@ -100,20 +103,18 @@ impl Owner {
 
 /// A host-selected, exact destination grant. Source/program/package bytes
 /// cannot construct this value; code using it must authenticate the grant.
-#[cfg(test)]
 #[derive(Clone, Copy)]
-struct ExportGrant<'a> {
-    destination: &'a str,
-    source_sha256: &'a str,
-    capture_sha256: &'a str,
-    allowed: bool,
+pub(crate) struct ExportGrant<'a> {
+    pub(crate) destination: &'a str,
+    pub(crate) source_sha256: &'a str,
+    pub(crate) capture_sha256: &'a str,
+    pub(crate) allowed: bool,
 }
 
 /// An export denial is its own outcome: it never reads as a source-check
 /// failure, and a refused package is never a successful no-op.
-#[cfg(test)]
 #[derive(Debug, PartialEq, Eq)]
-enum ExportRefusal {
+pub(crate) enum ExportRefusal {
     Denied,
     Refused(Refusal),
 }
@@ -160,6 +161,9 @@ pub(crate) struct Store {
     closure: Vec<Owner>,
     text_aliases: Vec<CheckedTextAlias>,
     attested_capture_hash: Option<[u8; 32]>,
+    /// Candidate body invocations observed while installing cells for
+    /// attestation; installation alone never runs the body.
+    body_requests: u32,
     nodes: Vec<Node>,
     witnesses: Vec<Witness>,
     work_left: usize,
@@ -584,6 +588,7 @@ impl Store {
             closure: owners,
             text_aliases,
             attested_capture_hash: None,
+            body_requests: 0,
             nodes,
             witnesses,
             compiled,
@@ -681,8 +686,7 @@ impl Store {
 
     /// Digest of the exact checked captures, computed without serializing
     /// them, so a host can bind an export grant to one capture set.
-    #[cfg(test)]
-    fn capture_digest(&self) -> Result<String, Refusal> {
+    pub(crate) fn capture_digest(&self) -> Result<String, Refusal> {
         let mut preimage = Vec::new();
         for alias in &self.text_aliases {
             let length = u64::try_from(alias.bytes.len()).map_err(|_| Refusal::Exhausted)?;
@@ -800,7 +804,6 @@ impl Store {
         Ok(())
     }
 
-    #[cfg(test)]
     fn package(&self, handle: Handle) -> Result<Value, Refusal> {
         let capture_binding = match self.attested_capture_hash {
             Some(hash) => Some(crate::workflow::encoding::hex(&hash)),
@@ -944,10 +947,10 @@ impl Store {
 
     /// Authorization precedes package construction and serialization: only a
     /// host-built grant for this exact destination, source and capture digest
-    /// admits an export, and a denial is reported as a denial. There is no
-    /// CLI route: file or argument bytes cannot construct a grant.
-    #[cfg(test)]
-    fn export(
+    /// admits an export, and a denial is reported as a denial. The only CLI
+    /// route is the test embedder, whose host code builds the grant; file or
+    /// argument bytes cannot construct one.
+    pub(crate) fn export(
         &mut self,
         handle: Handle,
         destination: &str,
@@ -965,7 +968,6 @@ impl Store {
             .map_err(ExportRefusal::Refused)
     }
 
-    #[cfg(test)]
     fn export_authorized(&mut self, handle: Handle) -> Result<Vec<u8>, Refusal> {
         self.require_selected_root(handle)?;
         let capture_bytes = self
@@ -982,9 +984,7 @@ impl Store {
             .ok_or(Refusal::Exhausted)?;
         self.charge(package_work)?;
         if !self.text_aliases.is_empty() {
-            self.reserve_attestation()?;
-            self.attested_capture_hash =
-                Some(super::worker_program_guest::attest(self, handle).map_err(runtime_refusal)?);
+            self.attest_under(handle, wasmtime::OptLevel::Speed)?;
         }
         let package = self.package(handle)?;
         let encoded = serde_json::to_vec(&package).map_err(|_| Refusal::Invalid)?;
@@ -992,6 +992,90 @@ impl Store {
             return Err(Refusal::Exhausted);
         }
         Ok(encoded)
+    }
+
+    /// Install the selected cells under one Cranelift optimization level and
+    /// retain their attested Text binding. Nothing invokes the body.
+    pub(crate) fn attest_under(
+        &mut self,
+        handle: Handle,
+        level: wasmtime::OptLevel,
+    ) -> Result<(), Refusal> {
+        self.reserve_attestation()?;
+        self.attest_reserved(handle, level)
+    }
+
+    fn attest_reserved(
+        &mut self,
+        handle: Handle,
+        level: wasmtime::OptLevel,
+    ) -> Result<(), Refusal> {
+        let attested =
+            super::worker_program_guest::attest(self, handle, level).map_err(runtime_refusal)?;
+        self.attested_capture_hash = Some(attested.capture_hash);
+        self.body_requests = self
+            .body_requests
+            .checked_add(attested.body_requests)
+            .ok_or(Refusal::Exhausted)?;
+        Ok(())
+    }
+
+    pub(crate) fn body_requests(&self) -> u32 {
+        self.body_requests
+    }
+
+    /// Request work this store has not yet charged: its budget outcome.
+    pub(crate) fn work_left(&self) -> usize {
+        self.work_left
+    }
+
+    /// Experimental local program-value identity (P-ID-04), never a stable
+    /// or cross-implementation hash. It keeps the checked package fields that
+    /// carry meaning: the recipe graph, interface witness, typed captures
+    /// with their attested runtime binding, exact dependencies and scoped
+    /// recursive owners. Source bytes and names, compiler layout indices, the
+    /// source-bound graph digest, Wasm or native artifacts, budgets and
+    /// instance ids are not identity.
+    pub(crate) fn identity_projection(&self, handle: Handle) -> Result<Value, Refusal> {
+        let capture_binding = match self.attested_capture_hash {
+            Some(hash) => Some(crate::workflow::encoding::hex(&hash)),
+            None if self.text_aliases.is_empty() => None,
+            None => return Err(Refusal::Invalid),
+        };
+        let package = self.package_document(handle, capture_binding)?;
+        let definitions = package["definitions"].as_array().ok_or(Refusal::Invalid)?;
+        let graph = package["graph"]
+            .as_array()
+            .ok_or(Refusal::Invalid)?
+            .iter()
+            .map(|row| match row["kind"].as_str() {
+                Some("named") => json!({"kind":"named","owner":row["owner"]}),
+                _ => json!({"kind":row["kind"],"first":row["first"],"second":row["second"]}),
+            })
+            .collect::<Vec<_>>();
+        let mut projection = json!({
+            "normalized_recipe":{"root":package["root"]["recipe_sha256"],
+                "definitions":definitions.iter().map(|row| json!({"owner":row["owner"],
+                    "recipe_sha256":row["recipe_sha256"]})).collect::<Vec<_>>(),
+                "graph":graph,"selected_node":package["selected_node"]},
+            "interface_witnesses":package["interface"],
+            "captures":{"sha256":self.capture_digest()?,
+                "attested_binding_blake3":package["capture_binding_blake3"]},
+            "dependency_identities":{"root_owner":package["root"]["owner"],
+                "definitions":definitions.iter().map(|row| row["owner"].clone()).collect::<Vec<_>>(),
+                "builtins":package["builtins"],"schemas":package["schemas"],
+                "host_contracts":package["host_contracts"]},
+            "recursive_owner":definitions.iter().map(|row| row["self_owner"].clone())
+                .collect::<Vec<_>>(),
+        });
+        // serde_json orders keys, so these bytes are deterministic locally.
+        let digest = crate::workflow::intrinsic::sha256(
+            &serde_json::to_vec(&projection).map_err(|_| Refusal::Invalid)?,
+        );
+        projection["label"] = json!(IDENTITY_LABEL);
+        projection["abstract_program_value_identity"] =
+            json!(format!("{IDENTITY_LABEL}-sha256:{digest}"));
+        Ok(projection)
     }
 
     /// Import never accepts a package's digest, flags or artifact as proof.
@@ -1129,12 +1213,13 @@ impl Store {
                 .installations
                 .checked_add(1)
                 .ok_or(Refusal::Exhausted)?;
-            let attested =
-                super::worker_program_guest::attest(&store, selected).map_err(runtime_refusal)?;
-            if crate::workflow::encoding::hex(&attested) != claimed {
+            store.attest_reserved(selected, wasmtime::OptLevel::Speed)?;
+            if store
+                .attested_capture_hash
+                .is_none_or(|attested| crate::workflow::encoding::hex(&attested) != claimed)
+            {
                 return Err(Refusal::Invalid);
             }
-            store.attested_capture_hash = Some(attested);
         }
         Ok((store, selected))
     }
@@ -1606,6 +1691,9 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
         "schema_source_sha256":schema.as_deref().map(crate::workflow::intrinsic::sha256),
         "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
+        "identity":store.identity_projection(root).map_err(refusal)?,
+        "candidate_body_requests":store.body_requests(),
+        "request_work_left":store.work_left(),
         "dependencies":store.closure.len(),"guest_requests":0,
         "protected_operations":0,"executable_guest_installed":false,
         "source_installations":trace.installations,"limits":{"work":work},

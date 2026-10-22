@@ -80,8 +80,9 @@ pub const USAGE: &str = "usage:
   noble worker program import PACKAGE --effect-ceiling pure [--work N] [--schema SCHEMA]
   Freshly recheck a finite local v2 package's source, complete named closure
   and checked recipe; Text aliases require fresh installed-cell rechecking.
-  Import is inert and is not an executable guest. Export is unavailable through
-  CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
+  Import is inert and is not an executable guest. Export has no CLI command:
+  only the test embedder's host code builds a grant, for its own fixture and
+  destination; file JSON cannot grant it.
   A test.emit package/ceiling is refused: the host-only bound adapter and
   revocable effect policy require an explicit embedder, never a CLI argument.
   noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export|builders < FIXTURE_SOURCE
@@ -100,6 +101,13 @@ pub const USAGE: &str = "usage:
   cancellation. The record keeps invocation and attempt correlation, counts
   and kernel outcomes; rows beyond the selected bound (6 for -rows) and a
   diagnostic beyond its bound (48 bytes for -diagnostic) are marked omitted.
+  noble worker program test-host export|export-denied|optimizer < FIXTURE_SOURCE
+  Check the built-in recursive Program with a Text capture. export builds the
+  grant for its own destination from the checked source and capture digests
+  and prints the package with the experimental program-value identity;
+  export-denied refuses the same subject and emits no bytes. optimizer checks
+  the fixture twice and attests each under a different Cranelift level,
+  reporting artifact digests and identities. Nothing invokes the body.
   noble worker program test-host emit-import < PACKAGE
   Import an untrusted package under the same preselected test.emit binding;
   only that exact host-contract row can match, and importing issues nothing.

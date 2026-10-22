@@ -1646,22 +1646,49 @@ fn instantiate_source(
     Ok((store, instance))
 }
 
-/// Inspect actual runtime Text cells before accepting a portable capture
-/// package. Neither a source literal nor a package row can attest itself.
-pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8; 32]> {
+/// What installing the selected cells observed: the runtime Text binding and
+/// how often the candidate body ran (installation never invokes it).
+pub(super) struct Attested {
+    pub(super) capture_hash: [u8; 32],
+    pub(super) body_requests: u32,
+}
+
+fn engine_at(level: wasmtime::OptLevel) -> Result<Engine> {
     let mut config = Config::new();
     config
         .wasm_component_model(true)
         .consume_fuel(true)
-        .epoch_interruption(true);
-    let engine = Engine::new(&config)?;
+        .epoch_interruption(true)
+        .cranelift_opt_level(level);
+    Engine::new(&config)
+}
+
+/// Inspect actual runtime Text cells before accepting a portable capture
+/// package. Neither a source literal nor a package row can attest itself.
+pub(super) fn attest(
+    source: &ProgramStore,
+    root: Handle,
+    level: wasmtime::OptLevel,
+) -> Result<Attested> {
+    let engine = engine_at(level)?;
     let store = install_selected(&engine, source, root, TaskOwner::for_source(source))?;
-    Ok(store
-        .data()
-        .installed
-        .context("missing installed Program cell")?
-        .cell
-        .capture_hash)
+    let host = store.data();
+    Ok(Attested {
+        capture_hash: host
+            .installed
+            .context("missing installed Program cell")?
+            .cell
+            .capture_hash,
+        body_requests: host.invokes,
+    })
+}
+
+/// SHA-256 of the native artifact Wasmtime compiles from this Program's
+/// checked module at one Cranelift optimization level.
+fn native_artifact_sha256(source: &ProgramStore, level: wasmtime::OptLevel) -> Result<String> {
+    let engine = engine_at(level)?;
+    let artifact = core_module(&engine, source.wat())?.serialize()?;
+    Ok(crate::workflow::intrinsic::sha256(&artifact))
 }
 
 /// The selected guest is always rebuilt from the WIT and Noble body retained
@@ -1856,6 +1883,11 @@ const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text T
 const HOST_BUILDER_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit def increment [ 1 + ] export plus def plus [ \"builder-ledger-marker\" emit increment ] ]";
 /// WORKER-10: three bound `test.send` requests in one invocation.
 const HOST_SEND_SOURCE: &[u8] = b"module Sender@1 [ require send Text -- ! test.send export plus def plus [ \"w10-a\" send \"w10-b\" send \"w10-c\" send 1 + ] ]";
+/// WORKER-04: a pure Program with a runtime-attested Text capture, an exact
+/// dependency and a retained scoped self owner.
+const HOST_ROUND_TRIP_SOURCE: &[u8] = b"module Worker@1 [ def dec [ \"tag\" drop 1 - ] signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dec count 1 + ] if ] ]";
+/// The host-selected destination of the WORKER-04 export grant.
+const HOST_EXPORT_DESTINATION: &str = "synthetic-export-destination";
 
 /// The synthetic ledger's exact host-selected `test.emit` bound adapter.
 fn emit_binding() -> noble_contracts::source::BoundOperation {
@@ -1959,6 +1991,109 @@ fn send_observation(
     Ok(serde_json::json!({
         "schema":"noble-worker-program-test-host/v1","stage":"host-outcome-record",
         "outcome":record["primary_outcome"],"operation":"test.send","record":record,
+    }))
+}
+
+/// WORKER-04: read the candidate, which must be the preselected fixture,
+/// and check it as a fresh pure `I64 -- I64` Program.
+fn round_trip_store() -> Result<(ProgramStore, Handle)> {
+    use std::io::Read;
+    let mut source = Vec::new();
+    std::io::stdin()
+        .lock()
+        .take(u64::from(super::SOURCE_LIMITS.bytes) + 1)
+        .read_to_end(&mut source)?;
+    ensure!(
+        source == HOST_ROUND_TRIP_SOURCE,
+        "Worker candidate differs from the preselected fixture source"
+    );
+    ProgramStore::prepare(
+        &source,
+        "count",
+        &[noble_kernel::types::Ty::I64],
+        super::worker_program::RUNTIME_REQUEST_WORK,
+    )
+    .map_err(|_| anyhow::anyhow!("Worker round-trip Program refused"))
+}
+
+/// WORKER-04 export: the host builds the grant for its own destination from
+/// the checked Store's source and capture digests, then exports. `denied`
+/// selects a refusing grant for the same subject.
+fn host_export(denied: bool) -> Result<serde_json::Value> {
+    let (mut store, root) = round_trip_store()?;
+    let source_sha256 = crate::workflow::intrinsic::sha256(store.source());
+    let capture_sha256 = store
+        .capture_digest()
+        .map_err(|_| anyhow::anyhow!("Worker capture digest refused"))?;
+    let grant = super::worker_program::ExportGrant {
+        destination: HOST_EXPORT_DESTINATION,
+        source_sha256: &source_sha256,
+        capture_sha256: &capture_sha256,
+        allowed: !denied,
+    };
+    let package = match store.export(root, HOST_EXPORT_DESTINATION, &grant) {
+        Ok(package) => package,
+        Err(super::worker_program::ExportRefusal::Denied) => {
+            return Ok(serde_json::json!({
+                "schema":"noble-worker-program-test-host/v1","stage":"export-authorization",
+                "outcome":"denied","operation":"export","destination":HOST_EXPORT_DESTINATION,
+                "package_bytes_emitted":0,"candidate_body_requests":store.body_requests(),
+            }))
+        }
+        Err(super::worker_program::ExportRefusal::Refused(_)) => {
+            anyhow::bail!("Worker export refused")
+        }
+    };
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","stage":"export-authorization",
+        "outcome":"normal","operation":"export","destination":HOST_EXPORT_DESTINATION,
+        "package_bytes_emitted":package.len(),
+        "package_utf8":String::from_utf8(package)?,
+        "identity":store.identity_projection(root)
+            .map_err(|_| anyhow::anyhow!("Worker identity projection refused"))?,
+        "candidate_body_requests":store.body_requests(),
+        "request_work_left":store.work_left(),
+    }))
+}
+
+/// WORKER-04 optimizer: two independent checks of the same candidate, each
+/// installed and attested under a different Cranelift optimization level.
+/// Identity is recomputed per Store; nothing invokes the body.
+fn host_optimizer() -> Result<serde_json::Value> {
+    let (first, first_root) = round_trip_store()?;
+    let source = first.source().to_vec();
+    let mut rows = Vec::with_capacity(2);
+    let mut stores = vec![(first, first_root)];
+    stores.push(
+        ProgramStore::prepare(
+            &source,
+            "count",
+            &[noble_kernel::types::Ty::I64],
+            super::worker_program::RUNTIME_REQUEST_WORK,
+        )
+        .map_err(|_| anyhow::anyhow!("Worker round-trip Program refused"))?,
+    );
+    for ((mut store, root), (name, level)) in stores.into_iter().zip([
+        ("none", wasmtime::OptLevel::None),
+        ("speed", wasmtime::OptLevel::Speed),
+    ]) {
+        store
+            .attest_under(root, level)
+            .map_err(|_| anyhow::anyhow!("Worker attestation refused"))?;
+        rows.push(serde_json::json!({
+            "cranelift_opt_level":name,
+            "instance":store.instance_id(),
+            "wasm_text_sha256":crate::workflow::intrinsic::sha256(store.wat()),
+            "native_artifact_sha256":native_artifact_sha256(&store, level)?,
+            "identity":store.identity_projection(root)
+                .map_err(|_| anyhow::anyhow!("Worker identity projection refused"))?,
+            "candidate_body_requests":store.body_requests(),
+            "request_work_left":store.work_left(),
+        }));
+    }
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","stage":"identity-after-local-admission",
+        "outcome":"normal","operation":"optimizer","artifacts":rows,
     }))
 }
 
@@ -2305,7 +2440,10 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "candidate-fault",
                         "send-observe",
                         "send-observe-rows",
-                        "send-observe-diagnostic"
+                        "send-observe-diagnostic",
+                        "export",
+                        "export-denied",
+                        "optimizer"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -2319,6 +2457,11 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             }
             if let Some(scenario) = super::worker_send::Scenario::for_mode(mode) {
                 return send_observation(scenario, &mut guest_attempted);
+            }
+            match mode {
+                "export" | "export-denied" => return host_export(mode == "export-denied"),
+                "optimizer" => return host_optimizer(),
+                _ => {}
             }
             let emit = mode.starts_with("emit") || mode == "builders";
             // The fixture source, unlike stdin, is chosen before evaluating any
