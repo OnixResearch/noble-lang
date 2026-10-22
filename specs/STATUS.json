@@ -1078,8 +1078,9 @@
     "package_encoding": "open",
     "task_abi": "open",
     "execution_accounting": "open",
-    "implementation": "absent",
-    "execution": "not-run",
+    "implementation": "partial",
+    "execution": "passed",
+    "execution_scope": "WORKER-02, WORKER-03, WORKER-05, WORKER-06, WORKER-07, WORKER-10 and WORKER-12 pass on the production binary, and WORKER-08 passed under M6. WORKER-09 passes its MW1 rows and leaves its two MW2 rows not run. WORKER-04 runs two of its four variants and is not passed. WORKER-01 and WORKER-11 are not run, and MW1 and MW2 remain open.",
     "proof": "open"
   },
   "octet_adoption": {

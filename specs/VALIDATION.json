@@ -2472,7 +2472,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "909a93428247c2fb4bd0a6d7306fc45c2740f7f0885d65e4736e3f3a19a293cd"
+      "sha256": "739961320f5479d2ad4a356cb5a3c137c0aaf5380ea07cf40fa0bdf3dd49bfd3"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "cc20571b3e6cc3813d0bd33693802ecfa62c91f885c10a2b2c86b4ded0a69658"
+      "sha256": "5666473206b11292175bdc4482df44d8d5a768ab4fdd39615ebf277ae6535590"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
