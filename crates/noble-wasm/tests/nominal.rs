@@ -371,6 +371,134 @@ fn bound_code_export_compiles_real_deny_only_slot_import() -> Result<(), String>
     Ok(())
 }
 
+/// What a hostile or mistaken host does with the deny-only export import.
+#[derive(Clone, Copy)]
+enum ExportHost {
+    ReportsSuccess,
+    Traps,
+}
+
+/// Runs the compiled WORKER-12 fixture in a real Wasmtime instance whose
+/// `test_code_export_bound` import misbehaves, returning the invocation
+/// outcome, the `$failure` metric afterwards and every slot the host saw.
+fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), String> {
+    use wasmtime::{
+        Caller, Engine, ExternType, Global, Linker, Memory, Module, Ref, Store, Table, Val, ValType,
+    };
+    fn wasm<T>(result: wasmtime::Result<T>) -> Result<T, String> {
+        result.map_err(|error| error.to_string())
+    }
+    let binding = noble_contracts::source::BoundOperation {
+        module_name: "ledger".into(),
+        module_version: 1,
+        operation: "test.code-export".into(),
+        adapter_identity: "worker-test-code-export@1.0.0".into(),
+        adapter_slot: 9,
+        input: vec![noble_kernel::types::Ty::Text, noble_kernel::types::Ty::Text],
+        output: vec![],
+        effects: vec![noble_kernel::contracts::TEST_CODE_EXPORT],
+    };
+    let submission = module_submission(
+        b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]",
+        b"account.capture",
+        &[binding],
+    )?;
+    let compiled = noble_wasm::source::Compiler::new_worker()
+        .prepare(&submission)
+        .map_err(|error| format!("code-export source rejected: {}", wasm_diagnostic(error)))?;
+    let binary = wat::parse_bytes(compiled.wat()).map_err(|error| error.to_string())?;
+    let engine = Engine::default();
+    let module = wasm(Module::new(&engine, &binary))?;
+    let mut store = Store::new(&engine, Vec::<i32>::new());
+    let mut linker = Linker::new(&engine);
+    let imports: Vec<(String, ExternType)> = module
+        .imports()
+        .map(|import| (import.name().to_string(), import.ty()))
+        .collect();
+    for (name, ty) in imports {
+        match ty {
+            ExternType::Memory(ty) => {
+                let memory = wasm(Memory::new(&mut store, ty))?;
+                wasm(linker.define(&store, "noble", &name, memory))?;
+            }
+            ExternType::Table(ty) => {
+                let table = wasm(Table::new(&mut store, ty, Ref::Func(None)))?;
+                wasm(linker.define(&store, "noble", &name, table))?;
+            }
+            ExternType::Global(ty) => {
+                let value = match ty.content() {
+                    ValType::I32 => Val::I32(0),
+                    ValType::I64 => Val::I64(0),
+                    _ => return Err(format!("unexpected global import {name}")),
+                };
+                let global = wasm(Global::new(&mut store, ty, value))?;
+                wasm(linker.define(&store, "noble", &name, global))?;
+            }
+            ExternType::Func(ty) if name == "test_code_export_bound" => {
+                // Only the adapter slot crosses: no capture or destination
+                // pointer, length or bytes can reach the host.
+                let params: Vec<ValType> = ty.params().collect();
+                let results: Vec<ValType> = ty.results().collect();
+                if !matches!(params.as_slice(), [ValType::I32])
+                    || !matches!(results.as_slice(), [ValType::I32])
+                {
+                    return Err("code-export import is not (i32) -> i32".into());
+                }
+                wasm(linker.func_wrap(
+                    "noble",
+                    "test_code_export_bound",
+                    move |mut caller: Caller<'_, Vec<i32>>, slot: i32| -> wasmtime::Result<i32> {
+                        caller.data_mut().push(slot);
+                        match host {
+                            ExportHost::ReportsSuccess => Ok(0),
+                            ExportHost::Traps => Err(wasmtime::Error::msg("host export threw")),
+                        }
+                    },
+                ))?;
+            }
+            _ => return Err(format!("unexpected import {name}")),
+        }
+    }
+    let instance = wasm(linker.instantiate(&mut store, &module))?;
+    let begin =
+        wasm(instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(&mut store, "begin"))?;
+    let budget = (32_768, 256, 32, 2048, 4096, 4096);
+    assert_eq!(wasm(begin.call(&mut store, budget))?, 0);
+    let install = wasm(instance.get_typed_func::<(), i32>(&mut store, "worker_install"))?;
+    assert_eq!(wasm(install.call(&mut store, ()))?, 0);
+    let named = wasm(instance.get_typed_func::<i32, i32>(&mut store, "worker_named_handle"))?;
+    let handle = wasm(named.call(&mut store, 0))?;
+    assert!(handle > 0, "installed capture Program has no handle");
+    assert_eq!(wasm(begin.call(&mut store, budget))?, 0);
+    let invoke = wasm(instance.get_typed_func::<(i32, i64), i64>(&mut store, "worker_invoke"))?;
+    let completed = invoke.call(&mut store, (handle, 41)).is_ok();
+    let metric = wasm(instance.get_typed_func::<i32, i64>(&mut store, "metric"))?;
+    let failure = wasm(metric.call(&mut store, 0))?;
+    Ok((completed, failure, store.data().clone()))
+}
+
+#[test]
+fn bound_code_export_stays_failed_when_host_reports_success() -> Result<(), String> {
+    let (completed, failure, slots) = run_code_export_guest(ExportHost::ReportsSuccess)?;
+    assert_eq!(slots, [9], "expected exactly one slot-only export request");
+    // The guest returned normally, yet the poisoned invocation stays failed:
+    // a zero status from the host cannot clear the terminal failure.
+    assert!(
+        completed,
+        "a status-0 host import should not trap the guest"
+    );
+    assert_eq!(failure, 5, "host success cleared the code-export failure");
+
+    let (completed, failure, slots) = run_code_export_guest(ExportHost::Traps)?;
+    assert_eq!(slots, [9], "expected exactly one slot-only export request");
+    assert!(
+        !completed,
+        "a throwing host import must not complete the invocation"
+    );
+    assert_eq!(failure, 5, "a throwing host left the invocation unpoisoned");
+    Ok(())
+}
+
 fn verify_core_abort() -> Result<(), String> {
     let core = noble_contracts::source::Session::new()
         .prepare(b"test.abort", &[], LIMITS)
