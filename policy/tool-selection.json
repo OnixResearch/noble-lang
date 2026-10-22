@@ -228,7 +228,7 @@
     "crates/noble-wasm/src/source/transaction.rs": "f1ea380466be0254ec107f6121674e1f6f2499d32ca422377edd196c6082b23b",
     "crates/noble-wasm/tests/declared_text.rs": "75e58a4b31d5f348842d6d6e9d47bd0a1323a44d371f6736774a5c2b5b9dec74",
     "crates/noble-wasm/tests/live_slot_artifact.rs": "50acfa0f7b4508fb4005ddbd1d2acf688f7922dd60ff5cb9081ebc089264b49b",
-    "crates/noble-wasm/tests/nominal.rs": "9e395ff01cd42cbd7ce75c00cc110d1774cce7fe8fdf0e692f0a3bcc4691e609",
+    "crates/noble-wasm/tests/nominal.rs": "d892f1c59f8676c95976d407564e68b80935414bbbb11ee434cb78fb9c6c1448",
     "crates/noble-wasm/tests/signed_self.rs": "9f715f208d11b0ab11245d0bb78f1ab666885e70e8930ee1533c886ccb9460d7",
     "crates/noble-wasm/wit/async.wit": "c39188a9900f23c1eb4905ea1d6504c93c735b0d9214f1497b968315d2a505d0",
     "crates/noble-wasm/wit/bootstrap.wit": "d1928908b21d1d63be477fdf2226a6547db7d6efa5ef905635498d1d1e43bc68",

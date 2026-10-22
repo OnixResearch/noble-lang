@@ -378,16 +378,12 @@ enum ExportHost {
     Traps,
 }
 
-/// Runs the compiled WORKER-12 fixture in a real Wasmtime instance whose
-/// `test_code_export_bound` import misbehaves, returning the invocation
-/// outcome, the `$failure` metric afterwards and every slot the host saw.
-fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), String> {
-    use wasmtime::{
-        Caller, Engine, ExternType, Global, Linker, Memory, Module, Ref, Store, Table, Val, ValType,
-    };
-    fn wasm<T>(result: wasmtime::Result<T>) -> Result<T, String> {
-        result.map_err(|error| error.to_string())
-    }
+fn wasm_result<T>(result: wasmtime::Result<T>) -> Result<T, String> {
+    result.map_err(|error| error.to_string())
+}
+
+/// Compiles the WORKER-12 `ledger@1.capture` fixture to a Wasm binary.
+fn code_export_module() -> Result<Vec<u8>, String> {
     let binding = noble_contracts::source::BoundOperation {
         module_name: "ledger".into(),
         module_version: 1,
@@ -406,11 +402,20 @@ fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), Stri
     let compiled = noble_wasm::source::Compiler::new_worker()
         .prepare(&submission)
         .map_err(|error| format!("code-export source rejected: {}", wasm_diagnostic(error)))?;
-    let binary = wat::parse_bytes(compiled.wat()).map_err(|error| error.to_string())?;
-    let engine = Engine::default();
-    let module = wasm(Module::new(&engine, &binary))?;
-    let mut store = Store::new(&engine, Vec::<i32>::new());
-    let mut linker = Linker::new(&engine);
+    wat::parse_bytes(compiled.wat())
+        .map(std::borrow::Cow::into_owned)
+        .map_err(|error| error.to_string())
+}
+
+/// Links the fixture's runtime imports. Only the export import misbehaves,
+/// and it records every slot it receives.
+fn link_code_export_imports(
+    module: &wasmtime::Module,
+    store: &mut wasmtime::Store<Vec<i32>>,
+    host: ExportHost,
+) -> Result<wasmtime::Linker<Vec<i32>>, String> {
+    use wasmtime::{Caller, ExternType, Global, Linker, Memory, Ref, Table, Val, ValType};
+    let mut linker = Linker::new(store.engine());
     let imports: Vec<(String, ExternType)> = module
         .imports()
         .map(|import| (import.name().to_string(), import.ty()))
@@ -418,21 +423,23 @@ fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), Stri
     for (name, ty) in imports {
         match ty {
             ExternType::Memory(ty) => {
-                let memory = wasm(Memory::new(&mut store, ty))?;
-                wasm(linker.define(&store, "noble", &name, memory))?;
+                let memory = wasm_result(Memory::new(&mut *store, ty))?;
+                wasm_result(linker.define(&*store, "noble", &name, memory))?;
             }
             ExternType::Table(ty) => {
-                let table = wasm(Table::new(&mut store, ty, Ref::Func(None)))?;
-                wasm(linker.define(&store, "noble", &name, table))?;
+                let table = wasm_result(Table::new(&mut *store, ty, Ref::Func(None)))?;
+                wasm_result(linker.define(&*store, "noble", &name, table))?;
             }
             ExternType::Global(ty) => {
                 let value = match ty.content() {
                     ValType::I32 => Val::I32(0),
                     ValType::I64 => Val::I64(0),
-                    _ => return Err(format!("unexpected global import {name}")),
+                    ValType::F32 | ValType::F64 | ValType::V128 | ValType::Ref(_) => {
+                        return Err(format!("unexpected global import {name}"))
+                    }
                 };
-                let global = wasm(Global::new(&mut store, ty, value))?;
-                wasm(linker.define(&store, "noble", &name, global))?;
+                let global = wasm_result(Global::new(&mut *store, ty, value))?;
+                wasm_result(linker.define(&*store, "noble", &name, global))?;
             }
             ExternType::Func(ty) if name == "test_code_export_bound" => {
                 // Only the adapter slot crosses: no capture or destination
@@ -444,55 +451,72 @@ fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), Stri
                 {
                     return Err("code-export import is not (i32) -> i32".into());
                 }
-                wasm(linker.func_wrap(
+                wasm_result(linker.func_wrap(
                     "noble",
                     "test_code_export_bound",
                     move |mut caller: Caller<'_, Vec<i32>>, slot: i32| -> wasmtime::Result<i32> {
                         caller.data_mut().push(slot);
-                        match host {
-                            ExportHost::ReportsSuccess => Ok(0),
-                            ExportHost::Traps => Err(wasmtime::Error::msg("host export threw")),
+                        if matches!(host, ExportHost::Traps) {
+                            Err(wasmtime::Error::msg("host export threw"))
+                        } else {
+                            Ok(0)
                         }
                     },
                 ))?;
             }
-            _ => return Err(format!("unexpected import {name}")),
+            ExternType::Func(_) | ExternType::Tag(_) => {
+                return Err(format!("unexpected import {name}"));
+            }
         }
     }
-    let instance = wasm(linker.instantiate(&mut store, &module))?;
-    let begin =
-        wasm(instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(&mut store, "begin"))?;
+    Ok(linker)
+}
+
+/// Runs the compiled WORKER-12 fixture in a real Wasmtime instance whose
+/// export import misbehaves, returning whether the invocation completed, the
+/// `$failure` metric afterwards and every slot the host saw.
+fn run_code_export_guest(host: ExportHost) -> Result<(bool, i64, Vec<i32>), String> {
+    let engine = wasm_result(wasmtime::Engine::new(&wasmtime::Config::new()))?;
+    let module = wasm_result(wasmtime::Module::new(&engine, code_export_module()?))?;
+    let mut store = wasmtime::Store::new(&engine, Vec::<i32>::new());
+    let linker = link_code_export_imports(&module, &mut store, host)?;
+    let instance = wasm_result(linker.instantiate(&mut store, &module))?;
+    let begin = wasm_result(
+        instance.get_typed_func::<(i32, i32, i32, i32, i32, i32), i32>(&mut store, "begin"),
+    )?;
     let budget = (32_768, 256, 32, 2048, 4096, 4096);
-    assert_eq!(wasm(begin.call(&mut store, budget))?, 0);
-    let install = wasm(instance.get_typed_func::<(), i32>(&mut store, "worker_install"))?;
-    assert_eq!(wasm(install.call(&mut store, ()))?, 0);
-    let named = wasm(instance.get_typed_func::<i32, i32>(&mut store, "worker_named_handle"))?;
-    let handle = wasm(named.call(&mut store, 0))?;
+    assert_eq!(wasm_result(begin.call(&mut store, budget))?, 0);
+    let install = wasm_result(instance.get_typed_func::<(), i32>(&mut store, "worker_install"))?;
+    assert_eq!(wasm_result(install.call(&mut store, ()))?, 0);
+    let named =
+        wasm_result(instance.get_typed_func::<i32, i32>(&mut store, "worker_named_handle"))?;
+    let handle = wasm_result(named.call(&mut store, 0))?;
     assert!(handle > 0, "installed capture Program has no handle");
-    assert_eq!(wasm(begin.call(&mut store, budget))?, 0);
-    let invoke = wasm(instance.get_typed_func::<(i32, i64), i64>(&mut store, "worker_invoke"))?;
-    let completed = invoke.call(&mut store, (handle, 41)).is_ok();
-    let metric = wasm(instance.get_typed_func::<i32, i64>(&mut store, "metric"))?;
-    let failure = wasm(metric.call(&mut store, 0))?;
-    Ok((completed, failure, store.data().clone()))
+    assert_eq!(wasm_result(begin.call(&mut store, budget))?, 0);
+    let invoke =
+        wasm_result(instance.get_typed_func::<(i32, i64), i64>(&mut store, "worker_invoke"))?;
+    let is_completed = invoke.call(&mut store, (handle, 41)).is_ok();
+    let metric = wasm_result(instance.get_typed_func::<i32, i64>(&mut store, "metric"))?;
+    let failure = wasm_result(metric.call(&mut store, 0))?;
+    Ok((is_completed, failure, store.data().clone()))
 }
 
 #[test]
 fn bound_code_export_stays_failed_when_host_reports_success() -> Result<(), String> {
-    let (completed, failure, slots) = run_code_export_guest(ExportHost::ReportsSuccess)?;
+    let (is_completed, failure, slots) = run_code_export_guest(ExportHost::ReportsSuccess)?;
     assert_eq!(slots, [9], "expected exactly one slot-only export request");
     // The guest returned normally, yet the poisoned invocation stays failed:
     // a zero status from the host cannot clear the terminal failure.
     assert!(
-        completed,
+        is_completed,
         "a status-0 host import should not trap the guest"
     );
     assert_eq!(failure, 5, "host success cleared the code-export failure");
 
-    let (completed, failure, slots) = run_code_export_guest(ExportHost::Traps)?;
+    let (is_completed, failure, slots) = run_code_export_guest(ExportHost::Traps)?;
     assert_eq!(slots, [9], "expected exactly one slot-only export request");
     assert!(
-        !completed,
+        !is_completed,
         "a throwing host import must not complete the invocation"
     );
     assert_eq!(failure, 5, "a throwing host left the invocation unpoisoned");
