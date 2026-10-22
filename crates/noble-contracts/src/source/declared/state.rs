@@ -114,6 +114,8 @@ pub struct CheckedProgramOwner {
     definition_ordinal: u32,
     definition_identity: u64,
     definition_slot: u32,
+    /// The definition calls itself through its own verified signed owner.
+    recursive: bool,
 }
 
 /// Why a closed Worker Program closure was not established. Exhaustion stays
@@ -122,10 +124,11 @@ pub struct CheckedProgramOwner {
 pub enum ProgramClosureError {
     /// The walk ran out of the work limit this preparation was given.
     Exhausted,
-    /// A scoped self-owner or slot invocation: recursive graph shapes are not
-    /// closed Worker Program closures.
+    /// A slot invocation: live-slot graph shapes are not closed Worker
+    /// Program closures.
     Unsupported,
-    /// A missing, foreign, unverified, unexported or unreachable definition.
+    /// A missing, foreign, unverified, unexported or unreachable definition,
+    /// or a self call outside its own verified signed owner.
     Invalid,
 }
 
@@ -181,6 +184,10 @@ impl CheckedProgramOwner {
     }
     pub const fn definition_slot(&self) -> u32 {
         self.definition_slot
+    }
+    /// True when this definition is its own scoped recursive owner.
+    pub const fn is_recursive(&self) -> bool {
+        self.recursive
     }
 }
 
@@ -377,6 +384,7 @@ impl ModulePrepared {
             definition_ordinal: u32::try_from(ordinal).ok()?,
             definition_identity: definition.identity,
             definition_slot: *index,
+            recursive: calls_self(definition),
         })
     }
 
@@ -397,6 +405,39 @@ impl ModulePrepared {
             .last()
             .ok_or(ProgramClosureError::Invalid)?;
         self.checked_program_closure_source(module, &owner)
+    }
+
+    /// The exported root and its closed dependency closure, established from
+    /// an exact checked invocation of that root in the pure profile. A signed
+    /// owner is verified only when an expression invoking it is prepared, so
+    /// a scoped recursive owner can be established here, never from the
+    /// module alone.
+    pub fn checked_invocation_closure(
+        &self,
+        module_identity: u64,
+        root: &str,
+    ) -> Result<(CheckedProgramOwner, alloc::vec::Vec<CheckedProgramOwner>), ProgramClosureError>
+    {
+        if self.kind != ModuleKind::Expression
+            || self.pending.is_some()
+            || !self.staged.bindings.is_empty()
+        {
+            return Err(ProgramClosureError::Invalid);
+        }
+        let module = self
+            .staged
+            .modules
+            .iter()
+            .find(|module| module.identity == module_identity)
+            .ok_or(ProgramClosureError::Invalid)?;
+        let owner = self
+            .checked_program_owner_source(module, root)
+            .ok_or(ProgramClosureError::Invalid)?;
+        if self.checked_program_invocation(&owner).is_none() {
+            return Err(ProgramClosureError::Invalid);
+        }
+        let closure = self.checked_program_closure_source(module, &owner)?;
+        Ok((owner, closure))
     }
 
     /// Only a closed source graph that actually invokes the exact selected
@@ -550,9 +591,19 @@ impl ModulePrepared {
                             pending.push(next);
                         }
                     }
-                    crate::source::Kind::Call(
-                        crate::source::Target::SlotInvoke(_) | crate::source::Target::SelfOwner,
-                    ) => return Err(ProgramClosureError::Unsupported),
+                    // A scoped recursive call is admitted only inside its own
+                    // verified signed owner; it adds no edge to the closure.
+                    crate::source::Kind::Call(crate::source::Target::SelfOwner) => {
+                        let is_own_owner = definition.signed.as_ref().is_some_and(|relation| {
+                            usize::try_from(relation.source_slot).ok() == Some(index)
+                        });
+                        if !is_own_owner {
+                            return Err(ProgramClosureError::Invalid);
+                        }
+                    }
+                    crate::source::Kind::Call(crate::source::Target::SlotInvoke(_)) => {
+                        return Err(ProgramClosureError::Unsupported)
+                    }
                     _ => {}
                 }
             }
@@ -578,6 +629,7 @@ impl ModulePrepared {
                     .map_err(|_| ProgramClosureError::Invalid)?,
                 definition_identity: named[index].identity,
                 definition_slot: u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?,
+                recursive: calls_self(&named[index]),
             });
         }
         if visited.iter().filter(|seen| **seen).count() == closure.len() {
@@ -1454,6 +1506,17 @@ impl ModuleSession {
             retained_source_limit: self.retained_source_limit,
         }
     }
+}
+
+/// Whether a definition contains a lexical self call. Only a signed owner
+/// can resolve one; the closure walk separately requires it to be its own.
+fn calls_self(definition: &crate::source::Named) -> bool {
+    definition.tree.nodes.iter().any(|node| {
+        matches!(
+            node.kind,
+            crate::source::Kind::Call(crate::source::Target::SelfOwner)
+        )
+    })
 }
 
 #[expect(

@@ -1692,6 +1692,45 @@ const HOST_EMIT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.
 const HOST_WRONG_RESULT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 2 + ] ]";
 const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-export-marker\" \"hidden-capture-destination\" code_export ] ]";
 
+/// Imports an untrusted package from stdin under the preselected bound
+/// policy. Only the exact same independently selected binding can admit a
+/// host-contract row; importing installs no guest and issues no effect.
+fn import_under_policy(policy: &WorkerHostPolicy) -> Result<serde_json::Value> {
+    use std::io::Read;
+    let limit = super::worker_program::PACKAGE_BYTES;
+    let mut package = Vec::new();
+    std::io::stdin()
+        .lock()
+        .take(
+            u64::try_from(limit)?
+                .checked_add(1)
+                .context("package bound overflow")?,
+        )
+        .read_to_end(&mut package)?;
+    ensure!(
+        !package.is_empty() && package.len() <= limit,
+        "Worker package byte bound"
+    );
+    let mut trace = super::worker_program::ImportTrace::default();
+    let imported = ProgramStore::import(
+        &package,
+        Some(policy.clone()),
+        super::worker_program::RUNTIME_REQUEST_WORK,
+        &mut trace,
+    );
+    let outcome = match imported {
+        Ok(_) => "ready",
+        Err(Refusal::Invalid) => "invalid-input",
+        Err(Refusal::Unsupported) => "unsupported",
+        Err(Refusal::Exhausted) => "exhausted",
+    };
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","outcome":outcome,
+        "operation":"import","source_installations":trace.installations,
+        "guest_requests":0,"protected_operations":0,"executable_guest_installed":false,
+    }))
+}
+
 fn host_ledger_denial_source() -> Vec<u8> {
     // One checked Text atom, not 257 recipe leaves: four committed copies
     // precede the fifth callback's actual ledger-byte quota refusal.
@@ -1722,7 +1761,8 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "emit-panic",
                         "emit-revoked",
                         "wit-export",
-                        "core-export"
+                        "core-export",
+                        "emit-import"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -1735,7 +1775,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             // The fixture source, unlike stdin, is chosen before evaluating any
             // candidate bytes. No arbitrary checked candidate can select a grant.
             let trusted_source = match mode {
-                "emit" | "emit-request-denied" => HOST_EMIT_SOURCE.to_vec(),
+                "emit" | "emit-request-denied" | "emit-import" => HOST_EMIT_SOURCE.to_vec(),
                 "emit-wrong" => HOST_WRONG_RESULT_SOURCE.to_vec(),
                 "emit-ledger-denied" => host_ledger_denial_source(),
                 "emit-panic" | "emit-revoked" => HOST_EMIT_SOURCE.to_vec(),
@@ -1792,6 +1832,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                 )?
             };
             selected_policy = Some(policy.clone());
+            if mode == "emit-import" {
+                return import_under_policy(&policy);
+            }
             let mut source = Vec::new();
             std::io::stdin()
                 .lock()

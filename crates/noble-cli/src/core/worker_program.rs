@@ -17,7 +17,7 @@ const GRAPH_LIMIT: usize = 4_096;
 const WITNESS_LIMIT: usize = 4_096;
 const RECIPE_DEPTH_LIMIT: u32 = 32;
 const RECIPE_LEAF_LIMIT: u32 = 256;
-const PACKAGE_BYTES: usize = 262_144;
+pub(super) const PACKAGE_BYTES: usize = 262_144;
 const PACKAGE_DEPTH: usize = 32;
 /// format, semantic_revision, wit_world, source_utf8, root, graph,
 /// selected_node, selected_graph_blake3, definitions, builtins, interface,
@@ -26,8 +26,8 @@ const PACKAGE_FIELDS: usize = 15;
 /// The pure builtin table is the checker's core vocabulary; each package row
 /// binds one builtin spelling to this kernel semantic revision.
 const BUILTIN_COUNT: u32 = 22;
-const RUNTIME_REQUEST_WORK: usize = 50_000_000;
-const PACKAGE_REVISION: &str = "0.1.0-draft.10";
+pub(super) const RUNTIME_REQUEST_WORK: usize = 50_000_000;
+const PACKAGE_REVISION: &str = "0.1.0-draft.11";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
@@ -71,6 +71,8 @@ struct Owner {
     version: u32,
     ordinal: u32,
     identity: u64,
+    /// The definition is its own scoped recursive owner.
+    recursive: bool,
 }
 
 pub(crate) struct CheckedTextAlias {
@@ -203,8 +205,13 @@ impl Store {
         });
         let retained = noble_contracts::source::RetainedSourceLimit::new(limits.bytes)
             .ok_or(Refusal::Exhausted)?;
-        let session = noble_contracts::source::ModuleSession::new(bindings, retained)
-            .map_err(source_refusal)?;
+        let session = match &policy {
+            // A host-bound Program keeps the unsigned grammar.
+            Some(_) => noble_contracts::source::ModuleSession::new(bindings, retained),
+            // A pure Program may contain signed, scoped self recursion.
+            None => noble_contracts::source::ModuleSession::new_signed_self(bindings, retained),
+        }
+        .map_err(source_refusal)?;
         let module = session
             .prepare(source, &[], limits)
             .map_err(source_refusal)?;
@@ -217,18 +224,41 @@ impl Store {
         {
             return Err(Refusal::Unsupported);
         }
-        // The closure walk runs first so its exhaustion stays the primary
-        // outcome; the bound owner walk below repeats an admitted walk.
-        let closure = match &policy {
-            Some(selected) => module.checked_program_closure_for_binding(name, selected.binding()),
-            None => module.checked_program_closure(name),
+        // A host-selected binding is checked at module level; the closure walk
+        // runs first so its exhaustion stays the primary outcome. A pure root
+        // is checked from its exact invocation below, where signed recursive
+        // owners become verified.
+        let bound = match &policy {
+            Some(selected) => {
+                let closure = module
+                    .checked_program_closure_for_binding(name, selected.binding())
+                    .map_err(closure_refusal)?;
+                let owner = module
+                    .checked_program_owner_for_binding(name, selected.binding())
+                    .ok_or(Refusal::Invalid)?;
+                Some((owner, closure))
+            }
+            None => None,
+        };
+        let (module_identity, module_name, version) =
+            module.resolved_module().ok_or(Refusal::Invalid)?;
+        let (session, committed) = session.commit(module);
+        committed.map_err(source_refusal)?;
+        if let (Some(selected), Some((owner, _))) = (&policy, &bound) {
+            if !selected.matches_source(source, owner.definition_identity(), session.generation()) {
+                return Err(Refusal::Invalid);
+            }
         }
-        .map_err(closure_refusal)?;
-        let owner = match &policy {
-            Some(selected) => module.checked_program_owner_for_binding(name, selected.binding()),
-            None => module.checked_program_owner(name),
-        }
-        .ok_or(Refusal::Invalid)?;
+        let invocation = format!("{module_name}@{version}.{name}");
+        let prepared = session
+            .prepare(invocation.as_bytes(), input, limits)
+            .map_err(source_refusal)?;
+        let (owner, closure) = match bound {
+            Some(checked) => checked,
+            None => prepared
+                .checked_invocation_closure(module_identity, name)
+                .map_err(closure_refusal)?,
+        };
         if closure.is_empty() {
             return Err(Refusal::Invalid);
         }
@@ -237,18 +267,6 @@ impl Store {
             .checked_sub(source.len())
             .and_then(|left| left.checked_sub(closure.len().checked_mul(8)?))
             .ok_or(Refusal::Exhausted)?;
-        let (_, module_name, version) = module.resolved_module().ok_or(Refusal::Invalid)?;
-        let (session, committed) = session.commit(module);
-        committed.map_err(source_refusal)?;
-        if policy.as_ref().is_some_and(|selected| {
-            !selected.matches_source(source, owner.definition_identity(), session.generation())
-        }) {
-            return Err(Refusal::Invalid);
-        }
-        let invocation = format!("{module_name}@{version}.{name}");
-        let prepared = session
-            .prepare(invocation.as_bytes(), input, limits)
-            .map_err(source_refusal)?;
         let checked_interface = match &policy {
             Some(selected) => {
                 prepared.checked_program_interface_for_binding(&owner, selected.binding())
@@ -282,12 +300,16 @@ impl Store {
         {
             return Err(Refusal::Invalid);
         }
-        let compiled = noble_wasm::source::Compiler::new_worker()
-            .prepare(submission)
-            .map_err(|problem| match problem {
-                noble_wasm::Diagnostic::Exhausted => Refusal::Exhausted,
-                _ => Refusal::Invalid,
-            })?;
+        // Signed recursion compiles only through the sealed rederivation.
+        let compiler = noble_wasm::source::Compiler::new_worker();
+        let compiled = match prepared.signed_source_owner() {
+            Some(signed) => compiler.prepare_worker_signed(&signed),
+            None => compiler.prepare(submission),
+        }
+        .map_err(|problem| match problem {
+            noble_wasm::Diagnostic::Exhausted => Refusal::Exhausted,
+            _ => Refusal::Invalid,
+        })?;
         let mut nodes = Vec::with_capacity(closure.len());
         let mut witnesses = Vec::with_capacity(closure.len());
         let mut owners = Vec::with_capacity(closure.len());
@@ -354,6 +376,7 @@ impl Store {
                 version: dependency.module_version(),
                 ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity(),
+                recursive: dependency.is_recursive(),
             });
             for text in &source_definition.body.texts {
                 let node = usize::try_from(text.node.0).map_err(|_| Refusal::Exhausted)?;
@@ -407,6 +430,7 @@ impl Store {
                 version: owner.module_version(),
                 ordinal: owner.definition_ordinal(),
                 identity: owner.definition_identity(),
+                recursive: owner.is_recursive(),
             },
             root_index: root,
             closure: owners,
@@ -625,7 +649,14 @@ impl Store {
                     witness: index,
                 })
                 .ok_or(Refusal::Invalid)?;
-            definitions.push(json!({"owner":owner.wire(),
+            // A recursive definition's scoped self owner is itself; import
+            // regenerates this row, so a foreign self owner cannot match.
+            let self_owner = if owner.recursive {
+                owner.wire()
+            } else {
+                Value::Null
+            };
+            definitions.push(json!({"owner":owner.wire(),"self_owner":self_owner,
                 "recipe_sha256":crate::workflow::intrinsic::sha256(&named.checked_recipe)}));
         }
         let mut graph = Vec::with_capacity(self.nodes.len());
@@ -796,16 +827,19 @@ impl Store {
         }
         if document["format"] != "noble-worker-program-package/v2"
             || document["semantic_revision"] != PACKAGE_REVISION
+            || document["wit_world"] != WIT_WORLD
         {
             return Err(Refusal::Unsupported);
         }
+        // This revision fixes the field set and carries no executable
+        // artifact: an artifact, accepted flag or any other extra claim is a
+        // malformed package, not an unsupported feature.
         if document["artifact"] != Value::Null
-            || document["wit_world"] != WIT_WORLD
             || document
                 .as_object()
                 .is_none_or(|fields| fields.len() != PACKAGE_FIELDS)
         {
-            return Err(Refusal::Unsupported);
+            return Err(Refusal::Invalid);
         }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
@@ -1190,8 +1224,20 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
     )
     .map_err(|_| ("invalid-input", "package file admission failed"))?;
     let mut trace = ImportTrace::default();
-    let (store, root) =
-        Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace).map_err(refusal)?;
+    let (store, root) = match Store::import(&package, None, RUNTIME_REQUEST_WORK, &mut trace) {
+        Ok(imported) => imported,
+        // A refusal still reports how many source modules were installed
+        // before it, so a hostile package cannot hide a partial admission.
+        Err(problem) => {
+            let (outcome, diagnostic) = refusal(problem);
+            return Ok(
+                json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
+                "outcome":outcome,"diagnostic":diagnostic,
+                "source_installations":trace.installations,"guest_requests":0,
+                "protected_operations":0,"executable_guest_installed":false}),
+            );
+        }
+    };
     Ok(
         json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
@@ -1888,7 +1934,7 @@ mod tests {
                     value["artifact"] = json!({"wasm":"claimed-accepted"});
                     value
                 },
-                Refusal::Unsupported,
+                Refusal::Invalid,
             ),
             (
                 "unbound captured Text",
@@ -2104,7 +2150,7 @@ mod tests {
                     value["artifact"] = json!({"wasm":"claimed-accepted"});
                     value
                 },
-                Refusal::Unsupported,
+                Refusal::Invalid,
             ),
             (
                 "accepted flag",
@@ -2113,7 +2159,28 @@ mod tests {
                     value["accepted"] = json!(true);
                     value
                 },
-                Refusal::Unsupported,
+                Refusal::Invalid,
+            ),
+            (
+                "invalid body keeping the valid package's digest",
+                {
+                    let mut value = package.clone();
+                    value["source_utf8"] =
+                        json!(String::from_utf8_lossy(source).replace("1 - ]", "1 - - ]"));
+                    value
+                },
+                Refusal::Invalid,
+            ),
+            (
+                "invalid body with digest and accepted flag",
+                {
+                    let mut value = package.clone();
+                    value["source_utf8"] =
+                        json!(String::from_utf8_lossy(source).replace("1 - ]", "1 - - ]"));
+                    value["accepted"] = json!(true);
+                    value
+                },
+                Refusal::Invalid,
             ),
             (
                 "forged captured Text",
@@ -2209,5 +2276,96 @@ mod tests {
             Some(Refusal::Exhausted),
             "one more decoded graph node must not fit the exact budget"
         );
+    }
+
+    const RECURSIVE: &[u8] = b"module Worker@1 [ def dec [ \"tag\" drop 1 - ] signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dec count 1 + ] if ] ]";
+
+    #[test]
+    fn recursive_package_retains_its_scoped_self_owner_and_rejects_a_foreign_one() {
+        let (mut store, root) =
+            Store::prepare(RECURSIVE, "count", &[Ty::I64], RUNTIME_REQUEST_WORK)
+                .expect("signed recursive Program");
+        let encoded = granted_export(&mut store, root);
+        let package: Value = serde_json::from_slice(&encoded).unwrap();
+        let dec = package["definitions"][0].clone();
+        let count = package["definitions"][1].clone();
+        assert_eq!(count["owner"], package["root"]["owner"]);
+        assert_eq!(count["self_owner"], count["owner"]);
+        assert_eq!(dec["self_owner"], Value::Null);
+        let mut trace = ImportTrace::default();
+        let (mut imported, selected) =
+            Store::import(&encoded, None, RUNTIME_REQUEST_WORK, &mut trace)
+                .expect("the exact recursive package imports");
+        assert_eq!(trace.installations, 1);
+        assert_eq!(
+            crate::core::worker_program_guest::execute(&mut imported, selected, 20, 1)
+                .unwrap()
+                .value,
+            21,
+            "the imported recursive Program must run through its own owner"
+        );
+        for (label, path, value) in [
+            (
+                "self owner of another definition",
+                "/definitions/1/self_owner",
+                dec["owner"].clone(),
+            ),
+            (
+                "self owner claimed by a non-recursive definition",
+                "/definitions/0/self_owner",
+                dec["owner"].clone(),
+            ),
+            (
+                "recursive owner dropped",
+                "/definitions/1/self_owner",
+                Value::Null,
+            ),
+            (
+                "self owner from a foreign module",
+                "/definitions/1/self_owner/module_id",
+                json!("999"),
+            ),
+        ] {
+            let mut altered = package.clone();
+            *altered.pointer_mut(path).expect(label) = value;
+            let mut trace = ImportTrace::default();
+            assert_eq!(
+                Store::import(
+                    &serde_json::to_vec(&altered).unwrap(),
+                    None,
+                    RUNTIME_REQUEST_WORK,
+                    &mut trace,
+                )
+                .err(),
+                Some(Refusal::Invalid),
+                "{label}"
+            );
+            assert_eq!(
+                trace.installations, 0,
+                "{label} installed Wasm before refusal"
+            );
+        }
+        for (label, source, name) in [
+            (
+                "unsigned self recursion",
+                b"module Worker@1 [ export spin def spin [ 1 + spin ] ]".as_slice(),
+                "spin",
+            ),
+            (
+                "polymorphic recursion",
+                b"module Worker@1 [ signature recur forall<S:stack> [ S -- S ! pure ] export recur def recur [ 1 recur drop ] ]".as_slice(),
+                "recur",
+            ),
+            (
+                "mutual recursion",
+                b"module Worker@1 [ signature even forall<S:stack> [ S I64 -- S I64 ! pure ] signature odd forall<S:stack> [ S I64 -- S I64 ! pure ] def odd [ even ] export even def even [ odd ] ]".as_slice(),
+                "even",
+            ),
+        ] {
+            assert!(
+                Store::prepare(source, name, &[Ty::I64], RUNTIME_REQUEST_WORK).is_err(),
+                "{label} was admitted"
+            );
+        }
     }
 }

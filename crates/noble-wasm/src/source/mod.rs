@@ -832,6 +832,31 @@ impl Compiler {
         self.prepare_from(&submission, None, self.functions, false, false, true)
     }
 
+    /// Worker ingress for a pure Program with signed, scoped recursion. Like
+    /// `prepare_signed`, it compiles only a rederivation from the private
+    /// staged source after each signed owner is authenticated; no public
+    /// Submission can authorize `SignedSelf` in a Worker module.
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
+    pub fn prepare_worker_signed(
+        &self,
+        source: &noble_contracts::source::SignedSourceOwner<'_>,
+    ) -> Result<Prepared, crate::Diagnostic> {
+        if !self.worker_inputs
+            || self.live
+            || self.live_slots
+            || self.text_cursor
+            || self.declared_text
+            || self.calculator
+        {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        self.prepare_from(&submission, None, self.functions, false, false, true)
+    }
+
     /// The merged cursor/declared profile has no raw Submission ingress.
     /// Rebuild from the contracts-private source snapshot, including the
     /// signed owner and all quotations, before the fixed-prefix admission audit.
@@ -952,8 +977,7 @@ impl Compiler {
                 || self.live
                 || self.live_slots
                 || self.text_cursor
-                || self.calculator
-                || signed)
+                || self.calculator)
         {
             return Err(crate::Diagnostic::Unsupported);
         }

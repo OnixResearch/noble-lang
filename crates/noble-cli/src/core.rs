@@ -61,6 +61,8 @@ pub const USAGE: &str = "usage:
   adapt, select, duplicate and compose typed handles under an explicit bound.
   This local builder does not execute a guest, import/export packages or grant effects.
   noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure
+  A pure Program may use signed, scoped self recursion (`signature` plus
+  a self call); host-bound Programs may not.
   Selected pure WIT owner invokes the actual checked named Program cell in a
   fresh, bounded source Wasm instance. Guest source and component are rebuilt;
   this source-only path is not yet execution evidence without scoped Wasm tests.
@@ -75,6 +77,9 @@ pub const USAGE: &str = "usage:
   A test.emit package/ceiling is refused: the host-only bound adapter and
   revocable effect policy require an explicit embedder, never a CLI argument.
   noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
+  noble worker program test-host emit-import < PACKAGE
+  Import an untrusted package under the same preselected test.emit binding;
+  only that exact host-contract row can match, and importing issues nothing.
   Dedicated finite synthetic test embedder: built-in exact fixture source,
   checked owner, adapter, destination and epoch are chosen before bounded
   untrusted stdin; source mismatch denies before any issue. Only an installed
