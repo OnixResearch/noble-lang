@@ -2172,7 +2172,7 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
-      "sha256": "7bc660aa9cb2f9035391e12cf44779fed530e00863eee12d85724a5550591b4e"
+      "sha256": "ebfc970eef6217d75c36f201ce2c32736ad1f90d2a1d4d96fbf6a7c5b015dbb0"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
@@ -2184,7 +2184,7 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
-      "sha256": "51c55e91d402d4da81e59e3abdcefd446ba145b5e467e10475cf0f1f6f62f7c7"
+      "sha256": "db09f2ee2c872dcedf65ac7a1b41279e6229be4d274d63c8650ca33cc1ebd58c"
     },
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
@@ -2440,7 +2440,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "da61b224cf86e35b3e326ecd063394bf2984f54b2170253ea834db81a33689aa"
+      "sha256": "a90cbbe240143574efd8ad59f4c312f72387d134b6004af40fd65346d642265c"
     },
     {
       "file": "specs/SAFETY.md",
