@@ -26,6 +26,41 @@ pub(super) fn write(
 (import \"noble\" \"resource_bind_validate\" (func $host_resource_bind_validate (param i32 i32 i32 i32 i32 i32) (result i32)))\n"
         ));
     }
+    attempt!(host_function_imports(out, plan));
+    attempt!(globals(out));
+    if plan.calculator {
+        // Immutable and per instance: the compiler generation this module was
+        // validated against, bound by the engine at instantiation.
+        attempt!(out
+            .append(b"(import \"noble\" \"submit_generation\" (global $submit_generation i32))\n"));
+    }
+    attempt!(global_import(out, b"allocated_total", b"i64"));
+    attempt!(global_import(out, b"released_total", b"i64"));
+    if plan.live_slots {
+        attempt!(global_import(out, b"live_target", b"i32"));
+        attempt!(global_import(out, b"live_frame", b"i32"));
+        attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
+    }
+    if plan.core_live {
+        attempt!(out.append(
+            b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
+(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
+(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n"
+        ));
+    }
+    attempt!(out.append(
+        b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
+    ));
+    arena_limits(out, plan.calculator)
+}
+
+/// Imported host functions selected by the plan's effects and profile, in
+/// their fixed declaration order.
+fn host_function_imports(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     if plan.has_core_emit {
         attempt!(out.append(
             b"(import \"noble\" \"test_emit\" (func $host_emit (param i32 i32) (result i32)))\n"
@@ -55,32 +90,7 @@ pub(super) fn write(
             b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"
         ));
     }
-    attempt!(globals(out));
-    if plan.calculator {
-        // Immutable and per instance: the compiler generation this module was
-        // validated against, bound by the engine at instantiation.
-        attempt!(out
-            .append(b"(import \"noble\" \"submit_generation\" (global $submit_generation i32))\n"));
-    }
-    attempt!(global_import(out, b"allocated_total", b"i64"));
-    attempt!(global_import(out, b"released_total", b"i64"));
-    if plan.live_slots {
-        attempt!(global_import(out, b"live_target", b"i32"));
-        attempt!(global_import(out, b"live_frame", b"i32"));
-        attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
-    }
-    if plan.core_live {
-        attempt!(out.append(
-            b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
-(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
-(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
-(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n"
-        ));
-    }
-    attempt!(out.append(
-        b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
-    ));
-    arena_limits(out, plan.calculator)
+    Ok(())
 }
 
 /// Per-profile arena bounds read by the shared runtime fragments. The Core16

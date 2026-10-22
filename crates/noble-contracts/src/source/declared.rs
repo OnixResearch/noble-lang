@@ -167,10 +167,6 @@ pub(crate) struct DefinitionOrigin<'a> {
     pub span: crate::Span,
 }
 
-#[expect(
-    tigerstyle::interior_mutability_in_core,
-    reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
-)]
 /// Reparse a claimed module's source, not its specialization slots, to bind
 /// one lexical definition to its exact original bracketed body. This proves
 /// internal consistency of the supplied bytes, not their historical
