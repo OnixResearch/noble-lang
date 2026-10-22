@@ -1447,6 +1447,22 @@
       "sha256": "07bc8719f5ab199130bffa27db3a88aea6b70963e65654ff79a3bfe7fa02b40a"
     },
     {
+      "file": ".cairn/archive/2026-10-22-worker-bounded-execution-profile/design.md",
+      "sha256": "84ae93bc8c91f56475a94cf966dc3ddacfed737df53d5700d871bb1394e25aef"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-bounded-execution-profile/proposal.md",
+      "sha256": "80fe8eff5df3d80430ac867fbbbc4481c24686acdfcd4a79eea2461e3f0417a0"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-bounded-execution-profile/specs/language/spec.md",
+      "sha256": "cf6175db18c3e9ab8ea0c521f196b87a00f4b9a6064f25840c299f8288f3caad"
+    },
+    {
+      "file": ".cairn/archive/2026-10-22-worker-bounded-execution-profile/tasks.md",
+      "sha256": "f6b8abf8ea5827974ccb4983baceaf1dfbc4d988a750fa2b044266bb29a9d223"
+    },
+    {
       "file": ".cairn/archive/2026-10-22-worker-preparation-service/design.md",
       "sha256": "5ded436273ac04bc63880542a168f4653e3246078865280bf780a9671c47137a"
     },
@@ -2240,7 +2256,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "9ea12b1dc8431571e53d51788dd958ab18f7b1570c2934c5bfaa80afe97f9b14"
+      "sha256": "af6a6c9b19d8b963a64b745a958736d2eef6fa2028087dfb9ab27ad17983dfd0"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -2440,7 +2456,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "a90cbbe240143574efd8ad59f4c312f72387d134b6004af40fd65346d642265c"
+      "sha256": "17c51ff20e6e42da5ac9cb226ae04650fab6971d96c0d8335b3ed82213dc142f"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2452,7 +2468,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "15265df7420551f45f57b3e85670ae7ba6d1d1e078727fb0dc6ac5b732707726"
+      "sha256": "7a9f909704c4199aad990aee178e05fe9110bc329d86508afece3400926a45bc"
     },
     {
       "file": "specs/spec-family.json",
