@@ -1,0 +1,1 @@
+{"body":[0],"expected":{"allowed_effects":[],"in":[{"i64":{}}],"out":[{"i64":{}},{"i64":{}}]},"format":"noble-candidate/v1","nodes":[{"def":0,"inst":[{"stack":[]},{"value":{"i64":{}}}],"kind":"invocation"}],"semantic_revision":0}

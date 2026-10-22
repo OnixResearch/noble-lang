@@ -1,0 +1,1 @@
+{"body":[0,1,2],"format":"noble-candidate/v1","nodes":[{"inst":[{"stack":[{"i64":{}}]}],"kind":"literal","lit":{"i64":1}},{"def":2,"inst":[{"stack":[]},{"value":{"i64":{}}},{"value":{"i64":{}}}],"kind":"invocation"},{"def":4,"inst":[{"stack":[]}],"kind":"signed-self"}],"semantic_revision":0}

@@ -694,7 +694,7 @@ impl Store {
         Ok(crate::workflow::intrinsic::sha256(&preimage))
     }
 
-    fn selected_graph_blake3(&self, selected: usize) -> Result<String, Refusal> {
+    pub(crate) fn selected_graph_blake3(&self, selected: usize) -> Result<String, Refusal> {
         let mut digest = blake3::Hasher::new();
         digest.update(b"noble-worker-checked-graph-v2\0");
         digest.update(&self.source);

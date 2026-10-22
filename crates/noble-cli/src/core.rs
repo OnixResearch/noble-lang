@@ -12,6 +12,7 @@ pub(crate) mod live_slot;
 pub(crate) mod output;
 mod report;
 pub(crate) mod worker;
+mod worker_candidate;
 pub(crate) mod worker_package;
 pub(crate) mod worker_program;
 mod worker_program_guest;
@@ -83,6 +84,13 @@ pub const USAGE: &str = "usage:
   A test.emit package/ceiling is refused: the host-only bound adapter and
   revocable effect policy require an explicit embedder, never a CLI argument.
   noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export|builders < FIXTURE_SOURCE
+  noble worker program test-host candidate|candidate-fault < CANDIDATE_JSON
+  Consumer acceptance of one untrusted noble-candidate/v1 document: the host
+  selects the session, the expected interface (its own pure Program's), the
+  bootstrap environment and the limits; the document carries only the
+  candidate. The kernel checker runs at most once and only an accepted
+  candidate is published. candidate-fault injects a host fault inside the
+  acceptance stage.
   noble worker program test-host emit-import < PACKAGE
   Import an untrusted package under the same preselected test.emit binding;
   only that exact host-contract row can match, and importing issues nothing.

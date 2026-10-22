@@ -1696,6 +1696,200 @@ const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text T
 /// `I64 -- I64 ! {test.emit}` Program in one checked source closure.
 const HOST_BUILDER_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit def increment [ 1 + ] export plus def plus [ \"builder-ledger-marker\" emit increment ] ]";
 
+/// The synthetic ledger's exact host-selected `test.emit` bound adapter.
+fn emit_binding() -> noble_contracts::source::BoundOperation {
+    noble_contracts::source::BoundOperation {
+        module_name: "Ledger".into(),
+        module_version: 1,
+        operation: "test.emit".into(),
+        adapter_identity: "worker-test-emit@1.0.0".into(),
+        adapter_slot: 4,
+        input: vec![noble_kernel::types::Ty::Text],
+        output: vec![],
+        effects: vec![noble_kernel::contracts::TEST_EMIT],
+    }
+}
+
+/// The checked pure Program of the builder fixture closure.
+fn pure_program(store: &ProgramStore, root: Handle) -> Result<Handle> {
+    (0..store.recipe_nodes())
+        .filter_map(|index| store.checked_root(index))
+        .find(|handle| {
+            *handle != root
+                && store
+                    .interface(*handle)
+                    .is_some_and(|(_, _, effects)| effects.is_empty())
+        })
+        .context("fixture closure has no pure checked Program")
+}
+
+/// The consumer's admitted state: the prior Worker Program session and the
+/// candidates this embedder has accepted into it.
+fn session_fingerprint(store: &ProgramStore, root: Handle, accepted: &[String]) -> Result<String> {
+    let graph = store
+        .selected_graph_blake3(store.node_index(root).context("session root lost")?)
+        .map_err(|problem| anyhow::anyhow!("session graph refused: {problem:?}"))?;
+    let mut nodes = Vec::with_capacity(store.recipe_nodes());
+    for index in 0..store.recipe_nodes() {
+        let handle = store.node_handle(index).context("session node lost")?;
+        nodes.push(
+            store
+                .interface_text(handle)
+                .map_err(|problem| anyhow::anyhow!("session interface refused: {problem:?}"))?,
+        );
+    }
+    let state = serde_json::json!({"graph":graph,"nodes":nodes,"compilations":store.compilations(),
+        "wat_sha256":crate::workflow::intrinsic::sha256(store.wat()),"accepted":accepted});
+    Ok(crate::workflow::intrinsic::sha256(
+        serde_json::to_vec(&state)?.as_slice(),
+    ))
+}
+
+/// WORKER-07 consumer embedder. The host selects the prior session, the
+/// expected interface (its own checked pure Program's), the bootstrap
+/// environment and the limits before reading the untrusted candidate on
+/// stdin. The kernel acceptance checker is the only route, invoked at most
+/// once; only an accepted candidate is published into the session. With
+/// `fault`, a host-selected fault fires inside the acceptance stage after
+/// the checker returns, so nothing is published and no other route runs.
+fn candidate_admission(fault: bool) -> Result<serde_json::Value> {
+    use std::io::Read;
+    let issuer = HostWorkerIssuer::select_checked(
+        HOST_BUILDER_SOURCE,
+        "plus",
+        "synthetic-ledger",
+        1,
+        emit_binding(),
+    )?;
+    let (store, root) = issuer
+        .prepare(HOST_BUILDER_SOURCE, "plus", 160_000_000)
+        .map_err(|problem| anyhow::anyhow!("prior session refused: {problem:?}"))?;
+    let consumer = pure_program(&store, root)?;
+    let (stack_in, stack_out, allowed) = store
+        .interface(consumer)
+        .context("consumer interface lost")?;
+    let expected_interface = store
+        .interface_text(consumer)
+        .map_err(|problem| anyhow::anyhow!("consumer interface refused: {problem:?}"))?;
+    let mut accepted: Vec<String> = Vec::new();
+    let before = session_fingerprint(&store, root, &accepted)?;
+    let limit = usize::try_from(super::SOURCE_LIMITS.bytes)?;
+    let mut bytes = Vec::new();
+    std::io::stdin()
+        .lock()
+        .take(
+            u64::try_from(limit)?
+                .checked_add(1)
+                .context("candidate bound")?,
+        )
+        .read_to_end(&mut bytes)?;
+    let request = noble_kernel::untrusted::Request {
+        input_bytes: u32::try_from(bytes.len()).unwrap_or(u32::MAX),
+        expected: noble_kernel::untrusted::Expected {
+            stack_in: stack_in.to_vec(),
+            stack_out: stack_out.to_vec(),
+            allowed_effects: allowed.clone(),
+        },
+        limits: noble_kernel::untrusted::Limits {
+            bytes: super::SOURCE_LIMITS.bytes,
+            nodes: 256,
+            depth: 32,
+            type_size: 64,
+            stack_height: 64,
+            work: 100_000,
+            diagnostics: 64,
+        },
+    };
+    let invocations = std::cell::Cell::new(0_u32);
+    let decoded = if bytes.len() > limit {
+        Err(super::worker_candidate::Refused::Exhausted(
+            "candidate bytes exceed 65536",
+        ))
+    } else {
+        super::worker_candidate::decode(&bytes)
+    };
+    let (outcome, refused_at, detail) = match decoded {
+        Err(refused) => {
+            let (outcome, why) = match refused {
+                super::worker_candidate::Refused::Invalid(why) => ("invalid-input", why),
+                super::worker_candidate::Refused::Unsupported(why) => ("unsupported", why),
+                super::worker_candidate::Refused::Exhausted(why) => ("exhausted", why),
+            };
+            (outcome, Some("decode"), serde_json::json!(why))
+        }
+        Ok(candidate) => {
+            let environment = noble_kernel::contracts::environment()
+                .map_err(|problem| anyhow::anyhow!("bootstrap environment refused: {problem:?}"))?;
+            let checked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                invocations.set(invocations.get().saturating_add(1));
+                let outcome = noble_kernel::acceptance::check(&environment, &request, &candidate);
+                if fault {
+                    std::panic::panic_any("host-selected fault inside the acceptance stage");
+                }
+                outcome
+            }));
+            match checked {
+                Err(_) => (
+                    "internal-failure",
+                    Some("acceptance"),
+                    serde_json::json!("host-selected fault inside the acceptance stage"),
+                ),
+                Ok(noble_kernel::untrusted::Outcome::Accepted(checked)) => {
+                    accepted.push(crate::workflow::intrinsic::sha256(&bytes));
+                    let interface = &checked.interface;
+                    (
+                        "ready",
+                        None,
+                        serde_json::json!({"derivations":checked.derivations.len(),
+                            "stack_in":interface.stack_in.len(),"stack_out":interface.stack_out.len()}),
+                    )
+                }
+                Ok(noble_kernel::untrusted::Outcome::Invalid(diagnostic)) => (
+                    "invalid-input",
+                    Some("acceptance"),
+                    serde_json::json!(format!("{:?}", diagnostic.constraint)),
+                ),
+                Ok(noble_kernel::untrusted::Outcome::Unsupported(kind)) => (
+                    "unsupported",
+                    Some("acceptance"),
+                    serde_json::json!(format!("{kind:?}")),
+                ),
+                Ok(noble_kernel::untrusted::Outcome::Exhausted(limit)) => (
+                    "exhausted",
+                    Some("acceptance"),
+                    serde_json::json!(format!("{limit:?}")),
+                ),
+                Ok(noble_kernel::untrusted::Outcome::InternalFailure) => (
+                    "internal-failure",
+                    Some("acceptance"),
+                    serde_json::json!("kernel reported an internal failure"),
+                ),
+            }
+        }
+    };
+    let after = session_fingerprint(&store, root, &accepted)?;
+    let receipt = issuer.receipt()?;
+    let routes: Vec<&str> = if invocations.get() > 0 {
+        vec!["noble_kernel::acceptance::check"]
+    } else {
+        Vec::new()
+    };
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","operation":"candidate-admission",
+        "stage":"acceptance","outcome":outcome,"refused_at":refused_at,"detail":detail,
+        "candidate_format":super::worker_candidate::FORMAT,
+        "candidate_sha256":crate::workflow::intrinsic::sha256(&bytes),
+        "expected_interface":expected_interface,"expected_interface_owner":"consumer",
+        "environment":"bootstrap","fault_injected":fault,
+        "checker_invocations":invocations.get(),"checker_routes":routes,
+        "accepted_programs":accepted.len(),
+        "session":{"before":before,"after":after},"prior_session_unchanged":before == after,
+        "guest_requests":receipt["effect_requests"],
+        "protected_operations":receipt["protected_operations"],
+        "issued_allowance":receipt["issued_allowance"],
+    }))
+}
+
 /// WORKER-03 runtime builders over Programs chosen after compilation. Every
 /// operation is checked against the Programs' instantiated witnesses; none
 /// compiles source, installs or invokes a guest, or issues an allowance.
@@ -1706,15 +1900,7 @@ fn runtime_builders(
     subject: serde_json::Value,
 ) -> Result<serde_json::Value> {
     let refused = |problem: Refusal| anyhow::anyhow!("Worker builder refused: {problem:?}");
-    let pure = (0..store.recipe_nodes())
-        .filter_map(|index| store.checked_root(index))
-        .find(|handle| {
-            *handle != root
-                && store
-                    .interface(*handle)
-                    .is_some_and(|(_, _, effects)| effects.is_empty())
-        })
-        .context("fixture closure has no pure checked Program")?;
+    let pure = pure_program(store, root)?;
     let destination = noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]);
     let pure_interface = store.interface_text(pure).map_err(refused)?;
     let interfaces = [
@@ -1862,7 +2048,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "wit-export",
                         "core-export",
                         "emit-import",
-                        "builders"
+                        "builders",
+                        "candidate",
+                        "candidate-fault"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -1871,6 +2059,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             let mode = arguments[3]
                 .to_str()
                 .context("invalid Worker test host mode")?;
+            if mode == "candidate" || mode == "candidate-fault" {
+                return candidate_admission(mode == "candidate-fault");
+            }
             let emit = mode.starts_with("emit") || mode == "builders";
             // The fixture source, unlike stdin, is chosen before evaluating any
             // candidate bytes. No arbitrary checked candidate can select a grant.
@@ -1883,19 +2074,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                 _ => HOST_EXPORT_SOURCE.to_vec(),
             };
             let (name, binding) = if emit {
-                (
-                    "plus",
-                    noble_contracts::source::BoundOperation {
-                        module_name: "Ledger".into(),
-                        module_version: 1,
-                        operation: "test.emit".into(),
-                        adapter_identity: "worker-test-emit@1.0.0".into(),
-                        adapter_slot: 4,
-                        input: vec![noble_kernel::types::Ty::Text],
-                        output: vec![],
-                        effects: vec![noble_kernel::contracts::TEST_EMIT],
-                    },
-                )
+                ("plus", emit_binding())
             } else {
                 (
                     "capture",
