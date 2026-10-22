@@ -174,7 +174,26 @@
         {"case": "injected-checker-internal-failure", "outcome": "internal-failure"}
       ]},
       "expected": {"stage": "acceptance", "outcome": "no-variant-admitted", "guest_requests": 0, "protected_operations": 0, "accepted_programs": 0, "prior_session_unchanged": true, "fallback_checker_used": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "A consumer that selects its own expected interface, environment and limits refuses all nine WORKER-07 candidate variants with their outcomes (six invalid, two unsupported, one injected internal failure) through the kernel acceptance check as the only route, run at most once, while the same embedder accepts and publishes a valid baseline; no variant publishes a program, changes the session fingerprint, or makes a guest request or protected operation.",
+        "subject": "WORKER-07", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:61052326adbe061130c130664bdc16d2373149e3aafdbbfd421fc48e5a6e3690",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "candidate-witness-boundary", "receipt": "../../verification/worker07/acceptance.json",
+          "receipt_sha256": "2f3d703af983b8f88ededc163fa923df843b72347e745a4cd103ea0c643f8e73",
+          "gate": "verification/worker07/gate.mjs", "case": "WORKER-07", "tested_commit": "d7d6ccb3d6403ade093016bbf39b4b4dd77dcbd4",
+          "binary_sha256": "1e891ea80763873431ad7d009b885ccf9ea67952be51244fd804f940bf0dca13",
+          "command": "noble worker program test-host candidate|candidate-fault < CANDIDATE_JSON",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 098c3412d43f64ae8622940e846b7dc78298dc6804f3be4d2ee0f067598a02b0); every candidate fixture and raw report is retained under verification/worker07."
+        },
+        "assumptions": [
+          "Candidates use the local noble-candidate/v1 wire form against the bootstrap environment and the consumer interface I64 -- I64 ! {}; the document can name neither.",
+          "infinite-type-equation is refused at decoding: candidate types have no variables, so a binding such as a := Pair<ref a, I64> is malformed input that never reaches the checker.",
+          "The interface and environment variants are refused at decoding for carrying metadata; the same bodies without it are refused by the checker (StackJoin, UnknownDefinition(26)).",
+          "The internal failure is a host-selected fault inside the acceptance stage on the valid baseline, not a kernel-raised failure."
+        ]
+      }]
     },
     {
       "id": "WORKER-08", "profile": "Worker-Design", "kind": "adapter",
