@@ -211,6 +211,8 @@ pub struct Compiler {
     declared_text: bool,
     calculator: bool,
     worker_inputs: bool,
+    /// Typed-worker profile: a host interruption point every eighth unit.
+    worker_interruption: bool,
     generation: u32,
     functions: u32,
     retention_revision: u64,
@@ -715,6 +717,7 @@ impl Compiler {
             declared_text: false,
             calculator: false,
             worker_inputs: false,
+            worker_interruption: false,
             generation: 0,
             functions: 4,
             retention_revision: 0,
@@ -786,6 +789,17 @@ impl Compiler {
     pub fn new_worker() -> Self {
         Self {
             worker_inputs: true,
+            ..Self::new()
+        }
+    }
+
+    /// The typed-worker execution profile: worker ingress whose every eighth
+    /// charged unit of execution or observation work calls the imported
+    /// `noble/worker_interrupt_check` with the total charged work.
+    pub fn new_interruptible_worker() -> Self {
+        Self {
+            worker_inputs: true,
+            worker_interruption: true,
             ..Self::new()
         }
     }
@@ -1043,6 +1057,7 @@ impl Compiler {
             declared_text: self.declared_text,
             calculator: self.calculator,
             worker_inputs: self.worker_inputs,
+            worker_interruption: self.worker_interruption,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),

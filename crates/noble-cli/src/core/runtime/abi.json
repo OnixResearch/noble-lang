@@ -75,7 +75,7 @@
     "signature_address":"(id:i32)->UTF-8 descriptor address:i32; the checked source-free runtime bridge inspects all committed signature IDs",
     "signature_length":"(id:i32)->descriptor byte length:i32"
   },
-  "status": {"0":"success","1":"initialization exhaustion","2":"runtime exhaustion","3":"exact interface mismatch","4":"invalid ABI/state","5":"host denial","6":"test.abort trap"},
+  "status": {"0":"success","1":"initialization exhaustion","2":"runtime exhaustion","3":"exact interface mismatch","4":"invalid ABI/state","5":"host denial","6":"test.abort trap","7":"cancelled at a typed-worker interruption point","8":"host deadline at a typed-worker interruption point"},
   "quota_reason": {"1":"allocation","2":"recipe leaves","3":"program graph depth","4":"operand bytes","5":"continuation bytes","6":"execution work","7":"reflection/type-observation work"},
   "limits_maximum": {"allocation_bytes":196608,"recipe_leaves":256,"program_depth":256,"operand_bytes":2048,"continuation_bytes":4096,"steps":100000,"session_cells":4096,"session_functions":16384,"session_literal_bytes":786432},
   "metrics": {"0":"status","1":"quota_reason","2":"allocated_total_bytes","3":"released_total_bytes","4":"allocated_since_begin_bytes","5":"allocation_peak_bytes","6":"operand_peak_bytes","7":"continuation_peak_bytes","8":"execution_steps","9":"quote_invocations","10":"memory_bytes","11":"retained_before_begin_bytes","12":"stack_length","13":"reflection_steps"},

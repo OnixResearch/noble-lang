@@ -8,6 +8,7 @@ pub(super) struct Base {
     declared_text: bool,
     calculator: bool,
     worker_inputs: bool,
+    worker_interruption: bool,
     generation: u32,
     functions: u32,
     text_end_bytes: u32,
@@ -43,6 +44,7 @@ impl Base {
             declared_text: compiler.declared_text,
             calculator: compiler.calculator,
             worker_inputs: compiler.worker_inputs,
+            worker_interruption: compiler.worker_interruption,
             generation: compiler.generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
@@ -84,6 +86,8 @@ impl Base {
             && self.calculator == next.calculator
             && self.worker_inputs == current.worker_inputs
             && self.worker_inputs == next.worker_inputs
+            && self.worker_interruption == current.worker_interruption
+            && self.worker_interruption == next.worker_interruption
             && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end

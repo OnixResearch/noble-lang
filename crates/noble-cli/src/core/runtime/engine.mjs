@@ -280,7 +280,8 @@ export class CoreEngine {
     declared_modules = false, declared_extension = null, in_process_live = false,
     text_byte_cursor = false, calculator = false, calculator_shell_state = false,
     calculator_assembler = null, calculator_trace = false,
-    calculator_module_cache = false, signed_self_recursion = false } = {}) {
+    calculator_module_cache = false, signed_self_recursion = false,
+    worker_interruption = false } = {}) {
     this.selection = selection;
     // This larger bounded cell arena belongs only to Calculator-v1. Do not
     // mutate the parsed ABI shared with the ordinary and cursor profiles.
@@ -295,6 +296,14 @@ export class CoreEngine {
     configureDeclaredAbi(this, this.abi, declared_modules, declared_extension, bindings,
       text_byte_cursor, calculator, signed_self_recursion);
     if (!calculator && calculator_assembler !== null) fail('calculator assembler cannot enter another profile');
+    // The typed-worker execution profile: only that worker's modules may
+    // import the interruption check, and only one execution answers it.
+    if (typeof worker_interruption !== 'boolean'
+      || worker_interruption && this.profile !== 'Declared-Modules-v1') {
+      fail('worker interruption requires the typed declared-module worker');
+    }
+    this.workerInterruption = worker_interruption;
+    this.interruption = null;
     if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
     if (calculator_trace !== false && (calculator_trace !== true || !calculator))
       fail('calculator timings require the calculator profile');
@@ -379,6 +388,9 @@ export class CoreEngine {
     this.shared = Object.create(null);
     installSharedGlobals(this, this.abi);
     installTestHosts(this, declared_modules || calculator);
+    if (this.workerInterruption) {
+      this.shared.worker_interrupt_check = work => this.workerInterruptCheck(work);
+    }
     if (this.inProcessLive) {
       if (!this.declaredLive) {
         this.shared.live_propose = (owner, expected, program) => this.livePropose(owner, expected, program);
@@ -1857,7 +1869,9 @@ export class CoreEngine {
         entry.kind === 'memory' && entry.name === this.abi.memory.name
         || entry.kind === 'table' && entry.name === this.abi.table.name
         || entry.kind === 'global' && globals.has(entry.name)
-        || entry.kind === 'function' && functions.has(entry.name));
+        || entry.kind === 'function' && functions.has(entry.name)
+        || this.workerInterruption && entry.kind === 'function'
+          && entry.name === 'worker_interrupt_check');
       if (!allowed) fail(`undeclared module import: ${JSON.stringify(entry)}`);
     }
     const requests = this.trace.length;
@@ -1886,8 +1900,43 @@ export class CoreEngine {
       candidate_prepare_requests: 0 };
   }
 
-  execute({ inputs = [], typedValues = null, limits = {} } = {}) {
+  // One interruption point of the typed-worker profile. The host records the
+  // charged work it is shown, so the interval between checks is its own
+  // observation; the answer is 0 continue, 1 cancel, 2 deadline, and any
+  // other value a host-selected guest fault.
+  workerInterruptCheck(work) {
+    const state = this.interruption;
+    if (!state) fail('interruption check outside a typed worker execution');
+    if (!Number.isSafeInteger(work) || work < state.last) fail('interruption work went backwards');
+    state.checks += 1;
+    state.max = Math.max(state.max, work - state.last);
+    state.last = work;
+    const { control } = state;
+    if (control.fault_at_check === state.checks) {
+      if (control.fault === 'host') fail('host-selected fault at an interruption check');
+      return 3;
+    }
+    if (control.cancel_at_check === state.checks) return 1;
+    if (process.hrtime.bigint() >= state.deadline) return 2;
+    return 0;
+  }
+
+  execute({ inputs = [], typedValues = null, limits = {}, control = null } = {}) {
     if (!this.pending || this.stagedDeclared || this.poisoned) fail('no prepared module or poisoned session');
+    const interruptible = typedValues !== null && this.workerInterruption;
+    if (interruptible !== (control !== null)) fail('typed worker execution requires its interruption control');
+    if (interruptible) {
+      const keys = ['cancel_at_check', 'deadline_ms', 'fault', 'fault_at_check'];
+      const check = value => value === null || integer(value, 4096, 'interruption check') > 0;
+      if (!control || typeof control !== 'object' || Array.isArray(control)
+        || Object.keys(control).sort().join(',') !== keys.join(',')
+        || !check(control.cancel_at_check) || !check(control.fault_at_check)
+        || ![null, 'trap', 'host'].includes(control.fault)
+        || (control.fault === null) !== (control.fault_at_check === null)) {
+        fail('invalid typed worker interruption control');
+      }
+      integer(control.deadline_ms, 3600000, 'interruption deadline');
+    }
     const { instance, record, traceStart, checkedLive } = this.pending;
     const boundStart = this.boundRequests.length;
     const boundTotalStart = this.boundRequestsTotal;
@@ -1937,8 +1986,14 @@ export class CoreEngine {
     // A stricter boundary answer: no Program, Syntax or recipe cell (the only
     // holders of signature IDs) is reachable, so signature IDs may restart.
     let programsReachable = null;
+    if (interruptible) {
+      this.interruption = { control, checks: 0, last: 0, max: 0,
+        deadline: process.hrtime.bigint() + BigInt(control.deadline_ms) * 1000000n };
+    }
     if (status === 0) status = runtime.begin(...selectedLimits);
     let inputExhausted = null;
+    // A host exception, as opposed to a Wasm trap, is an internal failure.
+    let hostFailure = false;
     try {
       if (typedValues !== null) {
         const manifest = record.worker_catalog;
@@ -2004,7 +2059,11 @@ export class CoreEngine {
           ? 'typed-input-scratch' : 'typed-input-nodes';
       }
       status = inputExhausted === null ? 6 : 2;
+      hostFailure = interruptible && inputExhausted === null
+        && !(error instanceof WebAssembly.RuntimeError);
     }
+    const interruption = this.interruption;
+    this.interruption = null;
     let cancelledProposal = null;
     if (status !== 0 && this.liveProposal) {
       const queued = this.liveProposal;
@@ -2046,7 +2105,18 @@ export class CoreEngine {
       observationExhausted = error.message === 'typed observation work limit exhausted'
         ? 'typed-observation-work' : 'typed-observation-bytes';
     }
-    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
+    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted'
+      : interruptible && status === 7 ? 'cancelled' : interruptible && status === 8 ? 'host-deadline'
+        : hostFailure ? 'internal-failure' : 'trap';
+    let observedInterruption = null;
+    if (interruption) {
+      // The tail after the last check is guest work between interruption
+      // points too.
+      const work = metrics.execution_steps + metrics.reflection_steps;
+      observedInterruption = { interval: 8, checks: interruption.checks, work,
+        execution_steps: metrics.execution_steps, reflection_steps: metrics.reflection_steps,
+        observed_max_guest_work_between_checks: Math.max(interruption.max, work - interruption.last) };
+    }
     const isDeclared = this.declaredModules;
     const boundRequests = isDeclared ? this.boundRequests.slice(boundStart) : null;
     const adapterInvocations = isDeclared
@@ -2077,6 +2147,7 @@ export class CoreEngine {
         } : {}) } : {}),
       quota_reason: inputExhausted ?? observationExhausted
         ?? this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
+      ...(observedInterruption ? { interruption: observedInterruption } : {}),
       request_trace: isDeclared
         ? boundRequests : this.trace.slice(traceStart),
       guest_requests: isDeclared ? this.hostRequestsTotal - hostStart : this.trace.length - traceStart,

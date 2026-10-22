@@ -38,13 +38,7 @@ pub(in crate::source::emit) fn runtime(
             ))
         ));
     } else {
-        attempt!(super::fragment(
-            out,
-            include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/runtime/accounting.wat"
-            ))
-        ));
+        attempt!(accounting(out, plan.worker_interruption));
         if plan.calculator {
             attempt!(super::fragment(
                 out,
@@ -205,7 +199,11 @@ pub(in crate::source::emit) fn runtime(
 "
         ));
     }
-    attempt!(super::super::reflection::write(out, plan.declared_modules));
+    attempt!(super::super::reflection::write(
+        out,
+        plan.declared_modules,
+        plan.worker_interruption
+    ));
     attempt!(super::fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
@@ -233,4 +231,36 @@ pub(in crate::source::emit) fn runtime(
         ));
     }
     Ok(())
+}
+
+const ACCOUNTING: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/accounting.wat"
+));
+const CHARGING_TICK: &str = "(func $runtime_tick (result i32)";
+
+/// The shared charging semantics. The typed-worker profile keeps that tick
+/// as `$runtime_charge` and defines `$runtime_tick` and `$observation_tick`
+/// over the charges with an interruption point every eighth unit.
+fn accounting(
+    out: &mut crate::output::Buffer,
+    interruptible: bool,
+) -> Result<(), crate::Diagnostic> {
+    if !interruptible {
+        return super::fragment(out, ACCOUNTING);
+    }
+    let Some((before, after)) = ACCOUNTING.split_once(CHARGING_TICK) else {
+        return Err(crate::Diagnostic::Defective);
+    };
+    attempt!(out.append(before.as_bytes()));
+    attempt!(out.append(b"(func $runtime_charge (result i32)"));
+    attempt!(out.append(after.as_bytes()));
+    attempt!(out.append(b"\n"));
+    super::fragment(
+        out,
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/runtime/worker-interruption.wat"
+        )),
+    )
 }

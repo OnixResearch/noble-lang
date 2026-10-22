@@ -226,7 +226,7 @@ async function protocol(config) {
           } else if (/^execute-typed [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute-typed '.length));
             command = { kind: 'execute-typed',
-              inputs: integer(Number(count), 131072, 'typed worker input frame') };
+              inputs: integer(Number(count), 135168, 'typed worker input frame') };
           } else if (/^observe [0-9]+$/.test(header)) {
             try { emit('observed', engine.observe(Number(header.slice('observe '.length)))); }
             catch (error) { emit('internal-failure', reportError(error), true); return; }
@@ -359,9 +359,17 @@ async function protocol(config) {
                 || BigInt.asIntN(64, BigInt(input.value)) !== BigInt(input.value)))) {
               fail('invalid scalar worker inputs');
             }
+            // The Rust host selects the typed worker's step ceiling and
+            // interruption control; neither is candidate input.
+            if (typed && (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)
+              || Object.keys(inputs).sort().join(',') !== 'control,steps,values')) {
+              fail('invalid typed worker frame');
+            }
             report = engine.execute(typed
-              ? { typedValues: inputs,
-                limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } }
+              ? { typedValues: inputs.values,
+                limits: { steps: integer(inputs.steps, engine.abi.limits_maximum.steps,
+                  'typed worker steps') },
+                control: engine.workerInterruption ? inputs.control : null }
               : { inputs,
                 ...((scalar || steps) ? { limits: { steps: scalar
                   ? Math.min(4096, engine.abi.limits_maximum.steps) : steps } } : {}) });

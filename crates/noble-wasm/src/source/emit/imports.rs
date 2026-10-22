@@ -44,6 +44,9 @@ pub(super) fn write(
         attempt!(out.append(b"(import \"noble\" \"test_code_export_bound\" (func $host_code_export_bound (param i32) (result i32)))\n"));
     }
 
+    if plan.worker_interruption {
+        attempt!(out.append(b"(import \"noble\" \"worker_interrupt_check\" (func $host_interrupt_check (param i32) (result i32)))\n"));
+    }
     if plan.has_live_propose {
         attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
     }
@@ -209,7 +212,7 @@ pub(super) fn bridge_runtime(
     declared_modules: bool,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(core_runtime(out, true));
-    attempt!(super::reflection::write(out, declared_modules));
+    attempt!(super::reflection::write(out, declared_modules, false));
     fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat")),

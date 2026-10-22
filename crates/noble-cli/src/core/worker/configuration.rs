@@ -38,6 +38,12 @@ fn worker(optimized: bool, declared: bool) -> std::string::String {
             "declared_extension",
             crate::workflow::encoding::optional_string(declared.then_some(super::DECLARED_ABI)),
         ),
+        // The declared worker is the typed worker: its modules carry the
+        // bounded execution profile's interruption checks.
+        (
+            "worker_interruption",
+            crate::workflow::encoding::Json::Bool(declared),
+        ),
     ])
     .encode()
 }

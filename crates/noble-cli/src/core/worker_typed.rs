@@ -12,6 +12,69 @@ const USAGE: &str =
     "usage: noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON";
 const PREPARE_USAGE: &str = "usage: noble worker prepare SOURCE --schema SCHEMA --out PACKAGE";
 const PACKAGE_BYTES: usize = 262_144;
+/// The typed worker's bounded execution profile (H-LIMIT-02, H-LIMIT-03):
+/// one unit per dispatched operation, initialization item or captured-data
+/// node, and per observation node on its own counter; every eighth charged
+/// unit is a host interruption point.
+const ACCOUNTING_REVISION: &str = "worker-typed/step-4096/interrupt-8";
+const STEP_CEILING: u64 = 4_096;
+const INTERRUPTION_INTERVAL: u64 = 8;
+
+/// A host-selected guest fault at an interruption point (test builds only).
+#[cfg(test)]
+#[derive(Clone, Copy)]
+enum Fault {
+    /// The guest executes `unreachable`.
+    Trap,
+    /// The host's check throws.
+    Host,
+}
+
+/// Host-selected execution control. Production code, including the CLI,
+/// runs only the production control; cancel and fault points exist only in
+/// test builds.
+#[derive(Clone, Copy)]
+pub(super) struct ExecutionControl {
+    deadline_ms: u64,
+    #[cfg(test)]
+    cancel_at_check: Option<u32>,
+    #[cfg(test)]
+    fault_at_check: Option<(u32, Fault)>,
+}
+
+impl ExecutionControl {
+    /// Wall-clock deadline checked only at interruption points, below the
+    /// engine reply deadline that still guards a hung engine.
+    pub(super) const PRODUCTION: Self = Self {
+        deadline_ms: 60_000,
+        #[cfg(test)]
+        cancel_at_check: None,
+        #[cfg(test)]
+        fault_at_check: None,
+    };
+
+    fn wire(self) -> Value {
+        #[cfg(test)]
+        let (cancel, fault) = (
+            self.cancel_at_check,
+            self.fault_at_check.map(|(check, fault)| {
+                (
+                    check,
+                    match fault {
+                        Fault::Trap => "trap",
+                        Fault::Host => "host",
+                    },
+                )
+            }),
+        );
+        #[cfg(not(test))]
+        let (cancel, fault): (Option<u32>, Option<(u32, &str)>) = (None, None);
+        json!({"deadline_ms":self.deadline_ms,"cancel_at_check":cancel,
+            "fault_at_check":fault.map(|(check, _)| check),
+            "fault":fault.map(|(_, kind)| kind)})
+    }
+}
+
 /// The typed engine refuses a worker literal arena that ends beyond this.
 const LITERAL_ARENA_END: u32 = 983_040;
 const BUILTIN_COUNT: u32 = 22;
@@ -156,12 +219,21 @@ fn report(
     guest_requests: u64,
     protected_operations: u64,
     diagnostic: Option<&str>,
+    interruption: Option<&Value>,
 ) -> Report {
     let value = json!({
         "schema":"noble-worker-typed/v1", "profile":"Worker-Typed-Local",
         "stage":stage, "outcome":outcome, "interface":"State Event -- State List<Action> ! {}",
-        "accounting_revision":"core-managed-linear-memory/step-limit-4096",
-        "step_ceiling":4096, "invocation":if stage == "execution" {Some("typed-1")} else {None},
+        "accounting_revision":ACCOUNTING_REVISION,
+        "step_ceiling":STEP_CEILING,
+        "execution_profile":{"revision":ACCOUNTING_REVISION,
+            "units":["dispatched-operation","initialization-item","captured-data-node",
+                "observation-node"],
+            "step_ceiling":STEP_CEILING,"observation_ceiling":STEP_CEILING,
+            "interruption_interval":INTERRUPTION_INTERVAL,
+            "deadline_ms":ExecutionControl::PRODUCTION.deadline_ms},
+        "interruption":interruption,
+        "invocation":if stage == "execution" {Some("typed-1")} else {None},
         "ownership_disposition":if stage == "execution" {"local-no-guest-resource"} else {"not-admitted"},
         "package_sha256":package.map(crate::workflow::intrinsic::sha256),
         "schema_source_sha256":schema.map(crate::workflow::intrinsic::sha256),
@@ -569,7 +641,7 @@ pub(super) fn prepare(
         .ok_or_else(|| failure("invalid-input", "checked Program body absent")));
     trace.enter("backend");
     PreparationTrace::count(&mut trace.backend_compilations);
-    let compiled = attempt!(noble_wasm::source::Compiler::new_worker()
+    let compiled = attempt!(noble_wasm::source::Compiler::new_interruptible_worker()
         .prepare(submission)
         .map_err(Failure::backend));
     if compiled
@@ -734,6 +806,22 @@ pub(super) fn execute(
     state_bytes: &[u8],
     event_bytes: &[u8],
 ) -> Result<Report, Failure> {
+    execute_controlled(
+        package_bytes,
+        schema_bytes,
+        state_bytes,
+        event_bytes,
+        ExecutionControl::PRODUCTION,
+    )
+}
+
+pub(super) fn execute_controlled(
+    package_bytes: &[u8],
+    schema_bytes: &[u8],
+    state_bytes: &[u8],
+    event_bytes: &[u8],
+    control: ExecutionControl,
+) -> Result<Report, Failure> {
     let package = attempt!(Package::parse(package_bytes).map_err(value_failure));
     let retained = noble_contracts::source::RetainedSourceLimit::new(RETAINED_SCHEMA_ROOT_BYTES)
         .expect("combined Worker schema and root source limit");
@@ -756,12 +844,14 @@ pub(super) fn execute(
     let submission = attempt!(checked
         .submission()
         .ok_or_else(|| failure("invalid-input", "checked Program body absent")));
-    let compiled = attempt!(noble_wasm::source::Compiler::new_worker()
+    let compiled = attempt!(noble_wasm::source::Compiler::new_interruptible_worker()
         .prepare(submission)
         .map_err(Failure::backend));
     let owner_record = owner_record(&owner);
-    let input = attempt!(serde_json::to_string(&values)
-        .map_err(|_| failure("internal-failure", "validated input encoding failed")));
+    let input = attempt!(serde_json::to_string(
+        &json!({"values":values,"steps":STEP_CEILING,"control":control.wire()})
+    )
+    .map_err(|_| failure("internal-failure", "validated input encoding failed")));
     let mut engine = match super::worker::Engine::start_typed_worker() {
         Ok(engine) => engine,
         Err(error) => {
@@ -777,6 +867,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some(&error.message),
+                None,
             ))
         }
     };
@@ -802,6 +893,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some(&error.message),
+                None,
             ))
         }
     };
@@ -820,6 +912,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some("malformed typed worker preparation"),
+                None,
             ))
         }
     };
@@ -835,6 +928,7 @@ pub(super) fn execute(
             None,
             0,
             0,
+            None,
             None,
         ));
     }
@@ -853,6 +947,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some("prepared artifact absent"),
+                None,
             ))
         }
     };
@@ -875,6 +970,7 @@ pub(super) fn execute(
             0,
             0,
             Some("compiled artifact is not bound to checked source and literal arena"),
+            None,
         ));
     }
     let execution = match engine.execute_typed(&input) {
@@ -892,6 +988,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some(&error.message),
+                None,
             ))
         }
     };
@@ -910,6 +1007,7 @@ pub(super) fn execute(
                 0,
                 0,
                 Some("malformed typed worker observation"),
+                None,
             ))
         }
     };
@@ -936,6 +1034,30 @@ pub(super) fn execute(
             requests.unwrap_or(0),
             protected.unwrap_or(0),
             Some("worker execution violates source or effect boundary"),
+            None,
+        ));
+    }
+    // The interval bound is the host's own observation of the checks it
+    // answered, including the work after the last one.
+    let interruption = &observation["interruption"];
+    if interruption["interval"] != INTERRUPTION_INTERVAL
+        || interruption["observed_max_guest_work_between_checks"]
+            .as_u64()
+            .is_none_or(|observed| observed > INTERRUPTION_INTERVAL)
+    {
+        return Ok(report(
+            "internal-failure",
+            "execution",
+            Some(package_bytes),
+            Some(schema_bytes),
+            Some(package.source().as_bytes()),
+            None,
+            Some(&owner_record),
+            None,
+            0,
+            0,
+            Some("worker execution exceeded its interruption interval"),
+            Some(interruption),
         ));
     }
     if execution.outcome == "normal" {
@@ -957,6 +1079,7 @@ pub(super) fn execute(
                     0,
                     0,
                     Some("wrong worker output arity"),
+                    Some(interruption),
                 ))
             }
         };
@@ -984,6 +1107,7 @@ pub(super) fn execute(
                     0,
                     0,
                     Some("returned value violates selected schema or observation budget"),
+                    Some(interruption),
                 ))
             }
         };
@@ -1000,9 +1124,15 @@ pub(super) fn execute(
             0,
             0,
             None,
+            Some(interruption),
         ));
     }
-    if !matches!(execution.outcome.as_str(), "runtime-exhausted" | "trap") {
+    // Deterministic exhaustion, a guest trap, cancellation and a host deadline
+    // at an interruption point are distinct outcomes with no typed output.
+    if !matches!(
+        execution.outcome.as_str(),
+        "runtime-exhausted" | "trap" | "cancelled" | "host-deadline"
+    ) {
         return Ok(report(
             "internal-failure",
             "execution",
@@ -1015,6 +1145,7 @@ pub(super) fn execute(
             0,
             0,
             Some("unknown typed worker outcome"),
+            Some(interruption),
         ));
     }
     Ok(report(
@@ -1029,6 +1160,7 @@ pub(super) fn execute(
         0,
         0,
         observation["quota_reason"].as_str(),
+        Some(interruption),
     ))
 }
 
@@ -1080,6 +1212,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             0,
             0,
             Some(USAGE),
+            None,
         );
         let _ = super::output::print(&result);
         return std::process::ExitCode::from(result.exit());
@@ -1103,6 +1236,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                     0,
                     0,
                     Some(&problem.message),
+                    None,
                 ),
             }
         }
@@ -1123,6 +1257,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                 0,
                 0,
                 Some(&problem.message),
+                None,
             )
         }
     };
@@ -2110,6 +2245,235 @@ mod tests {
                     );
                     assert!(trace.wat_sha256.is_none(), "{name}");
                 }
+            }
+        }
+        Ok(())
+    }
+
+    /// One WORKER-09 MW1 row: a transition run once under a control.
+    struct Row<'row> {
+        label: &'row str,
+        schema: &'row str,
+        source: String,
+        control: ExecutionControl,
+        outcome: &'row str,
+        quota: Option<&'row str>,
+    }
+
+    /// WORKER-09's MW1 rows through the real typed engine under the bounded
+    /// execution profile: each outcome is distinct, only a normal return has
+    /// a typed output, budgets are shared by nested work and never exceeded,
+    /// and the host observes at most eight units of guest work between its
+    /// interruption checks.
+    #[test]
+    fn bounded_execution_profile_keeps_each_outcome_distinct() -> Result<(), String> {
+        let production = ExecutionControl::PRODUCTION;
+        let at =
+            |cancel: Option<u32>, fault: Option<(u32, Fault)>, deadline_ms: u64| ExecutionControl {
+                deadline_ms,
+                cancel_at_check: cancel,
+                fault_at_check: fault,
+            };
+        let noop = "unit WorkerData@1.Action.Noop nil cons";
+        let transition = |body: String| {
+            format!("module worker@1 [ export transition def transition [ {body} ] ]")
+        };
+        // A pure 256-leaf recipe (128 increments) applied by runtime \`run\`:
+        // source has no unbounded loop, so work grows only at runtime.
+        let program = format!("[ 1 + ] {}", "dup compose ".repeat(7));
+        let apply = "dup [ run ] dip ";
+        let looped = |reps: usize| {
+            transition(format!(
+                "drop 0 {program}{} drop drop {noop}",
+                apply.repeat(reps)
+            ))
+        };
+        let nested = |outer: usize, inner: usize| {
+            transition(format!(
+                "drop 0 {program}{}[ {} ] run drop drop {noop}",
+                apply.repeat(outer),
+                apply.repeat(inner)
+            ))
+        };
+        let composed = |times: usize| {
+            transition(format!(
+                "drop [ 1 + ] {}drop {noop}",
+                "dup compose ".repeat(times)
+            ))
+        };
+        // A domain error is data: this schema's Action has an error arm.
+        let refusing = SCHEMA
+            .replace("Noop Unit public", "Refused Text public")
+            .replace("export Action.Noop", "export Action.Refused");
+        let rows = [
+            Row {
+                label: "finite-pure-step",
+                schema: SCHEMA,
+                source: SOURCE.into(),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "domain-error-arm",
+                schema: &refusing,
+                source: transition(
+                    "drop \"duplicate attempt\" WorkerData@1.Action.Refused nil cons".into(),
+                ),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "pure-loop-within-budget",
+                schema: SCHEMA,
+                source: looped(8),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "pure-loop-work-limit",
+                schema: SCHEMA,
+                source: looped(12),
+                control: production,
+                outcome: "runtime-exhausted",
+                quota: Some("execution work"),
+            },
+            Row {
+                label: "builder-within-limit",
+                schema: SCHEMA,
+                source: composed(7),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "runtime-builder-allocation-limit",
+                schema: SCHEMA,
+                source: composed(8),
+                control: production,
+                outcome: "runtime-exhausted",
+                quota: Some("recipe leaves"),
+            },
+            Row {
+                label: "nested-alone",
+                schema: SCHEMA,
+                source: nested(0, 7),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "outer-alone",
+                schema: SCHEMA,
+                source: nested(7, 0),
+                control: production,
+                outcome: "normal",
+                quota: None,
+            },
+            Row {
+                label: "nested-invocation-budget",
+                schema: SCHEMA,
+                source: nested(7, 7),
+                control: production,
+                outcome: "runtime-exhausted",
+                quota: Some("execution work"),
+            },
+            Row {
+                label: "cancelled-invocation",
+                schema: SCHEMA,
+                source: SOURCE.into(),
+                control: at(Some(2), None, production.deadline_ms),
+                outcome: "cancelled",
+                quota: None,
+            },
+            Row {
+                label: "host-deadline",
+                schema: SCHEMA,
+                source: SOURCE.into(),
+                control: at(None, None, 0),
+                outcome: "host-deadline",
+                quota: None,
+            },
+            Row {
+                label: "guest-trap",
+                schema: SCHEMA,
+                source: SOURCE.into(),
+                control: at(None, Some((1, Fault::Trap)), production.deadline_ms),
+                outcome: "trap",
+                quota: None,
+            },
+            Row {
+                label: "runtime-internal-failure",
+                schema: SCHEMA,
+                source: SOURCE.into(),
+                control: at(None, Some((1, Fault::Host)), production.deadline_ms),
+                outcome: "internal-failure",
+                quota: None,
+            },
+        ];
+        for row in rows {
+            let label = row.label;
+            let fixture = fixture_with_source(
+                row.schema,
+                &row.source,
+                json!({"tag":"text","value":"attempt-1"}),
+            )?;
+            let package =
+                serde_json::to_vec(&fixture.manifest).map_err(|error| error.to_string())?;
+            let report = execute_controlled(
+                &package,
+                row.schema.as_bytes(),
+                &fixture.state,
+                &fixture.event,
+                row.control,
+            )
+            .map_err(|problem| format!("{label}: {}", problem.message))?;
+            let report: Value =
+                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            assert_eq!(report["outcome"], row.outcome, "{label}: {report}");
+            assert_eq!(
+                report["typed_output"].is_null(),
+                row.outcome != "normal",
+                "{label}"
+            );
+            assert_eq!(report["guest_requests"], 0, "{label}");
+            if let Some(reason) = row.quota {
+                assert_eq!(report["diagnostic"], reason, "{label}");
+            }
+            // A host fault ends the engine before it reports; every other
+            // outcome carries the host's own interruption observation.
+            if row.outcome == "internal-failure" {
+                continue;
+            }
+            let interruption = &report["interruption"];
+            let steps = interruption["execution_steps"].as_u64().ok_or(label)?;
+            assert!(steps <= STEP_CEILING, "{label}: budget exceeded");
+            assert!(
+                interruption["observed_max_guest_work_between_checks"]
+                    .as_u64()
+                    .is_some_and(|observed| observed <= INTERRUPTION_INTERVAL),
+                "{label}: {interruption}"
+            );
+            match label {
+                "domain-error-arm" => {
+                    let action = &report["typed_output"]["actions"]["items"][0];
+                    assert_eq!(action["arm"], "right");
+                    assert_eq!(action["value"]["value"], "duplicate attempt");
+                }
+                "pure-loop-work-limit" | "nested-invocation-budget" => {
+                    assert_eq!(
+                        steps, STEP_CEILING,
+                        "{label}: exhausted exactly at the ceiling"
+                    );
+                }
+                "cancelled-invocation" => assert_eq!(interruption["checks"], 2),
+                "host-deadline" | "guest-trap" => {
+                    assert_eq!(interruption["checks"], 1, "{label}");
+                    assert!(steps < STEP_CEILING, "{label}: budget remained");
+                }
+                _ => {}
             }
         }
         Ok(())

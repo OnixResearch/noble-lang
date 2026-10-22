@@ -237,6 +237,7 @@ pub(super) struct Layout {
     pub(super) declared_modules: bool,
     pub(super) declared_text: bool,
     pub(super) worker_inputs: bool,
+    pub(super) worker_interruption: bool,
     pub(super) live: bool,
     /// Opt-in Core or declared live: the 16-page heap, never live_slots.
     pub(super) core_live: bool,
@@ -361,6 +362,7 @@ fn start(
         declared_modules: submission.environment.declared_modules,
         declared_text: compiler.declared_text,
         worker_inputs: compiler.worker_inputs,
+        worker_interruption: compiler.worker_interruption,
         live: submission
             .environment
             .effects

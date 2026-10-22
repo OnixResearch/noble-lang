@@ -129,8 +129,24 @@ impl Sections {
         })
     }
 
-    fn emit(self, out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
-        attempt!(out.append(&ORIGINAL.as_bytes()[..self.sum_start]));
+    fn emit(
+        self,
+        out: &mut crate::output::Buffer,
+        interruptible: bool,
+    ) -> Result<(), crate::Diagnostic> {
+        let Some(head) = ORIGINAL.get(..self.sum_start) else {
+            return Err(crate::Diagnostic::Defective);
+        };
+        if interruptible {
+            let Some((before, after)) = head.split_once(OBSERVATION_TICK) else {
+                return Err(crate::Diagnostic::Defective);
+            };
+            attempt!(out.append(before.as_bytes()));
+            attempt!(out.append(b"(func $observation_charge (result i32)"));
+            attempt!(out.append(after.as_bytes()));
+        } else {
+            attempt!(out.append(head.as_bytes()));
+        }
         attempt!(out.append(NOMINAL_SUM.as_bytes()));
         attempt!(out.append(&ORIGINAL.as_bytes()[self.sum_end..self.witness_start]));
         attempt!(out.append(DECLARED_WITNESS.as_bytes()));
@@ -139,14 +155,22 @@ impl Sections {
     }
 }
 
+/// `interruptible` keeps the observation charge as `$observation_charge`;
+/// the typed-worker interruption fragment defines `$observation_tick`.
 pub(super) fn write(
     out: &mut crate::output::Buffer,
     declared_modules: bool,
+    interruptible: bool,
 ) -> Result<(), crate::Diagnostic> {
     if !declared_modules {
+        if interruptible {
+            return Err(crate::Diagnostic::Defective);
+        }
         attempt!(out.append(ORIGINAL.as_bytes()));
         return out.append(b"\n");
     }
     let sections = attempt!(Sections::checked());
-    sections.emit(out)
+    sections.emit(out, interruptible)
 }
+
+const OBSERVATION_TICK: &str = "(func $observation_tick (result i32)";
