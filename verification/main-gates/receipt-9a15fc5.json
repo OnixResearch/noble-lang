@@ -1,0 +1,193 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "tested_commit": "9a15fc50b52a373c28b1a018a8f61d81a7d3ebac",
+  "base_upstream_commit": "a0121e992a9eeb86f5b5a1ed9c34f26b45b1bc12",
+  "flake_note": "All fourteen flake checks pass at 9a15fc50, the first globally green gate set since the 2026-10-21 integration. Each check ran from a clean detached worktree with nix build .#checks.x86_64-linux.<check> on the configured leviathan builder. boundary-controls needed three invocations because the client timeout (3550 s) expired twice with no failing case. Transfer, not compilation, dominates its wall time on a remote builder: the aggregate output is a 7.6 GiB NAR holding a copy of each case result (about 533 MiB each), and attempt 3, which had only that aggregate left to build, spent 2799 s copying it back. No check was weakened to pass: the repairs are recorded in the commits listed under repairs.",
+  "run": {
+    "date": "2026-10-21",
+    "worktree": "/var/tmp/noble-gate-final",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check>",
+    "options": [
+      "--option min-free 0",
+      "--option max-free 0"
+    ],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/9a15fc50"
+  },
+  "flake_checks": [
+    {
+      "check": "policy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 160,
+      "log_sha256": "40e7a114c8caa8ac03a22edf0d75d13710cbbcf4491a7f53e8739fe4dd8e5e63"
+    },
+    {
+      "check": "tool-selection",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 15,
+      "log_sha256": "309f4fbae0e82472e3f6d905b028e1bc3e0edccc9d6bac96bcbfb732a0bc7af7"
+    },
+    {
+      "check": "tool-overrides",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 18,
+      "log_sha256": "064cdeb38c7ff3b69dd60ff46dff6e02432f67bf310f2f81cd7050369f56a8d4"
+    },
+    {
+      "check": "tool-versions",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 19,
+      "log_sha256": "b0f31fb8e35257a778951e4d1b8c0fe201663830376f19be034f9cc192ed400e"
+    },
+    {
+      "check": "format",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 23,
+      "log_sha256": "7698ff5aaf7855f07fcf458253da94e85a74387f9c0b21482549fca139f06249"
+    },
+    {
+      "check": "clippy",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 69,
+      "log_sha256": "7e06e4310cc6374cf29c80f6910a6146504729dfc7b508cf7c95fe4b6b23b974"
+    },
+    {
+      "check": "documents",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 55,
+      "log_sha256": "9d400168e90b0432d936851cae15b5408ff6794e9ba2df31787ede375517eb8f"
+    },
+    {
+      "check": "cairn",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 18,
+      "log_sha256": "bd9c60a9bbd7deb23f5eb93d31a791d26e6fd4d430115a999e1e60e7091cce3d"
+    },
+    {
+      "check": "source-inventory-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 8,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observation": "The derivation builds silently; the empty log is its whole output."
+    },
+    {
+      "check": "octet",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 601,
+      "log_sha256": "234c5941014d4c0a71c0cf61eabece8978aa36701348cf3b6ff7e3b53466b2d6",
+      "observation": "noble-octet-gate --workspace -- --all-targets --all-features: status clean, lint phase clean, architecture phase clean, 0 findings."
+    },
+    {
+      "check": "source-coverage",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 931,
+      "log_sha256": "ad12af873c595b37ee12bd2e99db5b028dbb368e4a294fa73adee19027094629",
+      "observation": "The sandboxed inventory collection reports lint and architecture phases clean with 0 findings (architecture receipt 021f45567dbf35622a7b01918bbdf2a8a3f843beca3b95babef31b3055cc5760); the coverage comparator accepts the committed accounting in policy/source-inventory.ncl (14303 production paths = 7348 body/open + 3977 generated + 2978 structural)."
+    },
+    {
+      "check": "native-assurance",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 15,
+      "log_sha256": "7297fe3038f8daa09684a506cfbaadfd154f7ab99f3b8492ab364992c683565d"
+    },
+    {
+      "check": "rust-tests",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 899,
+      "log_sha256": "a84766b234db18fe977fed53a8cc148c8d91a7832ed8ede5706d3d49d773f246",
+      "observation": "85 test binaries, 770 passed, 0 failed, 7 ignored, including worker_interface_checker_classifies_each_worker02_variant."
+    },
+    {
+      "check": "boundary-controls",
+      "result": "pass",
+      "exit": 0,
+      "duration_s": 2799,
+      "log_sha256": "e0c7976a9e08260d332a2ab5141fd5a648e8590fdf02b6ba7522487c5efd2f9a",
+      "output": "/nix/store/brm79yzcybbg7rj4g4c11vszz77r3zdm-noble-boundary-controls",
+      "output_nar_hash": "sha256-/4GOaRmf7Q/r+BsrBYPWAKpCm6xpQnYD6IzE9+E6sNc=",
+      "observation": "All 18 cases report 'passed (not M1 acceptance)': 2 positive baselines (workspace, acyclic-shell) and 16 rejected fixtures. Attempts 1 and 2 (logs 0efaced8…, d210c571…) stopped at the 3550 s client timeout with no failing case, attempt 2 while copying the finished aggregate back from the builder; attempt 3 built only the aggregate and is the passing run.",
+      "output_nar_size": "7.6 GiB"
+    }
+  ],
+  "rust_tests": {
+    "binaries": 85,
+    "passed": 770,
+    "failed": 0,
+    "ignored": 7,
+    "log_sha256": "a84766b234db18fe977fed53a8cc148c8d91a7832ed8ede5706d3d49d773f246"
+  },
+  "repairs": [
+    {
+      "commit": "f03413ed",
+      "fix": "Re-pin the reviewed vendor to the merged nine-lock recipe so the flake evaluates."
+    },
+    {
+      "commit": "298673c8",
+      "fix": "Restore the twelve compacted archive trees and de-link two directory targets (documents)."
+    },
+    {
+      "commit": "9ced7fc0",
+      "fix": "Resolve the C11 syntax compiler from PATH (rust-tests)."
+    },
+    {
+      "commit": "e3011209",
+      "fix": "Resolve mkfifo and kill from PATH (rust-tests)."
+    },
+    {
+      "commit": "9c62cafa",
+      "fix": "Declare live-test-barrier in the feature row, set 96-unit and shard caps, and classify the rustix and serde providers (octet, source-coverage, native-assurance)."
+    },
+    {
+      "commit": "3822f977",
+      "fix": "Clear the 543 integrated deny-all lint findings (octet)."
+    },
+    {
+      "commit": "afda8005",
+      "fix": "Renew source and native accounting and review the two new dependency edges."
+    },
+    {
+      "commit": "77cb7803",
+      "fix": "Renew the 96-unit boundary roster and derive the acyclic capacity from policy."
+    },
+    {
+      "commit": "e2c6c174",
+      "fix": "Expect the reviewed providers in the Octet controls (policy)."
+    },
+    {
+      "commit": "a664560e",
+      "fix": "WORKER-02 interface checker for typed worker admission; MW1 entry-gate slice."
+    },
+    {
+      "commit": "795dd9f8",
+      "fix": "Renew inventory accounting for the checker."
+    },
+    {
+      "commit": "d7a95765",
+      "fix": "Give boundary cases a compile budget (1800 s, builder cores) and accept the declared feature plan."
+    },
+    {
+      "commit": "9a15fc50",
+      "fix": "Observe the selected Octet's test-source refusal (source_role mode) and renew the randomness fixture lock."
+    }
+  ],
+  "non_claims": [
+    "Not M1 or any milestone acceptance; every check binds 9a15fc50 only.",
+    "All 7348 authored production bodies remain open refinement obligations; inventory accounting is not proof.",
+    "No scenario case, including WORKER-02, is promoted by this receipt.",
+    "Lint expectations and harness allows carry stated reasons; they record reviewed shapes, not proofs of those reasons.",
+    "No NGRAPH, CALC or LIVE case and no Cairn archive is advanced."
+  ]
+}

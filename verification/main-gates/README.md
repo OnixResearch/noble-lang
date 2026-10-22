@@ -1,5 +1,33 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-21 (all fourteen checks pass at `9a15fc5`)
+
+The [receipt](receipt-9a15fc5.json) records **14 PASS / 0 FAIL** at
+`9a15fc50b52a373c28b1a018a8f61d81a7d3ebac`, each check built from a clean
+worktree. `rust-tests` reports 85 binaries, 770 passed, 0 failed and 7 ignored;
+`octet` is clean in both the lint and architecture phases with 0 findings;
+`boundary-controls` reports all 18 cases passed: 2 positive baselines and 16
+rejected fixtures.
+
+The six failures recorded at `f03413e` below were cleared at their source:
+
+| check | repair |
+|---|---|
+| `documents` | `298673c8` unpacks the twelve compacted archives that 17 canonical links target and de-links two directory targets |
+| `rust-tests` | `9ced7fc0` and `e3011209` resolve `gcc`, `mkfifo` and `kill` from the check's `PATH` instead of undeclared absolute paths |
+| `octet` | `9c62cafa` declares the `live-test-barrier` feature row; `3822f977` clears the 543 integrated deny-all findings |
+| `source-coverage`, `native-assurance` | `9c62cafa` sets the measured 96-unit and shard caps and classifies the `rustix` and `serde` providers; `afda8005` and `795dd9f8` renew the accounting |
+| `boundary-controls` | `77cb7803` renews the 96-unit roster; `d7a95765` replaces the 180 s single-job budget, which could not compile the Wasmtime workspace, and accepts the declared feature plan; `9a15fc50` observes the selected Octet's `source-role-unit-mismatch` refusal for `test-source-import` and renews the randomness fixture lock |
+| `policy` | `e2c6c174` adds the reviewed providers to the Octet controls |
+
+Two `boundary-controls` invocations stopped at a 3550 s client timeout with no
+failing case. Transfer, not compilation, dominates that check's wall time on a
+remote builder: the aggregate output is a 7.6 GiB NAR holding a copy of each
+case result (about 533 MiB each), and the third invocation, which had only the
+aggregate left to build, spent 2799 s copying it back. A green gate set binds
+only `9a15fc5`. It is not milestone acceptance,
+and all authored bodies remain open refinement obligations.
+
 ## Checking change log — 2026-10-21 (current source, commit `f03413e`)
 
 The [receipt](receipt-f03413e.json) records a cold run of all fourteen flake
