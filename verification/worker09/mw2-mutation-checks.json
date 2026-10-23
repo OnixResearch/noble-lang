@@ -1,0 +1,40 @@
+{
+  "schema": "noble-worker09-native-mutation-checks/v1",
+  "tested_commit": "01e8f466dcc81fd51019888efcf4daa05f90714c",
+  "gate": "verification/worker09/mw2-gate.mjs",
+  "result": "passed",
+  "mutations": [
+    {
+      "name": "pending-owner-task-to-host",
+      "source": "verification/m6/peer/src/driver.rs",
+      "change": "The suspended observation's pending_owner was changed from task to host.",
+      "gate_exit": 1,
+      "rejection": "permitted-suspension differs",
+      "observed": {
+        "outcome": "suspended",
+        "pending_owner": "host",
+        "task_pending": 1,
+        "pins": 1,
+        "deliveries": 0
+      },
+      "mutated_source_revision": "sha256:14d50ff68e2ffab0404b026ee2a70ff690f6d72025d73f12c102cf5bd59f4068"
+    },
+    {
+      "name": "deadline-outcome-to-completed",
+      "source": "verification/m6/peer/src/progress.rs",
+      "change": "The final progress report's dynamic deadline outcome was changed to completed without changing runtime cancellation.",
+      "gate_exit": 1,
+      "rejection": "deadline-native-work differs",
+      "observed": {
+        "outcome": "completed",
+        "native_owner": "host-retirement",
+        "pins_at_ack": 1,
+        "pins_after_join": 0,
+        "tasks_retiring": 1,
+        "deliveries": 0,
+        "fuel_remaining": 99999970
+      },
+      "mutated_source_revision": "sha256:4cd3d9193baedcf36e9d4a8e2d6576ca339265d1987051b28ce08d43fa08a509"
+    }
+  ]
+}

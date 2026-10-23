@@ -291,9 +291,9 @@
         {"case": "runtime-internal-failure", "outcome": "internal-failure", "typed_output": false}
       ]},
       "expected": {"stage": "bounded-execution", "outcome": "each-outcome-distinct", "observed_max_guest_work_between_checks": 8, "pure_code_exempt_from_limits": false, "nested_budget_reset": false, "failed_output_exposed_as_T": false, "host_deadline_is_deterministic_fuel": false, "exhaustion_proves_divergence": false, "budget_silently_increased": false, "cross_backend_budget_equality_required": false},
-      "state": {"implementation": "partial", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
-        "claim": "Under the typed worker profile worker-typed/step-4096/interrupt-8, the eight MW1 variants each produce their own outcome through the real engine: a finite step and a domain error arm return typed output; a pure runtime loop, an over-limit builder and outer plus nested run work exhaust at exactly 4096 steps while each part alone returns; a guest trap, cancellation at an interruption check and a host fault are distinct non-normal outcomes without typed output; the host observed at most 8 units of guest work between checks. The two native-async variants were not run.",
+        "claim": "Under the typed worker profile worker-typed/step-4096/interrupt-8, the eight synchronous variants each produce their own outcome through the real engine: a finite step and a domain error arm return typed output; a pure runtime loop, an over-limit builder and outer plus nested run work exhaust at exactly 4096 steps while each part alone returns; a guest trap, cancellation at an interruption check and a host fault are distinct non-normal outcomes without typed output; the host observed at most 8 units of guest work between checks. This receipt records the two native-async variants as not run; the following evidence covers them.",
         "subject": "WORKER-09", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
         "source_revision": "sha256:8615d8120292ab640bc7941b65fe5e9e25e213ffcedcf488967d1853cf6192b6",
         "configuration": {
@@ -305,10 +305,30 @@
           "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 7552f1899178c76ddcb3453cd88edd920be8d81cda6def511a07ff1b5d1ed3f5); every row and control report is retained under verification/worker09/raw."
         },
         "assumptions": [
-          "Coverage is the MW1 rows: host-deadline-native-work-outstanding and permitted-suspension need native task ownership and stay MW2 obligations with not-run results; implementation is therefore partial.",
+          "This receipt covers the eight synchronous rows; the separately retained native receipt covers host-deadline-native-work-outstanding and permitted-suspension.",
           "symbolic-test-profile-v1 maps to worker-typed/step-4096/interrupt-8; the case outcome names map to normal, runtime-exhausted, trap, cancelled and internal-failure.",
           "Cancellation, the guest trap and the host fault are host-selected fault points in the test build; a zero wall-clock deadline shows host-deadline differing from deterministic exhaustion.",
           "domain-Result-error uses an Action error arm because the worker schema catalog does not admit result@1.Result; the pure loop is runtime run amplification because pure source has no unbounded loop."
+        ]
+      }, {
+        "claim": "The two native rows run against a component built for the pinned Wasmtime 40 async ABI and the generated wasmtime-wit-bindgen 40 host binding. The first actual async import captures a suspended observation before completion with one pending task, one retained pin, no delivery and no typed output. A separate bounded cooperative run reaches a host deadline with native work still outstanding: cancellation acknowledgement observes one retained pin and one retiring task, no delivery and budget remaining; joining the native job releases the pin. Corrupting the suspended owner to host or the deadline outcome to completed makes the gate fail.",
+        "subject": "WORKER-09", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:802403096b0c7a87d5ac16994b06f69bb8ee682dc8dc2977b802492a9504fa56",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "bounded-worker-execution-native", "receipt": "../../verification/worker09/mw2-acceptance.json",
+          "receipt_sha256": "5be8b5827ecd418b4f69b401593f564abebc838af47d2a3f8fdcfd75c8b74031",
+          "mutation_receipt": "../../verification/worker09/mw2-mutation-checks.json",
+          "gate": "verification/worker09/mw2-gate.mjs", "case": "WORKER-09", "tested_commit": "01e8f466dcc81fd51019888efcf4daa05f90714c",
+          "cli_sha256": "b19d543e8897128fcb26528392bdeb66a2637a21d5ba867c4d86497dfe043bf3",
+          "peer_sha256": "323cdbc83d3f209418c6a4ee7e52ec51767641349cfe40127fb070d7a4311f6a",
+          "component_sha256": "aeb97a12329e3ca07294c5083b231c5305f1eb20660a38d085ccc8ac02aec43f",
+          "command": "node verification/worker09/mw2-gate.mjs --out NEW_DIRECTORY",
+          "workload_binding": "Exact WORKER-09 id/profile/kind/requirements/input/expected projection (sha256 7552f1899178c76ddcb3453cd88edd920be8d81cda6def511a07ff1b5d1ed3f5); native peer reports and the component compile report are retained under verification/worker09/mw2-raw."
+        },
+        "assumptions": [
+          "The native rows compose the existing production Worker transition guest/type boundary with the independently retained M6 Component Model async substrate; they do not claim a transferable guest continuation.",
+          "Permitted suspension is the host's intermediate observation at the first actual async import before the same run later completes; it is not typed output.",
+          "The deadline row uses the M6 cooperative driver and a retained native pin, and is distinct from deterministic source-fuel exhaustion."
         ]
       }]
     },

@@ -2252,7 +2252,7 @@
     },
     {
       "file": ".cairn/changes/worker-cancellation-slice-native-async/tasks.md",
-      "sha256": "6d97cecef5780bb7d7e245cf0c6ad8ea7b577523268a42e103ebdd9c84c4fdd1"
+      "sha256": "42f8d46dc14528ef79c6b2047dbae0f3164c20c41ea2d822cd5e06b2e0179ef5"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -2440,7 +2440,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "2c076935d382baa55e0798044da77a0078e1ff809488c1d0a67b8436aaaf6741"
+      "sha256": "1ecbf90801f86ef817f86ab3c28dcca78fea4c1ae8037ad8d366258a409219b1"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "91a75d83742f5c7c70d11660989739ff48e6738877d1a8f1ec2f0490351644aa"
+      "sha256": "1e7f1d4e73e36102958f2382bc196f525247c82d276c4db9852b95563de616a2"
     },
     {
       "file": "specs/SAFETY.md",
