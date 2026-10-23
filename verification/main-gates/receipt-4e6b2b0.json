@@ -1,0 +1,189 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "tested_commit": "4e6b2b09c5734fe3f6f5398d93c6b49703b3fd58",
+  "base_upstream_commit": "42f5b3d4aec0adaba1c472c6b043e35e5878ccfc",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "flake_note": "All fourteen flake checks pass at 4e6b2b09 after the MW1 case work: WORKER-03 (runtime-selected effect adaptation, 33492ca2), WORKER-07 (consumer candidate acceptance, d7d6ccb3), the WORKER-09 gate (20e4249e, 0561841c), WORKER-10 (the test.send effect and bounded observation record, 8f6fbb23) and the WORKER-04 export ingress and experimental program-value identity (47a5ab2e). Each check ran from the clean detached worktree /var/tmp/noble-gate-4e6b2b09. boundary-controls ran beside the other checks and needed three invocations under a 3500 s client timeout: the first two realized all 18 cases, the third built the aggregate in 25 s. rust-tests was interrupted once by the tool time cap while it shared the builder and passed on a separate invocation.",
+  "repairs": [
+    {
+      "commit": "44bba57e",
+      "fix": "Octet assertion density: kind_matches_definition gained a fourth bound-operation branch; a sealed exhaustive const bound_operation(kind) now maps each bound operation to its slot and effect."
+    },
+    {
+      "commit": "4e6b2b09",
+      "fix": "Renew source-inventory accounting from the gate's own all-features collection at 44bba57e (487 added, 278 removed, none reclassified or rebound)."
+    }
+  ],
+  "rust_tests": {
+    "binaries": 85,
+    "passed": 789,
+    "failed": 0,
+    "ignored": 7,
+    "log_sha256": "d36a056ae342c4415d479fba0d949f3ebf0bc10c84f27138c6fb1bd47e1f72aa"
+  },
+  "additional_verification": [
+    {
+      "subject": "Worker case gate replays",
+      "commit": "4e6b2b09",
+      "result": "passed",
+      "command": "node verification/<case>/gate.mjs --out /var/tmp/<case>-final (pinned devShell)",
+      "receipt_sha256": {
+        "worker02": "a026df1df118bfc00f24da2a2eff9131ecba232def077bf18d4c74ea98269b94",
+        "worker03": "cf354a990c959536dcc41fae410320a4616e31061576498ef2269ed68c8f893b",
+        "worker04": "62b3e40dffaa8b50f55003eb85d12cc5d65d49c8da32b761ef1ce42413e30f53",
+        "worker05": "4cf2695e8106fa61f99e13bdc45c979568780e7245798454795fd647f7f7e883",
+        "worker06": "af8b52382872daa6a942d84091819d5aa107f721d707d96131eb62ba046def6b",
+        "worker07": "1f13e844d2689bcd0d432100605a8761b1064d272cc5e39bb1f768298a05159e",
+        "worker09": "337f9e5d625c4d2479f4cb952f44a793edc2341f37b1e126fc9292ba020baf40",
+        "worker10": "3df247c293880a5d7109f6f2d9c18ac99c4d5e6d0344716ff023dc73fbbff938",
+        "worker12": "405f5ce23e7c7360ebb2e08f09809f93b9fe0f107fef832b0bd453ba749f2cf1"
+      },
+      "observation": "Each gate rebuilt noble (WORKER-09: the unit-test binary) from the clean source scope and passed with no failures. The WORKER-04 gate passes its two executed variants and reports the case as not run. Accepted evidence stays bound to each case's own receipt."
+    },
+    {
+      "subject": "Local Octet deny-all at the kernel repair",
+      "commit": "44bba57e (working tree before commit)",
+      "result": "passed",
+      "command": "nix run .#octet-gate -- --workspace --artifact-dir DIR -- --all-targets --all-features (CARGO_INCREMENTAL=0, separate target dir)",
+      "observation": "Status clean, lint phase clean, architecture phase clean with 0 findings, before the remote octet check."
+    }
+  ],
+  "run": {
+    "date": "2026-10-23",
+    "worktree": "/var/tmp/noble-gate-4e6b2b09",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check> (boundary-controls with --out-link /var/tmp/noble-bc-4e6b2b09 and timeout 3500)",
+    "options": [
+      "--option min-free 0",
+      "--option max-free 0"
+    ],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/4e6b2b09"
+  },
+  "flake_checks": [
+    {
+      "check": "policy",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 502,
+      "log_sha256": "6e00b8a516c8b9ac08c104989bbc2a6703e96f84e87ef3f4dbb961eae5a6cfe6"
+    },
+    {
+      "check": "tool-selection",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 27,
+      "log_sha256": "ec36d8efe5a683077ac85631216102cd5044dcdeded66eff575e38ddb6d170d6"
+    },
+    {
+      "check": "tool-overrides",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 25,
+      "log_sha256": "238905129e35c446e22355cc5085c603131ef2890fc61b12920f9d4952e0f6eb"
+    },
+    {
+      "check": "tool-versions",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 26,
+      "log_sha256": "f19b3e31ef9bb324f3da129c7960fbbb8a25f3c8cfb2ee2d6e7719cbe1dafccd"
+    },
+    {
+      "check": "format",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 34,
+      "log_sha256": "0da34771c1e5d67125366b54141bfe9490d8de683f1a1970193dbf10f9ec6cb1"
+    },
+    {
+      "check": "clippy",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 80,
+      "log_sha256": "142dd2ae257b23ae0e922c6e8ca67cc6b38e415eb4ade31f335add6f4c44603e"
+    },
+    {
+      "check": "documents",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 63,
+      "log_sha256": "a500aa3dd78d5895c9db845645c4cd23782e1d2cbbf391fcff7c1c6e9d25b211"
+    },
+    {
+      "check": "cairn",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 25,
+      "log_sha256": "0bebd903cc862986d1f293267fb51604dbeacc0ff52bc243107a159a43cfeb67"
+    },
+    {
+      "check": "source-inventory-controls",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 14,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "native-assurance",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 636,
+      "log_sha256": "d01bb729c5b74d507d0f00f100ab2e877432002e72d81a040080d23aa139f9ba"
+    },
+    {
+      "check": "octet",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 655,
+      "log_sha256": "ee1f48f85d77517ad4efcf9d57151a10511061f8ac21a32d4a0fd3f8e9bf3fa4"
+    },
+    {
+      "check": "source-coverage",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 334,
+      "log_sha256": "a6b89ba0caa019d08c2141873884c684371cafb451c2eb8d24adb69d3a5419d1"
+    },
+    {
+      "check": "rust-tests",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 912,
+      "log_sha256": "d36a056ae342c4415d479fba0d949f3ebf0bc10c84f27138c6fb1bd47e1f72aa"
+    },
+    {
+      "check": "boundary-controls",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 25,
+      "log_sha256": "3440c24dba8b916ddeba238d2c372a216f82b5eeac423f7bbe2aa308046b10ad",
+      "earlier_invocations": [
+        {
+          "exit": 124,
+          "duration_s": 3500,
+          "log_sha256": "f71754349254c8dc05088d451395c1dfceabf2090551bb2275786a9e2b2689ff",
+          "note": "client timeout; cases continued to completion"
+        },
+        {
+          "exit": 124,
+          "duration_s": 3501,
+          "log_sha256": "93e008bae753001eec296b690d87c0c90385deb030230862459efc6e2dd478a2",
+          "note": "client timeout; all 18 case outputs realized locally afterwards"
+        }
+      ]
+    }
+  ],
+  "interrupted": [
+    {
+      "check": "rust-tests",
+      "log_sha256": "eeb4c000b40a3162bd3b8d5a2471637d5aa368b07297374430371f73bc29c718",
+      "note": "Interrupted by the 3600 s tool cap while sharing the builder with boundary-controls; not a test failure."
+    }
+  ],
+  "non_claims": [
+    "Not M1, MW1 or any milestone acceptance; every check binds 4e6b2b09 only.",
+    "All 7643 authored production bodies remain open refinement obligations; inventory accounting is not proof.",
+    "WORKER-04 is partial (two of four variants run, case not passed) and WORKER-09 is partial (two MW2 rows not run); WORKER-11 still lists all MW1 entry gates as open.",
+    "The test.send peer is synthetic and in-process; late completion and native in-flight work remain WORKER-01 (MW2).",
+    "The program-value identity is local and experimental (P-ID-04), not a stable or cross-implementation hash."
+  ]
+}

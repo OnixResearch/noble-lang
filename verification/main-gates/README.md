@@ -1,5 +1,24 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-23 (all fourteen checks pass at `4e6b2b0`)
+
+The [receipt](receipt-4e6b2b0.json) records **14 PASS / 0 FAIL** at
+`4e6b2b09c5734fe3f6f5398d93c6b49703b3fd58`, after the MW1 case work:
+WORKER-03, WORKER-07 and WORKER-10 accepted, WORKER-09's MW1 rows executed,
+and WORKER-04's export-import and optimizer variants run (the case stays
+partial). `rust-tests` reports 85 binaries, 789 passed, 0 failed and 7
+ignored. `octet` is clean in both phases. The renewed inventory accounts for
+14729 production paths. `boundary-controls` passes all 18 cases; under a
+3500 s client timeout it needed three invocations, the last building only the
+aggregate.
+
+Reaching a clean `octet` took one repair: the new `test.send` branch pushed
+the kernel's `kind_matches_definition` over the assertion-density
+threshold, so a sealed `bound_operation` map now gives each bound
+operation's slot and effect (`44bba57e`). Replays of the WORKER-02, 03, 04,
+05, 06, 07, 09, 10 and 12 gates at `4e6b2b09` pass. The pass binds
+`4e6b2b0` only and is not milestone acceptance.
+
 ## Checking change log — 2026-10-22 (all fourteen checks pass at `0dd2fe4`)
 
 The [receipt](receipt-0dd2fe4.json) records **14 PASS / 0 FAIL** at
