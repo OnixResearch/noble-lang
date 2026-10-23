@@ -8,7 +8,7 @@
 
 ## Canonical cases and gate
 
-- [ ] [serial] Build a source-bound WORKER-01 gate: explicit preparation in a separate process, Submit then post-cancellation-commit Cancelled transitions, all four transition controls, independent send grant, late native completion and retirement. Promote only when every expected field is derived from retained observations. r[RA-ASYNC-02]
+- [x] [serial] Build a source-bound WORKER-01 gate: explicit preparation in a separate process, Submit then post-cancellation-commit Cancelled transitions, all four transition controls, independent send grant, late native completion and retirement. Evidence: `verification/worker01/acceptance.json` (sha256 `b39990a865b0d8644b2f157df51dd623d35a6772bf2f5fa5c5f9be65f8428314`) at `0a66b72b`: every expected field derives from Worker reports, kernel snapshots/counters/observations and an append-only lifecycle sequence; the operation-success receipt retains a Cancelled invocation. r[RA-ASYNC-02]
 - [ ] [serial] Run WORKER-09 `permitted-suspension` and `host-deadline-native-work-outstanding`, retaining a new receipt without rewriting its MW1 receipt; promote only when all ten rows have results. r[H-OUTCOME-01]
 - [ ] [serial] Replay WORKER-08's immutable M6 gate and append worker-shell race-order evidence without changing its input or expected projection. r[RA-ASYNC-03]
 

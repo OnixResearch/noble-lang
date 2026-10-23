@@ -37,6 +37,8 @@ pub struct Runtime {
     pub events: Events,
     pub case: String,
     pub live: Vec<(Val, Callback, bool)>,
+    /// First actual async-import suspension, before native completion.
+    pub suspended: Option<Value>,
 }
 
 pub fn config() -> Config {
@@ -273,6 +275,15 @@ async fn async_call(
     })?;
     let events = accessor.with(|mut access| access.get().events.clone());
     event(&events, &format!("suspend-{name}"));
+    accessor.with(|mut access| {
+        if access.get().suspended.is_none() {
+            let host = access.get().host.lock().report();
+            access.get().suspended = Some(json!({
+                "operation":name,"outcome":"suspended","pending_owner":"task",
+                "typed_output":Value::Null,"host":host
+            }));
+        }
+    });
     wait_native(accessor, callback, receive).await?;
     event(&events, &format!("resume-{name}"));
     accessor.with(|mut access| -> Result<()> {
@@ -387,6 +398,7 @@ pub async fn execute(path: &str, export: &str, case: &str) -> Result<Value> {
             jobs: jobs.clone(),
             case: case.to_owned(),
             live: Vec::with_capacity(MAX_LIVE_VALUES),
+            suspended: None,
         },
     );
     store.limiter(|runtime| &mut runtime.limits);
@@ -479,6 +491,7 @@ pub async fn execute(path: &str, export: &str, case: &str) -> Result<Value> {
     let fuel = store.get_fuel()?;
     let guest_stop_ms = started.elapsed().as_millis();
     let native_pins_at_store_drop = host.lock().native_pins();
+    let suspended = store.data().suspended.clone();
     drop(store); // guest lifetime ends; host table and native jobs remain alive
     for job in std::mem::take(&mut *jobs.lock()) {
         job.join()
@@ -493,7 +506,7 @@ pub async fn execute(path: &str, export: &str, case: &str) -> Result<Value> {
     let report = host.lock().report();
     let error = result.as_ref().err().map(|error| format!("{error:#}"));
     Ok(
-        json!({"schema":"noble-m6-peer/v1","engine":"wasmtime-40.0.2","binding_generator":"wasmtime-wit-bindgen-40.0.2","observation":{"outcome":outcome,"results":result.unwrap_or_default(),"events":*events.lock(),"error":error,"task_exit_observed":outcome=="normal"},"host":report,"case":case,"elapsed_ms":started.elapsed().as_millis(),"guest_stop_ms":guest_stop_ms,"native_pins_at_store_drop":native_pins_at_store_drop,"remaining_fuel":fuel,"native_jobs_joined":true,"host_retained_after_store_drop":true}),
+        json!({"schema":"noble-m6-peer/v1","engine":"wasmtime-40.0.2","binding_generator":"wasmtime-wit-bindgen-40.0.2","observation":{"outcome":outcome,"results":result.unwrap_or_default(),"events":*events.lock(),"error":error,"task_exit_observed":outcome=="normal"},"suspended":suspended,"host":report,"case":case,"elapsed_ms":started.elapsed().as_millis(),"guest_stop_ms":guest_stop_ms,"native_pins_at_store_drop":native_pins_at_store_drop,"remaining_fuel":fuel,"native_jobs_joined":true,"host_retained_after_store_drop":true}),
     )
 }
 

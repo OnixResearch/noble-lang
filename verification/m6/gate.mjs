@@ -733,6 +733,12 @@ try {
     assert.deepEqual(order, ['enter-first', 'suspend-first', 'resume-first', 'complete-first', 'enter-second', 'suspend-second', 'resume-second', 'complete-second']);
     assert.ok(events.indexOf('enter-second') > events.indexOf('complete-first'));
     assert.ok(events.slice(events.indexOf('suspend-first') + 1, events.indexOf('resume-first')).includes('native-complete'), 'first import must actually suspend until native completion');
+    assert.equal(report.suspended.outcome, 'suspended');
+    assert.equal(report.suspended.pending_owner, 'task');
+    assert.equal(report.suspended.typed_output, null);
+    assert.equal(report.suspended.host.tasks.pending, 1);
+    assert.equal(report.suspended.host.tasks.outstanding_pins, 1);
+    assert.equal(report.suspended.host.accounting.deliveries, 0);
     assert.equal(report.host.authority.counters.witness_consumptions, 1); assert.equal(report.host.authority.counters.protected_operations, 1);
     assert.equal(report.host.authority.counters.successful_deliveries, 1); assert.equal(report.host.authority.invocation, 'Succeeded');
     operationReceipt(report.host, { claim: 'OperationSuccess', invocation: 'Pending', operation: 'noble-test:async-boundary/host@1.0.0#first', argument: 40 });
