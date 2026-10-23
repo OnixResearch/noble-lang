@@ -1,5 +1,22 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-23 (all fourteen checks pass at `e4cfb08`)
+
+The [receipt](receipt-e4cfb08.json) records **14 PASS / 0 FAIL** at
+`e4cfb086a3be5e2d6c19735c76c1d23145871fd9`, after WORKER-04 was completed: host
+reflect-prepare over installed cells, host-selected dependency modules in the
+invocation closure, and a retained declared-module session with alias
+rebinding. `rust-tests` reports 85 binaries, 793 passed, 0 failed and 7
+ignored. `octet` is clean in both phases. The renewed inventory accounts for
+14840 production paths. `boundary-controls` passes all 18 cases on its second
+invocation under a 3500 s client timeout.
+
+Reaching a clean `octet` took one repair (`21340da3`): the new closure
+helpers in `noble-contracts` take and return the meter by value rather than
+`&mut`, and the retained-session stage share uses `checked_div`. Replays of
+the WORKER-02, 03, 04, 05, 06, 07, 09, 10 and 12 gates at `e4cfb086` pass. The
+pass binds `e4cfb08` only and is not milestone acceptance.
+
 ## Checking change log — 2026-10-23 (all fourteen checks pass at `4e6b2b0`)
 
 The [receipt](receipt-4e6b2b0.json) records **14 PASS / 0 FAIL** at

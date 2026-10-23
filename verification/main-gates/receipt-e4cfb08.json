@@ -1,0 +1,176 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "tested_commit": "e4cfb086a3be5e2d6c19735c76c1d23145871fd9",
+  "base_upstream_commit": "42f5b3d4aec0adaba1c472c6b043e35e5878ccfc",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
+  "flake_note": "All fourteen flake checks pass at e4cfb086 after WORKER-04 was completed: host reflect-prepare over installed cells (worker_reflect.rs), host-selected dependency modules in the invocation closure, and a retained declared-module session with alias rebinding (4f26f271). Each check ran from the clean detached worktree /var/tmp/noble-gate-e4cfb086. boundary-controls needed two invocations under a 3500 s client timeout; rust-tests ran alone after it.",
+  "repairs": [
+    {
+      "commit": "21340da3",
+      "fix": "Octet: the new closure helpers take and return the meter by value instead of &mut (mutating_input_in_pure in noble-contracts), and the retained-session stage share uses checked_div."
+    },
+    {
+      "commit": "e4cfb086",
+      "fix": "Renew source-inventory accounting from the gate's own all-features collection at 21340da3 (343 added, 232 removed, none reclassified or rebound)."
+    }
+  ],
+  "rust_tests": {
+    "binaries": 85,
+    "passed": 793,
+    "failed": 0,
+    "ignored": 7,
+    "log_sha256": "3cf84419c81da3b294fef9f789ad10ca48f872f80dbda50a0d2cb396e86e5c38"
+  },
+  "additional_verification": [
+    {
+      "subject": "Worker case gate replays",
+      "commit": "e4cfb086",
+      "result": "passed",
+      "command": "node verification/<case>/gate.mjs --out /var/tmp/<case>-final (pinned devShell)",
+      "receipt_sha256": {
+        "worker02": "59eff4ed83f9d5914845ba50980fa4e22c94a2ed1101aa23acddde5196890af3",
+        "worker03": "7931b50a9e5a793973b062211b4b036075e855128d1fd12c46be4d4ed75ec479",
+        "worker04": "2c1cb5eefbb0f5dc287a9f70542129031df5cec5b31f1ef21469644fd0785607",
+        "worker05": "f50f50d8b90adbc24761db7d0d000448620e191df7089b7ce30749742d78a4db",
+        "worker06": "d5a35e54993f71b8f716ae794073fdbd5b8800d5d4110571ae3512f0b6cf3657",
+        "worker07": "0027f17de59a1cfbebdb1ed1f97df4a33c9e65ddef2c65c9ece85c3f2ec74400",
+        "worker09": "b02d24eb9da571ee684d29f47d79900cf2e729c78fe9a20da6926ba1110da639",
+        "worker10": "0df9b90f9ec15d50778f06c9cf96c96a4aa5536a1cc318964a8544fd61f0c7f1",
+        "worker12": "2c8526bfd841d288f3214cafb4298f85f6e4560d293730f50adbaed1484915b7"
+      },
+      "observation": "Each gate rebuilt noble (WORKER-09: the unit-test binary) from the clean source scope and passed with no failures; WORKER-04 ran all four variants. Accepted evidence stays bound to each case's own receipt."
+    },
+    {
+      "subject": "Local Octet deny-all before the remote check",
+      "commit": "21340da3 (working tree before commit)",
+      "result": "passed",
+      "command": "nix run .#octet-gate -- --workspace --artifact-dir DIR -- --all-targets --all-features (CARGO_INCREMENTAL=0, separate target dir)",
+      "observation": "Status clean, lint phase clean, architecture phase clean with 0 findings."
+    }
+  ],
+  "run": {
+    "date": "2026-10-23",
+    "worktree": "/var/tmp/noble-gate-e4cfb086",
+    "invocation": "nix build --no-link -L .#checks.x86_64-linux.<check> (boundary-controls with --out-link /var/tmp/noble-bc-e4cfb086 and timeout 3500)",
+    "options": [
+      "--option min-free 0",
+      "--option max-free 0"
+    ],
+    "log_root": "/home/brittonr/.cache/noble-issues/logs/gates/e4cfb086"
+  },
+  "flake_checks": [
+    {
+      "check": "policy",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 236,
+      "log_sha256": "7da213607c7a7f0086b52ca1291148e5a023b863035aa98b125478d4c6efa45a"
+    },
+    {
+      "check": "tool-selection",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 21,
+      "log_sha256": "81913098d9efff204738ce0b8b31ae2094f5d2506594585d498836e56b8998f1"
+    },
+    {
+      "check": "tool-overrides",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 1918,
+      "log_sha256": "2c690b056721a60e7fc6c1e112fa5853cb8cbda13fd3d4fa59e0cb0db73b376a"
+    },
+    {
+      "check": "tool-versions",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 22,
+      "log_sha256": "059bb1e9f5f0d030288f02ec60241d900ddecb5cde6dc6a243940ed5d4bb5f69"
+    },
+    {
+      "check": "format",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 28,
+      "log_sha256": "21823408f30680fab7fd707d3e676a5d4b75958d3451503dd8203c8c530f586d"
+    },
+    {
+      "check": "clippy",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 72,
+      "log_sha256": "d5e88c36b2be40f4c784510f47a68a46fd4ca552e7aa92d178ea096486b6f1c5"
+    },
+    {
+      "check": "documents",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 62,
+      "log_sha256": "9d25c8ee6061fcedb198d2ff8efd88e08f05297aa466a56f2ce1fcb0d5b381f4"
+    },
+    {
+      "check": "cairn",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 24,
+      "log_sha256": "3521b3d7846d964582ee1b2341042899fcb337264d42c4e57d81f081176cb094"
+    },
+    {
+      "check": "source-inventory-controls",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 12,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "native-assurance",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 700,
+      "log_sha256": "ea7cee75eb52ffebe68de55b6669acc533bd836364a5f60f84cad804647565c9"
+    },
+    {
+      "check": "octet",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 656,
+      "log_sha256": "fefaf8ee633f09af0e581529e455cd4077278d5cc17dd91df7fc07a4c9dae533"
+    },
+    {
+      "check": "source-coverage",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 340,
+      "log_sha256": "76ddb804f5b62b685689428291d3aa7bc02ab986eb88942d88294d01ccb3e566"
+    },
+    {
+      "check": "rust-tests",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 900,
+      "log_sha256": "3cf84419c81da3b294fef9f789ad10ca48f872f80dbda50a0d2cb396e86e5c38"
+    },
+    {
+      "check": "boundary-controls",
+      "exit": 0,
+      "result": "pass",
+      "duration_s": 2245,
+      "log_sha256": "f45753f12f8e42a094c96528da007f120f6d3afe55233f58d44a9abfb1580559",
+      "earlier_invocations": [
+        {
+          "exit": 124,
+          "duration_s": 3500,
+          "log_sha256": "d19e7908e2567a1a6a8fa7f7011e5730be3a375253b315eea113f5fa70f22c21",
+          "note": "client timeout beside octet and source-coverage; finished cases stayed in the store"
+        }
+      ]
+    }
+  ],
+  "non_claims": [
+    "Not M1, MW1 or any milestone acceptance; every check binds e4cfb086 only.",
+    "All 7716 authored production bodies remain open refinement obligations; inventory accounting is not proof.",
+    "WORKER-09 is partial (two MW2 rows not run); WORKER-01 and WORKER-11 are not run, and WORKER-11 still lists the MW1 entry gates as open.",
+    "The program-value identity is local and experimental (P-ID-04); reflect-prepare is a host preparation service; Programs reaching a dependency module are not exported.",
+    "The test.send peer is synthetic and in-process; late completion and native in-flight work remain WORKER-01 (MW2)."
+  ]
+}
