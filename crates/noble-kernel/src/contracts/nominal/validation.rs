@@ -361,17 +361,8 @@ fn kind_matches_definition(
     index: usize,
     kind: super::super::Behavior,
 ) -> bool {
-    if let super::super::Behavior::BoundEmit(slot) = kind {
-        return bound_definition_matches(env, index, slot, super::super::TEST_EMIT);
-    }
-    if let super::super::Behavior::BoundClock(slot) = kind {
-        return bound_definition_matches(env, index, slot, super::super::TEST_CLOCK);
-    }
-    if let super::super::Behavior::BoundCodeExport(slot) = kind {
-        return bound_definition_matches(env, index, slot, super::super::TEST_CODE_EXPORT);
-    }
-    if let super::super::Behavior::BoundSend(slot) = kind {
-        return bound_definition_matches(env, index, slot, super::super::TEST_SEND);
+    if let Some((slot, effect)) = bound_operation(kind) {
+        return bound_definition_matches(env, index, slot, effect);
     }
     if let Some(id) = generic_operation_id(kind) {
         return generic_definition_matches(env, index, kind, id);
@@ -380,6 +371,60 @@ fn kind_matches_definition(
         return declared_definition_matches(env, index, kind, id);
     }
     true
+}
+
+/// The adapter slot and reserved effect of a required bound host operation.
+const fn bound_operation(kind: super::super::Behavior) -> Option<(u32, crate::types::EffId)> {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-kernel; the Behavior enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+    )]
+    match kind {
+        super::super::Behavior::BoundEmit(slot) => Some((slot, super::super::TEST_EMIT)),
+        super::super::Behavior::BoundClock(slot) => Some((slot, super::super::TEST_CLOCK)),
+        super::super::Behavior::BoundCodeExport(slot) => {
+            Some((slot, super::super::TEST_CODE_EXPORT))
+        }
+        super::super::Behavior::BoundSend(slot) => Some((slot, super::super::TEST_SEND)),
+        super::super::Behavior::Dup => None,
+        super::super::Behavior::Drop => None,
+        super::super::Behavior::Swap => None,
+        super::super::Behavior::Dip => None,
+        super::super::Behavior::Arith => None,
+        super::super::Behavior::Equals => None,
+        super::super::Behavior::Quote => None,
+        super::super::Behavior::Compose => None,
+        super::super::Behavior::Run => None,
+        super::super::Behavior::Reflect => None,
+        super::super::Behavior::Unit => None,
+        super::super::Behavior::Pair => None,
+        super::super::Behavior::Unpair => None,
+        super::super::Behavior::Inl => None,
+        super::super::Behavior::Inr => None,
+        super::super::Behavior::Case => None,
+        super::super::Behavior::If => None,
+        super::super::Behavior::Nil => None,
+        super::super::Behavior::Cons => None,
+        super::super::Behavior::ListCase => None,
+        super::super::Behavior::TestEmit => None,
+        super::super::Behavior::TextByte => None,
+        super::super::Behavior::I64Less => None,
+        super::super::Behavior::CalculatorIterate => None,
+        super::super::Behavior::CalculatorCompare => None,
+        super::super::Behavior::CalculatorDivRem => None,
+        super::super::Behavior::CalculatorTextFromAscii => None,
+        super::super::Behavior::CalculatorTextLength => None,
+        super::super::Behavior::Reserved => None,
+        super::super::Behavior::NominalNew(_) => None,
+        super::super::Behavior::NominalInto(_) => None,
+        super::super::Behavior::NominalLeft(_) => None,
+        super::super::Behavior::NominalRight(_) => None,
+        super::super::Behavior::NominalMatch(_) => None,
+        super::super::Behavior::GenericLeft(_) => None,
+        super::super::Behavior::GenericRight(_) => None,
+        super::super::Behavior::GenericMatch(_) => None,
+        super::super::Behavior::Named => None,
+    }
 }
 
 #[expect(

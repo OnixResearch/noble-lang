@@ -243,7 +243,7 @@
   "crates/noble-kernel/src/contracts.rs" = "af3945a5f510ad8b166fb139ede3bbd4537f019e51e32e195f46048dd455c27e",
   "crates/noble-kernel/src/contracts/nominal.rs" = "90645d0e65cac4aa67435282302776175a232cb00612f7f9fefd745f20ace9a2",
   "crates/noble-kernel/src/contracts/nominal/schemes.rs" = "7f794dbf9bc7a907ec904866ba685b3662bf09db584c936d296b9fb01d6be918",
-  "crates/noble-kernel/src/contracts/nominal/validation.rs" = "eb3913bd268e708e06a1c1672a2f3c1a623563c2aa4f77303784f67273e05a0b",
+  "crates/noble-kernel/src/contracts/nominal/validation.rs" = "594ab9c04d7a51ff116c3e8144953055e91de6482eeaa732104b6cfd903c47f7",
   "crates/noble-kernel/tests/acceptance/nominal/forgery.rs" = "b4a7db38a3c10cb4b474f45057aec11c356e47e228b1855f1945a6d06ffdaa0c",
   "crates/noble-wasm/src/component/abi.rs" = "f2d1e1f83db18a9926670b365da011cc4d71c350705585900b30cc877ed94fa9",
   "crates/noble-wasm/src/component/lower.rs" = "1c26845fdbfbcbcbc857c889fead8a9fd9e25da5a2e10c931c3a5055d4872e4b",
