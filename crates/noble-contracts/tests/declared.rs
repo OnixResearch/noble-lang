@@ -282,6 +282,78 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     Ok(())
 }
 
+/// Commit one module and return its session-assigned identity.
+fn commit_module(
+    session: noble_contracts::source::ModuleSession,
+    text: &[u8],
+) -> Result<(noble_contracts::source::ModuleSession, u64), String> {
+    let prepared = session
+        .prepare(text, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let identity = prepared
+        .resolved_module()
+        .ok_or("committed module lost its identity")?
+        .0;
+    let (session, outcome) = session.commit(prepared);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    Ok((session, identity))
+}
+
+#[test]
+fn dependency_module_enters_a_closure_only_when_exactly_selected() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, ProgramClosureError};
+    let session =
+        ModuleSession::new_signed_self(&[], retained()).map_err(|error| format!("{error:?}"))?;
+    let (session, dep) = commit_module(
+        session,
+        b"module dep@1 [ export dec def dec [ \"tag\" drop 1 - ] export unused def unused [ 0 ] ]",
+    )?;
+    let (session, spare) =
+        commit_module(session, b"module spare@1 [ export idle def idle [ 1 + ] ]")?;
+    let session = commit(session, b"import dep@1 as dep")?;
+    let (session, worker) = commit_module(
+        session,
+        b"module worker@1 [ export run def run [ dep.dec ] ]",
+    )?;
+    let invocation = session
+        .prepare(b"worker@1.run", &[noble_kernel::types::Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(
+        invocation
+            .checked_invocation_closure(worker, "run", &[])
+            .err()
+            == Some(ProgramClosureError::Invalid),
+        "an unselected dependency module is a foreign owner"
+    );
+    let (owner, closure) = invocation
+        .checked_invocation_closure(worker, "run", &[dep])
+        .map_err(|error| format!("selected dependency refused: {error:?}"))?;
+    assert_eq!(
+        closure
+            .iter()
+            .map(|row| (row.module_identity(), row.definition_ordinal()))
+            .collect::<Vec<_>>(),
+        vec![(worker, 0), (dep, 0)],
+        "the root module, then only the dependency module's reached definition"
+    );
+    assert_eq!(closure[0].definition_slot(), owner.definition_slot());
+    for selection in [
+        vec![dep, spare],
+        vec![worker],
+        vec![dep, dep],
+        vec![spare + worker],
+    ] {
+        assert!(
+            invocation
+                .checked_invocation_closure(worker, "run", &selection)
+                .err()
+                == Some(ProgramClosureError::Invalid),
+            "an unreached, root, repeated or unknown selection is refused: {selection:?}"
+        );
+    }
+    Ok(())
+}
+
 #[test]
 fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Result<(), String> {
     use noble_contracts::source::{BoundOperation, ModuleSession, ProgramClosureError};

@@ -1,0 +1,1 @@
+module Worker@1 [ signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dep.dec count 1 + ] if ] ]

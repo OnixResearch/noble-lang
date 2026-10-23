@@ -410,18 +410,21 @@ impl ModulePrepared {
             .modules
             .last()
             .ok_or(ProgramClosureError::Invalid)?;
-        self.checked_program_closure_source(module, &owner)
+        self.checked_program_closure_source(module, &owner, &[])
     }
 
     /// The exported root and its closed dependency closure, established from
     /// an exact checked invocation of that root in the pure profile. A signed
     /// owner is verified only when an expression invoking it is prepared, so
     /// a scoped recursive owner can be established here, never from the
-    /// module alone.
+    /// module alone. `dependencies` names the host-selected committed modules
+    /// whose definitions the root may reach; each must contribute a reached
+    /// definition, and any other owner fails closed.
     pub fn checked_invocation_closure(
         &self,
         module_identity: u64,
         root: &str,
+        dependencies: &[u64],
     ) -> Result<(CheckedProgramOwner, alloc::vec::Vec<CheckedProgramOwner>), ProgramClosureError>
     {
         if self.kind != ModuleKind::Expression
@@ -436,14 +439,37 @@ impl ModulePrepared {
             .iter()
             .find(|module| module.identity == module_identity)
             .ok_or(ProgramClosureError::Invalid)?;
+        let selected = self.selected_dependency_modules(module_identity, dependencies)?;
         let owner = self
             .checked_program_owner_source(module, root)
             .ok_or(ProgramClosureError::Invalid)?;
         if self.checked_program_invocation(&owner).is_none() {
             return Err(ProgramClosureError::Invalid);
         }
-        let closure = self.checked_program_closure_source(module, &owner)?;
+        let closure = self.checked_program_closure_source(module, &owner, &selected)?;
         Ok((owner, closure))
+    }
+
+    /// Distinct committed modules other than the root, in selection order.
+    fn selected_dependency_modules(
+        &self,
+        root_module: u64,
+        dependencies: &[u64],
+    ) -> Result<alloc::vec::Vec<&super::Module>, ProgramClosureError> {
+        let mut selected = alloc::vec::Vec::with_capacity(dependencies.len());
+        for (at, identity) in dependencies.iter().enumerate() {
+            if *identity == root_module || dependencies[..at].contains(identity) {
+                return Err(ProgramClosureError::Invalid);
+            }
+            let module = self
+                .staged
+                .modules
+                .iter()
+                .find(|module| module.identity == *identity)
+                .ok_or(ProgramClosureError::Invalid)?;
+            selected.push(module);
+        }
+        Ok(selected)
     }
 
     /// Only a closed source graph that actually invokes the exact selected
@@ -478,7 +504,7 @@ impl ModulePrepared {
         let owner = self
             .checked_program_owner_source(module, root)
             .ok_or(ProgramClosureError::Invalid)?;
-        let closure = self.checked_program_closure_source(module, &owner)?;
+        let closure = self.checked_program_closure_source(module, &owner, &[])?;
         if self.closure_invokes_bound(&closure, adapter.definition) {
             Ok((owner, closure))
         } else {
@@ -563,32 +589,67 @@ impl ModulePrepared {
         &self,
         module: &super::Module,
         owner: &CheckedProgramOwner,
+        dependencies: &[&super::Module],
     ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
         if module.definition_spans.is_empty() {
             return Err(ProgramClosureError::Invalid);
         }
         // The closure traversal is bounded by the definition cap; a larger
         // module exhausts the traversal, it is not thereby invalid.
-        if module.definition_spans.len() > super::MODULE_CAP {
+        if core::iter::once(module)
+            .chain(dependencies.iter().copied())
+            .any(|selected| selected.definition_spans.len() > super::MODULE_CAP)
+        {
             return Err(ProgramClosureError::Exhausted);
         }
+        let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
+        let visited = self.closure_walk(module, owner, dependencies, &mut meter)?;
+        // Every root-module definition is reachable; a selected dependency
+        // module contributes exactly its reached definitions, and at least one.
+        let (mut closure, unreached) = self.reached_rows(module, &visited, &mut meter)?;
+        if unreached != 0 {
+            return Err(ProgramClosureError::Invalid);
+        }
+        for dependency in dependencies {
+            let (rows, _) = self.reached_rows(dependency, &visited, &mut meter)?;
+            if rows.is_empty() {
+                return Err(ProgramClosureError::Invalid);
+            }
+            closure.extend(rows);
+        }
+        if visited.iter().filter(|seen| **seen).count() == closure.len() {
+            Ok(closure)
+        } else {
+            Err(ProgramClosureError::Invalid)
+        }
+    }
+
+    /// Definitions reachable from the root; an owner outside the root and
+    /// selected modules, or an unverified signed slot, fails closed.
+    fn closure_walk(
+        &self,
+        module: &super::Module,
+        owner: &CheckedProgramOwner,
+        dependencies: &[&super::Module],
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::vec::Vec<bool>, ProgramClosureError> {
         let named = &self.staged.source.definitions;
         let root_index =
             usize::try_from(owner.definition_slot).map_err(|_| ProgramClosureError::Invalid)?;
         let mut visited = alloc::vec![false; named.len()];
         let mut enqueued = alloc::vec![false; named.len()];
         let mut pending = alloc::vec![root_index];
-        let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
         *enqueued
             .get_mut(root_index)
             .ok_or(ProgramClosureError::Invalid)? = true;
         while let Some(index) = pending.pop() {
             let definition = named.get(index).ok_or(ProgramClosureError::Invalid)?;
-            if definition.owner != Some(module.identity)
-                || definition.signed.is_some()
-                    && !module
-                        .verified_signed_slots
-                        .contains(&u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?)
+            let owning = closure_owner(module, dependencies, definition.owner)
+                .ok_or(ProgramClosureError::Invalid)?;
+            if definition.signed.is_some()
+                && !owning
+                    .verified_signed_slots
+                    .contains(&u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?)
             {
                 return Err(ProgramClosureError::Invalid);
             }
@@ -626,7 +687,20 @@ impl ModulePrepared {
                 }
             }
         }
+        Ok(visited)
+    }
+
+    /// Rows for `module`'s reached definitions in ordinal order, and how many
+    /// of its definitions the walk did not reach.
+    fn reached_rows(
+        &self,
+        module: &super::Module,
+        visited: &[bool],
+        meter: &mut crate::Meter,
+    ) -> Result<(alloc::vec::Vec<CheckedProgramOwner>, usize), ProgramClosureError> {
+        let named = &self.staged.source.definitions;
         let mut closure = alloc::vec::Vec::with_capacity(module.definition_spans.len());
+        let mut unreached = 0usize;
         for (ordinal, entry) in module.definition_spans.iter().enumerate() {
             meter
                 .charge(1, super::SPAN)
@@ -637,8 +711,9 @@ impl ModulePrepared {
                     definition.name == entry.name && definition.owner == Some(module.identity)
                 })
                 .ok_or(ProgramClosureError::Invalid)?;
-            if !visited[index] {
-                return Err(ProgramClosureError::Invalid);
+            if !*visited.get(index).ok_or(ProgramClosureError::Invalid)? {
+                unreached = unreached.saturating_add(1);
+                continue;
             }
             closure.push(CheckedProgramOwner {
                 module_identity: module.identity,
@@ -650,11 +725,7 @@ impl ModulePrepared {
                 recursive: calls_self(&named[index]),
             });
         }
-        if visited.iter().filter(|seen| **seen).count() == closure.len() {
-            Ok(closure)
-        } else {
-            Err(ProgramClosureError::Invalid)
-        }
+        Ok((closure, unreached))
     }
 
     pub fn declared_text_source_owner(&self) -> Option<DeclaredTextSourceOwner<'_>> {
@@ -1088,7 +1159,9 @@ impl ModulePrepared {
     ) -> Option<CheckedProgramInterface> {
         let (submission, definition, module) = self.checked_program_invocation(owner)?;
         let adapter = self.checked_bound_adapter(module, binding)?;
-        let closure = self.checked_program_closure_source(module, owner).ok()?;
+        let closure = self
+            .checked_program_closure_source(module, owner, &[])
+            .ok()?;
         if !self.closure_invokes_bound(&closure, adapter.definition)
             || submission.request.expected.allowed_effects != adapter.effects
             || definition.expected.allowed_effects != adapter.effects
@@ -1565,6 +1638,22 @@ fn calls_self(definition: &crate::source::Named) -> bool {
             crate::source::Kind::Call(crate::source::Target::SelfOwner)
         )
     })
+}
+
+/// The root module or the selected dependency module owning a definition.
+fn closure_owner<'module>(
+    module: &'module super::Module,
+    dependencies: &[&'module super::Module],
+    owner: Option<u64>,
+) -> Option<&'module super::Module> {
+    let owner = owner?;
+    if owner == module.identity {
+        return Some(module);
+    }
+    dependencies
+        .iter()
+        .copied()
+        .find(|dependency| dependency.identity == owner)
 }
 
 #[expect(

@@ -139,6 +139,29 @@ struct SelectedSchema {
     types: [Ty; 4],
 }
 
+/// A host-selected dependency module retained with a Program admitted from
+/// a retained session. Its definitions enter the closure under their own
+/// module identity; a package cannot carry it, so such a Program is never
+/// exported.
+#[derive(Clone)]
+struct DependencySource {
+    module_id: u64,
+    version: u32,
+    source: Vec<u8>,
+}
+
+/// The host's selection for one root admission: the root source and export
+/// name, the exact input stack, an optional bound policy or schema, and the
+/// committed dependency modules the closure may reach.
+struct RootSelection<'selection> {
+    source: &'selection [u8],
+    name: &'selection str,
+    input: &'selection [Ty],
+    policy: Option<super::worker_program_guest::WorkerHostPolicy>,
+    schema: Option<SelectedSchema>,
+    dependencies: Vec<DependencySource>,
+}
+
 /// A Program's graph index and its *adapted* interface witness are distinct.
 /// The graph node retains its original, source-derived interface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -159,6 +182,11 @@ pub(crate) struct Store {
     root_owner: Owner,
     root_index: usize,
     closure: Vec<Owner>,
+    /// Each closure member's declared rank-1 scheme if it is a scoped
+    /// recursive owner, in closure order.
+    signatures: Vec<Option<noble_kernel::words::Scheme>>,
+    /// Host-selected dependency modules, empty for a single-module Program.
+    dependencies: Vec<DependencySource>,
     text_aliases: Vec<CheckedTextAlias>,
     attested_capture_hash: Option<[u8; 32]>,
     /// Candidate body invocations observed while installing cells for
@@ -296,7 +324,7 @@ impl Store {
             .map_err(|_| Refusal::Exhausted)?
             .checked_mul(slices)
             .ok_or(Refusal::Exhausted)?;
-        let mut work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
+        let work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
         let bindings = policy.as_ref().map_or(&[][..], |selection| {
             std::slice::from_ref(selection.binding())
         });
@@ -399,16 +427,60 @@ impl Store {
         let (owner, closure) = match bound {
             Some(checked) => checked,
             None => prepared
-                .checked_invocation_closure(module_identity, name)
+                .checked_invocation_closure(module_identity, name, &[])
                 .map_err(|problem| closure_refused(trace, problem))?,
         };
         trace.checking_work_left = session.remaining_request_work();
+        Self::admit_invocation(
+            &prepared,
+            (owner, closure),
+            RootSelection {
+                source,
+                name,
+                input: &input,
+                policy,
+                schema,
+                dependencies: Vec::new(),
+            },
+            work_left,
+            trace,
+        )
+    }
+
+    /// Compile and bind one checked root invocation and its closure: the
+    /// shared tail of fresh and retained-session admission. Each closure
+    /// member is matched under its own owning module, so a host-selected
+    /// dependency module's definitions bind exactly like the root's.
+    fn admit_invocation(
+        prepared: &noble_contracts::source::ModulePrepared,
+        (owner, closure): (
+            noble_contracts::source::CheckedProgramOwner,
+            Vec<noble_contracts::source::CheckedProgramOwner>,
+        ),
+        selection: RootSelection<'_>,
+        mut work_left: usize,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Self, Handle), Refusal> {
+        let RootSelection {
+            source,
+            name,
+            input,
+            policy,
+            schema,
+            dependencies,
+        } = selection;
         if closure.is_empty() {
             return Err(Refusal::Invalid);
         }
-        // Retaining the source and matching each dependency below.
+        // Retaining the sources and matching each dependency below.
+        let retained = dependencies
+            .iter()
+            .try_fold(source.len(), |total, dependency| {
+                total.checked_add(dependency.source.len())
+            })
+            .ok_or(Refusal::Exhausted)?;
         work_left = work_left
-            .checked_sub(source.len())
+            .checked_sub(retained)
             .and_then(|left| left.checked_sub(closure.len().checked_mul(8)?))
             .ok_or(Refusal::Exhausted)?;
         let checked_interface = match &policy {
@@ -460,6 +532,7 @@ impl Store {
         let mut nodes = Vec::with_capacity(closure.len());
         let mut witnesses = Vec::with_capacity(closure.len());
         let mut owners = Vec::with_capacity(closure.len());
+        let mut signatures = Vec::with_capacity(closure.len());
         let mut text_aliases = Vec::new();
         let mut root = None;
         for dependency in &closure {
@@ -470,7 +543,7 @@ impl Store {
                         .environment
                         .definition_owners
                         .get(definition.definition.0 as usize)
-                        == Some(&Some(owner.module_identity()))
+                        == Some(&Some(dependency.module_identity()))
             });
             let (Some(source_definition), None) =
                 (source_definitions.next(), source_definitions.next())
@@ -484,7 +557,7 @@ impl Store {
                         .environment
                         .definition_owners
                         .get(target.definition.0 as usize)
-                        == Some(&Some(owner.module_identity()))
+                        == Some(&Some(dependency.module_identity()))
             });
             let (Some(target), None) = (named.next(), named.next()) else {
                 return Err(Refusal::Invalid);
@@ -528,6 +601,20 @@ impl Store {
                 ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity(),
                 recursive: dependency.is_recursive(),
+            });
+            // A scoped recursive owner retains its declared rank-1 scheme in
+            // the checked environment; reflection cannot recover it.
+            signatures.push(if dependency.is_recursive() {
+                Some(
+                    submission
+                        .environment
+                        .defs
+                        .get(source_definition.definition.0 as usize)
+                        .ok_or(Refusal::Invalid)?
+                        .clone(),
+                )
+            } else {
+                None
             });
             for text in &source_definition.body.texts {
                 let node = usize::try_from(text.node.0).map_err(|_| Refusal::Exhausted)?;
@@ -586,6 +673,8 @@ impl Store {
             },
             root_index: root,
             closure: owners,
+            signatures,
+            dependencies,
             text_aliases,
             attested_capture_hash: None,
             body_requests: 0,
@@ -710,6 +799,19 @@ impl Store {
                     .to_le_bytes(),
             );
             digest.update(&selected.source);
+        }
+        // A single-module Program keeps its historical digest: dependency
+        // modules are hashed only when the host selected some.
+        for dependency in &self.dependencies {
+            digest.update(b"dependency\0");
+            digest.update(&dependency.module_id.to_le_bytes());
+            digest.update(&dependency.version.to_le_bytes());
+            digest.update(
+                &u64::try_from(dependency.source.len())
+                    .map_err(|_| Refusal::Exhausted)?
+                    .to_le_bytes(),
+            );
+            digest.update(&dependency.source);
         }
         digest.update(
             &u64::try_from(selected)
@@ -969,6 +1071,11 @@ impl Store {
     }
 
     fn export_authorized(&mut self, handle: Handle) -> Result<Vec<u8>, Refusal> {
+        // The package format carries one root source; a Program whose closure
+        // reaches a host-selected dependency module cannot be described.
+        if !self.dependencies.is_empty() {
+            return Err(Refusal::Unsupported);
+        }
         self.require_selected_root(handle)?;
         let capture_bytes = self
             .text_aliases
@@ -1022,6 +1129,79 @@ impl Store {
 
     pub(crate) fn body_requests(&self) -> u32 {
         self.body_requests
+    }
+
+    /// P-ROUND-01 explicit host preparation of this Program's reflected
+    /// recipe. The runtime reflects every installed closure cell through its
+    /// own observation ABI; each decoded recipe must equal the checked recipe
+    /// byte for byte; a module rendered from the reflection, with synthesized
+    /// names and each recursive owner's retained scheme, is then prepared in
+    /// a fresh session at the root's original input. No body runs.
+    pub(crate) fn reflect_prepare(
+        &mut self,
+        root: Handle,
+    ) -> Result<(Store, Handle, Reflection), Refusal> {
+        if self.host_policy.is_some() || self.schema.is_some() || !self.dependencies.is_empty() {
+            return Err(Refusal::Unsupported);
+        }
+        self.require_selected_root(root)?;
+        if root.node != self.root_index || root.witness != self.root_index {
+            return Err(Refusal::Unsupported);
+        }
+        self.reserve_attestation()?;
+        let reflected =
+            super::worker_program_guest::reflect_installed(self, root).map_err(runtime_refusal)?;
+        self.body_requests = self
+            .body_requests
+            .checked_add(reflected.body_requests)
+            .ok_or(Refusal::Exhausted)?;
+        if reflected.cells.len() != self.closure.len() {
+            return Err(Refusal::Invalid);
+        }
+        let mut definitions = Vec::with_capacity(self.closure.len());
+        for (node, events) in reflected.cells.iter().enumerate() {
+            let owner = self.closure.get(node).ok_or(Refusal::Invalid)?;
+            let tokens = super::worker_reflect::decode(events, owner.identity)?;
+            let named = self
+                .node_handle(node)
+                .and_then(|handle| self.named(handle))
+                .ok_or(Refusal::Invalid)?;
+            if super::worker_reflect::encode(&tokens, owner.identity) != named.checked_recipe {
+                return Err(Refusal::Invalid);
+            }
+            definitions.push(super::worker_reflect::ReflectedDefinition {
+                ordinal: owner.ordinal,
+                identity: owner.identity,
+                signature: self.signatures.get(node).cloned().flatten(),
+                tokens,
+            });
+        }
+        let rendered = super::worker_reflect::render_module(
+            self.root_owner.version,
+            self.root_owner.identity,
+            &definitions,
+        )?;
+        let input = self
+            .witnesses
+            .get(self.root_index)
+            .ok_or(Refusal::Invalid)?
+            .input
+            .clone();
+        let (prepared, handle) = Store::prepare(
+            rendered.source.as_bytes(),
+            &rendered.root_name,
+            &input,
+            RUNTIME_REQUEST_WORK,
+        )?;
+        Ok((
+            prepared,
+            handle,
+            Reflection {
+                events: reflected.cells.iter().map(Vec::len).collect(),
+                source: rendered.source,
+                root_name: rendered.root_name,
+            },
+        ))
     }
 
     /// Request work this store has not yet charged: its budget outcome.
@@ -1489,6 +1669,232 @@ impl Store {
             Recipe::Compose { first, second } => Some((*first, *second)),
             Recipe::Named { .. } => None,
         }
+    }
+}
+
+/// A host-retained declared-module session. The host commits selected
+/// dependency modules, import aliases and a root module in order, admits
+/// Programs from the committed state under an exact dependency selection,
+/// and may rebind an alias afterwards. Module bodies resolve their calls at
+/// registration, so a rebind never changes an already committed root.
+pub(crate) struct RetainedSession {
+    session: Option<noble_contracts::source::ModuleSession>,
+    modules: Vec<RetainedModule>,
+}
+
+struct RetainedModule {
+    identity: u64,
+    name: String,
+    version: u32,
+    source: Vec<u8>,
+}
+
+/// What host reflection observed and rendered for explicit preparation.
+pub(crate) struct Reflection {
+    /// Runtime reflection events per closure definition, in closure order.
+    pub(crate) events: Vec<usize>,
+    /// The module source rendered from the reflected recipes.
+    pub(crate) source: String,
+    pub(crate) root_name: String,
+}
+
+/// What committing one import alias observed.
+pub(crate) struct ImportCommit {
+    pub(crate) alias: String,
+    /// The session identity of the module the alias names afterwards.
+    pub(crate) module_identity: u64,
+    /// Current outside definitions replayed by a rebind; `None` when the
+    /// alias was new.
+    pub(crate) rebuilt_definitions: Option<usize>,
+    pub(crate) generation_before: u64,
+    pub(crate) generation_after: u64,
+}
+
+impl RetainedSession {
+    /// A pure session (signed scoped self recursion admitted) retaining up
+    /// to `modules` module sources of at most `SOURCE_LIMITS.bytes` each.
+    pub(crate) fn open(modules: u32) -> Result<Self, Refusal> {
+        let bytes = SOURCE_LIMITS
+            .bytes
+            .checked_mul(modules)
+            .ok_or(Refusal::Exhausted)?;
+        let retained =
+            noble_contracts::source::RetainedSourceLimit::new(bytes).ok_or(Refusal::Exhausted)?;
+        let session = noble_contracts::source::ModuleSession::new_signed_self(&[], retained)
+            .map_err(source_refusal)?;
+        Ok(Self {
+            session: Some(session),
+            modules: Vec::new(),
+        })
+    }
+
+    /// Check one unit under a fresh, finite request budget.
+    fn check(
+        &mut self,
+        unit: &[u8],
+        trace: &mut AdmissionTrace,
+    ) -> Result<noble_contracts::source::ModulePrepared, Refusal> {
+        if unit.len() > SOURCE_LIMITS.bytes as usize {
+            return Err(Refusal::Exhausted);
+        }
+        let session = self.session.as_mut().ok_or(Refusal::Invalid)?;
+        session.share_request_work(SOURCE_LIMITS.work);
+        session
+            .prepare(unit, &[], SOURCE_LIMITS)
+            .map_err(|problem| {
+                trace.diagnostic = Some(problem.diagnostic().message.clone());
+                source_refusal(problem)
+            })
+    }
+
+    fn publish(
+        &mut self,
+        prepared: noble_contracts::source::ModulePrepared,
+        trace: &mut AdmissionTrace,
+    ) -> Result<(), Refusal> {
+        let session = self.session.take().ok_or(Refusal::Invalid)?;
+        let (session, committed) = session.commit(prepared);
+        self.session = Some(session);
+        committed.map_err(|problem| {
+            trace.diagnostic = Some(problem.diagnostic().message.clone());
+            source_refusal(problem)
+        })
+    }
+
+    /// Commit one pure module and return its session identity.
+    pub(crate) fn commit_module(
+        &mut self,
+        source: &[u8],
+        trace: &mut AdmissionTrace,
+    ) -> Result<u64, Refusal> {
+        let prepared = self.check(source, trace)?;
+        if prepared.kind() != noble_contracts::source::ModuleKind::Module
+            || prepared.proof_obligations().is_some()
+            || !prepared.bindings().is_empty()
+        {
+            return Err(Refusal::Unsupported);
+        }
+        let (identity, name, version) = prepared.resolved_module().ok_or(Refusal::Invalid)?;
+        self.publish(prepared, trace)?;
+        self.modules.push(RetainedModule {
+            identity,
+            name,
+            version,
+            source: source.to_vec(),
+        });
+        Ok(identity)
+    }
+
+    /// Commit one `import M@v as alias` unit, binding or rebinding a display
+    /// name. The checker replays only current outside dependents.
+    pub(crate) fn commit_import(
+        &mut self,
+        unit: &[u8],
+        trace: &mut AdmissionTrace,
+    ) -> Result<ImportCommit, Refusal> {
+        let prepared = self.check(unit, trace)?;
+        if prepared.kind() != noble_contracts::source::ModuleKind::Import {
+            return Err(Refusal::Unsupported);
+        }
+        let alias = prepared
+            .resolved_import_alias()
+            .ok_or(Refusal::Invalid)?
+            .to_owned();
+        let (module_identity, _, _) = prepared.resolved_module().ok_or(Refusal::Invalid)?;
+        let rebuilt_definitions = prepared.rebuilt_import_definitions().map(<[_]>::len);
+        let generation_before = self.session.as_ref().ok_or(Refusal::Invalid)?.generation();
+        self.publish(prepared, trace)?;
+        Ok(ImportCommit {
+            alias,
+            module_identity,
+            rebuilt_definitions,
+            generation_before,
+            generation_after: self.session.as_ref().ok_or(Refusal::Invalid)?.generation(),
+        })
+    }
+
+    /// Admit the exported `name` of a committed root module, invoked at the
+    /// exact `input`, whose closure may reach exactly the `dependencies`.
+    pub(crate) fn admit(
+        &mut self,
+        root_module: u64,
+        name: &str,
+        input: &[Ty],
+        dependencies: &[u64],
+        trace: &mut AdmissionTrace,
+    ) -> Result<(Store, Handle), Refusal> {
+        if input.len() > 64
+            || name.len() > 128
+            || !name
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+        {
+            return Err(Refusal::Exhausted);
+        }
+        // One slice each for the invocation check, the closure walk and the
+        // compilation; the checks share theirs.
+        let slices = 3usize;
+        let stage_work =
+            u32::try_from((RUNTIME_REQUEST_WORK / (slices + 1)).min(SOURCE_LIMITS.work as usize))
+                .map_err(|_| Refusal::Exhausted)?;
+        let limits = noble_contracts::Limits {
+            work: stage_work,
+            ..SOURCE_LIMITS
+        };
+        let reserved = usize::try_from(stage_work)
+            .map_err(|_| Refusal::Exhausted)?
+            .checked_mul(slices)
+            .ok_or(Refusal::Exhausted)?;
+        let work_left = RUNTIME_REQUEST_WORK
+            .checked_sub(reserved)
+            .ok_or(Refusal::Exhausted)?;
+        let root = self
+            .modules
+            .iter()
+            .find(|module| module.identity == root_module)
+            .ok_or(Refusal::Invalid)?;
+        let mut selected = Vec::with_capacity(dependencies.len());
+        for identity in dependencies {
+            let module = self
+                .modules
+                .iter()
+                .find(|module| module.identity == *identity)
+                .ok_or(Refusal::Invalid)?;
+            selected.push(DependencySource {
+                module_id: module.identity,
+                version: module.version,
+                source: module.source.clone(),
+            });
+        }
+        let session = self.session.as_mut().ok_or(Refusal::Invalid)?;
+        let checking_work = stage_work.checked_mul(2).ok_or(Refusal::Exhausted)?;
+        session.share_request_work(checking_work);
+        trace.checking_work_shared = Some(checking_work);
+        let invocation = format!("{}@{}.{name}", root.name, root.version);
+        let prepared = session
+            .prepare(invocation.as_bytes(), input, limits)
+            .map_err(|problem| {
+                trace.diagnostic = Some(problem.diagnostic().message.clone());
+                source_refusal(problem)
+            })?;
+        let checked = prepared
+            .checked_invocation_closure(root_module, name, dependencies)
+            .map_err(|problem| closure_refused(trace, problem))?;
+        trace.checking_work_left = session.remaining_request_work();
+        Store::admit_invocation(
+            &prepared,
+            checked,
+            RootSelection {
+                source: &root.source,
+                name,
+                input,
+                policy: None,
+                schema: None,
+                dependencies: selected,
+            },
+            work_left,
+            trace,
+        )
     }
 }
 
@@ -2601,6 +3007,43 @@ mod tests {
             allowed: true,
         };
         store.export(handle, "local-test", &grant).unwrap()
+    }
+
+    #[test]
+    fn program_reaching_a_dependency_module_is_never_exported() {
+        let mut trace = AdmissionTrace::default();
+        let mut session = RetainedSession::open(2).unwrap();
+        let dependency = session
+            .commit_module(
+                b"module Dep@1 [ export dec def dec [ \"tag\" drop 1 - ] ]",
+                &mut trace,
+            )
+            .unwrap();
+        session
+            .commit_import(b"import Dep@1 as dep", &mut trace)
+            .unwrap();
+        let root = session
+            .commit_module(
+                b"module Worker@1 [ export run def run [ dep.dec ] ]",
+                &mut trace,
+            )
+            .unwrap();
+        let (mut store, handle) = session
+            .admit(root, "run", &[Ty::I64], &[dependency], &mut trace)
+            .unwrap();
+        let source_sha256 = crate::workflow::intrinsic::sha256(&store.source);
+        let capture_sha256 = store.capture_digest().unwrap();
+        let grant = ExportGrant {
+            destination: "local-test",
+            source_sha256: &source_sha256,
+            capture_sha256: &capture_sha256,
+            allowed: true,
+        };
+        assert_eq!(
+            store.export(handle, "local-test", &grant),
+            Err(ExportRefusal::Refused(Refusal::Unsupported)),
+            "a package carries one root source and cannot describe the dependency module"
+        );
     }
 
     #[test]

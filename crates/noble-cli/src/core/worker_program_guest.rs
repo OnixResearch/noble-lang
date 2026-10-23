@@ -1691,6 +1691,78 @@ fn native_artifact_sha256(source: &ProgramStore, level: wasmtime::OptLevel) -> R
     Ok(crate::workflow::intrinsic::sha256(&artifact))
 }
 
+/// Runtime reflection events of every closure cell, in closure order, and
+/// the body invocations the installation observed.
+pub(super) struct ReflectedCells {
+    pub(super) cells: Vec<Vec<(u32, u64)>>,
+    pub(super) body_requests: u32,
+}
+
+/// Install the selected Program (binding and attesting every cell), then
+/// reflect each closure cell through the module's own observation ABI:
+/// `push_program`, `observe` and the `recipe_*` readers. Reflection walks
+/// recipes and never enqueues executable code.
+pub(super) fn reflect_installed(source: &ProgramStore, root: Handle) -> Result<ReflectedCells> {
+    let engine = engine_at(wasmtime::OptLevel::Speed)?;
+    let mut store = install_selected(&engine, source, root, TaskOwner::for_source(source))?;
+    let instance = store
+        .data()
+        .installed
+        .context("missing installed Program cell")?
+        .instance;
+    let named_handle = instance.get_typed_func::<i32, i32>(&mut store, "worker_named_handle")?;
+    let push = instance.get_typed_func::<i32, i32>(&mut store, "push_program")?;
+    let observe = instance.get_typed_func::<i32, i32>(&mut store, "observe")?;
+    let stack_length = instance.get_typed_func::<(), i32>(&mut store, "stack_length")?;
+    let recipe_length = instance.get_typed_func::<(), i32>(&mut store, "recipe_length")?;
+    let recipe_kind = instance.get_typed_func::<i32, i32>(&mut store, "recipe_kind")?;
+    let recipe_value = instance.get_typed_func::<i32, i64>(&mut store, "recipe_value")?;
+    let mut cells = Vec::with_capacity(source.recipe_nodes());
+    for node in 0..source.recipe_nodes() {
+        let handle = source
+            .node_handle(node)
+            .context("missing checked Program recipe node")?;
+        let named = source
+            .named(handle)
+            .context("reflection covers checked named cells only")?;
+        let index = source
+            .compiled()
+            .named_targets()
+            .iter()
+            .position(|candidate| {
+                candidate.program_index == named.program_index
+                    && candidate.definition_identity == named.definition_identity
+            })
+            .context("reflected Program is not in checked module metadata")?;
+        let address = named_handle.call(&mut store, i32::try_from(index)?)?;
+        ensure!(address > 0, "named Program cell is not installed");
+        ensure!(
+            push.call(&mut store, address)? == 0,
+            "installed cell cannot be observed"
+        );
+        let top = stack_length
+            .call(&mut store, ())?
+            .checked_sub(1)
+            .context("empty observation stack")?;
+        ensure!(
+            observe.call(&mut store, top)? == 0,
+            "runtime reflection refused the installed cell"
+        );
+        let count = recipe_length.call(&mut store, ())?;
+        let mut events = Vec::with_capacity(usize::try_from(count)?);
+        for at in 0..count {
+            let kind = u32::try_from(recipe_kind.call(&mut store, at)?)?;
+            let value = u64::from_le_bytes(recipe_value.call(&mut store, at)?.to_le_bytes());
+            events.push((kind, value));
+        }
+        cells.push(events);
+    }
+    Ok(ReflectedCells {
+        cells,
+        body_requests: store.data().invokes,
+    })
+}
+
 /// The selected guest is always rebuilt from the WIT and Noble body retained
 /// here; no package or caller-supplied component binary is installed.
 pub(super) fn execute(
@@ -1888,6 +1960,14 @@ const HOST_SEND_SOURCE: &[u8] = b"module Sender@1 [ require send Text -- ! test.
 const HOST_ROUND_TRIP_SOURCE: &[u8] = b"module Worker@1 [ def dec [ \"tag\" drop 1 - ] signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dec count 1 + ] if ] ]";
 /// The host-selected destination of the WORKER-04 export grant.
 const HOST_EXPORT_DESTINATION: &str = "synthetic-export-destination";
+/// WORKER-04 rebound display name: two versions of a dependency module, the
+/// alias the root resolves through, and a control registered after rebinding.
+const HOST_DEPENDENCY_A: &[u8] = b"module Dep@1 [ export dec def dec [ \"tag\" drop 1 - ] ]";
+const HOST_DEPENDENCY_B: &[u8] = b"module Dep@2 [ export dec def dec [ \"tag\" drop 2 - ] ]";
+const HOST_ALIAS_A: &[u8] = b"import Dep@1 as dep";
+const HOST_ALIAS_B: &[u8] = b"import Dep@2 as dep";
+const HOST_REBOUND_ROOT_SOURCE: &[u8] = b"module Worker@1 [ signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dep.dec count 1 + ] if ] ]";
+const HOST_REBOUND_CONTROL: &[u8] = b"module Worker@2 [ signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dep.dec count 1 + ] if ] ]";
 
 /// The synthetic ledger's exact host-selected `test.emit` bound adapter.
 fn emit_binding() -> noble_contracts::source::BoundOperation {
@@ -1997,16 +2077,7 @@ fn send_observation(
 /// WORKER-04: read the candidate, which must be the preselected fixture,
 /// and check it as a fresh pure `I64 -- I64` Program.
 fn round_trip_store() -> Result<(ProgramStore, Handle)> {
-    use std::io::Read;
-    let mut source = Vec::new();
-    std::io::stdin()
-        .lock()
-        .take(u64::from(super::SOURCE_LIMITS.bytes) + 1)
-        .read_to_end(&mut source)?;
-    ensure!(
-        source == HOST_ROUND_TRIP_SOURCE,
-        "Worker candidate differs from the preselected fixture source"
-    );
+    let source = preselected_candidate(HOST_ROUND_TRIP_SOURCE)?;
     ProgramStore::prepare(
         &source,
         "count",
@@ -2014,6 +2085,131 @@ fn round_trip_store() -> Result<(ProgramStore, Handle)> {
         super::worker_program::RUNTIME_REQUEST_WORK,
     )
     .map_err(|_| anyhow::anyhow!("Worker round-trip Program refused"))
+}
+
+/// Bounded stdin, which must equal the fixture the host selected first.
+fn preselected_candidate(fixture: &[u8]) -> Result<Vec<u8>> {
+    use std::io::Read;
+    let mut source = Vec::new();
+    std::io::stdin()
+        .lock()
+        .take(u64::from(super::SOURCE_LIMITS.bytes) + 1)
+        .read_to_end(&mut source)?;
+    ensure!(
+        source == fixture,
+        "Worker candidate differs from the preselected fixture source"
+    );
+    Ok(source)
+}
+
+/// One admitted Program's attested identity and what its host measured.
+fn identity_row(store: &mut ProgramStore, root: Handle) -> Result<serde_json::Value> {
+    store
+        .attest_under(root, wasmtime::OptLevel::Speed)
+        .map_err(|problem| anyhow::anyhow!("Worker attestation refused: {problem:?}"))?;
+    Ok(serde_json::json!({
+        "source_sha256":crate::workflow::intrinsic::sha256(store.source()),
+        "identity":store.identity_projection(root)
+            .map_err(|problem| anyhow::anyhow!("Worker identity projection refused: {problem:?}"))?,
+        "candidate_body_requests":store.body_requests(),
+        "request_work_left":store.work_left(),
+    }))
+}
+
+/// WORKER-04 reflect-prepare: the host reflects the admitted fixture's
+/// installed cells and explicitly prepares the reflected recipe again.
+fn host_reflect_prepare() -> Result<serde_json::Value> {
+    let (mut original, root) = round_trip_store()?;
+    let original_row = identity_row(&mut original, root)?;
+    let (mut prepared, prepared_root, reflection) = original
+        .reflect_prepare(root)
+        .map_err(|problem| anyhow::anyhow!("Worker reflect-prepare refused: {problem:?}"))?;
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","stage":"identity-after-local-admission",
+        "outcome":"normal","operation":"reflect-prepare",
+        "reflection":{"events_per_definition":reflection.events,
+            "rendered_source_utf8":reflection.source,"rendered_root":reflection.root_name,
+            "candidate_body_requests":original.body_requests()},
+        "original":original_row,
+        "prepared":identity_row(&mut prepared, prepared_root)?,
+    }))
+}
+
+fn import_row(commit: &super::worker_program::ImportCommit) -> serde_json::Value {
+    serde_json::json!({
+        "alias":commit.alias,"module_identity":commit.module_identity,
+        "rebuilt_definitions":commit.rebuilt_definitions,
+        "generation_before":commit.generation_before,"generation_after":commit.generation_after,
+    })
+}
+
+/// WORKER-04 rebound display name: in one retained session the root calls
+/// `dep.dec` through `import Dep@1 as dep`; the host admits it, rebinds the
+/// alias to Dep@2 and admits the same root again. A control registered after
+/// the rebind shows the alias now resolves to Dep@2.
+fn host_rebound() -> Result<serde_json::Value> {
+    use super::worker_program::{AdmissionTrace, RetainedSession};
+    let source = preselected_candidate(HOST_REBOUND_ROOT_SOURCE)?;
+    let refused =
+        |problem: Refusal| anyhow::anyhow!("Worker retained session refused: {problem:?}");
+    let input = [noble_kernel::types::Ty::I64];
+    let mut trace = AdmissionTrace::default();
+    let mut session = RetainedSession::open(4).map_err(refused)?;
+    let dependency_a = session
+        .commit_module(HOST_DEPENDENCY_A, &mut trace)
+        .map_err(refused)?;
+    let dependency_b = session
+        .commit_module(HOST_DEPENDENCY_B, &mut trace)
+        .map_err(refused)?;
+    let bound = session
+        .commit_import(HOST_ALIAS_A, &mut trace)
+        .map_err(refused)?;
+    let root_module = session
+        .commit_module(&source, &mut trace)
+        .map_err(refused)?;
+    let (mut before, before_root) = session
+        .admit(root_module, "count", &input, &[dependency_a], &mut trace)
+        .map_err(refused)?;
+    let before_row = identity_row(&mut before, before_root)?;
+    let rebound = session
+        .commit_import(HOST_ALIAS_B, &mut trace)
+        .map_err(refused)?;
+    let (mut after, after_root) = session
+        .admit(root_module, "count", &input, &[dependency_a], &mut trace)
+        .map_err(refused)?;
+    let after_row = identity_row(&mut after, after_root)?;
+    // The original dependency stays required: a host that selects only the
+    // rebound version cannot admit the root.
+    let substituted = match session.admit(root_module, "count", &input, &[dependency_b], &mut trace)
+    {
+        Ok(_) => "ready",
+        Err(Refusal::Invalid) => "invalid-input",
+        Err(Refusal::Unsupported) => "unsupported",
+        Err(Refusal::Exhausted) => "exhausted",
+    };
+    let control_module = session
+        .commit_module(HOST_REBOUND_CONTROL, &mut trace)
+        .map_err(refused)?;
+    let (mut control, control_root) = session
+        .admit(control_module, "count", &input, &[dependency_b], &mut trace)
+        .map_err(refused)?;
+    let unit = |role: &str, bytes: &[u8]| {
+        serde_json::json!({"role":role,"source_sha256":crate::workflow::intrinsic::sha256(bytes),
+            "source_utf8":String::from_utf8_lossy(bytes)})
+    };
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-test-host/v1","stage":"identity-after-local-admission",
+        "outcome":"normal","operation":"rebound",
+        "units":[unit("dependency-a", HOST_DEPENDENCY_A), unit("dependency-b", HOST_DEPENDENCY_B),
+            unit("alias-a", HOST_ALIAS_A), unit("root", &source), unit("alias-b", HOST_ALIAS_B),
+            unit("control", HOST_REBOUND_CONTROL)],
+        "modules":{"dependency_a":dependency_a,"dependency_b":dependency_b,
+            "root":root_module,"control":control_module},
+        "alias_bound":import_row(&bound),"alias_rebound":import_row(&rebound),
+        "before":before_row,"after":after_row,
+        "substituted_dependency":substituted,
+        "control":identity_row(&mut control, control_root)?,
+    }))
 }
 
 /// WORKER-04 export: the host builds the grant for its own destination from
@@ -2443,7 +2639,9 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "send-observe-diagnostic",
                         "export",
                         "export-denied",
-                        "optimizer"
+                        "optimizer",
+                        "reflect-prepare",
+                        "rebound"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -2461,6 +2659,8 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             match mode {
                 "export" | "export-denied" => return host_export(mode == "export-denied"),
                 "optimizer" => return host_optimizer(),
+                "reflect-prepare" => return host_reflect_prepare(),
+                "rebound" => return host_rebound(),
                 _ => {}
             }
             let emit = mode.starts_with("emit") || mode == "builders";

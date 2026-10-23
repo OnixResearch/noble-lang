@@ -16,6 +16,7 @@ mod worker_candidate;
 pub(crate) mod worker_package;
 pub(crate) mod worker_program;
 mod worker_program_guest;
+mod worker_reflect;
 pub(crate) mod worker_scalar;
 mod worker_send;
 pub(crate) mod worker_shell;
@@ -101,13 +102,21 @@ pub const USAGE: &str = "usage:
   cancellation. The record keeps invocation and attempt correlation, counts
   and kernel outcomes; rows beyond the selected bound (6 for -rows) and a
   diagnostic beyond its bound (48 bytes for -diagnostic) are marked omitted.
-  noble worker program test-host export|export-denied|optimizer < FIXTURE_SOURCE
+  noble worker program test-host export|export-denied|optimizer|reflect-prepare < FIXTURE_SOURCE
   Check the built-in recursive Program with a Text capture. export builds the
   grant for its own destination from the checked source and capture digests
   and prints the package with the experimental program-value identity;
   export-denied refuses the same subject and emits no bytes. optimizer checks
   the fixture twice and attests each under a different Cranelift level,
-  reporting artifact digests and identities. Nothing invokes the body.
+  reporting artifact digests and identities. reflect-prepare reflects every
+  installed cell through the runtime's observation ABI, requires the decoded
+  recipe to equal the checked recipe, renders it as a module with synthesized
+  names and prepares it again. Nothing invokes the body.
+  noble worker program test-host rebound < FIXTURE_SOURCE
+  In one retained session commit Dep@1, Dep@2, import Dep@1 as dep and the
+  fixture root, which calls dep.dec; admit the root, rebind dep to Dep@2,
+  admit the root again, try it with only Dep@2 selected, and admit a control
+  root registered after the rebind. Reports each identity.
   noble worker program test-host emit-import < PACKAGE
   Import an untrusted package under the same preselected test.emit binding;
   only that exact host-contract row can match, and importing issues nothing.
