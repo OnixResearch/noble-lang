@@ -1,0 +1,36 @@
+module worker@1 [
+  def on_submit [
+    swap unpair
+    [
+      drop 1 + swap
+      dup unpair drop inr
+      swap [ pair WorkerData@1.State.new ] dip
+      WorkerData@1.Action.Send nil cons
+    ]
+    [
+      inr pair WorkerData@1.State.new
+      swap drop nil
+    ] case
+  ]
+  def on_cancel [
+    swap unpair
+    [
+      inl pair WorkerData@1.State.new
+      swap drop nil
+    ]
+    [
+      [ swap ] dip
+      dup WorkerData@1.AttemptId.into
+      [ swap ] dip
+      [ WorkerData@1.AttemptId.into ] dip
+      =
+      [ drop unit inl pair WorkerData@1.State.new nil ]
+      [ inr pair WorkerData@1.State.new nil ] if
+    ] case
+  ]
+  export transition
+  def transition [
+    swap WorkerData@1.State.into swap
+    [ on_submit ] [ on_cancel ] WorkerData@1.Event.match
+  ]
+]

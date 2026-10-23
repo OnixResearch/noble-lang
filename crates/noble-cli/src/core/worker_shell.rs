@@ -236,6 +236,18 @@ struct ShellEvidence {
     native_bytes: Option<usize>,
 }
 
+struct LifecycleEvidence {
+    owner_after_admission: &'static str,
+    state_at_cancel_ack: &'static str,
+    pins_at_cancel_ack: u64,
+    external_send_outcome_at_cancel: &'static str,
+    authority_invocation: &'static str,
+    late_success_receipt: bool,
+    task_deliveries: usize,
+    owner_resurrections: usize,
+    late_worker_events: u32,
+}
+
 impl ShellEvidence {
     fn observe(
         &mut self,
@@ -262,6 +274,7 @@ fn report(
     resource: Option<owner::Observation>,
     counters: Option<auth::Counters>,
     native_bytes: Option<usize>,
+    lifecycle: Option<&LifecycleEvidence>,
     message: Option<&str>,
 ) -> Report {
     let value = json!({
@@ -269,7 +282,9 @@ fn report(
         "stage":stage,"outcome":outcome,"interface":"State Event -- State List<Action> ! {}",
         "source_sha256":first.map(|value| &value["source_sha256"]),
         "first_guest":first, "cancel_guest":second,
-        "worker_host_requests":first.map(|value| &value["guest_requests"]),
+        "worker_host_requests":first.zip(second).map(|(first,second)|
+            first["guest_requests"].as_u64().unwrap_or(0)
+                .saturating_add(second["guest_requests"].as_u64().unwrap_or(0))),
         "native_send_bytes":native_bytes,
         "protected_operation_attempts":counters.map(|value| value.protected_operations),
         "successful_result_deliveries":counters.map(|value| value.successful_deliveries),
@@ -277,8 +292,18 @@ fn report(
         "outstanding_native_pins":tasks.map(|value| value.outstanding_pins),
         "resource_state":resource.map(|value| if value.retired == 1 {"Retired"} else {"not-retired"}),
         "resource_native_pins":resource.map(|value| value.native_pins),
-        "external_send_outcome":"not-attempted",
-        "external_rollback_claimed":false,
+        "owner_after_admission":lifecycle.map(|value|value.owner_after_admission),
+        "state_at_cancel_ack":lifecycle.map(|value|value.state_at_cancel_ack),
+        "pins_at_cancel_ack":lifecycle.map(|value|value.pins_at_cancel_ack),
+        "external_send_outcome_at_cancel":lifecycle.map(|value|value.external_send_outcome_at_cancel),
+        "authority_invocation":lifecycle.map(|value|value.authority_invocation),
+        "late_success_receipt":lifecycle.map(|value|value.late_success_receipt),
+        "task_deliveries":lifecycle.map(|value|value.task_deliveries),
+        "owner_resurrections":lifecycle.map(|value|value.owner_resurrections),
+        "late_worker_events":lifecycle.map(|value|value.late_worker_events),
+        "external_rollback_claimed":lifecycle.map(|value|
+            !(value.external_send_outcome_at_cancel=="unknown"
+                && value.late_success_receipt && value.owner_resurrections==0)),
         "diagnostic":message.map(|value| value.chars().take(512).collect::<String>()),
     });
     Report {
@@ -297,6 +322,7 @@ fn failure_report(error: &Failure, evidence: &ShellEvidence) -> Report {
         evidence.resources,
         evidence.counters,
         evidence.native_bytes,
+        None,
         Some(&error.message),
     )
 }
@@ -623,7 +649,7 @@ fn settle_native(
     clippy::too_many_arguments,
     reason = "Owner: noble-maintainers; one started-send retirement names the task, authority and resource tables, the borrowed scope, the admitted task, the native handle, the cancel context, its attempt and text, and the reserved byte count explicitly."
 )]
-fn retire_started(
+fn retire_started<F>(
     tasks: &mut task::Table,
     authority: &mut auth::Authority,
     resources: &mut owner::Table,
@@ -634,8 +660,26 @@ fn retire_started(
     attempt: i64,
     text: &str,
     bytes: usize,
-) -> Result<(task::Observation, owner::Observation), Failure> {
+    attempt_key: auth::AttemptKey,
+    operation_plan: auth::Plan,
+    after_cancel: F,
+) -> Result<
+    (
+        Value,
+        task::Observation,
+        owner::Observation,
+        LifecycleEvidence,
+    ),
+    Failure,
+>
+where
+    F: FnOnce() -> Result<Value, Failure>,
+{
     let mut failure = None;
+    let retained_context = admitted.task.handle().context;
+    let owner_after_admission = tasks
+        .inspect(admitted.task.handle(), retained_context)
+        .is_ok_and(|snapshot| snapshot.state == task::State::Pending && snapshot.pins == 1);
     let (callback, mut token) =
         cancel_owned(tasks, admitted, cancel_context, Some(bytes), &mut failure);
     let guest_cancelled = token.is_none();
@@ -655,6 +699,42 @@ fn retire_started(
         resources.native_access(borrowed).is_err(),
         "resource access remained live after cancellation",
     );
+    let unknown = note(
+        &mut failure,
+        checked(
+            authority.observe_from_trusted_host(auth::ObservationDescription {
+                attempt: attempt_key,
+                plan: operation_plan.clone(),
+                source: auth::SourceId(2),
+                checkpoint: CHECKPOINT,
+                outcome: auth::ObservedOutcome::Unknown,
+            }),
+        ),
+    );
+    let task_at_cancel = tasks
+        .inspect(callback.task, retained_context)
+        .map_err(|error| internal(format!("cancel snapshot: {error:?}")))?;
+    let external_unknown = authority
+        .attempt_snapshot(attempt_key)
+        .is_ok_and(|snapshot| snapshot.outcome == Some(auth::ObservedOutcome::Unknown));
+    require(
+        &mut failure,
+        unknown.is_some()
+            && task_at_cancel.state == task::State::Retiring
+            && task_at_cancel.pins == 1
+            && resources.observation().native_pins == 1
+            && external_unknown,
+        "cancellation acknowledgement lost task/resource/operation ownership",
+    );
+    // The Worker sees Cancelled only after cancellation is committed and
+    // before the native producer is allowed to complete.
+    let second = match after_cancel() {
+        Ok(second) => Some(second),
+        Err(error) => {
+            let _ = note(&mut failure, Err::<(), _>(error));
+            None
+        }
+    };
 
     // finish joins the producer before inspecting its datagram. An error from
     // join (including a panic) still means the native thread has stopped.
@@ -669,6 +749,7 @@ fn retire_started(
     if !resource_retired {
         let _ = retire_resource_if_needed(resources, scope, &mut failure);
     }
+    let mut late_success_receipt = false;
     if native_ok {
         let state = tasks
             .snapshot(callback.task.slot)
@@ -704,6 +785,28 @@ fn retire_started(
                 "native result could not be retired without delivering to the guest",
             );
         }
+        if let Some(observation) = note(
+            &mut failure,
+            checked(
+                authority.observe_from_trusted_host(auth::ObservationDescription {
+                    attempt: attempt_key,
+                    plan: operation_plan,
+                    source: auth::SourceId(2),
+                    checkpoint: CHECKPOINT,
+                    outcome: auth::ObservedOutcome::OperationSuccess,
+                }),
+            ),
+        ) {
+            late_success_receipt = authority
+                .receipt(
+                    attempt_key,
+                    auth::ReceiptClaim::OperationSuccess,
+                    Some(&observation),
+                )
+                .is_ok_and(|receipt| {
+                    receipt.description().invocation == auth::InvocationOutcome::Cancelled
+                });
+        }
     }
     let completion = if native_ok {
         owner::Completion::Success
@@ -718,7 +821,44 @@ fn retire_started(
         completion,
         &mut failure,
     );
-    failure.map_or_else(|| Ok((tasks.observation(), resources.observation())), Err)
+    let task_observation = tasks.observation();
+    let resource_observation = resources.observation();
+    let lifecycle = LifecycleEvidence {
+        owner_after_admission: if owner_after_admission {
+            "task"
+        } else {
+            "missing"
+        },
+        state_at_cancel_ack: if task_at_cancel.state == task::State::Retiring {
+            "Retiring"
+        } else {
+            "other"
+        },
+        pins_at_cancel_ack: task_at_cancel.pins,
+        external_send_outcome_at_cancel: if external_unknown { "unknown" } else { "other" },
+        authority_invocation: match authority.invocation_outcome() {
+            auth::InvocationOutcome::Cancelled => "cancelled",
+            auth::InvocationOutcome::Pending => "pending",
+            auth::InvocationOutcome::Succeeded => "succeeded",
+            auth::InvocationOutcome::Failed => "failed",
+        },
+        late_success_receipt,
+        task_deliveries: task_observation.delivered,
+        owner_resurrections: usize::from(
+            resource_observation.live != 0
+                || resource_observation.busy != 0
+                || resource_observation.retiring != 0,
+        ),
+        late_worker_events: 0,
+    };
+    failure.map_or_else(
+        || {
+            second
+                .map(|second| (second, task_observation, resource_observation, lifecycle))
+                .ok_or_else(|| internal("post-cancel transition produced no report"))
+        },
+        Err,
+    )
 }
 
 fn release_unbegun(
@@ -921,6 +1061,7 @@ fn execute_recording(
                 Some(resources.observation()),
                 Some(authority.counters()),
                 None,
+                None,
                 Some("host grant denied exact worker action"),
             ));
         }
@@ -949,6 +1090,7 @@ fn execute_recording(
                 None,
                 Some(resources.observation()),
                 Some(authority.counters()),
+                None,
                 None,
                 Some("exact action admission refused"),
             ));
@@ -1001,6 +1143,8 @@ fn execute_recording(
                 ));
             }
         };
+        let attempt_key = started.attempt();
+        let operation_plan = started.plan().clone();
         // This is an in-process datagram, not an external send. It exercises a
         // real native operation and a live retained pin without claiming network
         // delivery, a portable capability, or a WORKER-01 receipt.
@@ -1041,8 +1185,7 @@ fn execute_recording(
             return Err(preserve(preserve(primary, stopped), retired));
         }
 
-        let cancel_guest = super::worker_typed::execute(package, schema, &next_state, cancel);
-        let retirement = retire_started(
+        let (second, observation, resource_observation, lifecycle) = retire_started(
             &mut tasks,
             &mut authority,
             &mut resources,
@@ -1053,29 +1196,29 @@ fn execute_recording(
             attempt,
             text,
             bytes,
-        );
-        let (second, (observation, resource_observation)) = match (cancel_guest, retirement) {
-            (Ok(second), Ok(retirement)) => (second, retirement),
-            (Err(guest), Err(retirement)) => return Err(preserve(guest, Err(retirement))),
-            (Err(guest), Ok(_)) => return Err(guest),
-            (Ok(_), Err(retirement)) => return Err(retirement),
-        };
-        let second: Value = serde_json::from_str(&second.json)
-            .map_err(|_| internal("malformed cancellation guest report"))?;
-        if second["outcome"] != "normal"
-            || second["typed_output"]["state"]["value"]["left"]["value"] != "1"
-            || second["typed_output"]["state"]["value"]["right"]["arm"] != "left"
-            || second["typed_output"]["actions"]["items"]
-                .as_array()
-                .is_none_or(|rows| !rows.is_empty())
-            || second["source_sha256"] != first["source_sha256"]
-        {
-            return Err(invalid(
-                "cancellation guest did not clear exact pending attempt",
-            ));
-        }
+            attempt_key,
+            operation_plan,
+            || {
+                let second = super::worker_typed::execute(package, schema, &next_state, cancel)?;
+                let second: Value = serde_json::from_str(&second.json)
+                    .map_err(|_| internal("malformed cancellation guest report"))?;
+                if second["outcome"] != "normal"
+                    || second["typed_output"]["state"]["value"]["left"]["value"] != "1"
+                    || second["typed_output"]["state"]["value"]["right"]["arm"] != "left"
+                    || second["typed_output"]["actions"]["items"]
+                        .as_array()
+                        .is_none_or(|rows| !rows.is_empty())
+                    || second["source_sha256"] != first["source_sha256"]
+                {
+                    return Err(invalid(
+                        "cancellation guest did not clear exact pending attempt",
+                    ));
+                }
+                Ok(second)
+            },
+        )?;
         Ok(report(
-            "normal",
+            "cancelled-without-resurrection",
             "retirement",
             Some(&first),
             Some(&second),
@@ -1083,6 +1226,7 @@ fn execute_recording(
             Some(resource_observation),
             Some(authority.counters()),
             Some(bytes),
+            Some(&lifecycle),
             None,
         ))
     })();
@@ -1303,6 +1447,8 @@ mod tests {
             .authority
             .start_execution(send.execution)
             .map_err(|error| format!("{error:?}"))?;
+        let attempt_key = started.attempt();
+        let operation_plan = started.plan().clone();
         let mut wire = Vec::with_capacity(12);
         wire.extend_from_slice(&1_i64.to_le_bytes());
         wire.extend_from_slice(b"ping");
@@ -1332,6 +1478,9 @@ mod tests {
             1,
             "ping",
             12,
+            attempt_key,
+            operation_plan,
+            || Err(internal("post-cancel transition unexpectedly ran")),
         )
         .err()
         .ok_or("wrong-context Task cancellation was accepted")?;

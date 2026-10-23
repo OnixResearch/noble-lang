@@ -1863,7 +1863,7 @@ mod tests {
         .map_err(|error| error.message)?;
         let approved: Value =
             serde_json::from_str(&approved.json).map_err(|error| error.to_string())?;
-        assert_eq!(approved["outcome"], "normal");
+        assert_eq!(approved["outcome"], "cancelled-without-resurrection");
         assert_eq!(approved["stage"], "retirement");
         assert_eq!(
             approved["first_guest"]["typed_output"]["actions"]["items"][0]["arm"],
@@ -1880,7 +1880,16 @@ mod tests {
         assert_eq!(approved["outstanding_native_pins"], 0);
         assert_eq!(approved["resource_state"], "Retired");
         assert_eq!(approved["resource_native_pins"], 0);
-        assert_eq!(approved["external_send_outcome"], "not-attempted");
+        assert_eq!(approved["worker_host_requests"], 0);
+        assert_eq!(approved["owner_after_admission"], "task");
+        assert_eq!(approved["state_at_cancel_ack"], "Retiring");
+        assert_eq!(approved["pins_at_cancel_ack"], 1);
+        assert_eq!(approved["external_send_outcome_at_cancel"], "unknown");
+        assert_eq!(approved["authority_invocation"], "cancelled");
+        assert_eq!(approved["late_success_receipt"], true);
+        assert_eq!(approved["task_deliveries"], 0);
+        assert_eq!(approved["owner_resurrections"], 0);
+        assert_eq!(approved["late_worker_events"], 0);
         assert_eq!(approved["external_rollback_claimed"], false);
 
         let wrong_attempt = serde_json::to_vec(&json!({
