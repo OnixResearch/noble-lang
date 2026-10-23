@@ -2204,19 +2204,19 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
-      "sha256": "fa13a18cea972e91eddc13540d8c782b394e5238971ff82ac0b6c2a6131e1f32"
+      "sha256": "7135e3af78816a8c649dbd307ff21004f916e718407f22cf210b6f742c65e709"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
-      "sha256": "d2573e68273e7fd8ab34ea12232f6ca4e0bc18e6bd0df939eaf6ea07b2d4b43a"
+      "sha256": "182705d12831c9e1616d83344968a9f31ed63be33067fa38c27cefb2d6c2ec75"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/specs/language/spec.md",
-      "sha256": "a24d70b8954762d022b8ad23965c4693809cf8523a8c0e7f946cecd927ed0637"
+      "sha256": "7e481ad60b95b3dea0bba96ec425400657833ae7e1f5b2a8e97f16e4280860a7"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
-      "sha256": "5e5b04ba9feab22fbde26523b0002b229affb17f1a1c084af5dfd382dbe17216"
+      "sha256": "d840c8f06a0c1b1c5042a02b0f2fcf0502a1c7d4b00fed4627a4a4557b113f1b"
     },
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
@@ -2233,6 +2233,26 @@
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/tasks.md",
       "sha256": "6fbca773acce8e9dcced42bce3418d33caeba01249d8f2731b35ddfb9722a6a4"
+    },
+    {
+      "file": ".cairn/changes/worker-cancellation-slice-native-async/design.md",
+      "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
+    },
+    {
+      "file": ".cairn/changes/worker-cancellation-slice-native-async/proposal.md",
+      "sha256": "f063d5278b17b912f29b55c557f3f26ed5b9252d6321aafd1ccd1d60abdcfcde"
+    },
+    {
+      "file": ".cairn/changes/worker-cancellation-slice-native-async/specs/language/spec.md",
+      "sha256": "51dc948b8282f7a214a25920b05cc2a5410f3adc05c6de4df66eb9838dc08d09"
+    },
+    {
+      "file": ".cairn/changes/worker-cancellation-slice-native-async/specs/resource-adapters/spec.md",
+      "sha256": "8ca2c967fcdc62c961b64f21c88f8ebacf5f038e4b2ffe31746a31491ab6ba89"
+    },
+    {
+      "file": ".cairn/changes/worker-cancellation-slice-native-async/tasks.md",
+      "sha256": "6d97cecef5780bb7d7e245cf0c6ad8ea7b577523268a42e103ebdd9c84c4fdd1"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -2472,7 +2492,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "abec30b0ae310367e30375f3d32fc27a93f831a7d3a18416ab3b2c7648a5e98d"
+      "sha256": "803236b655bdad307fedf68c9ee9bbd23c50ba0dc4e94b0362f8489039af8d10"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2492,7 +2512,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "59485d0482ac8ecfaf7819dff502e1d17165f01a330f046ce1c792412da4fa1e"
+      "sha256": "969eb1fdcd4f83ec20433494923cc431638a3ee57c7869716a57162e25cab460"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

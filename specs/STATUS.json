@@ -88,8 +88,27 @@
     "execution_scope": "The historical six selected Noble-source cases passed with 154 frozen commands; separately, CONTRACT-26 passed 15 named-call source-bound variants with 97 commands and selected compiled off/on erasure observations. These finite results are not a source translation, Rust refinement, general proof erasure, backend or host-authorization theorem.",
     "proof": "open",
     "trust": "explicit",
-    "cases": ["CONTRACT-17", "CONTRACT-18", "CONTRACT-19", "CONTRACT-20", "CONTRACT-21", "CONTRACT-22", "CONTRACT-23", "CONTRACT-24", "CONTRACT-25", "CONTRACT-26"],
-    "executed_cases": ["CONTRACT-17", "CONTRACT-18", "CONTRACT-19", "CONTRACT-21", "CONTRACT-22", "CONTRACT-25", "CONTRACT-26"],
+    "cases": [
+      "CONTRACT-17",
+      "CONTRACT-18",
+      "CONTRACT-19",
+      "CONTRACT-20",
+      "CONTRACT-21",
+      "CONTRACT-22",
+      "CONTRACT-23",
+      "CONTRACT-24",
+      "CONTRACT-25",
+      "CONTRACT-26"
+    ],
+    "executed_cases": [
+      "CONTRACT-17",
+      "CONTRACT-18",
+      "CONTRACT-19",
+      "CONTRACT-21",
+      "CONTRACT-22",
+      "CONTRACT-25",
+      "CONTRACT-26"
+    ],
     "named_call_v2": {
       "id": "CONTRACT-26",
       "implementation": "implemented",
@@ -119,22 +138,44 @@
         "reviewed_cli_sha256": "eadc1f634777d02dec6881a1322891422590bc1be31b6f7e13a4aac5ea7ec351"
       }
     },
-    "assurance_review": {"id": "CONTRACT-24", "execution": "passed", "proof": "open", "scope": "Separately labeled strict Lean application check, valid-Lean/broken-translation counterexamples, and open Aeneas/Rust refinement; no theorem promoted."},
-    "blocked_cases": [{"id": "CONTRACT-20", "requires": ["VC-OWNER-01", "CONTRACT-16"]}, {"id": "CONTRACT-23", "requires": ["VC-OWNER-01", "CONTRACT-16"]}],
+    "assurance_review": {
+      "id": "CONTRACT-24",
+      "execution": "passed",
+      "proof": "open",
+      "scope": "Separately labeled strict Lean application check, valid-Lean/broken-translation counterexamples, and open Aeneas/Rust refinement; no theorem promoted."
+    },
+    "blocked_cases": [
+      {
+        "id": "CONTRACT-20",
+        "requires": [
+          "VC-OWNER-01",
+          "CONTRACT-16"
+        ]
+      },
+      {
+        "id": "CONTRACT-23",
+        "requires": [
+          "VC-OWNER-01",
+          "CONTRACT-16"
+        ]
+      }
+    ],
     "completion_record": "../verification/intrinsic-proofs/acceptance.json",
     "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
     "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c",
     "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/",
-    "evidence": [{
-      "kind": "test",
-      "claim": "Six actual-source cases passed; 154 raw commands, no failures or integrity failures; CONTRACT-24 is review only.",
-      "receipt": "../verification/intrinsic-proofs/acceptance.json",
-      "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c",
-      "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db",
-      "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3",
-      "reviewed_cli_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c",
-      "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0"
-    }],
+    "evidence": [
+      {
+        "kind": "test",
+        "claim": "Six actual-source cases passed; 154 raw commands, no failures or integrity failures; CONTRACT-24 is review only.",
+        "receipt": "../verification/intrinsic-proofs/acceptance.json",
+        "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c",
+        "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db",
+        "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3",
+        "reviewed_cli_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c",
+        "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0"
+      }
+    ],
     "supplemental_source_bridge": {
       "scope": "Finite direct builtin-only versioned module definition [ 1 + ] to accepted typed MC1-v1 source proof; separately observed exported, compact/commented source reached pinned Lean 4.31 independent recheck of MC1Obligation.claim with zero guest, host or protected operations. This is not a formal source-translation, Rust refinement, general backend or named-call proof-admission theorem.",
       "receipt": "../verification/intrinsic-proofs/source-bridge-acceptance.json",
@@ -145,12 +186,23 @@
       "reviewed_cli_sha256": "ef4a3e82c6192691829d5e885f5159c0463a04368afaf3e88e0671391b2b0bdf",
       "kernel_peer_sha256": "a843f9d30db13efb0a0e556b6cdc592886a4f299e3b331387352e04d7625eb3c",
       "direct_source_sha256": "8cc4b28088e098886ffae9593115f901b1269c75d64b0205834a8df2813bc2da",
-      "executed_cases": ["CONTRACT-17", "CONTRACT-18", "CONTRACT-19", "CONTRACT-21", "CONTRACT-22", "CONTRACT-25"],
+      "executed_cases": [
+        "CONTRACT-17",
+        "CONTRACT-18",
+        "CONTRACT-19",
+        "CONTRACT-21",
+        "CONTRACT-22",
+        "CONTRACT-25"
+      ],
       "raw_commands": 154,
       "failures": 0,
       "integrity_failures": 0
     },
-    "open_assumptions": ["Source translation soundness, model/type-code fidelity and actual Rust checker/translator refinement beyond the finite CONTRACT-26 source-bound acceptance", "General proof erasure, backend/Wasm correspondence and host MC1 release authority", "VC-OWNER-01 owner-frozen law and CONTRACT-16 host acceptance before CONTRACT-20/23"],
+    "open_assumptions": [
+      "Source translation soundness, model/type-code fidelity and actual Rust checker/translator refinement beyond the finite CONTRACT-26 source-bound acceptance",
+      "General proof erasure, backend/Wasm correspondence and host MC1 release authority",
+      "VC-OWNER-01 owner-frozen law and CONTRACT-16 host acceptance before CONTRACT-20/23"
+    ],
     "legacy_mc2_caveat": "The selected MC2 certify/inspect observations do not report request counters; the receipt marks both as unreported, not zero."
   },
   "developer_experience": {
@@ -178,7 +230,14 @@
       "receipt": "../verification/m4/acceptance.json"
     },
     "current_source_replay": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "implementation": "implemented",
       "execution": "passed",
       "proof": "open",
@@ -227,7 +286,14 @@
         "scope": "New frozen source replays the selected compiled test.clock controls and latent declared effect; no real clock or ambient host fallback."
       },
       "six_case_renewal": {
-        "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+        "cases": [
+          "DX-01",
+          "ADAPT-01",
+          "S-CASE-01",
+          "S-CASE-03",
+          "S-CASE-05",
+          "S-CASE-14"
+        ],
         "receipt": "../verification/current-source-replay-dx02/acceptance.json",
         "receipt_sha256": "c5f6c5956fd5ee2de5fc20bf298c1eb33768f70b0078deb109feae3739e58cfe",
         "source_revision": "sha256:036b507351a6a6dc3a1703961ef81a8fc1c105a2363e776cc94be970ffe6fb09",
@@ -315,8 +381,14 @@
     "receipt_sha256": "6943c1a03163ebe5c7e98c1cdc4187cfa02a8c7007c57702e7f241d5679ab418",
     "source_revision": "sha256:e67068ecefd7161de12dd73b484598294317f9d7c227c82c49af2781b7ae5ebf",
     "historical_receipts": [
-      {"receipt": "../verification/scase06/acceptance.json", "sha256": "5fed58285741886c1c019dc07878e7b4c8d138d9110d240b78a0c25de7d299d8"},
-      {"receipt": "../verification/scase06/corrected-acceptance.json", "sha256": "304fad0aced504a9f241c2f0f05be4dc5d221e8e88caa97c36516079f6b428f9"}
+      {
+        "receipt": "../verification/scase06/acceptance.json",
+        "sha256": "5fed58285741886c1c019dc07878e7b4c8d138d9110d240b78a0c25de7d299d8"
+      },
+      {
+        "receipt": "../verification/scase06/corrected-acceptance.json",
+        "sha256": "304fad0aced504a9f241c2f0f05be4dc5d221e8e88caa97c36516079f6b428f9"
+      }
     ],
     "commands": 9,
     "scope": "The final chronological source freeze repeats the exact compiled Noble main.rs fs.read through the production Wasmtime callback. Its live host-owned invocation-1 logical Directory maps only main.rs to a host-vetted preopened regular file. Host-retained Table WrongRights, not guest-returned text, classifies the one-request authorization denial with zero protected reads; the same component with READ returns exact bounded file bytes and settles its owner. Independent full WIT/world/export-source byte correspondence precedes file opening or authority, and compiled path escape plus production hostile-right/handle/size/guest-result controls refuse. The two previous receipts remain immutable earlier source scopes; general filesystem safety, owner law, Octet, Aeneas and compiler/engine proof remain open.",
@@ -373,7 +445,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 7,
       "receipt": "../verification/scase06-current-source/acceptance.json",
       "receipt_sha256": "aeaaba6afa2c2a7f4e18ea7704b4fc46b2c6ba029f42eb4779f1d71c15686da1",
@@ -415,7 +494,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 8,
       "receipt": "../verification/scase04-current-source/acceptance.json",
       "receipt_sha256": "850f455e59f41be52e2ae1b7996473825af80d00653517c720b0d4c0aafcd2c3",
@@ -458,7 +544,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 9,
       "receipt": "../verification/scase08-current-source/acceptance.json",
       "receipt_sha256": "a95ce45b7c1bd2a6ca1613e0feaf6d634e65c65923e78fd480e50bf70033feee",
@@ -499,7 +592,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 11,
       "receipt": "../verification/adapt15-release-source/acceptance.json",
       "receipt_sha256": "26453b3d895e5f56d6b10f95b2bf9b0ae8259e12c7ff3e4530f7bfd44660b7dd",
@@ -552,7 +652,14 @@
       "temporal_precondition": "Standalone --dx06 checker passed after its DX-06 promotion and before the newer six-case promotion. After six-case promotion, run the full postpromotion checker: it reverses the exact newer six-case observations in memory before verifying this frozen DX-06 receipt."
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 12,
       "evidence_length": 13,
       "receipt": "../verification/wi03-current-source/acceptance.json",
@@ -605,7 +712,14 @@
       "checkpoint": "Standalone source-frozen --dx06 postpromotion PASSED after this DX-06 append and before the newer six-case append; full checker verifies it after exact six-case rollback."
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "receipt": "../verification/wi03-release-source/acceptance.json",
       "receipt_sha256": "39995d3446f3a331f0c90b485ad5c5b44a881faa2b20d5dd6e1b44a3d0606f47",
       "source_revision": "sha256:2b86ecf02a637ed53bbd101da3ef40dc964ed41c115fe0e3747590523148356b",
@@ -660,7 +774,14 @@
       "checkpoint": "Standalone source-bound --dx06 checker PASSED after the DX-06 append and before the newer six-case append; after six-case promotion the full checker reverses its newer six-case record first."
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "receipt": "../verification/diagnostic-join-source/acceptance.json",
       "receipt_sha256": "eee52b5ee98db5de2b9a3cd24793f4ebaed3cbcab51b876e9852fc6a837672dc",
       "source_revision": "sha256:e7476c64c8f702ef5890d72815a90da12ee60a2764e94086d1d71dfc561af887",
@@ -707,7 +828,14 @@
       "postpromotion": "passed before the six-case append; full replay postpromotion later reverses the newer six-case records before checking DX-06"
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "receipt": "../verification/kernel-overflow-source/acceptance.json",
       "receipt_sha256": "03a1f1301f6dba56b6ef72773b0bd6c30ed6ab676f15ec0525d7e0ea65c8aafd",
       "source_revision": "sha256:96e8bd2c70aa65f2fa41715564dda770c5693f90c947a9c6b9c9feff7193043b",
@@ -760,7 +888,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 6,
       "receipt": "../verification/scase13-current-source/acceptance.json",
       "receipt_sha256": "65ea09a8cc7e3a0a05f7f990d4b5e8cff7977192c3ecf9cbee51f4d876ff8e37",
@@ -800,7 +935,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 4,
       "receipt": "../verification/scase02-current-source/acceptance.json",
       "receipt_sha256": "dd36ff5c04808c16461ab34a1c905a73e942e73a63e889fa1ee9647bbca72046",
@@ -830,7 +972,11 @@
     "initial_receipt": "../verification/scase16/acceptance.json",
     "initial_receipt_sha256": "7534cfc6501b223e80e04ed0042fdf21fead5ffe246e4528b1358e8d605457d5",
     "initial_source_revision": "sha256:320bed079b5cd8564637164fe7dfdfc22b2124b6c14f15e9c6a46ec56a3805f2",
-    "initial_controls": {"refusals": 23, "compiled_executions": 5, "unchanged_host": 3},
+    "initial_controls": {
+      "refusals": 23,
+      "compiled_executions": 5,
+      "unchanged_host": 3
+    },
     "chronological_dx06_renewal": {
       "case": "DX-06",
       "receipt": "../verification/scase16-current-source/dx06-acceptance.json",
@@ -840,7 +986,14 @@
       "scope": "Historical pre-view-rendering snapshot: six unchanged compiled scripted test.clock controls and latent effect witness, plus independently compiled pure/effectful actual import and trusted/forged admission controls; DX-06 evidence[2] only."
     },
     "chronological_six_case_renewal": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "receipt": "../verification/scase16-current-source/acceptance.json",
       "receipt_sha256": "487ca0f71ea9740f7f032537cd59f3197c4085735dea9ff9681237b82aa8e77b",
       "source_revision": "sha256:4d77beea2c96438336f3eedf604ed679b570069f264c486ff24b763837103a9d",
@@ -890,7 +1043,11 @@
     "receipt_sha256": "6bb9ee9bf3d9ed1077818426d29a1bb9895fe1733e1d8bbb3041e3d7fa2013d5",
     "source_revision": "sha256:9bdba3deb1e1d9550404ee7fc6328449143fe4302fe7d8fb8e090b33de44dda5",
     "postpromotion_check": "../verification/scase07/postpromotion.mjs",
-    "controls": {"refusals": 7, "executions": 2, "structural_absence_probes": 3},
+    "controls": {
+      "refusals": 7,
+      "executions": 2,
+      "structural_absence_probes": 3
+    },
     "commands": 21,
     "later_source_replay": "passed-after-scase07-freeze; see post_scase07_source_replay; chronological DX-06/six-case and four-crate/doc checks remain separate from this S-CASE-07 receipt",
     "general_refinement": "open"
@@ -915,7 +1072,14 @@
       "integrity_failures": 0
     },
     "six_case": {
-      "cases": ["DX-01", "ADAPT-01", "S-CASE-01", "S-CASE-03", "S-CASE-05", "S-CASE-14"],
+      "cases": [
+        "DX-01",
+        "ADAPT-01",
+        "S-CASE-01",
+        "S-CASE-03",
+        "S-CASE-05",
+        "S-CASE-14"
+      ],
       "evidence_index": 5,
       "receipt": "../verification/scase07-current-source/acceptance.json",
       "receipt_sha256": "b20e176c5cbe4ca7af997771b58ad569e76baae783bb3c7a36f7fdef7292fbc1",
@@ -950,13 +1114,21 @@
     "result_library_receipt": "../verification/result-library/acceptance.json",
     "managed_memory_layout_case": "ADAPT-17",
     "pure_fork_join_case": "ADAPT-18",
-    "unexecuted_cases": ["CONTRACT-16", "ADAPT-17", "ADAPT-18"],
+    "unexecuted_cases": [
+      "CONTRACT-16",
+      "ADAPT-17",
+      "ADAPT-18"
+    ],
     "existing_m3_m6_mc2_completion_changed": false,
     "universal_proof_or_backend_claim": false
   },
   "decoder_experiment": {
     "profile": "Decoder-Experiment",
-    "cases": ["ADAPT-04", "ADAPT-05", "ADAPT-07"],
+    "cases": [
+      "ADAPT-04",
+      "ADAPT-05",
+      "ADAPT-07"
+    ],
     "implementation": "implemented",
     "execution": "passed",
     "proof": "open",
@@ -964,9 +1136,26 @@
     "scope": "Isolated safe Rust owned-reference and zero-copy borrowed byte-slice view of an experiment-only version/tag/reserved/LE-length payload record, max 16 bytes; all eight canonical records at offsets 0 and 1, four external lifetime controls, 16/17-byte boundaries, borrow compile failures and scoped pinned strict Miri. ADAPT-07 separately reviewed and rejected native IntoBytes identity.",
     "execution_receipt": "../verification/decoder-experiment/acceptance.json",
     "review_receipt": "../verification/decoder-experiment/adapt07-review.json",
-    "native_assurance_review": {"case": "ADAPT-13", "execution": "passed", "proof": "not-applicable", "receipt": "../verification/decoder-experiment/adapt13-review-final.json", "scope": "Four evidence-policy controls; only a cited safety argument with pinned Noble-local scoped strict Miri supports scoped native evidence, not Wasm correspondence or all-target coverage."},
-    "initial_final_review": {"case": "ADAPT-14", "execution": "passed", "proof": "not-applicable", "receipt": "../verification/decoder-experiment/adapt14-review-final.json", "scope": "Finite signed-I64 initial 100, amount 10, final 110 counterexample; correct snapshot relation true, self-referential final relation false; no universal proof."},
-    "public_api_compile_probe": {"case": "ADAPT-16", "execution": "not-run", "proof": "not-applicable", "blocker": "Public Rust ProgramValueId, BuildKey and AcceptedProgram APIs do not exist; missing imports are not type/private-field compile-fail evidence."},
+    "native_assurance_review": {
+      "case": "ADAPT-13",
+      "execution": "passed",
+      "proof": "not-applicable",
+      "receipt": "../verification/decoder-experiment/adapt13-review-final.json",
+      "scope": "Four evidence-policy controls; only a cited safety argument with pinned Noble-local scoped strict Miri supports scoped native evidence, not Wasm correspondence or all-target coverage."
+    },
+    "initial_final_review": {
+      "case": "ADAPT-14",
+      "execution": "passed",
+      "proof": "not-applicable",
+      "receipt": "../verification/decoder-experiment/adapt14-review-final.json",
+      "scope": "Finite signed-I64 initial 100, amount 10, final 110 counterexample; correct snapshot relation true, self-referential final relation false; no universal proof."
+    },
+    "public_api_compile_probe": {
+      "case": "ADAPT-16",
+      "execution": "not-run",
+      "proof": "not-applicable",
+      "blocker": "Public Rust ProgramValueId, BuildKey and AcceptedProgram APIs do not exist; missing imports are not type/private-field compile-fail evidence."
+    },
     "zerocopy_dependency": "unselected-not-run-not-passed",
     "canonical_noble_encoding": false,
     "accepted_program_created": false,
@@ -974,7 +1163,10 @@
   },
   "numeric_graph": {
     "profile": "Numeric-Graph-v1",
-    "sub_profiles": ["ngraph-i64/0", "ngraph-f32/0"],
+    "sub_profiles": [
+      "ngraph-i64/0",
+      "ngraph-f32/0"
+    ],
     "selection": "explicit-opt-in-only",
     "change": "../.cairn/changes/numeric-graph-v1/",
     "change_status": "active",
@@ -984,9 +1176,26 @@
     "implementation_scope": "Selected noble ngraph CLI and noble-ngraph library only: exact I64 extraction, directly authored F32 graphs admitted by the graph checker, reference/compiled CPU evaluation, immutable adam/0 snapshots and same-platform provenance replay. No kernel F32, ordinary entry-point selection or frontend syntax change.",
     "execution": "passed",
     "execution_scope": "The candidate records 14 execution-passed cases and one held case. The immutable historical acceptance/review receipts support the original eight; each additional record (03/04/05/09/11/12) retains its preliminary 002d8ec packet and binds a fresh final-candidate safety observation. Final integrated-source cold review and the bounded terminal receipt govern these six execution records only. CASE-02 remains unrun because complete compiler-authenticated capability closure is incomplete. No proof, whole-feature or global-gate acceptance is implied.",
-    "passed_cases": ["NGRAPH-CASE-01", "NGRAPH-CASE-03", "NGRAPH-CASE-04", "NGRAPH-CASE-05", "NGRAPH-CASE-06", "NGRAPH-CASE-07", "NGRAPH-CASE-08", "NGRAPH-CASE-09", "NGRAPH-CASE-10", "NGRAPH-CASE-11", "NGRAPH-CASE-12", "NGRAPH-CASE-13", "NGRAPH-CASE-14", "NGRAPH-CASE-15"],
+    "passed_cases": [
+      "NGRAPH-CASE-01",
+      "NGRAPH-CASE-03",
+      "NGRAPH-CASE-04",
+      "NGRAPH-CASE-05",
+      "NGRAPH-CASE-06",
+      "NGRAPH-CASE-07",
+      "NGRAPH-CASE-08",
+      "NGRAPH-CASE-09",
+      "NGRAPH-CASE-10",
+      "NGRAPH-CASE-11",
+      "NGRAPH-CASE-12",
+      "NGRAPH-CASE-13",
+      "NGRAPH-CASE-14",
+      "NGRAPH-CASE-15"
+    ],
     "final_case_evidence_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
-    "held_cases": ["NGRAPH-CASE-02"],
+    "held_cases": [
+      "NGRAPH-CASE-02"
+    ],
     "held_state": {
       "implementation": "absent",
       "execution": "not-run",
@@ -1035,7 +1244,16 @@
     "case08_node_zero": "Approved review.json case08.node_zero maps the three exact named FactInput, Interface and SnapshotLayout refusal classes to directly measured evaluated_nodes=0 in both library evaluators; not a CLI counter and not a measurement on CLI guard/F1 bytes.",
     "proof": "open",
     "trust": "explicit",
-    "proof_obligations_open": ["NG-PO-A", "NG-PO-B", "NG-PO-C", "NG-PO-D", "NG-PO-E", "NG-PO-F", "NG-PO-G", "NG-PO-H"],
+    "proof_obligations_open": [
+      "NG-PO-A",
+      "NG-PO-B",
+      "NG-PO-C",
+      "NG-PO-D",
+      "NG-PO-E",
+      "NG-PO-F",
+      "NG-PO-G",
+      "NG-PO-H"
+    ],
     "ng_po_discharged": [],
     "platform_scope": "One pinned x86_64 Linux toolchain/platform; no cross-platform bit-reproducibility claim.",
     "trusted_assumptions": [
@@ -1047,8 +1265,18 @@
     ],
     "global_gate_record": "../verification/main-gates/receipt.json",
     "global_gate_status": "Historical full 14 checks: 10 passed, 4 known failed (boundary-controls, octet, source-coverage, native-assurance); not globally green and not rerun by lifecycle recording.",
-    "archive_blockers": ["Seven incomplete case contracts", "Four retained global gate failures and no terminal-PASS full source-bound closeout"],
-    "non_claims": ["No performance or speedup claim; Phase C W3-L host-native 0.131x STOP unchanged", "No GPU or backend selection", "No proof discharge", "No cross-platform claim", "No whole-feature acceptance or archive", "No CALC case or proof-ledger change"]
+    "archive_blockers": [
+      "Seven incomplete case contracts",
+      "Four retained global gate failures and no terminal-PASS full source-bound closeout"
+    ],
+    "non_claims": [
+      "No performance or speedup claim; Phase C W3-L host-native 0.131x STOP unchanged",
+      "No GPU or backend selection",
+      "No proof discharge",
+      "No cross-platform claim",
+      "No whole-feature acceptance or archive",
+      "No CALC case or proof-ledger change"
+    ]
   },
   "calculator": {
     "contract": "CALCULATOR.md",
@@ -1074,13 +1302,13 @@
     "new_kernel_syntax": false,
     "bootstrap_expanded": false,
     "swarm_runtime_claimed": false,
-    "candidate_encoding": "open",
-    "package_encoding": "open",
+    "candidate_encoding": "noble-candidate/v1-local-experimental",
+    "package_encoding": "noble-worker-program-package/v2-draft.12",
     "task_abi": "open",
-    "execution_accounting": "open",
+    "execution_accounting": "worker-typed/step-4096/interrupt-8 and worker-program-v2/wasmtime-40.0.2/step-4096/interrupt-8/fuel-10000000",
     "implementation": "partial",
     "execution": "passed",
-    "execution_scope": "WORKER-02 through WORKER-07, WORKER-10 and WORKER-12 pass on the production binary, and WORKER-08 passed under M6. WORKER-09 passes its MW1 rows and leaves its two MW2 rows not run. WORKER-01 and WORKER-11 are not run, and MW1 and MW2 remain open.",
+    "execution_scope": "WORKER-02 through WORKER-07, WORKER-10 and WORKER-12 pass on the production binary, and WORKER-08 passed under M6. WORKER-09 passes its MW1 rows and leaves its two native-async MW2 rows not run. All five MW1 entry gates pass through the production Worker-Typed/Worker Program paths; WORKER-11 scope review remains. WORKER-01 and MW2 remain not run.",
     "proof": "open"
   },
   "octet_adoption": {
