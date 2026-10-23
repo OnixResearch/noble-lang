@@ -32,7 +32,13 @@ function main(){
   fs.writeFileSync(path.join(out,'raw','build.stdout'),built.stdout);fs.writeFileSync(path.join(out,'raw','build.stderr'),built.stderr);
   assert.equal(built.status,0,built.stderr||built.stdout);const build=JSON.parse(fs.readFileSync(path.join(buildDir,'build.json')));assert.equal(build.result,'built');
   const cli=path.join(buildDir,build.binaries.cli.snapshot);const peer=path.join(buildDir,build.binaries.peer.snapshot);
-  const componentDir=path.join(out,'component');const compiled=command(cli,['component','compile','crates/noble-wasm/wit/async.wit','bootstrap',componentDir,'order=verification/m6/cases/order.noble']);
+  const componentDir=path.join(out,'component');const compiled=command(cli,[
+    'component','compile','crates/noble-wasm/wit/async.wit','bootstrap',componentDir,
+    'order=verification/m6/cases/order.noble',
+    'future-result=verification/m6/cases/future-result.noble',
+    'stream-result=verification/m6/cases/stream-result.noble',
+    'future-cancel=verification/m6/cases/future-cancel.noble',
+    'stream-close=verification/m6/cases/stream-close.noble']);
   fs.writeFileSync(path.join(out,'raw','compile.stdout.json'),compiled.stdout);fs.writeFileSync(path.join(out,'raw','compile.stderr'),compiled.stderr);assert.equal(compiled.status,0,compiled.stderr||compiled.stdout);
   const component=path.join(componentDir,'component.wasm');
   const suspendedRun=command(peer,[component,'order','success']);fs.writeFileSync(path.join(out,'raw','suspension.stdout.json'),suspendedRun.stdout);fs.writeFileSync(path.join(out,'raw','suspension.stderr'),suspendedRun.stderr);assert.equal(suspendedRun.status,0,suspendedRun.stderr||suspendedRun.stdout);const suspension=JSON.parse(suspendedRun.stdout);
