@@ -401,7 +401,7 @@
         "M4",
         "M5"
       ],
-      "status": "not-started",
+      "status": "completed",
       "entry_gates": [
         "worker-interface-checker",
         "declared-schemas-and-modules",
@@ -520,8 +520,16 @@
       "contract": "../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
       "scope": "Selected Choreography-Service-M8 versioned finite data descriptor admitted only from strict UTF-8 JSON (512 bytes, depth three, exact typed keys, duplicate/unknown-key and trailing non-whitespace refusal) and deterministic publisher/subscriber projection over the unchanged M7 synchronous service; general choreography remains open.",
       "implementation": "Production strict descriptor parser/projector and serialized host-owned monitor compose existing M7 dataspace and WIT service decisions with two separately compiled Noble participants and independent typed Wasmtime linking; no new WIT world or guest authority.",
-      "required_requirements": ["S-CONC-09","WI-SYN-05"],
-      "acceptance_cases": ["S-CASE-18","S-CASE-19","WI-19","WI-20"],
+      "required_requirements": [
+        "S-CONC-09",
+        "WI-SYN-05"
+      ],
+      "acceptance_cases": [
+        "S-CASE-18",
+        "S-CASE-19",
+        "WI-19",
+        "WI-20"
+      ],
       "acceptance_status": "passed",
       "acceptance_scope": "All four selected canonical cases and 38 hostile variants pass against source-bound compiled components and an independent typed peer, including ten strict JSON edges and three one-round reservations; fresh M7 regression retains seven cases and sixteen variants. All 17 pre-promotion commands and eleven gates pass, including published Octet deny-all and full Nix flake; a distinct final documents/Cairn Nix receipt binds archived staged source.",
       "verification_scope": "Fresh whole-crate actual-Rust extraction binds 562 files and retains three pure M7 dataspace functions at compiler DefIDs 31/32/33 and nine strict Lean roots with 265 refusal controls. M8 parser, projector, monitor, adapter, host and engine correspondence and all 2087 authored-production-body inventory refinements remain open.",
@@ -584,35 +592,107 @@
     {
       "id": "MLIVE",
       "name": "opt-in-live-wasm-bytecode-reload",
-      "depends_on": ["M4", "DXM1"],
+      "depends_on": [
+        "M4",
+        "DXM1"
+      ],
       "status": "not-started",
       "scope": "Resource-free Core-Bootstrap plus explicitly selected Declared-Modules-v1; resident Node/V8 Wasm bytecode VM with in-process emission, atomic namespace reload and a separately gated actual Wasm interpreter choice.",
-      "required_requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "B-LIVE-01", "BE-LIVE-01", "DX-LIVE-01", "S-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
-      "acceptance_cases": ["LIVE-01", "LIVE-02", "LIVE-03", "LIVE-04", "LIVE-05", "LIVE-06", "LIVE-07", "LIVE-08"],
+      "required_requirements": [
+        "K-LIVE-01",
+        "H-LIVE-01",
+        "H-LIVE-02",
+        "H-LIVE-03",
+        "B-LIVE-01",
+        "BE-LIVE-01",
+        "DX-LIVE-01",
+        "S-LIVE-01",
+        "V-LIVE-01",
+        "EV-LIVE-01"
+      ],
+      "acceptance_cases": [
+        "LIVE-01",
+        "LIVE-02",
+        "LIVE-03",
+        "LIVE-04",
+        "LIVE-05",
+        "LIVE-06",
+        "LIVE-07",
+        "LIVE-08"
+      ],
       "acceptance_status": "not-started",
-      "non_claims": ["Cooperative paired-rename watch and selected declared snapshots do not authenticate later bytes against outside writable mappings or hardlinks; complete H-LIVE-01 and LIVE-05/watch acceptance, effectful/general transitions and full in-flight controls remain open. Integrated source 8b1504b passed 55 live CLI tests and five finite selected compiled guest traces including one-to-zero exact queued proposal root release after trap/quota, but not LIVE-02 active in-flight reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke, general LIVE-10 cancellation assurance or canonical case acceptance; complete source-bound LIVE-02, interpreter execution, source-to-VM proof and any revision to historical M4/MC1/MC2/DXM1 evidence remain absent."]
+      "non_claims": [
+        "Cooperative paired-rename watch and selected declared snapshots do not authenticate later bytes against outside writable mappings or hardlinks; complete H-LIVE-01 and LIVE-05/watch acceptance, effectful/general transitions and full in-flight controls remain open. Integrated source 8b1504b passed 55 live CLI tests and five finite selected compiled guest traces including one-to-zero exact queued proposal root release after trap/quota, but not LIVE-02 active in-flight reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke, general LIVE-10 cancellation assurance or canonical case acceptance; complete source-bound LIVE-02, interpreter execution, source-to-VM proof and any revision to historical M4/MC1/MC2/DXM1 evidence remain absent."
+      ]
     },
     {
       "id": "MCB",
       "name": "opt-in-c11-native-backend",
-      "depends_on": ["M4"],
+      "depends_on": [
+        "M4"
+      ],
       "status": "not-started",
       "scope": "Nonselected opt-in resource-free Core-Bootstrap C11 AOT source/native target; native execution requires separate pinned sandbox, authenticated source-to-C-to-ELF correspondence and source-bound comparison against selected Wasm.",
-      "required_requirements": ["CB-SCOPE-01", "CB-BUILD-01", "CB-IDENTITY-01", "CB-NUM-01", "CB-VALUE-01", "CB-ORDER-01", "CB-LIMIT-01", "CB-HOST-01", "CB-SANDBOX-01", "CB-ADMIT-01", "CB-GATE-01"],
-      "acceptance_cases": ["CB-CASE-01", "CB-CASE-02", "CB-CASE-03", "CB-CASE-04", "CB-CASE-05", "CB-CASE-06", "CB-CASE-07", "CB-CASE-08", "CB-CASE-09", "CB-CASE-10"],
+      "required_requirements": [
+        "CB-SCOPE-01",
+        "CB-BUILD-01",
+        "CB-IDENTITY-01",
+        "CB-NUM-01",
+        "CB-VALUE-01",
+        "CB-ORDER-01",
+        "CB-LIMIT-01",
+        "CB-HOST-01",
+        "CB-SANDBOX-01",
+        "CB-ADMIT-01",
+        "CB-GATE-01"
+      ],
+      "acceptance_cases": [
+        "CB-CASE-01",
+        "CB-CASE-02",
+        "CB-CASE-03",
+        "CB-CASE-04",
+        "CB-CASE-05",
+        "CB-CASE-06",
+        "CB-CASE-07",
+        "CB-CASE-08",
+        "CB-CASE-09",
+        "CB-CASE-10"
+      ],
       "acceptance_status": "not-started",
-      "non_claims": ["Only restricted nonselected I64/Bool/Unit/Text-result checked C11 source emission with bounded internal Pair/Sum/List exists in this integrated source; recursive duplicate JSON members refuse, but ancestor-sealed input/output native admission remains absent. No native compiler selection, ELF execution/runtime admission, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists. CB-CASE-01 includes limits.list_length and remains absent/not-run; the current source-only policy accepts that field as an exact 0..255 List bound rather than ignoring it."]
+      "non_claims": [
+        "Only restricted nonselected I64/Bool/Unit/Text-result checked C11 source emission with bounded internal Pair/Sum/List exists in this integrated source; recursive duplicate JSON members refuse, but ancestor-sealed input/output native admission remains absent. No native compiler selection, ELF execution/runtime admission, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists. CB-CASE-01 includes limits.list_length and remains absent/not-run; the current source-only policy accepts that field as an exact 0..255 List bound rather than ignoring it."
+      ]
     },
     {
       "id": "MEB",
       "name": "opt-in-erlang-abstract-forms-backend",
-      "depends_on": ["M4"],
+      "depends_on": [
+        "M4"
+      ],
       "status": "not-started",
       "scope": "Nonselected opt-in signed-I64 arithmetic subset lowered to bounded annotated Erlang abstract forms, pinned OTP-compiled BEAM; broader Core-Bootstrap and effectful operations are unsupported pending separate selection.",
-      "required_requirements": ["EA-SCOPE-01", "EA-BUILD-01", "EA-FORMS-01", "EA-I64-01", "EA-ADMIT-01", "EA-ISOLATE-01", "EA-GATE-01"],
-      "acceptance_cases": ["EA-CASE-01", "EA-CASE-02", "EA-CASE-03", "EA-CASE-04", "EA-CASE-05", "EA-CASE-06", "EA-CASE-07"],
+      "required_requirements": [
+        "EA-SCOPE-01",
+        "EA-BUILD-01",
+        "EA-FORMS-01",
+        "EA-I64-01",
+        "EA-ADMIT-01",
+        "EA-ISOLATE-01",
+        "EA-GATE-01"
+      ],
+      "acceptance_cases": [
+        "EA-CASE-01",
+        "EA-CASE-02",
+        "EA-CASE-03",
+        "EA-CASE-04",
+        "EA-CASE-05",
+        "EA-CASE-06",
+        "EA-CASE-07"
+      ],
       "acceptance_status": "not-started",
-      "non_claims": ["No Noble abstract-form emitter, OTP compiler invocation, independently admitted BEAM execution, OS-confined runner, executed EA cases, backend proof, full Core-Bootstrap support or production selection exists."]
+      "non_claims": [
+        "No Noble abstract-form emitter, OTP compiler invocation, independently admitted BEAM execution, OS-confined runner, executed EA cases, backend proof, full Core-Bootstrap support or production selection exists."
+      ]
     }
   ]
 }

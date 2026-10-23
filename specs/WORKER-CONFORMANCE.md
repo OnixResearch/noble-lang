@@ -1,7 +1,7 @@
 # Typed-worker conformance slice
 
 Revision: 0.1.0-draft.5  
-Status: Unexecuted harness design, not a language profile or an agent runtime
+Status: MW1 scoped conformance executed; MW2 native-async delivery remains open; not a language profile or an agent runtime
 
 ## Purpose and ownership
 
@@ -86,4 +86,4 @@ MW2 follows MW1 and M6. It executes the integrated cancellation scenario and the
 
 Neither milestone blocks M1 through M4 or replaces the calculator as the first reference application. A single-worker harness does not implement a swarm scheduler. Syndicate/Synit remains the selected concurrency direction. Supervision, task leases, distributed delegation, durability, and safe remote retries require separate profiles.
 
-All cases remain `implementation: absent`, `execution: not-run`, `proof: open`, and `trust: unassessed` until evidence exists.
+Cases without evidence remain `implementation: absent`, `execution: not-run`, `proof: open`, and `trust: unassessed`; passing one dimension never promotes another.

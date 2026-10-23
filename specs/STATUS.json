@@ -1308,7 +1308,7 @@
     "execution_accounting": "worker-typed/step-4096/interrupt-8 and worker-program-v2/wasmtime-40.0.2/step-4096/interrupt-8/fuel-10000000",
     "implementation": "partial",
     "execution": "passed",
-    "execution_scope": "WORKER-02 through WORKER-07, WORKER-10 and WORKER-12 pass on the production binary, and WORKER-08 passed under M6. WORKER-09 passes its MW1 rows and leaves its two native-async MW2 rows not run. All five MW1 entry gates pass through the production Worker-Typed/Worker Program paths; WORKER-11 scope review remains. WORKER-01 and MW2 remain not run.",
+    "execution_scope": "MW1 completed: WORKER-02 through WORKER-07, WORKER-10, WORKER-11 and WORKER-12 pass; WORKER-09 passes every MW1 row, and WORKER-08 passed under M6. All five MW1 entry gates pass through the production Worker-Typed/Worker Program paths. WORKER-01, WORKER-09 native rows and native-async-interfaces remain MW2.",
     "proof": "open"
   },
   "octet_adoption": {
@@ -2104,7 +2104,7 @@
     "c_backend": "optional-nonselected-C11-AOT-specification-only; absent/not-run; no native execution",
     "erlang_abstract_backend": "optional-nonselected-abstract-forms-and-OTP-compiled-BEAM-specification-only; narrow-arithmetic-subset; absent/not-run; no runtime execution"
   },
-  "next_milestone": "MW1",
+  "next_milestone": "MW2",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
     "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",

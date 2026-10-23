@@ -410,6 +410,8 @@ MW1 requires a worker-interface checker, declared schemas/modules, an explicit p
 
 The MW1 case set is WORKER-02 through WORKER-07 and WORKER-09 through WORKER-12. Async-dependent rows in WORKER-09 remain MW2 obligations rather than false MW1 coverage. MW2 executes WORKER-01 and WORKER-08 plus those deferred rows. Reports retain a result for every applicable matrix entry. At 2026-10-23, WORKER-02 through WORKER-07, WORKER-10 and WORKER-12 are accepted; WORKER-09 is partial with its MW1 rows passed and its two MW2 rows not run. All five MW1 entry gates are closed by the transition-guest receipt; WORKER-11 scope review is the remaining MW1 case before milestone promotion.
 
+**WORKER-11 scope review and MW1 completion (2026-10-23).** [`verification/worker11/review.mjs`](../verification/worker11/review.mjs) binds the canonical review case to the milestone/status records, complete MW1 case roster, five entry-gate receipt, 23-entry bootstrap and retained calculator/Syndicate scope. Every expected negative is observed and native async remains open; [the receipt](../verification/worker11/review.json) promotes WORKER-11 to implemented/passed with proof open and trust explicit. MW1 is complete. MW2 is next and owns WORKER-01, WORKER-09's two native rows and the `native-async-interfaces` gate.
+
 Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. M6's completed local WORKER-08 slice did not establish M7 service acceptance, and neither the separately accepted bounded M7 service nor M8 choreography closes the broader worker milestones.
 
 ## M1 architecture and quality gates

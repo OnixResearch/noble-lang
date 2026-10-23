@@ -1,0 +1,107 @@
+{
+  "schema": "noble-worker11-scope-review/v1",
+  "case": "WORKER-11",
+  "result": "passed",
+  "failures": [],
+  "tested_commit": "d7b5c9ffbc5949695403107dec0e913285ee72c5",
+  "source_scope": [
+    "specs/conformance/worker-cases.json",
+    "specs/roadmap.json",
+    "specs/STATUS.json",
+    "specs/ROADMAP.md",
+    "specs/WORKER-CONFORMANCE.md",
+    "Cargo.toml",
+    "crates/noble-kernel/src/contracts/bootstrap.rs",
+    "crates/noble-kernel/src/contracts/bootstrap/data.rs",
+    "verification/worker11/review.mjs"
+  ],
+  "source_revision": "sha256:bbae83c77e0797fcb38483c414965df39580d9bb79bb0a5d9e705a3c94d6e03b",
+  "source_file_count": 9,
+  "case_projection": {
+    "id": "WORKER-11",
+    "profile": "Worker-Design",
+    "kind": "review",
+    "requirements": [
+      "K-SCOPE-01",
+      "K-SCOPE-04",
+      "EV-STATE-03",
+      "EV-GATE-01"
+    ],
+    "input": {
+      "harness": "worker-delivery-gates",
+      "milestones": [
+        "MW1",
+        "MW2"
+      ],
+      "open_gates": [
+        "worker-interface-checker",
+        "declared-schemas-and-modules",
+        "preparation-service",
+        "package-encoding",
+        "bounded-execution-profile",
+        "native-async-interfaces"
+      ]
+    },
+    "expected": {
+      "stage": "scope-review",
+      "outcome": "design-only-until-executed-evidence",
+      "new_kernel_syntax": false,
+      "bootstrap_expanded": false,
+      "ordinary_core_blocked": false,
+      "calculator_replaced": false,
+      "swarm_runtime_claimed": false,
+      "durable_replay_claimed": false,
+      "syndicate_replaced": false
+    }
+  },
+  "case_projection_sha256": "f430c9c295d53a07736df01686a29a7af447bfe1ce35afe52aaf2232202ea48a",
+  "observations": {
+    "stage": "scope-review",
+    "outcome": "design-only-until-executed-evidence",
+    "new_kernel_syntax": false,
+    "bootstrap_expanded": false,
+    "ordinary_core_blocked": false,
+    "calculator_replaced": false,
+    "swarm_runtime_claimed": false,
+    "durable_replay_claimed": false,
+    "syndicate_replaced": false,
+    "mw1_case_execution_complete": true,
+    "mw1_entry_gates_closed": true,
+    "native_async_interfaces_open": true,
+    "bootstrap_entry_count": 23
+  },
+  "source_files": {
+    "Cargo.toml": {
+      "sha256": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6"
+    },
+    "crates/noble-kernel/src/contracts/bootstrap.rs": {
+      "sha256": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4"
+    },
+    "crates/noble-kernel/src/contracts/bootstrap/data.rs": {
+      "sha256": "c41941d104412cde0169ea34d28d79e01c0c8a1d41fdd9981f19fc6280d77807"
+    },
+    "specs/ROADMAP.md": {
+      "sha256": "5fca9c118d42d49ff041dea5740dc48b70c53acb6421afa04b16ed9265737721"
+    },
+    "specs/STATUS.json": {
+      "sha256": "969eb1fdcd4f83ec20433494923cc431638a3ee57c7869716a57162e25cab460"
+    },
+    "specs/WORKER-CONFORMANCE.md": {
+      "sha256": "1037c412b995f84258e232dcbcef9e0fb46101328918248e81b534c2a29b5bf2"
+    },
+    "specs/conformance/worker-cases.json": {
+      "sha256": "e928943bf2754a54d334248e2b8fb786c511d0fa8c3c6d158df47f93bf82e290"
+    },
+    "specs/roadmap.json": {
+      "sha256": "61040a65b69d6c937142e9bec468b40d428418c39ed250716b54f2b431c57595"
+    },
+    "verification/worker11/review.mjs": {
+      "sha256": "89fb39104899d95bdd7d3546e3dc6a9f21bb34d9b8a2db52c7c31f7829593207"
+    }
+  },
+  "non_claims": [
+    "Review evidence checks scope and claim discipline; it is not runtime or proof evidence.",
+    "MW1 completion does not complete MW2: WORKER-01 and WORKER-09 native rows remain open.",
+    "The Worker changes use existing module, Program, effect/resource and component contracts; no agent/swarm syntax was added."
+  ]
+}

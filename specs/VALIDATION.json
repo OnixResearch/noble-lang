@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 551,
   "scenarios": 221,
-  "scenarios_executed": 139,
+  "scenarios_executed": 140,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -2440,7 +2440,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "e928943bf2754a54d334248e2b8fb786c511d0fa8c3c6d158df47f93bf82e290"
+      "sha256": "3780ad9e2e506a3b8547ff7b1d54b14b790b917f043f518d8e5c9031dea9abdc"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2488,11 +2488,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "61040a65b69d6c937142e9bec468b40d428418c39ed250716b54f2b431c57595"
+      "sha256": "02dfe0f383af68d6ccdcca1867efccddbf147bfc444e072bb6ed407dfc1bc679"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "5fca9c118d42d49ff041dea5740dc48b70c53acb6421afa04b16ed9265737721"
+      "sha256": "20f26d0fa5216a547e5d0bc063b8e1f59698526291e156b872eec8ec2118768b"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2512,7 +2512,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "969eb1fdcd4f83ec20433494923cc431638a3ee57c7869716a57162e25cab460"
+      "sha256": "aec0876f648cff627f12048b7dfb41c6d7f8fad3210a59a500cf86fe9eb4ec6b"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2536,7 +2536,7 @@
     },
     {
       "file": "specs/WORKER-CONFORMANCE.md",
-      "sha256": "1037c412b995f84258e232dcbcef9e0fb46101328918248e81b534c2a29b5bf2"
+      "sha256": "a1a0e1fa0cfc7bc55914207ce09ba894339dae13d83969a914ce9104606f242e"
     },
     {
       "file": "verification/boundary-controls.md",
