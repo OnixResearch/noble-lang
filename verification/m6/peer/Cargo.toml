@@ -17,10 +17,10 @@ wasmtime-wasi = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cra
 noble-kernel = { path = "../../../crates/noble-kernel" }
 
 [patch.crates-io]
-lock_api = { path = "/nix/store/5mwhb6hsn5bvvgnbasgzbsb2173mcb8m-cargo-package-lock_api-0.4.14" }
-parking_lot_core = { path = "/nix/store/75qqqmy8xz4kzsf4jgzg2xi3asmgnbbw-cargo-package-parking_lot_core-0.9.12" }
-scopeguard = { path = "/nix/store/0g2ipzda8dsp4jvmkqmmgmi4m1d3w573-cargo-package-scopeguard-1.2.0" }
-redox_syscall = { path = "/nix/store/ia1hffmz062l0z0rjj1x1pcyzqn3lxq2-cargo-package-redox_syscall-0.5.17" }
+lock_api = { path = "/nix/store/yzjhsvk7l9ahbafdsh89h0vkch7f9dm0-cargo-package-lock_api-0.4.14" }
+parking_lot_core = { path = "/nix/store/9nprhnalm4fwla29b17h8cn4a98m7277-cargo-package-parking_lot_core-0.9.12" }
+scopeguard = { path = "/nix/store/g6s0fqhkbsbqvgkfaiw96nw3w4s54z8z-cargo-package-scopeguard-1.2.0" }
+redox_syscall = { path = "/nix/store/gz3yhflfpgqdzz16r843p2vw05xkc544-cargo-package-redox_syscall-0.5.17" }
 windows-link = { path = "/nix/store/11qyih4kprkpmfybwpq4y60z8bx9jhm4-cargo-package-windows-link-0.2.1" }
 
 [profile.dev]
