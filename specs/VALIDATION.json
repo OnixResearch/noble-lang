@@ -1495,6 +1495,22 @@
       "sha256": "3881af9247c105dafecd6da6b4a69c9c3e1759db55c8e4d22d7ca03233a2be62"
     },
     {
+      "file": ".cairn/archive/2026-10-23-typed-worker-program-v2-native/design.md",
+      "sha256": "7135e3af78816a8c649dbd307ff21004f916e718407f22cf210b6f742c65e709"
+    },
+    {
+      "file": ".cairn/archive/2026-10-23-typed-worker-program-v2-native/proposal.md",
+      "sha256": "182705d12831c9e1616d83344968a9f31ed63be33067fa38c27cefb2d6c2ec75"
+    },
+    {
+      "file": ".cairn/archive/2026-10-23-typed-worker-program-v2-native/specs/language/spec.md",
+      "sha256": "7e481ad60b95b3dea0bba96ec425400657833ae7e1f5b2a8e97f16e4280860a7"
+    },
+    {
+      "file": ".cairn/archive/2026-10-23-typed-worker-program-v2-native/tasks.md",
+      "sha256": "d840c8f06a0c1b1c5042a02b0f2fcf0502a1c7d4b00fed4627a4a4557b113f1b"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2203,22 +2219,6 @@
       "sha256": "6de7ef9938777ba920fd4cb62ecd8144ece64d051a117f645a2961b18e3d7546"
     },
     {
-      "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
-      "sha256": "7135e3af78816a8c649dbd307ff21004f916e718407f22cf210b6f742c65e709"
-    },
-    {
-      "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
-      "sha256": "182705d12831c9e1616d83344968a9f31ed63be33067fa38c27cefb2d6c2ec75"
-    },
-    {
-      "file": ".cairn/changes/typed-worker-program-v2-native/specs/language/spec.md",
-      "sha256": "7e481ad60b95b3dea0bba96ec425400657833ae7e1f5b2a8e97f16e4280860a7"
-    },
-    {
-      "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
-      "sha256": "d840c8f06a0c1b1c5042a02b0f2fcf0502a1c7d4b00fed4627a4a4557b113f1b"
-    },
-    {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
       "sha256": "6954f83de816eff75e6a27d2b3228fd546a884f11bbd543a57bb9fe02e6af219"
     },
@@ -2292,7 +2292,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "dd107fbdf62c1f4f9229427caf582b25ddabbeaa5ae00c258b312be343f042e4"
+      "sha256": "8856654a3e645dc98a4a42af1de4ecc13f2f1ae3fcca95f0eac75aae3d73dcaa"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "803236b655bdad307fedf68c9ee9bbd23c50ba0dc4e94b0362f8489039af8d10"
+      "sha256": "5fca9c118d42d49ff041dea5740dc48b70c53acb6421afa04b16ed9265737721"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2504,7 +2504,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "d8a1f37a48db5a66563616e3a1588c11234f617806374a3f8231051cea1de944"
+      "sha256": "8d0e065d8e8349e3b9ea376897e62d4830d65d58b63d9f745518341fbca6d48b"
     },
     {
       "file": "specs/spec-family.json",
