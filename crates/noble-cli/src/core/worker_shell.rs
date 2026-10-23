@@ -237,6 +237,7 @@ struct ShellEvidence {
 }
 
 struct LifecycleEvidence {
+    sequence: Vec<&'static str>,
     owner_after_admission: &'static str,
     state_at_cancel_ack: &'static str,
     pins_at_cancel_ack: u64,
@@ -293,6 +294,7 @@ fn report(
         "resource_state":resource.map(|value| if value.retired == 1 {"Retired"} else {"not-retired"}),
         "resource_native_pins":resource.map(|value| value.native_pins),
         "owner_after_admission":lifecycle.map(|value|value.owner_after_admission),
+        "lifecycle_sequence":lifecycle.map(|value|&value.sequence),
         "state_at_cancel_ack":lifecycle.map(|value|value.state_at_cancel_ack),
         "pins_at_cancel_ack":lifecycle.map(|value|value.pins_at_cancel_ack),
         "external_send_outcome_at_cancel":lifecycle.map(|value|value.external_send_outcome_at_cancel),
@@ -676,6 +678,7 @@ where
     F: FnOnce() -> Result<Value, Failure>,
 {
     let mut failure = None;
+    let mut sequence = vec!["admission-commit"];
     let retained_context = admitted.task.handle().context;
     let owner_after_admission = tasks
         .inspect(admitted.task.handle(), retained_context)
@@ -726,10 +729,14 @@ where
             && external_unknown,
         "cancellation acknowledgement lost task/resource/operation ownership",
     );
+    sequence.push("cancellation-commit");
     // The Worker sees Cancelled only after cancellation is committed and
     // before the native producer is allowed to complete.
     let second = match after_cancel() {
-        Ok(second) => Some(second),
+        Ok(second) => {
+            sequence.push("cancelled-worker-event");
+            Some(second)
+        }
         Err(error) => {
             let _ = note(&mut failure, Err::<(), _>(error));
             None
@@ -740,6 +747,7 @@ where
     // join (including a panic) still means the native thread has stopped.
     // Drop the socket and receive buffer before refunding their task reservation.
     let native_result = native.finish(attempt, text);
+    sequence.push("late-native-completion");
     drop(native);
     let native_ok = native_result.is_ok();
     let _ = note(&mut failure, native_result);
@@ -824,6 +832,7 @@ where
     let task_observation = tasks.observation();
     let resource_observation = resources.observation();
     let lifecycle = LifecycleEvidence {
+        sequence,
         owner_after_admission: if owner_after_admission {
             "task"
         } else {

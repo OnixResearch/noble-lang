@@ -90,6 +90,12 @@ function main(){
     external_send_outcome_at_cancel:report.external_send_outcome_at_cancel,
     external_rollback_claimed:report.external_rollback_claimed};
   const failures=[];
+  const sequence=report.lifecycle_sequence;
+  if(JSON.stringify(sequence)!==JSON.stringify([
+    'admission-commit','cancellation-commit','cancelled-worker-event','late-native-completion']))
+    failures.push(`lifecycle order differs: ${JSON.stringify(sequence)}`);
+  if(JSON.stringify(sequence.filter(event=>event!=='cancelled-worker-event'))!==JSON.stringify(input.task_order))
+    failures.push('case task_order differs from observed lifecycle');
   for(const run of [prepared,shell,...Object.values(controls)])if(run.leftovers.length)failures.push(`${run.name}: left files ${run.leftovers}`);
   for(const [field,value] of Object.entries(expected))if(JSON.stringify(observed[field])!==JSON.stringify(value))
     failures.push(`${field}: expected ${JSON.stringify(value)}, observed ${JSON.stringify(observed[field])}`);
