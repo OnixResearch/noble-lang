@@ -8,5 +8,7 @@
 
 ## Phase 2: Verification without premature promotion
 
+- [ ] [serial] Execute the schema-selected transition through the production Worker Program v2 component guest: canonical frame strings plus an opaque move-only owner, host-side nominal validation/injection/observation, explicit v2 preparation, source and package parity, and the interruptible source profile with distinct bounded outcomes. r[K-PROG-09] r[P-PREPARE-03] r[H-LIMIT-02]
+
 - [ ] [serial] Run real guest/component outcomes, native task owner/cancel/suspension and correlated omission-aware observation with MW2 owner; prove exact WORKER-02..07/09/10/12 scenarios before any state promotion. r[K-PROG-09] r[K-CHECK-07]
 - [ ] [serial] Exercise changed CLI/guest path, run scoped tests and pinned source-bound gates only in granted heavy window; preserve pure Worker v1 and existing accepted WORKER-08 evidence. r[K-EFFECT-05]

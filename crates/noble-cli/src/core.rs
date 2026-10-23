@@ -16,6 +16,7 @@ mod worker_candidate;
 pub(crate) mod worker_package;
 pub(crate) mod worker_program;
 mod worker_program_guest;
+mod worker_program_transition;
 mod worker_reflect;
 pub(crate) mod worker_scalar;
 mod worker_send;
@@ -74,10 +75,22 @@ pub const USAGE: &str = "usage:
   a self call); host-bound Programs may not.
   Selected pure WIT owner invokes the actual checked named Program cell in a
   fresh, bounded source Wasm instance. Guest source and component are rebuilt;
-  this source-only path is not yet execution evidence without scoped Wasm tests.
+  the scoped Worker gates retain the execution evidence.
   noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure
   Freshly import a checked pure package graph and invoke its selected installed
   Program cell through the same WIT owner; package bytes are not executable.
+  noble worker program prepare-transition SOURCE --name NAME --schema SCHEMA --out PACKAGE --effect-ceiling pure
+  Explicit Worker Program v2 host preparation: check the schema, root, closure
+  and transition interface, compile once under the interruptible profile,
+  encode and re-admit the package, then publish only a new destination file.
+  It starts no engine and reports a separate service trace.
+  noble worker program guest-transition SOURCE --name NAME --schema SCHEMA --state STATE --event EVENT --effect-ceiling pure
+  noble worker program guest-transition-package PACKAGE --schema SCHEMA --state STATE --event EVENT --effect-ceiling pure
+  Run a schema-selected State Event -- State List<Action> transition through
+  a fixed WIT guest. WIT carries canonical frame strings and a move-only owner;
+  the host validates every nominal against its selected WorkerData@1 catalog,
+  injects typed runtime cells, observes State and List<Action>, and publishes
+  typed output only on normal return. Source and package routes are equivalent.
   noble worker program import PACKAGE --effect-ceiling pure [--work N] [--schema SCHEMA]
   Freshly recheck a finite local v2 package's source, complete named closure
   and checked recipe; Text aliases require fresh installed-cell rechecking.
@@ -102,6 +115,10 @@ pub const USAGE: &str = "usage:
   cancellation. The record keeps invocation and attempt correlation, counts
   and kernel outcomes; rows beyond the selected bound (6 for -rows) and a
   diagnostic beyond its bound (48 bytes for -diagnostic) are marked omitted.
+  noble worker program test-host transition-normal|transition-cancel|transition-deadline|transition-trap|transition-exhausted < FIXTURE_SOURCE
+  Run host-selected controls through the same transition WIT guest. Each
+  reports source interruption checks (maximum interval eight), distinct
+  primary outcomes, and no typed output for non-normal outcomes.
   noble worker program test-host export|export-denied|optimizer|reflect-prepare < FIXTURE_SOURCE
   Check the built-in recursive Program with a Text capture. export builds the
   grant for its own destination from the checked source and capture digests

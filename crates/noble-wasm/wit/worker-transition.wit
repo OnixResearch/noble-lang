@@ -1,0 +1,12 @@
+package noble-test:worker-transition@1.0.0;
+
+interface programs {
+  resource program;
+  admit: func() -> own<program>;
+  invoke: func(state: string, event: string, value: own<program>) -> string;
+}
+
+world guest {
+  import programs;
+  export step: func(state: string, event: string) -> string;
+}

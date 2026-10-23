@@ -22,6 +22,7 @@ pub(crate) enum Refusal {
 
 /// Construct these entries only from independently checked ModuleSession
 /// declarations. Visibility is checked against exported constructor words.
+#[derive(Clone)]
 pub(crate) struct Schema {
     pub(crate) ty: Ty,
     opaque_public: bool,

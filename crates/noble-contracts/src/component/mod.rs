@@ -183,6 +183,10 @@ pub struct World {
     checked_u64: bool,
     worker_program_kind: Option<noble_kernel::types::ResourceKind>,
     worker_program_effect: Option<noble_kernel::types::EffId>,
+    /// Opaque move-only owner for a host-typed transition Program. Unlike the
+    /// I64 Program world, the guest sees only this Resource: canonical frame
+    /// strings are typed independently by the selected host schema.
+    worker_transition_kind: Option<noble_kernel::types::ResourceKind>,
     limits: crate::Limits,
 }
 
@@ -255,6 +259,66 @@ impl World {
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_SEND))
     }
 
+    /// Select the frame-transport Worker transition world only for the exact
+    /// host-checked `State Event -- State List<Action> ! {}` Program. WIT
+    /// strings and the opaque owner carry no schema authority; the embedder
+    /// validates both frames against `state`, `event` and `action`.
+    pub fn select_worker_transition(
+        mut self,
+        source: &crate::source::CheckedProgramInterface,
+        state: &noble_kernel::types::Ty,
+        event: &noble_kernel::types::Ty,
+        action: &noble_kernel::types::Ty,
+    ) -> Result<Self, Error> {
+        let expected = noble_kernel::types::Ty::program(
+            alloc::vec![state.clone(), event.clone()],
+            alloc::vec![
+                state.clone(),
+                noble_kernel::types::Ty::List(alloc::boxed::Box::new(action.clone())),
+            ],
+            noble_kernel::types::EffSet::empty(),
+        );
+        if source.ty() != expected
+            || self.identity != "noble-test:worker-transition/guest@1.0.0"
+            || self.asynchronous
+            || self.checked_u64
+        {
+            return Err(unsupported(
+                "Worker transition WIT requires the checked schema Program",
+            ));
+        }
+        let mut matches = self.resources.iter().filter(|resource| {
+            resource.identity == "noble-test:worker-transition/programs@1.0.0#program"
+        });
+        let resource = matches
+            .next()
+            .ok_or_else(|| unsupported("selected transition Program resource is absent"))?;
+        if matches.next().is_some() {
+            return Err(invalid("duplicate transition Program resource"));
+        }
+        let kind = resource.kind;
+        if self.resources.len() != 1
+            || self.imports.len() != 2
+            || self.exports.len() != 1
+            || self.imports[0].identity != "noble-test:worker-transition/programs@1.0.0#admit"
+            || !self.imports[0].parameters.is_empty()
+            || self.imports[0].results != [Type::Own(kind)]
+            || self.imports[1].identity != "noble-test:worker-transition/programs@1.0.0#invoke"
+            || self.imports[1].parameters != [Type::String, Type::String, Type::Own(kind)]
+            || self.imports[1].results != [Type::String]
+            || self.exports[0].identity != "noble-test:worker-transition/guest@1.0.0#step"
+            || self.exports[0].parameters != [Type::String, Type::String]
+            || self.exports[0].results != [Type::String]
+        {
+            return Err(unsupported(
+                "Worker transition WIT operation or ownership shape differs",
+            ));
+        }
+        self.worker_transition_kind = Some(kind);
+        attempt!(bindings::make(&self));
+        Ok(self)
+    }
+
     #[expect(
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
@@ -308,6 +372,9 @@ impl World {
 
     pub const fn worker_program_kind(&self) -> Option<noble_kernel::types::ResourceKind> {
         self.worker_program_kind
+    }
+    pub const fn worker_transition_kind(&self) -> Option<noble_kernel::types::ResourceKind> {
+        self.worker_transition_kind
     }
     /// Checked unsigned projection and Worker Program typing require explicit
     /// selection; neither installs a host operation or an executable cell.

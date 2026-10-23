@@ -54,7 +54,7 @@ pub(super) fn exports(
         attempt!(super::get_global(out, index));
         attempt!(out.append(b")))\n"));
     }
-    out.append(b"(i32.const 0))\n\
+    attempt!(out.append(b"(i32.const 0))\n\
 (func (export \"worker_invoke\") (param $handle i32) (param $operand i64) (result i64)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n (i32.or (global.get $sp) (global.get $cp)))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\
@@ -66,11 +66,32 @@ pub(super) fn exports(
 (call $enqueue_program (local.get $handle))\n(call $dispatch)\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\
 (if (i32.ne (global.get $sp) (i32.const 1))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
-(call $pop_kind (i32.const 1)))\n\
-(func (export \"worker_compose\") (param $left i32) (param $right i32) (result i32)\n\
+(call $pop_kind (i32.const 1)))\n"));
+    if plan.worker_interruption {
+        // A transition host injects two checked data values first and reads
+        // two checked results afterwards. This stack entry is exposed only
+        // in the interruptible worker profile.
+        attempt!(out.append(b"(func (export \"worker_invoke_stack\") (param $handle i32) (param $inputs i32) (param $outputs i32) (result i32)\n\
+(if (i32.or (i32.eqz (global.get $worker_installed))\n\
+ (i32.or (global.get $cp) (i32.ne (global.get $sp) (local.get $inputs))))\n\
+ (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
+(if (global.get $failure) (then (return (global.get $failure))))\n\
+(if (i32.ne (call $kind (local.get $handle)) (i32.const 4))\n\
+ (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
+(global.set $phase (i32.const 1))\n\
+(call $enqueue_program (local.get $handle))\n\
+(call $dispatch)\n\
+(if (global.get $failure) (then (return (global.get $failure))))\n\
+(if (i32.ne (global.get $sp) (local.get $outputs))\n\
+ (then (call $fail (i32.const 4))))\n\
+(global.get $failure))\n"));
+    }
+    out.append(
+        b"(func (export \"worker_compose\") (param $left i32) (param $right i32) (result i32)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n\
  (i32.or (global.get $sp) (global.get $cp)))\n\
  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n\
 (if (global.get $failure) (then (return (i32.const 0))))\n\
-(call $compose (local.get $left) (local.get $right)))\n")
+(call $compose (local.get $left) (local.get $right)))\n",
+    )
 }

@@ -54,3 +54,25 @@ An opted Worker Program v2 exporter MUST require explicit authorization for both
 - GIVEN a valid checked Program capturing synthetic private Text and a denied destination/capture-specific export grant
 - WHEN the guest requests export
 - THEN exactly the request is observable, no package or capture bytes are published and no protected export operation is admitted; denial cannot become source-check failure or a successful no-op
+
+### Requirement: P-PREPARE-03
+r[P-PREPARE-03]
+
+For a schema-selected Worker Program v2 transition, the explicit host preparation service MUST take only candidate source bytes. The host MUST select the exact WorkerData@1 schema, `State Event -- State List<Action> ! {}` interface, root, limits, package encoding and a new destination. It MUST complete the same schema, root, closure and interface checks as execution, compile once under the interruptible profile, encode and locally re-admit the package before create-new publication, start no engine and run no candidate body. Its service trace MUST remain separate from evaluation. A minimal host need not expose preparation as a guest operation.
+
+#### Scenario: v2 transition preparation is separate
+
+- GIVEN the exact WorkerData@1 schema and transition source, a new destination and sufficient limits
+- WHEN the host prepares the transition, then a separate process imports and executes the package
+- THEN preparation reports its two input reads, three source checks, one closure walk, one compilation, one package write and zero engines, while evaluation performs no preparation request and produces the expected typed transition output
+
+### Requirement: H-LIMIT-02
+r[H-LIMIT-02]
+
+For schema-selected Worker Program v2 transitions, revision `worker-program-v2/wasmtime-40.0.2/step-4096/interrupt-8/fuel-10000000` MUST retain the source runtime's 4,096-unit execution and observation ceilings and an interruption point every eighth charged unit. The host MUST record the maximum interval and select continue, cancel or deadline. Wasmtime fuel and epoch MUST remain independent engine-level backstops. Normal, runtime exhaustion, cancellation, host deadline and guest trap MUST be distinct primary outcomes; only normal return may publish typed output. Native-work ownership and permitted suspension remain obligations of the separate MW2 native-async profile.
+
+#### Scenario: v2 transition bounded outcomes
+
+- GIVEN one admitted schema transition and host-selected normal, cancellation, immediate-deadline, trap and over-budget controls
+- WHEN each runs through the same production component guest and installed Program cell
+- THEN every run reports at most eight charged units between checks, the matching primary outcome, one consumed Program owner, zero effect/protected requests, and typed output only for normal return

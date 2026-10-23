@@ -29,6 +29,7 @@ const BUILTIN_COUNT: u32 = 22;
 pub(super) const RUNTIME_REQUEST_WORK: usize = 50_000_000;
 const PACKAGE_REVISION: &str = "0.1.0-draft.12";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
+const TRANSITION_WIT_WORLD: &str = "noble-test:worker-transition/guest@1.0.0";
 /// P-ID-04: no canonical byte format, encoding version or test vectors are
 /// specified, so a program-value identity is local and experimental.
 const IDENTITY_LABEL: &str = "worker-program-value-experimental-v1";
@@ -132,11 +133,12 @@ pub(crate) enum HostInterface<'selection> {
 
 /// A host-selected `WorkerData@1` schema module, checked and committed in the
 /// Program's session before its root.
-struct SelectedSchema {
-    source: Vec<u8>,
-    catalog: Vec<super::worker_value::Schema>,
+#[derive(Clone)]
+pub(super) struct SelectedSchema {
+    pub(super) source: Vec<u8>,
+    pub(super) catalog: Vec<super::worker_value::Schema>,
     /// State, Event, Action and AttemptId, resolved from the schema's exports.
-    types: [Ty; 4],
+    pub(super) types: [Ty; 4],
 }
 
 /// A host-selected dependency module retained with a Program admitted from
@@ -517,7 +519,11 @@ impl Store {
             return Err(Refusal::Invalid);
         }
         // Signed recursion compiles only through the sealed rederivation.
-        let compiler = noble_wasm::source::Compiler::new_worker();
+        let compiler = if schema.is_some() {
+            noble_wasm::source::Compiler::new_interruptible_worker()
+        } else {
+            noble_wasm::source::Compiler::new_worker()
+        };
         let compiled = match prepared.signed_source_owner() {
             Some(signed) => compiler.prepare_worker_signed(&signed),
             None => compiler.prepare(submission),
@@ -759,6 +765,9 @@ impl Store {
     pub(crate) fn host_policy(&self) -> Option<&super::worker_program_guest::WorkerHostPolicy> {
         self.host_policy.as_ref()
     }
+    pub(super) fn transition_schema(&self) -> Option<&SelectedSchema> {
+        self.schema.as_ref()
+    }
     pub(crate) fn text_aliases(&self) -> &[CheckedTextAlias] {
         &self.text_aliases
     }
@@ -864,10 +873,14 @@ impl Store {
     /// creation still requires source-to-installed-cell correspondence and a
     /// host owner table in the selected component instance.
     pub(crate) fn selected_world(&self) -> Result<noble_contracts::component::World, Refusal> {
-        // The selected guest world maps only I64 Programs; a transition over
-        // a host-selected schema has no WIT mapping yet.
-        if self.schema.is_some() {
-            return Err(Refusal::Unsupported);
+        if let Some(selected) = &self.schema {
+            let bytes = include_bytes!("../../../noble-wasm/wit/worker-transition.wit");
+            let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
+                .map_err(|_| Refusal::Unsupported)?;
+            let [state, event, action, _] = &selected.types;
+            return world
+                .select_worker_transition(&self.checked_interface, state, event, action)
+                .map_err(|_| Refusal::Invalid);
         }
         let bytes = include_bytes!("../../../noble-wasm/wit/worker-program.wit");
         let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
@@ -1030,7 +1043,7 @@ impl Store {
         Ok(json!({
             "format":"noble-worker-program-package/v2",
             "semantic_revision":PACKAGE_REVISION,
-            "wit_world":WIT_WORLD,
+            "wit_world":if self.schema.is_some() { TRANSITION_WIT_WORLD } else { WIT_WORLD },
             "source_utf8":source,
             "root":{"name":self.root_name,"owner":self.root_owner.wire(),
                 "recipe_sha256":crate::workflow::intrinsic::sha256(&target.checked_recipe)},
@@ -1305,9 +1318,14 @@ impl Store {
         if serde_json::to_vec(&document).map_err(|_| Refusal::Invalid)? != bytes {
             return Err(Refusal::Invalid);
         }
+        let expected_world = if schema.is_some() {
+            TRANSITION_WIT_WORLD
+        } else {
+            WIT_WORLD
+        };
         if document["format"] != "noble-worker-program-package/v2"
             || document["semantic_revision"] != PACKAGE_REVISION
-            || document["wit_world"] != WIT_WORLD
+            || document["wit_world"] != expected_world
         {
             return Err(Refusal::Unsupported);
         }
@@ -2294,6 +2312,222 @@ fn guest_package(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static st
     guest_report(&mut store, root, operand, "fresh-package")
 }
 
+fn transition_files(
+    schema: &std::ffi::OsStr,
+    state: &std::ffi::OsStr,
+    event: &std::ffi::OsStr,
+) -> Result<(Vec<u8>, String, String), (&'static str, &'static str)> {
+    let schema = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(schema),
+        SOURCE_LIMITS.bytes as usize,
+    )
+    .map_err(|_| ("invalid-input", "schema file admission failed"))?;
+    let frame = |path: &std::ffi::OsStr| {
+        super::worker_typed::read_bounded_regular_file(
+            std::path::Path::new(path),
+            SOURCE_LIMITS.bytes as usize,
+        )
+        .map_err(|_| ("invalid-input", "transition frame admission failed"))
+        .and_then(|bytes| {
+            String::from_utf8(bytes).map_err(|_| ("invalid-input", "transition frame is not UTF-8"))
+        })
+    };
+    Ok((schema, frame(state)?, frame(event)?))
+}
+
+fn guest_transition(
+    arguments: &[std::ffi::OsString],
+) -> Result<Value, (&'static str, &'static str)> {
+    const USAGE: &str = "usage: noble worker program guest-transition SOURCE --name NAME --schema SCHEMA --state STATE --event EVENT --effect-ceiling pure";
+    if arguments.len() != 14
+        || arguments[4] != "--name"
+        || arguments[6] != "--schema"
+        || arguments[8] != "--state"
+        || arguments[10] != "--event"
+        || arguments[12] != "--effect-ceiling"
+        || arguments[13] != "pure"
+    {
+        return Err(("invalid-input", USAGE));
+    }
+    let name = arguments[5]
+        .to_str()
+        .ok_or(("invalid-input", "invalid named transition Program"))?;
+    let source = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]),
+        SOURCE_LIMITS.bytes as usize,
+    )
+    .map_err(|_| ("invalid-input", "source file admission failed"))?;
+    let (schema, state, event) = transition_files(&arguments[7], &arguments[9], &arguments[11])?;
+    let mut trace = AdmissionTrace::default();
+    let (mut store, root) =
+        Store::prepare_transition(&source, name, &schema, RUNTIME_REQUEST_WORK, &mut trace)
+            .map_err(refusal)?;
+    transition_report(&mut store, root, state, event, "source", &schema)
+}
+
+fn guest_transition_package(
+    arguments: &[std::ffi::OsString],
+) -> Result<Value, (&'static str, &'static str)> {
+    const USAGE: &str = "usage: noble worker program guest-transition-package PACKAGE --schema SCHEMA --state STATE --event EVENT --effect-ceiling pure";
+    if arguments.len() != 12
+        || arguments[4] != "--schema"
+        || arguments[6] != "--state"
+        || arguments[8] != "--event"
+        || arguments[10] != "--effect-ceiling"
+        || arguments[11] != "pure"
+    {
+        return Err(("invalid-input", USAGE));
+    }
+    let package = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]),
+        PACKAGE_BYTES,
+    )
+    .map_err(|_| ("invalid-input", "package file admission failed"))?;
+    let (schema, state, event) = transition_files(&arguments[5], &arguments[7], &arguments[9])?;
+    let mut trace = AdmissionTrace::default();
+    let (mut store, root) =
+        Store::import_transition(&package, &schema, RUNTIME_REQUEST_WORK, &mut trace)
+            .map_err(refusal)?;
+    transition_report(&mut store, root, state, event, "fresh-package", &schema)
+}
+
+fn publish_new(
+    destination: &std::path::Path,
+    bytes: &[u8],
+) -> Result<(), (&'static str, &'static str)> {
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(destination)
+        .map_err(|error| {
+            if error.kind() == std::io::ErrorKind::AlreadyExists {
+                ("invalid-input", "package destination already exists")
+            } else {
+                ("invalid-input", "package destination cannot be created")
+            }
+        })?;
+    std::io::Write::write_all(&mut file, bytes)
+        .map_err(|_| ("invalid-input", "package destination write failed"))
+}
+
+fn prepare_transition_package(
+    arguments: &[std::ffi::OsString],
+) -> Result<Value, (&'static str, &'static str)> {
+    const USAGE: &str = "usage: noble worker program prepare-transition SOURCE --name NAME --schema SCHEMA --out PACKAGE --effect-ceiling pure";
+    if arguments.len() != 12
+        || arguments[4] != "--name"
+        || arguments[6] != "--schema"
+        || arguments[8] != "--out"
+        || arguments[10] != "--effect-ceiling"
+        || arguments[11] != "pure"
+    {
+        return Err(("invalid-input", USAGE));
+    }
+    let name = arguments[5]
+        .to_str()
+        .ok_or(("invalid-input", "invalid named transition Program"))?;
+    let source = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]),
+        SOURCE_LIMITS.bytes as usize,
+    )
+    .map_err(|_| ("invalid-input", "source file admission failed"))?;
+    let schema = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[7]),
+        SOURCE_LIMITS.bytes as usize,
+    )
+    .map_err(|_| ("invalid-input", "schema file admission failed"))?;
+    let mut trace = AdmissionTrace::default();
+    let (mut store, root) =
+        Store::prepare_transition(&source, name, &schema, RUNTIME_REQUEST_WORK, &mut trace)
+            .map_err(refusal)?;
+    let source_sha256 = crate::workflow::intrinsic::sha256(&source);
+    let capture_sha256 = store.capture_digest().map_err(refusal)?;
+    let destination = std::path::Path::new(&arguments[9]);
+    let destination_text = destination.to_string_lossy();
+    let grant = ExportGrant {
+        destination: &destination_text,
+        source_sha256: &source_sha256,
+        capture_sha256: &capture_sha256,
+        allowed: true,
+    };
+    let package =
+        store
+            .export(root, &destination_text, &grant)
+            .map_err(|problem| match problem {
+                ExportRefusal::Denied => ("denied", "transition export grant denied"),
+                ExportRefusal::Refused(problem) => refusal(problem),
+            })?;
+    // Re-admit the exact bytes before publication. A package digest or the
+    // successful source check does not transfer acceptance.
+    let mut import_trace = AdmissionTrace::default();
+    Store::import_transition(&package, &schema, RUNTIME_REQUEST_WORK, &mut import_trace)
+        .map_err(refusal)?;
+    publish_new(destination, &package)?;
+    Ok(json!({
+        "schema":"noble-worker-program-preparation/v1","stage":"publish",
+        "outcome":"ready","service":"worker-program-v2-prepare-transition",
+        "interface":"State Event -- State List<Action> ! {}","root_export":name,
+        "candidate_source_sha256":source_sha256,
+        "schema_source_sha256":crate::workflow::intrinsic::sha256(&schema),
+        "module_wat_sha256":crate::workflow::intrinsic::sha256(store.wat()),
+        "package_sha256":crate::workflow::intrinsic::sha256(&package),
+        "package_bytes":package.len(),
+        "service_effects":{"input_files_read":2,"source_checks":3,
+            "closure_walks":1,"backend_compilations":store.compilations(),
+            "package_writes":1,"engines_started":0},
+        "admission":{"source_installations":import_trace.installations,
+            "checking_work_shared":import_trace.checking_work_shared,
+            "checking_work_left":import_trace.checking_work_left}
+    }))
+}
+
+fn transition_report(
+    store: &mut Store,
+    root: Handle,
+    state: String,
+    event: String,
+    origin: &'static str,
+    schema: &[u8],
+) -> Result<Value, (&'static str, &'static str)> {
+    let world = store.selected_world().map_err(refusal)?;
+    let build_context = crate::workflow::intrinsic::sha256(&world.build_context());
+    let wat_sha256 = crate::workflow::intrinsic::sha256(store.wat());
+    let observed = super::worker_program_guest::execute_transition(store, root, state, event)
+        .map_err(|failure| match failure {
+            super::worker_program_guest::GuestFailure::Exhausted => refusal(Refusal::Exhausted),
+            super::worker_program_guest::GuestFailure::Invalid(_) => (
+                "invalid-input",
+                "source-bound Worker transition installation or execution refused",
+            ),
+        })?;
+    let guest_requests = observed
+        .admits
+        .checked_add(observed.invokes)
+        .and_then(|count| count.checked_add(observed.effect_requests))
+        .ok_or(("internal-failure", "transition request counter overflow"))?;
+    Ok(json!({
+        "schema":"noble-worker-program-transition/v1","stage":"guest-execution",
+        "outcome":observed.outcome,"origin":origin,
+        "source_sha256":crate::workflow::intrinsic::sha256(store.source()),
+        "schema_source_sha256":crate::workflow::intrinsic::sha256(schema),
+        "module_wat_sha256":wat_sha256,"guest_build_context_sha256":build_context,
+        "execution_profile":{"revision":"worker-program-v2/wasmtime-40.0.2/step-4096/interrupt-8/fuel-10000000",
+            "source_steps":4096,"interruption_interval":8,"fuel":super::worker_program_guest::FUEL},
+        "interruption":{"checks":observed.interruption_checks,
+            "observed_max_guest_work_between_checks":observed.observed_max_interval},
+        "fuel_used":observed.fuel_used,"quota_reason":observed.quota_reason,
+        "typed_output":observed.output.as_ref().map(|output| json!({
+            "state":output.state,"actions":output.actions})),
+        "guest_frame_sha256":observed.output.as_ref().map(|output|
+            crate::workflow::intrinsic::sha256(output.encoded.as_bytes())),
+        "guest_requests":guest_requests,"program_admissions":observed.admits,
+        "program_invocations":observed.invokes,"effect_requests":observed.effect_requests,
+        "protected_operations":observed.protected_operations,
+        "live_owners":observed.live_owners,"executable_guest_installed":true,
+        "ownership_disposition":"delivered-no-guest-owner"
+    }))
+}
+
 fn guest_report(
     store: &mut Store,
     root: Handle,
@@ -2346,6 +2580,9 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             Some("check") => return check(arguments),
             Some("guest") => return guest(arguments),
             Some("guest-package") => return guest_package(arguments),
+            Some("guest-transition") => return guest_transition(arguments),
+            Some("guest-transition-package") => return guest_transition_package(arguments),
+            Some("prepare-transition") => return prepare_transition_package(arguments),
             _ => {}
         }
         if arguments.len() != 8
@@ -3650,11 +3887,11 @@ mod tests {
         }
     }
 
-    /// The selected WIT guest world maps only I64 Programs; a transition is
-    /// refused as unsupported before any guest is installed.
+    /// The schema transition crosses a fixed WIT guest as canonical frames
+    /// plus one move-only owner; the host performs all nominal typing.
     #[test]
-    fn transition_program_guest_execution_is_unsupported() {
-        let (store, root) = Store::prepare_transition(
+    fn transition_program_executes_through_the_typed_component_guest() {
+        let (mut store, root) = Store::prepare_transition(
             WORKER_TRANSITION,
             "transition",
             WORKER_SCHEMA,
@@ -3663,6 +3900,22 @@ mod tests {
         )
         .unwrap();
         assert!(store.require_selected_root(root).is_ok());
-        assert_eq!(store.selected_world().err(), Some(Refusal::Unsupported));
+        let world = store.selected_world().unwrap();
+        assert_eq!(world.identity(), TRANSITION_WIT_WORLD);
+        let observed = super::super::worker_program_guest::execute_transition(
+            &mut store,
+            root,
+            include_str!("../../tests/fixtures/worker-state.json").to_owned(),
+            include_str!("../../tests/fixtures/worker-submit.json").to_owned(),
+        )
+        .unwrap();
+        assert_eq!(observed.outcome, "normal");
+        let output = observed.output.unwrap();
+        assert_eq!(output.state["value"]["left"]["value"], "1");
+        assert_eq!(output.actions["items"].as_array().map(Vec::len), Some(1));
+        assert_eq!(observed.admits, 1);
+        assert_eq!(observed.invokes, 1);
+        assert_eq!(observed.live_owners, 0);
+        assert_eq!(observed.observed_max_interval, 8);
     }
 }

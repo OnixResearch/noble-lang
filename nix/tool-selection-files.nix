@@ -268,6 +268,7 @@
   "crates/noble-wasm/src/source/transaction.rs"
   "crates/noble-wasm/wit/worker-program.wit"
   "crates/noble-wasm/wit/worker-send.wit"
+  "crates/noble-wasm/wit/worker-transition.wit"
   "verification/worker-send/peer/src/host.rs"
   "verification/worker-send/peer/src/main.rs"
   "verification/worker-send/peer/src/verified.rs"

@@ -37,6 +37,13 @@ impl super::World {
             } else {
                 0
             })
+            .saturating_add(if self.worker_transition_kind.is_some() {
+                b"worker-program-v2:transition-frames"
+                    .len()
+                    .saturating_add(5)
+            } else {
+                0
+            })
             .saturating_add(abi.len())
             .saturating_add(self.identity.len())
             .saturating_add(self.wit.len())
@@ -52,6 +59,11 @@ impl super::World {
         }
         if let Some(kind) = self.worker_program_kind {
             key.extend_from_slice(worker_schema);
+            key.extend_from_slice(&kind.0.to_le_bytes());
+            key.push(0);
+        }
+        if let Some(kind) = self.worker_transition_kind {
+            key.extend_from_slice(b"worker-program-v2:transition-frames");
             key.extend_from_slice(&kind.0.to_le_bytes());
             key.push(0);
         }

@@ -13,6 +13,7 @@ use wasmtime::{
 use super::worker_program::{Handle, Refusal, Store as ProgramStore};
 
 const INTERFACE: &str = "noble-test:worker-program/programs@2.0.0";
+const TRANSITION_INTERFACE: &str = "noble-test:worker-transition/programs@1.0.0";
 pub(super) const FUEL: u64 = 10_000_000;
 pub(super) const EFFECT_REQUEST_LIMIT: u32 = 256;
 const EFFECT_TEXT_LIMIT: usize = 65_536;
@@ -671,13 +672,13 @@ impl TaskOwner {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct ProgramCell {
-    scope: u64,
-    address: u32,
-    definition_identity: u64,
-    capture_hash: [u8; 32],
+pub(super) struct ProgramCell {
+    pub(super) scope: u64,
+    pub(super) address: u32,
+    pub(super) definition_identity: u64,
+    pub(super) capture_hash: [u8; 32],
     // An address/source can recur in a fresh Wasmtime Store. This token cannot.
-    installation: u64,
+    pub(super) installation: u64,
 }
 /// Created before starting a task or installing a cell. The exact issue is
 /// recorded here before publication, so even an unwind during issuance
@@ -722,7 +723,7 @@ struct Installed {
     instance: wasmtime::Instance,
     cell: ProgramCell,
 }
-struct Host {
+pub(super) struct Host {
     table: ResourceTable,
     installed: Option<Installed>,
     export_capture: Option<ProgramCell>,
@@ -737,6 +738,7 @@ struct Host {
     protected_operations: u32,
     code_export_requests: u32,
     code_export_denials: u32,
+    pub(super) transition: Option<super::worker_program_transition::TransitionState>,
 }
 #[expect(
     tigerstyle::type_accumulation,
@@ -868,6 +870,21 @@ fn denied_code_export_bound(mut caller: Caller<'_, Host>, _slot: i32) -> i32 {
     1
 }
 
+/// Source-runtime interruption point for schema-selected transition Stores.
+/// It records the interval in source accounting units and returns the
+/// interruptible profile's continue/cancel/deadline decision.
+fn worker_interrupt_check(mut caller: Caller<'_, Host>, total: i32) -> i32 {
+    let total = match u32::try_from(total) {
+        Ok(total) => total,
+        Err(_) => return 3,
+    };
+    let cancelled = caller.data().task.cancelled().unwrap_or(true);
+    match caller.data_mut().transition.as_mut() {
+        Some(transition) => transition.interrupt(total, cancelled),
+        None => 3,
+    }
+}
+
 /// Fresh memory/table/globals are kept in this one Store for this one source
 /// compiler artifact. A forged extra import cannot be satisfied or guessed.
 fn install_core(store: &mut Store<Host>, module: &Module) -> Result<wasmtime::Instance> {
@@ -930,6 +947,11 @@ fn install_core(store: &mut Store<Host>, module: &Module) -> Result<wasmtime::In
                         .is_some_and(|policy| policy.binding().operation == "test.send") =>
             {
                 linker.func_wrap("noble", name, bound_send)?;
+            }
+            ExternType::Func(_)
+                if name == "worker_interrupt_check" && store.data().transition.is_some() =>
+            {
+                linker.func_wrap("noble", name, worker_interrupt_check)?;
             }
             _ => bail!("unapproved Worker source Wasm import {name}"),
         }
@@ -1274,11 +1296,21 @@ fn bind_installed(
         Some(policy) => noble_kernel::types::EffSet::from_ids(&policy.binding().effects),
         None => noble_kernel::types::EffSet::empty(),
     };
+    let interface_matches = match source.transition_schema() {
+        Some(selected) => {
+            let [state, event, action, _] = &selected.types;
+            input == [state.clone(), event.clone()]
+                && output
+                    == [
+                        state.clone(),
+                        noble_kernel::types::Ty::List(Box::new(action.clone())),
+                    ]
+        }
+        None => input == [noble_kernel::types::Ty::I64] && output == [noble_kernel::types::Ty::I64],
+    };
     ensure!(
-        input == [noble_kernel::types::Ty::I64]
-            && output == [noble_kernel::types::Ty::I64]
-            && effects == &selected_effects,
-        "guest requires the exact host-selected I64 Program witness"
+        interface_matches && effects == &selected_effects,
+        "guest requires the exact host-selected Program witness"
     );
     let capture_hash = text_alias_hash(store, instance, source)?;
     let mut cells = Vec::with_capacity(source.recipe_nodes());
@@ -1494,6 +1526,92 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                     }
                 }
             }
+            wasmtime::component::types::ComponentItem::ComponentInstance(interface)
+                if name == TRANSITION_INTERFACE =>
+            {
+                let mut imports = linker.instance(name)?;
+                imports.resource(
+                    "program",
+                    ResourceType::host::<ProgramCell>(),
+                    |mut store, rep| {
+                        store
+                            .data_mut()
+                            .release(Resource::<ProgramCell>::new_own(rep))?;
+                        Ok(())
+                    },
+                )?;
+                for (function, item) in interface.exports(engine) {
+                    match item {
+                        wasmtime::component::types::ComponentItem::ComponentFunc(_)
+                            if function == "admit" =>
+                        {
+                            imports.func_wrap("admit", |mut cx, (): ()| {
+                                ensure!(!cx.data().task.cancelled()?, "Program task cancelled");
+                                let installed = cx
+                                    .data()
+                                    .installed
+                                    .context("uninstalled transition source")?;
+                                ensure!(
+                                    installed.cell.scope == cx.data().scope
+                                        && cx.data().transition.is_some(),
+                                    "foreign or untyped transition Program"
+                                );
+                                let host = cx.data_mut();
+                                let cell = host.table.push(installed.cell)?;
+                                host.admits = host
+                                    .admits
+                                    .checked_add(1)
+                                    .context("Program admission count overflow")?;
+                                host.live_owners = host
+                                    .live_owners
+                                    .checked_add(1)
+                                    .context("Program owner count overflow")?;
+                                Ok((cell,))
+                            })?;
+                        }
+                        wasmtime::component::types::ComponentItem::ComponentFunc(_)
+                            if function == "invoke" =>
+                        {
+                            imports.func_wrap(
+                                "invoke",
+                                |mut cx,
+                                 (state, event, owner): (
+                                    String,
+                                    String,
+                                    Resource<ProgramCell>,
+                                )| {
+                                    let cell = cx.data_mut().release(owner)?;
+                                    ensure!(!cx.data().task.cancelled()?, "Program task cancelled");
+                                    let installed = cx
+                                        .data()
+                                        .installed
+                                        .context("uninstalled transition source")?;
+                                    ensure!(
+                                        cell.scope == cx.data().scope && cell == installed.cell,
+                                        "foreign or stale transition Program owner"
+                                    );
+                                    let host = cx.data_mut();
+                                    host.invokes = host
+                                        .invokes
+                                        .checked_add(1)
+                                        .context("Program invocation count overflow")?;
+                                    let result = super::worker_program_transition::invoke(
+                                        &mut cx,
+                                        installed.instance,
+                                        cell,
+                                        &state,
+                                        &event,
+                                    )?;
+                                    Ok((result,))
+                                },
+                            )?;
+                        }
+                        wasmtime::component::types::ComponentItem::Resource(_)
+                            if function == "program" => {}
+                        _ => bail!("unapproved Worker transition import {function}"),
+                    }
+                }
+            }
             wasmtime::component::types::ComponentItem::Type(_) => {}
             _ => bail!("unapproved Worker component import {name}"),
         }
@@ -1516,6 +1634,20 @@ pub(super) struct Observation {
 pub(super) enum GuestFailure {
     Exhausted,
     Invalid(anyhow::Error),
+}
+
+pub(super) struct TransitionObservation {
+    pub(super) outcome: &'static str,
+    pub(super) output: Option<super::worker_program_transition::TransitionOutput>,
+    pub(super) admits: u32,
+    pub(super) invokes: u32,
+    pub(super) live_owners: u32,
+    pub(super) effect_requests: u32,
+    pub(super) protected_operations: u32,
+    pub(super) interruption_checks: u32,
+    pub(super) observed_max_interval: u32,
+    pub(super) fuel_used: u64,
+    pub(super) quota_reason: Option<i64>,
 }
 
 #[derive(Debug)]
@@ -1625,6 +1757,10 @@ fn instantiate_source(
             protected_operations: 0,
             code_export_requests: 0,
             code_export_denials: 0,
+            transition: source
+                .transition_schema()
+                .cloned()
+                .map(super::worker_program_transition::TransitionState::new),
         },
     );
     store.limiter(|host| &mut host.limits);
@@ -1787,6 +1923,154 @@ pub(super) fn execute(
         false,
     )
     .map_err(GuestFailure::Invalid)
+}
+
+/// Run one schema-selected transition through the fixed frame-transport WIT
+/// guest. The guest can only move the opaque Program owner and canonical
+/// strings; this host validates and constructs every typed value.
+pub(super) fn execute_transition(
+    source: &mut ProgramStore,
+    root: Handle,
+    state: String,
+    event: String,
+) -> std::result::Result<TransitionObservation, GuestFailure> {
+    execute_transition_controlled(
+        source,
+        root,
+        state,
+        event,
+        super::worker_program_transition::TransitionControl::PRODUCTION,
+    )
+}
+
+pub(super) fn execute_transition_controlled(
+    source: &mut ProgramStore,
+    root: Handle,
+    state: String,
+    event: String,
+    control: super::worker_program_transition::TransitionControl,
+) -> std::result::Result<TransitionObservation, GuestFailure> {
+    source
+        .reserve_guest()
+        .map_err(|_| GuestFailure::Exhausted)?;
+    let task = TaskOwner::for_source(source);
+    execute_transition_reserved(source, root, &task, state, event, control)
+        .map_err(GuestFailure::Invalid)
+}
+
+fn execute_transition_reserved(
+    source: &ProgramStore,
+    root: Handle,
+    task: &TaskOwner,
+    state: String,
+    event: String,
+    control: super::worker_program_transition::TransitionControl,
+) -> Result<TransitionObservation> {
+    ensure!(
+        source.transition_schema().is_some() && source.host_policy().is_none(),
+        "transition guest requires the selected pure schema Program"
+    );
+    let _scope = ExecutionScope::new(task, None);
+    let world = source
+        .selected_world()
+        .map_err(|_| anyhow::anyhow!("transition WIT binding refused"))?;
+    let checked = world
+        .prepare_export(
+            "step",
+            b"programs.admit programs.invoke",
+            super::worker_program::SOURCE_LIMITS,
+        )
+        .map_err(|_| anyhow::anyhow!("transition guest source check refused"))?;
+    let guest = noble_wasm::component::compile(&world, &[checked])
+        .map_err(|_| anyhow::anyhow!("transition guest compile refused"))?;
+    let component = crate::component::assemble_checked_world(&world, guest.wat())
+        .map_err(|_| anyhow::anyhow!("transition guest assembly refused"))?;
+    let mut config = Config::new();
+    config
+        .wasm_component_model(true)
+        .consume_fuel(true)
+        .epoch_interruption(true);
+    let engine = Engine::new(&config)?;
+    task.start(&engine)?;
+    let guest = Component::new(&engine, component)?;
+    let mut linker = Linker::new(&engine);
+    link(&engine, &guest, &mut linker)?;
+    let mut store = install_selected(&engine, source, root, task.clone())?;
+    store
+        .data_mut()
+        .transition
+        .as_mut()
+        .context("transition host state disappeared")?
+        .select_control(control);
+    store.set_fuel(FUEL)?;
+    let guest = linker.instantiate(&mut store, &guest)?;
+    let step = guest.get_typed_func::<(String, String), (String,)>(&mut store, "step")?;
+    let called = step.call(&mut store, (state, event));
+    if called.is_ok() {
+        step.post_return(&mut store)?;
+    }
+    let (outcome, output, quota_reason, interruption_checks, observed_max_interval) = {
+        let host = store.data();
+        let transition = host
+            .transition
+            .as_ref()
+            .context("transition host state disappeared")?;
+        let outcome = transition.outcome;
+        match (called, outcome) {
+            (Err(problem), None) => return Err(problem),
+            (Ok((encoded,)), Some("normal")) => {
+                let output = transition
+                    .output
+                    .as_ref()
+                    .context("transition returned no typed output")?;
+                ensure!(
+                    encoded == output.encoded,
+                    "guest output differs from host record"
+                );
+            }
+            (Err(_), Some("normal")) | (Ok(_), Some(_)) => {
+                bail!("transition component and source outcomes disagree")
+            }
+            (Err(_), Some(_)) => {}
+            (_, None) => bail!("transition source produced no outcome"),
+        }
+        ensure!(
+            host.admits == 1
+                && host.invokes == 1
+                && host.live_owners == 0
+                && host.effect_requests == 0
+                && host.protected_operations == 0,
+            "transition guest observations differ from the host record"
+        );
+        (
+            outcome.context("missing transition outcome")?,
+            transition.output.clone(),
+            transition.quota_reason,
+            transition.interruption.checks,
+            transition.interruption.max,
+        )
+    };
+    let remaining = store.get_fuel()?;
+    if outcome == "normal" {
+        task.complete(0)?;
+        task.recall(source.instance_id())?;
+    } else if outcome == "cancelled" {
+        task.cancel(source.instance_id())?;
+    }
+    let host = store.data();
+    Ok(TransitionObservation {
+        outcome,
+        output,
+        admits: host.admits,
+        invokes: host.invokes,
+        live_owners: host.live_owners,
+        effect_requests: host.effect_requests,
+        protected_operations: host.protected_operations,
+        interruption_checks,
+        observed_max_interval,
+        fuel_used: FUEL.saturating_sub(remaining),
+        quota_reason,
+    })
 }
 
 /// Only an embedder holding the selected policy may explicitly issue a fresh
@@ -1968,6 +2252,11 @@ const HOST_ALIAS_A: &[u8] = b"import Dep@1 as dep";
 const HOST_ALIAS_B: &[u8] = b"import Dep@2 as dep";
 const HOST_REBOUND_ROOT_SOURCE: &[u8] = b"module Worker@1 [ signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dep.dec count 1 + ] if ] ]";
 const HOST_REBOUND_CONTROL: &[u8] = b"module Worker@2 [ signature count forall<S:stack> [ S I64 -- S I64 ! pure ] export count def count [ dup 0 = [ 1 + ] [ dep.dec count 1 + ] if ] ]";
+const HOST_TRANSITION_SOURCE: &[u8] =
+    include_bytes!("../../tests/fixtures/worker-transition.noble");
+const HOST_TRANSITION_SCHEMA: &[u8] = include_bytes!("../../tests/fixtures/worker-data.noble");
+const HOST_TRANSITION_STATE: &[u8] = include_bytes!("../../tests/fixtures/worker-state.json");
+const HOST_TRANSITION_SUBMIT: &[u8] = include_bytes!("../../tests/fixtures/worker-submit.json");
 
 /// The synthetic ledger's exact host-selected `test.emit` bound adapter.
 fn emit_binding() -> noble_contracts::source::BoundOperation {
@@ -2209,6 +2498,76 @@ fn host_rebound() -> Result<serde_json::Value> {
         "before":before_row,"after":after_row,
         "substituted_dependency":substituted,
         "control":identity_row(&mut control, control_root)?,
+    }))
+}
+
+/// MW1 bounded transition controls selected by host mode before stdin. The
+/// candidate must equal the built-in Worker transition fixture.
+fn host_transition(mode: &str) -> Result<serde_json::Value> {
+    use super::worker_program::AdmissionTrace;
+    let fixture = if mode == "transition-exhausted" {
+        let program = format!("[ 1 + ] {}", "dup compose ".repeat(7));
+        format!(
+            "module worker@1 [ export transition def transition [ drop 0 {program}{} drop drop unit WorkerData@1.Action.Noop nil cons ] ]",
+            "dup [ run ] dip ".repeat(12)
+        )
+        .into_bytes()
+    } else {
+        HOST_TRANSITION_SOURCE.to_vec()
+    };
+    let source = preselected_candidate(&fixture)?;
+    let mut trace = AdmissionTrace::default();
+    let (mut store, root) = ProgramStore::prepare_transition(
+        &source,
+        "transition",
+        HOST_TRANSITION_SCHEMA,
+        super::worker_program::RUNTIME_REQUEST_WORK,
+        &mut trace,
+    )
+    .map_err(|problem| anyhow::anyhow!("transition candidate refused: {problem:?}"))?;
+    let control = match mode {
+        "transition-normal" => super::worker_program_transition::TransitionControl::PRODUCTION,
+        "transition-cancel" => super::worker_program_transition::TransitionControl {
+            cancel_at_check: Some(2),
+            trap_at_check: None,
+            deadline_ms: 60_000,
+        },
+        "transition-deadline" => super::worker_program_transition::TransitionControl {
+            cancel_at_check: None,
+            trap_at_check: None,
+            deadline_ms: 0,
+        },
+        "transition-trap" => super::worker_program_transition::TransitionControl {
+            cancel_at_check: None,
+            trap_at_check: Some(1),
+            deadline_ms: 60_000,
+        },
+        "transition-exhausted" => super::worker_program_transition::TransitionControl::PRODUCTION,
+        _ => anyhow::bail!("unsupported transition test-host mode"),
+    };
+    let observed = execute_transition_controlled(
+        &mut store,
+        root,
+        std::str::from_utf8(HOST_TRANSITION_STATE)?.to_owned(),
+        std::str::from_utf8(HOST_TRANSITION_SUBMIT)?.to_owned(),
+        control,
+    )
+    .map_err(|problem| anyhow::anyhow!("transition execution refused: {problem:?}"))?;
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-transition/v1","stage":"guest-execution",
+        "outcome":observed.outcome,"operation":mode,
+        "source_sha256":crate::workflow::intrinsic::sha256(&source),
+        "schema_source_sha256":crate::workflow::intrinsic::sha256(HOST_TRANSITION_SCHEMA),
+        "execution_profile":{"revision":"worker-program-v2/wasmtime-40.0.2/step-4096/interrupt-8/fuel-10000000",
+            "source_steps":4096,"interruption_interval":8,"fuel":FUEL},
+        "interruption":{"checks":observed.interruption_checks,
+            "observed_max_guest_work_between_checks":observed.observed_max_interval},
+        "fuel_used":observed.fuel_used,"quota_reason":observed.quota_reason,
+        "typed_output":observed.output.as_ref().map(|output| serde_json::json!({
+            "state":output.state,"actions":output.actions})),
+        "program_admissions":observed.admits,"program_invocations":observed.invokes,
+        "live_owners":observed.live_owners,"effect_requests":observed.effect_requests,
+        "protected_operations":observed.protected_operations,
     }))
 }
 
@@ -2641,7 +3000,12 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                         "export-denied",
                         "optimizer",
                         "reflect-prepare",
-                        "rebound"
+                        "rebound",
+                        "transition-normal",
+                        "transition-cancel",
+                        "transition-deadline",
+                        "transition-trap",
+                        "transition-exhausted"
                     ]
                     .iter()
                     .any(|mode| arguments[3] == *mode),
@@ -2661,6 +3025,11 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                 "optimizer" => return host_optimizer(),
                 "reflect-prepare" => return host_reflect_prepare(),
                 "rebound" => return host_rebound(),
+                "transition-normal"
+                | "transition-cancel"
+                | "transition-deadline"
+                | "transition-trap"
+                | "transition-exhausted" => return host_transition(mode),
                 _ => {}
             }
             let emit = mode.starts_with("emit") || mode == "builders";

@@ -57,6 +57,7 @@ pub(super) fn world(
         checked_u64,
         worker_program_kind: None,
         worker_program_effect: None,
+        worker_transition_kind: None,
         limits,
     };
     let context = Context {
