@@ -97,7 +97,7 @@
       "requirements": ["P-ROUND-01", "P-ROUND-02", "P-PACK-01", "P-PACK-02", "P-ID-04"],
       "input": {"harness": "program-round-trip-and-import", "expected_interface": "unchanged-instantiated-interface", "context": "same-exact-semantic-dependencies", "captured_data": "runtime-supplied-text", "self_reference": "retained-owner-identity", "preparation_authority": "explicit", "export_authority": "explicit-for-destination-and-capture", "limits": "sufficient", "variants": ["reflect-prepare", "export-import", "rebound-display-name-original-dependency-retained", "different-optimizer-same-semantics"]},
       "expected": {"stage": "identity-after-local-admission", "outcome": "preserve-each-variant", "normalized_recipe": "same", "interface_witnesses": "same", "captures": "same", "dependency_identities": "same", "recursive_owner": "same", "abstract_program_value_identity": "same", "artifact_bytes_required_identical": false, "budget_outcomes_required_identical": false, "unchecked_acceptance_transferred": false, "proof_applicability_transferred": false, "live_authority_transferred": false, "stable_wire_encoding_claimed": false, "candidate_body_requests": 0},
-      "state": {"implementation": "partial", "execution": "not-run", "proof": "open", "trust": "explicit"},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
         "claim": "Two of the four WORKER-04 variants run on the production binary. export-import: a host-granted export and two separate-process imports at different request budgets report the same experimental program-value identity, normalized recipe, interface witness, captures, dependencies and recursive owner. different-optimizer-same-semantics: two independent checks installed under Cranelift opt levels none and speed produce different native artifacts and the same identity. No body is invoked; altered packages with an accepted flag, a proof evidence row, a changed capture or a changed builtin revision are refused, and a refusing grant emits no bytes. The case is not passed: reflect-prepare and rebound-display-name-original-dependency-retained have no implementation.",
         "subject": "WORKER-04", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
@@ -115,6 +115,26 @@
         "assumptions": [
           "The program-value identity is a local experimental projection (P-ID-04) of the checked package fields; identities match across sessions because each admission commits the same module in the same order.",
           "runtime-supplied-text is the source Text literal bound to its installed runtime cell by attestation.",
+          "The optimizer is Cranelift's opt level over the same checked Wasm text; semantic preservation is Wasmtime's obligation and is not shown by identity equality.",
+          "Authority non-transfer is observed as the absence of an issue route in a pure-ceiling import, not as a refused issue."
+        ]
+      }, {
+        "claim": "All four WORKER-04 variants run on the production binary and preserve the normalized recipe, interface witness, captures, dependency identities, scoped recursive owner and experimental program-value identity, with no body invocation. reflect-prepare: the runtime reflects every installed closure cell, the decoded recipe equals the checked recipe, and a module rendered with synthesized names is prepared again. export-import: a host-granted export imported by separate processes at two budgets. Rebound display name: after import Dep@1 as dep is rebound to Dep@2 in the same retained session, re-admitting the root keeps Dep@1, while a root registered after the rebind reaches Dep@2 and a Dep@2-only selection for the original root is refused. Optimizer: Cranelift levels none and speed give different native artifacts and the same identity.",
+        "subject": "WORKER-04", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:f582fcad61188475c6e99c30b4a989faaeb2e797468c29a78eb15461ccbe93fe",
+        "configuration": {
+          "profile": "Worker-Design", "harness": "program-round-trip-and-import", "receipt": "../../verification/worker04/run-4f26f27/acceptance.json",
+          "receipt_sha256": "aa8b0e4c014dfbe1b78577cb6d0d4c111c010d5a3547b9f799c67238dd6c4114",
+          "gate": "verification/worker04/gate.mjs", "case": "WORKER-04", "tested_commit": "4f26f271fd363987fcc42f4342b6ebc6ce0f24ee",
+          "binary_sha256": "ba6c027b509b613a7090542a5ea17e9d694f93410491cbc4474833215d32db88",
+          "command": "noble worker program test-host export|export-denied|optimizer|reflect-prepare < verification/worker04/fixtures/recursive.noble; noble worker program test-host rebound < verification/worker04/fixtures/rebound-root.noble; noble worker program import PACKAGE --effect-ceiling pure [--work 25000000]",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 55b2a9e4c79ae6f702b1ab68c7c517ad1255b09bc208606b8728f465dd8d3733); both fixtures, the exported package and every raw report are retained under verification/worker04/run-4f26f27."
+        },
+        "assumptions": [
+          "The program-value identity is a local experimental projection (P-ID-04) of the checked package fields; fresh-session identities match because each admission commits the same module in the same order.",
+          "runtime-supplied-text is the source Text literal bound to its installed runtime cell by attestation.",
+          "reflect-prepare is a host preparation service over a pure single-module Program; a recursive owner's signature comes from the declared scheme retained at admission, which reflection does not carry.",
+          "The rebound display name is the session import alias dep; a Program reaching a dependency module has no package form and is not exported.",
           "The optimizer is Cranelift's opt level over the same checked Wasm text; semantic preservation is Wasmtime's obligation and is not shown by identity equality.",
           "Authority non-transfer is observed as the absence of an issue route in a pure-ceiling import, not as a refused issue."
         ]

@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 551,
   "scenarios": 221,
-  "scenarios_executed": 138,
+  "scenarios_executed": 139,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -2204,7 +2204,7 @@
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
-      "sha256": "8a35cd322d5aac9e3721b0a8dac80215e8ed403e0b0431dfdff55c0e72d86ad1"
+      "sha256": "fa13a18cea972e91eddc13540d8c782b394e5238971ff82ac0b6c2a6131e1f32"
     },
     {
       "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
@@ -2420,7 +2420,7 @@
     },
     {
       "file": "specs/conformance/worker-cases.json",
-      "sha256": "c5a8a63b40fac3c6af4dc990d6ba9a7c317e00ace00dee6eb493c1a97a3c6620"
+      "sha256": "e928943bf2754a54d334248e2b8fb786c511d0fa8c3c6d158df47f93bf82e290"
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
@@ -2472,7 +2472,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "739961320f5479d2ad4a356cb5a3c137c0aaf5380ea07cf40fa0bdf3dd49bfd3"
+      "sha256": "ef8ae613d6b58ed7139d031c9bbc6470f3930476c7caaa7ac738dc950126a666"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "f6687f52adaec2ebcbc972e7a66cf93e2eaccdb6e43be12adad56b6206a3e8cd"
+      "sha256": "5116a9f11b12f24ff1cdce258cfd9c5ec685aa512dbee5ae822ef3c0dec5fad9"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
