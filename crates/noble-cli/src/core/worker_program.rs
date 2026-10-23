@@ -1834,9 +1834,12 @@ impl RetainedSession {
         // One slice each for the invocation check, the closure walk and the
         // compilation; the checks share theirs.
         let slices = 3usize;
-        let stage_work =
-            u32::try_from((RUNTIME_REQUEST_WORK / (slices + 1)).min(SOURCE_LIMITS.work as usize))
-                .map_err(|_| Refusal::Exhausted)?;
+        let share = slices
+            .checked_add(1)
+            .and_then(|divisor| RUNTIME_REQUEST_WORK.checked_div(divisor))
+            .ok_or(Refusal::Exhausted)?;
+        let stage_work = u32::try_from(share.min(SOURCE_LIMITS.work as usize))
+            .map_err(|_| Refusal::Exhausted)?;
         let limits = noble_contracts::Limits {
             work: stage_work,
             ..SOURCE_LIMITS

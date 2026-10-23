@@ -602,16 +602,17 @@ impl ModulePrepared {
         {
             return Err(ProgramClosureError::Exhausted);
         }
-        let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
-        let visited = self.closure_walk(module, owner, dependencies, &mut meter)?;
+        let meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
+        let (visited, meter) = self.closure_walk(module, owner, dependencies, meter)?;
         // Every root-module definition is reachable; a selected dependency
         // module contributes exactly its reached definitions, and at least one.
-        let (mut closure, unreached) = self.reached_rows(module, &visited, &mut meter)?;
+        let (mut closure, unreached, mut meter) = self.reached_rows(module, &visited, meter)?;
         if unreached != 0 {
             return Err(ProgramClosureError::Invalid);
         }
         for dependency in dependencies {
-            let (rows, _) = self.reached_rows(dependency, &visited, &mut meter)?;
+            let (rows, _, next) = self.reached_rows(dependency, &visited, meter)?;
+            meter = next;
             if rows.is_empty() {
                 return Err(ProgramClosureError::Invalid);
             }
@@ -625,14 +626,16 @@ impl ModulePrepared {
     }
 
     /// Definitions reachable from the root; an owner outside the root and
-    /// selected modules, or an unverified signed slot, fails closed.
+    /// selected modules, or an unverified signed slot, fails closed. The
+    /// meter is returned with what the walk charged.
     fn closure_walk(
         &self,
         module: &super::Module,
         owner: &CheckedProgramOwner,
         dependencies: &[&super::Module],
-        meter: &mut crate::Meter,
-    ) -> Result<alloc::vec::Vec<bool>, ProgramClosureError> {
+        meter: crate::Meter,
+    ) -> Result<(alloc::vec::Vec<bool>, crate::Meter), ProgramClosureError> {
+        let mut meter = meter;
         let named = &self.staged.source.definitions;
         let root_index =
             usize::try_from(owner.definition_slot).map_err(|_| ProgramClosureError::Invalid)?;
@@ -687,17 +690,19 @@ impl ModulePrepared {
                 }
             }
         }
-        Ok(visited)
+        Ok((visited, meter))
     }
 
     /// Rows for `module`'s reached definitions in ordinal order, and how many
-    /// of its definitions the walk did not reach.
+    /// of its definitions the walk did not reach, with the charged meter.
     fn reached_rows(
         &self,
         module: &super::Module,
         visited: &[bool],
-        meter: &mut crate::Meter,
-    ) -> Result<(alloc::vec::Vec<CheckedProgramOwner>, usize), ProgramClosureError> {
+        meter: crate::Meter,
+    ) -> Result<(alloc::vec::Vec<CheckedProgramOwner>, usize, crate::Meter), ProgramClosureError>
+    {
+        let mut meter = meter;
         let named = &self.staged.source.definitions;
         let mut closure = alloc::vec::Vec::with_capacity(module.definition_spans.len());
         let mut unreached = 0usize;
@@ -725,7 +730,7 @@ impl ModulePrepared {
                 recursive: calls_self(&named[index]),
             });
         }
-        Ok((closure, unreached))
+        Ok((closure, unreached, meter))
     }
 
     pub fn declared_text_source_owner(&self) -> Option<DeclaredTextSourceOwner<'_>> {
