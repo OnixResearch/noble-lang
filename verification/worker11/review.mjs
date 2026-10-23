@@ -58,8 +58,9 @@ function main() {
     bootstrap_expanded: status.worker_contracts.bootstrap_expanded,
     ordinary_core_blocked: !(milestones.M1.status === 'completed' && milestones.M2.status === 'completed'
       && milestones.M3.status === 'completed' && milestones.M4.status === 'completed'),
-    calculator_replaced: !(status.calculator?.implementation && status.calculator?.implementation !== 'absent'
-      && roadmapText.includes('calculator as the first reference application')),
+    calculator_replaced: !(status.calculator?.lane === 'reference-application-not-language-profile'
+      && status.calculator?.core_I64_semantics === 'unchanged-wrapping'
+      && conformance.includes('Neither milestone blocks M1 through M4 or replaces the calculator')),
     swarm_runtime_claimed: status.worker_contracts.swarm_runtime_claimed,
     durable_replay_claimed: !conformance.includes('durability, and safe remote retries require separate profiles'),
     syndicate_replaced: !(cargo.includes('"crates/noble-syndicate"')
