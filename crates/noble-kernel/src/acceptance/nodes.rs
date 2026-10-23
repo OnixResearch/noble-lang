@@ -300,7 +300,10 @@ pub(super) fn open_quotation(
     };
     let scheme = super::parts::instantiate::quotation_scheme();
     let cost = attempt!(super::parts::scheme_cost(&scheme));
-    attempt!(super::parts::instantiate::apply(
+    // The child frame opens from the resolved witness: a reference binding
+    // (for example a result stack stated as the input stack) has no direct
+    // stack of its own.
+    let (_, resolved) = attempt!(super::parts::instantiate::apply(
         &scheme,
         inst,
         None,
@@ -310,15 +313,15 @@ pub(super) fn open_quotation(
     if frame.depth.saturating_add(1) > context.request.limits.depth {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Depth));
     }
-    let start = match inst.stack(crate::words::Variable(1)) {
+    let start = match resolved.stack(crate::words::Variable(1)) {
         Some(segment) => segment.to_vec(),
         None => return Err(super::Fail::Internal),
     };
-    let claimed_out = match inst.stack(crate::words::Variable(2)) {
+    let claimed_out = match resolved.stack(crate::words::Variable(2)) {
         Some(segment) => segment.to_vec(),
         None => return Err(super::Fail::Internal),
     };
-    let claimed_effects = match inst.effects(crate::words::Variable(3)) {
+    let claimed_effects = match resolved.effects(crate::words::Variable(3)) {
         Some(set) => set.clone(),
         None => return Err(super::Fail::Internal),
     };

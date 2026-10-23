@@ -137,7 +137,9 @@ fn follow_chain(
     let mut current = from;
     let mut terminal: Option<usize> = None;
     let mut failure: Option<crate::words::InstError> = None;
-    while terminal.is_none() {
+    // A missing binding position ends the walk at once: it is an unknown
+    // variable, not a cycle, and charges only the hop that found it.
+    while terminal.is_none() && failure.is_none() {
         hops += 1;
         if hops > inst.bindings.len() {
             failure = Some(crate::words::InstError::CyclicWitness);

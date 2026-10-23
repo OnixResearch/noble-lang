@@ -1,3 +1,56 @@
+/// B-CHECK-05: a quotation's witness may state its result stack as a
+/// reference to its input stack. The resolved witness is the one that
+/// opens the child frame, so the empty body checks exactly as the direct
+/// `[I64] -- [I64]` spelling does, never as an internal failure.
+// r[verify VT-M3-01]
+#[test]
+fn quotation_result_stack_may_reference_its_input_stack() -> Result<(), String> {
+    let env = noble_kernel::contracts::environment().map_err(|defect| format!("{defect:?}"))?;
+    let program_value = noble_kernel::types::Ty::program(
+        vec![noble_kernel::types::Ty::I64],
+        vec![noble_kernel::types::Ty::I64],
+        noble_kernel::types::EffSet::empty(),
+    );
+    let request = crate::support::request(vec![], vec![program_value], &[]);
+    let direct = crate::support::candidate(
+        vec![crate::support::quote_node(
+            vec![],
+            vec![],
+            vec![noble_kernel::types::Ty::I64],
+            vec![noble_kernel::types::Ty::I64],
+            &[],
+        )],
+        vec![0],
+    );
+    let referenced = crate::support::candidate(
+        vec![noble_kernel::untrusted::Node::Quotation {
+            body: vec![],
+            inst: crate::support::inst(vec![
+                crate::support::segment(vec![]),
+                crate::support::segment(vec![noble_kernel::types::Ty::I64]),
+                noble_kernel::words::Binding::Ref(noble_kernel::words::Variable(1)),
+                crate::support::effect_binding(&[]),
+            ]),
+        }],
+        vec![0],
+    );
+    let crate::support::Seen::Accepted(expected) = crate::support::seen(&env, &request, &direct)?
+    else {
+        return Err("the direct quotation witness must be accepted".to_string());
+    };
+    let crate::support::Seen::Accepted(checked) =
+        crate::support::seen(&env, &request, &referenced)?
+    else {
+        return Err("a result stack referring to the input stack must be accepted".to_string());
+    };
+    assert_eq!(checked.interface.stack_in, expected.interface.stack_in);
+    assert_eq!(
+        checked.interface.stack_out, expected.interface.stack_out,
+        "the reference resolves to exactly the direct witness's Program type"
+    );
+    Ok(())
+}
+
 /// B-CHECK-03: a duplicated first-class program value shares one
 /// instantiated interface — the second use cannot claim a fresh
 /// instantiation against the same empty stack.

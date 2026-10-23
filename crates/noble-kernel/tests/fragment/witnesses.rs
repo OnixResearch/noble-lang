@@ -65,3 +65,30 @@ fn witness_references_resolve_and_cycles_reject() -> Result<(), String> {
     ));
     Ok(())
 }
+
+/// A reference naming a binding position the witness does not have is an
+/// unknown variable, reported at its first hop under any remaining fuel:
+/// neither a cycle nor work exhaustion (B-CHECK-05).
+// r[verify VT-M3-01]
+#[test]
+fn reference_to_an_absent_variable_is_unknown_not_cyclic() {
+    let kinds = [
+        noble_kernel::words::VariableKind::Stack,
+        noble_kernel::words::VariableKind::Value,
+    ];
+    let dangling = noble_kernel::words::Inst {
+        bindings: vec![
+            noble_kernel::words::Binding::Stack(vec![]),
+            noble_kernel::words::Binding::Ref(noble_kernel::words::Variable(7)),
+        ],
+    };
+    for fuel in [1, 8] {
+        assert!(
+            matches!(
+                noble_kernel::words::resolve::bindings(&kinds, &dangling, fuel),
+                Err(noble_kernel::words::InstError::UnknownVariable)
+            ),
+            "a dangling reference under fuel {fuel} is an unknown variable"
+        );
+    }
+}
