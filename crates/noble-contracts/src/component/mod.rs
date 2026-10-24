@@ -259,6 +259,39 @@ impl World {
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_SEND))
     }
 
+    /// Every ordered admission rule stays a separate guard so the shape reads
+    /// as the exact operation/ownership table rather than one compound test.
+    fn has_transition_operation_shape(&self, kind: Type) -> bool {
+        if self.resources.len() != 1 || self.imports.len() != 2 {
+            return false;
+        }
+        if self.exports.len() != 1 {
+            return false;
+        }
+        let admit = &self.imports[0];
+        if admit.identity != "noble-test:worker-transition/programs@1.0.0#admit" {
+            return false;
+        }
+        if !admit.parameters.is_empty() || admit.results != [Type::Own(kind)] {
+            return false;
+        }
+        let invoke = &self.imports[1];
+        if invoke.identity != "noble-test:worker-transition/programs@1.0.0#invoke" {
+            return false;
+        }
+        if invoke.parameters != [Type::String, Type::String, Type::Own(kind)]
+            || invoke.results != [Type::String]
+        {
+            return false;
+        }
+        let step = &self.exports[0];
+        if step.identity != "noble-test:worker-transition/guest@1.0.0#step" {
+            return false;
+        }
+        step.parameters == [Type::String, Type::String]
+            && step.results == [Type::String]
+    }
+
     /// Select the frame-transport Worker transition world only for the exact
     /// host-checked `State Event -- State List<Action> ! {}` Program. WIT
     /// strings and the opaque owner carry no schema authority; the embedder
@@ -278,11 +311,12 @@ impl World {
             ],
             noble_kernel::types::EffSet::empty(),
         );
-        if source.ty() != expected
-            || self.identity != "noble-test:worker-transition/guest@1.0.0"
-            || self.asynchronous
-            || self.checked_u64
-        {
+        if source.ty() != expected || self.identity != "noble-test:worker-transition/guest@1.0.0" {
+            return Err(unsupported(
+                "Worker transition WIT requires the checked schema Program",
+            ));
+        }
+        if self.asynchronous || self.checked_u64 {
             return Err(unsupported(
                 "Worker transition WIT requires the checked schema Program",
             ));
@@ -297,19 +331,7 @@ impl World {
             return Err(invalid("duplicate transition Program resource"));
         }
         let kind = resource.kind;
-        if self.resources.len() != 1
-            || self.imports.len() != 2
-            || self.exports.len() != 1
-            || self.imports[0].identity != "noble-test:worker-transition/programs@1.0.0#admit"
-            || !self.imports[0].parameters.is_empty()
-            || self.imports[0].results != [Type::Own(kind)]
-            || self.imports[1].identity != "noble-test:worker-transition/programs@1.0.0#invoke"
-            || self.imports[1].parameters != [Type::String, Type::String, Type::Own(kind)]
-            || self.imports[1].results != [Type::String]
-            || self.exports[0].identity != "noble-test:worker-transition/guest@1.0.0#step"
-            || self.exports[0].parameters != [Type::String, Type::String]
-            || self.exports[0].results != [Type::String]
-        {
+        if !self.has_transition_operation_shape(kind) {
             return Err(unsupported(
                 "Worker transition WIT operation or ownership shape differs",
             ));

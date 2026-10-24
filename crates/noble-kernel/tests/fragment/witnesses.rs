@@ -90,5 +90,14 @@ fn reference_to_an_absent_variable_is_unknown_not_cyclic() {
             ),
             "a dangling reference under fuel {fuel} is an unknown variable"
         );
+        // The same refusal is not a cycle at that position: the absent
+        // binding position stays unknown under any remaining fuel.
+        assert!(
+            !matches!(
+                noble_kernel::words::resolve::bindings(&kinds, &dangling, fuel),
+                Err(noble_kernel::words::InstError::CyclicWitness)
+            ),
+            "a dangling reference under fuel {fuel} is not a witness cycle"
+        );
     }
 }
