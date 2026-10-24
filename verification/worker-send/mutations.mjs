@@ -45,7 +45,7 @@ function main(){
   const tried=path.join(out,'receipt.json');
   const reasoned=failures=>failures.length
     ? failures
-    : [/AssertionError[^:]*: ([^\n]*)/.exec(gate.stderr)?.at(1)
+    : [/AssertionError(?: \[[^\]]*\])?: ([^\n]*)/.exec(gate.stderr)?.at(1)
       || (gate.stdout.split('\n').filter(Boolean).at(-1)) || 'gate failed'];
   const evidence=fs.existsSync(tried)
     ? JSON.parse(fs.readFileSync(tried,'utf8'))
