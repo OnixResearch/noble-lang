@@ -348,7 +348,12 @@ let contracts = import "./architecture.contracts.ncl" in
     # the provider and dependency rules above.
     # serde: the C-backend duplicate-member Visitor calls Deserializer,
     # SeqAccess, MapAccess and de::Error trait methods on generic receivers.
-    external_crates = ["alloc", "core", "rustc_apfloat", "serde", "std"],
+    # anyhow: the composition-root transition host calls
+    # anyhow::Context::with_context on generic Result/Option receivers, whose
+    # dispatch is not statically unique. The trait only wraps the already
+    # observed error value; the crate's existing infrastructure provider
+    # classification and composition-root caller rule still govern it.
+    external_crates = ["alloc", "anyhow", "core", "rustc_apfloat", "serde", "std"],
     local_traits = [
       {
         path = "noble_ngraph::grad::Real",

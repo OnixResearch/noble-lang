@@ -109,6 +109,7 @@
   "dynamic_dispatch": {
     "external_crates": [
       "alloc",
+      "anyhow",
       "core",
       "rustc_apfloat",
       "serde",
