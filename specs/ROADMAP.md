@@ -374,6 +374,18 @@ promotes MW1 or MW2.
 
 MW1 requires a worker-interface checker, declared schemas/modules, an explicit preparation service, package encoding, and a bounded execution profile. The finite DXM1 session-local module selection alone does not close these broader entry gates or make MW1 a completed capability. MW2 additionally requires concrete native-async task interfaces. M2 establishes finite candidate limits in its own subset. M6 owns RA-ASYNC-02 through RA-ASYNC-05 regardless of the worker harness.
 
+**MW2 completed (2026-10-24).** Both worker milestones are now closed by their own receipts, so
+`next_milestone` is unset until a successor is selected. WORKER-01's lifecycle-order gate,
+WORKER-09's two native rows and the milestone-level `native-async-interfaces` gate supply the
+MW2 exit evidence, and the Octet architecture gate is clean (lint clean, zero architecture
+findings, receipt `d5f7d714af5bc90859e8f18635fea2b7aa24b567884c7020888ba23f10b3ddbe`) after the
+composition-root `anyhow::Context` dispatch class was reviewed rather than waived. The renewed
+compiler-derived inventory matches the reviewed classification (`valid: true`, empty
+diagnostics, 14,963 subjects over 96 units, 88 macro origins) from the declared
+`live-test-barrier,safety-observe` feature plan. Milestone completion is direction and scoped
+execution evidence, not a general worker service, portable shell harness, scheduling, task
+leases, distributed retries or durability claim.
+
 **Selection.** MW1 is the selected successor to M8 and DXM1. Its `M4` and `M5` dependencies are complete, and two Cairn changes declared MW1 scope at selection: [worker program v2](../.cairn/archive/2026-10-23-typed-worker-program-v2-native/proposal.md) and the [WORKER-12 code-export adapter](../.cairn/archive/2026-10-21-worker-code-export-bound-effect/proposal.md). The adapter change was archived on 2026-10-21 after its scoped tests, and the completed v2 change was synced and archived on 2026-10-23 after its five entry gates passed. Selection alone was direction rather than capability; the receipts below supply the later execution evidence. MW2 depends on the completed M6 lane and is owned by the active native-async cancellation change.
 
 **Worker-interface checker (first entry gate, closed 2026-10-23).** The local `noble worker typed` admission now classifies a package's declared interface against the independently checked host schema catalog before any worker engine starts: a latent effect outside the empty dispatch ceiling is `effect-reject`; a schema identity that is not an exact catalog row, including a same-layout row under another module identity, is `schema-reject`; any other arity, order or list-shape difference, including a heterogeneous list claim, is `interface-reject`; a claimed capture that hides a resource at any depth is `eligibility-reject` ahead of the generic unsupported-capture refusal. The checked transition Program is held to the same `State Event -- State List<Action> ! {}` interface. `worker_interface_checker_classifies_each_worker02_variant` runs all six WORKER-02 variants and two program-level controls through the production admission path. The v1 package remains intentionally capture/effect/adapter-free; those interfaces are checked by Worker Program v2. The transition guest gate adds hostile canonical-frame, swapped-interface, schema and WIT-world controls before source invocation, closing the checker over every executable Worker lane.
