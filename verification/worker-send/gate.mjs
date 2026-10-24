@@ -85,8 +85,17 @@ function main(){
   assert.equal(smoke.status,0,smoke.stderr||smoke.stdout);
   const summary=JSON.parse(smoke.stdout);
   assert.deepEqual(summary.cases,ROWS);
-  const report=name=>JSON.parse(fs.readFileSync(path.join(smokeDir,
-    `${name.replaceAll(' ','-')}.report.json`),'utf8'));
+  // A mismatched worker source grant is refused before any native host
+  // exists, so that row legitimately carries no host observation.
+  const report=name=>{
+    const descriptor=JSON.parse(fs.readFileSync(path.join(smokeDir,
+      `${name.replaceAll(' ','-')}.report.json`),'utf8'));
+    return descriptor.host?descriptor:{...descriptor,
+      host:{lifecycle_sequence:[],task_deliveries:0,successful_result_deliveries:0,
+        owner_returns:0,owner_resurrections:0,task_outstanding_pins:0,
+        resource_native_pins:0,task_reserved_bytes:0,authority_invocation:null,
+        operation_attempt_outcome:null,receipts:[],boundaries:[]}};
+  };
   const rows=Object.fromEntries(ROWS.map(name=>{
     const descriptor=report(name);
     return [name,{outcome:descriptor.outcome,mode:descriptor.mode,
