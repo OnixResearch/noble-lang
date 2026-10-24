@@ -261,7 +261,7 @@ impl World {
 
     /// Every ordered admission rule stays a separate guard so the shape reads
     /// as the exact operation/ownership table rather than one compound test.
-    fn has_transition_operation_shape(&self, kind: Type) -> bool {
+    fn has_transition_operation_shape(&self, kind: noble_kernel::types::ResourceKind) -> bool {
         if self.resources.len() != 1 || self.imports.len() != 2 {
             return false;
         }
