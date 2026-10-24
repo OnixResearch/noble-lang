@@ -2,10 +2,12 @@ package noble-test:worker-send@1.0.0;
 
 interface host {
   begin-send: func(attempt: s64, text: string) -> future<result<s64, string>>;
+  finish-send: async func(value: future<result<s64, string>>) -> result<s64, string>;
   cancel-send: func(value: future<result<s64, string>>);
 }
 
 world worker-shell {
   import host;
   export dispatch: async func(attempt: s64, text: string);
+  export dispatch-result: async func(attempt: s64, text: string) -> result<s64, string>;
 }

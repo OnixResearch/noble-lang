@@ -24,12 +24,21 @@ impl fmt::Display for SelectionFailure {
 }
 impl std::error::Error for SelectionFailure {}
 
-pub struct Verified {
+/// The host-selected Submit transition. The Cancelled transition is a
+/// separate step so the shell can commit cancellation before supplying it.
+pub struct Submitted {
     pub attempt: i64,
     pub text: String,
     pub source_sha256: String,
     pub first: Value,
-    pub second: Value,
+    files: SelectedFiles,
+    cli: PathBuf,
+    package: PathBuf,
+    schema: PathBuf,
+    returned_state: PathBuf,
+    cancel: PathBuf,
+    package_sha256: String,
+    schema_sha256: String,
 }
 
 // The private directory pins the bytes handed to both checked CLI runs.
@@ -141,7 +150,7 @@ impl Drop for SelectedChild {
     }
 }
 
-fn nonblocking(fd: impl AsRawFd) -> io::Result<()> {
+fn nonblocking(fd: &impl AsRawFd) -> io::Result<()> {
     let flags = unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_GETFL) };
     if flags == -1 { return Err(io::Error::last_os_error()); }
     if unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) } == -1 {
@@ -316,8 +325,8 @@ fn read_bounded(path:&Path,limit:u64)->Result<Vec<u8>> {
     Ok(bytes)
 }
 
-pub fn run(cli: &Path, package: &Path, schema: &Path, state: &Path,
-           submit: &Path, cancel: &Path) -> Result<Verified> {
+pub fn submit(cli: &Path, package: &Path, schema: &Path, state: &Path,
+              submit: &Path, cancel: &Path) -> Result<Submitted> {
     let deadline = Instant::now().checked_add(SELECTION_DEADLINE)
         .context("selected worker deadline overflow")?;
     let files = SelectedFiles::new()?;
@@ -350,19 +359,30 @@ pub fn run(cli: &Path, package: &Path, schema: &Path, state: &Path,
     let next_state = serde_json::to_vec(&json!({"format":"noble-worker-value/v1",
         "expected_schema":output_state["schema"],"value":output_state}))?;
     let returned_state = files.write("returned-state", &next_state)?;
-    let second = selected(cli, &package, &schema, &returned_state, &cancel,
-        &package_sha256, &schema_sha256, deadline)?;
-    same_checked_identity(&first, &second)?;
-    ensure!(second["typed_output"]["state"]["value"]["left"]["value"] == "1"
-        && second["typed_output"]["state"]["value"]["right"]["arm"] == "left"
-        && second["typed_output"]["actions"]["items"].as_array().is_some_and(Vec::is_empty),
-        "checked cancellation did not clear the exact pending attempt");
     let source_sha256 = first["source_sha256"].as_str()
         .filter(|value| value.len() == 64).context("missing checked source digest")?.to_owned();
     if text.len() > noble_kernel::authority::MAX_ARGUMENT_BYTES - 8 {
         bail!("checked Send exceeds the host operation argument bound");
     }
-    Ok(Verified { attempt, text, source_sha256, first, second })
+    Ok(Submitted { attempt, text, source_sha256, first, files, cli: cli.to_owned(),
+        package, schema, returned_state, cancel, package_sha256, schema_sha256 })
+}
+
+impl Submitted {
+    /// Supply the host-selected Cancelled transition for the admitted attempt.
+    /// Its own deadline starts when the shell actually requests it.
+    pub fn cancelled(&self) -> Result<Value> {
+        let deadline = Instant::now().checked_add(SELECTION_DEADLINE)
+            .context("selected worker deadline overflow")?;
+        let second = selected(&self.cli, &self.package, &self.schema, &self.returned_state,
+            &self.cancel, &self.package_sha256, &self.schema_sha256, deadline)?;
+        same_checked_identity(&self.first, &second)?;
+        ensure!(second["typed_output"]["state"]["value"]["left"]["value"] == "1"
+            && second["typed_output"]["state"]["value"]["right"]["arm"] == "left"
+            && second["typed_output"]["actions"]["items"].as_array().is_some_and(Vec::is_empty),
+            "checked cancellation did not clear the exact pending attempt");
+        Ok(second)
+    }
 }
 
 #[cfg(test)]

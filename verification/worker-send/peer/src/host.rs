@@ -16,8 +16,8 @@ fn checked<T,E:std::fmt::Debug>(result: std::result::Result<T,E>) -> Result<T> {
     result.map_err(|error| anyhow!("retained host decision: {error:?}"))
 }
 
-pub struct Grant { attempt:i64, text:String, allow:bool, expires_at:u64,
-    source_sha256:String }
+pub struct Grant { pub attempt:i64, pub text:String, pub allow:bool, pub expires_at:u64,
+    pub source_sha256:String }
 
 fn positive(value:&Value) -> Result<i64> {
     let spelling = value.as_str().context("host grant attempt must be decimal text")?;
@@ -59,8 +59,12 @@ impl Grant {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
-    SendThenCancel,
-    CancelBeforeSend,
+    CancelBeforeDelivery,
+    CancelWithNativeOutstanding,
+    DeliveryBeforeCancel,
+    DeliveryDomainError,
+    SuspendAwaitingSend,
+    DeadlineWithNativeOutstanding,
     InjectFallbackAuthorityError,
     InjectReceiveError,
     InjectReceiveCorruption,
@@ -71,8 +75,12 @@ pub enum Mode {
 }
 impl Mode {
     pub fn parse(text:&str) -> Result<Self> {
-        match text { "send-then-cancel"=>Ok(Self::SendThenCancel),
-            "cancel-before-send"=>Ok(Self::CancelBeforeSend),
+        match text { "cancel-before-delivery"=>Ok(Self::CancelBeforeDelivery),
+            "cancel-with-native-outstanding"=>Ok(Self::CancelWithNativeOutstanding),
+            "delivery-before-cancel"=>Ok(Self::DeliveryBeforeCancel),
+            "delivery-domain-error"=>Ok(Self::DeliveryDomainError),
+            "suspend-awaiting-send"=>Ok(Self::SuspendAwaitingSend),
+            "deadline-with-native-outstanding"=>Ok(Self::DeadlineWithNativeOutstanding),
             "inject-fallback-authority-error"=>Ok(Self::InjectFallbackAuthorityError),
             "inject-receive-error"=>Ok(Self::InjectReceiveError),
             "inject-receive-corruption"=>Ok(Self::InjectReceiveCorruption),
@@ -81,6 +89,24 @@ impl Mode {
             "inject-cancel-panic"=>Ok(Self::InjectCancelPanic),
             "buffer-quota-preflight"=>Ok(Self::BufferQuotaPreflight),
             _=>bail!("unknown host-selected native Send mode") }
+    }
+
+    /// Every mode except the pre-send cancellations and the injected domain
+    /// error actually issues the authorized datagram.
+    pub const fn sends(self) -> bool {
+        !matches!(self, Self::CancelBeforeDelivery | Self::InjectFallbackAuthorityError
+            | Self::DeliveryDomainError)
+    }
+
+    /// The delivery-shaped modes hand the admitted future to the guest's
+    /// explicit asynchronous finish instead of cancelling it.
+    pub const fn awaits_finish(self) -> bool {
+        matches!(self, Self::DeliveryBeforeCancel | Self::DeliveryDomainError
+            | Self::SuspendAwaitingSend | Self::DeadlineWithNativeOutstanding)
+    }
+
+    pub const fn suspends(self) -> bool {
+        matches!(self, Self::SuspendAwaitingSend | Self::DeadlineWithNativeOutstanding)
     }
 }
 
@@ -114,6 +140,17 @@ struct Pending {
     receive_buffer:Vec<u8>,
 }
 
+/// Why the shell is retiring an admitted task before any result was delivered.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Retire {
+    /// The guest consumed its future through cancel-send.
+    Guest,
+    /// The guest is parked awaiting a result the shell deliberately withholds.
+    Suspension,
+    /// The bounded driver deadline elapsed while native work stayed pinned.
+    Deadline,
+}
+
 // The producer's gate is last. Attempt every independent revocation even
 // after a refusal; the producer cannot issue a post-gate Send in any mode.
 // Native pins cannot settle until the released producer has exited and joined.
@@ -124,8 +161,11 @@ struct Cancellation<'a> {
     resources:&'a mut owner::Table,
     cleanup_failures:&'a mut Vec<String>,
     pins_at_cancel:&'a mut usize,
+    reason:Retire,
+    failure:task::Failure,
+    retirement:owner::Retirement,
     task_retired:bool,
-    authority_cancelled:bool,
+    authority_retired:bool,
     resource_revoked:bool,
 }
 
@@ -159,14 +199,18 @@ impl Drop for Cancellation<'_> {
                     format!("task.retire: retained host decision: {error:?}")),
             }
         }
-        if !self.authority_cancelled {
-            if let Err(error)=self.authority.cancel_invocation() {
+        if !self.authority_retired {
+            let retired=match self.reason {
+                Retire::Guest | Retire::Suspension=>self.authority.cancel_invocation(),
+                Retire::Deadline=>self.authority.fail_invocation(),
+            };
+            if let Err(error)=retired {
                 self.record_failure(format!(
-                    "authority.cancel_invocation: retained host decision: {error:?}"));
+                    "authority retirement ({:?}): retained host decision: {error:?}",self.failure));
             }
         }
         if !self.resource_revoked {
-            match self.resources.retire(self.pending.scope.handle,owner::Retirement::HostCleanup) {
+            match self.resources.retire(self.pending.scope.handle,self.retirement) {
                 Ok(decision) if decision.record.state
                     ==owner::State::Retiring(self.pending.scope.serial)=>{}
                 Ok(decision)=>self.record_failure(
@@ -209,6 +253,15 @@ pub struct Host {
     late_task_outcome:Option<task::Outcome>,
     pins_at_cancel:usize,
     cleanup_failures:Vec<String>,
+    sequence:Vec<&'static str>,
+    boundaries:Vec<Value>,
+    receipts:Vec<Value>,
+    owner_returns:usize,
+    admitted_key:Option<auth::AttemptKey>,
+    admitted_plan:Option<auth::Plan>,
+    operation_observation:Option<(auth::AttemptKey,auth::Observation)>,
+    delivered:Option<std::result::Result<i64,String>>,
+    deadline_diagnostic:Option<String>,
 }
 
 impl Host {
@@ -242,7 +295,9 @@ impl Host {
             sender:Some(sender),receiver:Some(receiver),pending:None,grant,mode,context,
             denied:false,quota_refusal:None,native_sent:0,native_error:None,receiver_reads:0,
             late_retired:false,late_task_outcome:None,pins_at_cancel:0,
-            cleanup_failures:Vec::new()};
+            cleanup_failures:Vec::new(),sequence:Vec::new(),boundaries:Vec::new(),
+            receipts:Vec::new(),owner_returns:0,admitted_key:None,admitted_plan:None,
+            operation_observation:None,delivered:None,deadline_diagnostic:None};
         host.owner=Some(checked(host.resources.register(required))?);
         Ok(host)
     }
@@ -263,6 +318,7 @@ impl Host {
             Err(error)=>{
                 if self.mode==Mode::BufferQuotaPreflight && error==task::Error::ByteCapacity {
                     self.quota_refusal=Some("byte-capacity");
+                    self.refusal_boundary();
                     bail!("task buffer reservation denied before Send admission");
                 }
                 bail!("retained host decision: {error:?}");
@@ -280,6 +336,7 @@ impl Host {
             auth::Authorization::Denied(_) | auth::Authorization::Preflight(_)=>{
                 self.denied=true;
                 drop(prepared);
+                self.refusal_boundary();
                 self.release_unused()?;
                 bail!("independent host Send grant refused")
             }
@@ -290,6 +347,7 @@ impl Host {
             auth::Admission::Denied {witness,..} | auth::Admission::Preflight {witness,..}=>{
                 self.denied=true;
                 drop(prepared);
+                self.refusal_boundary();
                 self.release_unused()?;
                 if let Some(witness)=witness {checked(self.authority.retire_witness(witness))?;}
                 bail!("exact host Send admission refused")
@@ -301,6 +359,7 @@ impl Host {
             Err(rejected)=>{
                 self.owner=Some(rejected.input);
                 drop(prepared);
+                self.refusal_boundary();
                 self.release_unused()?;
                 checked(self.authority.fail_invocation())?;
                 bail!("native Send resource could not be admitted: {:?}",rejected.error)
@@ -327,6 +386,8 @@ impl Host {
             self.retire_unstarted(token.task,callback,scope)?;
             bail!("native Send differs from consumed exact authority");
         }
+        self.admitted_key=Some(started.attempt());
+        self.admitted_plan=Some(started.plan().clone());
         let sender=self.sender.take().context("native socket already transferred")?;
         let (release_tx,release_rx)=mpsc::sync_channel(1);
         let (started_tx,started_rx)=mpsc::sync_channel(1);
@@ -335,8 +396,7 @@ impl Host {
         let joined=std::thread::Builder::new().name("noble-worker-wit-send".into())
             .spawn(move || {
                 let _permit=started;
-                let sent=if matches!(mode,Mode::CancelBeforeSend
-                    | Mode::InjectFallbackAuthorityError) {
+                let sent=if !mode.sends() {
                     // Acknowledging readiness does not complete the operation.
                     // No post-gate Send is possible even if cancellation
                     // reports a revocation failure; the pin retires on join.
@@ -354,10 +414,12 @@ impl Host {
                 };
                 // Skipping a Send after cancellation is not a successful
                 // result, even though the closed future cannot deliver it.
-                let result=match (mode,&sent) {
-                    (Mode::CancelBeforeSend | Mode::InjectFallbackAuthorityError,Ok(0))=>
-                        Err("cancelled before native Send".to_owned()),
-                    _=>sent.clone().map(|_|attempt),
+                let result=if mode==Mode::DeliveryDomainError {
+                    Err("send-refused".to_owned())
+                } else if mode.sends() {
+                    sent.clone().map(|_|attempt)
+                } else {
+                    Err("cancelled before native Send".to_owned())
                 };
                 let _=native_tx.send(result);
                 sent
@@ -373,41 +435,72 @@ impl Host {
         self.pending=Some(Pending {callback,token:Some(token.task),scope,
             borrow:borrowed.borrow,
             release:Some(release_tx),joined:Some(joined),receive_buffer});
+        self.boundary("admission");
+        self.record("admission-commit");
         let first=started_rx.recv_timeout(Duration::from_secs(5))?;
         // Even a failed native syscall leaves the task's pin retained until
         // its joined producer reports actual stop, never on this observation.
         self.native_sent=first.as_ref().copied().unwrap_or(0);
         first.map_err(|error|anyhow!("native Send attempt failed: {error}"))?;
+        self.record("native-handoff");
         Ok((callback,native_rx))
     }
 
     pub fn cancel(&mut self,callback:task::Callback)->Result<()> {
+        self.retire(callback,Retire::Guest)
+    }
+
+    /// The guest is parked awaiting a result the shell deliberately withholds.
+    /// Report the suspension before retiring so the pending owner is visible
+    /// while native work is still pinned.
+    pub fn suspend(&mut self,callback:task::Callback)->Result<()> {
+        self.suspension(callback)?;
+        self.retire(callback,Retire::Suspension)
+    }
+
+    /// The bounded driver deadline elapsed while native work remained pinned.
+    pub fn deadline(&mut self,callback:task::Callback,diagnostic:&str)->Result<()> {
+        self.deadline_diagnostic=Some(diagnostic.to_owned());
+        self.retire(callback,Retire::Deadline)
+    }
+
+    fn retire(&mut self,callback:task::Callback,reason:Retire)->Result<()> {
         let previous_cleanup_failures=self.cleanup_failures.len();
         let pending=self.pending.as_mut().context("no admitted task to cancel")?;
         ensure!(pending.callback==callback,"foreign or stale future cancellation");
+        let (failure,retirement)=match reason {
+            Retire::Guest=>(task::Failure::Cancelled,owner::Retirement::Cancelled),
+            Retire::Suspension | Retire::Deadline=>
+                (task::Failure::Deadline,owner::Retirement::HostCleanup),
+        };
         let mut cancellation=Cancellation {pending,tasks:&mut self.tasks,
             authority:&mut self.authority,resources:&mut self.resources,
             cleanup_failures:&mut self.cleanup_failures,
             pins_at_cancel:&mut self.pins_at_cancel,
-            task_retired:false,authority_cancelled:false,resource_revoked:false};
+            reason,failure,retirement,
+            task_retired:false,authority_retired:false,resource_revoked:false};
         let token=cancellation.pending.token.take().context("duplicate future cancellation")?;
         // Deliberately exercise the real move-only rejection contract in the
         // host-selected fault mode; never treat it as a cancelled task.
         let context=if self.mode==Mode::InjectCancelError {
             owner::Context(self.context.0 ^ (1_u64<<63))
         } else {self.context};
-        let decision=match cancellation.tasks.cancel(token,context) {
-            Ok(decision)=>decision,
-            Err(rejected)=>{
-                cancellation.pending.token=Some(rejected.input);
-                bail!("retained host decision: {:?}",rejected.error);
-            }
+        let retired=match reason {
+            Retire::Guest | Retire::Suspension=>cancellation.tasks.cancel(token,context)
+                .map_err(|rejected|anyhow::anyhow!(
+                    "retained host decision: {:?}",rejected.error)),
+            Retire::Deadline=>checked(cancellation.tasks.retire(token.handle(),failure)),
         };
+        let decision=retired?;
         cancellation.task_retired=decision.record.state==task::State::Retiring;
         if self.mode==Mode::InjectCancelPanic {
             panic!("injected host Send cancellation panic");
         }
-        let task_retained=decision.action==task::Action::CancellationAcknowledged
+        let acknowledged=match reason {
+            Retire::Guest | Retire::Suspension=>decision.action==task::Action::CancellationAcknowledged,
+            Retire::Deadline=>decision.action==task::Action::FailureRecorded(failure),
+        };
+        let task_retained=acknowledged
             && decision.record.state==task::State::Retiring && decision.record.pins==1
             && decision.record.retiring_inputs==1
             && cancellation.tasks.observation().reserved.bytes
@@ -420,23 +513,256 @@ impl Host {
             ensure!(failed==auth::InvocationOutcome::Failed,
                 "injected invocation failure did not become terminal");
         }
-        let cancelled=checked(cancellation.authority.cancel_invocation());
-        cancellation.authority_cancelled=cancelled.is_ok();
+        let retired=match reason {
+            Retire::Guest | Retire::Suspension=>
+                checked(cancellation.authority.cancel_invocation()),
+            Retire::Deadline=>checked(cancellation.authority.fail_invocation()),
+        };
+        cancellation.authority_retired=retired.is_ok();
         let revoked=checked(cancellation.resources.revoke(
-            cancellation.pending.scope,owner::Retirement::Cancelled));
+            cancellation.pending.scope,retirement));
         cancellation.resource_revoked=revoked.as_ref().is_ok_and(|decision|
             decision.record.state==owner::State::Retiring(cancellation.pending.scope.serial));
         ensure!(task_retained,"task owner or reserved storage was not retained at cancellation");
-        cancelled?;
+        retired?;
         let revoked=revoked?;
         ensure!(revoked.record.state==owner::State::Retiring(cancellation.pending.scope.serial)
             && cancellation.resources.observation().native_pins==1
             && cancellation.resources.native_access(&cancellation.pending.borrow).is_err(),
             "resource access or native pin violated cancellation");
         drop(cancellation);
+        self.observe_unknown()?;
+        let boundary=match reason {
+            Retire::Guest=>"cancellation-commit",
+            Retire::Suspension=>"suspension-retirement",
+            Retire::Deadline=>"deadline-ack",
+        };
+        self.boundary(boundary);
+        self.record(boundary);
         ensure!(self.cleanup_failures.len()==previous_cleanup_failures,
             "host cancellation cleanup failed; see cleanup_failures");
         Ok(())
+    }
+
+    /// The guest is parked on its explicit asynchronous finish. The task stays
+    /// Pending with its native pin; only the shell's own observation changes.
+    fn suspension(&mut self,callback:task::Callback)->Result<()> {
+        let snapshot=self.tasks.snapshot(callback.task.slot)
+            .filter(|snapshot|snapshot.handle==callback.task)
+            .context("suspension snapshot missing")?;
+        let resource=self.resources.snapshot(0);
+        ensure!(snapshot.state==task::State::Pending && snapshot.pins==1
+            && snapshot.returned_inputs==0
+            && self.pending.as_ref().is_some_and(|pending|pending.token.is_some())
+            && resource.is_some_and(|resource|matches!(resource.state,owner::State::Busy(_)))
+            && self.resources.observation().native_pins==1,
+            "suspension lost the pending task or the native pin");
+        self.boundary("suspension");
+        self.record("suspension");
+        Ok(())
+    }
+
+    /// Trusted host acknowledgement that no terminal observation exists yet.
+    fn observe_unknown(&mut self)->Result<()> {
+        let attempt=self.admitted_key.context("no admitted attempt to observe")?;
+        let plan=self.admitted_plan.clone().context("no admitted plan to observe")?;
+        checked(self.authority.observe_from_trusted_host(auth::ObservationDescription {
+            attempt,plan,source:auth::SourceId(2),checkpoint:NOW,
+            outcome:auth::ObservedOutcome::Unknown,
+        }))?;
+        Ok(())
+    }
+
+    pub fn record(&mut self,event:&'static str) {
+        self.sequence.push(event);
+    }
+
+    fn refusal_boundary(&mut self) {
+        self.boundary("preflight-refusal");
+        self.record("preflight-refusal");
+    }
+
+    /// Every observation is a fresh snapshot of the retained tables plus the
+    /// authority counters; no field is copied from the selected mode.
+    fn boundary(&mut self,name:&'static str) {
+        let task=self.tasks.snapshot(0);
+        let tasks=self.tasks.observation();
+        let resource=self.resources.snapshot(0);
+        let resources=self.resources.observation();
+        let counters=self.authority.counters();
+        let attempt=self.admitted_key
+            .and_then(|key|self.authority.attempt_snapshot(key).ok())
+            .and_then(|snapshot|snapshot.outcome)
+            .map(|outcome|format!("{outcome:?}"));
+        let value=json!({"boundary":name,
+            "task":task.map(|snapshot|json!({
+                "state":task_state(snapshot.state),
+                "pins":snapshot.pins,
+                "returned_inputs":snapshot.returned_inputs,
+                "retiring_inputs":snapshot.retiring_inputs,
+                "failure":snapshot.failure.map(|failure|format!("{failure:?}")),
+                "outcome":snapshot.outcome.map(|outcome|format!("{outcome:?}")),
+                "native_stopped":snapshot.native_stopped,
+                "finalized":snapshot.finalized})),
+            "tasks":{"pending":tasks.pending,"ready":tasks.ready,"delivered":tasks.delivered,
+                "retiring":tasks.retiring,"retired":tasks.retired,
+                "outstanding_pins":tasks.outstanding_pins,
+                "reserved_bytes":tasks.reserved.bytes},
+            "resource":resource.map(|snapshot|json!({
+                "state":resource_state(snapshot.state),
+                "retirement":snapshot.retirement.map(|retirement|format!("{retirement:?}"))})),
+            "resources":{"live":resources.live,"busy":resources.busy,
+                "retiring":resources.retiring,"retired":resources.retired,
+                "native_pins":resources.native_pins},
+            "owner_with_caller":self.owner.is_some(),
+            "authority":{"invocation":format!("{:?}",self.authority.invocation_outcome()),
+                "attempt_outcome":attempt,
+                "counters":{"authorization_requests":counters.authorization_requests,
+                    "admission_requests":counters.admission_requests,
+                    "witnesses_created":counters.witnesses_created,
+                    "witness_consumptions":counters.witness_consumptions,
+                    "attempts_admitted":counters.attempts_admitted,
+                    "protected_operations":counters.protected_operations,
+                    "approved_observations":counters.approved_observations,
+                    "successful_deliveries":counters.successful_deliveries}}});
+        self.boundaries.push(value);
+    }
+
+    /// Open the producer's gate so the native result can be joined.
+    pub fn release_native(&mut self,callback:task::Callback)->Result<()> {
+        let pending=self.pending.as_mut().context("no admitted task to release")?;
+        ensure!(pending.callback==callback,"foreign native release");
+        if let Some(release)=pending.release.take() {let _=release.send(());}
+        Ok(())
+    }
+
+    /// Validate the joined native outcome, move the guest owner through one
+    /// checked delivery and complete the resource. Delivery is one-shot: the
+    /// task table itself refuses a second delivery.
+    pub fn deliver(&mut self,
+                   outcome:&std::result::Result<i64,String>)->Result<()> {
+        let mut pending=self.pending.take().context("delivery without an admitted task")?;
+        let receiver=self.receiver.take();
+        let validation=(|| -> Result<()> {
+            let receiver=receiver.as_ref().context("missing native receiver after join")?;
+            let mut extra=[0];
+            match outcome {
+                Ok(value)=>{
+                    let size=receiver.recv(&mut pending.receive_buffer)
+                        .context("native receiver read failed")?;
+                    self.receiver_reads+=1;
+                    ensure!(size==8+self.grant.text.len()
+                        && &pending.receive_buffer[..8]==self.grant.attempt.to_le_bytes().as_slice()
+                        && &pending.receive_buffer[8..]==self.grant.text.as_bytes(),
+                        "native receiver did not observe exact authorized Send");
+                    ensure!(*value==self.grant.attempt,"native producer reported another attempt");
+                }
+                Err(error)=>{
+                    ensure!(!error.is_empty() && error.len()<=pending.receive_buffer.len(),
+                        "native error text exceeds the result reservation");
+                    self.native_error=Some(error.clone());
+                }
+            }
+            let additional=receiver.recv(&mut extra);
+            if additional.is_ok(){self.receiver_reads+=1;}
+            ensure!(additional.is_err_and(|error|error.kind()==std::io::ErrorKind::WouldBlock),
+                "an unexpected second datagram reached the receiver");
+            Ok(())
+        })();
+        drop(receiver);
+        let failed=outcome.is_err();
+        let bytes=match outcome {Ok(_)=>8+self.grant.text.len(),Err(error)=>error.len()};
+        let attempt=self.admitted_key.context("no admitted attempt to observe")?;
+        let plan=self.admitted_plan.clone().context("no admitted plan to observe")?;
+        let observed=checked(self.authority.observe_from_trusted_host(
+            auth::ObservationDescription {attempt,plan,source:auth::SourceId(2),checkpoint:NOW,
+                outcome:if failed {auth::ObservedOutcome::OperationFailure}
+                    else {auth::ObservedOutcome::OperationSuccess}}))?;
+        let completed=checked(self.tasks.complete(pending.callback,
+            if failed {task::Outcome::DomainError}else {task::Outcome::Success},
+            task::Completion {inputs:task::Disposition {returned:1,consumed:0,retired:0},
+                produced:0,bytes}))?;
+        ensure!(completed.action==task::Action::ResultReady(
+            if failed {task::Outcome::DomainError}else {task::Outcome::Success}),
+            "native completion did not produce one ready result");
+        let token=pending.token.take().context("delivered task token missing")?;
+        let delivered=match self.tasks.deliver(token,self.context) {
+            Ok(decision)=>decision,
+            Err(rejected)=>{
+                pending.token=Some(rejected.input);
+                self.pending=Some(pending);
+                bail!("task delivery refused: {:?}",rejected.error);
+            }
+        };
+        ensure!(delivered.action==task::Action::ResultDelivered,
+            "guest result was not transferred exactly once");
+        let stopped=checked(self.tasks.native_stopped(pending.callback));
+        let mut released=checked(self.resources.complete(pending.scope,
+            if failed {owner::Completion::DomainError}else {owner::Completion::Success}));
+        let returned=released.as_mut().ok().and_then(|released|released.owner.take());
+        let returned_owner=returned.is_some();
+        if let Some(owner)=returned {
+            self.owner_returns+=1;
+            self.owner=Some(owner);
+        }
+        let settled=self.settle_delivered(pending.callback);
+        validation?;
+        stopped?;
+        released?;
+        settled?;
+        ensure!(returned_owner,"delivery did not return the caller-owned resource");
+        self.operation_observation=Some((attempt,observed));
+        self.delivered=Some(outcome.clone());
+        self.boundary("delivery");
+        self.record("result-delivery");
+        Ok(())
+    }
+
+    /// The guest's explicit asynchronous finish returned this exact result.
+    pub fn finish_invocation(&mut self,value:&std::result::Result<i64,String>)->Result<()> {
+        let delivered=self.delivered.clone()
+            .context("guest finish without a delivered result")?;
+        ensure!(delivered==*value,"guest returned a result the shell never delivered");
+        let (attempt,observation)=self.operation_observation.take()
+            .context("guest finish without an approved operation observation")?;
+        if value.is_ok() {
+            let receipt=checked(self.authority.deliver_success(attempt,&observation))?;
+            ensure!(receipt.description().attempt==Some(attempt)
+                && format!("{:?}",receipt.description().scope)=="InvocationDelivery",
+                "invocation receipt lost its attempt boundary");
+            self.receipts.push(json!({"claim":format!("{:?}",receipt.description().claim),
+                "scope":format!("{:?}",receipt.description().scope),
+                "invocation_outcome":format!("{:?}",self.authority.invocation_outcome())}));
+        } else {
+            let failed=checked(self.authority.fail_invocation())?;
+            ensure!(failed==auth::InvocationOutcome::Failed,
+                "domain-error arm did not end the invocation as failed");
+        }
+        self.boundary("invocation-delivery");
+        self.record("invocation-delivery");
+        Ok(())
+    }
+
+    /// A cancellation offered after delivery is a duplicate: it must not
+    /// revoke the receiver's owner, restore authority or restart retirement.
+    pub fn cancel_after_delivery(&mut self)->Result<bool> {
+        let Some(snapshot)=self.tasks.snapshot(0) else {return Ok(false)};
+        if snapshot.state!=task::State::Delivered {return Ok(false);}
+        let decision=checked(self.tasks.retire(snapshot.handle,task::Failure::Cancelled))?;
+        ensure!(decision.action==task::Action::Duplicate
+            && self.tasks.snapshot(0).is_some_and(|current|current.state==task::State::Delivered),
+            "late cancellation revoked a delivered task");
+        let refused=self.authority.cancel_invocation();
+        ensure!(refused.is_err_and(|error|error==auth::BoundaryError::InvocationFinished),
+            "duplicate cancellation changed the finished invocation");
+        ensure!(self.resources.observation().native_pins==0
+            && self.resources.snapshot(0).is_some_and(|resource|
+                resource.state==owner::State::Live)
+            && self.owner.is_some(),
+            "duplicate cancellation disturbed returned caller ownership");
+        self.boundary("duplicate-cancellation");
+        self.record("duplicate-cancellation");
+        Ok(true)
     }
 
     pub fn abort_unconsumed(&mut self)->Result<()> {
@@ -476,6 +802,26 @@ impl Host {
         Ok(())
     }
 
+    /// After a one-shot delivery the receiver owns the result; only pins,
+    /// buffers and the finalized flag remain to settle.
+    fn settle_delivered(&mut self,callback:task::Callback)->Result<()> {
+        let snapshot=checked(self.tasks.inspect(callback.task,self.context))?;
+        ensure!(snapshot.state==task::State::Delivered,
+            "delivery did not leave the task in the receiver's custody");
+        if snapshot.pins!=0 {checked(self.tasks.settle_pins(callback,snapshot.pins))?;}
+        let snapshot=checked(self.tasks.inspect(callback.task,self.context))?;
+        ensure!(snapshot.native_stopped && snapshot.pins==0
+            && snapshot.state==task::State::Delivered,
+            "native storage not stopped before delivered-task cleanup");
+        let obligations=task::Obligations {inputs:snapshot.retiring_inputs,
+            results:snapshot.results,buffers:snapshot.buffers};
+        if obligations!=task::Obligations::empty(){checked(self.tasks.cleanup(callback.task,obligations))?;}
+        let finished=checked(self.tasks.finish(callback.task))?;
+        ensure!(finished.action==task::Action::DeliverySettled,
+            "delivered task did not settle its reservation");
+        Ok(())
+    }
+
     pub fn finish_native(&mut self,outcome:std::result::Result<usize,String>)->Result<()> {
         let mut pending=self.pending.take().context("late native completion without task")?;
         let receiver=self.receiver.take();
@@ -484,9 +830,10 @@ impl Host {
         let validation=(|| -> Result<bool> {
             let receiver=receiver.as_ref().context("missing native receiver after join")?;
             match (self.mode,&outcome) {
-                (Mode::SendThenCancel | Mode::InjectReceiveError
+                (Mode::CancelWithNativeOutstanding | Mode::InjectReceiveError
                     | Mode::InjectReceiveCorruption | Mode::InjectCancelError
-                    | Mode::InjectCancelPanic,Ok(count))=>{
+                    | Mode::InjectCancelPanic | Mode::SuspendAwaitingSend
+                    | Mode::DeadlineWithNativeOutstanding,Ok(count))=>{
                     if self.mode==Mode::InjectReceiveError {
                         // Consume the real datagram first. The ordinary read
                         // then deterministically gets WouldBlock, exercising
@@ -517,7 +864,7 @@ impl Host {
                         error.kind()==std::io::ErrorKind::WouldBlock),"duplicate datagram observed");
                     Ok(true)
                 }
-                (Mode::CancelBeforeSend | Mode::InjectFallbackAuthorityError,Ok(0))=>{
+                (Mode::CancelBeforeDelivery | Mode::InjectFallbackAuthorityError,Ok(0))=>{
                     let mut extra=[0];
                     let unexpected=receiver.recv(&mut extra);
                     if unexpected.is_ok(){self.receiver_reads+=1;}
@@ -584,6 +931,26 @@ impl Host {
         ensure!(late_retired,"late native result crossed canceled future boundary");
         ensure!(resource_retired,"late native result resurrected resource owner");
         self.late_retired=true;
+        if success {
+            // The cancelled invocation stays cancelled. Only the operation
+            // attempt gains its late terminal observation and receipt.
+            let attempt=self.admitted_key.context("no admitted attempt to observe")?;
+            let plan=self.admitted_plan.clone().context("no admitted plan to observe")?;
+            let observed=checked(self.authority.observe_from_trusted_host(
+                auth::ObservationDescription {attempt,plan,source:auth::SourceId(2),checkpoint:NOW,
+                    outcome:auth::ObservedOutcome::OperationSuccess}))?;
+            let receipt=checked(self.authority.receipt(attempt,
+                auth::ReceiptClaim::OperationSuccess,Some(&observed)))?;
+            ensure!(receipt.description().attempt==Some(attempt),
+                "late operation receipt lost its attempt boundary");
+            self.receipts.push(json!({"claim":format!("{:?}",receipt.description().claim),
+                "scope":format!("{:?}",receipt.description().scope),
+                "invocation_outcome":format!("{:?}",self.authority.invocation_outcome())}));
+            self.boundary("late-completion");
+            self.record("late-native-completion");
+        }
+        self.boundary("retirement");
+        self.record("retirement-finished");
         validation.map(|_|())
     }
 
@@ -600,6 +967,21 @@ impl Host {
         self.tasks.observation().outstanding_pins
     }
 
+    /// The bounded driver finished settling a deadline retirement after join.
+    pub fn deadline_settled(&mut self) {
+        self.boundary("deadline-retirement");
+        self.record("deadline-retirement");
+    }
+
+    pub fn grant(&self)->&Grant {
+        &self.grant
+    }
+
+    /// The single admitted Send still awaiting a shell decision, if any.
+    pub fn pending_callback(&self)->Option<task::Callback> {
+        self.pending.as_ref().map(|pending|pending.callback)
+    }
+
     pub fn observation(&self)->Value {
         let task=self.tasks.observation();
         let resource=self.resources.observation();
@@ -607,6 +989,23 @@ impl Host {
         let late_task_outcome=self.late_task_outcome.map(|outcome|match outcome {
             task::Outcome::Success=>"success",task::Outcome::DomainError=>"domain-error"
         });
+        let attempt=self.admitted_key
+            .and_then(|key|self.authority.attempt_snapshot(key).ok())
+            .map(|snapshot|snapshot.outcome.map(|outcome|format!("{outcome:?}")));
+        let after_late=self.sequence.iter().position(|event|*event=="late-native-completion")
+            .map_or(self.sequence.len(),|at|at+1);
+        let late_worker_events=self.sequence[after_late..].iter()
+            .filter(|event|event.ends_with("-worker-event")).count();
+        // Resurrection: a resource count that was retired at one observation and
+        // live, busy or retiring at a later one. Delivery returns the caller a
+        // live owner, which is not a resurrection.
+        let owner_resurrections=usize::from(self.boundaries.iter().enumerate().any(
+            |(at,boundary)|
+                boundary["resources"]["retired"].as_u64().is_some_and(|retired|retired>0)
+                && self.boundaries[at+1..].iter().any(|later|
+                    ["live","busy","retiring"].iter().any(|kind|
+                        later["resources"][*kind].as_u64().is_some_and(|count|count>0)))
+        ));
         json!({"schema":"noble-worker-send-wit-peer/v1",
             "profile":"Worker-Send-WIT-Local", "denied":self.denied,
             "quota_refusal":self.quota_refusal,
@@ -620,6 +1019,41 @@ impl Host {
             "cleanup_failures":self.cleanup_failures,
             "native_send_bytes":self.native_sent,"native_error":self.native_error,
             "receiver_datagrams":self.receiver_reads,
-            "external_send_outcome":"not-attempted", "external_rollback_claimed":false})
+            "lifecycle_sequence":self.sequence,
+            "boundaries":self.boundaries,
+            "receipts":self.receipts,
+            "authority_invocation":format!("{:?}",self.authority.invocation_outcome()),
+            "operation_attempt_outcome":attempt,
+            "attempts_admitted":counters.attempts_admitted,
+            "witness_consumptions":counters.witness_consumptions,
+            "approved_observations":counters.approved_observations,
+            "task_deliveries":task.delivered,
+            "task_pending":task.pending,"task_retiring":task.retiring,
+            "owner_returns":self.owner_returns,
+            "owner_resurrections":owner_resurrections,
+            "late_worker_events":late_worker_events,
+            "delivered_result":self.delivered.as_ref().map(|value|match value {
+                Ok(attempt)=>json!({"ok":attempt}),
+                Err(error)=>json!({"error":error})}),
+            "deadline_diagnostic":self.deadline_diagnostic})
+    }
+}
+
+fn task_state(state:task::State)->&'static str {
+    match state {
+        task::State::Pending=>"Pending",
+        task::State::Ready=>"Ready",
+        task::State::Delivered=>"Delivered",
+        task::State::Retiring=>"Retiring",
+        task::State::Retired=>"Retired",
+    }
+}
+
+fn resource_state(state:owner::State)->&'static str {
+    match state {
+        owner::State::Live=>"Live",
+        owner::State::Busy(_)=>"Busy",
+        owner::State::Retiring(_)=>"Retiring",
+        owner::State::Retired=>"Retired",
     }
 }
