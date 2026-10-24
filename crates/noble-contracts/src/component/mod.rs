@@ -261,7 +261,11 @@ impl World {
 
     /// Every ordered admission rule stays a separate guard so the shape reads
     /// as the exact operation/ownership table rather than one compound test.
-    const fn has_transition_operation_shape(&self, kind: noble_kernel::types::ResourceKind) -> bool {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the predicate indexes owned Vec slices and compares owned Strings, which const fn cannot do here."
+    )]
+    fn has_transition_operation_shape(&self, kind: noble_kernel::types::ResourceKind) -> bool {
         if self.resources.len() != 1 || self.imports.len() != 2 {
             return false;
         }
