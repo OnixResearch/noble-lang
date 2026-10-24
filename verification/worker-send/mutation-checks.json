@@ -1,0 +1,39 @@
+{
+  "schema": "noble-worker-send-mutation-checks/v1",
+  "case": "native-async-interfaces",
+  "tested_commit": "2c649ec235adc22e6cccf7da5b8d546b9801756f",
+  "gate_receipt": {
+    "path": "verification/worker-send/receipt.json",
+    "sha256": "3dab63e562084d45d4742c898feafe86a98dc7010c1c1da646e2e023ec373a21"
+  },
+  "mutations": [
+    {
+      "mutation": "suspension-not-observed",
+      "claim": "a suspended guest must observe its still-pending owner before retirement",
+      "gate_exit": 1,
+      "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:",
+      "mutated_source_revision": "sha256:cedbe688a7627e1ece0dc887f5e8fd575208d1048d3548447ab3bf6bc2996e49",
+      "failing_output_sha256": "6a7ae066afcf01c1a4dcdf349f418826f9113f4d57a365cee505ce3a7f7b6a8a"
+    },
+    {
+      "mutation": "delivery-does-not-return-caller-owner",
+      "claim": "one-shot delivery must return the caller-owned resource",
+      "gate_exit": 1,
+      "failure": "AssertionError [ERR_ASSERTION]: delivered once through guest finish: ",
+      "mutated_source_revision": "sha256:7d9ca25a641c1f286411619ff38584f2ea840751bc2b3bf701c2b98fa8519482",
+      "failing_output_sha256": "156b8d7117d0198f5e71814375d49e9cac446c527ab064f27be91fd190d4803f"
+    },
+    {
+      "mutation": "invocation-receipt-not-issued",
+      "claim": "the guest explicit finish must approve the invocation delivery receipt",
+      "gate_exit": 1,
+      "failure": "AssertionError [ERR_ASSERTION]: delivered once through guest finish: ",
+      "mutated_source_revision": "sha256:f749c21f51eec9cd927a48c0f6699bd06d684237ed72a065f3078649233357ec",
+      "failing_output_sha256": "c912213b3319d91815c9a52d07ebad79b4889c40188b0343e97465b06b1004e0"
+    }
+  ],
+  "non_claims": [
+    "Each mutation removes one shell obligation in a throwaway worktree and is committed there.",
+    "The failures are gate rejections, not kernel or Cairn authority."
+  ]
+}

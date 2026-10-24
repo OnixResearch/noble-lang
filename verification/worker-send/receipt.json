@@ -1,0 +1,1151 @@
+{
+  "schema": "noble-worker-send-gate/v1",
+  "case": "native-async-interfaces",
+  "result": "passed",
+  "failures": [],
+  "tested_commit": "2c649ec235adc22e6cccf7da5b8d546b9801756f",
+  "source_scope": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "crates/noble-kernel",
+    "crates/noble-wasm/wit/worker-send.wit",
+    "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble",
+    "crates/noble-cli/tests/fixtures/worker-send-finish.noble",
+    "verification/worker-send",
+    "verification/worker01/fixtures",
+    "specs/conformance/worker-cases.json",
+    ".cairn/changes/worker-cancellation-slice-native-async/design.md"
+  ],
+  "source_revision": "sha256:1d85ab7c1a8baef5877af5c02ec38cf2bd1cc9f0f84253e7be2b165abebe1460",
+  "source_file_count": 191,
+  "case_projection": {
+    "case": "native-async-interfaces",
+    "criteria": [
+      "- The peer has a separate lock/vendor surface and every peer/WIT file is tool-selection pinned.",
+      "- WORKER-01 and WORKER-09 inputs/expected are check-specs pinned; code and gates must conform rather than edit cases.",
+      "- WORKER-09's case-wide 8-unit source interval applies to its typed-engine rows; the async driver has its separately declared 1,000-fuel quantum and deadline.",
+      "- `resources::Retirement` has no Deadline variant; deadline maps to `HostCleanup` and the task table retains `Failure::Deadline`.",
+      "- The datagram is an in-process synthetic native operation, not network delivery or exactly-once external semantics."
+    ],
+    "rows": [
+      "authorized socket send",
+      "cancel before native send",
+      "core start traps after send admission",
+      "core start sends before typed lookup failure",
+      "injected receiver error",
+      "injected receiver corruption",
+      "native producer panic after send",
+      "rejected native cancellation",
+      "unwound native cancellation",
+      "failed fallback authority retirement",
+      "buffer quota preflight",
+      "no-grant",
+      "mismatched-attempt-grant",
+      "expired-grant",
+      "candidate-generated-grant",
+      "mismatched-source-grant",
+      "delivered once through guest finish",
+      "domain error stays a domain error",
+      "suspended awaiting withheld result",
+      "host deadline retires outstanding native work"
+    ]
+  },
+  "case_projection_sha256": "c10dbe711f471c2de3e6ce5ece328f1b7ebf23a5d1273f04f7242c542b54f802",
+  "binaries": {
+    "cli": {
+      "sha256": "90452243fb3994bc2592ecd3b35080863305df4639fe1a639c5d2d4a1707d92a"
+    },
+    "peer": {
+      "sha256": "5acab0575c0a7172e825e8a179306da7e2580b627c42d14b805859db7e3ad2ff"
+    },
+    "component": {
+      "sha256": "aef3b63421d82a3e16352165b11bd2e8c47edc73621757afde2a4d4f08beabaa"
+    }
+  },
+  "rows": {
+    "authorized socket send": {
+      "outcome": "cancelled-retired",
+      "mode": "CancelWithNativeOutstanding",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "late-native-completion",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 4
+    },
+    "cancel before native send": {
+      "outcome": "cancelled-retired",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "core start traps after send admission": {
+      "outcome": "internal-failure",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": false,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "core start sends before typed lookup failure": {
+      "outcome": "internal-failure",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": false,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "injected receiver error": {
+      "outcome": "native-validation-failure-retired",
+      "mode": "InjectReceiveError",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "injected receiver corruption": {
+      "outcome": "native-validation-failure-retired",
+      "mode": "InjectReceiveCorruption",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "native producer panic after send": {
+      "outcome": "native-validation-failure-retired",
+      "mode": "InjectProducerPanic",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "cancellation-commit",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "Unknown",
+      "receipts": 0,
+      "boundaries": 3
+    },
+    "rejected native cancellation": {
+      "outcome": "internal-failure",
+      "mode": "InjectCancelError",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "late-native-completion",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 3
+    },
+    "unwound native cancellation": {
+      "outcome": "internal-failure",
+      "mode": "InjectCancelPanic",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "late-native-completion",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 3
+    },
+    "failed fallback authority retirement": {
+      "outcome": "internal-failure",
+      "mode": "InjectFallbackAuthorityError",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "cancelled",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Failed",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 2
+    },
+    "buffer quota preflight": {
+      "outcome": "quota-denied",
+      "mode": "BufferQuotaPreflight",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "preflight-refusal"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Pending",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 1
+    },
+    "no-grant": {
+      "outcome": "denied",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "preflight-refusal"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Pending",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 1
+    },
+    "mismatched-attempt-grant": {
+      "outcome": "denied",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "preflight-refusal"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Pending",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 1
+    },
+    "expired-grant": {
+      "outcome": "denied",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "preflight-refusal"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Pending",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 1
+    },
+    "candidate-generated-grant": {
+      "outcome": "denied",
+      "mode": "CancelBeforeDelivery",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": null,
+      "sequence": [
+        "submit-worker-event",
+        "preflight-refusal"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Pending",
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 1
+    },
+    "mismatched-source-grant": {
+      "outcome": "internal-failure",
+      "sequence": [],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": null,
+      "operation_attempt": null,
+      "receipts": 0,
+      "boundaries": 0
+    },
+    "delivered once through guest finish": {
+      "outcome": "delivered-once",
+      "mode": "DeliveryBeforeCancel",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": "finished",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "result-delivery",
+        "invocation-delivery",
+        "duplicate-cancellation"
+      ],
+      "deliveries": 1,
+      "successful_deliveries": 1,
+      "owner_returns": 1,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Succeeded",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 4
+    },
+    "domain error stays a domain error": {
+      "outcome": "domain-error-delivered",
+      "mode": "DeliveryDomainError",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 0,
+      "handle_disposition": "finished",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "result-delivery",
+        "invocation-delivery",
+        "duplicate-cancellation"
+      ],
+      "deliveries": 1,
+      "successful_deliveries": 0,
+      "owner_returns": 1,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Failed",
+      "operation_attempt": "OperationFailure",
+      "receipts": 0,
+      "boundaries": 4
+    },
+    "suspended awaiting withheld result": {
+      "outcome": "suspended-retired",
+      "mode": "SuspendAwaitingSend",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "finished",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "suspension",
+        "suspension-retirement",
+        "late-native-completion",
+        "retirement-finished"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Cancelled",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 5
+    },
+    "host deadline retires outstanding native work": {
+      "outcome": "host-deadline-retired",
+      "mode": "DeadlineWithNativeOutstanding",
+      "future_consumed": true,
+      "native_pins_at_guest_exit": 1,
+      "handle_disposition": "finished",
+      "sequence": [
+        "submit-worker-event",
+        "admission-commit",
+        "native-handoff",
+        "deadline-ack",
+        "late-native-completion",
+        "retirement-finished",
+        "deadline-retirement"
+      ],
+      "deliveries": 0,
+      "successful_deliveries": 0,
+      "owner_returns": 0,
+      "owner_resurrections": 0,
+      "task_outstanding_pins": 0,
+      "resource_native_pins": 0,
+      "task_reserved_bytes": 0,
+      "invocations": "Failed",
+      "operation_attempt": "OperationSuccess",
+      "receipts": 1,
+      "boundaries": 5
+    }
+  },
+  "smoke_cases": [
+    "authorized socket send",
+    "cancel before native send",
+    "core start traps after send admission",
+    "core start sends before typed lookup failure",
+    "injected receiver error",
+    "injected receiver corruption",
+    "native producer panic after send",
+    "rejected native cancellation",
+    "unwound native cancellation",
+    "failed fallback authority retirement",
+    "buffer quota preflight",
+    "no-grant",
+    "mismatched-attempt-grant",
+    "expired-grant",
+    "candidate-generated-grant",
+    "mismatched-source-grant",
+    "delivered once through guest finish",
+    "domain error stays a domain error",
+    "suspended awaiting withheld result",
+    "host deadline retires outstanding native work"
+  ],
+  "source_files": {
+    ".cairn/changes/worker-cancellation-slice-native-async/design.md": {
+      "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
+    },
+    "Cargo.lock": {
+      "sha256": "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b"
+    },
+    "Cargo.toml": {
+      "sha256": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6"
+    },
+    "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble": {
+      "sha256": "0bb7e63ef292cfa871f15b6f154a9426cb739fe5185a7098e324c653de84f65e"
+    },
+    "crates/noble-cli/tests/fixtures/worker-send-finish.noble": {
+      "sha256": "c0613f59dc6e519904b083f3149f6c41ee51ed90f22ad9eab0319c46c5182a81"
+    },
+    "crates/noble-kernel/Cargo.toml": {
+      "sha256": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b"
+    },
+    "crates/noble-kernel/src/acceptance/frames.rs": {
+      "sha256": "5cdd1a5e0b12a9881ca147df7e5754423a1292ff6adf2ee933e2a43491f079b3"
+    },
+    "crates/noble-kernel/src/acceptance/mod.rs": {
+      "sha256": "5bde0eee5d4c5e7369b08931de00e03fadf0f6dfc3043f6cbbb4daf6e7ff865d"
+    },
+    "crates/noble-kernel/src/acceptance/nodes.rs": {
+      "sha256": "bcb6871172f0d8c8c188dc5eb41f094f38019dbec34a7c7d3a71bef5bf684f7e"
+    },
+    "crates/noble-kernel/src/acceptance/nodes/visibility.rs": {
+      "sha256": "12c8013f94a6e748a3e3e5051f1bc3cf938d8480419624a97ad174c0e9c7069c"
+    },
+    "crates/noble-kernel/src/acceptance/parts.rs": {
+      "sha256": "0a3922be73ff336981c08f7624c7e6a9767ece4771fd6be5b40077d4b8d09adf"
+    },
+    "crates/noble-kernel/src/acceptance/parts/effects.rs": {
+      "sha256": "a9a7f5727bfe231deca57c3220db00320ae35d0c9990b07b11a351538b40e5ce"
+    },
+    "crates/noble-kernel/src/acceptance/parts/instantiate.rs": {
+      "sha256": "7546b95e1435d37e25f0c653a25d618ffcb091080df5e0fcf1b0b8c101fdc62d"
+    },
+    "crates/noble-kernel/src/acceptance/parts/multiset.rs": {
+      "sha256": "2c4f39f5fc40624c677a7321ca18e37ccb464d80886ece22da696fa385bdb1eb"
+    },
+    "crates/noble-kernel/src/acceptance/preflight.rs": {
+      "sha256": "c051826745e252c0f16a8ebde76256aec2fbf3e75ad8abb3de5e44e4a78fcea7"
+    },
+    "crates/noble-kernel/src/acceptance/schemes.rs": {
+      "sha256": "eff565f9ed0300ba649ba9202337b5e3d84c9c4b230ddd49e0ced81e18a4b1fd"
+    },
+    "crates/noble-kernel/src/acceptance/validate.rs": {
+      "sha256": "8a2bce3c761c123fc55e76b90cd5c0008332065fd0c25479ee70a62655e248e1"
+    },
+    "crates/noble-kernel/src/async_tasks/accounting.rs": {
+      "sha256": "1f5ad623385fc49613fba5f6cbfe564126b556d57ca0817cb175e692b85dc9f3"
+    },
+    "crates/noble-kernel/src/async_tasks/bounds.rs": {
+      "sha256": "0d4399f7778bbb8ae11ee9d59f896660743db607a81ed13126071b91d7305899"
+    },
+    "crates/noble-kernel/src/async_tasks/domain.rs": {
+      "sha256": "ad7291c0b2d16f67e065369a490b5657fa7bc76e22f34dc2e28fb6444f0d9115"
+    },
+    "crates/noble-kernel/src/async_tasks/mod.rs": {
+      "sha256": "e6555dce4344e36839dede79efde3b87b8e8240aba8f21a00fa944a909d80d40"
+    },
+    "crates/noble-kernel/src/async_tasks/schema.rs": {
+      "sha256": "3ebc3d67c0bfa8ee5ddf23b87b05f038bfd774a57a9207a91ff4130a7f3a9f24"
+    },
+    "crates/noble-kernel/src/async_tasks/schema/coverage.rs": {
+      "sha256": "ddd74ea7eb19a32618eb37b89cfc7a09bb58698bc650f67f5761cf67becbde01"
+    },
+    "crates/noble-kernel/src/async_tasks/table.rs": {
+      "sha256": "2fd40027c437cebf8beb3b396bf438defab1d7d5176a1b1709f3955c1c67b54b"
+    },
+    "crates/noble-kernel/src/async_tasks/table/admission.rs": {
+      "sha256": "0f8fa1db0a91df899c5241c295678b2639090027e61adebeba1d4ac8ea4eb512"
+    },
+    "crates/noble-kernel/src/async_tasks/table/callbacks.rs": {
+      "sha256": "d60510a9cb329fea57c3a227a32690941c24f8646dc79d5f059df48abc262856"
+    },
+    "crates/noble-kernel/src/async_tasks/table/inspection.rs": {
+      "sha256": "acb126a14d2b4decb4c55cc7be46fe8340b170523972f3a44adc3b0447df982a"
+    },
+    "crates/noble-kernel/src/async_tasks/table/ownership.rs": {
+      "sha256": "35f9bc998377527b8633adbdf3ffef527eaf1d56ce53156ac2e7c00f63493d4e"
+    },
+    "crates/noble-kernel/src/async_tasks/transition.rs": {
+      "sha256": "82618f6878188ab86d915a666ee94d883cfcbc9621f620a40ed372f7f10be7e6"
+    },
+    "crates/noble-kernel/src/async_tasks/transition/cleanup.rs": {
+      "sha256": "5d766b0655bfe95e7ba133075eda597ecf9345823b3adf074bf971533aca532f"
+    },
+    "crates/noble-kernel/src/async_tasks/transition/completion.rs": {
+      "sha256": "76e6790bcfb6fd51b9e85840e435e3754b3872749878af68c8ca34290d3c3fea"
+    },
+    "crates/noble-kernel/src/async_tasks/transition/lifecycle.rs": {
+      "sha256": "73fc27318d81b4fb90cf24a26907fe1a1d0183188f93fb8f30ac458d3279517c"
+    },
+    "crates/noble-kernel/src/async_tasks/transition/validation.rs": {
+      "sha256": "3f0b78edac2a575bcadd2bf64e22cac6fffee52d26fc61b3782b526f61a79e14"
+    },
+    "crates/noble-kernel/src/authority/admission.rs": {
+      "sha256": "fc9ecd0c744680c392380f1b140aca6f8861dd88b400d3a659ae599bb65aa26a"
+    },
+    "crates/noble-kernel/src/authority/facts.rs": {
+      "sha256": "8f8812cf68385d3d6e02bad49f3a48a5efc908507407c2d5d525d981b16d044e"
+    },
+    "crates/noble-kernel/src/authority/mod.rs": {
+      "sha256": "b2d5c908480706a7d061771ce00359d82ea431f963856063593910f61ffc839c"
+    },
+    "crates/noble-kernel/src/authority/observation.rs": {
+      "sha256": "c966bf9265551b1f9f352ab6c945a371b4123e4024465ed67eb237a68be20b20"
+    },
+    "crates/noble-kernel/src/authority/permit.rs": {
+      "sha256": "d85558ed22d47483ed65e5955086efe4f545500b1f4292291278ecb1743e5c8d"
+    },
+    "crates/noble-kernel/src/authority/receipts.rs": {
+      "sha256": "7a4cb2ddc5e9bb4c9316343a38554d159fcca06edc7ac04c6c6229fe55fa84eb"
+    },
+    "crates/noble-kernel/src/authority/report.rs": {
+      "sha256": "0b56bc438c3543e56b97d5e3d2a7ba8b0304452be9d5fc9103a4da0def380859"
+    },
+    "crates/noble-kernel/src/capacity.rs": {
+      "sha256": "d823bc8d9e40fdecd77f67186a50af9acec6a46db523232a6de9958eeeef5038"
+    },
+    "crates/noble-kernel/src/contracts.rs": {
+      "sha256": "af3945a5f510ad8b166fb139ede3bbd4537f019e51e32e195f46048dd455c27e"
+    },
+    "crates/noble-kernel/src/contracts/bootstrap.rs": {
+      "sha256": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4"
+    },
+    "crates/noble-kernel/src/contracts/bootstrap/data.rs": {
+      "sha256": "c41941d104412cde0169ea34d28d79e01c0c8a1d41fdd9981f19fc6280d77807"
+    },
+    "crates/noble-kernel/src/contracts/clone_budget.rs": {
+      "sha256": "11d65af79b112843eb6972cd9ad8c9e1d1a75e05d70c6eb0c29b638d3da583ab"
+    },
+    "crates/noble-kernel/src/contracts/live.rs": {
+      "sha256": "9563b5656bf86005d8d6dcd13929408205a4e254d473218271711abff9428295"
+    },
+    "crates/noble-kernel/src/contracts/nominal.rs": {
+      "sha256": "90645d0e65cac4aa67435282302776175a232cb00612f7f9fefd745f20ace9a2"
+    },
+    "crates/noble-kernel/src/contracts/nominal/inspection.rs": {
+      "sha256": "21442ea2e7277c6edbd2d490af60c58606897a8c2377b0329749cea4accd3520"
+    },
+    "crates/noble-kernel/src/contracts/nominal/payload.rs": {
+      "sha256": "66ccbe7c74d1695de72a58c1139f3319e0a9723ec1057220d815722ccb64cbda"
+    },
+    "crates/noble-kernel/src/contracts/nominal/schemes.rs": {
+      "sha256": "7f794dbf9bc7a907ec904866ba685b3662bf09db584c936d296b9fb01d6be918"
+    },
+    "crates/noble-kernel/src/contracts/nominal/type/walk.rs": {
+      "sha256": "548f4aefec4f0d5e9b2a968051bd934e72faedc5dd52191fa40ed0cfda951407"
+    },
+    "crates/noble-kernel/src/contracts/nominal/type/walk/work.rs": {
+      "sha256": "7ed8ee6155d404f4aeb28e3828d22d9556b734cd7e9b451a067947cd3b76cfa2"
+    },
+    "crates/noble-kernel/src/contracts/nominal/validation.rs": {
+      "sha256": "594ab9c04d7a51ff116c3e8144953055e91de6482eeaa732104b6cfd903c47f7"
+    },
+    "crates/noble-kernel/src/dataspace/mod.rs": {
+      "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f"
+    },
+    "crates/noble-kernel/src/dataspace/table.rs": {
+      "sha256": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de"
+    },
+    "crates/noble-kernel/src/dataspace/table/actions.rs": {
+      "sha256": "ab02f1a631cb1958c38bed12bbd3ad417380193012de5c30322329b74850d1a2"
+    },
+    "crates/noble-kernel/src/dataspace/wire.rs": {
+      "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08"
+    },
+    "crates/noble-kernel/src/execution/mod.rs": {
+      "sha256": "ffd9d557bc3a8717372ad1ad59b4e7366d01d8d40317ece80e5fb7b1a4230ef4"
+    },
+    "crates/noble-kernel/src/lib.rs": {
+      "sha256": "1d589647566d9c3306ed40f9cebdc287fc9bf839873e74fb16c09704a645ebdf"
+    },
+    "crates/noble-kernel/src/resources/mod.rs": {
+      "sha256": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3"
+    },
+    "crates/noble-kernel/src/resources/table.rs": {
+      "sha256": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35"
+    },
+    "crates/noble-kernel/src/resources/table/access.rs": {
+      "sha256": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b"
+    },
+    "crates/noble-kernel/src/resources/table/inspection.rs": {
+      "sha256": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58"
+    },
+    "crates/noble-kernel/src/resources/table/transfer.rs": {
+      "sha256": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff"
+    },
+    "crates/noble-kernel/src/resources/transition.rs": {
+      "sha256": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+    },
+    "crates/noble-kernel/src/shapes.rs": {
+      "sha256": "cd4a1829de8c99d97143f30c226bce5ab7dc9a87e2ab5a93de557acabdc16331"
+    },
+    "crates/noble-kernel/src/shapes/impls.rs": {
+      "sha256": "c5e01ec491af3ac46488e567ff2d3c0b9531a22e11cc842ecab7604544620413"
+    },
+    "crates/noble-kernel/src/shapes/impls/equality.rs": {
+      "sha256": "16511b2c29a47c37ab4ceaa7b339ab163f7cda8a4972597caa9a6b9e3eeb6c3b"
+    },
+    "crates/noble-kernel/src/types.rs": {
+      "sha256": "36a7223f8a7c724e3ffd1fa8ef3b6fa85d0245138919ad16b883b05c49b8de15"
+    },
+    "crates/noble-kernel/src/types/data.rs": {
+      "sha256": "a4f3119632222be2c6d964db7c2f899b251c990f6e4b41c6c9511ffcfff402ff"
+    },
+    "crates/noble-kernel/src/types/impls.rs": {
+      "sha256": "879e40fd46b196725b1c20b8c40e1b9536d6736a7f3ab6bafac7da7b47d003ca"
+    },
+    "crates/noble-kernel/src/types/size.rs": {
+      "sha256": "e04c6f762f1cf4092b14d5fe1624354336fc4c97ce9534008149eb37d312dd3b"
+    },
+    "crates/noble-kernel/src/untrusted.rs": {
+      "sha256": "248c2a4a0bab52da79af79937c7c77b96397d5214c5da954217088e32e03dd1e"
+    },
+    "crates/noble-kernel/src/words.rs": {
+      "sha256": "d1f593ba85770a758b0d4df692b868095649be1538429a7166820a5d5c662941"
+    },
+    "crates/noble-kernel/src/words/bounds.rs": {
+      "sha256": "f966e4fa5618ec03a9013cd9a068d0f6438fd053041ae4dba07d9dcb57b166c8"
+    },
+    "crates/noble-kernel/src/words/resolve.rs": {
+      "sha256": "96dcfc57f837e3b1a11c62b8f348c5f8806d3dcf6c63d7d619bbb2a9902e766d"
+    },
+    "crates/noble-kernel/src/words/segments.rs": {
+      "sha256": "58433562c4c2cbce4956284153405cedbc03d1bbeb1f2e4ccc38daf96bacd6bf"
+    },
+    "crates/noble-kernel/src/words/subst.rs": {
+      "sha256": "d50a439309dc2c38950a8b7058713426ff7f105006a20405539b4ff6c63a0aae"
+    },
+    "crates/noble-kernel/src/words/subst/finish.rs": {
+      "sha256": "051e4d017d0904dc6a2360c0b9e3902b609e7fc829fce1b910f50bc76fce2e6e"
+    },
+    "crates/noble-kernel/src/words/subst/schedule.rs": {
+      "sha256": "aa002bbe003739fa07cde5164c62acfea147ac817956c30fd79ce37b79e7be00"
+    },
+    "crates/noble-kernel/tests/acceptance.rs": {
+      "sha256": "13c5f2dc68ddb080a2d4e4f9a3e893602632060f3680f7004f3fc3114c698973"
+    },
+    "crates/noble-kernel/tests/acceptance/controls.rs": {
+      "sha256": "1c01366b8b178c1c572ec8f7dec5ba3524e0e84f9902b167bf9e583a00e5d272"
+    },
+    "crates/noble-kernel/tests/acceptance/controls/data.rs": {
+      "sha256": "ef651058fca543886ac70884e8d915d22a5660d866409d3e907bf55ce0ec4a89"
+    },
+    "crates/noble-kernel/tests/acceptance/controls/eliminators.rs": {
+      "sha256": "b299da26ed266e471352756626a0ad9af11888f2bc252ab657fac020ea44f0ae"
+    },
+    "crates/noble-kernel/tests/acceptance/controls/primitives.rs": {
+      "sha256": "6e9a59eca8ed63466331cd6d6b9bd3ae6a865d1486e5690c527f4144a53cbb1c"
+    },
+    "crates/noble-kernel/tests/acceptance/controls/programs.rs": {
+      "sha256": "65a0d2152c412aaf070854f313934b1333dcc6d2c0cd4c8b7a9f13ad17af5c92"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal.rs": {
+      "sha256": "fde8ad4c2aa1436d2262251d9ca2d95182385f39961745bcad47fdb95dc7e666"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/eligibility.rs": {
+      "sha256": "34a9b0fd4d97f6424d28469a90e59ce38c978f2424af61fc8b3cb2d768796d6f"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/forgery.rs": {
+      "sha256": "b4a7db38a3c10cb4b474f45057aec11c356e47e228b1855f1945a6d06ffdaa0c"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/generic.rs": {
+      "sha256": "a0a8d295b15a90d2bd01d7e1a4dca6ca7c2334a20cba077530eece05f5c26262"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/identity.rs": {
+      "sha256": "7774c6d64d1d9fbb637b36c17158109df32466f5651ecfc5d1b37e5178a44276"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/matching.rs": {
+      "sha256": "e2b7d0ab506d629752779408d72bb038664a98dc478a5a8c914e40b47974e52a"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/matching/branches.rs": {
+      "sha256": "fc74734ac3fe7b7113c6a12a00082d18cb8592746e974af5b8a557c4dd986cc0"
+    },
+    "crates/noble-kernel/tests/acceptance/nominal/visibility.rs": {
+      "sha256": "da8f9f0e3bdf97c7c3dc34f3ad3bb7fd0cd15736bed651f3d9809215d01a07c7"
+    },
+    "crates/noble-kernel/tests/acceptance/programs.rs": {
+      "sha256": "894bfb70bdd3946b6576d97997fa2ee0a628d615571c7d643935c4fe2e616ec8"
+    },
+    "crates/noble-kernel/tests/acceptance/sums.rs": {
+      "sha256": "4494e95f78e0ee565df1f83c4d0edbca82322e17ff56629d52fafa5d4ccd6e8f"
+    },
+    "crates/noble-kernel/tests/budget.rs": {
+      "sha256": "4f0f946aed48214ba1677371cc66e0e07b0594204ee82d3f876d3e454ef7a178"
+    },
+    "crates/noble-kernel/tests/docexamples.rs": {
+      "sha256": "8e776f611b12d059f1bad2e150477e669323f4d93bf1c83e0ae4cf5f11a52af9"
+    },
+    "crates/noble-kernel/tests/docexamples/decode.rs": {
+      "sha256": "101bd9830996becccf0dd252e40d204b5cf37fd30d1811bab6036bf69a6ad970"
+    },
+    "crates/noble-kernel/tests/docexamples/fences.rs": {
+      "sha256": "5aa9b8279d1514db67ed6a6e7e453916d1edb4953c73c1eedd06c5e30859302b"
+    },
+    "crates/noble-kernel/tests/docexamples/json.rs": {
+      "sha256": "fedb51f34c81562e3b86f9b9b61f50885d40e4e53d08295de00684a1c84fe3ee"
+    },
+    "crates/noble-kernel/tests/docexamples/json/numbers.rs": {
+      "sha256": "01ef994cb89c8d6053bf791b71b8f8b814dca81f33a08af735413239576a9c73"
+    },
+    "crates/noble-kernel/tests/docexamples/shapes.rs": {
+      "sha256": "64abfa685b03377e5ae2e865db6b6f05fb6ae80e33e57221f38c100903a2ce82"
+    },
+    "crates/noble-kernel/tests/docexamples/value.rs": {
+      "sha256": "c9634b3d3d9100a19c5e3b085f24333e8f53609cd2fe525864279b7d83715e07"
+    },
+    "crates/noble-kernel/tests/docexamples/vocab.rs": {
+      "sha256": "b4a737cac51e332350d5b1b10aaec1c3b24610b208cce95bd769a42afeca7f8a"
+    },
+    "crates/noble-kernel/tests/dx01.rs": {
+      "sha256": "65ea9b37c9df1d34845f77acd822a8e00d3d9044d3eb17e1d4d008591a7879f0"
+    },
+    "crates/noble-kernel/tests/dx01/builders.rs": {
+      "sha256": "7118632f82bb9cb3924a0f88feb2aa9e73020cb83b0f9002a624851fe8ca12bd"
+    },
+    "crates/noble-kernel/tests/dx01/v1.rs": {
+      "sha256": "57db3c91263680040f753321bcaf770577faf863370ee7817e09280de553e99f"
+    },
+    "crates/noble-kernel/tests/fragment.rs": {
+      "sha256": "8cf908362732a7f0b7de1fa7d94cf6390f70c14c02b19d1a01b68dac17249477"
+    },
+    "crates/noble-kernel/tests/fragment/kinds.rs": {
+      "sha256": "a5a51a4f0fbf59083476cc1e3ab51eb3c628dab5a2143a6f3e0636d7888993ea"
+    },
+    "crates/noble-kernel/tests/fragment/witnesses.rs": {
+      "sha256": "57783070389b366372b9a83986322b3212e57e25446a8c6c966b341a5696661f"
+    },
+    "crates/noble-kernel/tests/live_slots.rs": {
+      "sha256": "8c7f326f1e642956762f28eb3e180cb0c3a77a9a3434c575942c67ba25b11e7a"
+    },
+    "crates/noble-kernel/tests/m5-authority.rs": {
+      "sha256": "f0a449efa1e0e0e19d8ff2d9152713be23ea66eef252c6e37bbc7f9997687168"
+    },
+    "crates/noble-kernel/tests/m5-authority/bindings.rs": {
+      "sha256": "4ba3ac7d668ced2c0b59311abfdba81f2f48b1004ce7e0e7b58b8b5c1e3ea9a5"
+    },
+    "crates/noble-kernel/tests/m5-authority/bindings/cases.rs": {
+      "sha256": "44a01765a6cb88c56ea359944c27c3b2e88155ce80bb95d64a154b413b038838"
+    },
+    "crates/noble-kernel/tests/m5-authority/receipts.rs": {
+      "sha256": "e6a2b86f2a4c9fa771fcc17d7296337b905ea9709e3ba05f7a6fe2d93699b0dc"
+    },
+    "crates/noble-kernel/tests/m5-authority/receipts/completion.rs": {
+      "sha256": "985046ae27d4ac3a1cce09d8c9d9f5f20d962946ea132e53c98fa6c6fba028c4"
+    },
+    "crates/noble-kernel/tests/m5-authority/receipts/finality.rs": {
+      "sha256": "3e2eca4e65b3dc3becd841ed45d2f25b62c1a6c1e27c4b2d537c0146fdec7073"
+    },
+    "crates/noble-kernel/tests/m5-authority/receipts/provenance.rs": {
+      "sha256": "11ad0e231e1e215f302445de838c53e5df24d9885e7c4224c7892a0db42b90a4"
+    },
+    "crates/noble-kernel/tests/m5-authority/sequencing.rs": {
+      "sha256": "e6e424981e2a1424af6dd9ba7c074eb8413ad074927b4b35e6c2f14bd96d2b12"
+    },
+    "crates/noble-kernel/tests/m5-authority/support.rs": {
+      "sha256": "2b7b6b63c52a70bad42105e24be96dadf6acc6477be8daf9568e69f53f788830"
+    },
+    "crates/noble-kernel/tests/m5-resources.rs": {
+      "sha256": "0bfc2ce18626872879546460f16c9bec6dc39df1e38179500992b8c1bbaf7148"
+    },
+    "crates/noble-kernel/tests/m5-resources/boundaries.rs": {
+      "sha256": "9e650542ce2a59478269905b8b010781f4bf2423e887461793462a1d068f51b6"
+    },
+    "crates/noble-kernel/tests/m5-resources/budgets.rs": {
+      "sha256": "95804e4dcdf846d6dd0bcf15f8d1f6161edb6ad35e3df7668437c14aea83308d"
+    },
+    "crates/noble-kernel/tests/m5-resources/handoff.rs": {
+      "sha256": "f297c83f367fb72ad4134e536dbfb3c988544640a47ae29352d22d352ccf9b7d"
+    },
+    "crates/noble-kernel/tests/m5-resources/lifecycle.rs": {
+      "sha256": "a3964913e4bd620634ba9608f99f0fa1af6de3708ffa4ffa25a3af6025f892ab"
+    },
+    "crates/noble-kernel/tests/m5-resources/retirement.rs": {
+      "sha256": "d269d812d81972b7521937b7ba2843b5ef237e6c4900365243e15d43f7421d10"
+    },
+    "crates/noble-kernel/tests/m5-resources/support.rs": {
+      "sha256": "2ab7d58d694ccdea1df69f75d74980817f7ee806480bd7f92c5cbf921976058d"
+    },
+    "crates/noble-kernel/tests/m5-resources/transfer.rs": {
+      "sha256": "99bb0a291a1aef30912030fd7ff7fab37462fe2eee93813bd008eee7d4153877"
+    },
+    "crates/noble-kernel/tests/m6-async.rs": {
+      "sha256": "e29fd2545db7bc15d26835b1068fdb38fe45198526e94a14182fcfd806812499"
+    },
+    "crates/noble-kernel/tests/m6_async/budgets.rs": {
+      "sha256": "a600f98c265ecb4c57eed494b37a1283c7bb358bc78f7b7ce14e358a28454c7f"
+    },
+    "crates/noble-kernel/tests/m6_async/callbacks.rs": {
+      "sha256": "396001488b6aaf3d5fce7e78965e5bef9364fc1fe7a110a75f87d3182f04313e"
+    },
+    "crates/noble-kernel/tests/m6_async/coverage.rs": {
+      "sha256": "a44cff394bf2ff47dfdaa34cdd7524ab7e9163416cc06b87c348626d98d870f4"
+    },
+    "crates/noble-kernel/tests/m6_async/receivers.rs": {
+      "sha256": "495d1be4fc5ecf459f300816d0f98d71a8a7437cd5679e1d555edee0b93acd5b"
+    },
+    "crates/noble-kernel/tests/m6_async/retirement.rs": {
+      "sha256": "6a14981ec0d112f8a7ccca275d241ca7f6dfdfba4e84fc71a292d486ad00b8c4"
+    },
+    "crates/noble-kernel/tests/m6_async/support.rs": {
+      "sha256": "7d1fc331f5eedcd3dced5a75d77afeef1e14081845b9c7d12b6def2687f78f39"
+    },
+    "crates/noble-kernel/tests/m7-dataspace.rs": {
+      "sha256": "d8e1661cc45ea601912bcd84c5c10b674088ee3eda3dee7a40ec2369bc058da8"
+    },
+    "crates/noble-kernel/tests/property.rs": {
+      "sha256": "8d3ad6b061849c29951b65c08edff96eff0a84e44eddee61cc616ae5b929680e"
+    },
+    "crates/noble-kernel/tests/property/fit.rs": {
+      "sha256": "9af970796435d24f78c34087358ed5c82111bc19111cd3fd2eaafaddd71e860b"
+    },
+    "crates/noble-kernel/tests/property/fit/branches.rs": {
+      "sha256": "1aaaac358d2df8c5e0bf1bd6e1dcd29e4b758fe8135794ca604931df0fcf8495"
+    },
+    "crates/noble-kernel/tests/property/fit/data.rs": {
+      "sha256": "6039445bd6fe1dacda7701e1e70a4bb7b7555ff0b7f5af6e550361b1af280c5c"
+    },
+    "crates/noble-kernel/tests/property/fit/primitives.rs": {
+      "sha256": "10449372dacc94e86b4fd84e033e7ac8790e3f3950954510a251c84485a51214"
+    },
+    "crates/noble-kernel/tests/property/fit/programs.rs": {
+      "sha256": "2b2804cfae35109f5f154fc4cf50d2908dc2c19a03a5b72ca5a8bbdd22c45836"
+    },
+    "crates/noble-kernel/tests/property/generator/build/body.rs": {
+      "sha256": "b7e7ffe2a8cb807fc4bccab33186fbc707e355d5d2864b88d64b98f74ff786b9"
+    },
+    "crates/noble-kernel/tests/property/generator/build/eliminators.rs": {
+      "sha256": "f7d09affd0827a71d2b2d7557abed36c56ac3e653e73a6e27ff640a8498641aa"
+    },
+    "crates/noble-kernel/tests/property/generator/build/storage.rs": {
+      "sha256": "6c4f8575a9598477eb356248f601aa0151f65056f5ac0fccace0fc9eb05d5c47"
+    },
+    "crates/noble-kernel/tests/property/generator/build/types.rs": {
+      "sha256": "5e1c60296b1b5024b68d1df755bcdf6a094e1b01b813b1bfab8754fd3e08fe81"
+    },
+    "crates/noble-kernel/tests/property/generator/corruptions/witness.rs": {
+      "sha256": "71c9cbdd7e4e3f7ac2a04be82f61d3c160a32f13fb8e9d55d21079cd42c8cd3f"
+    },
+    "crates/noble-kernel/tests/property/generator/gen.rs": {
+      "sha256": "f662c390c104f4c0cf98a42fdf549469b2e7659f2f136dc96c646dd7e2e9fab5"
+    },
+    "crates/noble-kernel/tests/property/generator/knobs.rs": {
+      "sha256": "e0275f70a8708641ec6782ec8865c85034211895fcfe2bc541c4897a74e13fdc"
+    },
+    "crates/noble-kernel/tests/property/generator/malform.rs": {
+      "sha256": "6855d145bd043f004d626f13ca2f3d2e5b914e26418e850a5b1807b005634dfe"
+    },
+    "crates/noble-kernel/tests/property/generator/random.rs": {
+      "sha256": "2ad06dae5d929680926095d45c0b0abb0f99fa91c64b648f8bc5df941bbf7a00"
+    },
+    "crates/noble-kernel/tests/property/oracle.rs": {
+      "sha256": "163969ec93fbba4e00d73ea1601a54169f5e817a7a08c81d20e37b2b56f938de"
+    },
+    "crates/noble-kernel/tests/property/otypes.rs": {
+      "sha256": "9880d35898d2f06624b93e760375ddc352841e9ce744babc7b67b7ee7feac5fe"
+    },
+    "crates/noble-kernel/tests/property/shrink.rs": {
+      "sha256": "be44aac8d1f3a5dc83c1e8aeabc7db8edf43c1bad49383c3497f0c411d014adc"
+    },
+    "crates/noble-kernel/tests/property/table.rs": {
+      "sha256": "72aedc42fa251a2300fd8402910d9d575c6bb6ec234b5a8b594a608c7cdb9f26"
+    },
+    "crates/noble-kernel/tests/property/table/branches.rs": {
+      "sha256": "da43d4ecc6b12a0c32d1e36c732afca56c4c14e3f397bf88f46b16013a840221"
+    },
+    "crates/noble-kernel/tests/property/table/data.rs": {
+      "sha256": "56550fd9a963a08564edd60feee6b655cd71f5982b6f588535219741d48f2fdd"
+    },
+    "crates/noble-kernel/tests/property/table/primitives.rs": {
+      "sha256": "c83cf6f58fe033e1785ae293a859cfd02de34f09a75368e8e122a8e06f949aa7"
+    },
+    "crates/noble-kernel/tests/property/table/programs.rs": {
+      "sha256": "f7f2215b386c491e2019dd14e4b16be793fff39b2c99fdb2dc3819211eab7acc"
+    },
+    "crates/noble-kernel/tests/recursion-schema-cycle.rs": {
+      "sha256": "27fc55c5cd5c4ab01603869874179faaea797ae7ca03628f42fef74d54beeb76"
+    },
+    "crates/noble-kernel/tests/recursion_schema_cycle/builders.rs": {
+      "sha256": "37ec7c49e254df9b6a18a0066f24fcc01c8fa010fc9f77db84dcf0681131d2aa"
+    },
+    "crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs": {
+      "sha256": "123e9c98bede4c7de2cfc2049d01fb5f4ecc8199a7c3bae3304e7d1efa49fdc2"
+    },
+    "crates/noble-kernel/tests/support/mod.rs": {
+      "sha256": "3fec2dd444ab39badddd822b365bfce3d5aa81a1c85be57f1c8ebd6e4be94fc9"
+    },
+    "crates/noble-wasm/wit/worker-send.wit": {
+      "sha256": "3963a55c7f98c248f5e9f9f72ccd93c985139f04c04433a89f578c0a42d85d93"
+    },
+    "rust-toolchain.toml": {
+      "sha256": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271"
+    },
+    "specs/conformance/worker-cases.json": {
+      "sha256": "9a8f4a97e8903243e24d32bffef94f094c2131c0ebc3092d89ada243bf150663"
+    },
+    "verification/worker-send/gate.mjs": {
+      "sha256": "866dd76b8046d1b5d1758e5a53bbe995181a10c6d7642dafbf61bdc8aac176fc"
+    },
+    "verification/worker-send/mutations.mjs": {
+      "sha256": "9187db740d9cd16b5583275f4a93f5c4519d62fa2dfd88247566f40e38186146"
+    },
+    "verification/worker-send/peer/Cargo.lock": {
+      "sha256": "91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2"
+    },
+    "verification/worker-send/peer/Cargo.toml": {
+      "sha256": "ba48d3ca72bdbb07ff0a0302e4b47d147e10025a327b6c346d9b69da4cc57cd6"
+    },
+    "verification/worker-send/peer/src/host.rs": {
+      "sha256": "af4f3a03ad5b08a426691ffc4e98bb69b1e1f1d5aee0cfd00a26415b15dbc8f3"
+    },
+    "verification/worker-send/peer/src/main.rs": {
+      "sha256": "457d268a4a26cb3db3a83fb6d32af71e69f71a0439eb054b7707c72caa8b24ca"
+    },
+    "verification/worker-send/peer/src/verified.rs": {
+      "sha256": "cbc51b675b3d8e5c52d0e3075a5ee7549994aa2f3af3031e8ad8ac1dbe9ba8a3"
+    },
+    "verification/worker-send/start-missing-dispatch.wat": {
+      "sha256": "63eb31db34c62101ff6303f3199cc37e8fe17c27aa47abce5813cacd92ed6b7a"
+    },
+    "verification/worker-send/start-trap.wat": {
+      "sha256": "8dc503b17d4ce170f00cfdf83c8a390afddc83b79fbdd43daf1f472475691d7b"
+    },
+    "verification/worker-send/test.mjs": {
+      "sha256": "ffaf91eff8c3d2422312a91755dd2aa7342c3fcbad312eb775c8df44bf8e1dc4"
+    },
+    "verification/worker01/fixtures/cancel-without-pending-event.json": {
+      "sha256": "a8ecd6b2ec54cf7b7c4178ceeba250617995bab53f38acec3b88ab06457bb8c1"
+    },
+    "verification/worker01/fixtures/cancel-without-pending-state.json": {
+      "sha256": "1a0fc984539fc876bdb754a7eec6cb130cdd473078b3d4dfcb0d918da271d326"
+    },
+    "verification/worker01/fixtures/cancel-wrong-attempt-event.json": {
+      "sha256": "e59d7e39f107509bd7919d76cc8b0a124e657f71f79071f969e8cf9da68bccac"
+    },
+    "verification/worker01/fixtures/cancel-wrong-attempt-state.json": {
+      "sha256": "908385eea29ebbdf835e758d7d3c097f1dc207051fe74772969feac5bdb3b3f9"
+    },
+    "verification/worker01/fixtures/cancel.json": {
+      "sha256": "a8ecd6b2ec54cf7b7c4178ceeba250617995bab53f38acec3b88ab06457bb8c1"
+    },
+    "verification/worker01/fixtures/grant.json": {
+      "sha256": "307eafdb068fd2e8bababdb9aedcbfc22b908be18789f805b7bfb8b762071755"
+    },
+    "verification/worker01/fixtures/schema.noble": {
+      "sha256": "5ed5e7eadf5682862a3bd379d909585d0b1ad44d65268fb6c285b53a2285fec2"
+    },
+    "verification/worker01/fixtures/state.json": {
+      "sha256": "19c50ff459532d55d84b81a5fd3b34e6efdf00480ba742f89d40b9c41abb6907"
+    },
+    "verification/worker01/fixtures/submit-while-pending-event.json": {
+      "sha256": "025482f78483043d7876b8140ef5dfa8f53f0484dc09fb9f75dd99584edf9bec"
+    },
+    "verification/worker01/fixtures/submit-while-pending-state.json": {
+      "sha256": "908385eea29ebbdf835e758d7d3c097f1dc207051fe74772969feac5bdb3b3f9"
+    },
+    "verification/worker01/fixtures/submit.json": {
+      "sha256": "cb3bfb3768977a699112ccf705d78f1e30bdf5ae57a3bace5a84436aff886cf3"
+    },
+    "verification/worker01/fixtures/transition.noble": {
+      "sha256": "1fc74eae8be587ff5f380438f53abc4201e98f3fb149de6b127afd6c1926e9b1"
+    },
+    "verification/worker01/fixtures/wrapping-submission-count-event.json": {
+      "sha256": "cb3bfb3768977a699112ccf705d78f1e30bdf5ae57a3bace5a84436aff886cf3"
+    },
+    "verification/worker01/fixtures/wrapping-submission-count-state.json": {
+      "sha256": "5a7504cc7712786e03934206882a9ae1dab2a685e6a34141d173e4e8a178b663"
+    }
+  },
+  "non_claims": [
+    "The datagram peer is local-socket-only and not the canonical WORKER-01 transfer.",
+    "Boundaries are retained-table snapshots of this shell, not kernel witnesses.",
+    "The host deadline is the shell bounded driver, distinct from source fuel exhaustion."
+  ]
+}
