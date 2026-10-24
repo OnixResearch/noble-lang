@@ -1,0 +1,37 @@
+{
+  "schema": "noble-worker01-mutation-checks/v1",
+  "tested_commit": "a988828278615b1100365bea07fb6ae2540bbf88",
+  "gate": "verification/worker01/gate.mjs",
+  "result": "passed",
+  "mutations": [
+    {
+      "name": "cancelled-worker-event-before-cancellation-commit",
+      "source": "crates/noble-cli/src/core/worker_shell.rs",
+      "change": "Supply the Worker's Cancelled transition before the cancellation commit instead of after it.",
+      "gate_exit": 1,
+      "rejection": "lifecycle order differs: [\"admission-commit\",\"cancelled-worker-event\",\"cancellation-commit\",\"late-native-completion\"]",
+      "observed_lifecycle": ["admission-commit", "cancelled-worker-event", "cancellation-commit", "late-native-completion"],
+      "required_lifecycle": ["admission-commit", "cancellation-commit", "cancelled-worker-event", "late-native-completion"]
+    },
+    {
+      "name": "late-success-uncancels-invocation",
+      "source": "crates/noble-kernel/src/authority/observation.rs",
+      "change": "A late authenticated OperationSuccess observation also changes a Cancelled invocation to Succeeded and counts a successful delivery.",
+      "gate_exit": 1,
+      "rejection": "successful_result_deliveries: expected 0, observed 1; external_rollback_claimed: expected false, observed true; shell receipt or final retirement differs",
+      "observed": {
+        "successful_result_deliveries": 1,
+        "external_rollback_claimed": true
+      },
+      "required": {
+        "successful_result_deliveries": 0,
+        "external_rollback_claimed": false
+      }
+    }
+  ],
+  "method": "Each mutation lived in an isolated detached worktree with its own target directory, was committed there only to satisfy the gate's clean-scope check, and made the same gate fail for the stated reason. The main worktree was not modified.",
+  "non_claims": [
+    "These are causal gate rejections for two named guarantees, not exhaustive exploration of every shell race.",
+    "The late-success mutation deliberately changes production kernel observation semantics; it exists only in a throwaway worktree."
+  ]
+}
