@@ -292,8 +292,7 @@ impl World {
         if step.identity != "noble-test:worker-transition/guest@1.0.0#step" {
             return false;
         }
-        step.parameters == [Type::String, Type::String]
-            && step.results == [Type::String]
+        step.parameters == [Type::String, Type::String] && step.results == [Type::String]
     }
 
     /// Select the frame-transport Worker transition world only for the exact

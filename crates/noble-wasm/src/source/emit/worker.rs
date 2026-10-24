@@ -37,7 +37,7 @@ fn install(out: &mut crate::output::Buffer, generation: u32) -> Result<(), crate
  (global.set $worker_installed (i32.const 1))\n\
  (global.set $generation (i32.add (global.get $generation) (i32.const 1)))))\n\
 (global.get $failure))\n\
-(func (export \"worker_named_count\") (result i32) "
+(func (export \"worker_named_count\") (result i32) ",
     )
 }
 
