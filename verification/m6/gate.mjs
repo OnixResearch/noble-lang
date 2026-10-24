@@ -672,7 +672,10 @@ function runLifecycleControls() {
 }
 
 try {
-  for (const directory of ['crates', 'tools', 'verification/m6/peer/src', 'verification/m6/cases', 'verification/m5/peer/src', 'verification/mc2/contracts']) sourceTree(directory);
+  for (const directory of ['crates', 'tools', 'proofs/mc1',
+    'verification/calculator-precursor', 'verification/m6/peer/src',
+    'verification/m6/cases', 'verification/m5/peer/src',
+    'verification/mc2/contracts']) sourceTree(directory);
   if (fs.existsSync(path.join(root, '.cargo'))) sourceTree('.cargo');
   for (const file of ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'flake.nix', 'flake.lock', 'policy/tool-selection.json',
     'verification/m6/pins.json', 'verification/m6/build.mjs', 'verification/m6/gate.mjs', 'verification/m6/peer/Cargo.toml', 'verification/m6/peer/Cargo.lock',
