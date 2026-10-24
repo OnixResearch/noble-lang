@@ -149,7 +149,11 @@ function main(){
   }catch(error){
     // A failed row must still produce a failure receipt with the real
     // assertion text, so the mutation harness has causal evidence.
-    failures.push(String(error.message).split('\n')[0]);
+    // The first line of a nested smoke assertion is node's internal frame;
+    // keep the line that actually states the rejected obligation.
+    const lines=String(error.message).split('\n');
+    const stated=lines.find(line=>/AssertionError|!==|missing |differs|did not/.test(line));
+    failures.push(stated||lines[0]||String(error));
   }
   const receipt={schema:'noble-worker-send-gate/v1',case:'native-async-interfaces',
     result:failures.length?'failed':'passed',failures,
