@@ -4,6 +4,7 @@
 // shell obligation removed), committed, and must make the gate fail.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -42,13 +43,20 @@ function main(){
     '--out',out],{cwd:root,encoding:'utf8',maxBuffer:256*1024*1024,timeout:1_800_000});
   assert.notEqual(gate.status,0,`mutation ${name} did not fail the gate:\n${gate.stdout}`);
   const tried=path.join(out,'receipt.json');
+  const reasoned=failures=>failures.length
+    ? failures
+    : [/AssertionError[^:]*: ([^\n]*)/.exec(gate.stderr)?.at(1)
+      || (gate.stdout.split('\n').filter(Boolean).at(-1)) || 'gate failed'];
   const evidence=fs.existsSync(tried)
     ? JSON.parse(fs.readFileSync(tried,'utf8'))
-    : JSON.parse(gate.stdout.split('\n').filter(Boolean).at(-1));
+    : {result:'failed',failures:reasoned([])};
   assert.equal(evidence.result,'failed',`mutation ${name} produced no failure receipt`);
+  assert.ok(evidence.failures.length,`mutation ${name} failed without a reason`);
   console.log(JSON.stringify({mutation:name,claim:mutation.claim,
     gate_exit:gate.status,failures:evidence.failures,
-    source_revision:evidence.source_revision,commit:commit.stdout}));
+    source_revision:evidence.source_revision||null,
+    failing_output_sha256:crypto.createHash('sha256')
+      .update(gate.stdout+gate.stderr).digest('hex'),commit:commit.stdout}));
   process.exitCode=0;
 }
 main();

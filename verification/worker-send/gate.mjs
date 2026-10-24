@@ -78,69 +78,78 @@ function main(){
   fs.writeFileSync(path.join(out,'raw','prepare.stdout.json'),prepared.stdout);
   assert.equal(prepared.status,0,prepared.stderr||prepared.stdout);
   const smokeDir=path.join(out,'rows');
-  const smoke=command(process.execPath,['verification/worker-send/test.mjs',
-    path.join(sealed,'cli'),path.join(sealed,'peer'),fixtures,smokeDir]);
-  fs.writeFileSync(path.join(out,'raw','smoke.stdout'),smoke.stdout);
-  fs.writeFileSync(path.join(out,'raw','smoke.stderr'),smoke.stderr);
-  assert.equal(smoke.status,0,smoke.stderr||smoke.stdout);
-  const summary=JSON.parse(smoke.stdout);
-  assert.deepEqual(summary.cases,ROWS);
-  // A mismatched worker source grant is refused before any native host
-  // exists, so that row legitimately carries no host observation.
-  const report=name=>{
-    const descriptor=JSON.parse(fs.readFileSync(path.join(smokeDir,
-      `${name.replaceAll(' ','-')}.report.json`),'utf8'));
-    return descriptor.host?descriptor:{...descriptor,
-      host:{lifecycle_sequence:[],task_deliveries:0,successful_result_deliveries:0,
-        owner_returns:0,owner_resurrections:0,task_outstanding_pins:0,
-        resource_native_pins:0,task_reserved_bytes:0,authority_invocation:null,
-        operation_attempt_outcome:null,receipts:[],boundaries:[]}};
-  };
-  const rows=Object.fromEntries(ROWS.map(name=>{
-    const descriptor=report(name);
-    return [name,{outcome:descriptor.outcome,mode:descriptor.mode,
-      future_consumed:descriptor.future_consumed,
-      native_pins_at_guest_exit:descriptor.native_pins_at_guest_exit,
-      handle_disposition:descriptor.handle_disposition,
-      sequence:descriptor.host.lifecycle_sequence,
-      deliveries:descriptor.host.task_deliveries,
-      successful_deliveries:descriptor.host.successful_result_deliveries,
-      owner_returns:descriptor.host.owner_returns,
-      owner_resurrections:descriptor.host.owner_resurrections,
-      task_outstanding_pins:descriptor.host.task_outstanding_pins,
-      resource_native_pins:descriptor.host.resource_native_pins,
-      task_reserved_bytes:descriptor.host.task_reserved_bytes,
-      invocations:descriptor.host.authority_invocation,
-      operation_attempt:descriptor.host.operation_attempt_outcome,
-      receipts:descriptor.host.receipts.length,
-      boundaries:descriptor.host.boundaries.length}];
-  }));
-  const failures=[];
-  const expect=(name,field,value)=>{
-    if (rows[name][field]!==value) failures.push(`${name}: ${field} ${JSON.stringify(rows[name][field])}!==${JSON.stringify(value)}`);
-  };
-  expect('authorized socket send','outcome','cancelled-retired');
-  expect('authorized socket send','deliveries',0);
-  expect('cancel before native send','outcome','cancelled-retired');
-  expect('delivered once through guest finish','outcome','delivered-once');
-  expect('delivered once through guest finish','deliveries',1);
-  expect('delivered once through guest finish','successful_deliveries',1);
-  expect('delivered once through guest finish','owner_returns',1);
-  expect('delivered once through guest finish','owner_resurrections',0);
-  expect('domain error stays a domain error','outcome','domain-error-delivered');
-  expect('domain error stays a domain error','successful_deliveries',0);
-  expect('domain error stays a domain error','invocations','Failed');
-  expect('suspended awaiting withheld result','outcome','suspended-retired');
-  expect('suspended awaiting withheld result','deliveries',0);
-  expect('suspended awaiting withheld result','native_pins_at_guest_exit',1);
-  expect('host deadline retires outstanding native work','outcome','host-deadline-retired');
-  expect('host deadline retires outstanding native work','deliveries',0);
-  expect('host deadline retires outstanding native work','invocations','Failed');
-  const parked=['suspended awaiting withheld result','host deadline retires outstanding native work'];
-  for (const name of parked) {
-    for (const marker of ['late-native-completion','retirement-finished']) {
-      if (!rows[name].sequence.includes(marker)) failures.push(`${name}: missing ${marker}`);
+  let failures=[];
+  let rows={};
+  let summary={cases:[]};
+  try{
+    const smoke=command(process.execPath,['verification/worker-send/test.mjs',
+      path.join(sealed,'cli'),path.join(sealed,'peer'),fixtures,smokeDir]);
+    fs.writeFileSync(path.join(out,'raw','smoke.stdout'),smoke.stdout);
+    fs.writeFileSync(path.join(out,'raw','smoke.stderr'),smoke.stderr);
+    assert.equal(smoke.status,0,smoke.stderr||smoke.stdout);
+    summary=JSON.parse(smoke.stdout);
+    assert.deepEqual(summary.cases,ROWS);
+    // A mismatched worker source grant is refused before any native host
+    // exists, so that row legitimately carries no host observation.
+    const report=name=>{
+      const descriptor=JSON.parse(fs.readFileSync(path.join(smokeDir,
+        `${name.replaceAll(' ','-')}.report.json`),'utf8'));
+      return descriptor.host?descriptor:{...descriptor,
+        host:{lifecycle_sequence:[],task_deliveries:0,successful_result_deliveries:0,
+          owner_returns:0,owner_resurrections:0,task_outstanding_pins:0,
+          resource_native_pins:0,task_reserved_bytes:0,authority_invocation:null,
+          operation_attempt_outcome:null,receipts:[],boundaries:[]}};
+    };
+    rows=Object.fromEntries(ROWS.map(name=>{
+      const descriptor=report(name);
+      return [name,{outcome:descriptor.outcome,mode:descriptor.mode,
+        future_consumed:descriptor.future_consumed,
+        native_pins_at_guest_exit:descriptor.native_pins_at_guest_exit,
+        handle_disposition:descriptor.handle_disposition,
+        sequence:descriptor.host.lifecycle_sequence,
+        deliveries:descriptor.host.task_deliveries,
+        successful_deliveries:descriptor.host.successful_result_deliveries,
+        owner_returns:descriptor.host.owner_returns,
+        owner_resurrections:descriptor.host.owner_resurrections,
+        task_outstanding_pins:descriptor.host.task_outstanding_pins,
+        resource_native_pins:descriptor.host.resource_native_pins,
+        task_reserved_bytes:descriptor.host.task_reserved_bytes,
+        invocations:descriptor.host.authority_invocation,
+        operation_attempt:descriptor.host.operation_attempt_outcome,
+        receipts:descriptor.host.receipts.length,
+        boundaries:descriptor.host.boundaries.length}];
+    }));
+    const expect=(name,field,value)=>{
+      if (rows[name][field]!==value) failures.push(`${name}: ${field} ${JSON.stringify(rows[name][field])}!==${JSON.stringify(value)}`);
+    };
+    expect('authorized socket send','outcome','cancelled-retired');
+    expect('authorized socket send','deliveries',0);
+    expect('cancel before native send','outcome','cancelled-retired');
+    expect('delivered once through guest finish','outcome','delivered-once');
+    expect('delivered once through guest finish','deliveries',1);
+    expect('delivered once through guest finish','successful_deliveries',1);
+    expect('delivered once through guest finish','owner_returns',1);
+    expect('delivered once through guest finish','owner_resurrections',0);
+    expect('domain error stays a domain error','outcome','domain-error-delivered');
+    expect('domain error stays a domain error','successful_deliveries',0);
+    expect('domain error stays a domain error','invocations','Failed');
+    expect('suspended awaiting withheld result','outcome','suspended-retired');
+    expect('suspended awaiting withheld result','deliveries',0);
+    expect('suspended awaiting withheld result','native_pins_at_guest_exit',1);
+    expect('host deadline retires outstanding native work','outcome','host-deadline-retired');
+    expect('host deadline retires outstanding native work','deliveries',0);
+    expect('host deadline retires outstanding native work','invocations','Failed');
+    const parked=['suspended awaiting withheld result','host deadline retires outstanding native work'];
+    for (const name of parked) {
+      for (const marker of ['late-native-completion','retirement-finished']) {
+        if (!rows[name].sequence.includes(marker)) failures.push(`${name}: missing ${marker}`);
+      }
     }
+
+  }catch(error){
+    // A failed row must still produce a failure receipt with the real
+    // assertion text, so the mutation harness has causal evidence.
+    failures.push(String(error.message).split('\n')[0]);
   }
   const receipt={schema:'noble-worker-send-gate/v1',case:'native-async-interfaces',
     result:failures.length?'failed':'passed',failures,
