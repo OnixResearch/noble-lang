@@ -137,7 +137,7 @@
     "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
     "crates/noble-contracts/src/component/bindings.rs": "b6c15ae0d787db0adb1473c532d0f36f4271ea248eb59d19a367d5dbced47025",
     "crates/noble-contracts/src/component/context.rs": "a0bbc5097099583f307e2be511e9a40500edce9d42143000151452f5096d9d6c",
-    "crates/noble-contracts/src/component/mod.rs": "d716e12e68cd0785a78c39733f67bf84fde71509d2c34e9c9cb480700b21cfc3",
+    "crates/noble-contracts/src/component/mod.rs": "0bd6f417a839df45cf7e6eeee99b50d24cc38a52fbe1dd1dfc95961de7fed628",
     "crates/noble-contracts/src/component/parser/resolve.rs": "bbca1cad268e98fc673d1692464de869836926c253435ac0c29a77f80900bed9",
     "crates/noble-contracts/src/component/preparation.rs": "35874ea7d19cabc7f7b0f3a516077c392955e405a3902e3bfa750b03c5c82776",
     "crates/noble-contracts/src/inference/construct.rs": "6e5444cab9349194fc6c2b4457e67d44cc2ba2b931df0a0839f99d53e3d56433",
