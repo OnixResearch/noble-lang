@@ -258,7 +258,7 @@
   "crates/noble-wasm/src/source/emit/initialize.rs" = "2140c2faee12b6eab9686c61fb886f8dc0f54080e17bccaa2895ad20e025c4ba",
   "crates/noble-wasm/src/source/emit/metadata.rs" = "03f8acb2f15c7f70ef719b10cccc6805c571c1f115d53209ce8d0c19fb7bcdf4",
   "crates/noble-wasm/src/source/emit/reflection.rs" = "7598ff8c9c904afd150ec34e6a4eb77727156f62b7e7f4a4bdf93e8a39e3ecd6",
-  "crates/noble-wasm/src/source/emit/worker.rs" = "6765f4f5d7df70e47db59f6375ad36a14a0c6a4087a449afc1f5725327fa3b49",
+  "crates/noble-wasm/src/source/emit/worker.rs" = "2071abc56792499a6544c45d21718240955fd1ec0f9c8a9301f7e6bf77bb0192",
   "crates/noble-wasm/src/source/plan.rs" = "f7f4c1c3eaeb3d92ee31edddb48317de73c3467b2254e61e3fe6fd4c93562f90",
   "crates/noble-wasm/src/source/plan/allocation.rs" = "f134d0031dafcb16397e8ba2a24771770a37f32aea855acc5157a1f93c0f4d43",
   "crates/noble-wasm/src/source/plan/operations.rs" = "feca2d75cf286fef19658fa0e12315a63bb627ca85fded3aa6210916c748ddbc",
