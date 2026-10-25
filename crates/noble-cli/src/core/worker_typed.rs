@@ -704,21 +704,19 @@ fn preparation_report(
 
 /// Publish only a new file. An existing destination is never overwritten.
 fn publish(destination: &std::path::Path, bytes: &[u8]) -> Result<(), Failure> {
-    let mut file = match std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(destination)
-    {
-        Ok(file) => file,
-        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-            return Err(failure(
-                "invalid-input",
-                "package destination already exists",
-            ))
+    match super::framing::publish_new(destination, bytes) {
+        Ok(()) => Ok(()),
+        Err(super::framing::PublishRefusal::DestinationExists) => Err(failure(
+            "invalid-input",
+            "package destination already exists",
+        )),
+        Err(super::framing::PublishRefusal::CannotCreate(error)) => {
+            Err(super::framing::io_error(error))
         }
-        Err(error) => return Err(super::framing::io_error(error)),
-    };
-    std::io::Write::write_all(&mut file, bytes).map_err(super::framing::io_error)
+        Err(super::framing::PublishRefusal::WriteFailed(error)) => {
+            Err(super::framing::io_error(error))
+        }
+    }
 }
 
 fn prepare_command(arguments: &[std::ffi::OsString], trace: &mut PreparationTrace) -> Report {

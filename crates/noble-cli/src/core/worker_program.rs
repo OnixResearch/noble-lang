@@ -2395,19 +2395,18 @@ fn publish_new(
     destination: &std::path::Path,
     bytes: &[u8],
 ) -> Result<(), (&'static str, &'static str)> {
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(destination)
-        .map_err(|error| {
-            if error.kind() == std::io::ErrorKind::AlreadyExists {
-                ("invalid-input", "package destination already exists")
-            } else {
-                ("invalid-input", "package destination cannot be created")
-            }
-        })?;
-    std::io::Write::write_all(&mut file, bytes)
-        .map_err(|_| ("invalid-input", "package destination write failed"))
+    match super::framing::publish_new(destination, bytes) {
+        Ok(()) => Ok(()),
+        Err(super::framing::PublishRefusal::DestinationExists) => {
+            Err(("invalid-input", "package destination already exists"))
+        }
+        Err(super::framing::PublishRefusal::CannotCreate(_)) => {
+            Err(("invalid-input", "package destination cannot be created"))
+        }
+        Err(super::framing::PublishRefusal::WriteFailed(_)) => {
+            Err(("invalid-input", "package destination write failed"))
+        }
+    }
 }
 
 fn prepare_transition_package(
