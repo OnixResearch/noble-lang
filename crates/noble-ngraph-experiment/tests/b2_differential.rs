@@ -265,12 +265,8 @@ fn lean_retained_binary32_expectations_replay_through_the_graph_reference() {
         // observation equality rather than by exact bytes; every other class is
         // matched by its exact encoding.
         let is_nan = |bits: u32| bits >> 23 & 0xFF == 0xFF && bits & 0x7F_FFFF != 0;
-        assert_eq!(
-            noble_ngraph::sem::obs_eq(
-                Value::F32(observed.to_bits()),
-                Value::F32(expected)
-            ),
-            true,
+        assert!(
+            noble_ngraph::sem::obs_eq(Value::F32(observed.to_bits()), Value::F32(expected)),
             "{operation}({left:#010x}, {right:#010x}) observed {:#010x} is not obs_eq to {expected:#010x}",
             observed.to_bits()
         );
