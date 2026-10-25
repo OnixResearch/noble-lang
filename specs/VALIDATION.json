@@ -2088,7 +2088,7 @@
     },
     {
       "file": ".cairn/changes/safety-artifact-correspondence/tasks.md",
-      "sha256": "470f645282ab06859ba0f2fa66d94240eeef8ca0efcd56af4944f8886f5e015d"
+      "sha256": "5a8b07754ad45c540839348abe6c420d3a728a9711375b60e1ed98292897de88"
     },
     {
       "file": ".cairn/changes/safety-authorized-fs-read/design.md",
@@ -2132,7 +2132,7 @@
     },
     {
       "file": ".cairn/changes/safety-bounded-region-adapter/tasks.md",
-      "sha256": "12e26756db08468df0340edf2c810a113897868d7213577c421f6087c7414323"
+      "sha256": "c19c140cac47dcc35999a0b777b7f321ea0b427423874c9f87c66ecc8423113a"
     },
     {
       "file": ".cairn/changes/safety-callback-returned-owner/design.md",
@@ -2184,7 +2184,7 @@
     },
     {
       "file": ".cairn/changes/safety-runtime-quotas/tasks.md",
-      "sha256": "79ed341ffbd5a46c0a21a3c826256d5f3c12cd68b94af1a24dea681db38313a6"
+      "sha256": "13d7bcc7320a93b3026d90672ee9827cf05305da1709c7ef31235ad0d5b91120"
     },
     {
       "file": ".cairn/changes/safety-wasm-manifest-admission/design.md",
@@ -2200,7 +2200,7 @@
     },
     {
       "file": ".cairn/changes/safety-wasm-manifest-admission/tasks.md",
-      "sha256": "4c4836c88d2f682bb6397cc332b01dadf782f94aae2c6e5fae18c5a734f771ce"
+      "sha256": "ad5d1e508e8fb5b48434639120e1282ce23e350c9f0a233505d54feef83cafdb"
     },
     {
       "file": ".cairn/changes/semantic-merge-verification/design.md",

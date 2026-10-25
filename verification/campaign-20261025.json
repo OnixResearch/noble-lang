@@ -1,0 +1,103 @@
+{
+  "schema": "noble.cairn-campaign-20261025/v1",
+  "date": "2026-10-25",
+  "scope": "Resolve the active Cairn backlog and the bounded open issue work on main after the MW2 closeout.",
+  "archived": [
+    {
+      "slug": "declared-retained-source-budget",
+      "archive": ".cairn/archive/2026-10-25-declared-retained-source-budget",
+      "requirements": [
+        "DX-MODULE-05"
+      ],
+      "canonical": true
+    },
+    {
+      "slug": "worker-cancellation-slice-native-async",
+      "archive": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async",
+      "requirements": [
+        "H-OUTCOME-01",
+        "H-OUTCOME-02",
+        "H-RECEIPT-02",
+        "RA-ASYNC-02",
+        "RA-ASYNC-03",
+        "RA-ASYNC-04",
+        "RA-ASYNC-05"
+      ],
+      "canonical": true,
+      "replay": "verification/worker-send/post-archive-replay.json: twenty rows passed with the identical case projection c10dbe711f471c2de3e6ce5ece328f1b7ebf23a5d1273f04f7242c542b54f802"
+    },
+    {
+      "slug": "editor-hole-transport",
+      "archive": ".cairn/archive/2026-10-25-editor-hole-transport",
+      "requirements": [
+        "DX-HOLE-01"
+      ],
+      "canonical": true,
+      "gate": "verification/dx02/gate.mjs replayed at sha256:4d47bfbcf162907dee2fc938ba4a2ac3d8548962f95fc6115b0236527a446579: passed, 25 commands, four variants"
+    }
+  ],
+  "kept_active_with_recorded_blockers": [
+    {
+      "slug": "effect-oracle",
+      "blocker": "FXORACLE-SEM-01/DIFF-01/CORPUS-01/CTRL-01 are change-local ADDED requirements with no canonical counterpart; the executed receipt exists."
+    },
+    {
+      "slug": "text-byte-cursor",
+      "blocker": "Current main admits a combined Declared-Text-v1 profile that DX-TEXT-01 forbids and no canonical requirement covers; no retained observation exists at the historical revision. Receipt: verification/text-byte-cursor/reproduce-failure.json."
+    },
+    {
+      "slug": "safety-runtime-quotas",
+      "blocker": "Frozen release-source replay trees enumerate the live change directory."
+    },
+    {
+      "slug": "safety-artifact-correspondence",
+      "blocker": "Frozen release-source replay trees enumerate the live change directory."
+    },
+    {
+      "slug": "safety-bounded-region-adapter",
+      "blocker": "Frozen release-source replay trees enumerate the live change directory."
+    },
+    {
+      "slug": "safety-wasm-manifest-admission",
+      "blocker": "Frozen release-source replay trees enumerate the live change directory."
+    }
+  ],
+  "post_promotion_changes_needing_regenerated_evidence": [
+    {
+      "slug": "safety-authorized-fs-read",
+      "blocker": "The postpromotion replay needs the S-CASE evidence root, which is gone."
+    },
+    {
+      "slug": "safety-callback-returned-owner",
+      "blocker": "The postpromotion assurance replay needs the same missing evidence root."
+    },
+    {
+      "slug": "safety-recursive-resource-eligibility",
+      "blocker": "The postpromotion projection check needs the same missing evidence root."
+    },
+    {
+      "slug": "wit-exact-u64-adapter",
+      "blocker": "The WI-03 prepromotion directory /var/tmp/noble-wi03-prepromotion-20260930-d no longer exists."
+    },
+    {
+      "slug": "numeric-graph-v1",
+      "blocker": "Its archive box requires NGRAPH-CASE-02 closure plus explicit authorization; CASE-02 is absent/not-run."
+    }
+  ],
+  "validations": {
+    "cairn_validate": "34 changes, 0 issues, 0 findings, 0 spec issues",
+    "check_specs": "passed, 230 self-tests",
+    "octet": "clean, zero architecture findings",
+    "source_coverage": "valid, empty diagnostics"
+  },
+  "file_digests": {
+    "verification/text-byte-cursor/reproduce-failure.json": "4c8c5969b29f763577507d705dd1c67c3459db05801dae1d7a5ac1978777593a",
+    "verification/worker-send/post-archive-replay.json": "ffd1c0f5bc2665341828ba8a7eafbd6882fb15a6e5baaaa56436ede6ee8401de",
+    "verification/worker-prepare-atomic/acceptance.json": "2dcc50544fa21a38b52d8f25600df869df34e69b43d4a8baa18aad7bfea6d068"
+  },
+  "non_claims": [
+    "Archiving a change records that its authored tasks are done and its requirement IDs canonical; it is not new runtime or proof evidence.",
+    "No GitHub issue or pull request state was changed; publication of these records is separate.",
+    "The five post-promotion changes are reported, not repaired: their evidence roots cannot be regenerated from the current sources without re-running their frozen gates."
+  ]
+}
