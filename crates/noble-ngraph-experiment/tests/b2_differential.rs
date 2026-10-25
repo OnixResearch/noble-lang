@@ -28,6 +28,9 @@ use noble_ngraph_experiment::oracle::{ap_add, ap_mul, ap_sub, f64_op};
 use noble_ngraph_experiment::random::random_f32;
 use noble_ngraph_experiment::scheme::BLAKE3;
 
+#[path = "b2_support/shrink.rs"]
+mod shrink;
+
 #[test]
 fn boundary_vectors_agree_on_every_leg_and_match_expected_bits() {
     for v in fixtures::b2_vectors() {
@@ -343,7 +346,7 @@ fn lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs() 
 
 #[test]
 fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
-    use noble_ngraph_experiment::shrink::{minimize, replays, Budget};
+    use shrink::{minimize, replays, Budget};
 
     let authority = |operation: u8, left: u32, right: u32| -> u32 {
         match operation {
@@ -383,7 +386,7 @@ fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
 
 #[test]
 fn agreeing_pairs_produce_no_witness() {
-    use noble_ngraph_experiment::shrink::{minimize, Budget};
+    use shrink::{minimize, Budget};
     let authority =
         |operation: u8, left: u32, right: u32| -> u32 { operation as u32 + left + right };
     let candidate = authority;
