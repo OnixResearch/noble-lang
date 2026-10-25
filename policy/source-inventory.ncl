@@ -118,6 +118,11 @@
 #   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
 #   14963 production paths = 7798 body/open + 4080 generated + 3085 structural;
 #   4981 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed 2026-10-24 rustfmt rebind at 35fcdc04 from a complete 96-unit selected collection:
+#   IR dbac462b83790cc1e4233b183d9f908aaabc2fcbc64f43f57637363eaf15bf20; coverage c1a0bb06a9441b8c5af823ddd56d79ed48642176bdd429d4b6980f87253d5b3f;
+#   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
+#   14963 production paths = 7798 body/open + 4080 generated + 3085 structural;
+#   4981 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -14397,8 +14402,6 @@ let
     body "noble-cli::closure@crates/noble-cli/src/core/worker_value.rs:7256:7261" "noble-cli" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/core/worker_value.rs:7654:7661" "noble-cli" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/main.rs:12708:12714" "noble-cli" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-    body "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:13627:13629" "noble-contracts" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-    body "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:14995:14997" "noble-contracts" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-contracts::closure@crates/noble-contracts/src/component/parser/resolve.rs:2782:2793" "noble-contracts" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-contracts::closure@crates/noble-contracts/src/component/parser/resolve.rs:3607:3618" "noble-contracts" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-contracts::closure@crates/noble-contracts/src/metering.rs:1873:1879" "noble-contracts" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -15179,6 +15182,11 @@ let
     body "noble_wasm::source::emit::worker::invoke" "noble-wasm" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_wasm::source::emit::worker::named_handles" "noble-wasm" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_wasm::source::plan::operations::nominal::Output::<'a>::send_action" "noble-wasm" "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    # Renewed 2026-10-24 rustfmt rebind at 35fcdc04: 2 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    body "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:13615:13617" "noble-contracts" "Renewed 2026-10-24 rustfmt rebind at 35fcdc04 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:14983:14985" "noble-contracts" "Renewed 2026-10-24 rustfmt rebind at 35fcdc04 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [

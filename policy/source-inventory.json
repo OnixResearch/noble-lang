@@ -113684,22 +113684,6 @@
       "disposition": "open",
       "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:13627:13629",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:14995:14997",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/component/parser/resolve.rs:2782:2793",
       "refinement": "open"
     },
@@ -119933,6 +119917,22 @@
       "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-wasm",
       "qualified_path": "noble_wasm::source::plan::operations::nominal::Output::<'a>::send_action",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-24 rustfmt rebind at 35fcdc04 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:13615:13617",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-24 rustfmt rebind at 35fcdc04 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/component/mod.rs:14983:14985",
       "refinement": "open"
     }
   ],
