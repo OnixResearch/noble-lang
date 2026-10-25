@@ -140,7 +140,7 @@ host FPU, and they close no obligation under #10/#15.
 ## aa074e1 — binary32 reference with the mutation lane (issue #38)
 
 `aa074e1/` records clean source commit
-`aa074e137…`, tree `j.source_tree` from its index, produced by
+`aa074e137…`, tree `0fef9fc8df537854c854b90d09c326b7e21746b2`, produced by
 `verification/foundation/check.mjs --output /var/tmp/f32-check2`. It supersedes
 `4be2a68/` for the binary32 claim only: that earlier packet stays untouched and
 remains the evidence for the model without the mutation lane.
