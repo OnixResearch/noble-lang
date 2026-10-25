@@ -1184,6 +1184,60 @@
       "phase": 3,
       "role": "vertical-composition",
       "claim": "two local forward simulations compose over finite intermediate-model execution segments"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.retained_expectations_checked",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "every retained binary32 expectation proposed by the external tool is the selected model's answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "halfway ties round to even in both directions"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.signed_zero_rules",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "addition and subtraction signed-zero rules"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.nan_class_and_zero_separation",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "all NaNs are one observation class and signed zeros stay distinct"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.encoding_boundaries",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "scaled exact interpretation of the smallest subnormal, smallest normal and largest finite encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "the exact sum 1.0 + 2^-24 is not representable yet rounds to 1.0"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.reassociation_is_observable",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "binary32 addition is not associative, so a fold order is observable"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.implicit_contraction_is_observable",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "rounding the product before the sum differs from one rounding of the exact three-operand sum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Expectations.multiplication_rounds_once",
+      "phase": 5,
+      "role": "binary32-reference",
+      "claim": "multiplication takes the sign exclusive-or and rounds the exact product once"
     }
   ]
 }
