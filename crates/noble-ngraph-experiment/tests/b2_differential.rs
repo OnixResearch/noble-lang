@@ -280,3 +280,63 @@ fn lean_retained_binary32_expectations_replay_through_the_graph_reference() {
         }
     }
 }
+
+#[test]
+fn lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs() {
+    use noble_ngraph::ir::{GraphBuilder, Op, ScalarType, SubProfile, Subject};
+
+    let mut matched = 0usize;
+    for (operation, left, right, expected) in retained_expectations() {
+        let subject = format!("issue 38 retained {operation} {left:#010x} {right:#010x}");
+        let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&BLAKE3, &subject));
+        let x = b.input(ScalarType::F32);
+        let y = b.input(ScalarType::F32);
+        let node = match operation.as_str() {
+            "add" => b.op(Op::F32Add(x, y)),
+            "sub" => b.op(Op::F32Sub(x, y)),
+            "mul" => b.op(Op::F32Mul(x, y)),
+            other => panic!("unsupported operation {other}"),
+        };
+        b.output(node);
+        let checked = check(&BLAKE3, b.finish()).unwrap_or_else(|d| panic!("{subject}: {d}"));
+        let comp = Compiled::new(&BLAKE3, &checked);
+        let inputs = f32_inputs(&[f32::from_bits(left), f32::from_bits(right)]);
+        let legs = run_legs(&comp, &inputs, None);
+        assert!(legs.agree(), "{subject}: {legs:?}");
+        let expected_observation = Obs::Normal(vec![Value::F32(expected)]);
+        for (leg, observed) in [
+            ("l2_apfloat", &legs.l2_apfloat),
+            ("l3_reference", &legs.l3_reference),
+            ("l4_compiled", &legs.l4_compiled),
+        ] {
+            let Obs::Normal(values) = observed else {
+                panic!("{subject} {leg}: expected a normal observation, got {observed:?}");
+            };
+            let Some(Value::F32(bits)) = values.first() else {
+                panic!("{subject} {leg}: expected one F32 value, got {values:?}");
+            };
+            let is_nan = expected >> 23 & 0xFF == 0xFF && expected & 0x7F_FFFF != 0;
+            if is_nan {
+                assert!(
+                    f32::from_bits(*bits).is_nan(),
+                    "{subject} {leg}: {bits:#010x} is not a NaN observation"
+                );
+            } else {
+                assert_eq!(*bits, expected, "{subject} {leg}");
+            }
+        }
+        assert!(
+            legs.l3_reference.obs_eq(&expected_observation),
+            "{subject}: L3"
+        );
+        assert!(
+            legs.l4_compiled.obs_eq(&expected_observation),
+            "{subject}: L4"
+        );
+        matched += 1;
+    }
+    assert_eq!(
+        matched, 26,
+        "retained expectations replayed through the graph legs"
+    );
+}

@@ -37,13 +37,20 @@ const testRun = run(
     'cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture',
   root,
 );
-const passed = /test lean_retained_binary32_expectations_replay_through_the_graph_reference \.\.\. ok/.test(testRun);
-if (!passed) throw new Error(`replay lane did not pass:\n${testRun.slice(-2000)}`);
+const lanes = [
+  'lean_retained_binary32_expectations_replay_through_the_graph_reference',
+  'lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs',
+];
+for (const lane of lanes) {
+  if (!new RegExp(`test ${lane} \\.\\.\\. ok`).test(testRun)) {
+    throw new Error(`replay lane did not pass: ${lane}\n${testRun.slice(-2000)}`);
+  }
+}
 
 const proposals = JSON.parse(fs.readFileSync(path.join(root, 'verification/binary32/proposals.json'), 'utf8'));
 const receipt = {
   schema: 'noble-binary32-replay/v1',
-  assertion: 'the packed Rust graph reference agrees with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence',
+  assertion: 'the packed Rust reference and the compiled graph legs agree with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence',
   source_commit: head,
   source_tree: tree,
   clean_source: !dirty,
@@ -56,7 +63,11 @@ const receipt = {
   retained_expectations: proposals.proposals.length,
   observations: 'NaN expectations match by observation equality; every other class matches its exact encoding',
   lean_authority: 'verification/foundation/receipts/aa074e1/index.json',
-  results: { lane: 'passed', retained_expectations_matched: proposals.proposals.length },
+  lanes: [
+    { name: 'packed-reference', test: lanes[0], observed: 'noble_ngraph::sem::add/sub/mul' },
+    { name: 'compiled-graph-legs', test: lanes[1], observed: 'Compiled::new + run_legs over L2 APFloat, L3 reference and L4 compiled, with legs agreement' },
+  ],
+  results: { lanes_passed: lanes.length, retained_expectations_matched: proposals.proposals.length },
   claims: [
     'Tested-implementation evidence for the packed Rust graph reference on this host and target only.',
     'No correspondence proof, no cross-platform claim, and no evidence about wasm-opt, V8 or the loader.',
@@ -64,5 +75,5 @@ const receipt = {
 };
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`);
-console.log(JSON.stringify({ outcome: 'recorded', output, retained_expectations: receipt.retained_expectations,
+console.log(JSON.stringify({ outcome: 'recorded', output, lanes: receipt.lanes.length, retained_expectations: receipt.retained_expectations,
   clean_source: receipt.clean_source, host: receipt.host }));
