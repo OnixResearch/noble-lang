@@ -37,7 +37,7 @@ for (const file of [
   'crates/noble-wasm/Cargo.toml','crates/noble-cli/Cargo.toml',
   'policy/tool-selection.json','policy/boundary-controls.ncl','policy/boundary-controls.json',
   '.cairn/specs/developer-experience/spec.md',
-  '.cairn/changes/editor-hole-transport/specs/developer-experience/spec.md',
+  '.cairn/archive/2026-10-25-editor-hole-transport/specs/developer-experience/spec.md',
   'verification/dx02/gate.mjs','README.md'
 ]) source[file] = hash(content(file));
 const revision = `sha256:${hash(JSON.stringify(Object.entries(source).sort()))}`;
@@ -46,8 +46,9 @@ const caseBytes = content(caseFile);
 const caseHash = hash(caseBytes);
 const dx02 = JSON.parse(caseBytes).cases.find(entry => entry.id === 'DX-02');
 assert.ok(dx02, 'canonical DX-02 must exist');
-assert.deepEqual(dx02.state, {implementation:'absent',execution:'not-run',proof:'open',trust:'unassessed'});
-assert.deepEqual(dx02.evidence, []);
+assert.deepEqual(dx02.state, {implementation:'implemented',execution:'passed',proof:'open',trust:'explicit'});
+assert.ok(dx02.evidence.length > 0, 'promoted DX-02 must cite its retained acceptance receipt');
+assert.equal(dx02.evidence[0].configuration.receipt, '../../verification/dx02/acceptance.json');
 assert.deepEqual(dx02.input.nodes, ['integer:1','editor-hole','word:+']);
 assert.deepEqual(dx02.input.variants,
   ['editor-analysis','direct-admission','nested-quotation-admission','serialized-candidate-admission']);
