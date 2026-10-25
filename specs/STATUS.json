@@ -319,6 +319,23 @@
       "general_capability_modules": "open",
       "portable_encoding": "open"
     },
+    "text_byte_cursor": {
+      "profile": "Text-Byte-Cursor-v1 and Declared-Text-v1",
+      "requirement": "DX-TEXT-01",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "trust": "explicit",
+      "cases": [
+        "TEXT-02"
+      ],
+      "acceptance": "finite-compiled-observation",
+      "receipt": "../verification/text-byte-cursor/observation.json",
+      "source_revision": "sha256:3d0c08be31d768ef4d837c6ecf83e16fd4ffab075d9dfcf24d8a3cb186961b10",
+      "byte_cursor_status": "The opt-in Text-Byte-Cursor-v1 profile resolves pure `text.byte` with the exact UTF-8 statuses of DX-TEXT-01; `TEXT-01` remains absent/not-run because its two-optimization-mode conformance assessment is not selected evidence.",
+      "combined_profile_status": "Selecting both `--declared-modules` and `--text-byte-cursor` selects Declared-Text-v1, which keeps the declared-module discipline and the byte-cursor scheme together; case TEXT-02 records it implemented/passed/open/explicit from twenty-five compiled children, and neither flag alone reaches it.",
+      "universal_status": "No universal refinement, MA1 or CALC acceptance is claimed; iteration, arbitrary precision and calculator budget accounting remain open."
+    },
     "result_library": {
       "profile": "Result-Library-Draft",
       "implementation": "implemented",

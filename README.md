@@ -158,16 +158,19 @@ checked WAT without executing the program.
 
 Use `noble session --text-byte-cursor` or
 `noble compile SOURCE --text-byte-cursor` to select the **Text-Byte-Cursor-v1**
-experimental profile (contract in the active
-[cursor change](.cairn/archive/2026-10-25-text-byte-cursor/design.md), not yet selected
-for the ordinary language). Only this opt-in profile resolves pure `text.byte`.
-It consumes `Text I64` and leaves the original Text and one `I64`: unsigned
-UTF-8 byte 0..255 for an in-range offset, -1 at exactly the byte length
+profile. The contract is
+[`DX-TEXT-01`](.cairn/specs/developer-experience/spec.md#requirement-dx-text-01);
+selecting both `--declared-modules` and `--text-byte-cursor` selects the combined
+**Declared-Text-v1** profile, which keeps the declared-module discipline and this
+byte-cursor scheme together. Only these opt-in profiles resolve pure `text.byte`.
+The operation consumes `Text I64` and leaves the original Text and one `I64`:
+unsigned UTF-8 byte 0..255 for an in-range offset, -1 at exactly the byte length
 (including empty Text), -2 for a negative offset, or -3 for an offset beyond
 the length. Increment the offset only after a nonnegative byte. The operation
 does not copy a suffix, allocate an aggregate, or request a host effect.
-Ordinary `run`, declared modules, and live REPL cannot select this profile.
-Managed-Wasm reports from the opted-in session identify `Text-Byte-Cursor-v1`.
+Ordinary `run` and the live REPL cannot select a byte-cursor profile, and neither
+flag alone reaches the combined profile. Managed-Wasm reports identify
+`Text-Byte-Cursor-v1` or `Declared-Text-v1`.
 
 
 ### Persistent sessions
