@@ -1,0 +1,35 @@
+{
+  "schema": "noble-text-byte-cursor-reproduce-failure/v1",
+  "finding": "The authored text-byte-cursor observation gate cannot be reproduced on current main:  exits 0 and reports profile Declared-Text-v1, while the gate asserts a non-zero argument-stage refusal.",
+  "command": "printf '\"ab\" 0 text.byte\\n' | noble session --declared-modules --text-byte-cursor",
+  "observed": {
+    "exit": 0,
+    "profile": "Declared-Text-v1",
+    "outcome": "normal",
+    "stack": [
+      {
+        "handle": 8,
+        "type": "Text",
+        "value": "ab"
+      },
+      {
+        "handle": null,
+        "type": "I64",
+        "value": "97"
+      }
+    ],
+    "raw_sha256": "ada7ce4303c7d776f1d9e44910a4399bb21db8dab8041d44341385215e58a33c"
+  },
+  "conflicting_requirement": "DX-TEXT-01 in .cairn/changes/text-byte-cursor/specs/developer-experience/spec.md requires the profile to be explicitly selected and disjoint from accepted Declared-Modules-v1; ordinary and declared behaviour MUST remain unchanged.",
+  "cli_source": "crates/noble-cli/src/core/entry.rs uses Options::declared_text() and crates/noble-wasm/src/source/admission.rs pairs declared modules with the text cursor.",
+  "canonical_coverage": "No canonical requirement or conformance case covers Declared-Text-v1; a grep of .cairn/specs and specs/conformance finds none.",
+  "resolution_options": [
+    "Make the CLI refuse the combination again, as the gate and DX-TEXT-01 expect.",
+    "Author and sync a canonical requirement plus a conformance case for the combined Declared-Text-v1 profile, and amend the gate accordingly."
+  ],
+  "status": "open; owner decision required before the text-byte-cursor change can be archived",
+  "non_claims": [
+    "No claim that the combined profile is unsafe or wrong; only that it is undocumented in canonical specs and contradicted by the authored gate.",
+    "No retained text-byte-cursor observation exists at the historical revision, so none is claimed."
+  ]
+}

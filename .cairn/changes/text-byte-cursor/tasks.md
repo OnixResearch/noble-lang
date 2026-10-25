@@ -12,3 +12,5 @@
 ## Closeout
 
 - [x] [serial] Run direct pinned Cairn proposal/design/tasks gates and validation; leave this change active until deliberate review/sync. r[DX-TEXT-01]
+
+- [ ] [serial] Resolve the combined-profile conflict before archiving: current main admits `session --declared-modules --text-byte-cursor` as `Declared-Text-v1`, which DX-TEXT-01 forbids and no canonical requirement covers, and no retained observation exists at the historical revision. Choose either refusal restoration or a canonical requirement plus conformance case, then retain a fresh scoped observation. Evidence of the conflict: `verification/text-byte-cursor/reproduce-failure.json`. r[DX-TEXT-01]

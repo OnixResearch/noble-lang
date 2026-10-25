@@ -12,3 +12,5 @@
 - [x] [serial] Implement M1–M6 as test-local variants and verify each is caught by the named deterministic case; the lane fails if a variant escapes the expected class. r[FXORACLE-CTRL-01]
 - [x] [serial] Add the Bun runner and execute the oracle with a source-bound receipt; record the conservative refusal and the outcome counts. r[FXORACLE-CTRL-01]
 - [x] [serial] Keep malformed/cyclic arenas in the separate robustness test. No minimized applicable discrepancy arose in the executed lane, so there is no source-level or kernel submission to add; a future discrepancy keeps the shrinking lane. r[FXORACLE-DIFF-01]
+
+- [ ] [serial] Complete the deliberate spec sync before archiving: FXORACLE-SEM-01, FXORACLE-DIFF-01, FXORACLE-CORPUS-01 and FXORACLE-CTRL-01 remain change-local ADDED requirements with no canonical counterpart, while the executed receipt `verification/effect-oracle/receipt.json` records 1,314 cases, six caught mutants and one conservative refusal. Sync them into `.cairn/specs/verification/spec.md` with their scenario designs, or record an owner decision that this change stays active indefinitely. r[FXORACLE-SEM-01]

@@ -1728,7 +1728,7 @@
     },
     {
       "file": ".cairn/changes/effect-oracle/tasks.md",
-      "sha256": "3b3d39d464c9ae002fd010355c8654430501d8ab950ef03bc088b98786066cd6"
+      "sha256": "d3241c78aa4f8347c811f9e240ca6011f97e7b2260143c18b50a930e265399af"
     },
     {
       "file": ".cairn/changes/explicit-live-references/design.md",
@@ -2236,7 +2236,7 @@
     },
     {
       "file": ".cairn/changes/text-byte-cursor/tasks.md",
-      "sha256": "6de7ef9938777ba920fd4cb62ecd8144ece64d051a117f645a2961b18e3d7546"
+      "sha256": "4451bdd848500fee8812d8ca64ab6425fd8091880048ae11e9438e0b7ea64a50"
     },
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
