@@ -1527,6 +1527,22 @@
       "sha256": "0a9255fc73a622e6745bd2db6ccc0560aebb961d78bd707be110bc5212da8946"
     },
     {
+      "file": ".cairn/archive/2026-10-25-editor-hole-transport/design.md",
+      "sha256": "17fb51d6b7517220b0f28613068bd328aa8c38a7399009b88234a777171fe3df"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-editor-hole-transport/proposal.md",
+      "sha256": "2ebba38f068e1bb251fe2162b099ad3f4f3cde5353cca23ed9d87dd0501cb4f2"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-editor-hole-transport/specs/developer-experience/spec.md",
+      "sha256": "ed045cfb43f2835fb4f7232bdd012ebea26ad4b979d5d79f4efd9f06538c1715"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-editor-hole-transport/tasks.md",
+      "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
+    },
+    {
       "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/design.md",
       "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
     },
@@ -1697,22 +1713,6 @@
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/tasks.md",
       "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
-    },
-    {
-      "file": ".cairn/changes/editor-hole-transport/design.md",
-      "sha256": "17fb51d6b7517220b0f28613068bd328aa8c38a7399009b88234a777171fe3df"
-    },
-    {
-      "file": ".cairn/changes/editor-hole-transport/proposal.md",
-      "sha256": "2ebba38f068e1bb251fe2162b099ad3f4f3cde5353cca23ed9d87dd0501cb4f2"
-    },
-    {
-      "file": ".cairn/changes/editor-hole-transport/specs/developer-experience/spec.md",
-      "sha256": "ed045cfb43f2835fb4f7232bdd012ebea26ad4b979d5d79f4efd9f06538c1715"
-    },
-    {
-      "file": ".cairn/changes/editor-hole-transport/tasks.md",
-      "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
     },
     {
       "file": ".cairn/changes/effect-oracle/design.md",
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "3993292956bd0e23b464389eba9083ec626e0515736aff32192d7a7f5f36ccf4"
+      "sha256": "56cf446f8159e54e3adb1b86fda537710ceec0aada19ba958c68670293b3aff5"
     },
     {
       "file": "specs/SAFETY.md",

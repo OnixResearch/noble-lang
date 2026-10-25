@@ -580,7 +580,7 @@ explicitly. Latent `[test.clock]` reflects the declared effect; no real clock
 or ambient-host fallback was called. This is test-only host evidence, not a
 general adapter, authority or host/backend refinement theorem.
 
-The active [Editor-Draft Cairn change](../.cairn/changes/editor-hole-transport/proposal.md)
+The completed and archived [Editor-Draft Cairn change](../.cairn/archive/2026-10-25-editor-hole-transport/proposal.md)
 now has a separately accepted corrected [DX-02 receipt](../verification/dx02/acceptance.json)
 (SHA-256 `2a6e59c06c26b3120b9a242e990647d64d7b4ed455208398801183ac435d7b5f`,
 source `sha256:624f95e6f6fccfb8bbcb2aaa9dd825dde866329c9fbbfe24b662803881366116`).
