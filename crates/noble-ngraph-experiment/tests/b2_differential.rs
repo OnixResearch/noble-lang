@@ -225,3 +225,60 @@ fn compiled_matches_first_guard_in_canonical_order() {
     let r = comp.evaluate(&f32_inputs(&[0.5]), None, &mut Control::default());
     assert_eq!(r.obs, Obs::Normal(vec![Value::F32(2.0f32.to_bits())]));
 }
+
+// Issue #38: replay the retained kernel-checked binary32 expectations through the
+// packed Rust graph reference. The Lean model is the authority for the
+// expectation; this lane only shows that the Rust reference agrees with it, and
+// it records which configuration the reference ran under.
+const LEAN_RETAINED_EXPECTATIONS: &str = include_str!("../../../verification/binary32/proposals.json");
+
+fn retained_expectations() -> Vec<(String, u32, u32, u32)> {
+    let packet: serde_json::Value =
+        serde_json::from_str(LEAN_RETAINED_EXPECTATIONS).expect("retained proposal packet parses");
+    let proposals = packet["proposals"].as_array().expect("proposals array");
+    proposals
+        .iter()
+        .map(|p| {
+            let operation = p["operation"].as_str().expect("operation").to_owned();
+            let bits = |key: &str| u32::try_from(p[key].as_u64().expect(key)).expect("u32 encoding");
+            (operation, bits("left"), bits("right"), bits("expected"))
+        })
+        .collect()
+}
+
+#[test]
+fn lean_retained_binary32_expectations_replay_through_the_graph_reference() {
+    let proposals = retained_expectations();
+    assert_eq!(proposals.len(), 26, "retained expectation count");
+    for (operation, left, right, expected) in proposals {
+        let a = f32::from_bits(left);
+        let b = f32::from_bits(right);
+        let observed = match operation.as_str() {
+            "add" => noble_ngraph::sem::add(a, b),
+            "sub" => noble_ngraph::sem::sub(a, b),
+            "mul" => noble_ngraph::sem::mul(a, b),
+            other => panic!("unsupported operation {other}"),
+        };
+        // NaN payloads are one observation class, so a NaN expectation is matched by
+        // observation equality rather than by exact bytes; every other class is
+        // matched by its exact encoding.
+        let is_nan = |bits: u32| bits >> 23 & 0xFF == 0xFF && bits & 0x7F_FFFF != 0;
+        assert_eq!(
+            noble_ngraph::sem::obs_eq(
+                Value::F32(observed.to_bits()),
+                Value::F32(expected)
+            ),
+            true,
+            "{operation}({left:#010x}, {right:#010x}) observed {:#010x} is not obs_eq to {expected:#010x}",
+            observed.to_bits()
+        );
+        if !is_nan(expected) {
+            assert_eq!(
+                observed.to_bits(),
+                expected,
+                "{operation}({left:#010x}, {right:#010x}) observed {:#010x}",
+                observed.to_bits()
+            );
+        }
+    }
+}
