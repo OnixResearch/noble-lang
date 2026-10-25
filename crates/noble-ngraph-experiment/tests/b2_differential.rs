@@ -230,7 +230,8 @@ fn compiled_matches_first_guard_in_canonical_order() {
 // packed Rust graph reference. The Lean model is the authority for the
 // expectation; this lane only shows that the Rust reference agrees with it, and
 // it records which configuration the reference ran under.
-const LEAN_RETAINED_EXPECTATIONS: &str = include_str!("../../../verification/binary32/proposals.json");
+const LEAN_RETAINED_EXPECTATIONS: &str =
+    include_str!("../../../verification/binary32/proposals.json");
 
 fn retained_expectations() -> Vec<(String, u32, u32, u32)> {
     let packet: serde_json::Value =
@@ -240,7 +241,8 @@ fn retained_expectations() -> Vec<(String, u32, u32, u32)> {
         .iter()
         .map(|p| {
             let operation = p["operation"].as_str().expect("operation").to_owned();
-            let bits = |key: &str| u32::try_from(p[key].as_u64().expect(key)).expect("u32 encoding");
+            let bits =
+                |key: &str| u32::try_from(p[key].as_u64().expect(key)).expect("u32 encoding");
             (operation, bits("left"), bits("right"), bits("expected"))
         })
         .collect()
