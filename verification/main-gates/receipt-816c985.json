@@ -1,0 +1,168 @@
+{
+  "schema": "noble-main-gates-receipt/v1",
+  "tested_commit": "816c9856e",
+  "base_upstream_commit": "35fcdc04d",
+  "tests_bind": "one commit: source bytes, re-pinned tool-selection files and the renewed source inventory all belong to 816c9856e",
+  "checks": [
+    {
+      "check": "boundary-controls",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 2689,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/boundary-controls.log",
+      "log_sha256": "0ce45a73f7f7f34b89f44131084ee57b479e3811bb6e3736c854423e52a9c9de",
+      "output_path": "/nix/store/6gdp7315x9cp71gh6x2jd9g0z035fva9-noble-boundary-controls",
+      "observation": "18 of 18 declared boundary fixtures: 2 positive baselines (acyclic-shell, dependencies) and 16 rejected boundary fixtures; comparator-tests.txt lists each label."
+    },
+    {
+      "check": "tool-selection",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 25,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/tool-selection.log",
+      "log_sha256": "8b8b01479c2f66f6516e2083b974f80610b0dbb91b071367061330275fd5a0e6",
+      "output_path": "/nix/store/7wzs0v4l6wlbfn4d7grmlh62a42vsvbp-noble-tool-selection",
+      "observation": "Nickel export of policy/tool-selection.ncl equals the committed JSON byte for byte; the registry typechecks and the selection self-tests list is written."
+    },
+    {
+      "check": "tool-versions",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 27,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/tool-versions.log",
+      "log_sha256": "6f5b6a397b63b53303e95453b92a2c428aaa13dad21851fbe65c6ead6d65ef6a",
+      "output_path": "/nix/store/a98ycg7mz9fbsva6iczpdq542cncah70-noble-tool-versions",
+      "observation": "Reviewed tool pins match their declared versions and no override reaches the build."
+    },
+    {
+      "check": "tool-overrides",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 20,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/tool-overrides.log",
+      "log_sha256": "14d29f97a06a7fbc8d97b17963ec7ec0efaafabef859cb81cd13b9f34a330555",
+      "output_path": "/nix/store/6x55whxdpv2xkigaaichng3hvhvrcmm8-noble-tool-overrides",
+      "observation": "Tool override attempts are rejected; the reviewed pins remain the only selected tools."
+    },
+    {
+      "check": "format",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 26,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/format.log",
+      "log_sha256": "0df6570aa64b7ac5a0989aeb31c48148614723eb7cc7927d712d07b44c8dadae",
+      "output_path": "/nix/store/jy63ams96pb08kw1nl89wss07hqn6iym-noble-format",
+      "observation": "cargo fmt --all --check reports no diff across the workspace."
+    },
+    {
+      "check": "rust-tests",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 890,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/rust-tests.log",
+      "log_sha256": "9e8f02f446fa1f04543e2ffcba4ae6e23c17ed140fd696f7984ccab89f12e675",
+      "output_path": "/nix/store/ybbfwzn32d1y3b7gaz6kpag4za84b28j-noble-rust-tests",
+      "observation": "85 suites pass with 0 failures; 795 tests in the observed `test result:` lines."
+    },
+    {
+      "check": "clippy",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 75,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/clippy.log",
+      "log_sha256": "931f4f7cde7924649d806ca3e45e989805de9fe7131ba5642078c72c83bcec27",
+      "output_path": "/nix/store/g589ff5lzbxhan1xbqrv4y47nycg23jc-noble-clippy",
+      "observation": "Workspace, all-target, all-feature Clippy exits 0 with warnings denied; no lint suppression was added."
+    },
+    {
+      "check": "documents",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 57,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/documents.log",
+      "log_sha256": "68fded14e6cd9181c5a90569e2376486a636f76d9e1fbe67f33c96839f4c9f07",
+      "output_path": "/nix/store/ll7s7yzz3p4w511b959skl5mvh53g9g4-noble-documents",
+      "observation": "Spec document, link and scenario validation passes; specs/VALIDATION.json is refreshed in the tested commit."
+    },
+    {
+      "check": "cairn",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 21,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/cairn.log",
+      "log_sha256": "c54d5f0d011b070ee2d9624e9ad04d5931d05503c3d3b639565dfe15e12afcda",
+      "output_path": "/nix/store/z165q0vy0ad7if4glz65yibdsq0xp437-noble-cairn",
+      "observation": "Cairn validates 36 changes with no issues, findings or profile issues."
+    },
+    {
+      "check": "policy",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 21,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/policy.log",
+      "log_sha256": "c2aaac9bc8ca3fe25c6df94c2693543d68197c8b858279762fa76bcc3d2fa6d0",
+      "output_path": "/nix/store/dh27a68ri91acmb42ibwk8ddfi5n3dpd-noble-policy-freshness",
+      "observation": "Policy freshness passes: the exported architecture/tool-selection/inventory/boundary-controls inputs match their reviewed sources."
+    },
+    {
+      "check": "octet",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 628,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/octet.log",
+      "log_sha256": "f3460a0064cdfe4e906b4082ea95ee442208fcf44c9aa3c39c222eccaaebd1c9",
+      "output_path": "/nix/store/6dpfnz4gi3a3xp6sqvw4rn9ar78yfbpp-noble-octet-deny-all",
+      "observation": "Status: clean; lint phase clean with 0 findings and 0 architecture findings."
+    },
+    {
+      "check": "source-inventory-controls",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 12,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/source-inventory-controls.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_path": "/nix/store/5xz3rkiw83922krwcddzwwwlclbyi7l3-noble-source-inventory-controls",
+      "observation": "The source-inventory self-tests (positive and negative controls) pass."
+    },
+    {
+      "check": "source-coverage",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 1082,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/source-coverage.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_path": "/nix/store/cfq2dzkzy719p8cs4q7qbhyag4k6x3hy-noble-source-coverage",
+      "observation": "Source-coverage comparator is valid with empty diagnostics; this run was served from the store (log empty), the artifact digest is recorded in the receipt."
+    },
+    {
+      "check": "native-assurance",
+      "result": "passed",
+      "exit": 0,
+      "duration_s": 17,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/816c985/native-assurance.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_path": "/nix/store/z61asddxqnyv5qq8r7kbz3c31hn17v10-noble-native-assurance",
+      "observation": "Native-assurance comparator is valid with empty diagnostics; served from the store (log empty), artifact digest recorded in the receipt."
+    }
+  ],
+  "rust_tests": {
+    "suites": 85,
+    "tests": 795,
+    "failed": 0,
+    "observation": "Every observed  line is ok; no suite failed or was filtered."
+  },
+  "repairs": [
+    "format failed at 7f1d30bd because the transition predicate and the worker emitter were not rustfmt-clean; `cargo fmt --all` reformatted both files and the tool-selection pins were renewed in the same commit chain (35fcdc04).",
+    "source-coverage then rejected subject-omission/subject-stale at 35fcdc04 because two reviewed subjects moved by formatting; policy/source-inventory.json was rebound from the declared `live-test-barrier,safety-observe` collection (816c9856).",
+    "boundary-controls exceeded a 3500 s timeout while still copying dependency outputs; the unbounded retry finished in 2689 s with exit 0."
+  ],
+  "follow_ups": {
+    "octet-anyhow-dispatch": "The two required-compiler-unknown findings were cleared by a reviewed `dynamic_dispatch.external_crates` entry for `anyhow`, together with the crate's existing infrastructure provider classification, rather than by a waiver. Reopen if `anyhow::Context` gains an effectful method or an implementation outside the composition root."
+  },
+  "non_claims": [
+    "A green gate set binds one commit and is not milestone acceptance or M1 acceptance.",
+    "Job-17 tests and accounting do not establish universal compiler/backend refinement.",
+    "The finite DX-02, ADAPT-06, DX-06 and worker-case receipts remain separately scoped.",
+    "The octet classification is a dispatch-class review, not a proof of anyhow native safety."
+  ]
+}

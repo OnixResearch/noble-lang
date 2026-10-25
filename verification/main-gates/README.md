@@ -492,6 +492,48 @@ The follow-ups are filed by root cause:
 - [#26](https://github.com/OnixResearch/noble-lang/issues/26): noble-kernel deny-all errors, which block `octet` and the `boundary-controls` deny bundles.
 - [#27](https://github.com/OnixResearch/noble-lang/issues/27): the `boundary-controls` unit roster and capacity reservation.
 
+## Results at `816c9856` (MW2 closeout)
+
+All fourteen pinned checks pass at one commit for the first time since `e4cfb086`.
+`verification/main-gates/receipt-816c985.json` binds them; it records each check's
+exit status, duration, log digest, store output path and observation, the 85 passing
+`test result:` suites (795 tests, 0 failures), the three repairs below, and the
+non-claims. The tested commit is `816c9856e` and its parent is `35fcdc04d`.
+
+| check | result | notes |
+|---|---|---|
+| `tool-selection` | pass | export equals the committed JSON byte for byte |
+| `tool-versions` | pass | reviewed pins only |
+| `tool-overrides` | pass | overrides rejected |
+| `format` | pass | no rustfmt diff |
+| `rust-tests` | pass | 85 suites, 795 tests, 0 failures |
+| `clippy` | pass | all targets and features, warnings denied |
+| `documents` | pass | specs, links and scenarios |
+| `cairn` | pass | 36 changes, no issues or findings |
+| `policy` | pass | reviewed inputs fresh |
+| `octet` | pass | lint clean, 0 architecture findings |
+| `source-inventory-controls` | pass | positive and negative controls |
+| `boundary-controls` | pass | 18 of 18 declared fixtures |
+| `source-coverage` | pass | `valid: true`, empty diagnostics |
+| `native-assurance` | pass | `valid: true`, empty diagnostics |
+
+Repairs needed to reach this state, each recorded in the receipt:
+
+- `format` failed because the new transition predicate and the split worker emitter
+  were not rustfmt-clean; `cargo fmt --all` reformatted both and the tool-selection
+  pins were renewed in the same chain (`35fcdc04`).
+- `source-coverage` then rejected `subject-omission`/`subject-stale` because two
+  reviewed subjects moved by formatting; the inventory was rebound from the declared
+  `live-test-barrier,safety-observe` collection (`816c9856`).
+- `boundary-controls` exceeded a 3500 s wrapper timeout while still copying
+  dependency outputs; the unbounded retry finished in 2689 s with exit 0.
+
+The Octet architecture pass is a reviewed classification, not a waiver: the two
+`required-compiler-unknown` findings were `anyhow::Context` trait calls on generic
+receivers in the composition-root transition host, and `anyhow` now sits in
+`dynamic_dispatch.external_crates` alongside its existing infrastructure provider
+classification.
+
 ## What changed to restore the gates
 
 - **Formatting.** `cargo fmt --all` was run with the pinned nightly-2026-03-21

@@ -2252,7 +2252,7 @@
     },
     {
       "file": ".cairn/changes/worker-cancellation-slice-native-async/tasks.md",
-      "sha256": "4a3ed6f9b531a5d917b10cdcb77bc5b5fe6ad8762a4b5eb819aef4632cb10e64"
+      "sha256": "19e2a6a4f1bdf7162f6b77036693c65d31e37530045396ed2a849ca5f3e90bdc"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -2512,7 +2512,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "e13282947f98582968e402a5e572205cc6d82b6f41a72b8ce194f81e2c140f3d"
+      "sha256": "314b6604d8c208c274d62f54e0cf71f4489ddf2b73ed03151931c30bee8d8583"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2680,7 +2680,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "53d05e67f025abc98dd4130ad1a8ef1f8e9e3c203673eb108b6b043f17b3cda2"
+      "sha256": "357012b2a0e9bacb8ab02785e4406e4d2b8951e840386bcadbc7df13df24dacd"
     },
     {
       "file": "verification/native-assurance.md",
