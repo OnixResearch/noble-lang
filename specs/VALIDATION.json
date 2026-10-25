@@ -1544,7 +1544,7 @@
     },
     {
       "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/tasks.md",
-      "sha256": "19e2a6a4f1bdf7162f6b77036693c65d31e37530045396ed2a849ca5f3e90bdc"
+      "sha256": "cd11f031cfd3ab6ec1724f1b155fb31ffd9f83a9ad5feb59d8e585ee955a7d1f"
     },
     {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
