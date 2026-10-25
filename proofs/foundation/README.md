@@ -561,10 +561,30 @@ Proved here:
 | `implicit_contraction_is_observable` | rounding the product before the sum differs from one rounding of the exact three-operand sum |
 | `multiplication_rounds_once` | multiplication takes the sign exclusive-or and rounds the exact operand product once |
 
+The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
+six wrong models that are compiled only in this project: away-from-zero ties,
+collapsing every zero result to `+0`, flush-to-zero, a zero-sign-insensitive
+observation, a commutative subtraction and implicit contraction. Each is caught
+by a named retained expectation, and `all_declared_mutations_are_caught` states
+that none of the declared variants escapes. Detection is kernel-checked model
+disagreement, not a Rust-side mutation run.
+
+The packed Rust graph reference replays all 26 retained expectations
+(`crates/noble-ngraph-experiment/tests/b2_differential.rs`): NaN expectations
+match by observation equality and every other class by its exact encoding. The
+receipt `verification/binary32/replay.json` names clean commit `74b5ea296`,
+`rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64`. The first replay found
+that the Rust reference returns `0xFFC00000` where the model produces its own
+canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
+exactly why the lane compares observations rather than payload bytes.
+
 Open, and deliberately not closed by this model:
 
 - correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
-  is a separate trusted-correspondence claim;
+  is a separate trusted-correspondence claim: the replay shows agreement on 26
+  retained expectations on one host and target, not a refinement proof;
+- the compiled graph legs (`Compiled::new` + `run_legs`/`evaluate`) are not yet
+  replayed against the retained expectations;
 - the ordered affine fold's individual rounding steps as graph operations, the
   extraction, training, snapshot and codec layers, guard/index rules, software
   helpers and optimizer behavior;

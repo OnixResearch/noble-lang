@@ -77,11 +77,31 @@ is not reviewed here.
   reviewed refinement or a bounded differential replay that retains the model
   as the authority. Untested correspondence is open, not assumed.
 - Rounding correctness is checked by kernel-reduced boundary examples rather
-  than a general theorem; a wrong-rounding mutation lane is still needed.
+  than a general theorem. The mutation lane shows that six declared wrong models
+  are detected, which is detection evidence, not a correctness proof.
 - The fuel-bounded `log2` and Nat division are trusted kernel-reducible code,
   not proved against a specification.
 - Extending the slice to the ordered affine fold, extraction, training,
   snapshots and codecs is future work, and no claim is made for them.
+
+## Executed phase 2
+
+- Test-local variants (`NobleFoundation/Binary32Mutations.lean`): away-from-zero
+  ties, positive-zero collapse, flush-to-zero, zero-sign-insensitive
+  observation, commutative subtraction and implicit contraction. Each is caught
+  by a named retained expectation; `all_declared_mutations_are_caught` closes the
+  declared set.
+- Packed-reference replay: `crates/noble-ngraph-experiment/tests/b2_differential.rs`
+  replays all 26 retained expectations through `noble_ngraph::sem::add/sub/mul`,
+  matching NaN expectations by observation equality and every other class by
+  exact encoding. The first run found one genuine difference: the Rust
+  reference returns `0xFFC00000` where the Lean model produces its canonical
+  `0x7FC00000` for `inf + -inf`. Both are one NaN observation, which is why the
+  lane compares observations rather than payload bytes, and why the model's
+  canonical-NaN statement is a model claim and not a reference claim.
+- Receipts: `verification/foundation/receipts/aa074e1/index.json` (212
+  theorems, sixteen binary32, clean source) and `verification/binary32/replay.json`
+  (clean commit `74b5ea296`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
 
 ## Acceptance mapping
 
@@ -90,6 +110,6 @@ is not reviewed here.
 | Versioned F32 specification, explicit relations, named inventory, audited assumptions | selected model, scaled interpretation, `obsEq`, nine inventoried theorems, axiom audit inside the allow-list |
 | Kernel-checked examples for ties, cancellation, both zero signs, subnormals, boundaries, overflow, infinities, NaNs | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `encoding_boundaries` |
 | Ordered affine examples detect reassociation and contraction; round-to-real cannot discharge binary32 | `reassociation_is_observable`, `implicit_contraction_is_observable`, `exact_sum_exceeds_the_rounded_result` |
-| Source-bound receipts identify Lean/Mathlib/model, generator, Rust, target, tested implementations | `verification/foundation/receipts/4be2a68/index.json` identifies Lean, Mathlib, model and proposer; **no Rust/Wasm lane is claimed here**, so the item stays partly open |
+| Source-bound receipts identify Lean/Mathlib/model, generator, Rust, target, tested implementations | `verification/foundation/receipts/aa074e1/index.json` identifies Lean, Mathlib, the model, the proposer and the six test-local variants; `verification/binary32/replay.json` identifies the clean Rust commit, `rustc 1.96.0-nightly`, the host and the lane/proposal digests for the packed-reference replay. The compiled graph legs, `wasm-opt`, V8 and the loader stay open |
 | Separate proved model / tested implementation / trusted correspondence / open | README claim table and non-claims list |
 | Update only the established slice | only the model-level slice; extraction, codec, optimizer, engine and loader stay open under #10/#15 |

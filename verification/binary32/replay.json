@@ -1,0 +1,24 @@
+{
+  "schema": "noble-binary32-replay/v1",
+  "assertion": "the packed Rust graph reference agrees with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence",
+  "source_commit": "74b5ea296aee9a0a5d7f283186570baa27eb8bf6",
+  "source_tree": "33780522437e4c4a0ba94a1f16466b3db0149076",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+  "host": "Linux 6.18.54 x86_64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-replay-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture",
+  "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
+  "lane_sha256": "61bc0d018e333d4d73ee09d9d8c305d81d87b7b3e2ea4817c5a34d8339b6e95a",
+  "proposals_sha256": "850362e810b321b7620fba51132b25cff1527ac48855e57379adaef72f75bf6e",
+  "retained_expectations": 26,
+  "observations": "NaN expectations match by observation equality; every other class matches its exact encoding",
+  "lean_authority": "verification/foundation/receipts/aa074e1/index.json",
+  "results": {
+    "lane": "passed",
+    "retained_expectations_matched": 26
+  },
+  "claims": [
+    "Tested-implementation evidence for the packed Rust graph reference on this host and target only.",
+    "No correspondence proof, no cross-platform claim, and no evidence about wasm-opt, V8 or the loader."
+  ]
+}
