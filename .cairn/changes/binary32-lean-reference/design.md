@@ -101,7 +101,7 @@ is not reviewed here.
   canonical-NaN statement is a model claim and not a reference claim.
 - Receipts: `verification/foundation/receipts/aa074e1/index.json` (212
   theorems, sixteen binary32, clean source) and `verification/binary32/replay.json`
-  (clean commit `74b5ea296`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
+  (clean commit `418381971`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
 
 ## Acceptance mapping
 

@@ -572,7 +572,7 @@ disagreement, not a Rust-side mutation run.
 The packed Rust graph reference replays all 26 retained expectations
 (`crates/noble-ngraph-experiment/tests/b2_differential.rs`): NaN expectations
 match by observation equality and every other class by its exact encoding. The
-receipt `verification/binary32/replay.json` names clean commit `74b5ea296`,
+receipt `verification/binary32/replay.json` names clean commit `418381971`,
 `rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64`. The first replay found
 that the Rust reference returns `0xFFC00000` where the model produces its own
 canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
