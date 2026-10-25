@@ -16,7 +16,7 @@ const SCOPE=['Cargo.toml','Cargo.lock','rust-toolchain.toml','crates/noble-kerne
   'crates/noble-cli/tests/fixtures/worker-send-dispatch.noble',
   'crates/noble-cli/tests/fixtures/worker-send-finish.noble',
   'verification/worker-send','verification/worker01/fixtures',
-  'specs/conformance/worker-cases.json','.cairn/changes/worker-cancellation-slice-native-async/design.md'];
+  'specs/conformance/worker-cases.json','.cairn/archive/2026-10-25-worker-cancellation-slice-native-async/design.md'];
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const hash=file=>sha(fs.readFileSync(file));
 const git=(...args)=>spawnSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:64*1024*1024});
@@ -43,7 +43,7 @@ function main(){
   const files=git('ls-files','-z','--',...SCOPE).stdout.split('\0').filter(Boolean).sort();
   const sourceFiles=Object.fromEntries(files.map(file=>[file,{sha256:hash(path.join(root,file))}]));
   const design=fs.readFileSync(path.join(root,
-    '.cairn/changes/worker-cancellation-slice-native-async/design.md'),'utf8');
+    '.cairn/archive/2026-10-25-worker-cancellation-slice-native-async/design.md'),'utf8');
   const closure=design.split('Native-async-interfaces gate closure')[1];
   assert.ok(closure,'design has no native-async-interfaces closure section');
   const projection={case:'native-async-interfaces',

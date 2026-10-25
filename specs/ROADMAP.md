@@ -219,7 +219,7 @@ reviewed DXM1 inventory remain open; no nominal/module, host or engine proof
 is claimed. General Result, local names, invariant-bearing types, portable
 packages/cache, capability modules and MA/MW entry gates are unaffected.
 
-The active [declared retained-source change](../.cairn/changes/declared-retained-source-budget/proposal.md)
+The completed and archived [declared retained-source change](../.cairn/archive/2026-10-25-declared-retained-source-budget/proposal.md)
 specifies an optional bounded aggregate namespace-source capacity without
 altering DXM1's historical 65,536-byte default or its accepted evidence. Each
 input remains bounded independently, and original module/definition bytes

@@ -1,0 +1,3 @@
+test core::framing::tests::an_existing_destination_is_never_overwritten ... ok
+test core::framing::tests::a_failed_write_leaves_no_package_and_a_retry_succeeds ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 114 filtered out; finished in 0.01s

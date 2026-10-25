@@ -1511,6 +1511,42 @@
       "sha256": "d840c8f06a0c1b1c5042a02b0f2fcf0502a1c7d4b00fed4627a4a4557b113f1b"
     },
     {
+      "file": ".cairn/archive/2026-10-25-declared-retained-source-budget/design.md",
+      "sha256": "847755d87af037e8df78e4c1fe91cdc89fefdefd5c748934224127a40de98110"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-declared-retained-source-budget/proposal.md",
+      "sha256": "f77dd1e72eea144c4fa68101996e6d61009da7e2d046eabf7e583e68036bbd6d"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-declared-retained-source-budget/specs/developer-experience/spec.md",
+      "sha256": "31ce41fec8587b1256af8d619cf0aef291c489be4fb0d919e15637d546d2c454"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-declared-retained-source-budget/tasks.md",
+      "sha256": "0a9255fc73a622e6745bd2db6ccc0560aebb961d78bd707be110bc5212da8946"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/design.md",
+      "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/proposal.md",
+      "sha256": "f063d5278b17b912f29b55c557f3f26ed5b9252d6321aafd1ccd1d60abdcfcde"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/specs/language/spec.md",
+      "sha256": "51dc948b8282f7a214a25920b05cc2a5410f3adc05c6de4df66eb9838dc08d09"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/specs/resource-adapters/spec.md",
+      "sha256": "8ca2c967fcdc62c961b64f21c88f8ebacf5f038e4b2ffe31746a31491ab6ba89"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/tasks.md",
+      "sha256": "19e2a6a4f1bdf7162f6b77036693c65d31e37530045396ed2a849ca5f3e90bdc"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -1661,22 +1697,6 @@
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/tasks.md",
       "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
-    },
-    {
-      "file": ".cairn/changes/declared-retained-source-budget/design.md",
-      "sha256": "847755d87af037e8df78e4c1fe91cdc89fefdefd5c748934224127a40de98110"
-    },
-    {
-      "file": ".cairn/changes/declared-retained-source-budget/proposal.md",
-      "sha256": "f77dd1e72eea144c4fa68101996e6d61009da7e2d046eabf7e583e68036bbd6d"
-    },
-    {
-      "file": ".cairn/changes/declared-retained-source-budget/specs/developer-experience/spec.md",
-      "sha256": "31ce41fec8587b1256af8d619cf0aef291c489be4fb0d919e15637d546d2c454"
-    },
-    {
-      "file": ".cairn/changes/declared-retained-source-budget/tasks.md",
-      "sha256": "0a9255fc73a622e6745bd2db6ccc0560aebb961d78bd707be110bc5212da8946"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -2235,26 +2255,6 @@
       "sha256": "6fbca773acce8e9dcced42bce3418d33caeba01249d8f2731b35ddfb9722a6a4"
     },
     {
-      "file": ".cairn/changes/worker-cancellation-slice-native-async/design.md",
-      "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
-    },
-    {
-      "file": ".cairn/changes/worker-cancellation-slice-native-async/proposal.md",
-      "sha256": "f063d5278b17b912f29b55c557f3f26ed5b9252d6321aafd1ccd1d60abdcfcde"
-    },
-    {
-      "file": ".cairn/changes/worker-cancellation-slice-native-async/specs/language/spec.md",
-      "sha256": "51dc948b8282f7a214a25920b05cc2a5410f3adc05c6de4df66eb9838dc08d09"
-    },
-    {
-      "file": ".cairn/changes/worker-cancellation-slice-native-async/specs/resource-adapters/spec.md",
-      "sha256": "8ca2c967fcdc62c961b64f21c88f8ebacf5f038e4b2ffe31746a31491ab6ba89"
-    },
-    {
-      "file": ".cairn/changes/worker-cancellation-slice-native-async/tasks.md",
-      "sha256": "19e2a6a4f1bdf7162f6b77036693c65d31e37530045396ed2a849ca5f3e90bdc"
-    },
-    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "790290a8cda85420d78e0345bddc6b1da7a707872d3fee2102cc24c232c182a1"
+      "sha256": "3993292956bd0e23b464389eba9083ec626e0515736aff32192d7a7f5f36ccf4"
     },
     {
       "file": "specs/SAFETY.md",

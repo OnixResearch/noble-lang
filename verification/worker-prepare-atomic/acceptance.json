@@ -1,0 +1,29 @@
+{
+  "schema": "noble.verification.worker-prepare-atomic/v1",
+  "issue": "OnixResearch/noble-lang#61",
+  "tested_commit": "bab1ebf7",
+  "inventory_commit": "2b3bbc17",
+  "claims": {
+    "MEASURED": [
+      "Both worker preparation paths now publish through one staged publisher: `crates/noble-cli/src/core/framing.rs::publish_new` creates `<out>.partial` with create-new, writes and syncs it, hard-links it to `out` (which refuses an existing destination), and removes the staging file; `worker_typed::publish` and `worker_program::publish_new` only map its refusal classes to their own outcomes.",
+      "A write failure after the staging file exists leaves neither the destination nor the `.partial` name, and a retry to the same fresh destination publishes the complete bytes (`core::framing::tests::a_failed_write_leaves_no_package_and_a_retry_succeeds`).",
+      "An existing destination is refused untouched and no staging name appears beside it (`core::framing::tests::an_existing_destination_is_never_overwritten`).",
+      "`verification/worker-transition-guest/gate.mjs --out <fresh>` passes on the fixed commit: `result: passed`, no failures, v1/v2 typed-output parity, all five outcomes distinct and the four hostile refusals unchanged, including the `hostile-overwrite` control that runs v2 preparation against an existing sentinel file (transition-guest-gate.log, sha256 f71aea245109c0db257048186699fe221c3340c708ac0a812f68717bb6cf3c0f).",
+      "The nine pre-publication refusals are kept: `preparation_refusals_stop_at_their_stage_without_a_package` passes, as do the eight other `core::worker_typed::tests` (framing-tests.log, sha256 b8359484bab635974da7cf19cd8a479f7dd105680809561d684cfdaf3e4315d2).",
+      "The workspace gates that this change can move pass at the fixed commit: rust-tests, clippy, format, octet, policy, tool-selection, documents and cairn, plus source-coverage, native-assurance and source-inventory-controls after the inventory rebind."
+    ],
+    "INFERRED": [
+      "The pre-fix defect is a read of the old code, not a re-run injection: `publish` wrote directly into the destination with `write_all` and returned the error without removing it, so a short write left a partial package. The new tests assert the property that defect violated (no destination after a failed write); they cannot be run against code that has no injection seam."
+    ]
+  },
+  "deviation": {
+    "requested": "a child process under RLIMIT_FSIZE",
+    "chosen": "an injected write sink inside `publish_bytes`",
+    "why": "The workspace sets `unsafe_code = \"forbid\"`, so neither `pre_exec` nor a direct `setrlimit` call is available, and a shell `ulimit -f` terminates the writer with SIGXFSZ before it can clean up, which is the behaviour under test. The seam exercises the same cleanup branch deterministically and in-process."
+  },
+  "not_proven": [
+    "No crash-safe or fsync-durability claim: the staging file is synced before the link, but no directory sync or power-loss ordering is claimed.",
+    "No claim about `core/framing.rs::write_new` (used by --emit) or the local writer in `c_backend.rs`; they are outside this issue's scope and unchanged.",
+    "No claim that an interrupted process (rather than a failed write) leaves no staging file."
+  ]
+}
