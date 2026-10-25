@@ -1,0 +1,38 @@
+{
+  "schema": "noble.postpromotion-evidence-gap-20261025/v1",
+  "date": "2026-10-25",
+  "observation": "None of the five one-step post-promotion changes can be archived from the current checkout: the evidence roots their unchanged archive boxes name are absent, and regenerating them means re-running their frozen gates against sources that have moved.",
+  "probed": [
+    "~/.cache/noble-proof-tmp (absent)",
+    "~/.cache/noble-scase*, ~/.cache/noble-s-case*, ~/.cache/noble-safety*, ~/.cache/noble-proof* (absent)",
+    "/var/tmp/noble-wi03-prepromotion-20260930-d (absent)"
+  ],
+  "changes": [
+    {
+      "slug": "safety-authorized-fs-read",
+      "open_box": "Run separate staged postpromotion documents/Cairn checks against the accepted-source projection, then preview/execute archive only if its prerequisites pass; retain ...",
+      "missing": "S-CASE-04/S-CASE-07/DX-02 root under ~/.cache/noble-proof-tmp"
+    },
+    {
+      "slug": "safety-callback-returned-owner",
+      "open_box": "Conduct separate accepted-source postpromotion assurance and chronological final-source replay if source moves; preview/execute archive only after full scoped assurance ...",
+      "missing": "same accepted-source postpromotion root"
+    },
+    {
+      "slug": "safety-recursive-resource-eligibility",
+      "open_box": "Check postpromotion accepted-source projection and staged native/doc/receipt integrity, then archive this distinct Cairn change only if its own scoped assurance passes",
+      "missing": "same accepted-source postpromotion root"
+    },
+    {
+      "slug": "wit-exact-u64-adapter",
+      "open_box": "Only after the corrected compiled peer gate passes: preview and sync native deltas, promote only WI-03 canonical state/evidence with the new immutable receipt ...",
+      "missing": "/var/tmp/noble-wi03-prepromotion-20260930-d"
+    },
+    {
+      "slug": "numeric-graph-v1",
+      "open_box": "Archive only after CASE-02 capability closure, full source-bound closeout and explicit archive authorization.",
+      "missing": "NGRAPH-CASE-02 is absent/not-run and archive authorization is explicitly withheld"
+    }
+  ],
+  "disposition": "NOT ARCHIVED. Each needs new evidence from a fresh source-bound run, or an explicit owner acceptance of the lost root; neither is fabricated here."
+}
