@@ -1,0 +1,94 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "4be2a68b1fbc3211c6bc079a435976527bfc96a3",
+  "source_tree": "ad2727755592f0a7569acfc40a950b179ba55a8e",
+  "run": "verification/foundation/check.mjs --output /var/tmp/f32-check (issue #38 binary32 reference), clean source",
+  "raw_location": "/var/tmp/f32-check (host-local, not attested by this file)",
+  "raw_sha256": {
+    "check/foundation-check.json": "71da72e08a5fb378f9f5c580fd09ff1ed2b8394d04597ec9e7d1405a984909bb"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 205,
+      "axiom_sets": {
+        "propext,Quot.sound": 51,
+        "propext,Classical.choice,Quot.sound": 71,
+        "propext": 65,
+        "(none)": 18
+      },
+      "clean_source": true
+    },
+    "binary32_reference": {
+      "module": "NobleFoundation.Binary32 and NobleFoundation.Binary32.Expectations",
+      "theorems": [
+        {
+          "name": "NobleFoundation.Binary32.Expectations.retained_expectations_checked",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.signed_zero_rules",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.nan_class_and_zero_separation",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.encoding_boundaries",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.reassociation_is_observable",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.implicit_contraction_is_observable",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.multiplication_rounds_once",
+          "axioms": [
+            "propext"
+          ]
+        }
+      ],
+      "theorem_count": 9,
+      "retained_expectations": 26,
+      "implementation_theorem": false
+    }
+  },
+  "claims": [
+    "The nine binary32 theorems are kernel-checked statements about the selected Lean model, not about the Rust evaluator, wasm-opt or any host FPU.",
+    "Expectations are proposed by verification/binary32/propose.py and checked against the model by kernel reduction; a proposal alone is not evidence.",
+    "No source, compiler, optimizer, engine or loader obligation is closed by this receipt; those stay open under #10/#15."
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "schema": "noble-binary32-external-proposals/v1",
+  "proposals": [
+    {
+      "operation": "add",
+      "left": 1065353216,
+      "right": 864026624,
+      "expected": 1065353216,
+      "expected_class": "normal",
+      "rationale": "1.0 + 2^-24 ties to even, down to 1.0",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "add",
+      "left": 1065353216,
+      "right": 872415232,
+      "expected": 1065353217,
+      "expected_class": "normal",
+      "rationale": "1.0 + 2^-23 is exact",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "add",
+      "left": 1065353217,
+      "right": 864026624,
+      "expected": 1065353218,
+      "expected_class": "normal",
+      "rationale": "1.0+2^-23 + 2^-24 ties to even, up away from odd",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "add",
+      "left": 1065353216,
+      "right": 875560960,
+      "expected": 1065353217,
+      "expected_class": "normal",
+      "rationale": "1.0 + 3*2^-25 rounds up",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "sub",
+      "left": 1065353217,
+      "right": 1065353216,
+      "expected": 872415232,
+      "expected_class": "normal",
+      "rationale": "cancellation 1.0+2^-23 - 1.0 is exact",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "sub",
+      "left": 1065353216,
+      "right": 1065353216,
+      "expected": 0,
+      "expected_class": "posZero",
+      "rationale": "x - x is +0",
+      "classification": "zero sign keeps negative only for two negative zeros"
+    },
+    {
+      "operation": "add",
+      "left": 0,
+      "right": 2147483648,
+      "expected": 0,
+      "expected_class": "posZero",
+      "rationale": "(+0) + (-0) is +0",
+      "classification": "zero sign keeps negative only for two negative zeros"
+    },
+    {
+      "operation": "add",
+      "left": 2147483648,
+      "right": 2147483648,
+      "expected": 2147483648,
+      "expected_class": "negZero",
+      "rationale": "(-0) + (-0) is -0",
+      "classification": "zero sign keeps negative only for two negative zeros"
+    },
+    {
+      "operation": "sub",
+      "left": 0,
+      "right": 0,
+      "expected": 0,
+      "expected_class": "posZero",
+      "rationale": "(+0) - (+0) is +0",
+      "classification": "zero sign keeps negative only for two negative zeros"
+    },
+    {
+      "operation": "sub",
+      "left": 2147483648,
+      "right": 0,
+      "expected": 2147483648,
+      "expected_class": "negZero",
+      "rationale": "(-0) - (+0) is -0",
+      "classification": "zero sign keeps negative only for two negative zeros"
+    },
+    {
+      "operation": "mul",
+      "left": 2147483648,
+      "right": 1065353216,
+      "expected": 2147483648,
+      "expected_class": "negZero",
+      "rationale": "(-0) * 1.0 is -0",
+      "classification": "zero result keeps the xor sign"
+    },
+    {
+      "operation": "add",
+      "left": 1,
+      "right": 0,
+      "expected": 1,
+      "expected_class": "subnormal",
+      "rationale": "smallest subnormal is retained",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "mul",
+      "left": 1,
+      "right": 1065353216,
+      "expected": 1,
+      "expected_class": "subnormal",
+      "rationale": "smallest subnormal times 1.0",
+      "classification": "round the exact product once"
+    },
+    {
+      "operation": "add",
+      "left": 8388607,
+      "right": 1,
+      "expected": 8388608,
+      "expected_class": "normal",
+      "rationale": "largest subnormal plus smallest subnormal is the smallest normal",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "mul",
+      "left": 8388608,
+      "right": 1056964608,
+      "expected": 4194304,
+      "expected_class": "subnormal",
+      "rationale": "smallest normal halved is a subnormal with fraction 0x400000",
+      "classification": "round the exact product once"
+    },
+    {
+      "operation": "sub",
+      "left": 8388608,
+      "right": 1,
+      "expected": 8388607,
+      "expected_class": "subnormal",
+      "rationale": "smallest normal minus the smallest subnormal is the largest subnormal",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "mul",
+      "left": 1,
+      "right": 1,
+      "expected": 0,
+      "expected_class": "posZero",
+      "rationale": "smallest subnormal squared underflows to +0",
+      "classification": "round the exact product once"
+    },
+    {
+      "operation": "mul",
+      "left": 2139095039,
+      "right": 1073741824,
+      "expected": 2139095040,
+      "expected_class": "infinity",
+      "rationale": "largest normal doubled overflows to infinity",
+      "classification": "round the exact product once"
+    },
+    {
+      "operation": "mul",
+      "left": 4286578687,
+      "right": 1073741824,
+      "expected": 4286578688,
+      "expected_class": "infinity",
+      "rationale": "negative overflow keeps the sign",
+      "classification": "round the exact product once"
+    },
+    {
+      "operation": "add",
+      "left": 2139095039,
+      "right": 2139095039,
+      "expected": 2139095040,
+      "expected_class": "infinity",
+      "rationale": "largest normal plus itself overflows to infinity",
+      "classification": "round the exact sum once"
+    },
+    {
+      "operation": "add",
+      "left": 2139095040,
+      "right": 2139095040,
+      "expected": 2139095040,
+      "expected_class": "infinity",
+      "rationale": "inf + inf is inf",
+      "classification": "same-sign infinities"
+    },
+    {
+      "operation": "add",
+      "left": 2139095040,
+      "right": 4286578688,
+      "expected": 2143289344,
+      "expected_class": "notANumber",
+      "rationale": "inf + -inf is NaN",
+      "classification": "inf + -inf is NaN"
+    },
+    {
+      "operation": "sub",
+      "left": 2139095040,
+      "right": 2139095040,
+      "expected": 2143289344,
+      "expected_class": "notANumber",
+      "rationale": "inf - inf is NaN",
+      "classification": "inf + -inf is NaN"
+    },
+    {
+      "operation": "mul",
+      "left": 2139095040,
+      "right": 0,
+      "expected": 2143289344,
+      "expected_class": "notANumber",
+      "rationale": "inf * 0 is NaN",
+      "classification": "zero times infinity is NaN"
+    },
+    {
+      "operation": "mul",
+      "left": 4286578688,
+      "right": 1073741824,
+      "expected": 4286578688,
+      "expected_class": "infinity",
+      "rationale": "-inf * 2.0 is -inf",
+      "classification": "infinity times finite is infinity"
+    },
+    {
+      "operation": "add",
+      "left": 2143289344,
+      "right": 1065353216,
+      "expected": 2143289344,
+      "expected_class": "notANumber",
+      "rationale": "NaN + 1.0 is the canonical NaN",
+      "classification": "NaN propagates as one canonical NaN"
+    }
+  ]
+}

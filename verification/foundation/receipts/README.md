@@ -113,3 +113,26 @@ lowering/loading correspondence remain premises; quota/abort and resource
 behavior remain outside the selected claim. The evidence-only commit that
 adds this packet has a different tree: its historical successful verifier
 outputs do not authorize receipt reuse on that later tree.
+
+## 4be2a68 — binary32 reference model (issue #38)
+
+`4be2a68/` records Clean source commit
+`4be2a68b1fbc3211c6bc079a435976527bfc96a3`, tree
+`ad2727755592f0a7569acfc40a950b179ba55a8e`, from
+`verification/foundation/check.mjs --output /var/tmp/f32-check`. It is a
+checker run only: the Phase 3 slice, the differential lane and the EMI lane
+were **not** re-run, and no fresh slice or comparator result is claimed here.
+
+| File | Content |
+|---|---|
+| `foundation-check.json` | verbatim Lean inventory/axiom audit: 205 theorems, including nine new binary32 theorems |
+| `index.json` | raw-file hash, axiom-set counts and the binary32 theorem list |
+
+The nine new theorems are about `NobleFoundation.Binary32`: raw encodings,
+classification, an exact scaled-integer interpretation, round-to-nearest /
+ties-to-even with gradual underflow, and add/subtract/multiply including
+signed-zero, infinity, NaN and overflow rules. They establish model-level
+representation and rounding properties and kernel-check 26 retained
+expectations proposed by `verification/binary32/propose.py`. They do not
+establish correspondence with the Rust graph evaluator, `wasm-opt`, V8 or any
+host FPU, and they close no obligation under #10/#15.
