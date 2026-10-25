@@ -1238,6 +1238,48 @@
       "phase": 5,
       "role": "binary32-reference",
       "claim": "multiplication takes the sign exclusive-or and rounds the exact product once"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.ties_away_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "an away-from-zero tie rule changes a retained halfway-tie answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.positive_zero_collapse_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "collapsing every zero result to +0 changes the retained (-0)+(-0) answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.flush_to_zero_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "flush-to-zero removes the retained smallest and largest subnormals"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.zero_sign_collapse_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "a zero-sign-insensitive observation collapses observations the reference separates"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.commutative_subtraction_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "a commutative subtraction changes the retained cancellation answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.implicit_contraction_is_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "contracting the product into the sum changes the retained three-operand answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Mutations.all_declared_mutations_are_caught",
+      "phase": 5,
+      "role": "binary32-mutation-lane",
+      "claim": "every declared test-local variant is caught by a retained expectation"
     }
   ]
 }

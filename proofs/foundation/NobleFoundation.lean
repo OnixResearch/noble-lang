@@ -4,6 +4,7 @@ import NobleFoundation.Instr
 import NobleFoundation.Sequence
 import NobleFoundation.Branch
 import NobleFoundation.Binary32Expectations
+import NobleFoundation.Binary32Mutations
 import NobleFoundation.Binary32
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
