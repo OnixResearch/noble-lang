@@ -142,5 +142,7 @@ pub mod oracle;
 pub mod random;
 pub mod rejections;
 pub mod scheme;
+pub mod shrink;
 pub mod suites;
+
 pub mod workloads;

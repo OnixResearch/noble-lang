@@ -340,3 +340,59 @@ fn lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs() 
         "retained expectations replayed through the graph legs"
     );
 }
+
+#[test]
+fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
+    use noble_ngraph_experiment::shrink::{minimize, replays, Budget};
+
+    let authority = |operation: u8, left: u32, right: u32| -> u32 {
+        match operation {
+            2 => (f32::from_bits(left) * f32::from_bits(right)).to_bits(),
+            other => panic!("unsupported operation {other}"),
+        }
+    };
+    let candidate = |operation: u8, left: u32, right: u32| -> u32 {
+        match operation {
+            2 => noble_ngraph_experiment::fixtures::ftz_mul(
+                f32::from_bits(left),
+                f32::from_bits(right),
+            )
+            .to_bits(),
+            other => panic!("unsupported operation {other}"),
+        }
+    };
+    // A pair whose product is a subnormal, so flush-to-zero disagrees.
+    let start = (0x0080_0000, 0x3f00_0000);
+    let witness = minimize(2, &authority, &candidate, start, Budget::default_attempts())
+        .expect("the start pair disagrees under flush-to-zero");
+    assert!(replays(&witness, &authority, &candidate), "{witness:?}");
+    // Deterministic: a second walk over the same start pair yields the same witness.
+    let again = minimize(2, &authority, &candidate, start, Budget::default_attempts())
+        .expect("the start pair still disagrees");
+    assert_eq!(again, witness);
+    // The walk terminates inside the documented budget rather than exhausting it,
+    // and the witness is a subnormal-versus-zero disagreement: the authority keeps
+    // the subnormal product and the candidate flushes it.
+    assert!(!witness.budget_exhausted, "{witness:?}");
+    assert!(witness.attempts <= Budget::default_attempts().attempts);
+    let expected_exponent = witness.expected >> 23 & 0xFF;
+    assert_eq!(expected_exponent, 0, "{witness:?}");
+    assert_ne!(witness.expected & 0x7F_FFFF, 0, "{witness:?}");
+    assert_eq!(witness.candidate, 0x0000_0000, "{witness:?}");
+}
+
+#[test]
+fn agreeing_pairs_produce_no_witness() {
+    use noble_ngraph_experiment::shrink::{minimize, Budget};
+    let authority =
+        |operation: u8, left: u32, right: u32| -> u32 { operation as u32 + left + right };
+    let candidate = authority;
+    assert!(minimize(
+        0,
+        &authority,
+        &candidate,
+        (0x3f80_0000, 0x3f80_0000),
+        Budget::default_attempts()
+    )
+    .is_none());
+}
