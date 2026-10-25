@@ -1,0 +1,94 @@
+{
+  "schema": "noble-ngraph-purity-observation/v1",
+  "assertion": "static boundary checks over the declared crate, not a proof of source purity and not a native-assurance or Octet receipt",
+  "case": "NGRAPH-CASE-02",
+  "checks": [
+    {
+      "name": "crate-attribute-no-std",
+      "claim": "The crate declares `#![no_std]` unconditionally in src/lib.rs.",
+      "observed": {
+        "line": "#![no_std]"
+      }
+    },
+    {
+      "name": "normal-dependencies",
+      "claim": "Normal dependencies are exactly noble-contracts and noble-kernel with no build dependencies.",
+      "observed": {
+        "normal": [
+          "noble-contracts",
+          "noble-kernel"
+        ]
+      }
+    },
+    {
+      "name": "resolved-normal-dependencies",
+      "claim": "Workspace metadata resolves only the two Noble crates as normal dependencies of noble-ngraph.",
+      "observed": {
+        "normal": [
+          "noble-contracts",
+          "noble-kernel"
+        ]
+      }
+    },
+    {
+      "name": "forbidden-capability-uses",
+      "claim": "No std filesystem/network/process/environment/time/concurrency surface, extern C, or unsafe block appears in the library sources.",
+      "observed": {
+        "forbidden": [
+          "std::fs",
+          "std::net",
+          "std::process",
+          "std::env",
+          "std::time",
+          "std::thread",
+          "std::sync",
+          "tokio::",
+          "std::os",
+          "extern \"C\"",
+          "unsafe "
+        ],
+        "sources": [
+          "crates/noble-ngraph/src/check.rs",
+          "crates/noble-ngraph/src/compiled.rs",
+          "crates/noble-ngraph/src/diag.rs",
+          "crates/noble-ngraph/src/eval.rs",
+          "crates/noble-ngraph/src/extract/admission.rs",
+          "crates/noble-ngraph/src/extract/mod.rs",
+          "crates/noble-ngraph/src/extract/source.rs",
+          "crates/noble-ngraph/src/extract/symbolic.rs",
+          "crates/noble-ngraph/src/facts.rs",
+          "crates/noble-ngraph/src/format/data.rs",
+          "crates/noble-ngraph/src/format/graph.rs",
+          "crates/noble-ngraph/src/format/mod.rs",
+          "crates/noble-ngraph/src/format/snapshot.rs",
+          "crates/noble-ngraph/src/format/value.rs",
+          "crates/noble-ngraph/src/format/vectors.rs",
+          "crates/noble-ngraph/src/grad.rs",
+          "crates/noble-ngraph/src/identity.rs",
+          "crates/noble-ngraph/src/ir.rs",
+          "crates/noble-ngraph/src/lib.rs",
+          "crates/noble-ngraph/src/prng.rs",
+          "crates/noble-ngraph/src/sem.rs",
+          "crates/noble-ngraph/src/snapshot.rs",
+          "crates/noble-ngraph/src/train.rs"
+        ]
+      }
+    },
+    {
+      "name": "identity-hash-injected",
+      "claim": "Identity hashing is a caller-supplied trait object; the library selects no standard hasher.",
+      "observed": {
+        "trait": "IdentityHasher"
+      }
+    }
+  ],
+  "source": {
+    "files": 23,
+    "digest": "f0d249761a50b9bca1665f1756b87bddec5fc020d33a225a2a0e2bb66defa6f0"
+  },
+  "manifest_sha256": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+  "cargo": {
+    "metadata": "offline --no-deps",
+    "packages": 7
+  }
+}

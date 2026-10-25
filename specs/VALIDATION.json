@@ -17,7 +17,7 @@
   "documents": 14,
   "requirements": 552,
   "scenarios": 223,
-  "scenarios_executed": 142,
+  "scenarios_executed": 143,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -1980,7 +1980,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "124c07656df84a570be787f30b0a552d9c300860878635b6e8d1625a3da5cd1f"
+      "sha256": "6fb4b0199522efa044f3ce4230287e6fdb2818820f6de67ac5395d4acf044cb5"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2412,7 +2412,7 @@
     },
     {
       "file": "specs/conformance/numeric-graph-cases.json",
-      "sha256": "abeaf185b2a60725e4ca906894c87b900356cbca2ac47187611835e5bef9c93b"
+      "sha256": "ff092d6039830b87c82a57c98008815e9019a0a3d2955f2ab388dd6fb2a02926"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",

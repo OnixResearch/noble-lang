@@ -177,12 +177,37 @@
         "identity_hash_injected": true
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "NGRAPH-CASE-02",
+          "claim": "verification/ngraph-purity/gate.mjs checks the crate boundary statically: src/lib.rs declares `#![no_std]` unconditionally, the manifest and the offline workspace metadata both resolve exactly noble-contracts and noble-kernel as normal dependencies with no build dependencies, none of 23 library sources contains a std filesystem/network/process/environment/time/concurrency surface, `extern \"C\"` or an unsafe block, and src/identity.rs declares the injected `IdentityHasher` trait object without selecting DefaultHasher, RandomState, SipHasher or std::collections::hash_map.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:f0d249761a50b9bca1665f1756b87bddec5fc020d33a225a2a0e2bb66defa6f0",
+          "result": "passed",
+          "configuration": {
+            "receipt": "verification/ngraph-purity/observation.json",
+            "manifest_sha256": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+            "source_files": 23,
+            "checks": [
+              "crate-attribute-no-std",
+              "normal-dependencies",
+              "resolved-normal-dependencies",
+              "forbidden-capability-uses",
+              "identity-hash-injected"
+            ]
+          },
+          "assumptions": [
+            "Static boundary checks over declared sources and metadata, not a proof of source purity, native-assurance receipt or Octet architecture admission.",
+            "Forbidden-capability scanning matches literal source needles; an obfuscated alias could evade a textual scan, which is why no proof claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-03",

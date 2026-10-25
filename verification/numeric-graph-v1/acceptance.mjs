@@ -1682,7 +1682,7 @@ function compareRepetitions(planned, runs) {
 
 const SCOPES = {
   'NGRAPH-CASE-01': 'CORE-01..18 on the base and tested binaries, plus diff and dispatch observations; the case is a review: a recorded review is still required',
-  'NGRAPH-CASE-02': 'not run by this runner',
+  'NGRAPH-CASE-02': 'not run by this runner; delegated to verification/ngraph-purity/gate.mjs, whose observation binds the implemented/passed state recorded in numeric-graph-cases.json',
   'NGRAPH-CASE-06': 'library tests bound through the gate rust-tests log',
   'NGRAPH-CASE-09': 'library tests bound through the gate rust-tests log',
   'NGRAPH-CASE-14': 'library tests, the soft-float log, and the B5 identities observed through the CLI',
