@@ -1,0 +1,144 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "aa074e137f7d4396263f38c3510bb244930b1fcf",
+  "source_tree": "0fef9fc8df537854c854b90d09c326b7e21746b2",
+  "run": "verification/foundation/check.mjs --output /var/tmp/f32-check2 (issue #38 binary32 reference with the mutation lane), clean source",
+  "raw_location": "/var/tmp/f32-check2 (host-local, not attested by this file)",
+  "raw_sha256": {
+    "check/foundation-check.json": "296eebad9406b055c4fd5b163347285624dad9da5a964cdc5494cdcf38bd412d"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 212,
+      "axiom_sets": {
+        "propext,Quot.sound": 53,
+        "propext,Classical.choice,Quot.sound": 71,
+        "propext": 70,
+        "(none)": 18
+      },
+      "clean_source": true
+    },
+    "binary32_reference": {
+      "modules": [
+        "NobleFoundation.Binary32",
+        "NobleFoundation.Binary32.Expectations",
+        "NobleFoundation.Binary32.Mutations"
+      ],
+      "theorems": [
+        {
+          "name": "NobleFoundation.Binary32.Expectations.retained_expectations_checked",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.signed_zero_rules",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.nan_class_and_zero_separation",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.encoding_boundaries",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.reassociation_is_observable",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.implicit_contraction_is_observable",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Expectations.multiplication_rounds_once",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.ties_away_is_caught",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.positive_zero_collapse_is_caught",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.flush_to_zero_is_caught",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.zero_sign_collapse_is_caught",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.commutative_subtraction_is_caught",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.implicit_contraction_is_caught",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.Binary32.Mutations.all_declared_mutations_are_caught",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        }
+      ],
+      "theorem_count": 16,
+      "retained_expectations": 26,
+      "mutation_variants": 6,
+      "implementation_theorem": false
+    }
+  },
+  "claims": [
+    "The sixteen binary32 theorems are kernel-checked statements about the selected Lean model, not about the Rust evaluator, wasm-opt or any host FPU.",
+    "Expectations are proposed by verification/binary32/propose.py and checked against the model by kernel reduction; a proposal alone is not evidence.",
+    "Six test-local faulty variants are compiled only here and each is caught by a named retained expectation; no variant escapes.",
+    "No source, compiler, optimizer, engine or loader obligation is closed by this receipt; those stay open under #10/#15."
+  ]
+}

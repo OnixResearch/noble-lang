@@ -136,3 +136,24 @@ representation and rounding properties and kernel-check 26 retained
 expectations proposed by `verification/binary32/propose.py`. They do not
 establish correspondence with the Rust graph evaluator, `wasm-opt`, V8 or any
 host FPU, and they close no obligation under #10/#15.
+
+## aa074e1 — binary32 reference with the mutation lane (issue #38)
+
+`aa074e1/` records clean source commit
+`aa074e137…`, tree `j.source_tree` from its index, produced by
+`verification/foundation/check.mjs --output /var/tmp/f32-check2`. It supersedes
+`4be2a68/` for the binary32 claim only: that earlier packet stays untouched and
+remains the evidence for the model without the mutation lane.
+
+| File | Content |
+|---|---|
+| `foundation-check.json` | verbatim Lean inventory/axiom audit: 212 theorems, sixteen of them binary32 |
+| `index.json` | raw-file hash, axiom-set counts, the binary32 theorem list, the six test-local variants |
+
+The six variants live in `NobleFoundation/Binary32Mutations.lean` and are
+compiled only in the foundation project: an away-from-zero tie rule, collapsing
+every zero result to `+0`, flush-to-zero, a zero-sign-insensitive observation, a
+commutative subtraction, and implicit contraction. Each is caught by a named
+retained expectation, and `all_declared_mutations_are_caught` states that no
+declared variant escapes. Detection is kernel-checked model disagreement, not a
+Rust-side mutation run; the packed-evaluator replay remains open.
