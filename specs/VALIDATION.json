@@ -1728,7 +1728,7 @@
     },
     {
       "file": ".cairn/changes/effect-oracle/tasks.md",
-      "sha256": "d3241c78aa4f8347c811f9e240ca6011f97e7b2260143c18b50a930e265399af"
+      "sha256": "e06572a1203ce2ff605bb9254bf56b758f9acf0aa94de864d337332c60d85e06"
     },
     {
       "file": ".cairn/changes/explicit-live-references/design.md",
