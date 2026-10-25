@@ -569,10 +569,13 @@ by a named retained expectation, and `all_declared_mutations_are_caught` states
 that none of the declared variants escapes. Detection is kernel-checked model
 disagreement, not a Rust-side mutation run.
 
-The packed Rust graph reference replays all 26 retained expectations
-(`crates/noble-ngraph-experiment/tests/b2_differential.rs`): NaN expectations
-match by observation equality and every other class by its exact encoding. The
-receipt `verification/binary32/replay.json` names clean commit `418381971`,
+The packed Rust graph reference and the compiled graph legs replay all 26
+retained expectations (`crates/noble-ngraph-experiment/tests/b2_differential.rs`):
+the packed lane calls `noble_ngraph::sem::add/sub/mul`, and the compiled lane
+builds a two-input F32 graph per expectation and checks legs agreement plus the
+L2 APFloat, L3 reference and L4 compiled observations. NaN expectations match by
+observation equality and every other class by its exact encoding. The
+receipt `verification/binary32/replay.json` names clean commit `9845a9e9d`,
 `rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64`. The first replay found
 that the Rust reference returns `0xFFC00000` where the model produces its own
 canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
@@ -583,8 +586,7 @@ Open, and deliberately not closed by this model:
 - correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
   is a separate trusted-correspondence claim: the replay shows agreement on 26
   retained expectations on one host and target, not a refinement proof;
-- the compiled graph legs (`Compiled::new` + `run_legs`/`evaluate`) are not yet
-  replayed against the retained expectations;
+
 - the ordered affine fold's individual rounding steps as graph operations, the
   extraction, training, snapshot and codec layers, guard/index rules, software
   helpers and optimizer behavior;

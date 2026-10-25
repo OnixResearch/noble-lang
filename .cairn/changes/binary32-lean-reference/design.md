@@ -99,9 +99,14 @@ is not reviewed here.
   `0x7FC00000` for `inf + -inf`. Both are one NaN observation, which is why the
   lane compares observations rather than payload bytes, and why the model's
   canonical-NaN statement is a model claim and not a reference claim.
+- Compiled-legs replay: each of the 26 expectations also builds a two-input F32
+  graph, and `run_legs` must agree across L2 APFloat, L3 reference and L4
+  compiled while each of those observations matches the retained encoding. This
+  lane exercises the checker, the graph reference and the compiled path rather
+  than the bare semantics.
 - Receipts: `verification/foundation/receipts/aa074e1/index.json` (212
   theorems, sixteen binary32, clean source) and `verification/binary32/replay.json`
-  (clean commit `418381971`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
+  (clean commit `9845a9e9d`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
 
 ## Acceptance mapping
 

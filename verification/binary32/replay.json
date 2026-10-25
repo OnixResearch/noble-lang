@@ -1,20 +1,32 @@
 {
   "schema": "noble-binary32-replay/v1",
-  "assertion": "the packed Rust graph reference agrees with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence",
-  "source_commit": "418381971f51aeaab78915cf3bdf3432f20958ce\nbuilding '/nix/store/x6ak3r8yw3fs08ym9xwhxml16cgb1q77-nix-shell-env.drv'...",
-  "source_tree": "762ad42e34495c82bdaaf158147e301bc2cc8a17",
+  "assertion": "the packed Rust reference and the compiled graph legs agree with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence",
+  "source_commit": "9845a9e9d9fa9e0340809abc90c377af15c4751a",
+  "source_tree": "d42d6226479d0093d64dabcc6f2f8a5984cb6ba9",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-replay-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture",
   "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
-  "lane_sha256": "8d1eb868151978b89af3e75726ecef59a5953b015e90e24db2ee089c8ba37b12",
+  "lane_sha256": "6004beccf79ee890cdf29baee1f2860822ad11e7c2a179dbb6cc48476bfe02d4",
   "proposals_sha256": "850362e810b321b7620fba51132b25cff1527ac48855e57379adaef72f75bf6e",
   "retained_expectations": 26,
   "observations": "NaN expectations match by observation equality; every other class matches its exact encoding",
   "lean_authority": "verification/foundation/receipts/aa074e1/index.json",
+  "lanes": [
+    {
+      "name": "packed-reference",
+      "test": "lean_retained_binary32_expectations_replay_through_the_graph_reference",
+      "observed": "noble_ngraph::sem::add/sub/mul"
+    },
+    {
+      "name": "compiled-graph-legs",
+      "test": "lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs",
+      "observed": "Compiled::new + run_legs over L2 APFloat, L3 reference and L4 compiled, with legs agreement"
+    }
+  ],
   "results": {
-    "lane": "passed",
+    "lanes_passed": 2,
     "retained_expectations_matched": 26
   },
   "claims": [
