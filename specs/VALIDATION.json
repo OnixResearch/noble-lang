@@ -15,9 +15,9 @@
     "node_api": "24.3.0"
   },
   "documents": 14,
-  "requirements": 551,
-  "scenarios": 221,
-  "scenarios_executed": 141,
+  "requirements": 552,
+  "scenarios": 223,
+  "scenarios_executed": 142,
   "open_test_design": 192,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -1543,6 +1543,22 @@
       "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
     },
     {
+      "file": ".cairn/archive/2026-10-25-text-byte-cursor/design.md",
+      "sha256": "38df731633f8c7430a9e02abdf9e8b934dd6ea33a1aa71c9c1e46311faea03fa"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-text-byte-cursor/proposal.md",
+      "sha256": "8d3a481c6040db7f248b6c0cd544b8b37051a5fc07748d6f93d1402dec770366"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-text-byte-cursor/specs/developer-experience/spec.md",
+      "sha256": "8f08418fd0171731ce055c4e4a2974e86cd0a2863cebb6e496f5f8470217e275"
+    },
+    {
+      "file": ".cairn/archive/2026-10-25-text-byte-cursor/tasks.md",
+      "sha256": "1727332af1e3b6c5cc627f3d10430c56351783d14576229913d4376c3d62f69c"
+    },
+    {
       "file": ".cairn/archive/2026-10-25-worker-cancellation-slice-native-async/design.md",
       "sha256": "c3ac7ce01aa0d0dd73b9e881bb384b64f9303ac86debaec0ee9c80e6e7adf960"
     },
@@ -2223,22 +2239,6 @@
       "sha256": "7c41569c58b8592b4d150566f90d5ff92277fae14066f7e3de3573d6483b7c68"
     },
     {
-      "file": ".cairn/changes/text-byte-cursor/design.md",
-      "sha256": "38df731633f8c7430a9e02abdf9e8b934dd6ea33a1aa71c9c1e46311faea03fa"
-    },
-    {
-      "file": ".cairn/changes/text-byte-cursor/proposal.md",
-      "sha256": "8d3a481c6040db7f248b6c0cd544b8b37051a5fc07748d6f93d1402dec770366"
-    },
-    {
-      "file": ".cairn/changes/text-byte-cursor/specs/developer-experience/spec.md",
-      "sha256": "8f08418fd0171731ce055c4e4a2974e86cd0a2863cebb6e496f5f8470217e275"
-    },
-    {
-      "file": ".cairn/changes/text-byte-cursor/tasks.md",
-      "sha256": "4451bdd848500fee8812d8ca64ab6425fd8091880048ae11e9438e0b7ea64a50"
-    },
-    {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
       "sha256": "6954f83de816eff75e6a27d2b3228fd546a884f11bbd543a57bb9fe02e6af219"
     },
@@ -2280,7 +2280,7 @@
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "68d4261a53bcafccf17f3aaa3ef1351882e69ba1def2226ce446255960a111db"
+      "sha256": "b33783c6420a68243fa2d23229ad56302306ed1a2e43908e27f30e5ee243ae81"
     },
     {
       "file": ".cairn/specs/erlang-abstract-backend/spec.md",
@@ -2352,7 +2352,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "3fd45a6f09689eb0191c0c77e4140b1ced4dc6adda53be3a47240d4721c102b9"
+      "sha256": "a5f7dd46ee8b3d1325036d67a814cb4b55bc3f5cf2bed9a43e41b9e60d214222"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2428,7 +2428,7 @@
     },
     {
       "file": "specs/conformance/text-byte-cursor-cases.json",
-      "sha256": "a9b15a6d06d4687764b38ec2ea2d7ec2dcb8d014019fa6cfb4aea41f90b1dd15"
+      "sha256": "5a9ac065693219f5091843b7327f052abc3df1785d71f24159635a646c5c3fb9"
     },
     {
       "file": "specs/conformance/verification-cases.json",
@@ -2452,7 +2452,7 @@
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
-      "sha256": "89652cf69de9a80ae91b930cefe9dee037fbae4906fb97b8f8676dc729ce43ea"
+      "sha256": "dee044a6c458ad6493aeb9efb772e2958b8dc85285f63207aec7b016d3e56e94"
     },
     {
       "file": "specs/ERLANG-ABSTRACT-BACKEND.md",
@@ -2476,7 +2476,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "56d79b19dc95eee21e0214ab5aca6c2b4fce8f32a607672e0eaa3d072a1a7cee"
+      "sha256": "487212704f51155727e1d1e8bcd8974ea66cc609c475822ed250610272deb70b"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -2508,7 +2508,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "3302b8911a7a9d284c501e4aa473ebab7b0a447fde11dbb84b33b41394bbf65b"
+      "sha256": "8ee94dbaa1659f2a07570d913544f3a90723fde9bf52ee80545d428a886f2319"
     },
     {
       "file": "specs/STATUS.json",

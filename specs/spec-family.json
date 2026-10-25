@@ -110,7 +110,8 @@
     "conformance/c-backend-cases.json",
     "conformance/erlang-abstract-cases.json",
     "conformance/octet-adoption-cases.json",
-    "conformance/numeric-graph-cases.json"
+    "conformance/numeric-graph-cases.json",
+    "conformance/text-byte-cursor-cases.json"
   ],
   "lifecycle": ".cairn"
 }

@@ -7,24 +7,74 @@
       "id": "TEXT-01",
       "profile": "Text-Byte-Cursor-v1",
       "kind": "runtime",
-      "requirements": ["DX-TEXT-01"],
+      "requirements": [
+        "DX-TEXT-01"
+      ],
       "input": {
         "harness": "compiled-managed-wasm-byte-cursor",
-        "optimization": ["off", "on"],
+        "optimization": [
+          "off",
+          "on"
+        ],
         "same_text_sequence": "Aé offsets 0,1,2,3 yield 65,195,169,-1 with preserved original Text handle",
         "vectors": [
-          {"text": "Aé", "offset": "0", "result": "65"},
-          {"text": "Aé", "offset": "1", "result": "195"},
-          {"text": "Aé", "offset": "2", "result": "169"},
-          {"text": "Aé", "offset": "3", "result": "-1"},
-          {"text": "", "offset": "0", "result": "-1"},
-          {"text": "Aé", "offset": "-1", "result": "-2"},
-          {"text": "Aé", "offset": "-9223372036854775808", "result": "-2"},
-          {"text": "Aé", "offset": "4", "result": "-3"},
-          {"text": "Aé", "offset": "4294967297", "result": "-3"},
-          {"text": "Aé", "offset": "9223372036854775807", "result": "-3"}
+          {
+            "text": "Aé",
+            "offset": "0",
+            "result": "65"
+          },
+          {
+            "text": "Aé",
+            "offset": "1",
+            "result": "195"
+          },
+          {
+            "text": "Aé",
+            "offset": "2",
+            "result": "169"
+          },
+          {
+            "text": "Aé",
+            "offset": "3",
+            "result": "-1"
+          },
+          {
+            "text": "",
+            "offset": "0",
+            "result": "-1"
+          },
+          {
+            "text": "Aé",
+            "offset": "-1",
+            "result": "-2"
+          },
+          {
+            "text": "Aé",
+            "offset": "-9223372036854775808",
+            "result": "-2"
+          },
+          {
+            "text": "Aé",
+            "offset": "4",
+            "result": "-3"
+          },
+          {
+            "text": "Aé",
+            "offset": "4294967297",
+            "result": "-3"
+          },
+          {
+            "text": "Aé",
+            "offset": "9223372036854775807",
+            "result": "-3"
+          }
         ],
-        "negative_controls": ["ordinary-text.byte-unbound", "forged-private-definition-23-rejected", "declared-plus-cursor-rejected", "ordinary-I64-wrapping-unchanged"]
+        "negative_controls": [
+          "ordinary-text.byte-unbound",
+          "forged-private-definition-23-rejected",
+          "declared-plus-cursor-rejected",
+          "ordinary-I64-wrapping-unchanged"
+        ]
       },
       "expected": {
         "stage": "wasm",
@@ -37,8 +87,85 @@
         "negative_controls": "all-rejected-or-unchanged-as-applicable",
         "calculator_accepted": false
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
+    },
+    {
+      "id": "TEXT-02",
+      "profile": "Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "DX-TEXT-01"
+      ],
+      "input": {
+        "harness": "compiled-managed-wasm-declared-modules-with-byte-cursor",
+        "selection": "both --declared-modules and --text-byte-cursor selected explicitly in one session",
+        "vectors": [
+          {
+            "text": "ab",
+            "offset": "0",
+            "result": "97"
+          },
+          {
+            "text": "Aé",
+            "offset": "2",
+            "result": "169"
+          }
+        ],
+        "negative_controls": [
+          "declared-only-does-not-acquire-byte-cursor",
+          "cursor-only-profile-remains-Text-Byte-Cursor-v1",
+          "forged-private-definition-23-rejected"
+        ],
+        "unselected_by": "selecting either flag alone must not select this combined profile"
+      },
+      "expected": {
+        "stage": "wasm",
+        "profile": "Declared-Text-v1",
+        "outcome": "exact-byte-or-disjoint-status-for-each-vector",
+        "declared_module_discipline_kept": true,
+        "original_text_unchanged": true,
+        "guest_requests": 0,
+        "ambient_fallback_calls": 0,
+        "native_trap": false,
+        "calculator_accepted": false
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "TEXT-02",
+          "claim": "The compiled CLI child `session --declared-modules --text-byte-cursor` reports profile Declared-Text-v1, outcome normal, zero guest requests, zero ambient fallback calls, and preserves the original immutable Text handle at `\"ab\" 0 text.byte`. Twelve real-source combined-profile checks in crates/noble-wasm/tests/declared_text.rs cover sources epochs, source-bound signed folds and nominal results, signed I64 order kept out of ordinary declared modules, lexical parameters and quotation, fail-closed local reuse/discard/capture/duplicate names, ordinary declared modules not acquiring the byte cursor, nominal signature owner binding and exact named digit ownership.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:3d0c08be31d768ef4d837c6ecf83e16fd4ffab075d9dfcf24d8a3cb186961b10",
+          "result": "passed",
+          "configuration": {
+            "receipt": "verification/text-byte-cursor/observation.json",
+            "executable": "/var/tmp/noble-target/debug/noble",
+            "args": [
+              "session",
+              "--declared-modules",
+              "--text-byte-cursor"
+            ],
+            "source_bound": false
+          },
+          "assumptions": [
+            "Finite compiled managed-Wasm observations of 25 children, not source-bound, MA1 or CALC acceptance.",
+            "The combined profile keeps the declared-module discipline stated by DX-TEXT-01; no universal refinement is claimed."
+          ]
+        }
+      ],
+      "origin": "canonicalized 2026-10-25 from the recovered combined declared-text implementation"
     }
   ]
 }

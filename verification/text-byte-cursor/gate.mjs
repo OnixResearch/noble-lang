@@ -109,11 +109,15 @@ assert.deepEqual(wrapping.report.request_trace, []);
 assert.equal(wrapping.report.guest_requests, 0);
 assert.deepEqual(wrapping.report.stack.map(({ type, value }) => ({ type, value })),
   [{ type: 'I64', value: '-9223372036854775808' }]);
-const invalidProfile = child('declared-combination-refused',
+const combinedProfile = child('declared-combination-selected',
   ['session', '--declared-modules', '--text-byte-cursor'], '"ab" 0 text.byte');
-assert.notEqual(invalidProfile.exit, 0);
-assert.equal(invalidProfile.report.stage, 'arguments');
-assert.equal(invalidProfile.report.profile, 'Core-Bootstrap');
+assert.equal(combinedProfile.exit, 0);
+assert.equal(combinedProfile.report.profile, 'Declared-Text-v1');
+assert.equal(combinedProfile.report.outcome, 'normal');
+assert.equal(combinedProfile.report.guest_requests, 0);
+assert.equal(combinedProfile.report.ambient_fallback_calls, 0);
+assert.deepEqual(combinedProfile.report.stack.map(({ type, value }) => ({ type, value })),
+  [{ type: 'Text', value: 'ab' }, { type: 'I64', value: '97' }]);
 fs.writeFileSync(path.join(output, 'observation.json'), `${JSON.stringify(receipt, null, 2)}\n`);
 console.log(JSON.stringify({ outcome: 'observed', binary_sha256: binarySha256,
   cases: receipt.cases.length, output, source_bound: false, calculator_accepted: false }));

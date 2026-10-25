@@ -1,0 +1,4954 @@
+{
+  "schema": "noble-text-byte-cursor-observation/v1",
+  "assertion": "finite compiled managed-Wasm child observations, not source-bound or MA1/CALC acceptance",
+  "executable": {
+    "path": "/var/tmp/noble-target/debug/noble",
+    "sha256": "3d0c08be31d768ef4d837c6ecf83e16fd4ffab075d9dfcf24d8a3cb186961b10"
+  },
+  "cases": [
+    {
+      "name": "ascii-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 0 text.byte",
+      "source_sha256": "abda050b34d53cbe4fcc8783c1cbab22fe4728e324ddcc3db08f6d5ba269370f",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "65"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "eafa4c39dc75e3bb1194708a5cba358b5beff22cf24e77886dd15b8df0f74db7",
+          "source_sha256": "abda050b34d53cbe4fcc8783c1cbab22fe4728e324ddcc3db08f6d5ba269370f",
+          "wat_sha256": "c3609f4e7725ebcd3fd62c2c96aee49c7e5e3914e4fa9cf0a96414da8db91f28",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "utf8-first-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 1 text.byte",
+      "source_sha256": "d5707a9df73ca9f6f566556195ae4d837950566853cf007f5b88a2c6e3160dc7",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "195"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "6ebda53ef69570c9854d9b8e4f1dfa63432af4b87130283d1a2360665d7cf6a0",
+          "source_sha256": "d5707a9df73ca9f6f566556195ae4d837950566853cf007f5b88a2c6e3160dc7",
+          "wat_sha256": "d63be69154bd87fae2cd53ce189197977ba2d17f1c21c992c852a3ca6a4db13a",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "utf8-second-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 2 text.byte",
+      "source_sha256": "cf352ddacecc4090c35ee377f5bcc9f1df3828f48c8425230d81190324e2012e",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "169"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "b50ef4c22eda5ae0c757c78037f00976a58abb9b537a864251af2fbaa1dded6a",
+          "source_sha256": "cf352ddacecc4090c35ee377f5bcc9f1df3828f48c8425230d81190324e2012e",
+          "wat_sha256": "d3d9e88a0e945fd80be95c78e4293dcfcc86425e4692958a419bf5cced1cbf96",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "eof-exact-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 3 text.byte",
+      "source_sha256": "f50866d85483b31dec5f8d801a403414a1001496ed746d8fd514907fd31f305d",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "ba8b84ee30789967c86cf8ae07b6393f528b02c19b5ac29e7ed90ac32aee5c6a",
+          "source_sha256": "f50866d85483b31dec5f8d801a403414a1001496ed746d8fd514907fd31f305d",
+          "wat_sha256": "e0af0e7820b2d84a51cd68a65aae9d5a865c42a2b4c059d8025986e18c5ae045",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "empty-eof-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"\" 0 text.byte",
+      "source_sha256": "5cc2daf2d5af182e56ba0d285027e4d131158ed466dfc546dc44364321a293c0",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": ""
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "3fc49b6b00f3c1621ebf2f9e5d1a443ac33b18b287c9187e08911fe7cd11dfeb",
+          "source_sha256": "5cc2daf2d5af182e56ba0d285027e4d131158ed466dfc546dc44364321a293c0",
+          "wat_sha256": "6ca4796b9e7598e9b11714b896bd13cef5fb2d863799bb639462602a0e057192",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "negative-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" -1 text.byte",
+      "source_sha256": "9055c839eebb55fa7a83d672ca1dc06db807633da9004508083b485d0d5c8952",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-2"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "cd1ddeee5a9efc55b20ea39eea5eab04c2db10c4d9959bcca67b619c913b30d3",
+          "source_sha256": "9055c839eebb55fa7a83d672ca1dc06db807633da9004508083b485d0d5c8952",
+          "wat_sha256": "2d422997d770bfdd6dd94491d3630222d8938c031cd5d4ce2fb4c07e0112f482",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "negative-minimum-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" -9223372036854775808 text.byte",
+      "source_sha256": "3b634aa639b46fe046a6bcc568e22836764817c08690be822625eda4b5fd227c",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-2"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "5c88d7cb9065acca42a79885127f5fea5e3c5a5695a614828ff597bcf4dfa302",
+          "source_sha256": "3b634aa639b46fe046a6bcc568e22836764817c08690be822625eda4b5fd227c",
+          "wat_sha256": "8c9cf65072704de82c4b027fd7184c2aa1a8eaeb855f0503aae590040f5e74ea",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 4 text.byte",
+      "source_sha256": "d414882f4f475574854bf8143f9e08ea0b4537d1358a1377d24c2aa797c2d2a8",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "66e0330965bc93070b58fbca111317443a14f89a40c4b7ab492cf1fdea3513fd",
+          "source_sha256": "d414882f4f475574854bf8143f9e08ea0b4537d1358a1377d24c2aa797c2d2a8",
+          "wat_sha256": "c4cf5f16adbc2845ca1feb2118ccc59d7cab1e73e24311b36bd51cb894bfaec8",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-wrap32-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 4294967297 text.byte",
+      "source_sha256": "c098be234ccc79984fea9b14900056212ed17bc95462fb1580e238af32488124",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "b166363d5e574ce55bfc394a8abca8162812f4b8c8c59aaae6a65d90091e716d",
+          "source_sha256": "c098be234ccc79984fea9b14900056212ed17bc95462fb1580e238af32488124",
+          "wat_sha256": "bcba1015d08dc67508a2ef65857e1b10fc92193f57b802c2f2139d27a2444f63",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-maximum-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" 9223372036854775807 text.byte",
+      "source_sha256": "80e4ea63136c43d8a53718d42b4831e3d949b05426ca07521eba01c85988d742",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "b96ad46fc44d4bb38d785e8f73a66408bb4da59aeafe654c2fa6d21c9418d8c2",
+          "source_sha256": "80e4ea63136c43d8a53718d42b4831e3d949b05426ca07521eba01c85988d742",
+          "wat_sha256": "2aaa20e92e5343ae2a7545fb9c47648fa15ba26962823b52327e83802e7a95da",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "same-text-sequential-bytes-off",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "off"
+      ],
+      "source": "\"Aé\" dup 0 text.byte swap 1 text.byte swap 2 text.byte swap 3 text.byte",
+      "source_sha256": "e03d722258d7e6728efceb6e7d9cf660f466ce6f93a80835f91bc47eca1fdb51",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 28,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "65"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "195"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "169"
+          },
+          {
+            "handle": 28,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 1344,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 1344,
+          "allocation_peak_bytes": 1344,
+          "operand_peak_bytes": 96,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 38,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 6,
+          "reflection_steps": 6
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "797219ee41e4bd361954504442d46810fa1dec80453a619585efe755b980891a",
+          "source_sha256": "e03d722258d7e6728efceb6e7d9cf660f466ce6f93a80835f91bc47eca1fdb51",
+          "wat_sha256": "a52e572dff1c6ba374220a4424894efcdfdf35a69dd5225ef87a2f44d88a01dd",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "ascii-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 0 text.byte",
+      "source_sha256": "abda050b34d53cbe4fcc8783c1cbab22fe4728e324ddcc3db08f6d5ba269370f",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "65"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "79071522675a0debd32429abcd5632c7e0836f471e71330095660cb4c2432771",
+          "source_sha256": "abda050b34d53cbe4fcc8783c1cbab22fe4728e324ddcc3db08f6d5ba269370f",
+          "wat_sha256": "c3609f4e7725ebcd3fd62c2c96aee49c7e5e3914e4fa9cf0a96414da8db91f28",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "utf8-first-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 1 text.byte",
+      "source_sha256": "d5707a9df73ca9f6f566556195ae4d837950566853cf007f5b88a2c6e3160dc7",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "195"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "6162c32fecabb28f46a1e7909e01fd6fcdc3da079972c2698d5d0bc8fb8b7f06",
+          "source_sha256": "d5707a9df73ca9f6f566556195ae4d837950566853cf007f5b88a2c6e3160dc7",
+          "wat_sha256": "d63be69154bd87fae2cd53ce189197977ba2d17f1c21c992c852a3ca6a4db13a",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "utf8-second-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 2 text.byte",
+      "source_sha256": "cf352ddacecc4090c35ee377f5bcc9f1df3828f48c8425230d81190324e2012e",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "169"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "7aadf4daad560bb63a5f1dab360aa5245d89a03232cdfbe874b1918274647351",
+          "source_sha256": "cf352ddacecc4090c35ee377f5bcc9f1df3828f48c8425230d81190324e2012e",
+          "wat_sha256": "d3d9e88a0e945fd80be95c78e4293dcfcc86425e4692958a419bf5cced1cbf96",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "eof-exact-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 3 text.byte",
+      "source_sha256": "f50866d85483b31dec5f8d801a403414a1001496ed746d8fd514907fd31f305d",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "149f91d493122ec5153170cab6c71345bfb4fc835f787a1e7bda11749972e920",
+          "source_sha256": "f50866d85483b31dec5f8d801a403414a1001496ed746d8fd514907fd31f305d",
+          "wat_sha256": "e0af0e7820b2d84a51cd68a65aae9d5a865c42a2b4c059d8025986e18c5ae045",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "empty-eof-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"\" 0 text.byte",
+      "source_sha256": "5cc2daf2d5af182e56ba0d285027e4d131158ed466dfc546dc44364321a293c0",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": ""
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "6244f7f2d7eb1d9d204bb3fa29a1867b59c2307c0f664330dca20f6686fd8701",
+          "source_sha256": "5cc2daf2d5af182e56ba0d285027e4d131158ed466dfc546dc44364321a293c0",
+          "wat_sha256": "6ca4796b9e7598e9b11714b896bd13cef5fb2d863799bb639462602a0e057192",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "negative-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" -1 text.byte",
+      "source_sha256": "9055c839eebb55fa7a83d672ca1dc06db807633da9004508083b485d0d5c8952",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-2"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "d5733f20b35ec7ea234fb1592fb745e67c7c89a0e6db4fa413a9b029596ff8bf",
+          "source_sha256": "9055c839eebb55fa7a83d672ca1dc06db807633da9004508083b485d0d5c8952",
+          "wat_sha256": "2d422997d770bfdd6dd94491d3630222d8938c031cd5d4ce2fb4c07e0112f482",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "negative-minimum-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" -9223372036854775808 text.byte",
+      "source_sha256": "3b634aa639b46fe046a6bcc568e22836764817c08690be822625eda4b5fd227c",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-2"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "08fc0098cf249686c73488df4c15fce261a710112a5e8c695c35045cb07b9492",
+          "source_sha256": "3b634aa639b46fe046a6bcc568e22836764817c08690be822625eda4b5fd227c",
+          "wat_sha256": "8c9cf65072704de82c4b027fd7184c2aa1a8eaeb855f0503aae590040f5e74ea",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 4 text.byte",
+      "source_sha256": "d414882f4f475574854bf8143f9e08ea0b4537d1358a1377d24c2aa797c2d2a8",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "5453f002abc3699a762c45782df1791f177dee2fbd70a8cdb6f58363abd145c9",
+          "source_sha256": "d414882f4f475574854bf8143f9e08ea0b4537d1358a1377d24c2aa797c2d2a8",
+          "wat_sha256": "c4cf5f16adbc2845ca1feb2118ccc59d7cab1e73e24311b36bd51cb894bfaec8",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-wrap32-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 4294967297 text.byte",
+      "source_sha256": "c098be234ccc79984fea9b14900056212ed17bc95462fb1580e238af32488124",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "6e505ad4bafccd9a5813c43ea173e9795531050963d81aa6ec7a1a5c7cb79a55",
+          "source_sha256": "c098be234ccc79984fea9b14900056212ed17bc95462fb1580e238af32488124",
+          "wat_sha256": "bcba1015d08dc67508a2ef65857e1b10fc92193f57b802c2f2139d27a2444f63",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "past-end-maximum-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" 9223372036854775807 text.byte",
+      "source_sha256": "80e4ea63136c43d8a53718d42b4831e3d949b05426ca07521eba01c85988d742",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-3"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "5b091f13fbe6ecb10d1b3c338f8e07d421d70562eae775d04a4f35d6a8209b1e",
+          "source_sha256": "80e4ea63136c43d8a53718d42b4831e3d949b05426ca07521eba01c85988d742",
+          "wat_sha256": "2aaa20e92e5343ae2a7545fb9c47648fa15ba26962823b52327e83802e7a95da",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "same-text-sequential-bytes-on",
+      "args": [
+        "session",
+        "--text-byte-cursor",
+        "--opt",
+        "on"
+      ],
+      "source": "\"Aé\" dup 0 text.byte swap 1 text.byte swap 2 text.byte swap 3 text.byte",
+      "source_sha256": "e03d722258d7e6728efceb6e7d9cf660f466ce6f93a80835f91bc47eca1fdb51",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Text-Byte-Cursor-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 28,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "65"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "195"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "169"
+          },
+          {
+            "handle": 28,
+            "type": "Text",
+            "value": "Aé"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-1"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 1344,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 1344,
+          "allocation_peak_bytes": 1344,
+          "operand_peak_bytes": 96,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 38,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 6,
+          "reflection_steps": 6
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "725dd97fb41f2cfd289366b068b6a7d04fa4d92fb06e93f1ba9acc90ed83d552",
+          "source_sha256": "e03d722258d7e6728efceb6e7d9cf660f466ce6f93a80835f91bc47eca1fdb51",
+          "wat_sha256": "a52e572dff1c6ba374220a4424894efcdfdf35a69dd5225ef87a2f44d88a01dd",
+          "optimized": true,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "core-word-unbound",
+      "args": [
+        "session"
+      ],
+      "source": "\"ab\" 0 text.byte",
+      "source_sha256": "5284fd041e648cfeb950ed62a984d947185a81a0554ec1d42a0c74ed0384abbf",
+      "exit": 2,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Core-Bootstrap",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "resolve",
+        "outcome": "unbound-word",
+        "diagnostic": "unbound word in immutable namespace snapshot",
+        "source_span": {
+          "start": 7,
+          "end": 16
+        },
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "unchanged",
+        "prior_session": "unchanged"
+      }
+    },
+    {
+      "name": "core-I64-wrapping",
+      "args": [
+        "session"
+      ],
+      "source": "9223372036854775807 1 +",
+      "source_sha256": "71243af2d9b7970b57d501b5a541e1b44c785504956578e0ac2298a4dbc89393",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Core-Bootstrap",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "-9223372036854775808"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 288,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 288,
+          "allocation_peak_bytes": 288,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 1,
+          "reflection_steps": 1
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "46ce36689afbe2e63ff093a2ecbc78bb74baff452d3e05a56dcef2cb4ff53eb8",
+          "source_sha256": "71243af2d9b7970b57d501b5a541e1b44c785504956578e0ac2298a4dbc89393",
+          "wat_sha256": "634a57dd2e60710df1ca0ece66c7b793658cb84c5c7be8d7547f272dda1ecd62",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "declared-combination-selected",
+      "args": [
+        "session",
+        "--declared-modules",
+        "--text-byte-cursor"
+      ],
+      "source": "\"ab\" 0 text.byte",
+      "source_sha256": "5284fd041e648cfeb950ed62a984d947185a81a0554ec1d42a0c74ed0384abbf",
+      "exit": 0,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "wasm",
+        "outcome": "normal",
+        "status": 0,
+        "quota_reason": null,
+        "stack": [
+          {
+            "handle": 8,
+            "type": "Text",
+            "value": "ab"
+          },
+          {
+            "handle": null,
+            "type": "I64",
+            "value": "97"
+          }
+        ],
+        "request_trace": [],
+        "guest_requests": 0,
+        "host_requests": 0,
+        "effect_requests": [],
+        "effect_requests_unrecorded": 0,
+        "request_trace_complete": true,
+        "adapter_invocations": [],
+        "substitutions": [],
+        "adapter_versions": [],
+        "scripted_inputs": [],
+        "declared_effect_preserved": true,
+        "ambient_fallback_calls": 0,
+        "real_host_fallback_calls": 0,
+        "real_host_evidence": false,
+        "acquired_authority": false,
+        "protected_operations": 0,
+        "candidate_prepare_requests": 0,
+        "runtime_prover_calls": 0,
+        "native_trap": null,
+        "session_state": "retained",
+        "metrics": {
+          "status": 0,
+          "quota_reason": 0,
+          "allocated_total_bytes": 384,
+          "released_total_bytes": 0,
+          "allocated_since_begin_bytes": 384,
+          "allocation_peak_bytes": 384,
+          "operand_peak_bytes": 32,
+          "continuation_peak_bytes": 8,
+          "execution_steps": 11,
+          "quote_invocations": 0,
+          "memory_bytes": 1048576,
+          "retained_before_begin_bytes": 0,
+          "stack_length": 2,
+          "reflection_steps": 2
+        },
+        "module": {
+          "submission": 1,
+          "wasm_sha256": "4c314971f50dc7245cd3a37e90aae963b5105a94597228b1a92e9719ff5fbc11",
+          "source_sha256": "5284fd041e648cfeb950ed62a984d947185a81a0554ec1d42a0c74ed0384abbf",
+          "wat_sha256": "0023f12a51764fa9a4c440e24857848c8eff7414c1334d7947c0d1fda1f07a92",
+          "optimized": false,
+          "compilations": 1,
+          "stem": "module-1",
+          "imports": [
+            {
+              "module": "noble",
+              "name": "memory",
+              "kind": "memory"
+            },
+            {
+              "module": "noble",
+              "name": "table",
+              "kind": "table"
+            },
+            {
+              "module": "noble",
+              "name": "failure",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quota_reason",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "phase",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_cursor",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "heap_baseline",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "depth_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "step_limit",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "operand_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "continuation_peak",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "quote_invocations",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "sp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "cp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "observed_program",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "recipe_count",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "reflection_steps",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "rp",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "generation",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "allocated_total",
+              "kind": "global"
+            },
+            {
+              "module": "noble",
+              "name": "released_total",
+              "kind": "global"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

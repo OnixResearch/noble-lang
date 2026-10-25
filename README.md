@@ -159,7 +159,7 @@ checked WAT without executing the program.
 Use `noble session --text-byte-cursor` or
 `noble compile SOURCE --text-byte-cursor` to select the **Text-Byte-Cursor-v1**
 experimental profile (contract in the active
-[cursor change](.cairn/changes/text-byte-cursor/design.md), not yet selected
+[cursor change](.cairn/archive/2026-10-25-text-byte-cursor/design.md), not yet selected
 for the ordinary language). Only this opt-in profile resolves pure `text.byte`.
 It consumes `Text I64` and leaves the original Text and one `I64`: unsigned
 UTF-8 byte 0..255 for an in-range offset, -1 at exactly the byte length

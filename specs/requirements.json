@@ -1478,6 +1478,21 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "DX-TEXT-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "TEXT-01",
+        "TEXT-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "DX-TYPE-01",
       "document": "../.cairn/specs/developer-experience/spec.md",
       "document_id": "SPEC-DX001",

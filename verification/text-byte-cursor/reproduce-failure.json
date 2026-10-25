@@ -20,14 +20,14 @@
     ],
     "raw_sha256": "ada7ce4303c7d776f1d9e44910a4399bb21db8dab8041d44341385215e58a33c"
   },
-  "conflicting_requirement": "DX-TEXT-01 in .cairn/changes/text-byte-cursor/specs/developer-experience/spec.md requires the profile to be explicitly selected and disjoint from accepted Declared-Modules-v1; ordinary and declared behaviour MUST remain unchanged.",
+  "conflicting_requirement": "DX-TEXT-01 in .cairn/archive/2026-10-25-text-byte-cursor/specs/developer-experience/spec.md requires the profile to be explicitly selected and disjoint from accepted Declared-Modules-v1; ordinary and declared behaviour MUST remain unchanged.",
   "cli_source": "crates/noble-cli/src/core/entry.rs uses Options::declared_text() and crates/noble-wasm/src/source/admission.rs pairs declared modules with the text cursor.",
   "canonical_coverage": "No canonical requirement or conformance case covers Declared-Text-v1; a grep of .cairn/specs and specs/conformance finds none.",
   "resolution_options": [
     "Make the CLI refuse the combination again, as the gate and DX-TEXT-01 expect.",
     "Author and sync a canonical requirement plus a conformance case for the combined Declared-Text-v1 profile, and amend the gate accordingly."
   ],
-  "status": "open; owner decision required before the text-byte-cursor change can be archived",
+  "status": "resolved 2026-10-25: the owner chose canonical documentation; DX-TEXT-01 now normatively allows the combined Declared-Text-v1 profile selected by both flags, and case TEXT-02 records it as implemented/passed. This receipt is retained as the historical finding that motivated the decision.",
   "non_claims": [
     "No claim that the combined profile is unsafe or wrong; only that it is undocumented in canonical specs and contradicted by the authored gate.",
     "No retained text-byte-cursor observation exists at the historical revision, so none is claimed."
