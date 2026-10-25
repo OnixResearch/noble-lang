@@ -519,6 +519,65 @@ premise.
 above is a pure-MC1-model slice. None discharges a registry obligation as
 stated, because those cover the whole language or the implementation.
 
+## Binary32 reference model (issue #38)
+
+`NobleFoundation/Binary32.lean` is a small, explicit, kernel-reducible model of
+IEEE 754 binary32 for the Numeric-Graph-v1 slice: raw 32-bit encodings,
+classification, an exact scaled-integer interpretation of every finite
+encoding, round-to-nearest/ties-to-even with gradual underflow, and
+add/subtract/multiply. `NobleFoundation/Binary32Expectations.lean` states the
+proved theorems and kernel-checks 26 retained expectations.
+
+The model is *selected*, not proposed: it is Lean 4.31.0 at the Noble pin with
+no new dependency, no axiom beyond the foundation's allow-list, and no
+`native_decide`, `decide +native` or native `#eval` anywhere in the lane.
+
+| Item | Selected |
+|---|---|---|
+| Model | explicit `NobleFoundation.Binary32` definitions, no opaque Lean `Float32` |
+| Rounding | round-to-nearest, ties-to-even, single rounding per operation |
+| Subnormals | retained, gradual underflow at `2^-149` |
+| Overflow | rounded magnitude at or above `2^128` becomes an infinity with the operand sign |
+| Signed zeros | distinct observations; the xor sign rule for multiplication, and the addition rules of IEEE 754 |
+| NaNs | every NaN encoding is one observation class (`obsEq`); arithmetic produces the canonical `0x7FC00000` |
+| Observations | `obsEq` equality: NaNs collapse, every other class keeps its exact bytes |
+| Correspondence | **none claimed** to the Rust graph evaluator, `wasm-opt`, V8 or any host FPU |
+
+`verification/binary32/propose.py` proposes expected bits from Python integers
+and its own rounding search. A proposal is not evidence: `retained_expectations_checked`
+is a single theorem the Lean kernel checks over all 26 retained expectations.
+
+Proved here:
+
+| Theorem | Claim |
+|---|---|
+| `retained_expectations_checked` | every retained expectation is the model's answer for its exact operand encodings |
+| `halfway_ties_round_to_even` | halfway ties round to even in both directions around `1.0` |
+| `signed_zero_rules` | `(-0)+(-0) = -0`, `(+0)+(-0) = +0`, `(-0)-(+0) = -0`, `x-x = +0` for nonzero `x` |
+| `nan_class_and_zero_separation` | all NaNs are one observation class; signed zeros and distinct finite encodings stay separate |
+| `encoding_boundaries` | exact scaled interpretation of the smallest subnormal, smallest normal and largest finite encoding |
+| `exact_sum_exceeds_the_rounded_result` | the exact sum `1.0 + 2^-24` is not representable yet rounds to exactly `1.0`, so round-to-real reasoning cannot discharge binary32 |
+| `reassociation_is_observable` | binary32 addition is not associative, so a fold order is observable |
+| `implicit_contraction_is_observable` | rounding the product before the sum differs from one rounding of the exact three-operand sum |
+| `multiplication_rounds_once` | multiplication takes the sign exclusive-or and rounds the exact operand product once |
+
+Open, and deliberately not closed by this model:
+
+- correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
+  is a separate trusted-correspondence claim;
+- the ordered affine fold's individual rounding steps as graph operations, the
+  extraction, training, snapshot and codec layers, guard/index rules, software
+  helpers and optimizer behavior;
+- a universal proof of the rounding function: its correctness is checked by
+  kernel-reduced examples and boundary reasoning, not by a general theorem;
+- the APFloat differential lane stays secondary finite evidence, and its guard
+  facts are not independent.
+
+The retained receipt is
+[`verification/foundation/receipts/4be2a68/`](../../verification/foundation/receipts/4be2a68/index.json):
+205 theorems, nine of them binary32, `clean_source: true`, axiom sets inside
+`propext`/`Classical.choice`/`Quot.sound`.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |
