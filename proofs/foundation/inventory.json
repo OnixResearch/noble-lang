@@ -1280,6 +1280,138 @@
       "phase": 5,
       "role": "binary32-mutation-lane",
       "claim": "every declared test-local variant is caught by a retained expectation"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.nameByte_excludes_structure",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "an admitted name byte is neither the closing quote nor an angle bracket"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.recordPrefix_length",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the record prefix is nine bytes"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.recordSuffix_length",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the record suffix is five bytes whatever the readiness tag is"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.encode_length",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a canonical encoding is fourteen bytes longer than its name"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.openBrackets_cons",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a head that is not an opening bracket and a tail without one open no bracket"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.openBrackets_of_name",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a name drawn from the admitted alphabet opens no bracket"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depthExceeds_encode",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the canonical encoding opens exactly one bracket, so an admitted configured depth accepts it"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.takeName_encode",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the name scanner consumes exactly the name and the closing quote of a canonical encoding"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.parseService_encode",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the closed-schema parser recognizes the canonical encoding of an admitted value"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.decode_encode",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a value round-trips: for an admitted name and configured depth, decoding the canonical encoding yields that value"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.encode_of_accepted",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "an accepted byte sequence is exactly the canonical encoding of the value it decodes to"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.longest_admitted_name_fits",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the longest admitted name still fits the 64-byte wire budget"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.byte_limit_precedes_depth_scan",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the byte budget is decided before the depth scan"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depth_configuration_precedes_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "an unadmitted configured depth rejects a well-formed record as a depth failure"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depth_scan_precedes_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the bracket count is decided before the schema match"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.altered_readiness_is_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a readiness tag other than #t or #f is a schema failure"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.trailing_bytes_are_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "trailing bytes are rejected, so the decoder is a document decoder and not a prefix decoder"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.empty_name_is_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "an empty name is rejected although the rest of the record is well formed"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.foreign_name_byte_is_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a name byte outside the admitted alphabet is rejected, which is the model form of the non-ASCII and wrong-alphabet rejections"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.overlong_name_is_rejected",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a 33-byte name exceeds the name budget"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.longest_name_round_trips",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the longest admitted name round-trips, which is the name bound exact accepting edge"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.shortest_name_round_trips",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "the shortest admitted name round-trips"
     }
   ]
 }
