@@ -107,6 +107,18 @@ is not reviewed here.
 - Receipts: `verification/foundation/receipts/aa074e1/index.json` (212
   theorems, sixteen binary32, clean source) and `verification/binary32/replay.json`
   (clean commit `9845a9e9d`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
+- Shrinking: a bounded deterministic shrinker walks a documented simplification
+  list over an operand pair, accepting only strictly simpler pairs under the
+  documented order, so the walk is monotone and terminates inside a documented
+  attempt budget. Its result is a LOCAL minimum under that order and never a
+  global minimum: a pair that needs a simplification outside the list is
+  reported unchanged rather than invented, and the lane withholds any
+  reachability claim beyond what the list reaches. `verification/binary32/shrinker.json`
+  records the flush-to-zero witness (`0x00800000 * 0x3f000000` keeps the
+  subnormal product against flush-to-zero's zero), the clean commit, the
+  toolchain and the host. The shrinker helps a future mismatch become a
+  minimized replayable record; it is not kernel evidence, and driving it from a
+  retained-expectation discrepancy stays open.
 
 ## Acceptance mapping
 

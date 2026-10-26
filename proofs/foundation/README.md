@@ -581,6 +581,17 @@ that the Rust reference returns `0xFFC00000` where the model produces its own
 canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
 exactly why the lane compares observations rather than payload bytes.
 
+A bounded deterministic shrinker in the same test file minimizes one binary32
+operation discrepancy: it walks a documented simplification list, accepts only
+strictly simpler operand pairs under the documented order, and reports a
+`local` minimum inside a documented attempt budget. The flush-to-zero lane
+checks determinism, replayability and termination, and
+`verification/binary32/shrinker.json` records the witness
+(`0x00800000 * 0x3f000000` keeps its subnormal product where flush-to-zero
+returns zero), the clean commit, the toolchain and the host. Because a
+simplification outside that list is never invented, the lane claims no
+reachability beyond the list and no global minimality.
+
 Open, and deliberately not closed by this model:
 
 - correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
@@ -592,6 +603,9 @@ Open, and deliberately not closed by this model:
   helpers and optimizer behavior;
 - a universal proof of the rounding function: its correctness is checked by
   kernel-reduced examples and boundary reasoning, not by a general theorem;
+- shrinking driven from a retained-expectation discrepancy: the shrinker lane
+  minimizes a bare operation discrepancy, so an expectation failure is not yet
+  minimized automatically;
 - the APFloat differential lane stays secondary finite evidence, and its guard
   facts are not independent.
 

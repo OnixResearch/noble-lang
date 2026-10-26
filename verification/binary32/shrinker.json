@@ -1,0 +1,32 @@
+{
+  "schema": "noble-binary32-shrinker/v1",
+  "assertion": "the flush-to-zero disagreement between the host multiply and the packed multiplier shrinks, deterministically and inside its documented budget, to the recorded witness on this host and target; not kernel evidence",
+  "source_commit": "38ce074788387ce98fc2649c1084b7788a76dd1a",
+  "source_tree": "9051a3462dacf85f233aaed317ed7c901accea95",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+  "host": "Linux 6.18.54 x86_64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-shrink-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential shrink -- --nocapture",
+  "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
+  "lane_sha256": "d3153a4b261d0589daf6fd81f5a81e056080c97c08de647ee04b7c3b3c55e6aa",
+  "lane": "flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness",
+  "witness": {
+    "operation": 2,
+    "left": "0x00800000",
+    "right": "0x3f000000",
+    "expected": "0x00400000",
+    "candidate": "0x00000000",
+    "attempts": 36,
+    "budget_exhausted": false
+  },
+  "scope": {
+    "order": "documented simplicity order over the documented simplification list",
+    "minimum": "local minimum under that order, not a global minimum",
+    "reachability_limit": "pairs that need a simplification outside the documented list are reported unchanged rather than invented"
+  },
+  "claims": [
+    "Tested-implementation evidence for the shrinker lane on this host and target only.",
+    "The witness is replayable and deterministic; it is not a retained kernel-checked expectation.",
+    "No correspondence proof, no cross-platform claim, and no claim about wasm-opt, V8 or the loader."
+  ]
+}
