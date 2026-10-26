@@ -150,7 +150,7 @@ theorem initial_uniqueness : WitnessUniqueness initial := by
 
 theorem initial_within_quota (snapshot : Snapshot) : WithinQuota initial snapshot := by
   intro checkpoint
-  simp [WithinQuota, initial, chargedFor]
+  simp [initial, chargedFor]
 
 theorem initial_started_at_most_once : StartedAtMostOnce initial := by
   intro attempt member
@@ -245,10 +245,10 @@ theorem admission_preserves_uniqueness (ledger : Ledger) (facts : Facts)
       have distinct : other ≠ witness := by
         intro equal
         exact fresh (equal ▸ old)
-      simp [decide_eq_false_iff_not, Ne.symm distinct]
+      simp [Ne.symm distinct]
     rw [show (consume ledger facts witness checkpoint).consumed
       = witness :: ledger.consumed from rfl]
-    simp [List.filter_cons, head]
+    simp [head]
     exact unique other old
 
 /-- One admission preserves the checkpoint quota bound, given that the exact
@@ -308,7 +308,7 @@ theorem omitted_quota_charge_breaks_accounting (facts : Facts) (witness checkpoi
     ¬ AttemptsCharged (consumeUncharged initial facts witness checkpoint) := by
   intro charged
   have present := charged ⟨witness, checkpoint, facts.cost, false⟩ (by simp [consumeUncharged])
-  exact absurd (by simpa [consumeUncharged, initial] using present) id
+  simp [consumeUncharged, initial] at present
 
 /-- Mutation control: a transition that skips the freshness check consumes a
     witness twice and breaks uniqueness. -/
@@ -348,7 +348,7 @@ def acceptIgnoringPlan (ledger : Ledger) (facts : Facts) (witness checkpoint : N
 
 theorem plan_blind_admission_mints_altered_plan (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (altered : facts.plan ≠ facts.requestedPlan) :
+    (_altered : facts.plan ≠ facts.requestedPlan) :
     (acceptIgnoringPlan ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
   simp [acceptIgnoringPlan, fresh]
 
