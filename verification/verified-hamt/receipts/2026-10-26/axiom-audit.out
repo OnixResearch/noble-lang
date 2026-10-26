@@ -1,0 +1,5 @@
+'VerifiedHAMT.findNode_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+'VerifiedHAMT.find?_eq_some_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'VerifiedHAMT.find?_eq_none_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'VerifiedHAMT.Map.find?_eq_some_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+Audit.lean:8:14: error(lean.unknownIdentifier): Unknown constant `VerifiedHAMT.Map.insert_eq`

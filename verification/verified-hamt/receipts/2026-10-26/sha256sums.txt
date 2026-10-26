@@ -1,0 +1,9 @@
+bf3731c338313734381f359b7d1e1c221ec9914995c7bddc7e0febd68eccb155  verification/verified-hamt/receipts/2026-10-26/axiom-audit.lean
+46cff72fdb914a9499b48ed7b4f0073a0492dbb35b535757afa216c1b500b73e  verification/verified-hamt/receipts/2026-10-26/axiom-audit.out
+e61409792a616192e0907d6b9e41a2e602140f966c7ca20f1bd1edc5876585d7  verification/verified-hamt/receipts/2026-10-26/duplicate-slot-eval.lean
+014d39207ac3ff75c643ae27429f4e5a879f3eeee6eb5026459b9f4c070e15a5  verification/verified-hamt/receipts/2026-10-26/duplicate-slot-eval.out
+6f5fd785425886040229571376d8f6aa46e2c8e4ddeb2f59df2da9340bd86100  verification/verified-hamt/receipts/2026-10-26/pins.json
+115afebe778d54980e2ccff0cbf29b72496ead723d0ae7655e74ca4461ea76c2  verification/verified-hamt/receipts/2026-10-26/upstream-lake-manifest.json
+348ea979c60110e79960104012553408b7ce8ba68e68525795bd40f41c2aba5c  verification/verified-hamt/receipts/2026-10-26/upstream-lakefile.toml
+2773c517aa90b66ea8a2c52bddddf84393157797f8341be0df45294fff7fd32e  verification/verified-hamt/receipts/2026-10-26/upstream-lean-toolchain.txt
+e2e606790cad6fdcfe18e3e45d4c1be5929e06102af3c209dff579f68cda4ae3  verification/verified-hamt/receipts/2026-10-26/upstream-tests-under-4.31.log

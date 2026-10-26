@@ -1,0 +1,44 @@
+name = "VerifiedHAMT"
+version = "0.1.0"
+defaultTargets = ["VerifiedHAMT"]
+testDriver = "VerifiedHAMTTests"
+
+[[lean_lib]]
+name = "VerifiedHAMT"
+
+[[lean_lib]]
+name = "VerifiedHAMTTestsLib"       # Avoid name clashing with the executable
+roots = ["VerifiedHAMTTests"]
+globs = ["VerifiedHAMTTests.+"]
+
+[[lean_exe]]
+name = "VerifiedHAMTTests"
+root = "VerifiedHAMTTests"
+
+[[lean_exe]]
+name = "containsBench"
+root = "Benchmarks.Contains"
+
+[[lean_exe]]
+name = "findBench"
+root = "Benchmarks.Find"
+
+[[lean_exe]]
+name = "insertBench"
+root = "Benchmarks.Insert"
+
+[[lean_exe]]
+name = "setContainsBench"
+root = "Benchmarks.SetContains"
+
+[[lean_exe]]
+name = "setInsertBench"
+root = "Benchmarks.SetInsert"
+
+[[lean_exe]]
+name = "setWithoutValArrayBench"
+root = "Benchmarks.SetWithoutValArray"
+
+[[lean_exe]]
+name = "setWithoutValArrayMemory"
+root = "Benchmarks.SetWithoutValArrayMemory"

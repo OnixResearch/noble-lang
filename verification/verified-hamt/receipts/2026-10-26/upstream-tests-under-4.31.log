@@ -1,0 +1,21 @@
+✖ [64/68] Building VerifiedHAMTTests.Find (608ms)
+trace: .> LEAN_PATH=/var/tmp/vhamt431/.lake/build/lib/lean /nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean /var/tmp/vhamt431/VerifiedHAMTTests/Find.lean -o /var/tmp/vhamt431/.lake/build/lib/lean/VerifiedHAMTTests/Find.olean -i /var/tmp/vhamt431/.lake/build/lib/lean/VerifiedHAMTTests/Find.ilean -c /var/tmp/vhamt431/.lake/build/ir/VerifiedHAMTTests/Find.c --setup /var/tmp/vhamt431/.lake/build/ir/VerifiedHAMTTests/Find.setup.json --json
+info: VerifiedHAMTTests/Find.lean:92:0: 'VerifiedHAMT.findNode_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+error: VerifiedHAMTTests/Find.lean:91:0: ❌️ Docstring on `#guard_msgs` does not match generated message:
+
+- info: 'VerifiedHAMT.findNode_sound' depends on axioms: [propext, Quot.sound]
++ info: 'VerifiedHAMT.findNode_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: VerifiedHAMTTests/Find.lean:95:0: 'VerifiedHAMT.find?_eq_some_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+error: VerifiedHAMTTests/Find.lean:94:0: ❌️ Docstring on `#guard_msgs` does not match generated message:
+
+- info: 'VerifiedHAMT.find?_eq_some_iff' depends on axioms: [propext, Quot.sound]
++ info: 'VerifiedHAMT.find?_eq_some_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: VerifiedHAMTTests/Find.lean:98:0: 'VerifiedHAMT.find?_eq_none_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+error: VerifiedHAMTTests/Find.lean:97:0: ❌️ Docstring on `#guard_msgs` does not match generated message:
+
+- info: 'VerifiedHAMT.find?_eq_none_iff' depends on axioms: [propext, Quot.sound]
++ info: 'VerifiedHAMT.find?_eq_none_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+error: Lean exited with code 1
+Some required targets logged failures:
+- VerifiedHAMTTests.Find
+error: build failed
