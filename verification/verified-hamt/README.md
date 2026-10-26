@@ -71,7 +71,7 @@ last-write-wins. Measured (`receipts/2026-10-26/duplicate-slot-eval.lean`):
 ```
 
 So an ordinary insert-based conversion of a list with duplicate slots
-x* x satisfies* the upstream library's own README behaviour and *violates* Noble's
+satisfies the upstream library's own README behaviour and **violates** Noble's
 first-match rule. The issue's required decision is therefore live, and one half
 of it is already partly answered by Noble's own source:
 
