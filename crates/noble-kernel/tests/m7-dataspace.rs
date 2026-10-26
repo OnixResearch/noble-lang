@@ -262,7 +262,7 @@ mod service_ref_differential {
         assert_eq!(text.len() % 2, 0, "hex payload has an even length");
         (0..text.len())
             .step_by(2)
-            .map(|index| u8::from_str_radix(&text[index..index + 2], 16).expect("hex byte"))
+            .map(|index| u8::from_str_radix(&text[index..index.saturating_add(2)], 16).expect("hex byte"))
             .collect()
     }
 
