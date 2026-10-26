@@ -259,6 +259,8 @@ impl Compiled {
             reg: self.reg.clone(),
             consts: self.consts.clone(),
             slot_regs: self.slot_regs.clone(),
+            layers: self.layers.clone(),
+            fail_suffix_min: self.fail_suffix_min.clone(),
             layout_key: self.layout_key,
         }
     }
