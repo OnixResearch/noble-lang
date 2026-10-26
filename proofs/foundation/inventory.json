@@ -2150,6 +2150,66 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "A corrupted witness can flip the verdict, so the recorded bits are load-bearing."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.encode_length",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "The encoder records exactly one pair per declared slot."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.decode_encode_replays",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "Every declared slot decodes back to the candidate's own exact bits."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.corrupted_witness_shifts_bits",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "A corrupted witness decodes to the corrupted bits and not to the candidate's."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.firstIndex_none_agrees",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "A failed first-match search establishes agreement on the declared universe only."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.firstIndex_some_decomposes",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "A reported index decomposes the universe into a non-refuting prefix of that exact length followed by a refuting candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.same_sum_first_none",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "The same-sum fixture pair has no refuting candidate in the declared universe."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.subtraction_first_index_zero",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "The subtraction fixture pair is refuted at the earliest declared candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.input_first_index_zero",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "The input-dependent fixture pair is refuted at the earliest declared candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.input_zero_candidate_refutes",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "The declared candidate at index zero really refutes the input-dependent pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.encoded_witness_decides",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "Encoded witnesses replay their candidate and a corrupted one does not, on the input-dependent pair."
     }
   ]
 }
