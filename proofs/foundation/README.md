@@ -170,6 +170,7 @@ Status words:
 | Public/internal orientation, deeper-minus-top subtraction | `internal_of_public`, `exec_sub_is_internal_step`, `sub_operand_order`, `wrap_sub_noncommutative` | `$op_sub` pop order | model **proved**. Helper **tested** (comparator `sub-order`) |
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
+| Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_admits`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -741,6 +742,53 @@ Open, and deliberately not closed:
 - no concurrency, crash-recovery, remote-revocation atomicity or exactly-once
   claim, and no cross-checkpoint conservation claim without the carry-forward
   premise.
+
+## Specification-quality obligations (issue #65)
+
+`NobleFoundation/SpecQuality.lean` separates three questions about a retained
+contract from the implementation claim. `Relation` abstracts the statement shape
+of `NobleContracts.exportedClaim` — typed parameters and inputs, a precondition
+over them, and a postcondition over the input, the exact typed output and the
+parameters — and the file defines domain inhabitation, relational realizability
+and output determinacy over it.
+
+Proved: a universal realizability proposition is provable from a false
+precondition alone, which is exactly the vacuity a report must mark
+(`realizable_of_uninhabited`); a contradictory postcondition under an inhabited
+domain refutes realizability, with the inhabitation witness required so the
+refutation is not itself vacuous
+(`unrealizable_of_contradictory_post`, `contradictory_admits`,
+`contradictory_not_realizable`); two distinct satisfying outputs for one
+admissible input refute determinacy (`not_deterministic_of_two_outputs`), and
+per-input uniqueness entails it (`deterministic_of_unique_output`); the exact
+wrapping `I64` increment with a true precondition is inhabited, realizable and
+deterministic (`increment_inhabited`, `increment_realizable`,
+`increment_deterministic`); an underconstrained `Bool` output is realizable but
+not deterministic (`underconstrainedBool_two_outputs`,
+`underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`);
+and determinacy does not imply existence — the empty-output relation is
+deterministic vacuously and not realizable (`emptyOutput_deterministic`,
+`emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability`).
+Fifteen inventoried theorems; receipt
+[`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md)
+for the retained run.
+
+Open, and deliberately not closed:
+
+- no correspondence claim relates these relations to the retained contracts or
+  to `crates/noble-contracts/src/rendering`: the model fixes the obligation
+  shapes, not the renderer, so this is model evidence rather than an
+  implementation theorem;
+- no obligation is generated from a retained contract yet, no witness is
+  replayed during shrinking, and no solver proposal, timeout, `UNKNOWN`,
+  unsupported syntax or exhaustion lane is modelled: those are Phase 2 work in
+  issue #65;
+- determinacy is stated with exact scalar equality only; any observational
+  quotient has to be selected, versioned and checked separately;
+- relational realizability says nothing about termination, traps, quotas or
+  success, and determinacy says nothing about intended meaning. An observed
+  relational counterexample is not an implementation failure without separate
+  execution evidence.
 
 ## Root-pinned live-dispatch model (issue #47)
 

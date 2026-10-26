@@ -10,6 +10,7 @@ import NobleFoundation.LiveDispatch
 import NobleFoundation.Ownership
 import NobleFoundation.ServiceWire
 import NobleFoundation.AuthorityLedger
+import NobleFoundation.SpecQuality
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice

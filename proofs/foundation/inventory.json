@@ -1724,6 +1724,96 @@
       "phase": 1,
       "role": "premise",
       "claim": "A renewal snapshot that carries prior charges forward keeps the quota bound; host replenishment is a premise."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.realizable_of_uninhabited",
+      "phase": 1,
+      "role": "vacuity",
+      "claim": "A universal realizability proposition is provable from a false precondition alone."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.unrealizable_of_contradictory_post",
+      "phase": 1,
+      "role": "control",
+      "claim": "A contradictory postcondition under an inhabited domain refutes relational realizability."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.not_deterministic_of_two_outputs",
+      "phase": 1,
+      "role": "control",
+      "claim": "Two distinct satisfying outputs for one admissible input refute determinacy."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.deterministic_of_unique_output",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "Per-input uniqueness entails determinacy; no output-search failure is claimed."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.increment_inhabited",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The wrapping I64 increment relation has an inhabited domain."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.increment_realizable",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The wrapping I64 increment has a typed output for every input."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.increment_deterministic",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The wrapping I64 increment is deterministic."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.contradictory_admits",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The contradictory relation's domain is inhabited, so its refutation is not vacuous."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.contradictory_not_realizable",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The contradictory relation is not relationally realizable."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.underconstrainedBool_two_outputs",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The underconstrained Bool relation has two distinct satisfying outputs for one input."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.underconstrainedBool_realizable",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The underconstrained Bool relation is realizable."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.underconstrainedBool_not_deterministic",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The underconstrained Bool relation is not deterministic."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.emptyOutput_deterministic",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "Determinacy of the empty-output relation holds vacuously."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.emptyOutput_not_realizable",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The empty-output relation is not realizable despite its determinacy."
+    },
+    {
+      "name": "NobleFoundation.SpecQuality.determinacy_does_not_imply_realizability",
+      "phase": 1,
+      "role": "control",
+      "claim": "Determinacy alone never witnesses existence of a satisfying output."
     }
   ]
 }
