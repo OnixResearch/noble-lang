@@ -102,22 +102,10 @@ mod shrink {
         pub budget_exhausted: bool,
     }
 
-    /// The bound on evaluated simplifications.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-    pub struct Budget {
-        /// Maximum number of simplifications to evaluate.
-        pub attempts: usize,
-    }
-
-    impl Budget {
-        /// A documented default: ten simplifications per operand is 20 evaluations
-        /// per pass and the joint phase adds at most 16, so 200 evaluations bound a
-        /// walk that terminates within ten improving passes.
-        #[must_use]
-        pub const fn default_attempts() -> Self {
-            Self { attempts: 200 }
-        }
-    }
+    /// The documented bound on evaluated simplifications: ten simplifications per
+    /// operand is 20 evaluations per pass and the joint phase adds at most 16, so
+    /// 200 evaluations bound a walk that terminates within ten improving passes.
+    pub const DEFAULT_ATTEMPTS: usize = 200;
 
     /// Shrink a disagreement between `authority` and `candidate` for `operation`.
     ///
@@ -135,7 +123,7 @@ mod shrink {
         authority: &dyn Fn(u8, u32, u32) -> u32,
         candidate: &dyn Fn(u8, u32, u32) -> u32,
         start: (u32, u32),
-        budget: Budget,
+        budget_attempts: usize,
     ) -> Option<Witness> {
         let disagrees = |pair: (u32, u32)| {
             authority(operation, pair.0, pair.1) != candidate(operation, pair.0, pair.1)
@@ -151,7 +139,7 @@ mod shrink {
             is_improved = false;
             for slot in 0..2u8 {
                 for simplification in SIMPLIFICATIONS {
-                    if attempts >= budget.attempts {
+                    if attempts >= budget_attempts {
                         is_exhausted = true;
                         break;
                     }
@@ -177,7 +165,7 @@ mod shrink {
                 // by the same attempt budget.
                 for left in SIMPLIFICATIONS.into_iter().take(JOINT_OPERANDS) {
                     for right in SIMPLIFICATIONS.into_iter().take(JOINT_OPERANDS) {
-                        if attempts >= budget.attempts {
+                        if attempts >= budget_attempts {
                             is_exhausted = true;
                             break;
                         }
@@ -538,7 +526,7 @@ fn lean_retained_binary32_expectations_replay_through_the_compiled_graph_legs() 
 
 #[test]
 fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
-    use shrink::{minimize, replays, Budget};
+    use shrink::{minimize, replays, DEFAULT_ATTEMPTS};
 
     let authority = |operation: u8, left: u32, right: u32| -> u32 {
         match operation {
@@ -558,18 +546,18 @@ fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
     };
     // A pair whose product is a subnormal, so flush-to-zero disagrees.
     let start = (0x0080_0000, 0x3f00_0000);
-    let witness = minimize(2, &authority, &candidate, start, Budget::default_attempts())
+    let witness = minimize(2, &authority, &candidate, start, DEFAULT_ATTEMPTS)
         .expect("the start pair disagrees under flush-to-zero");
     assert!(replays(&witness, &authority, &candidate), "{witness:?}");
     // Deterministic: a second walk over the same start pair yields the same witness.
-    let again = minimize(2, &authority, &candidate, start, Budget::default_attempts())
+    let again = minimize(2, &authority, &candidate, start, DEFAULT_ATTEMPTS)
         .expect("the start pair still disagrees");
     assert_eq!(again, witness);
     // The walk terminates inside the documented budget rather than exhausting it,
     // and the witness is a subnormal-versus-zero disagreement: the authority keeps
     // the subnormal product and the candidate flushes it.
     assert!(!witness.budget_exhausted, "{witness:?}");
-    assert!(witness.attempts <= Budget::default_attempts().attempts);
+    assert!(witness.attempts <= DEFAULT_ATTEMPTS);
     let expected_exponent = witness.expected >> 23 & 0xFF;
     assert_eq!(expected_exponent, 0, "{witness:?}");
     assert_ne!(witness.expected & 0x7F_FFFF, 0, "{witness:?}");
@@ -578,7 +566,7 @@ fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
 
 #[test]
 fn agreeing_pairs_produce_no_witness() {
-    use shrink::{minimize, Budget};
+    use shrink::{minimize, DEFAULT_ATTEMPTS};
     let authority = |operation: u8, left: u32, right: u32| -> u32 {
         (operation as u32).wrapping_add(left).wrapping_add(right)
     };
@@ -588,7 +576,7 @@ fn agreeing_pairs_produce_no_witness() {
         &authority,
         &candidate,
         (0x3f80_0000, 0x3f80_0000),
-        Budget::default_attempts()
+        DEFAULT_ATTEMPTS
     )
     .is_none());
 }
