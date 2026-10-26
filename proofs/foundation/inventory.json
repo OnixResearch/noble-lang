@@ -2210,6 +2210,48 @@
       "phase": 2,
       "role": "symbolic-solver",
       "claim": "Encoded witnesses replay their candidate and a corrupted one does not, on the input-dependent pair."
+    },
+    {
+      "name": "NobleFoundation.Certificate.stale_revision_refused",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A certificate naming another revision is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.over_bound_refused",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A certificate over the declared step bound is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.unordered_refused",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "Non-increasing node order in a certificate is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.unknown_rule_refused",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A step with an unknown rule identity cannot be accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.stale_revision_kills_acceptance",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A stale revision kills acceptance even when every step would be accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.accepted_implies_checked",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "Every step of an accepted derivation has a decoded claim the graph checker accepts."
+    },
+    {
+      "name": "NobleFoundation.Certificate.accepted_fold_step_denotes",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted certificate fold step denotes the claimed constant through the model own graph checker."
     }
   ]
 }
