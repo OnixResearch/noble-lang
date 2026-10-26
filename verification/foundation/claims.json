@@ -1,0 +1,20 @@
+{
+  "schema": "noble-fclaims-audit/v1",
+  "criterion": "claim-table completeness: every claim-table row names kernel-checked theorems or an explicitly labelled open, tested or assumed obligation; no receipt claims implementation correctness",
+  "owner_decision": "2026-10-26",
+  "audit_is_document_check_only": true,
+  "tables": {
+    "rows": 8,
+    "proved": 7,
+    "tested": 5,
+    "assumed": 0,
+    "open": 3
+  },
+  "inventoried_theorems": 261,
+  "document_only_names": {
+    "acceptLiteral": "Phase-1 literal-acceptance specification function, transcribed and proved through accumulate_eq_acceptLiteral",
+    "ArithSpec": "Phase-1 arithmetic specification structure whose fields add_spec/sub_spec/mul_spec are inventoried"
+  },
+  "diagnostics": [],
+  "result": "passed"
+}

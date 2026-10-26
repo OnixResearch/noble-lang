@@ -32,6 +32,7 @@ stage() {
   return $rc
 }
 stage check env -i "$node" verification/foundation/check.mjs --output "$out/check" || status=1
+stage claims env -i "$node" verification/foundation/claims.mjs > "$out/claims.json" || status=1
 if [ "$skip_slice" != "--skip-slice" ]; then
   stage slice env -i XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" "$node" verification/foundation/slice.mjs \
     --foundation "$out/check/foundation-check.json" --output "$out/slice" || status=1

@@ -130,6 +130,29 @@ under Phase 4 below.
   - `reflect`'s exact recipe;
   - frontend literal acceptance/rejection.
 
+## Closure criterion for issue #15 (owner decision 2026-10-26)
+
+The end-to-end foundation is **complete** for issue #15 once every claim-table
+row in this README names either a kernel-checked theorem set carried by a
+receipt or an explicitly labelled `open`, `tested` or `assumed` obligation, and
+no receipt claims implementation correctness.
+
+That criterion is machine-audited rather than asserted:
+[`verification/foundation/claims.mjs`](../../verification/foundation/claims.mjs)
+parses every claim table, requires an allowed status word in each row, requires
+a named model or theorem set unless the row is explicitly open, checks every
+named theorem against [`inventory.json`](inventory.json), and refuses a receipt
+that claims an implementation theorem. Names that are specification identifiers
+rather than inventoried theorems are declared with their reason in the audit
+itself. The retained result is
+[`verification/foundation/claims.json`](../../verification/foundation/claims.json):
+8 claim-table rows, 7 proved, 5 tested-bearing and 3 open, 261 inventoried
+theorems, no diagnostics. The audit is a *document* check: passing it is not a
+correctness claim about any implementation, and the rows labelled open stay
+open.
+
+`verification/foundation/ci.sh` runs the audit beside the proof check.
+
 ## Claim table (Phase 1)
 
 Status words:
