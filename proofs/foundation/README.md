@@ -693,6 +693,55 @@ Open, and deliberately not closed by this model:
 - host resource release: no admitted decision in this fragment releases a native
   object, and no runtime claim follows for an unimplemented profile.
 
+## Checkpoint-scoped authority ledger (issue #66)
+
+`NobleFoundation/AuthorityLedger.lean` models the M5 protected-operation
+authority ledger with bounded witnessed requests, an independently supplied
+fact bundle (plan, grant, requested identities, source authenticity, checkpoint
+validity, policy liveness, credentials, revocation, cost, available quota), a
+consumed-witness list, a registered-attempt ledger and checkpoint-local charges.
+Denials and preflight refusals leave the ledger definitionally unchanged; only
+their separately recorded request/effect counters move.
+
+Proved: initialization of align/unique/quota/at-most-once
+(`initial_alignment`, `initial_uniqueness`, `initial_within_quota`,
+`initial_started_at_most_once`); one admission consumes exactly one fresh
+witness and registers exactly one not-yet-started attempt
+(`admission_consumes_exactly_one_witness`, `admission_registers_one_attempt`,
+`admission_is_consumption`) while keeping alignment, uniqueness, the
+checkpoint quota bound and attempt/charge accounting
+(`admission_preserves_alignment`, `admission_preserves_uniqueness`,
+`admission_preserves_quota`, `admission_preserves_attempts_charged`); any finite
+serialized prefix keeps alignment (`admitPrefix_preserves_alignment`); an
+altered requested plan, revoked or stale facts, or an already started attempt
+mint nothing (`altered_plan_cannot_mint`, `stale_facts_cannot_mint`,
+`started_attempt_cannot_start_again`). Four mutation models break the
+corresponding invariant, which is what makes exact plan equality, checkpoint
+validation, freshness and the quota charge load-bearing rather than decorative
+(`omitted_quota_charge_breaks_accounting`, `unchecked_reuse_breaks_uniqueness`,
+`plan_blind_admission_mints_altered_plan`,
+`checkpoint_blind_admission_mints_stale_checkpoint`).
+`renewed_snapshot_keeps_quota` states checkpoint renewal as a host premise: a
+fresh snapshot must carry prior reservations forward, and host replenishment
+that ignores them is outside kernel-enforced safety. Twenty-five inventoried
+theorems; receipt
+[`verification/foundation/receipts/674b32d9/`](../../verification/foundation/receipts/674b32d9/foundation-check.json)
+(286 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
+
+Open, and deliberately not closed:
+
+- no correspondence claim relates the model to
+  `crates/noble-kernel/src/authority`: there is no authority extraction yet, so
+  this is finite model evidence rather than an implementation theorem;
+- finite Rust comparisons for multiple outstanding witnesses sharing quota,
+  both admission orders, quota exhaustion, facts changing between
+  authorization/admission and finalization between admission/start are Phase 2
+  work;
+- no concurrency, crash-recovery, remote-revocation atomicity or exactly-once
+  claim, and no cross-checkpoint conservation claim without the carry-forward
+  premise.
+
 ## Root-pinned live-dispatch model (issue #47)
 
 `NobleFoundation/LiveDispatch.lean` models the live-reference design's
