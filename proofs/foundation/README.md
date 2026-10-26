@@ -890,6 +890,40 @@ Open, and deliberately not closed:
   about fuel, allocation, cancellation behaviour or recipe identity;
 - finite fixtures are not a universal claim about any scheduler or transformation.
 
+## Replayable certificate format (issue #42, format half)
+
+`NobleFoundation/Certificate.lean` models the `ngraph-cert/0` derivation format that
+`crates/noble-ngraph/src/cert.rs` emits: the revision, the declared step bound, the
+ordered step list (rule identity, rewritten node, ordered operands, declared
+constant bits, claimed value), the decode of rule identities to the graph
+checker's claims, the structural bit comparison against the graph, and acceptance
+of a whole derivation.
+
+Proved: a certificate naming another revision is refused
+(`stale_revision_refused`) and that refusal kills acceptance even when every step
+would be accepted (`stale_revision_kills_acceptance`); a derivation over the
+declared bound is refused (`over_bound_refused`); an unknown rule identity cannot
+decode or be accepted (`unknown_rule_refused`); non-increasing node order is
+refused (`unordered_refused`); acceptance implies the graph checker accepts every
+decoded claim (`accepted_implies_checked`); and consequently an accepted
+certificate's fold step denotes the claimed constant
+(`accepted_fold_step_denotes`), i.e. the encoder's claim is the checker's
+denotation rather than taken on faith. Seven inventoried theorems; receipt
+[`verification/foundation/receipts/d67efd4a2/`](../../verification/foundation/receipts/d67efd4a2/foundation-check.json)
+(374 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
+
+Open, and deliberately not closed:
+
+- **no byte decoding**: nothing maps `serde`/binary output of the Rust encoder to
+  these structures, so a correspondence theorem binding actual certificate bytes
+  (or the Rust checker) to this model still does not exist;
+- envelope digests, replay-budget accounting, cold/warm comparison and the #32/#33
+  identity rules are outside the model, as are `F32`, guards, effects and
+  resources;
+- the Rust lane's differential execution (`crates/noble-ngraph/tests/cert_differential.rs`)
+  is implementation evidence and is not modelled here.
+
 ## Bounded graph-pair query model (issue #56, phase 1)
 
 `NobleFoundation/SymbolicPair.lean` models a *declared finite input universe*, the
