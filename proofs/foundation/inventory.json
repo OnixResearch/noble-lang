@@ -1291,7 +1291,7 @@
       "name": "NobleFoundation.ServiceWire.recordPrefix_length",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the record prefix is nine bytes"
+      "claim": "the record prefix is ten bytes"
     },
     {
       "name": "NobleFoundation.ServiceWire.recordSuffix_length",
@@ -1412,6 +1412,114 @@
       "phase": 5,
       "role": "service-ref-codec",
       "claim": "the shortest admitted name round-trips"
+    },
+    {
+      "name": "NobleFoundation.Ownership.duplicable_iff",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a payload is duplicable exactly when no resource occurs at any depth"
+    },
+    {
+      "name": "NobleFoundation.Ownership.data_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "every data payload is duplicable"
+    },
+    {
+      "name": "NobleFoundation.Ownership.resource_not_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a must-use resource payload is never duplicable"
+    },
+    {
+      "name": "NobleFoundation.Ownership.wrapped_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "wrapping a payload never changes its eligibility, so eligibility is recursive"
+    },
+    {
+      "name": "NobleFoundation.Ownership.wrapped_data_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a wrapped data payload is duplicable"
+    },
+    {
+      "name": "NobleFoundation.Ownership.wrapped_resource_not_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a wrapped resource payload is not duplicable"
+    },
+    {
+      "name": "NobleFoundation.Ownership.wrapDepth_preserves_eligibility",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "eligibility is unchanged at every wrapping depth"
+    },
+    {
+      "name": "NobleFoundation.Ownership.wrapDepth_resource_not_duplicable",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "no wrapping depth makes a resource payload duplicable"
+    },
+    {
+      "name": "NobleFoundation.Ownership.resource_operand_blocks_every_word",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a must-use resource as the constrained operand blocks every word of the fragment"
+    },
+    {
+      "name": "NobleFoundation.Ownership.drop_consumes_one",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "dropping consumes exactly the duplicable operand it inspected and no must-use obligation"
+    },
+    {
+      "name": "NobleFoundation.Ownership.dup_duplicates_one",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "duplication preserves both copies of the duplicable operand"
+    },
+    {
+      "name": "NobleFoundation.Ownership.quote_retains_one",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "quoting retains the obligation it inspected rather than consuming it"
+    },
+    {
+      "name": "NobleFoundation.Ownership.swap_permutes_two",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "swapping permutes two duplicable operands and consumes neither"
+    },
+    {
+      "name": "NobleFoundation.Ownership.run_sound",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "checker acceptance implies the declarative accounting judgment"
+    },
+    {
+      "name": "NobleFoundation.Ownership.branch_accounts_both_arms",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a two-arm branch accounts for the same obligations on both arms"
+    },
+    {
+      "name": "NobleFoundation.Ownership.fail_requires_empty_operands",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a normal error return is admitted only with no outstanding operand"
+    },
+    {
+      "name": "NobleFoundation.Ownership.fail_rejects_outstanding_operand",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "an outstanding operand is never abandoned by the error-return alternative"
+    },
+    {
+      "name": "NobleFoundation.Ownership.segment_conserved",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the opaque segment and its must-use obligations are conserved by every admitted program"
     }
   ]
 }
