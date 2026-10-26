@@ -1348,7 +1348,7 @@
       "claim": "an accepted byte sequence is exactly the canonical encoding of the value it decodes to"
     },
     {
-      "name": "NobleFoundation.ServiceWire.longest_admitted_name_fits",
+      "name": "NobleFoundation.ServiceWire.longest_name_fits_wire_budget",
       "phase": 5,
       "role": "service-ref-codec",
       "claim": "the longest admitted name still fits the 64-byte wire budget"

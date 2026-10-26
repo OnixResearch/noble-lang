@@ -277,7 +277,7 @@ theorem encode_of_accepted (bytes : List Nat) (configuredDepth : Nat)
         exact absurd hDecode (by simp)
 
 /-- The longest admitted name still fits the wire budget. -/
-theorem longest_admitted_name_fits (name : List Nat) (ready : Bool)
+theorem longest_name_fits_wire_budget (name : List Nat) (ready : Bool)
     (hValid : validName name = true) :
     (encode name ready).length ≤ maxWireBytes := by
   rw [encode_length]
