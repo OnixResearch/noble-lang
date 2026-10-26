@@ -173,6 +173,7 @@ Status words:
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
 | Packed I64/Bool schedule validator: acceptance implies complete ordered result equivalence | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (validator soundness over the untrusted schedule). Actual emitted-artifact binding, the Rust transcription, guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
+| Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -841,6 +842,50 @@ Open, and deliberately not closed:
   preflight are named obligations rather than implemented behaviour here;
 - this is not #10's MC2 trusted-build envelope and not a whole-Wasm validation
   path, and finite fixtures are not a universal theorem about the Rust scheduler.
+
+## Graph rewrite certificates model (issue #42, phase 1)
+
+`NobleFoundation/GraphRewrite.lean` (over the `PackedSchedule` model) keeps
+optimization and search untrusted and proves the accepted rewrite rules,
+congruence, the lifting of one local replacement to the whole graph, and a small
+checker whose acceptance implies the declared denotation. The slice is the same
+total `I64`/`Bool` one: input/constant, wrapping add/subtract/multiply and
+equality. Guards, effects, resources, reflection, `F32` and dynamic calls are
+outside the file.
+
+Proved: constant folding denotes the wrapping sum (`fold_add_constants`), including
+the boundary case (`add_wraps_at_the_boundary`); `0 + x` and `x * 1` denote `x`'s
+`I64` denotation, with the operand's `I64` value as an explicit premise rather than
+a total rewrite claim (`neutral_add_left`, `neutral_mul_right`); the step function is
+congruent in node identity and operand lookups (`evalStep_congr`), so equal operand
+denotations give equal node denotations (`congruence`); and **lifting** carries one
+unchanged local denotation to agreement over every node of the graph, which
+preserves unaffected shared uses (`replacement_lift`). The checker decodes exact
+node shapes, operand positions and constant bits from the graph — it never asks
+the reference for the answer — and acceptance implies the declared denotation
+(`checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`).
+
+Fixtures and controls: the three-constant fixture denotes `8` at both its addition
+and its multiplication (`foldGraph_reference`); the true constant-folding claim is
+accepted (`fold_certificate_accepted`) and a wrong claimed constant
+(`wrong_constant_refused`), swapped operand positions (`swapped_operands_refused`),
+a claim naming a node of another kind (`wrong_rule_identity_refused`) and the
+identity claim at swapped positions (`wrong_bits_refused`) are refused. Eighteen
+inventoried theorems; receipt
+[`verification/foundation/receipts/`](../../verification/foundation/receipts/).
+
+Open, and deliberately not closed:
+
+- **no Rust transformation or derivation artifact exists**: the checker validates
+  claims over the model graph, not a versioned derivation emitted by
+  `crates/noble-ngraph`, and there is no replay budget, decoding of the actual
+  original/result graph files, or certificate-size measurement;
+- no independent differential execution of the original and rewritten endpoints,
+  so this is model evidence rather than the issue's implementation test;
+- substitution/transitivity closure, a full e-graph, guard/failure-preserving
+  rewrites and `F32` laws are outside phase 1; value preservation says nothing
+  about fuel, allocation, cancellation behaviour or recipe identity;
+- finite fixtures are not a universal claim about any scheduler or transformation.
 
 ## Specification-quality obligations (issue #65)
 

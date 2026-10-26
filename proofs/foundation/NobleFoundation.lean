@@ -13,6 +13,7 @@ import NobleFoundation.AuthorityLedger
 import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
+import NobleFoundation.GraphRewrite
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice

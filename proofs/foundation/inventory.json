@@ -1970,6 +1970,114 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "Aliasing two live nodes onto one register gives the packed machine a different value from the graph reference, so injectivity is a necessary premise rather than an assumption."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.constant_value",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "A constant node denotes exactly its bits."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.fold_add_constants",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "Constant folding: an addition of two exact constants denotes their wrapping sum."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.neutral_add_left",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "Left zero identity: 0 + x denotes x's I64 denotation."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.neutral_mul_right",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "Right one identity: x * 1 denotes x's I64 denotation."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.add_wraps_at_the_boundary",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "The deepest-minus-top addition wraps rather than saturating at the boundary."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.evalStep_congr",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "The step function is congruent in the node identity and in the operand lookups."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.congruence",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "Equal operand denotations give equal node denotations."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.replacement_lift",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "One local replacement with an unchanged denotation lifts to agreement over every node of the graph, preserving shared uses."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.checked_sound_const_add",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "Acceptance of a constant-folding claim implies the declared denotation."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.checked_sound_zero_left",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "Acceptance of a left-zero claim implies equality with the second operand's denotation."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.checked_sound_one_right",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "Acceptance of a right-one claim implies equality with the first operand's denotation."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.foldGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The three-constant fixture graph is well formed."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.foldGraph_reference",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The fixture's addition and multiplication denote 8."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.fold_certificate_accepted",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The true constant-folding claim about the fixture is accepted."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.wrong_constant_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "A wrong claimed constant is refused."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.swapped_operands_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "Swapped operand positions are refused."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.wrong_rule_identity_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "A claim naming a node of another kind is refused."
+    },
+    {
+      "name": "NobleFoundation.GraphRewrite.wrong_bits_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The right-one claim is accepted only at the exact operand positions and refused when swapped."
     }
   ]
 }
