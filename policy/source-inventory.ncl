@@ -143,6 +143,11 @@
 #   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
 #   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
 #   5060 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed service-ref-codec-2b55bc95 from a complete 96-unit selected collection:
+#   IR baa2e616d9f9f5a6f2679f8820209a09bbb4afd8c1b57d00fe30dee4502db4af; coverage e59678ebe371618c0ed6dbf672e1c5cd9b3eaf8eed171aefa941c7eef530127b;
+#   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
+#   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
+#   5060 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -18658,16 +18663,16 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/retirement.rs:4267:5619",
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/retirement.rs:8:2410",
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/support.rs:111:118",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:10675:12235",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:12253:13061",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:2484:3553",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:3563:4335",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:4345:5552",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:5562:7291",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8401:8408",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8698:8704",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8747:8753",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:974:2474",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:11301:12861",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:12879:13687",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:1586:3086",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:3096:4165",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:4175:4947",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:4957:6164",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:6174:7903",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:9013:9020",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:9324:9330",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:9373:9379",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:10404:10420",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:2277:4080",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:2472:2479",
