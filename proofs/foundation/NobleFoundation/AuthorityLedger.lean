@@ -362,7 +362,7 @@ def acceptIgnoringCheckpoint (ledger : Ledger) (facts : Facts) (witness checkpoi
 
 theorem checkpoint_blind_admission_mints_stale_checkpoint (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (stale : facts.checkpointValid = false) :
+    (_stale : facts.checkpointValid = false) :
     (acceptIgnoringCheckpoint ledger facts witness checkpoint).attempts.length
       = ledger.attempts.length + 1 := by
   simp [acceptIgnoringCheckpoint, fresh]
