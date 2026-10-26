@@ -1,0 +1,35 @@
+{
+  "schema": "noble-service-ref-differential/v1",
+  "assertion": "the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, except for the one documented bracket-scan divergence; not a refinement proof",
+  "source_commit": "32b502a65719c2a243880e61283e9635a454f916\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'\nbuilding '/nix/store/x6ak3r8yw3fs08ym9xwhxml16cgb1q77-nix-shell-env.drv'...",
+  "source_tree": "00e2a100504271b2bcb38577ff2b5bc39b8b26c1\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+  "host": "Linux 6.18.54 x86_64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-service-ref-target CARGO_INCREMENTAL=0 cargo test -p noble-kernel --test service_ref_differential -- --nocapture",
+  "lanes": [
+    "every_independent_expectation_matches_the_codec",
+    "round_trip_through_the_rust_encoder_still_holds"
+  ],
+  "case_file": "verification/service-ref/cases.txt",
+  "case_file_sha256": "1c486f8a4053e68780ac19d19c76ebee91b2f9e77c16f3e20a7e8aaff5c69611",
+  "reference_file": "verification/service-ref/cases.mjs",
+  "reference_file_sha256": "6eda76142f50bbb29036b17919461e2b868694fef24c69b3fe8061a90205af4a",
+  "lane_file": "crates/noble-kernel/tests/service_ref_differential.rs",
+  "lane_file_sha256": "c8ea7cf44a53e672b97d26572fd5f4d8a2bc97beaa1d58a399a933706c847f5c",
+  "coverage": {
+    "cases": 269,
+    "documented_divergences": 1,
+    "summary": "service-ref-differential cases=269 coverage={\"accepted\": 78, \"byteLimit\": 6, \"depthLimit\": 3, \"schema\": 182} divergence=1"
+  },
+  "correspondence": {
+    "route": "handwritten Lean reference compared against the Rust functions by this differential lane",
+    "model_theorems": "proofs/foundation/receipts/b25314b1/foundation-check.json",
+    "open_edge": "no extraction or refinement proof relates crates/noble-kernel/src/dataspace/wire.rs to the Lean model; the differential is finite evidence on one host and target"
+  },
+  "claims": [
+    "Tested-implementation evidence for the Rust ServiceRef codec against a specification written down independently of it.",
+    "The model-to-Rust edge stays open: no refinement proof, no cross-platform claim.",
+    "The model counts opening brackets for its depth scan; the documented divergence case records where that is stricter than the Rust scanner."
+  ]
+}
