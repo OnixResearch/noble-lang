@@ -138,6 +138,11 @@
 #   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
 #   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
 #   5032 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed service-ref-codec-723cbdb5 from a complete 96-unit selected collection:
+#   IR 405d2c88b8ca1738de6f71a668a8aa256b1053d9c506d68c79d7e85d305dc4eb; coverage d19cbcb40ece943fc7c9ad1cced9f46a845406e2f100d5c2c2c79bf5fb6faf87;
+#   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
+#   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
+#   5060 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -17336,6 +17341,10 @@ let
     "m6_async::support::request",
     "m6_async::support::table",
     "m6_async::{use#0}",
+    "m7_dataspace::<service_ref_differential::Case as std::fmt::Debug>",
+    "m7_dataspace::<service_ref_differential::Case as std::fmt::Debug>::fmt",
+    "m7_dataspace::<service_ref_differential::Expect as std::fmt::Debug>",
+    "m7_dataspace::<service_ref_differential::Expect as std::fmt::Debug>::fmt",
     "m7_dataspace::LIMITS",
     "m7_dataspace::OBSERVER",
     "m7_dataspace::PRODUCER",
@@ -17346,6 +17355,25 @@ let
     "m7_dataspace::main",
     "m7_dataspace::main::test",
     "m7_dataspace::published_service_replaces_ready_and_scope_retirement_retracts_descendants",
+    "m7_dataspace::service_ref_differential",
+    "m7_dataspace::service_ref_differential::Case",
+    "m7_dataspace::service_ref_differential::Expect",
+    "m7_dataspace::service_ref_differential::Expect::label",
+    "m7_dataspace::service_ref_differential::cases_path",
+    "m7_dataspace::service_ref_differential::decide",
+    "m7_dataspace::service_ref_differential::expected_label",
+    "m7_dataspace::service_ref_differential::load_cases",
+    "m7_dataspace::service_ref_differential::service_ref_differential_matches_the_codec",
+    "m7_dataspace::service_ref_differential::service_ref_round_trip_through_the_rust_encoder_holds",
+    "m7_dataspace::service_ref_differential::test",
+    "m7_dataspace::service_ref_differential::unhex",
+    "m7_dataspace::service_ref_differential::{use#0}",
+    "m7_dataspace::service_ref_differential::{use#1}",
+    "m7_dataspace::service_ref_differential::{use#2}",
+    "m7_dataspace::service_ref_differential::{use#3}",
+    "m7_dataspace::service_ref_differential::{use#4}",
+    "m7_dataspace::service_ref_differential::{use#5}",
+    "m7_dataspace::service_ref_differential::{use#6}",
     "m7_dataspace::std",
     "m7_dataspace::test",
     "m7_dataspace::{use#0}",
@@ -18630,11 +18658,16 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/retirement.rs:4267:5619",
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/retirement.rs:8:2410",
     "noble-kernel::closure@crates/noble-kernel/tests/m6_async/support.rs:111:118",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:1924:2993",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:3003:3775",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:3785:4992",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:414:1914",
-    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:5002:6731",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:10675:12235",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:12253:13061",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:2484:3553",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:3563:4335",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:4345:5552",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:5562:7291",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8401:8408",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8698:8704",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:8747:8753",
+    "noble-kernel::closure@crates/noble-kernel/tests/m7-dataspace.rs:974:2474",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:10404:10420",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:2277:4080",
     "noble-kernel::closure@crates/noble-kernel/tests/property.rs:2472:2479",
