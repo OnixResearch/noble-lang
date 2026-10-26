@@ -45,8 +45,11 @@ const sha256 = file =>
 
 const head = run(['git', 'rev-parse', 'HEAD'], root).trim();
 const tree = run(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
-if (run(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().length > 0) {
-  throw new Error('differential receipt requires a clean tree: commit the lane before recording');
+const dirt = run(['git', 'status', '--porcelain', '--untracked-files=no'], root)
+  .split('\n')
+  .filter(line => /^(?:[ MADRCU?!]{2}) \S/u.test(line) || /^\?\? /u.test(line));
+if (dirt.length > 0) {
+  throw new Error(`differential receipt requires a clean tracked tree: ${dirt.join('; ')}`);
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
 const host = run(['uname', '-srm'], root).trim();
