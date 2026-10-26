@@ -158,6 +158,11 @@
 #   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
 #   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
 #   5158 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed ownership-oracle-5f46be34 from a complete 96-unit selected collection:
+#   IR 235cc21aef62a63017777887b4beadc975be28028597260123253bca648a7c13; coverage 992e80d23b265a69401bdb70a389282d19cd3f0ef82d47544ea160cda67e38d3;
+#   cargo graph 936d3fd19e95aff6d4f88a1123af89e50c3c6f3d9a0c263aed15c774db9defef; collector policy 491552d4397a3a6c2e01c4b1fd2f446eaca8fd6f6e626deefc631f79ae23c7f1.
+#   14991 production paths = 7813 body/open + 4085 generated + 3093 structural;
+#   5158 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -18624,13 +18629,13 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/nominal/matching.rs:6311:8867",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/nominal/visibility.rs:4337:6077",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/nominal/visibility.rs:8:2205",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:11317:11325",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:12300:12302",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:12952:12954",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:13270:13280",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:15613:17243",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:17253:18282",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:4044:4050",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:11994:12002",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:12977:12979",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:13629:13631",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:13947:13957",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:16290:17920",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:17930:18959",
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/ownership.rs:4721:4727",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/programs.rs:2648:4863",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/programs.rs:2784:2792",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/programs.rs:311:2202",
