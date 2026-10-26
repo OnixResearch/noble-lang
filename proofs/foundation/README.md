@@ -639,7 +639,7 @@ error return is admitted only with no outstanding operand
 (`fail_requires_empty_operands`). Eighteen theorems in total, all inventoried.
 
 The retained receipt is
-[`verification/foundation/receipts/e7cc0099/`](../../verification/foundation/receipts/e7cc00993/foundation-check.json):
+[`verification/foundation/receipts/e7cc00993/`](../../verification/foundation/receipts/e7cc00993/foundation-check.json):
 252 theorems, eighteen of them ownership, `clean_source: true`, axiom sets
 inside `propext`/`Classical.choice`/`Quot.sound`.
 

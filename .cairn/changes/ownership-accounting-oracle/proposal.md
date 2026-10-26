@@ -28,7 +28,7 @@ rather than Move's ownership policy. It is not a new source borrow feature.
   drives the unary fragment through the actual acceptance machine, compares a
   test-local shadow checker against every expectation, and declares seven
   checker mutations each of which the retained corpus catches. r[VC-OWN-02]
-- The receipts `verification/foundation/receipts/e7cc0099/` (252 theorems, 18
+- The receipts `verification/foundation/receipts/e7cc00993/` (252 theorems, 18
   of them ownership) and `verification/ownership/differential.json`
   (104 cases, 15 accepted and 6 rejected through the production machine, 83
   model-only, seven mutations caught) bind the model, the toolchain, the case
