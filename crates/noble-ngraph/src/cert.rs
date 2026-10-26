@@ -156,17 +156,16 @@ pub fn emit(ids: &dyn IdentityScheme, graph: &Graph) -> (Derivation, Graph) {
                     ));
                 }
             }
-            Op::I64Mul(first, second) => {
-                if constant_bits(graph, second) == Some(1) {
-                    steps.push(Step {
-                        rule: Rule::NeutralMulRight,
-                        node: NodeId(index),
-                        operands: [first, second],
-                        first_bits: constant_bits(graph, second).unwrap_or(0),
-                        second_bits: constant_bits(graph, second).unwrap_or(0),
-                        claimed: 0,
-                    });
-                }
+            Op::I64Mul(first, second) if constant_bits(graph, second) == Some(1) => {
+                let one = constant_bits(graph, second).unwrap_or(0);
+                steps.push(Step {
+                    rule: Rule::NeutralMulRight,
+                    node: NodeId(index),
+                    operands: [first, second],
+                    first_bits: one,
+                    second_bits: one,
+                    claimed: 0,
+                });
             }
             _ => {}
         }
