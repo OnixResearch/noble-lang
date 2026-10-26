@@ -13,3 +13,5 @@
 
 - [x] [serial] **Only after immutable prepromotion PASS**, preview/execute native Cairn sync and S-CASE-08-only canonical implementation/execution/trust/evidence promotion, generated views/ledger/status, and separate postpromotion document checks. Keep proof `open`; do not reuse S-CASE-04/06 historical receipts as callback evidence. r[S-HOST-01] r[S-HOST-02] r[S-MEM-02]
 - [ ] [serial] Conduct separate accepted-source postpromotion assurance and chronological final-source replay if source moves; preview/execute archive only after full scoped assurance is independently retained, never merely on Cairn structural gates or initial prepromotion execution. r[RA-OWN-01] r[RA-CLEAN-03]
+
+> ARCHIVE BLOCKED (2026-10-25): The accepted-source postpromotion root is reclaimed, so `verification/scase08*/postpromotion.mjs` cannot replay. Archiving needs a fresh acceptance run or explicit owner acceptance; recorded in `verification/postpromotion-evidence-gap-20261025.json`. The pending box above stays unchecked; nothing is ticked and no receipt is fabricated.

@@ -11,3 +11,5 @@
 
 - [x] [serial] Only after terminal prepromotion PASS, preview/execute native Cairn sync, promote only S-CASE-04 state and exact evidence, regenerate generated views/ledger and update current STATUS/ROADMAP truthfully while preserving historical receipts and active S-CASE-06. r[S-RES-01] r[S-RES-04]
 - [ ] [serial] Check postpromotion accepted-source projection and staged native/doc/receipt integrity, then archive this distinct Cairn change only if its own scoped assurance prerequisites pass; do not silently close active S-CASE-06 or assert owner-law/Octet/Aeneas proof. Coordinate new chronological DX-06/six-case current-source replay after freeze without overlapping source edits. r[S-RES-01] r[S-RES-04]
+
+> ARCHIVE BLOCKED (2026-10-25): The `/home/brittonr/.cache/noble-proof-tmp/scase04-recursive-20260930-a` root is reclaimed, so the postpromotion projection cannot replay. Archiving needs a fresh acceptance run or explicit owner acceptance; recorded in `verification/postpromotion-evidence-gap-20261025.json`. The pending box above stays unchecked; nothing is ticked and no receipt is fabricated.

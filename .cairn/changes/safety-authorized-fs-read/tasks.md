@@ -17,3 +17,5 @@
 After the archived source and peer promotions settle, perform the separate chronological final-source replay; this is not the immutable prepromotion acceptance or the staged postpromotion document gate. Keep the following last checkbox unchecked until that release completes.
 
 - [ ] Final source replay closeout [serial] r[EV-CASE-03]
+
+> ARCHIVE BLOCKED (2026-10-25): Postpromotion evidence root `~/.cache/noble-proof-tmp` for S-CASE-04/S-CASE-07/DX-02 is reclaimed, so `verification/scase06*/postpromotion.mjs` cannot replay on its own evidence. Archiving needs a fresh source-bound acceptance run or explicit owner acceptance of the lost root; see `verification/postpromotion-evidence-gap-20261025.json`. The pending box above stays unchecked; nothing is ticked and no receipt is fabricated.
