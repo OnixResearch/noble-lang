@@ -94,6 +94,11 @@ fields so further additive detail keeps `v1`:
   `actual_stack`, `constraint` and `value_origin` (a generated span, or `null`
   when the origin is unavailable).
 
+Paths, spans and join stacks are bounded by the same limits that admit the
+candidate (`depth 64`, 64 KiB of generated source, 16 384 nodes); the report
+refuses an over-budget candidate rather than truncating a path, so a reported
+`node_path` is always complete.
+
 Transport and schema refusals stay `transport` and carry no `failure` object,
 so malformed JSON is never reclassified as an analysis outcome. Editor
 analysis creates no accepted program, executes no guest body and performs no
