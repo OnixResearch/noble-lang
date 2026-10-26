@@ -1886,6 +1886,12 @@
       "phase": 1,
       "role": "fixture",
       "claim": "The reverse traversal keeps a non-unit seed for a node until a consumer contributes."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.line_zero",
+      "phase": 1,
+      "role": "premise",
+      "claim": "The direction line at t = 0 is the declared assignment, so tangents start from the declared values."
     }
   ]
 }
