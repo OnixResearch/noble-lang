@@ -770,8 +770,9 @@ and determinacy does not imply existence — the empty-output relation is
 deterministic vacuously and not realizable (`emptyOutput_deterministic`,
 `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability`).
 Fifteen inventoried theorems; receipt
-[`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md)
-for the retained run.
+[`verification/foundation/receipts/45d658591/`](../../verification/foundation/receipts/45d658591/foundation-check.json)
+(301 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
