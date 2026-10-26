@@ -552,3 +552,71 @@ fn replay_from_a_seed_is_deterministic_and_bounded() {
         "the same seed must retain the same full case"
     );
 }
+
+/// The declared shrink measure: a strictly decreasing measure makes the shrink
+/// loop terminate, and every accepted step must decrease it.
+fn measure(case: &LiveCase) -> usize {
+    case.stack_in.len() + case.forwarded.len() + case.sites.len()
+}
+
+/// A shrink candidate is accepted only when the production refusal class and the
+/// model's blamed premise both survive, and the measure strictly decreases. A
+/// shrink that turns a refusal into acceptance, or into a different premise, is a
+/// rejection rather than progress.
+fn shrink_step(base: &LiveCase, candidate: LiveCase) -> Option<LiveCase> {
+    let base_outcome = outcome_of(base);
+    let candidate_outcome = outcome_of(&candidate);
+    let same_class = match (&base_outcome, &candidate_outcome) {
+        (Outcome::Invalid(base_problem), Outcome::Invalid(candidate_problem)) => {
+            base_problem.constraint == candidate_problem.constraint
+        }
+        _ => false,
+    };
+    if !same_class {
+        return None;
+    }
+    if model(&candidate) != model(base) {
+        return None;
+    }
+    (measure(&candidate) < measure(base)).then_some(candidate)
+}
+
+#[test]
+fn refusal_shrinks_preserving_its_class() {
+    // A nested-signature case whose stack word no longer lands on its formal.
+    let mut base = positive_case(1, false);
+    base.stack_in[3] = Ty::Text;
+    let base_outcome = outcome_of(&base);
+    let Outcome::Invalid(base_problem) = &base_outcome else {
+        panic!("the base case must be refused: {base_outcome:?}");
+    };
+    let base_class = base_problem.constraint.clone();
+    assert_eq!(model(&base), ModelVerdict::ForwardedMismatch);
+
+    // Candidates, and one deliberately class-changing candidate that must be
+    // rejected rather than treated as progress.
+    let mut narrower = base.clone();
+    narrower.stack_in.truncate(3);
+    narrower.forwarded.truncate(1);
+    narrower.ceilings = vec![TEST_EMIT];
+    let mut relocated = base.clone();
+    relocated.root_ordinal = 9;
+
+    let accepted = shrink_step(&base, narrower);
+    let rejected = shrink_step(&base, relocated);
+    assert!(
+        rejected.is_none(),
+        "a class-changing shrink is not progress"
+    );
+    let shrunk = accepted.expect("the narrower case keeps the refusal class");
+    assert!(
+        measure(&shrunk) < measure(&base),
+        "an accepted shrink strictly decreases the declared measure"
+    );
+    assert_eq!(model(&shrunk), model(&base));
+    match outcome_of(&shrunk) {
+        Outcome::Invalid(problem) => assert_eq!(problem.constraint, base_class),
+        other => panic!("the shrunk case must keep its refusal class: {other:?}"),
+    }
+    assert!(admitted(&positive_case(0, false)), "positives still admit");
+}
