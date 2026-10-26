@@ -872,7 +872,9 @@ accepted (`fold_certificate_accepted`) and a wrong claimed constant
 a claim naming a node of another kind (`wrong_rule_identity_refused`) and the
 identity claim at swapped positions (`wrong_bits_refused`) are refused. Eighteen
 inventoried theorems; receipt
-[`verification/foundation/receipts/`](../../verification/foundation/receipts/).
+[`verification/foundation/receipts/71c02b9bb/`](../../verification/foundation/receipts/71c02b9bb/foundation-check.json)
+(345 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
