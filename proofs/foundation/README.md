@@ -170,7 +170,7 @@ Status words:
 | Public/internal orientation, deeper-minus-top subtraction | `internal_of_public`, `exec_sub_is_internal_step`, `sub_operand_order`, `wrap_sub_noncommutative` | `$op_sub` pop order | model **proved**. Helper **tested** (comparator `sub-order`) |
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
-| Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_admits`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
+| Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -757,7 +757,7 @@ precondition alone, which is exactly the vacuity a report must mark
 (`realizable_of_uninhabited`); a contradictory postcondition under an inhabited
 domain refutes realizability, with the inhabitation witness required so the
 refutation is not itself vacuous
-(`unrealizable_of_contradictory_post`, `contradictory_admits`,
+(`unrealizable_of_contradictory_post`, `contradictory_inhabited`,
 `contradictory_not_realizable`); two distinct satisfying outputs for one
 admissible input refute determinacy (`not_deterministic_of_two_outputs`), and
 per-input uniqueness entails it (`deterministic_of_unique_output`); the exact

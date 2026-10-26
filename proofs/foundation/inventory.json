@@ -1768,7 +1768,7 @@
       "claim": "The wrapping I64 increment is deterministic."
     },
     {
-      "name": "NobleFoundation.SpecQuality.contradictory_admits",
+      "name": "NobleFoundation.SpecQuality.contradictory_inhabited",
       "phase": 1,
       "role": "specification-quality",
       "claim": "The contradictory relation's domain is inhabited, so its refutation is not vacuous."

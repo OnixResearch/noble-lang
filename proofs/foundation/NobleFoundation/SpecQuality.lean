@@ -144,11 +144,11 @@ def contradictory : Relation where
 
 /-- The contradictory relation's domain is inhabited, so its refutation is not
 vacuous. -/
-theorem contradictory_admits : Admits contradictory := ⟨(), (0 : BitVec 64), trivial⟩
+theorem contradictory_inhabited : Admits contradictory := ⟨(), (0 : BitVec 64), trivial⟩
 
 /-- The contradictory relation is not relationally realizable. -/
 theorem contradictory_not_realizable : ¬ Realizable contradictory :=
-  unrealizable_of_contradictory_post contradictory contradictory_admits
+  unrealizable_of_contradictory_post contradictory contradictory_inhabited
     (fun _ _ _ _ h => h)
 
 /-! ### An underconstrained `Bool` output
