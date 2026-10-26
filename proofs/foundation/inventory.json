@@ -1814,6 +1814,78 @@
       "phase": 1,
       "role": "control",
       "claim": "Determinacy alone never witnesses existence of a satisfying output."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.evalStep_hasDerivAt",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "One node's evaluation is differentiable along the direction line whenever its operands are."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.valuesUpTo_hasDerivAt",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The denotation of every earlier node is differentiable along the direction line, by induction on the stored order."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.tangent_is_directional_derivative",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "The forward tangent is Mathlib's derivative of the intended-real denotation along the direction line at the declared assignment (the JVP specification)."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.repeated_operand_contributes_twice",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "A repeated operand contributes twice to its own adjoint, so accumulation adds rather than overwrites."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.adjoint_step_adds_contribution",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "One reverse step adds the processed consumer's contribution to an operand's adjoint."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.adjoint_unchanged_when_operand_absent",
+      "phase": 1,
+      "role": "premise",
+      "claim": "A node that is not an operand of the processed consumer leaves the adjoint unchanged, which is what makes descending order finalize an adjoint before its own step."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.exampleGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The example graph's operands are strictly earlier, so it is a well-formed acyclic graph."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.exampleGraph_value",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The example graph denotes 16 at the declared assignment: an input, an exact constant, an addition and a self-repeated multiplication."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.exampleGraph_tangent",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The example graph's forward tangent is 8 with unit direction on the used input slot and zero parameter directions."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.exampleGraph_derivative",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The example graph's tangent statement is exercised as Mathlib's derivative statement on a concrete graph."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.unused_input_slot_tangent",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "A direction on an unused input slot contributes nothing to the tangent."
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.non_unit_seed_unconsumed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The reverse traversal keeps a non-unit seed for a node until a consumer contributes."
     }
   ]
 }

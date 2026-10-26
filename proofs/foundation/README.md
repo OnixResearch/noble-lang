@@ -171,6 +171,7 @@ Status words:
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
+| Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -742,6 +743,48 @@ Open, and deliberately not closed:
 - no concurrency, crash-recovery, remote-revocation atomicity or exactly-once
   claim, and no cross-checkpoint conservation claim without the carry-forward
   premise.
+
+## Reverse-mode AD reference (issue #45)
+
+`NobleFoundation/ReverseAD.lean` models the bounded smooth slice — a
+well-formed acyclic graph over the reals with explicit input and parameter slots,
+exact finite constants, addition and multiplication, and one selected output.
+Guards, indexing, Boolean paths, activation corners, surrogate rules, and the
+subtraction and ordered affine terms the issue admits only later are outside the
+file, as are dynamic Programs.
+
+Proved: a node's evaluation is differentiable along a direction line whenever its
+operands are (`evalStep_hasDerivAt`), and by induction on the stored order every
+node's denotation is (`valuesUpTo_hasDerivAt`), so the forward tangent recursion
+*is* Mathlib's derivative of the intended-real denotation at the declared
+assignment — the JVP specification (`tangent_is_directional_derivative`). The
+reverse traversal adds one processed consumer's contribution to an operand's
+adjoint (`adjoint_step_adds_contribution`), a repeated operand contributes twice
+so accumulation adds rather than overwrites (`repeated_operand_contributes_twice`),
+and a node that is not an operand of the processed consumer is left unchanged,
+which is what makes the descending order finalize an adjoint before its own step
+(`adjoint_unchanged_when_operand_absent`). Nine concrete fixtures exercise the
+model: the example graph's well-formedness, denotation `16`, tangent `8` and its
+Mathlib derivative statement; a direction on an unused input slot contributing
+nothing; and a non-unit seed surviving until a consumer contributes. Twelve
+inventoried theorems. Receipt: see the retained foundation check for this tree.
+
+Open, and deliberately not closed:
+
+- no ordered **binary32** gradient model: a real-valued theorem does not
+  establish that binary32 gradients equal exact derivatives, and no
+  reassociation, FMA contraction or parallel reduction is authorisation;
+- the **transpose identity** (`Σ adjoint·direction = tangent`) and the full
+  summation theorem stating each final adjoint as seed plus its consumers are
+  named obligations rather than proved statements here;
+- no correspondence claim relates this file to
+  `crates/noble-ngraph/src/grad.rs`, so the ordered Rust loop's refinement is
+  open, and its admission, error and quota behaviour is untouched;
+- guards, indexing, Boolean paths, activation corners, surrogate policies,
+  dynamic Programs, multi-output seeds and duplicate output-node accumulation
+  are outside the selected fragment;
+- vanishing checks are absent by construction (no `sorry`, no axiom, no
+  `native_decide`), but that is a hygiene fact, not a claim about the Rust side.
 
 ## Specification-quality obligations (issue #65)
 
