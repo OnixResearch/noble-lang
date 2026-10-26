@@ -1,8 +1,8 @@
 {
   "schema": "noble-foundation-check/v1",
   "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem.",
-  "source_commit": "cb15a0f2ce60046e660891d8dc5082f3a4d01bd9",
-  "source_tree": "48dbd6f7d295d753b1c90bb26f5dcbbda052876a",
+  "source_commit": "b25314b126d619248c2d35c78e1309c51efe006a",
+  "source_tree": "db9a1fd02dfd6097a9d6652f5688a6c6cca465d0",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -68,7 +68,7 @@
     "proofs/foundation/NobleFoundation/Regressions.lean": "5a945960477c2692fa0d714e88624cb5c3257ee21dc1c8c0f0ebd24092f8d727",
     "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
     "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
-    "proofs/foundation/NobleFoundation/ServiceWire.lean": "5b594cf3ec37e56c8c3da71ee2577d20c546373d8d4d2ee2af6f059307aab912",
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "303b00fd6a81453fc91764338440e24be18bcb17d68a5493be098a4eea0002ba",
     "proofs/foundation/NobleFoundation/Slice.lean": "ba0408f65203afc6f6f527742aa435ea550cdc3f0ad466a29ed02ec1d5c8577c",
     "proofs/foundation/inventory.json": "d09d19758892fe52c964eb8d2890131f45a76b5e066594a15eb9b41de1e59b94",
     "proofs/foundation/lakefile.toml": "dde8be0ee9b607e6f46d7dd80e6ad5b88ad5eddab4c589a897c3613ab3c086b9",
@@ -2601,7 +2601,7 @@
       "role": "service-ref-codec",
       "claim": "the record prefix is nine bytes",
       "status": "proved",
-      "statement": "NobleFoundation.ServiceWire.recordPrefix_length : NobleFoundation.ServiceWire.recordPrefix.length = 9",
+      "statement": "NobleFoundation.ServiceWire.recordPrefix_length : NobleFoundation.ServiceWire.recordPrefix.length = 10",
       "axioms": []
     },
     {
@@ -2619,7 +2619,7 @@
       "role": "service-ref-codec",
       "claim": "a canonical encoding is fourteen bytes longer than its name",
       "status": "proved",
-      "statement": "NobleFoundation.ServiceWire.encode_length : ∀ (name : List ℕ) (ready : Bool), (NobleFoundation.ServiceWire.encode name ready).length = 14 + name.length",
+      "statement": "NobleFoundation.ServiceWire.encode_length : ∀ (name : List ℕ) (ready : Bool), (NobleFoundation.ServiceWire.encode name ready).length = 15 + name.length",
       "axioms": [
         "propext",
         "Quot.sound"
@@ -2838,5 +2838,5 @@
     }
   ],
   "implementation_theorem": false,
-  "artifact_directory": "/var/tmp/servicewire-receipt-3"
+  "artifact_directory": "/var/tmp/servicewire-receipt-4"
 }
