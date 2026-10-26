@@ -30,6 +30,8 @@ mod support;
 mod controls;
 #[path = "acceptance/nominal.rs"]
 mod nominal;
+#[path = "acceptance/ownership.rs"]
+mod ownership;
 #[path = "acceptance/programs.rs"]
 mod programs;
 #[path = "acceptance/sums.rs"]
