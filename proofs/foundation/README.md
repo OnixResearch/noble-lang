@@ -172,6 +172,7 @@ Status words:
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
+| Packed I64/Bool schedule validator: acceptance implies complete ordered result equivalence | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (validator soundness over the untrusted schedule). Actual emitted-artifact binding, the Rust transcription, guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -788,6 +789,58 @@ Open, and deliberately not closed:
   are outside the selected fragment;
 - vanishing checks are absent by construction (no `sorry`, no axiom, no
   `native_decide`), but that is a hygiene fact, not a claim about the Rust side.
+
+## Packed schedule validator model (issue #43, phase 1)
+
+`NobleFoundation/PackedSchedule.lean` names the model side of a validator lane for
+the packed `I64`/`Bool` schedule. `crates/noble-ngraph/src/compiled.rs` states that
+agreement between the packed evaluator and the graph reference is *tested, not
+proved*, so NG-PO-C stays open; the POPL 2008 translation-validation shape keeps
+scheduling untrusted and proves a smaller validator correct instead.
+
+The graph fragment is a finite acyclic graph over interface input slots, exact
+`I64` constants, addition, subtraction, multiplication and equality, with one
+selected output. The instruction set mirrors the packed `I` enum — destination
+register first, then ordered source registers — and constants and interface slots
+occupy their own registers, so bits and slots are validated rather than assumed.
+
+Proved: the packed fold executes exactly the scheduled order's emitted
+instructions (`run_emitNodes_eq`, `foldl_eq_execSchedule`), a step writes only its
+own node's register (`step_written`) and computes that node's reference value when
+its ordered operands' registers already hold theirs (`step_computes`), reference
+values are stable once later nodes are added (`valuesUpTo_eq_value`), and by
+induction on the untrusted order every already-processed node's register holds its
+reference value (`execSchedule_sound`). The closure is **validator soundness**:
+for every admitted input the packed machine's selected output register equals the
+graph reference (`schedule_sound`) — acceptance implies complete ordered result
+equivalence, with refusal allowed for unsupported valid schedules.
+
+Five fixtures and one control: the four-node example graph (input, exact constant,
+addition, equality) with values `3`, `8` and `true` (`exampleGraph_values`); one
+register per node in dependency order accepted without aliasing
+(`exampleSchedule_valid`) and agreeing with the reference
+(`exampleGraph_schedule_sound`); order correspondence decomposing at the head
+(`orderOk_cons`); and the control showing that **aliasing two live nodes onto one
+register changes the machine's value** (`aliasing_loses_the_constant`), which is
+why injectivity is a premise of the relation rather than a fresh-register
+assumption. Thirteen inventoried theorems; receipt
+[`verification/foundation/receipts/`](../../verification/foundation/receipts/)
+for the recorded hash (327 theorems, `clean_source: true`, axiom sets inside the
+allow-list, `implementation_theorem: false`).
+
+Open, and deliberately not closed:
+
+- **no binding to the actually emitted artifact**: the file models a schedule and
+  its instruction stream, not the `Compiled` layout key, layer ranges, register
+  count or constant/slot tables that `Compiled::new` produces, so a sound abstract
+  checker plus an unproved Rust transcription is not an end-to-end proof;
+- guards, `fail_suffix_min` canonical-first-failure behaviour, ordered affine and
+  `F32` instructions are outside the fragment (`F32` only after #38), as are
+  effects, resources, aliasing *after* last use and any multi-output reconstruction;
+- refusal classes, bounded checking work, versioned encoding and fail-closed
+  preflight are named obligations rather than implemented behaviour here;
+- this is not #10's MC2 trusted-build envelope and not a whole-Wasm validation
+  path, and finite fixtures are not a universal theorem about the Rust scheduler.
 
 ## Specification-quality obligations (issue #65)
 

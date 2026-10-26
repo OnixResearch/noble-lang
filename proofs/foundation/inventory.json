@@ -1892,6 +1892,84 @@
       "phase": 1,
       "role": "premise",
       "claim": "The direction line at t = 0 is the declared assignment, so tangents start from the declared values."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.run_emitNodes_eq",
+      "phase": 1,
+      "role": "model-mapping",
+      "claim": "The packed fold executes exactly the scheduled order's emitted instructions."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.foldl_eq_execSchedule",
+      "phase": 1,
+      "role": "model-mapping",
+      "claim": "Folding the emitted instructions is the same machine as executing the scheduled order node by node."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.valuesUpTo_eq_value",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The reference value of a node is stable once later nodes have been added."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.step_written",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A machine step writes only its own node's register."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.step_computes",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A machine step computes its own node's reference value when its ordered operands' registers already hold theirs."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.execSchedule_sound",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "After executing the remaining schedule, every already-processed node's register holds its reference value, given the order/disjointness/injectivity premises."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.schedule_sound",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Complete ordered result equivalence: the selected output register of a validated packed schedule equals the graph reference's value for every admitted input."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.exampleGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The four-node fixture graph (input, exact constant, addition, equality) is well formed."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.orderOk_cons",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "Order correspondence decomposes at the head of the untrusted order."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.exampleSchedule_valid",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "One register per node, in dependency order, satisfies order correspondence without aliasing."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.exampleGraph_values",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The fixture's reference values are 3 at the input, 8 at the addition and true at the equality."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.exampleGraph_schedule_sound",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The packed machine agrees with the graph reference on the fixture's validated schedule."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.aliasing_loses_the_constant",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "Aliasing two live nodes onto one register gives the packed machine a different value from the graph reference, so injectivity is a necessary premise rather than an assumption."
     }
   ]
 }
