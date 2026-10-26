@@ -824,9 +824,9 @@ register per node in dependency order accepted without aliasing
 register changes the machine's value** (`aliasing_loses_the_constant`), which is
 why injectivity is a premise of the relation rather than a fresh-register
 assumption. Thirteen inventoried theorems; receipt
-[`verification/foundation/receipts/`](../../verification/foundation/receipts/)
-for the recorded hash (327 theorems, `clean_source: true`, axiom sets inside the
-allow-list, `implementation_theorem: false`).
+[`verification/foundation/receipts/0ade1e4e9/`](../../verification/foundation/receipts/0ade1e4e9/foundation-check.json)
+(327 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
