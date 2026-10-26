@@ -115,7 +115,7 @@
       "name": "NobleFoundation.intCast_toInt",
       "phase": 1,
       "role": "round-trip",
-      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x"
+      "claim": "((x.toInt : \u2124) : ZMod (2^64)) = toZ x"
     },
     {
       "name": "NobleFoundation.intCast_signed",
@@ -1520,6 +1520,60 @@
       "phase": 5,
       "role": "ownership-accounting",
       "claim": "the opaque segment and its must-use obligations are conserved by every admitted program"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.publish_preserves_other_keys",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "one single-slot publication leaves every other slot selection unchanged"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.publish_selects_the_published_generation",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "one single-slot publication selects exactly the published generation for its own slot"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.pin_is_immutable",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "pinning stores the published map and nothing replaces it in place"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.root_selections_use_pinned_map",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "every live selection a root makes comes from its own pinned map"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.frozen_entry_map_reference_agrees",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "execution through a root equals the frozen-entry-map reference for the same requests"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.mixed_map_selects_old_and_new",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "two separate single-slot publications are not one atomic replacement, so a map pinned between them selects a mixed pair"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "a denied dispatch stops execution before producing a guest event"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "an authorized dispatch selects the generation its pinned map names"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "a finite abnormal prefix keeps the committed guest events"
     }
   ]
 }
