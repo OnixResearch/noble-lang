@@ -1,0 +1,6 @@
+3131:    table.init $core
+3135:    table.init $code
+3144:    memory.init $d0
+3153:    memory.init $d1
+3162:    memory.init $d2
+3171:    memory.init $d3

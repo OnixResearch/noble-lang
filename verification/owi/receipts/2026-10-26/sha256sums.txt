@@ -1,0 +1,13 @@
+3957c12f67c54be22003851c3f7fcc885d378824d0a2a4a1b54745857a61cbe5  verification/owi/receipts/2026-10-26/control-passive-data-only.wasm
+295d07426e6331c3f9485eb7853dcb71b210acdcc65c0b75e498d6d2e91277e6  verification/owi/receipts/2026-10-26/control-passive-data-only.wat
+2e86c68f0e412132bc3c1894b98d2d20af02016459a550776674db82f593ca83  verification/owi/receipts/2026-10-26/owi-validate-control.txt
+9ca5977b371502e1884acb1af414afd2e17842292fb5ba8fec129975329d7761  verification/owi/receipts/2026-10-26/owi-validate-reproducer.txt
+70e577ce83a9b53f4f7a185ea290660144e1776a57b58f7d2045d143c5a88046  verification/owi/receipts/2026-10-26/owi-validate-subject.txt
+9ce5514e95e89e0e6631f4aee0f1f8e84ece651e73778220fe4b29b0880aa648  verification/owi/receipts/2026-10-26/reproducer-memory-init.wasm
+5eae7b191af6250738afe257960c5f16b3e2da1afd6e94bb62d80aadb69810eb  verification/owi/receipts/2026-10-26/reproducer-memory-init.wat
+6734ef8d41c44f8cf04d783b052d28d41d89dffb73a7cd62c3fa59b116523e83  verification/owi/receipts/2026-10-26/subject-ast.json
+28ef899d566fed9f55d297f91a2da9d3f6d2a0163905fd5d9da6190350ceae7f  verification/owi/receipts/2026-10-26/subject-bulk-memory-ops.txt
+e440692978a9d0bf1e7dd1d172ea94f47b99560a87cbb7a373013781f0cf722f  verification/owi/receipts/2026-10-26/subject-imports-exports.txt
+261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac  verification/owi/receipts/2026-10-26/subject-module-1.wasm
+5d64031e1ff3dca19813fb96aefe0bee3f9181dfeff20ee9785db734975299ab  verification/owi/receipts/2026-10-26/subject-sections.txt
+d6487f7eb8ca4560b7bdc3f5e726476991ef0be0de5fa2724d269bafc0f6b629  verification/owi/receipts/2026-10-26/wasm-tools-validate-subject.txt

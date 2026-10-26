@@ -1,0 +1,10 @@
+  types                                  |        0xb -       0x8e |       131 bytes | 20 count
+  imports                                |       0x91 -      0x2cd |       572 bytes | 27 count
+  functions                              |      0x2cf -      0x34b |       124 bytes | 123 count
+  globals                                |      0x34d -      0x365 |        24 bytes | 4 count
+  exports                                |      0x368 -      0x4f8 |       400 bytes | 32 count
+  elements                               |      0x4fa -      0x50a |        16 bytes | 2 count
+  data count                             |      0x50c -      0x50d |         1 bytes | 1 count
+  code                                   |      0x510 -     0x1c39 |      5929 bytes | 123 count
+  data                                   |     0x1c3b -     0x1c5a |        31 bytes | 4 count
+  custom "name"                          |     0x1c62 -     0x28ea |      3208 bytes | 1 count
