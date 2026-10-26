@@ -53,8 +53,8 @@ theorem nameByte_excludes_structure (byte : Nat) (h : nameByte byte = true) :
   simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_iff, beq_iff_eq] at h
   omega
 
-/-- The nine-byte record prefix. -/
-def recordPrefix : List Nat := [60, 115, 101, 114, 118, 105, 99, 101, 34]
+/-- The ten-byte record prefix. -/
+def recordPrefix : List Nat := [60, 115, 101, 114, 118, 105, 99, 101, 32, 34]
 
 /-- The five-byte record suffix, which carries the readiness tag. -/
 def recordSuffix (ready : Bool) : List Nat := [34, 32, 35, if ready then 116 else 102, 62]
@@ -90,7 +90,7 @@ def depthExceeds (maxDepth : Nat) (bytes : List Nat) : Bool :=
 embedded value or an escape all fail here, because the suffix patterns consume
 the whole remainder. -/
 def parseService : List Nat → Option (List Nat × Bool)
-  | 60 :: 115 :: 101 :: 114 :: 118 :: 105 :: 99 :: 101 :: 34 :: rest =>
+  | 60 :: 115 :: 101 :: 114 :: 118 :: 105 :: 99 :: 101 :: 32 :: 34 :: rest =>
       match takeName rest with
       | none => none
       | some (name, tail) =>
@@ -114,7 +114,7 @@ def decode (bytes : List Nat) (configuredDepth : Nat) : Decision :=
         else .schema
 
 /-- The record prefix is nine bytes. -/
-theorem recordPrefix_length : recordPrefix.length = 9 := rfl
+theorem recordPrefix_length : recordPrefix.length = 10 := rfl
 
 /-- The record suffix is five bytes whatever the readiness tag is. -/
 theorem recordSuffix_length (ready : Bool) : (recordSuffix ready).length = 5 := by
@@ -123,7 +123,7 @@ theorem recordSuffix_length (ready : Bool) : (recordSuffix ready).length = 5 := 
 
 /-- The exact wire length of a canonical encoding. -/
 theorem encode_length (name : List Nat) (ready : Bool) :
-    (encode name ready).length = 14 + name.length := by
+    (encode name ready).length = 15 + name.length := by
   unfold encode
   rw [List.length_append, List.length_append, recordPrefix_length, recordSuffix_length]
   omega
