@@ -915,7 +915,9 @@ omitted slot takes the declared fallback rather than inventing bits
 (`unrecorded_slot_falls_back`), and a corrupted witness flips the verdict
 (`corrupted_witness_changes_the_verdict`), so the recorded bits are load-bearing.
 Twelve inventoried theorems; receipt
-[`verification/foundation/receipts/`](../../verification/foundation/receipts/).
+[`verification/foundation/receipts/9a810d3ff/`](../../verification/foundation/receipts/9a810d3ff/foundation-check.json)
+(357 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
