@@ -174,6 +174,7 @@ Status words:
 | Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
 | Packed I64/Bool schedule validator: acceptance implies complete ordered result equivalence | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (validator soundness over the untrusted schedule). Actual emitted-artifact binding, the Rust transcription, guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
+| Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -888,6 +889,47 @@ Open, and deliberately not closed:
   rewrites and `F32` laws are outside phase 1; value preservation says nothing
   about fuel, allocation, cancellation behaviour or recipe identity;
 - finite fixtures are not a universal claim about any scheduler or transformation.
+
+## Bounded graph-pair query model (issue #56, phase 1)
+
+`NobleFoundation/SymbolicPair.lean` models a *declared finite input universe*, the
+exhaustive search over it, and the replay of an exact-bit witness, and proves what
+such a search can and cannot establish. It contains no SAT/SMT solver, so no
+solver status, no certificate and no external UNSAT reasoning is claimed.
+
+Proved: a witness lookup only ever yields a pair the witness recorded
+(`lookup_returns_recorded`), an unrecorded slot decodes to exactly the declared
+fallback (`decode_uses_fallback`) and a recorded slot replays exactly its recorded
+bits (`decode_replays_recorded`), so a witness cannot acquire bits it did not
+carry. No refutation is exactly agreement over the ordered outputs
+(`not_refuted_iff_agrees`), and therefore a failed search establishes agreement on
+the declared universe **and nothing beyond it** (`search_none_sound`), while a
+found candidate is a genuine refutation (`search_some_refutes`).
+
+Fixtures: two differently written faces of `3 + 5` (`add 0 1` and `add 1 0` over
+reordered constants) find no distinguishing candidate in the declared universe;
+a subtraction face is genuinely refuted (`8` versus `2`); and for a pair whose left
+face reads input slot zero while the right face is the exact constant seven, the
+**decoded witness bits decide the verdict** (`witness_bits_decide`). Controls: an
+omitted slot takes the declared fallback rather than inventing bits
+(`unrecorded_slot_falls_back`), and a corrupted witness flips the verdict
+(`corrupted_witness_changes_the_verdict`), so the recorded bits are load-bearing.
+Twelve inventoried theorems; receipt
+[`verification/foundation/receipts/`](../../verification/foundation/receipts/).
+
+Open, and deliberately not closed:
+
+- **no encoder correspondence**: nothing relates `extract/symbolic.rs`, a
+  serialized formula or the B2 I64 harness to this model, so there is no
+  concrete/symbolic simulation theorem and no decoder/binding of actual endpoint
+  bytes;
+- no solver, no timeout/UNKNOWN budget, no certificate or witness shrinking, and no
+  formula-size, solver-time or memory measurement;
+- no replay through the actual emitted Wasm of either endpoint and no
+  optimization-mode comparison, so this cannot satisfy the issue's compiled-replay
+  acceptance on its own;
+- budgets, trap/refusal/quota classification, cancellation, guards, `F32`,
+  resources, live slots, recursion and dynamic calls are outside the slice.
 
 ## Specification-quality obligations (issue #65)
 

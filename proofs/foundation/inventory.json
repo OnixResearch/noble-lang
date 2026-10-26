@@ -2078,6 +2078,78 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "The right-one claim is accepted only at the exact operand positions and refused when swapped."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.lookup_returns_recorded",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "A witness lookup only ever yields a pair the witness recorded."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.decode_uses_fallback",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "An unrecorded slot decodes to exactly the declared fallback."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.decode_replays_recorded",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "A recorded slot replays exactly its recorded bits."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.not_refuted_iff_agrees",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "No refutation is exactly agreement over the ordered outputs."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.search_none_sound",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "A failed search over the declared finite universe establishes agreement on that universe and nothing beyond it."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.search_some_refutes",
+      "phase": 1,
+      "role": "symbolic-pair",
+      "claim": "A found candidate is a genuine refutation of the ordered results."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.same_sum_search_none",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "Two differently written faces of the same sum find no distinguishing candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.same_sum_agrees",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "Consequently the same-sum pair agrees on every declared candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.subtraction_refuted",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The subtraction pair is genuinely refuted at one declared candidate."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.witness_bits_decide",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "The exact decoded witness bits decide the verdict for the input-reading pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.unrecorded_slot_falls_back",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "A witness that omits a slot takes the declared fallback rather than acquiring bits."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.corrupted_witness_changes_the_verdict",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "A corrupted witness can flip the verdict, so the recorded bits are load-bearing."
     }
   ]
 }
