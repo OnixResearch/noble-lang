@@ -96,7 +96,7 @@ mod shrink {
         /// The candidate's answer for the witness.
         pub candidate: u32,
         /// How many candidate simplifications were evaluated, within the budget.
-        pub attempts: usize,
+        pub attempts: u32,
         /// Whether the shrinker stopped because the budget ran out with more
         /// simplifications pending.
         pub budget_exhausted: bool,
@@ -105,7 +105,7 @@ mod shrink {
     /// The documented bound on evaluated simplifications: ten simplifications per
     /// operand is 20 evaluations per pass and the joint phase adds at most 16, so
     /// 200 evaluations bound a walk that terminates within ten improving passes.
-    pub const DEFAULT_ATTEMPTS: usize = 200;
+    pub const DEFAULT_ATTEMPTS: u32 = 200;
 
     /// Shrink a disagreement between `authority` and `candidate` for `operation`.
     ///
@@ -123,7 +123,7 @@ mod shrink {
         authority: &dyn Fn(u8, u32, u32) -> u32,
         candidate: &dyn Fn(u8, u32, u32) -> u32,
         start: (u32, u32),
-        budget_attempts: usize,
+        budget_attempts: u32,
     ) -> Option<Witness> {
         let disagrees = |pair: (u32, u32)| {
             authority(operation, pair.0, pair.1) != candidate(operation, pair.0, pair.1)
@@ -132,7 +132,7 @@ mod shrink {
             return None;
         }
         let mut current = start;
-        let mut attempts = 0;
+        let mut attempts: u32 = 0;
         let mut is_improved = true;
         let mut is_exhausted = false;
         while is_improved && !is_exhausted {
@@ -552,6 +552,18 @@ fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
     // Deterministic: a second walk over the same start pair yields the same witness.
     let again = minimize(2, &authority, &candidate, start, DEFAULT_ATTEMPTS)
         .expect("the start pair still disagrees");
+    // One stable line lets the receipt runner record the exact witness the walk
+    // produced instead of re-deriving it.
+    println!(
+        "shrink-witness operation={} left={:#010x} right={:#010x} expected={:#010x} candidate={:#010x} attempts={} exhausted={}",
+        witness.operation,
+        witness.left,
+        witness.right,
+        witness.expected,
+        witness.candidate,
+        witness.attempts,
+        witness.budget_exhausted,
+    );
     assert_eq!(again, witness);
     // The walk terminates inside the documented budget rather than exhausting it,
     // and the witness is a subnormal-versus-zero disagreement: the authority keeps
