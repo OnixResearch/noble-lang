@@ -33,7 +33,7 @@ structure Facts where
   available : Nat
 deriving DecidableEq, Repr
 
-/-- Tie the two requested identities to the supplied ones: a claim is admitted
+/-- Tie the two requested identities to the supplied ones: a claim is committed
     only when the plan and grant facts equal what the request asked for. -/
 def FactsExact (facts : Facts) : Bool :=
   facts.plan == facts.requestedPlan && facts.grant == facts.requestedGrant
@@ -48,7 +48,7 @@ def FactsAdmissible (facts : Facts) : Bool :=
     && !facts.revoked
     && decide (facts.cost ≤ facts.available)
 
-/-- A registered admitted attempt. `started` records the at-most-once start. -/
+/-- A registered committed attempt. `started` records the at-most-once start. -/
 structure Attempt where
   witness : Nat
   checkpoint : Nat
@@ -56,7 +56,7 @@ structure Attempt where
   started : Bool
 deriving DecidableEq, Repr
 
-/-- The bounded ledger state. `consumed` holds exactly the witnesses admitted in
+/-- The bounded ledger state. `consumed` holds exactly the witnesses committed in
     this prefix, `attempts` the registered attempts, and `charges` the
     checkpoint-local quota charges. -/
 structure Ledger where
@@ -99,7 +99,7 @@ def refuse (ledger : Ledger) (_facts : Facts) : Ledger := ledger
 
 /-- One serialized request. Admission checks the exact facts *before* consuming
     the witness; nothing here can start execution directly. -/
-def admit (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
+def accept (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
   if witness ∈ ledger.consumed then refuse ledger facts
   else if FactsAdmissible facts then consume ledger facts witness checkpoint
   else refuse ledger facts
@@ -165,56 +165,56 @@ theorem refused_request_preserves_ledger (ledger : Ledger) (facts : Facts) :
 
 theorem denied_admission_preserves_ledger (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (already : witness ∈ ledger.consumed) :
-    admit ledger facts witness checkpoint = ledger := by
-  simp [admit, already, refuse]
+    accept ledger facts witness checkpoint = ledger := by
+  simp [accept, already, refuse]
 
 /-- Admission of a fresh witness under admissible facts grows the consumed set by
-    exactly that witness: one admitted attempt per consumed witness. -/
+    exactly that witness: one committed attempt per consumed witness. -/
 theorem admission_consumes_exactly_one_witness (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) :
-    (admit ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
-  simp [admit, fresh, admissible, consume]
+    (accept ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
+  simp [accept, fresh, admissible, consume]
 
 theorem admission_registers_one_attempt (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) :
-    (admit ledger facts witness checkpoint).attempts
+    (accept ledger facts witness checkpoint).attempts
       = ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts := by
-  simp [admit, fresh, admissible, consume]
+  simp [accept, fresh, admissible, consume]
 
 /-- The exact-plan comparison is not decorative: an altered requested plan fails
     admissibility and mints nothing. -/
 theorem altered_plan_cannot_mint (facts : Facts) (witness checkpoint : Nat)
     (ledger : Ledger) (fresh : witness ∉ ledger.consumed) (altered : facts.plan ≠ facts.requestedPlan) :
-    admit ledger facts witness checkpoint = ledger := by
+    accept ledger facts witness checkpoint = ledger := by
   have inexact : FactsExact facts = false := by
     simp [FactsExact, altered]
-  simp [admit, fresh, FactsAdmissible, inexact, refuse]
+  simp [accept, fresh, FactsAdmissible, inexact, refuse]
 
 /-- A stale or revoked fact bundle likewise mints nothing. -/
 theorem stale_facts_cannot_mint (facts : Facts) (witness checkpoint : Nat)
     (ledger : Ledger) (fresh : witness ∉ ledger.consumed)
     (stale : facts.revoked = true ∨ facts.checkpointValid = false
       ∨ facts.policyLive = false ∨ facts.sourceAuthentic = false) :
-    admit ledger facts witness checkpoint = ledger := by
+    accept ledger facts witness checkpoint = ledger := by
   have inadmissible : FactsAdmissible facts = false := by
     rcases stale with broken | broken | broken | broken <;> simp [FactsAdmissible, broken]
-  simp [admit, fresh, inadmissible, refuse]
+  simp [accept, fresh, inadmissible, refuse]
 
 /-- A fresh witness under admissible facts reaches the consuming transition. -/
 theorem admission_is_consumption (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) :
-    admit ledger facts witness checkpoint = consume ledger facts witness checkpoint := by
-  simp [admit, fresh, admissible]
+    accept ledger facts witness checkpoint = consume ledger facts witness checkpoint := by
+  simp [accept, fresh, admissible]
 
 /-- One admission preserves the witness alignment: the consumed list and the
     attempt ledger grow together by the same witness. -/
 theorem admission_preserves_alignment (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) (aligned : WitnessAlignment ledger) :
-    WitnessAlignment (admit ledger facts witness checkpoint) := by
+    WitnessAlignment (accept ledger facts witness checkpoint) := by
   rcases aligned with ⟨lengths, members⟩
   rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
   refine ⟨by simp [consume, lengths], ?_⟩
@@ -230,7 +230,7 @@ theorem admission_preserves_alignment (ledger : Ledger) (facts : Facts)
 theorem admission_preserves_uniqueness (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) (unique : WitnessUniqueness ledger) :
-    WitnessUniqueness (admit ledger facts witness checkpoint) := by
+    WitnessUniqueness (accept ledger facts witness checkpoint) := by
   rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
   intro other member
   rcases List.mem_cons.mp member with added | old
@@ -252,12 +252,12 @@ theorem admission_preserves_uniqueness (ledger : Ledger) (facts : Facts)
     exact unique other old
 
 /-- One admission preserves the checkpoint quota bound, given that the exact
-    admitted cost still fits the snapshot for that checkpoint. -/
+    committed cost still fits the snapshot for that checkpoint. -/
 theorem admission_preserves_quota (ledger : Ledger) (facts : Facts) (snapshot : Snapshot)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) (within : WithinQuota ledger snapshot)
     (fits : chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint) :
-    WithinQuota (admit ledger facts witness checkpoint) snapshot := by
+    WithinQuota (accept ledger facts witness checkpoint) snapshot := by
   rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
   intro other
   by_cases same : other = checkpoint
@@ -288,7 +288,7 @@ theorem initial_attempts_charged : AttemptsCharged initial := by
 theorem admission_preserves_attempts_charged (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (admissible : FactsAdmissible facts = true) (charged : AttemptsCharged ledger) :
-    AttemptsCharged (admit ledger facts witness checkpoint) := by
+    AttemptsCharged (accept ledger facts witness checkpoint) := by
   rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
   intro attempt member
   rcases List.mem_cons.mp member with added | old
@@ -340,7 +340,7 @@ theorem unchecked_reuse_breaks_uniqueness (ledger : Ledger) (facts : Facts)
 
 /-- Mutation control: an admission that ignores the exact plan comparison mints an
     attempt for an altered requested plan, so the comparison is load-bearing. -/
-def admitIgnoringPlan (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
+def acceptIgnoringPlan (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
   if witness ∈ ledger.consumed then ledger
   else ⟨witness :: ledger.consumed,
     ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts,
@@ -349,12 +349,12 @@ def admitIgnoringPlan (ledger : Ledger) (facts : Facts) (witness checkpoint : Na
 theorem plan_blind_admission_mints_altered_plan (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (altered : facts.plan ≠ facts.requestedPlan) :
-    (admitIgnoringPlan ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
-  simp [admitIgnoringPlan, fresh]
+    (acceptIgnoringPlan ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
+  simp [acceptIgnoringPlan, fresh]
 
 /-- Mutation control: an admission that ignores checkpoint validity charges stale
     facts, so checkpoint validation is load-bearing. -/
-def admitIgnoringCheckpoint (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
+def acceptIgnoringCheckpoint (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
   if witness ∈ ledger.consumed then ledger
   else ⟨witness :: ledger.consumed,
     ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts,
@@ -363,35 +363,35 @@ def admitIgnoringCheckpoint (ledger : Ledger) (facts : Facts) (witness checkpoin
 theorem checkpoint_blind_admission_mints_stale_checkpoint (ledger : Ledger) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
     (stale : facts.checkpointValid = false) :
-    (admitIgnoringCheckpoint ledger facts witness checkpoint).attempts.length
+    (acceptIgnoringCheckpoint ledger facts witness checkpoint).attempts.length
       = ledger.attempts.length + 1 := by
-  simp [admitIgnoringCheckpoint, fresh]
+  simp [acceptIgnoringCheckpoint, fresh]
 
-/-- A finite serialized prefix: admission, then one start of the last admitted
+/-- A finite serialized prefix: admission, then one start of the last committed
     witness. Every step either preserves the ledger (refusal) or adds exactly one
     attempt (admission). -/
-def admitPrefix (ledger : Ledger) (requests : List Facts) (checkpoint : Nat) : Ledger :=
-  requests.foldl (fun state facts => admit state facts state.consumed.length checkpoint) ledger
+def acceptPrefix (ledger : Ledger) (requests : List Facts) (checkpoint : Nat) : Ledger :=
+  requests.foldl (fun state facts => accept state facts state.consumed.length checkpoint) ledger
 
 /-- Preservation over any finite serialized prefix: the consumed set length equals
     the attempt ledger length and every consumed witness names a registered
     attempt. -/
 theorem prefix_preserves_alignment (requests : List Facts) (checkpoint : Nat) :
     ∀ ledger : Ledger, WitnessAlignment ledger →
-      WitnessAlignment (admitPrefix ledger requests checkpoint) := by
+      WitnessAlignment (acceptPrefix ledger requests checkpoint) := by
   induction requests with
   | nil => intro ledger aligned; exact aligned
   | cons facts rest induction =>
       intro ledger aligned
-      unfold admitPrefix
+      unfold acceptPrefix
       rw [List.foldl_cons]
-      refine induction (admit ledger facts ledger.consumed.length checkpoint) ?_
+      refine induction (accept ledger facts ledger.consumed.length checkpoint) ?_
       by_cases present : ledger.consumed.length ∈ ledger.consumed
-      · simp [admit, present]
+      · simp [accept, present]
         exact aligned
       · by_cases admissible : FactsAdmissible facts = true
         · exact admission_preserves_alignment ledger facts _ checkpoint present admissible aligned
-        · simp [admit, present, admissible, refuse]
+        · simp [accept, present, admissible, refuse]
           exact aligned
 
 /-- Checkpoint renewal premise: a *fresh* snapshot that carries the prior charges
