@@ -35,7 +35,7 @@ regressions, unchanged deny-all/architecture gate and all thirteen
 qualified local correspondence and milestone acceptance remain separate.
 
 The separate active
-[WI-03 exact-u64 change](../.cairn/changes/wit-exact-u64-adapter/proposal.md)
+[WI-03 exact-u64 change](../.cairn/archive/2026-10-26-wit-exact-u64-adapter/proposal.md)
 adds a finite caller-selected checked `echo: u64 -> u64` adapter without
 weakening the default binding-stage refusal of implicit `u64` to Noble `I64`.
 Its [original-source receipt](../verification/wi03-final/acceptance.json)
@@ -925,7 +925,7 @@ whole-workspace boundary-controls failure was not rerun or promoted.
 
 ### S-CASE-04 recursive resource eligibility
 
-The [distinct native Cairn change](../.cairn/changes/safety-recursive-resource-eligibility/proposal.md)
+The [distinct native Cairn change](../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/proposal.md)
 syncs only S-RES-01 and S-RES-04. Its
 [source-bound acceptance](../verification/scase04/acceptance.json)
 (SHA-256 `16ba34b6672486271eaef6bc22e7fd86c476374fd4f46acb745e66c2fc87f8be`,
@@ -958,7 +958,7 @@ owner-law, resource, lowering and Rust-to-Lean proof remain open.
 
 ### S-CASE-06 host-authorized bounded filesystem read
 
-The [separate native Cairn change](../.cairn/changes/safety-authorized-fs-read/proposal.md)
+The [separate native Cairn change](../.cairn/archive/2026-10-26-safety-authorized-fs-read/proposal.md)
 selects a **single-entry logical Directory**, not a general OS-directory
 preopen: the invoker maps only the exact guest key `main.rs` to an independently
 vetted, preopened regular file. The production `noble component read-fs` route
@@ -1053,8 +1053,8 @@ checker reverses the newest evidence byte-for-byte and reconstructs the
 accepted S-CASE-04 prepromotion safety case without modifying historical
 receipts or runners.
 
-Both [S-CASE-04](../.cairn/changes/safety-recursive-resource-eligibility/proposal.md)
-and [S-CASE-06](../.cairn/changes/safety-authorized-fs-read/proposal.md)
+Both [S-CASE-04](../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/proposal.md)
+and [S-CASE-06](../.cairn/archive/2026-10-26-safety-authorized-fs-read/proposal.md)
 Cairn changes remain **ACTIVE**; the two full normative trees, including all
 substantive task prose, native safety/resource/evidence views, WIT, production
 source and frozen runner identities are bound. Only task checkbox completion
@@ -1072,7 +1072,7 @@ and Rust-to-Lean refinement remain open.
 
 ### S-CASE-08 callback-returned owner ingress
 
-The [active native Cairn change](../.cairn/changes/safety-callback-returned-owner/proposal.md)
+The [archived native Cairn change](../.cairn/archive/2026-10-26-safety-callback-returned-owner/proposal.md)
 selects the versioned `noble-test:callback-owner/bounded@1.0.0` WIT world
 and production `noble component callback-owner` host route. Before creating
 an owner or entering guest code, the host independently rebuilds the complete
