@@ -264,7 +264,7 @@ fn request_for(case: &LiveCase) -> Request {
             stack_out: vec![nominal_type(case.target)],
             allowed_effects: effects(&case.ceilings),
         },
-        limits: case.limits.clone(),
+        limits: case.limits,
     }
 }
 
