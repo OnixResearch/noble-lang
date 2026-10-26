@@ -614,6 +614,62 @@ The retained receipt is
 205 theorems, nine of them binary32, `clean_source: true`, axiom sets inside
 `propext`/`Classical.choice`/`Quot.sound`.
 
+## Ownership accounting oracle (issue #59)
+
+An independent Lean ownership-accounting oracle for the ordered stack / resource
+rules lives in `NobleFoundation/Ownership.lean`. It adapts the
+executable-checker-to-declarative-typing architecture rather than Move's
+ownership policy: an executable checker `run` and an independent declarative
+judgment `Accounts`, with `run_sound` proving that every checker acceptance has
+a judgment.
+
+The declared fragment is deliberately small: data and must-use resource
+payloads, recursive `wrapped` payloads, the words `dup`/`drop`/`swap`/`quote`,
+composition, a finite two-arm branch and the ordinary error-return alternative.
+A payload is duplicable exactly when it contains no resource at any depth
+(`duplicable_iff`), wrapping never changes that
+(`wrapDepth_preserves_eligibility`), a must-use resource as the constrained
+operand blocks every word (`resource_operand_blocks_every_word`), dropping and
+duplication therefore only move data obligations (`drop_consumes_one`,
+`dup_duplicates_one`), quoting retains rather than consumes
+(`quote_retains_one`), the opaque segment's must-use obligations are conserved
+by every admitted program (`segment_conserved`), a two-arm branch accounts for
+the same obligations on both arms (`branch_accounts_both_arms`), and an ordinary
+error return is admitted only with no outstanding operand
+(`fail_requires_empty_operands`). Eighteen theorems in total, all inventoried.
+
+The retained receipt is
+[`verification/foundation/receipts/e7cc0099/`](../../verification/foundation/receipts/e7cc0099/foundation-check.json):
+252 theorems, eighteen of them ownership, `clean_source: true`, axiom sets
+inside `propext`/`Classical.choice`/`Quot.sound`.
+
+The comparison is finite and deliberately narrow:
+[`verification/ownership/differential.json`](../../verification/ownership/differential.json)
+records 104 independent cases generated from the model, of which 15 accepted and
+6 rejected cases are driven through the actual acceptance machine
+(`noble_kernel::acceptance::check`) over the unary `dup`/`drop` fragment, and 83
+are model-only. A test-local shadow checker agrees with every expectation and
+each of seven declared mutations (duplicating or releasing a must-use resource,
+ignoring swap eligibility, consuming a quoted operand, ignoring branch
+accounting, permitting an error return with an outstanding operand) is caught by
+at least one retained expectation.
+
+Open, and deliberately not closed by this model:
+
+- correspondence between `crates/noble-kernel/src/acceptance` and the model: a
+  handwritten comparison, not an extraction or refinement proof;
+- retain-in-place production analogues beyond the unary fragment: the production
+  quotation constructor wraps its operand into a program value, and the
+  two-operand swap value-slot ordering is not exposed as an operand-stack order
+  by the acceptance machine, so those cases stay model-only;
+- the production rejection category of a resource payload can be a stack-join
+  failure rather than eligibility; the lane asserts agreement of the accounting
+  decision and reports the split;
+- OWN-PO-2 (scope escape) and any future scoped-borrow syntax, package
+  retention/reclamation and the host-ledger OWN-PO-4..7 obligations;
+- host resource release: no admitted decision in this fragment releases a native
+  object, and no runtime claim follows for an unimplemented profile.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |
