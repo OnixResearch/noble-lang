@@ -124,3 +124,77 @@ fn editor_four_variants_and_hostile_transport() -> Result<(), Box<dyn std::error
     }
     Ok(())
 }
+
+// Analysis failures are reported as structured data: source stage and category
+// stay distinct from the editor operation stage, and the bounded editor node
+// path replaces the English message as the machine-facing address. No span is
+// ever presented as a `.noble`-file or caller-JSON offset.
+#[test]
+fn editor_failures_preserve_category_and_bounded_node_paths(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let temporary = std::env::temp_dir();
+    let (code, report) = invoke(
+        &temporary,
+        "analyze",
+        r#"{"format":1,"nodes":[{"kind":"word","value":"1 2 +"}]}"#,
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(report.contains("\"stage\":\"analysis\""), "{report}");
+    assert!(report.contains("\"failure\":{"), "{report}");
+    assert!(report.contains("\"category\":\"invalid\""), "{report}");
+    assert!(report.contains("\"source_stage\":\"parse\""), "{report}");
+    assert!(report.contains("\"kind\":\"generated\""), "{report}");
+    assert!(!report.contains(".noble"), "{report}");
+    let mapped = report.contains("\"node_path_status\":\"mapped\"");
+    let unmapped = report.contains("\"node_path_status\":\"unmapped\"");
+    assert!(mapped || unmapped, "{report}");
+    assert_eq!(
+        report.contains("\"node_path\":null"),
+        unmapped,
+        "an unmapped failure must not claim a node path: {report}"
+    );
+
+    // A hole-free refusal addresses the node it came from; the single hole of
+    // this candidate is node 0.
+    let (code, report) = invoke(
+        &temporary,
+        "admit",
+        r#"{"format":1,"nodes":[{"kind":"hole"}]}"#,
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(
+        report.contains("\"source_stage\":\"acceptance\""),
+        "{report}"
+    );
+    assert!(report.contains("\"category\":\"invalid\""), "{report}");
+    assert!(
+        report.contains("\"node_path_status\":\"mapped\""),
+        "{report}"
+    );
+    assert!(report.contains("\"node_path\":[0]"), "{report}");
+
+    // A budget refusal stays an exhaustion rather than collapsing into a
+    // generic rejection.
+    // A byte-budget refusal is a transport refusal, not an analysis outcome:
+    // it must not borrow an analysis category or claim an accepted program.
+    let node = r#"{"kind":"integer","value":1}"#;
+    let mut wide = std::string::String::from(node);
+    for _ in 1..17_000 {
+        wide.push(',');
+        wide.push_str(node);
+    }
+    let (code, report) = invoke(
+        &temporary,
+        "analyze",
+        &std::format!(r#"{{"format":1,"nodes":[{wide}]}}"#),
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(report.contains("\"stage\":\"transport\""), "{report}");
+    assert!(!report.contains("\"failure\":{"), "{report}");
+    assert!(!report.contains("\"category\":"), "{report}");
+    assert!(
+        report.contains("\"accepted_program_created\":false"),
+        "{report}"
+    );
+    Ok(())
+}

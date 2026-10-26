@@ -79,6 +79,20 @@ pub enum DiagnosticKind {
     Internal,
 }
 
+impl DiagnosticKind {
+    /// The stable machine-facing category of a diagnostic. Clients key on this
+    /// rather than on the English message, and it never conflates a budget
+    /// refusal with an invalid input.
+    pub const fn category(self) -> &'static str {
+        match self {
+            Self::Invalid => "invalid",
+            Self::Unsupported => "unsupported",
+            Self::Exhausted => "exhausted",
+            Self::Internal => "internal",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Diagnostic {
     pub kind: DiagnosticKind,

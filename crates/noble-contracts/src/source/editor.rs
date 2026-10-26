@@ -46,6 +46,10 @@ struct Builder {
     tree: super::Tree,
     source: Vec<u8>,
     holes: usize,
+    /// One entry per generated node: its synthetic span and the bounded editor
+    /// path that produced it. Paths are indices into the editor node tree, so
+    /// they are stable within one input and never claim to be source offsets.
+    paths: Vec<(crate::Span, Vec<u32>)>,
 }
 
 /// Owned build state: each step consumes and returns it, so no caller-owned
@@ -81,15 +85,26 @@ impl Emitter {
         struct Frame<'a> {
             nodes: &'a [Node],
             next: usize,
+            index: u32,
             start: u32,
             depth: u32,
             value_start: usize,
+        }
+        // The first frame is the node list itself rather than an editor node, so
+        // an editor path is the per-level node indexes below it.
+        fn ancestors(frames: &[Frame<'_>]) -> Vec<u32> {
+            let mut path = Vec::with_capacity(frames.len());
+            for frame in frames.iter().skip(1) {
+                path.push(frame.index);
+            }
+            path
         }
         let span = self.builder.tree.span;
         attempt!(self.meter.depth(0, span));
         let mut frames = alloc::vec![Frame {
             nodes,
             next: 0,
+            index: 0,
             start: 0,
             depth: 0,
             value_start: 0,
@@ -103,18 +118,22 @@ impl Emitter {
                 let Some(frame) = frames.pop() else {
                     return Err(crate::internal(span));
                 };
+                let mut quotation_path = ancestors(frames.as_slice());
+                quotation_path.push(frame.index);
                 let Some(parent) = frames.last_mut() else {
                     return Ok((self, values));
                 };
                 self = attempt!(self.append(b"]"));
                 let id = attempt!(crate::index(self.builder.tree.nodes.len(), span));
                 let end = attempt!(crate::index(self.builder.source.len(), span));
+                let quotation_span = crate::Span {
+                    start: frame.start,
+                    end,
+                };
+                self.builder.paths.push((quotation_span, quotation_path));
                 self.builder.tree.nodes.push(super::Node {
                     kind: super::Kind::Quotation(values.split_off(frame.value_start)),
-                    span: crate::Span {
-                        start: frame.start,
-                        end,
-                    },
+                    span: quotation_span,
                 });
                 let Some(parent_items) = values.len().checked_sub(parent.value_start) else {
                     return Err(crate::internal(span));
@@ -170,12 +189,14 @@ impl Emitter {
                     super::Kind::EditorHole
                 }
                 Node::Quotation(children) => {
-                    self = attempt!(self.append(b"["));
                     let depth = frame.depth.saturating_add(1);
+                    let index = frame.next.saturating_sub(1) as u32;
+                    self = attempt!(self.append(b"["));
                     attempt!(self.meter.depth(depth, span));
                     frames.push(Frame {
                         nodes: children,
                         next: 0,
+                        index,
                         start,
                         depth,
                         value_start: values.len(),
@@ -202,6 +223,12 @@ impl Emitter {
                     "editor node limit exceeded",
                 ));
             }
+            let own_index = frame.next.saturating_sub(1) as u32;
+            let mut leaf_path = ancestors(frames.as_slice());
+            leaf_path.push(own_index);
+            self.builder
+                .paths
+                .push((crate::Span { start, end }, leaf_path));
             self.builder.tree.nodes.push(super::Node {
                 kind,
                 span: crate::Span { start, end },
@@ -236,6 +263,7 @@ impl Candidate {
                 },
                 source: Vec::new(),
                 holes: 0,
+                paths: Vec::new(),
             },
             meter: crate::Meter::new(limits),
         };
@@ -246,6 +274,20 @@ impl Candidate {
         builder.tree.span.end = attempt!(crate::index(builder.source.len(), span)
             .map_err(|error| super::Error::at(super::Stage::Parse, error)));
         Ok((builder, meter))
+    }
+
+    /// The generated-span to editor-node-path index for this candidate.
+    ///
+    /// These spans are offsets into the synthetic editor source, never into a
+    /// `.noble` file or the caller's JSON. The mapping is rebuilt from the same
+    /// emitter that produced the source, so a span the emitter never produced
+    /// has no path and is reported as unmapped rather than guessed.
+    pub fn editor_paths(
+        &self,
+        limits: crate::Limits,
+    ) -> Result<Vec<(crate::Span, Vec<u32>)>, super::Error> {
+        let (builder, _) = attempt!(self.build(limits));
+        Ok(builder.paths)
     }
 
     /// Only a hole-free tree can become source bytes. The ordinary source
@@ -362,6 +404,44 @@ mod tests {
     use super::*;
 
     #[test]
+    fn generated_spans_map_to_bounded_editor_node_paths() {
+        let direct = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![Node::Integer(1), Node::Hole, Node::Word(String::from("+"))],
+        };
+        let paths = direct
+            .editor_paths(crate::Limits::default())
+            .expect("direct mapping");
+        assert_eq!(paths.len(), 3);
+        assert_eq!(paths[0].1, alloc::vec![0]);
+        assert_eq!(paths[1].1, alloc::vec![1]);
+        assert_eq!(paths[2].1, alloc::vec![2]);
+
+        let nested = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![Node::Quotation(alloc::vec![
+                Node::Hole,
+                Node::Quotation(alloc::vec![Node::Hole]),
+            ])],
+        };
+        let paths = nested
+            .editor_paths(crate::Limits::default())
+            .expect("nested mapping");
+        assert_eq!(paths.len(), 4);
+        // Entries are recorded when each node is emitted, so a quotation appears
+        // after its children. Repeated indices name the outer and inner
+        // quotation levels rather than collapsing them.
+        assert_eq!(paths[0].1, alloc::vec![0, 0]);
+        assert_eq!(paths[1].1, alloc::vec![0, 1, 0]);
+        assert_eq!(paths[2].1, alloc::vec![0, 1]);
+        assert_eq!(paths[3].1, alloc::vec![0]);
+        for (span, path) in &paths {
+            assert!(span.start <= span.end);
+            assert!(!path.is_empty());
+        }
+    }
+
+    #[test]
     fn deep_quotation_emission_respects_configured_depth_without_call_stack_recursion() {
         let mut node = Node::Integer(7);
         for _ in 0..512 {
@@ -387,5 +467,8 @@ mod tests {
         let error = candidate.admitted_source(limits).expect_err("depth limit");
         assert_eq!(error.stage(), super::super::Stage::Parse);
         assert_eq!(error.diagnostic().message, "frontend depth limit exceeded");
+        // A budget refusal stays an exhaustion rather than collapsing into a
+        // generic invalid input.
+        assert_eq!(error.diagnostic().kind.category(), "exhausted");
     }
 }

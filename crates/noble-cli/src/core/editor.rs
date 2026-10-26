@@ -146,16 +146,104 @@ fn decode(bytes: &[u8]) -> Result<Candidate, String> {
     })
 }
 
-fn refusal(stage: &str, message: &str) -> Json {
+const SOURCE_STAGE: [&str; 5] = ["parse", "resolve", "link", "check", "acceptance"];
+
+fn span_json(span: noble_contracts::Span) -> Json {
     object([
-        ("schema", string("noble-editor-report/v1")),
-        ("stage", string(stage)),
-        ("outcome", string("reject")),
-        ("diagnostic", string(message)),
-        ("accepted_program_created", Json::Bool(false)),
-        ("guest_requests", Json::Number(0)),
-        ("protected_operations", Json::Number(0)),
+        ("kind", string("generated")),
+        ("start", Json::Number(u64::from(span.start))),
+        ("end", Json::Number(u64::from(span.end))),
     ])
+}
+
+/// One structured analysis failure, with the bounded editor node path the
+/// synthetic span came from. A span the emitter never produced is reported as
+/// unmapped rather than guessed, and no span is ever presented as a
+/// `.noble`-file or caller-JSON offset.
+fn failure_object(
+    error: &noble_contracts::source::Error,
+    paths: &[(noble_contracts::Span, Vec<u32>)],
+) -> Json {
+    let diagnostic = error.diagnostic();
+    let source_stage = SOURCE_STAGE[error.stage() as usize];
+    let lookup = paths
+        .iter()
+        .find(|(span, _)| *span == diagnostic.span)
+        .map(|(_, path)| path.clone());
+    let node_path = match &lookup {
+        Some(path) => {
+            let indices: Vec<Json> = path
+                .iter()
+                .map(|index| Json::Number(u64::from(*index)))
+                .collect();
+            Json::Array(indices)
+        }
+        None => Json::Null,
+    };
+    let join = match diagnostic.join() {
+        Some(join) => object([
+            ("failing_word", string(&join.word)),
+            ("expected_stack", string(&join.expected_stack)),
+            ("actual_stack", string(&join.actual_stack)),
+            ("constraint", string(join.constraint)),
+            (
+                "value_origin",
+                match join.value_origin {
+                    Some(origin) => span_json(origin),
+                    None => Json::Null,
+                },
+            ),
+        ]),
+        None => Json::Null,
+    };
+    object([
+        ("source_stage", string(source_stage)),
+        ("category", string(diagnostic.kind.category())),
+        ("span", span_json(diagnostic.span)),
+        (
+            "node_path_status",
+            string(if lookup.is_some() {
+                "mapped"
+            } else {
+                "unmapped"
+            }),
+        ),
+        ("node_path", node_path),
+        ("join", join),
+    ])
+}
+
+/// One editor refusal: the operation stage, the English diagnostic kept for
+/// compatibility, and the structured source-analysis failure when the
+/// candidate reached the contracts layer.
+struct Refusal {
+    stage: &'static str,
+    message: String,
+    failure: Option<Json>,
+}
+
+fn rejection(stage: &'static str, message: &str) -> Refusal {
+    Refusal {
+        stage,
+        message: message.into(),
+        failure: None,
+    }
+}
+
+fn refusal_report(refusal: Refusal) -> Json {
+    let mut fields: std::vec::Vec<(&'static str, Json)> = std::vec![
+        ("schema", string("noble-editor-report/v1")),
+        ("stage", string(refusal.stage)),
+        ("outcome", string("reject")),
+        ("diagnostic", string(&refusal.message)),
+    ];
+    if let Some(failure) = refusal.failure {
+        fields.push(("failure", failure));
+    }
+    fields.push(("accepted_program_created", Json::Bool(false)));
+    fields.push(("guest_requests", Json::Number(0)));
+    fields.push(("protected_operations", Json::Number(0)));
+    Json::Object(fields)
 }
 
 fn print(report: Json) {
@@ -166,31 +254,31 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = run_inner(arguments);
     match result {
         Ok(code) => std::process::ExitCode::from(code),
-        Err((stage, error)) => {
-            print(refusal(stage, &error));
+        Err(refusal) => {
+            print(refusal_report(refusal));
             std::process::ExitCode::from(2)
         }
     }
 }
 
-fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, (&'static str, String)> {
+fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, Refusal> {
     if !matches!(arguments.len(), 3 | 5) {
-        return Err((
+        return Err(rejection(
             "transport",
-            "usage: noble editor analyze|admit JSON_FILE [--emit NEW_DIR]".into(),
+            "usage: noble editor analyze|admit JSON_FILE [--emit NEW_DIR]",
         ));
     }
     let Some(action) = arguments.get(1).and_then(|value| value.to_str()) else {
-        return Err(("transport", "editor action is not text".into()));
+        return Err(rejection("transport", "editor action is not text"));
     };
     if !matches!(action, "analyze" | "admit") {
-        return Err((
+        return Err(rejection(
             "transport",
-            "usage: noble editor analyze|admit JSON_FILE".into(),
+            "usage: noble editor analyze|admit JSON_FILE",
         ));
     }
     let Some(path) = arguments.get(2) else {
-        return Err(("transport", "editor input file is missing".into()));
+        return Err(rejection("transport", "editor input file is missing"));
     };
     let emit = if arguments.len() == 5
         && action == "admit"
@@ -200,20 +288,30 @@ fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, (&'static str, Stri
     } else if arguments.len() == 3 {
         None
     } else {
-        return Err((
+        return Err(rejection(
             "transport",
-            "--emit NEW_DIR is only valid for editor admission".into(),
+            "--emit NEW_DIR is only valid for editor admission",
         ));
     };
     let bytes =
         super::framing::read_file(&std::path::PathBuf::from(path), super::SOURCE_LIMITS.bytes)
-            .map_err(|error| ("transport", error.message))?;
-    let candidate = decode(&bytes).map_err(|error| ("transport", error))?;
+            .map_err(|error| rejection("transport", &error.message))?;
+    let candidate = decode(&bytes).map_err(|error| rejection("transport", &error))?;
     if action == "analyze" {
         let session = noble_contracts::source::Session::new();
-        let analysis = session
-            .analyze_editor(&candidate, &[], super::SOURCE_LIMITS)
-            .map_err(|error| ("analysis", error.diagnostic().message.clone()))?;
+        let analysis = match session.analyze_editor(&candidate, &[], super::SOURCE_LIMITS) {
+            Ok(analysis) => analysis,
+            Err(error) => {
+                let paths = candidate
+                    .editor_paths(super::SOURCE_LIMITS)
+                    .unwrap_or_default();
+                return Err(Refusal {
+                    stage: "analysis",
+                    message: error.diagnostic().message.clone(),
+                    failure: Some(failure_object(&error, paths.as_slice())),
+                });
+            }
+        };
         let holes = analysis
             .holes
             .iter()
@@ -270,9 +368,19 @@ fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, (&'static str, Stri
         ]));
         return Ok(0);
     }
-    let source = candidate
-        .admitted_source(super::SOURCE_LIMITS)
-        .map_err(|error| ("admission", error.diagnostic().message.clone()))?;
+    let source = match candidate.admitted_source(super::SOURCE_LIMITS) {
+        Ok(source) => source,
+        Err(error) => {
+            let paths = candidate
+                .editor_paths(super::SOURCE_LIMITS)
+                .unwrap_or_default();
+            return Err(Refusal {
+                stage: "admission",
+                message: error.diagnostic().message.clone(),
+                failure: Some(failure_object(&error, paths.as_slice())),
+            });
+        }
+    };
     let mut core_args = vec![
         std::ffi::OsString::from("run"),
         std::ffi::OsString::from("editor-generated.noble"),
@@ -281,16 +389,16 @@ fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, (&'static str, Stri
         core_args.push(std::ffi::OsString::from("--emit"));
         core_args.push(path.as_os_str().to_os_string());
     }
-    let options =
-        super::arguments::parse(&core_args).map_err(|error| ("transport", error.message))?;
+    let options = super::arguments::parse(&core_args)
+        .map_err(|error| rejection("transport", &error.message))?;
     if let Some(path) = &emit {
-        std::fs::create_dir(path).map_err(|error| ("transport", error.to_string()))?;
+        std::fs::create_dir(path).map_err(|error| rejection("transport", &error.to_string()))?;
     }
     let mut session =
-        super::Session::new(&options).map_err(|error| ("admission", error.message))?;
+        super::Session::new(&options).map_err(|error| rejection("admission", &error.message))?;
     let report = session
         .submit(&source, &options)
-        .map_err(|error| ("admission", error.message))?;
-    super::output::print(&report).map_err(|error| ("transport", error.message))?;
+        .map_err(|error| rejection("admission", &error.message))?;
+    super::output::print(&report).map_err(|error| rejection("transport", &error.message))?;
     Ok(report.exit())
 }
