@@ -31,17 +31,17 @@
    },
    "evidence": [
     {
-     "claim": "The finite-effects/v1 reference semantics was executed against 1,314 bounded cases at source revision 1b14b844e05368c11be05f9089425996ba998c5d; the greatest-assignment argument is recorded in design.md and the bounded corpus confirms it, so the proof field stays open.",
+     "claim": "The finite-effects/v1 reference semantics was executed against 1,314 bounded cases at source revision 0570b72a0a504ab10aa682eae896225944febebc; the greatest-assignment argument is recorded in design.md and the bounded corpus confirms it, so the proof field stays open.",
      "subject": "FXORACLE-CASE-SEM-01",
      "revision": "0.1.0-draft.5",
      "kind": "test",
      "result": "passed",
-     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "source_revision": "sha256:0570b72a0a504ab10aa682eae896225944febebc",
      "configuration": {
       "profile": "Finite-Effects-v1",
       "case_id": "FXORACLE-CASE-SEM-01",
       "receipt": "../../verification/effect-oracle/receipt.json",
-      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+      "receipt_sha256": "18afd7a317bea7f89b0957271bed9a0ede6b36e2f81c7400ceeec5e5b85e37f7"
      }
     }
    ]
@@ -80,12 +80,12 @@
      "revision": "0.1.0-draft.5",
      "kind": "test",
      "result": "passed",
-     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "source_revision": "sha256:0570b72a0a504ab10aa682eae896225944febebc",
      "configuration": {
       "profile": "Finite-Effects-v1",
       "case_id": "FXORACLE-CASE-DIFF-01",
       "receipt": "../../verification/effect-oracle/receipt.json",
-      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+      "receipt_sha256": "18afd7a317bea7f89b0957271bed9a0ede6b36e2f81c7400ceeec5e5b85e37f7"
      }
     }
    ]
@@ -127,12 +127,12 @@
      "revision": "0.1.0-draft.5",
      "kind": "test",
      "result": "passed",
-     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "source_revision": "sha256:0570b72a0a504ab10aa682eae896225944febebc",
      "configuration": {
       "profile": "Finite-Effects-v1",
       "case_id": "FXORACLE-CASE-CORPUS-01",
       "receipt": "../../verification/effect-oracle/receipt.json",
-      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+      "receipt_sha256": "18afd7a317bea7f89b0957271bed9a0ede6b36e2f81c7400ceeec5e5b85e37f7"
      }
     }
    ]
@@ -166,12 +166,12 @@
      "revision": "0.1.0-draft.5",
      "kind": "test",
      "result": "passed",
-     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "source_revision": "sha256:0570b72a0a504ab10aa682eae896225944febebc",
      "configuration": {
       "profile": "Finite-Effects-v1",
       "case_id": "FXORACLE-CASE-CTRL-01",
       "receipt": "../../verification/effect-oracle/receipt.json",
-      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+      "receipt_sha256": "18afd7a317bea7f89b0957271bed9a0ede6b36e2f81c7400ceeec5e5b85e37f7"
      }
     }
    ]

@@ -1,7 +1,7 @@
 {
   "schema": "noble-effect-oracle-receipt/v1",
   "oracle": "finite-effects/v1",
-  "source_revision": "1b14b844e05368c11be05f9089425996ba998c5d",
+  "source_revision": "0570b72a0a504ab10aa682eae896225944febebc",
   "dirty": false,
   "command": "nix develop --command cargo test -p noble-contracts --lib inference::effects::oracle -- --nocapture",
   "toolchain": {
@@ -42,5 +42,5 @@
     "conservative-valid-goal"
   ],
   "minimized_discrepancies": [],
-  "elapsed_ms": 11347
+  "elapsed_ms": 101514
 }
