@@ -9,6 +9,7 @@ import NobleFoundation.Binary32
 import NobleFoundation.LiveDispatch
 import NobleFoundation.Ownership
 import NobleFoundation.ServiceWire
+import NobleFoundation.AuthorityLedger
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice
