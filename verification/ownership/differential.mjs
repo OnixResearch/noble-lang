@@ -52,7 +52,7 @@ if (dirt.length > 0) {
   throw new Error(`differential receipt requires a clean tracked tree: ${dirt.join('; ')}`);
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
-const host = run(['uname', '-srm'], root).trim();
+const host = run(['uname', '-srm'], root).trim().split('\n')[0];
 const laneRun = run(['bash', '-c', command], root);
 for (const lane of lanes) {
   if (!new RegExp(`test ${lane} \\.\.\. ok`).test(laneRun)) {
