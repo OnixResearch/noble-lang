@@ -404,7 +404,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generated_spans_map_to_bounded_editor_node_paths() {
+    fn generated_spans_map_to_bounded_node_paths() {
         let direct = Candidate {
             format: FORMAT,
             nodes: alloc::vec![Node::Integer(1), Node::Hole, Node::Word(String::from("+"))],

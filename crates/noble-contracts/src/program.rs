@@ -332,7 +332,7 @@ fn check_with_owner(
                 problem.message.push_str(&required);
                 problem.message.push_str("; actual ");
                 problem.message.push_str(&actual);
-                problem = problem.with_join(crate::JoinDiagnostic {
+                problem = problem.join_with(crate::JoinDiagnostic {
                     word,
                     expected_stack: required,
                     actual_stack: actual,

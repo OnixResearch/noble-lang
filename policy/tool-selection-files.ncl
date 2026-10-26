@@ -161,7 +161,7 @@
   "crates/noble-cli/src/core/worker.rs" = "042d08182615bafa1bda1f4c9e036eea69ac42296aade1283ebd07434ba6474c",
   "crates/noble-cli/src/core/worker/assembly.rs" = "980f3bfc5cf9cb433bc8e2a3c8dfa79499425c3ed8bced80e846a4a02558ff31",
   "crates/noble-cli/tests/smoke.rs" = "ec8aedd20cfb6b09d1b857607f4be92afbfd7f44e80d058aecf3369696194f80",
-  "crates/noble-contracts/src/source.rs" = "46ad111797ac7d0a24c0dcde42b3dcb694e1b543dcfd0c4d0d686bdf7bbb8d7d",
+  "crates/noble-contracts/src/source.rs" = "feddee13f3fc6de88094273c035faa2c611735c212bb028409ccffb80c0e27f0",
   "crates/noble-contracts/src/source/declared/state.rs" = "ce239b439a43355fff100942f11c3ee70ee90f6f1222663eb8544d382c8dab10",
   "crates/noble-contracts/src/source/declared/state/namespace.rs" = "e59d075c782156fd0217bb8e76186599a78ed589105c39a17667cc538462b4f8",
   "crates/noble-contracts/src/source/declared/state/prepare.rs" = "0809f7a70bed303ce175e23ddf32701dae05bbe63f85fda129f71ad3895a37b3",

@@ -69,6 +69,36 @@ The CLI writes JSON reports. A successful run reports `normal`, with one
 `I64` value of `"42"` on the output stack. Stack order is bottom-to-top;
 integers are encoded as decimal strings.
 
+### Editor transport reports
+
+`noble editor analyze|admit JSON_FILE` accepts only a versioned structured node
+tree, never `.noble` syntax. Success reports exit `0`; every refusal reports
+exit `2` and exactly one JSON document.
+
+The report schema stays `noble-editor-report/v1`. Clients read `stage`
+(`analysis`, `admission` or `transport`), `outcome` (`constraints`, `normal` or
+`reject`) and, on refusals, exit `2`. Refusals that reached the source
+contracts also carry a `failure` object, and clients SHOULD ignore unknown
+fields so further additive detail keeps `v1`:
+
+- `source_stage` (`parse`, `resolve`, `link`, `check` or `acceptance`) and
+  `category` (`invalid`, `unsupported`, `exhausted` or `internal`) are the
+  source checker's own classification, distinct from the editor operation
+  `stage`. Clients need not parse the `diagnostic` prose.
+- `span` always has `"kind": "generated"`: it is an offset into the synthetic
+  editor source, never an original `.noble`-file or caller-JSON position.
+- `node_path` is the bounded editor node path that produced the span, and
+  `node_path_status` says whether the mapping is `mapped` or `unmapped`. An
+  unmapped failure reports `"node_path": null` instead of guessing.
+- `join`, when available, carries `failing_word`, `expected_stack`,
+  `actual_stack`, `constraint` and `value_origin` (a generated span, or `null`
+  when the origin is unavailable).
+
+Transport and schema refusals stay `transport` and carry no `failure` object,
+so malformed JSON is never reclassified as an analysis outcome. Editor
+analysis creates no accepted program, executes no guest body and performs no
+protected operation.
+
 The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 [its configuration](crates/noble-cli/src/core/runtime/config.json). Missing or
 incompatible tools produce an explicit refusal. The development shell alone

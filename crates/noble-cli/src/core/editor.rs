@@ -402,3 +402,122 @@ fn run_inner(arguments: &[std::ffi::OsString]) -> Result<u8, Refusal> {
     super::output::print(&report).map_err(|error| rejection("transport", &error.message))?;
     Ok(report.exit())
 }
+
+// Controlled injection: no safe deterministic editor fixture produces an
+// unsupported, exhausted or internal analysis outcome, so the reporting
+// boundary is exercised directly with captured diagnostics.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use noble_contracts::source::Stage;
+
+    fn field<'a>(json: &'a Json, key: &str) -> &'a Json {
+        let Json::Object(entries) = json else {
+            panic!("expected an object");
+        };
+        entries
+            .iter()
+            .find(|(name, _)| *name == key)
+            .map(|(_, value)| value)
+            .unwrap_or_else(|| panic!("missing field {key}"))
+    }
+
+    fn text(json: &Json) -> &str {
+        let Json::String(text) = json else {
+            panic!("expected a string");
+        };
+        text
+    }
+
+    fn failure(kind: noble_contracts::DiagnosticKind) -> Json {
+        let error = noble_contracts::source::Error::reported(
+            Stage::Check,
+            noble_contracts::Diagnostic::new(
+                kind,
+                noble_contracts::Span { start: 3, end: 7 },
+                "diagnostic prose that clients must not parse",
+            ),
+        );
+        failure_object(&error, &[])
+    }
+
+    #[test]
+    fn every_analysis_category_survives_the_reporting_boundary() {
+        let categories = [
+            (noble_contracts::DiagnosticKind::Invalid, "invalid"),
+            (noble_contracts::DiagnosticKind::Unsupported, "unsupported"),
+            (noble_contracts::DiagnosticKind::Exhausted, "exhausted"),
+            (noble_contracts::DiagnosticKind::Internal, "internal"),
+        ];
+        let mut seen = std::vec::Vec::new();
+        for (kind, category) in categories {
+            let report = failure(kind);
+            assert_eq!(text(field(&report, "category")), category);
+            assert_eq!(text(field(&report, "source_stage")), "check");
+            assert_eq!(text(field(&report, "node_path_status")), "unmapped");
+            assert_eq!(text(field(field(&report, "span"), "kind")), "generated");
+            // The structured failure carries no prose for clients to parse.
+            assert!(matches!(report, Json::Object(ref entries)
+                if !entries.iter().any(|(name, _)| *name == "diagnostic")));
+            assert!(!seen.contains(&category));
+            seen.push(category);
+        }
+        assert_eq!(seen.len(), 4);
+    }
+
+    #[test]
+    fn join_provenance_and_origin_survive_the_reporting_boundary() {
+        let word = "héllo☃ héllo☃";
+        let span = noble_contracts::Span { start: 11, end: 20 };
+        let diagnostic = noble_contracts::Diagnostic::new(
+            noble_contracts::DiagnosticKind::Invalid,
+            noble_contracts::Span { start: 0, end: 20 },
+            "two words did not join",
+        )
+        .join_with(noble_contracts::JoinDiagnostic {
+            word: word.into(),
+            expected_stack: "?stack I64 I64".into(),
+            actual_stack: "?stack Text".into(),
+            constraint: "joining:stack",
+            value_origin: Some(span),
+        });
+        let error = noble_contracts::source::Error::reported(Stage::Acceptance, diagnostic);
+        let report = failure_object(
+            &error,
+            &[(noble_contracts::Span { start: 0, end: 20 }, std::vec![0, 1])],
+        );
+        assert_eq!(text(field(&report, "source_stage")), "acceptance");
+        assert_eq!(text(field(&report, "node_path_status")), "mapped");
+        let join = field(&report, "join");
+        assert_eq!(text(field(join, "failing_word")), word);
+        assert_eq!(text(field(join, "expected_stack")), "?stack I64 I64");
+        assert_eq!(text(field(join, "actual_stack")), "?stack Text");
+        assert_eq!(text(field(join, "constraint")), "joining:stack");
+        assert!(matches!(
+            field(field(join, "value_origin"), "start"),
+            Json::Number(11)
+        ));
+
+        // An unavailable origin is reported as unavailable rather than guessed.
+        let diagnostic = noble_contracts::Diagnostic::new(
+            noble_contracts::DiagnosticKind::Invalid,
+            noble_contracts::Span { start: 0, end: 9 },
+            "no origin",
+        )
+        .join_with(noble_contracts::JoinDiagnostic {
+            word: "dup dup".into(),
+            expected_stack: "?stack".into(),
+            actual_stack: "?stack".into(),
+            constraint: "joining:stack",
+            value_origin: None,
+        });
+        let error = noble_contracts::source::Error::reported(Stage::Resolve, diagnostic);
+        let report = failure_object(&error, &[]);
+        let join = field(&report, "join");
+        assert!(matches!(field(join, "value_origin"), Json::Null));
+        assert_eq!(text(field(&report, "node_path_status")), "unmapped");
+        let Json::Null = field(&report, "node_path") else {
+            panic!("an unmapped failure must not claim a node path");
+        };
+    }
+}

@@ -145,14 +145,13 @@ fn editor_failures_preserve_category_and_bounded_node_paths(
     assert!(report.contains("\"source_stage\":\"parse\""), "{report}");
     assert!(report.contains("\"kind\":\"generated\""), "{report}");
     assert!(!report.contains(".noble"), "{report}");
-    let mapped = report.contains("\"node_path_status\":\"mapped\"");
-    let unmapped = report.contains("\"node_path_status\":\"unmapped\"");
-    assert!(mapped || unmapped, "{report}");
-    assert_eq!(
-        report.contains("\"node_path\":null"),
-        unmapped,
-        "an unmapped failure must not claim a node path: {report}"
+    // A parse refusal is located at the whole generated tree, so it has no
+    // single node path and must say so rather than guess one.
+    assert!(
+        report.contains("\"node_path_status\":\"unmapped\""),
+        "{report}"
     );
+    assert!(report.contains("\"node_path\":null"), "{report}");
 
     // A hole-free refusal addresses the node it came from; the single hole of
     // this candidate is node 0.

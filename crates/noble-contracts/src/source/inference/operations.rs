@@ -417,7 +417,7 @@ fn contextualize(
         error.span = caller;
     }
     error.message = message;
-    error.with_join(crate::JoinDiagnostic {
+    error.join_with(crate::JoinDiagnostic {
         word,
         expected_stack,
         actual_stack,

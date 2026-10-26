@@ -71,6 +71,7 @@ pub struct Span {
     pub end: u32,
 }
 
+#[octet::sealed_enum]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DiagnosticKind {
     Invalid,
@@ -120,7 +121,10 @@ impl Diagnostic {
         self.ordinary_typing.as_deref()
     }
 
-    pub(crate) fn new(kind: DiagnosticKind, span: Span, message: &str) -> Self {
+    /// Construct a diagnostic for a reporting adapter or a controlled test.
+    /// Producers inside this crate keep the dedicated constructors, so a
+    /// produced diagnostic always carries the span of the node it came from.
+    pub fn new(kind: DiagnosticKind, span: Span, message: &str) -> Self {
         Self {
             kind,
             span,
@@ -130,7 +134,11 @@ impl Diagnostic {
         }
     }
 
-    pub(crate) fn with_join(mut self, join: JoinDiagnostic) -> Self {
+    /// Attach join provenance to a diagnostic that a reporting adapter carries
+    /// across a boundary. Producers keep using the internal constructors; this
+    /// exists so transports can re-emit a captured diagnostic without
+    /// reconstructing it from prose.
+    pub fn join_with(mut self, join: JoinDiagnostic) -> Self {
         self.join = Some(alloc::boxed::Box::new(join));
         self
     }

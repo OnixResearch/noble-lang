@@ -93,6 +93,12 @@ impl Error {
     pub const fn diagnostic(&self) -> &crate::Diagnostic {
         &self.diagnostic
     }
+    /// Wrap a captured diagnostic with its original source stage so a transport
+    /// re-emits it rather than flattening it to prose.
+    pub const fn reported(stage: Stage, diagnostic: crate::Diagnostic) -> Self {
+        Self { stage, diagnostic }
+    }
+
     const fn at(stage: Stage, diagnostic: crate::Diagnostic) -> Self {
         Self { stage, diagnostic }
     }
