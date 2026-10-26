@@ -1574,6 +1574,156 @@
       "phase": 5,
       "role": "live-dispatch",
       "claim": "a finite abnormal prefix keeps the committed guest events"
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.chargedFor_cons_same",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Charging a matching checkpoint entry adds its cost to that checkpoint total."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.chargedFor_cons_other",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Charging a different checkpoint leaves this checkpoint total unchanged."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.initial_alignment",
+      "phase": 1,
+      "role": "initialization",
+      "claim": "The initial ledger has aligned consumed witnesses and registered attempts."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.initial_uniqueness",
+      "phase": 1,
+      "role": "initialization",
+      "claim": "The initial ledger consumes no witness twice."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.initial_within_quota",
+      "phase": 1,
+      "role": "initialization",
+      "claim": "The initial ledger charges nothing, so it is within any snapshot."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.initial_started_at_most_once",
+      "phase": 1,
+      "role": "initialization",
+      "claim": "The initial ledger registers no attempt, so at-most-once starts holds."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.refused_request_preserves_ledger",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "A refusal leaves the ledger definitionally unchanged; only separate counters move."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.denied_admission_preserves_ledger",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "Accepting an already consumed witness refuses and preserves the ledger."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_consumes_exactly_one_witness",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "A fresh witness under admissible facts adds exactly that witness to the consumed set."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_registers_one_attempt",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "The same step registers exactly one not-yet-started attempt."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.altered_plan_cannot_mint",
+      "phase": 1,
+      "role": "control",
+      "claim": "An altered requested plan fails exact equality and mints nothing."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.stale_facts_cannot_mint",
+      "phase": 1,
+      "role": "control",
+      "claim": "Revoked, invalid-checkpoint, stale-policy or unauthenticated facts mint nothing."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_is_consumption",
+      "phase": 1,
+      "role": "representation",
+      "claim": "A fresh admissible request reaches the consuming transition."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_preserves_alignment",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "One admission keeps consumed witnesses aligned with registered attempts."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_preserves_uniqueness",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "One admission keeps no witness consumed twice."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_preserves_quota",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "One admission keeps checkpoint charges within the supplied snapshot when the admitted cost fits."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.started_attempt_cannot_start_again",
+      "phase": 1,
+      "role": "control",
+      "claim": "Starting an already started attempt is refused rather than counted twice."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.initial_attempts_charged",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "Ledger invariant of the checkpoint-scoped authority model."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admission_preserves_attempts_charged",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "One admission keeps every registered attempt cost present in the checkpoint charges."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.omitted_quota_charge_breaks_accounting",
+      "phase": 1,
+      "role": "control",
+      "claim": "A consuming transition that forgets the quota charge breaks the attempt/charge accounting invariant."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.unchecked_reuse_breaks_uniqueness",
+      "phase": 1,
+      "role": "control",
+      "claim": "A transition that skips freshness consumes a witness twice and breaks uniqueness."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.plan_blind_admission_mints_altered_plan",
+      "phase": 1,
+      "role": "control",
+      "claim": "An admission ignoring exact plan equality mints an altered-plan attempt."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.checkpoint_blind_admission_mints_stale_checkpoint",
+      "phase": 1,
+      "role": "control",
+      "claim": "An admission ignoring checkpoint validity registers an attempt on stale facts."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.prefix_preserves_alignment",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "Ledger invariant of the checkpoint-scoped authority model."
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.renewed_snapshot_keeps_quota",
+      "phase": 1,
+      "role": "premise",
+      "claim": "A renewal snapshot that carries prior charges forward keeps the quota bound; host replenishment is a premise."
     }
   ]
 }
