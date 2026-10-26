@@ -1,3 +1,16 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::excessive_file_length,
+    tigerstyle::assertion_density,
+    tigerstyle::no_unwrap,
+    tigerstyle::no_panic,
+    tigerstyle::missing_const_fn,
+    tigerstyle::non_trait_imports,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the dataspace and ServiceRef harnesses construct boundary scenarios, parse a generated case file and assert one decision per case, so dense assertions, fully-named crate paths and checked unwraps are the readable form."
+)]
 //! The closed ServiceRef wire format compared against the independent
 //! expectations in `verification/service-ref/cases.txt` (issue #48).
 //!
