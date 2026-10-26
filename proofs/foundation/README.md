@@ -767,7 +767,10 @@ which is what makes the descending order finalize an adjoint before its own step
 model: the example graph's well-formedness, denotation `16`, tangent `8` and its
 Mathlib derivative statement; a direction on an unused input slot contributing
 nothing; and a non-unit seed surviving until a consumer contributes. Twelve
-inventoried theorems. Receipt: see the retained foundation check for this tree.
+inventoried theorems; receipt
+[`verification/foundation/receipts/5dd0dd5d1/`](../../verification/foundation/receipts/5dd0dd5d1/foundation-check.json)
+(314 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
