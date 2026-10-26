@@ -1,0 +1,47 @@
+{
+  "schema": "noble-ownership-differential/v1",
+  "assertion": "the unary ownership-accounting fragment of the production acceptance machine agrees with every independent expectation generated from the Lean model on this host and target; the shadow checker agrees with every expectation and each declared mutation of it is caught. Not a refinement proof.",
+  "source_commit": "c942e9b3c8143ee3d1e7b3d193b38f457567f8a7\nrunning auto-GC to free 41305767936 bytes\nwaiting for the big garbage collector lock...\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'",
+  "source_tree": "19983f6b24e9945d9e685bf1f7f8fbade597dcd3\nrunning auto-GC to free 41306554368 bytes\nwaiting for the big garbage collector lock...\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0\nrunning auto-GC to free 41311010816 bytes\nwaiting for the big garbage collector lock...",
+  "host": "Linux 6.18.54 x86_64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-ownership-target CARGO_INCREMENTAL=0 cargo test -p noble-kernel --test acceptance ownership -- --nocapture",
+  "lanes": [
+    "ownership::ownership_corpus_matches_the_acceptance_machine",
+    "ownership::ownership_corpus_detects_each_declared_checker_mutation"
+  ],
+  "case_file": "verification/ownership/cases.txt",
+  "case_file_sha256": "2d4ddd791b6123b93f8f290f987b98dc98d34ae3ab3864f44ee29d673c183b2c",
+  "reference_file": "verification/ownership/cases.mjs",
+  "reference_file_sha256": "f05e6304c0be08b544461b056d5fcd4378b53ba0eb757cf279aced8abfc65652",
+  "model_file": "proofs/foundation/NobleFoundation/Ownership.lean",
+  "model_file_sha256": "1d1a3cc1b59531735e6da3a4562e1660ebc9afe45c45647b725e52d5d4200486",
+  "lane_file": "crates/noble-kernel/tests/acceptance/ownership.rs",
+  "lane_file_sha256": "4511df21cc09d55e02223bd0d6f0ddb2648ca90e99d602e9dd038aa41ed40e6c",
+  "coverage": {
+    "cases": 104,
+    "accepted": 15,
+    "rejected": 6,
+    "model_only": 83,
+    "rejection_categories": {
+      "eligibility": 6,
+      "stack_join": 0,
+      "other": 0
+    },
+    "summary": "ownership-differential cases=104 accepted=15 rejected=6 model-only=83 categories=eligibility:6 stack-join:0 other:0",
+    "mutations": "ownership-mutations cases=104 caught=[None=0 ResourceOperandDuplicated=5 ResourceOperandReleased=4 SwapIgnoresEligibility=3 QuoteConsumesOperand=12 BranchPicksThenArm=1 FailAllowsOutstandingOperand=1]"
+  },
+  "correspondence": {
+    "route": "handwritten Lean reference compared against the production acceptance machine and a test-local shadow checker by this differential lane",
+    "model_theorems": "the eighteen NobleFoundation.Ownership theorems in proofs/foundation/receipts/e7cc0099/foundation-check.json",
+    "production_analogue": "dup and drop sequences over nameable operand payloads, driven through noble_kernel::acceptance::check",
+    "open_edge": "no extraction or refinement proof relates crates/noble-kernel/src/acceptance to the Lean model; the differential is finite evidence on one host and target"
+  },
+  "claims": [
+    "Tested-implementation evidence that the unary fragment of the acceptance machine agrees with a specification written down independently of it.",
+    "Model-only cases (wrapped payloads, the two-operand swap slot ordering, the production quotation constructor, two-arm accounting and the ordinary error return) are named and counted, never reported as executable production controls.",
+    "The production rejection category of a resource payload can be a stack-join failure rather than eligibility; the lane asserts the agreement of the accounting decision and reports the category split.",
+    "The model-to-Rust edge stays open: no refinement proof, no cross-platform claim, no claim about release of native objects."
+  ]
+}
