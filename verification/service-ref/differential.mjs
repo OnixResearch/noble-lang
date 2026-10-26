@@ -18,10 +18,13 @@ const output = outIndex >= 0 ? path.resolve(args[outIndex + 1]) : path.join(root
 
 const caseFile = 'verification/service-ref/cases.txt';
 const referenceFile = 'verification/service-ref/cases.mjs';
-const laneFile = 'crates/noble-kernel/tests/service_ref_differential.rs';
-const lanes = ['every_independent_expectation_matches_the_codec', 'round_trip_through_the_rust_encoder_still_holds'];
+const laneFile = 'crates/noble-kernel/tests/m7-dataspace.rs';
+const lanes = [
+  'service_ref_differential::service_ref_differential_matches_the_codec',
+  'service_ref_differential::service_ref_round_trip_through_the_rust_encoder_holds',
+];
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-service-ref-target CARGO_INCREMENTAL=0 ' +
-  'cargo test -p noble-kernel --test service_ref_differential -- --nocapture';
+  'cargo test -p noble-kernel --test m7-dataspace service_ref_differential -- --nocapture';
 
 function run(argv, cwd) {
   const result = spawnSync('nix', ['develop', '--command', ...argv], {
