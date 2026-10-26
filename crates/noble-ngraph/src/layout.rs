@@ -67,16 +67,22 @@ pub enum Refusal {
     LayerOrder,
     /// The declared failure-suffix minima are not the graph's own prefix minima.
     FailSuffixMismatch,
+    /// The declared layer ranges do not cover exactly the graph's instruction nodes.
+    LayerCoverage,
 }
 
 fn guard(op: &Op) -> bool {
     matches!(op, Op::Guard { .. })
 }
 
-fn i64_bits(lit: Literal) -> Option<u64> {
+/// The exact bits a constant node occupies in its register, for every literal
+/// kind the compiler packs: `I64` as wrapping unsigned bits, `Bool` as 0 or 1 and
+/// `F32` as its binary32 bits.
+fn constant_bits(lit: Literal) -> u64 {
     match lit {
-        Literal::I64(value) => Some(value.cast_unsigned()),
-        Literal::Bool(_) | Literal::F32(_) => None,
+        Literal::I64(value) => value.cast_unsigned(),
+        Literal::Bool(value) => u64::from(value),
+        Literal::F32(bits) => u64::from(bits),
     }
 }
 
@@ -140,7 +146,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
             .iter()
             .enumerate()
             .filter(|(index, node)| {
-                matches!(node.op, Op::Const(lit) if i64_bits(lit) == Some(bits))
+                matches!(node.op, Op::Const(lit) if constant_bits(lit) == bits)
                     && layout.reg.get(*index).copied() == Some(register)
             })
             .count();
@@ -166,7 +172,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     let constant_nodes = graph
         .nodes
         .iter()
-        .filter(|node| matches!(node.op, Op::Const(lit) if i64_bits(lit).is_some()))
+        .filter(|node| matches!(node.op, Op::Const(_)))
         .count();
     if declared_constants != constant_nodes {
         return Err(Refusal::ConstantTable);
@@ -203,6 +209,19 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     }
     if minima != layout.fail_suffix_min {
         return Err(Refusal::FailSuffixMismatch);
+    }
+    // Every node that produces an instruction is packed exactly once: slots and
+    // constants are table entries, not instructions.
+    let instructions = graph
+        .nodes
+        .iter()
+        .filter(|node| !matches!(node.op, Op::Input(_) | Op::Param(_) | Op::Const(_)))
+        .count();
+    let Ok(instructions) = u32::try_from(instructions) else {
+        return Err(Refusal::LayerCoverage);
+    };
+    if layout.layers.last().map(|&(_, end)| end) != Some(instructions) {
+        return Err(Refusal::LayerCoverage);
     }
     let declared_slots = layout.slot_regs.len();
     let input_nodes = graph
