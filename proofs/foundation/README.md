@@ -933,6 +933,46 @@ Open, and deliberately not closed:
 - budgets, trap/refusal/quota classification, cancellation, guards, `F32`,
   resources, live slots, recursion and dynamic calls are outside the slice.
 
+### Witness encoder correspondence and first-match search (issue #56, phase 2)
+
+`NobleFoundation/SymbolicSolver.lean` closes two of phase 1's open points for the
+*witness representation itself*, and one of them only there.
+
+Proved: the encoder records exactly one pair per declared slot
+(`encode_length`); every declared slot decodes back to the candidate's own exact
+bits (`decode_encode_replays`), so the encoder cannot smuggle a value the
+candidate did not carry; and a corrupted witness decodes to the corrupted bits and
+not to the candidate's (`corrupted_witness_shifts_bits`). The search is now
+first-match: a failed search establishes agreement on the declared universe only
+(`firstIndex_none_agrees`), and a reported index comes with a **structural
+decomposition** — the universe is a prefix of candidates that do not refute, of
+exactly the reported length, followed by a candidate that does
+(`firstIndex_some_decomposes`) — so the reported witness can never be a later,
+avoidable one, and no positional lookup into the candidate list is needed to say
+so. Fixtures rerun through the search: the same-sum pair finds nothing
+(`same_sum_first_none`), the subtraction pair and the input-dependent pair are both
+refuted at the earliest declared candidate (`subtraction_first_index_zero`,
+`input_first_index_zero`, `input_zero_candidate_refutes`), and encoded witnesses
+still decide the verdict while a corrupted one does not (`encoded_witness_decides`).
+Ten further inventoried theorems (22 for the #56 slice); receipt
+[`verification/foundation/receipts/144434256/`](../../verification/foundation/receipts/144434256/foundation-check.json)
+(367 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
+
+Still open, and explicitly not claimed here:
+
+- the encoder correspondence above is for the **witness representation**; it does
+  **not** relate `extract/symbolic.rs`, a serialized formula or the B2 I64 harness
+  to the model, so there is still no concrete/symbolic simulation theorem and no
+  binding of actual endpoint bytes;
+- the earliest-witness statement is structural over a *declared* universe: it says
+  nothing about assigning cost, formula size, solver time or memory, and the
+  universe is still the two declared candidates, not a generated search space;
+- no replay through the actual emitted Wasm of either endpoint, no certificate or
+  external UNSAT reasoning, and no timeout/UNKNOWN budget;
+- guards, input facts, `F32`, resources, live slots, recursion and dynamic calls
+  remain outside the slice.
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained
