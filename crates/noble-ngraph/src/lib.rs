@@ -66,6 +66,7 @@
 
 extern crate alloc;
 
+pub mod cert;
 pub mod check;
 pub mod compiled;
 pub mod diag;
