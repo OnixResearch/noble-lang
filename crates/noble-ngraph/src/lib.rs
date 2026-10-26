@@ -77,6 +77,7 @@ pub mod format;
 pub mod grad;
 pub mod identity;
 pub mod ir;
+pub mod layout;
 pub mod prng;
 pub mod sem;
 pub mod snapshot;

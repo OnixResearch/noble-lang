@@ -246,6 +246,23 @@ impl Compiled {
         }
     }
 
+    /// The declared packed layout, for independent validation. It carries no
+    /// instruction bodies: a validator may only check the register map, the
+    /// constant and slot tables, the register count and the build key against the
+    /// graph, and the instruction stream stays the scheduler's own business.
+    #[must_use]
+    pub fn packed_layout(&self) -> crate::layout::PackedLayout {
+        crate::layout::PackedLayout {
+            revision: alloc::string::String::from(crate::layout::LAYOUT_REVISION),
+            compiler_revision: alloc::string::String::from(COMPILER_REVISION),
+            regs: self.regs,
+            reg: self.reg.clone(),
+            consts: self.consts.clone(),
+            slot_regs: self.slot_regs.clone(),
+            layout_key: self.layout_key,
+        }
+    }
+
     /// `PackedLayoutKey = H(GraphLogicalId ‖ compiler rev ‖ layout options)`
     /// (a build key, not semantic identity).
     #[must_use]
