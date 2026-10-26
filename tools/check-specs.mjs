@@ -119,6 +119,7 @@ const ROUTES = {
   VC: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
   DX: ['semantic-test', 'policy-test', 'review'],
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
+  FXORACLE: ['experiment-test', 'correspondence', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.

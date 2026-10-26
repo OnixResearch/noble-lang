@@ -801,3 +801,75 @@ Numeric graph assurance claims MUST separately state reference agreement, finite
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
 <!-- cairn:scenario-links:end -->
+
+### Requirement: FXORACLE-SEM-01
+r[FXORACLE-SEM-01]
+
+**FXORACLE-SEM-01.**
+
+An opt-in `finite-effects/v1` reference semantics MUST interpret the existing finite effect-constraint grammar without changing production acceptance, using an independently represented finite universe, exact set union, explicit equations and rigid binders. For a concrete system it MUST define the assignment `A(const S) = S`, `A(union a b) = A(a) ∪ A(b)` and `A(a) = A(b)` for every equation, MUST interpret the solver's result as the unique greatest assignment, and MUST determine satisfiability by bounded exhaustive enumeration. For the rigid lane it MUST separate a rigid valuation from a hole assignment, MUST establish rigid consistency first, MUST report `goals-valid` only when every enumerated rigid valuation and equation-satisfying hole assignment satisfies every rigid goal, and MUST NOT report an inconsistent system as a vacuously valid implication. Cyclic or otherwise unrepresentable systems MUST be reported `unsupported-reference` with no semantic verdict, and a production refusal of a semantically valid goal MUST be characterized as a conservative refusal unless the case is in the explicitly declared symbolically exact subfamily.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: FXORACLE-CASE-SEM-01 for FXORACLE-SEM-01
+
+- GIVEN the `Finite-Effects-v1` profile and every field of `input` in [FXORACLE-CASE-SEM-01](../../../specs/conformance/effect-oracle-cases.json)
+- WHEN the `experiment-test` procedure for case `FXORACLE-CASE-SEM-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `FXORACLE-CASE-SEM-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: FXORACLE-DIFF-01
+r[FXORACLE-DIFF-01]
+
+**FXORACLE-DIFF-01.**
+
+A finite-model differential over the effect solver MUST compare the complete final bound table of every case against an independent reference representation that uses neither production narrowing, symbolic propagation nor the `EffSet` helpers, and MUST drive production only through its public effect constructors. The outcome matrix MUST distinguish agreement to accept, agreement to refuse, conservative refusal, wrong assignment and unsound acceptance as separate classes; a class with any wrong assignment or unsound acceptance MUST fail the lane rather than being reported as agreement. Exhaustion under a low work budget MUST be reported as exhaustion, not as a verdict. The differential is finite evidence and MUST NOT be reported as a solver correctness theorem.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: FXORACLE-CASE-DIFF-01 for FXORACLE-DIFF-01
+
+- GIVEN the `Finite-Effects-v1` profile and every field of `input` in [FXORACLE-CASE-DIFF-01](../../../specs/conformance/effect-oracle-cases.json)
+- WHEN the `correspondence` procedure for case `FXORACLE-CASE-DIFF-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `FXORACLE-CASE-DIFF-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: FXORACLE-CORPUS-01
+r[FXORACLE-CORPUS-01]
+
+**FXORACLE-CORPUS-01.**
+
+A deterministic bounded corpus for the finite-model differential MUST declare its caps on universe size, holes, nodes, equations, rigid binders and goals, MUST record a reproducible seed schedule, and MUST retain one receipt naming the source revision, toolchain, bounds, seeds, outcome counts, conservative refusals, minimized discrepancies and elapsed work. Cases outside the declared caps MUST be reported unsupported or exhausted rather than silently widened.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: FXORACLE-CASE-CORPUS-01 for FXORACLE-CORPUS-01
+
+- GIVEN the `Finite-Effects-v1` profile and every field of `input` in [FXORACLE-CASE-CORPUS-01](../../../specs/conformance/effect-oracle-cases.json)
+- WHEN the `experiment-test` procedure for case `FXORACLE-CASE-CORPUS-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `FXORACLE-CASE-CORPUS-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: FXORACLE-CTRL-01
+r[FXORACLE-CTRL-01]
+
+**FXORACLE-CTRL-01.**
+
+Every declared test-local faulty variant of the finite-model oracle MUST be caught by a named deterministic case, and the lane MUST fail when a declared variant escapes its expected class. A variant must never be reported as production evidence, and the controls MUST remain test-local: no production behaviour is selected by them.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: FXORACLE-CASE-CTRL-01 for FXORACLE-CTRL-01
+
+- GIVEN the `Finite-Effects-v1` profile and every field of `input` in [FXORACLE-CASE-CTRL-01](../../../specs/conformance/effect-oracle-cases.json)
+- WHEN the `experiment-test` procedure for case `FXORACLE-CASE-CTRL-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `FXORACLE-CASE-CTRL-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

@@ -1,0 +1,180 @@
+{
+ "schema_version": 1,
+ "revision": "0.1.0-draft.5",
+ "origin": "effect-oracle",
+ "cases": [
+  {
+   "id": "FXORACLE-CASE-SEM-01",
+   "profile": "Finite-Effects-v1",
+   "kind": "experiment-test",
+   "requirements": [
+    "FXORACLE-SEM-01"
+   ],
+   "input": {
+    "harness": "finite-effects/v1 reference semantics",
+    "fragment": "acyclic union graph, in-range references, bounded universe/holes/nodes/equations/rigid binders/goals",
+    "receipt": "../../verification/effect-oracle/receipt.json"
+   },
+   "expected": {
+    "stage": "reference-semantics",
+    "concrete_assignment": "A(const S)=S, A(union a b)=A(a) u A(b), equation-equal assignments satisfy every equation",
+    "greatest_assignment_unique": true,
+    "rigid_order": "rigid valuation enumerated first, then hole assignment",
+    "unsupported": "unsupported-reference carries no semantic verdict",
+    "conservative_refusal_characterization": true
+   },
+   "state": {
+    "implementation": "implemented",
+    "execution": "passed",
+    "proof": "open",
+    "trust": "explicit"
+   },
+   "evidence": [
+    {
+     "claim": "The finite-effects/v1 reference semantics was executed against 1,314 bounded cases at source revision 1b14b844e05368c11be05f9089425996ba998c5d; the greatest-assignment argument is recorded in design.md and the bounded corpus confirms it, so the proof field stays open.",
+     "subject": "FXORACLE-CASE-SEM-01",
+     "revision": "0.1.0-draft.5",
+     "kind": "test",
+     "result": "passed",
+     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "configuration": {
+      "profile": "Finite-Effects-v1",
+      "case_id": "FXORACLE-CASE-SEM-01",
+      "receipt": "../../verification/effect-oracle/receipt.json",
+      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FXORACLE-CASE-DIFF-01",
+   "profile": "Finite-Effects-v1",
+   "kind": "correspondence",
+   "requirements": [
+    "FXORACLE-DIFF-01"
+   ],
+   "input": {
+    "harness": "independent finite-model oracle compared with the production effect solver",
+    "comparison": "complete final bound table per case",
+    "receipt": "../../verification/effect-oracle/receipt.json"
+   },
+   "expected": {
+    "stage": "differential",
+    "agree_accept": 1227,
+    "agree_refuse": 86,
+    "conservative_refusal": 1,
+    "wrong_assignment": 0,
+    "unsound_accept": 0,
+    "minimized_discrepancies": []
+   },
+   "state": {
+    "implementation": "implemented",
+    "execution": "passed",
+    "proof": "open",
+    "trust": "explicit"
+   },
+   "evidence": [
+    {
+     "claim": "1,314 cases ran with 1,227 agree-accepts, 86 agree-refusals, exactly one conservative refusal, no wrong assignment and no unsound acceptance; no minimized discrepancy arose. This is finite differential evidence, not a solver correctness theorem.",
+     "subject": "FXORACLE-CASE-DIFF-01",
+     "revision": "0.1.0-draft.5",
+     "kind": "test",
+     "result": "passed",
+     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "configuration": {
+      "profile": "Finite-Effects-v1",
+      "case_id": "FXORACLE-CASE-DIFF-01",
+      "receipt": "../../verification/effect-oracle/receipt.json",
+      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FXORACLE-CASE-CORPUS-01",
+   "profile": "Finite-Effects-v1",
+   "kind": "experiment-test",
+   "requirements": [
+    "FXORACLE-CORPUS-01"
+   ],
+   "input": {
+    "harness": "deterministic bounded corpus",
+    "receipt": "../../verification/effect-oracle/receipt.json"
+   },
+   "expected": {
+    "stage": "corpus",
+    "cases": 1314,
+    "exhaustive_cases": 1300,
+    "seeds": 12,
+    "bounds": {
+     "universe_bits_max": 3,
+     "holes_max": 3,
+     "nodes_max": 12,
+     "assignments_max": 1048576
+    },
+    "low_work_exhausted": 1
+   },
+   "state": {
+    "implementation": "implemented",
+    "execution": "passed",
+    "proof": "open",
+    "trust": "explicit"
+   },
+   "evidence": [
+    {
+     "claim": "The bounded deterministic corpus ran 1,314 cases (1,300 exhaustive) over 12 SplitMix64-seeded schedules with the declared bounds; the one low-work exhaustion is preserved rather than reported as a verdict.",
+     "subject": "FXORACLE-CASE-CORPUS-01",
+     "revision": "0.1.0-draft.5",
+     "kind": "test",
+     "result": "passed",
+     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "configuration": {
+      "profile": "Finite-Effects-v1",
+      "case_id": "FXORACLE-CASE-CORPUS-01",
+      "receipt": "../../verification/effect-oracle/receipt.json",
+      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FXORACLE-CASE-CTRL-01",
+   "profile": "Finite-Effects-v1",
+   "kind": "experiment-test",
+   "requirements": [
+    "FXORACLE-CTRL-01"
+   ],
+   "input": {
+    "harness": "test-local faulty variants M1-M6",
+    "receipt": "../../verification/effect-oracle/receipt.json"
+   },
+   "expected": {
+    "stage": "controls",
+    "mutants_caught": 6,
+    "escaped_variants": 0
+   },
+   "state": {
+    "implementation": "implemented",
+    "execution": "passed",
+    "proof": "open",
+    "trust": "explicit"
+   },
+   "evidence": [
+    {
+     "claim": "All six declared test-local variants were caught by their named deterministic case and none escaped; the lane fails if a variant escapes.",
+     "subject": "FXORACLE-CASE-CTRL-01",
+     "revision": "0.1.0-draft.5",
+     "kind": "test",
+     "result": "passed",
+     "source_revision": "sha256:1b14b844e05368c11be05f9089425996ba998c5d",
+     "configuration": {
+      "profile": "Finite-Effects-v1",
+      "case_id": "FXORACLE-CASE-CTRL-01",
+      "receipt": "../../verification/effect-oracle/receipt.json",
+      "receipt_sha256": "aa956dc0b8a8600ae400802fe48785ad1bad1201a78a6b454fb105b44209b0fe"
+     }
+    }
+   ]
+  }
+ ]
+}
