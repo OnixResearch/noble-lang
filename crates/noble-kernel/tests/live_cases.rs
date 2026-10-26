@@ -53,8 +53,8 @@ use noble_kernel::acceptance::check;
 use noble_kernel::contracts::{environment, Env, NominalDecl, LIVE_DISPATCH, TEST_EMIT};
 use noble_kernel::types::{EffId, EffSet, NominalShape, NominalTypeId, ResourceKind, Ty};
 use noble_kernel::untrusted::{
-    Candidate, Constraint, Expected, Limits, Node, NodeId, Outcome, Request,
-    CANDIDATE_FORMAT, SEMANTIC_REVISION,
+    Candidate, Constraint, Expected, Limits, Node, NodeId, Outcome, Request, CANDIDATE_FORMAT,
+    SEMANTIC_REVISION,
 };
 
 /// A nominal identity this case declares and the host independently registers.
@@ -244,8 +244,7 @@ fn live_ref_formals(ty: &Ty) -> Vec<Ty> {
     }
 }
 
-impl LiveCase {
-}
+impl LiveCase {}
 
 fn environment_for(case: &LiveCase) -> Env {
     let mut env = environment().expect("bootstrap").enable_live_slots();
@@ -338,7 +337,11 @@ fn positive_case(nesting: u32, repeated_reborrow: bool) -> LiveCase {
 }
 
 fn outcome_of(case: &LiveCase) -> Outcome {
-    check(&environment_for(case), &request_for(case), &candidate_for(case))
+    check(
+        &environment_for(case),
+        &request_for(case),
+        &candidate_for(case),
+    )
 }
 
 fn admitted(case: &LiveCase) -> bool {
@@ -369,9 +372,9 @@ fn expected_constraint(premise: Premise) -> Constraint {
         }
         Premise::Target => Constraint::InvalidType,
         Premise::ForwardedMismatch => Constraint::BorrowProvenance,
-        Premise::SiteIdentity => Constraint::MalformedReference(noble_kernel::untrusted::NodeId(
-            SITE_IDENTITY_MUTATION,
-        )),
+        Premise::SiteIdentity => {
+            Constraint::MalformedReference(noble_kernel::untrusted::NodeId(SITE_IDENTITY_MUTATION))
+        }
     }
 }
 
@@ -485,7 +488,11 @@ fn one_premise_mutations_are_attributed_and_refused() {
             Premise::SiteIdentity => case.sites[0] = SITE_IDENTITY_MUTATION,
         }
         let verdict = model(&case);
-        assert_ne!(verdict, ModelVerdict::Admits, "{premise:?} was not modelled as refusal");
+        assert_ne!(
+            verdict,
+            ModelVerdict::Admits,
+            "{premise:?} was not modelled as refusal"
+        );
         match outcome_of(&case) {
             Outcome::Invalid(problem) => assert_eq!(
                 problem.constraint,
@@ -509,10 +516,9 @@ fn boundary_families_stay_distinct_from_agreement() {
     boundary.limits.stack_height = 1;
     assert_eq!(model(&boundary), ModelVerdict::Admits);
     match outcome_of(&boundary) {
-        Outcome::Exhausted(limit) => assert_eq!(
-            limit,
-            noble_kernel::untrusted::LimitKind::StackHeight
-        ),
+        Outcome::Exhausted(limit) => {
+            assert_eq!(limit, noble_kernel::untrusted::LimitKind::StackHeight)
+        }
         other => panic!("declared stack-height exhaustion must stay its own class: {other:?}"),
     }
 }
@@ -541,5 +547,8 @@ fn replay_from_a_seed_is_deterministic_and_bounded() {
         let repeated = (replay >> 62) & 1 == 1;
         second.push(summary(&positive_case(nesting, repeated)));
     }
-    assert_eq!(first, second, "the same seed must retain the same full case");
+    assert_eq!(
+        first, second,
+        "the same seed must retain the same full case"
+    );
 }
