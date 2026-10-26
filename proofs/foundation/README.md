@@ -670,6 +670,44 @@ Open, and deliberately not closed by this model:
 - host resource release: no admitted decision in this fragment releases a native
   object, and no runtime claim follows for an unimplemented profile.
 
+## Root-pinned live-dispatch model (issue #47)
+
+`NobleFoundation/LiveDispatch.lean` models the live-reference design's
+root-pinning claim with bounded roots, ordered entry maps, single-slot
+global-epoch publications and an ordered guest trace whose control events
+(denials, publication notices) stay separately identifiable.
+
+Proved: one publication changes only its own slot's selection
+(`publish_preserves_other_keys`, `publish_selects_the_published_generation`);
+pinning stores the map and nothing replaces it in place (`pin_is_immutable`);
+a root's selections come from its own pinned map
+(`root_selections_use_pinned_map`) and equal a frozen-entry-map reference for the
+same request sequence (`frozen_entry_map_reference_agrees`); two separate
+single-slot publications are not one atomic replacement, so a root pinned
+between them selects a mixed pair (`mixed_map_selects_old_and_new`); a denied
+dispatch produces no guest event (`denied_dispatch_produces_no_guest_event`,
+`authorized_dispatch_selects_the_pinned_generation`); and a finite abnormal
+prefix keeps its committed events (`abnormal_prefix_preserves_committed_events`).
+Nine theorems, all inventoried; receipt
+[`verification/foundation/receipts/d2aa7a382/`](../../verification/foundation/receipts/d2aa7a382/foundation-check.json)
+(261 theorems, `clean_source: true`, axiom sets inside the allow-list).
+
+Open, and deliberately not closed:
+
+- root-snapshot consistency is proved; *coordinated-version coherence* — that a
+  pinned map holds a behaviorally compatible set for one refactoring — is a
+  separate premise and is not proved here;
+- the interface-compatible two-version fixture and the broken
+  per-dispatch-current-map control that must expose the duplicate/omitted event
+  are Phase 2 work, bound to an existing supported observation rather than a new
+  host API;
+- no correspondence claim relates the model to
+  `crates/noble-cli/src/core/runtime/slot-registry.mjs`;
+- no event-count claim applies when a denied dispatch or effect stopped
+  execution before the event, and no rollback is implied by a committed prefix;
+- atomic multi-slot replacement, state/resource migration, new
+  contextual-effect inference, liveness and exactly-once effects are outside it.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |

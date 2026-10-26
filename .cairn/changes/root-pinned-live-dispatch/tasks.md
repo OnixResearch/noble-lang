@@ -1,0 +1,12 @@
+## Phase 1: Bounded model, proven properties and receipt
+
+- [x] [serial] Define bounded roots, ordered entry maps, single-slot global-epoch publications, guest-visible events and separately identifiable control events, with a frozen-entry-map reference for the same request sequence. r[VC-LIVE-01]
+- [x] [serial] Prove that a publication changes only its own slot's selection, that a root's selections come from its own pinned map, that execution equals the frozen-entry-map reference, that a fresh root pinned between two publications selects a mixed pair, that a denied dispatch produces no guest event, and that a finite abnormal prefix keeps committed events. r[VC-LIVE-01]
+- [x] [serial] Inventory the nine new theorems and retain the clean-source kernel check: `verification/foundation/receipts/d2aa7a382/` records 261 theorems, `clean_source: true` and axiom sets inside the allow-list. r[VC-LIVE-02]
+
+## Phase 2: Implementation fixture and adversarial controls (not selected in this phase)
+
+- [ ] [serial] Bind an interface-compatible two-version fixture (A-old/B-old invoking and emitting a distinguished event, A-new/B-new with the event moved into the callee) to an existing supported observation or trace in `crates/noble-cli/tests/live_slot_nested_roots.mjs`, rather than inventing a host API. r[VC-LIVE-03]
+- [ ] [serial] Check exactly one event for coherent all-old or all-new entry maps under successful authorized execution, interleaving publications at the existing checkpoints and requiring an already-pinned root to retain its map. r[VC-LIVE-03]
+- [ ] [serial] Add the deliberately broken per-dispatch-current-map control that exposes the duplicate or omitted event, and the separate sequential-publication control that records the mixed pair as the limit of the coherence premise rather than as a root-snapshot defect. r[VC-LIVE-03]
+- [ ] [serial] Include independent policy revocation and abnormal-prefix cases, reusing stale-CAS/ABA, old-root/new-root and last-pin-retention coverage, and retain source/model/artifact-bound receipts that keep model proof, implementation comparison and host correspondence distinct. r[VC-LIVE-02]
