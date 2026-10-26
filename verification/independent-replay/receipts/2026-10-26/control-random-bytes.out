@@ -1,0 +1,3 @@
+leanchecker found a problem in NobleFoundation.ReverseAD
+uncaught exception: failed to read file '/tmp/corrupt-libs/NobleFoundation/ReverseAD.olean', invalid header
+status=1
