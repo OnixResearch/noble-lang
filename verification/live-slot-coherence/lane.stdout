@@ -1,0 +1,1 @@
+{"leafFirstCounts":{"dispatches":1,"effects":1},"callerFirstCounts":{"dispatches":1,"effects":1},"pinnedEpoch":"2","refusedPublication":"stale-reject","freshRootCounts":{"dispatches":1,"effects":1},"halfPublishedOutcome":"execution-failed","halfPublishedRows":0,"halfPublishedSessionState":"terminated-after-guest-failure","omissionCounts":{"dispatches":1,"effects":0}}

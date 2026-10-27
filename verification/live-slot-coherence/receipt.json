@@ -1,0 +1,118 @@
+{
+  "schema": "noble-live-slot-coherence-receipt/v1",
+  "claim": "selected host correspondence for coherent entry maps; not a proof and not a promotion",
+  "model": {
+    "what": "kernel-checked model theorems about pinned entry maps and single publications",
+    "theorems": [
+      "NobleFoundation.LiveDispatch.publish_preserves_other_keys",
+      "NobleFoundation.LiveDispatch.publish_selects_the_published_generation",
+      "NobleFoundation.LiveDispatch.pin_is_immutable",
+      "NobleFoundation.LiveDispatch.root_selections_use_pinned_map",
+      "NobleFoundation.LiveDispatch.frozen_entry_map_reference_agrees",
+      "NobleFoundation.LiveDispatch.mixed_map_selects_old_and_new",
+      "NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event",
+      "NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation",
+      "NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events"
+    ],
+    "retained_receipt": {
+      "directory": "verification/foundation/receipts/d2aa7a382",
+      "theorem_count": 261,
+      "clean_source": true
+    },
+    "does_not_establish": "that the selected runtime behaves this way"
+  },
+  "implementation_comparison": {
+    "what": "measured counts the host lane asserts, as a behavioral comparison",
+    "lane": {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+      "sha256": "655753e3d7f84003ce06a56e4af03c04c649d4983a697ebb5180ede2ba282539"
+    },
+    "runner": {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.rs",
+      "sha256": "f09624b358f38e4aa6e6aef8535ed497ea043aa5ba02671854e3fc43b5930c19"
+    },
+    "helper": {
+      "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+      "sha256": "8f55ed81c5570a98789c9756fed345c707c19b38b60cb208cc9053cecf904046"
+    },
+    "observed": {
+      "leafFirstCounts": {
+        "dispatches": 1,
+        "effects": 1
+      },
+      "callerFirstCounts": {
+        "dispatches": 1,
+        "effects": 1
+      },
+      "pinnedEpoch": "2",
+      "refusedPublication": "stale-reject",
+      "freshRootCounts": {
+        "dispatches": 1,
+        "effects": 1
+      },
+      "halfPublishedOutcome": "execution-failed",
+      "halfPublishedRows": 0,
+      "halfPublishedSessionState": "terminated-after-guest-failure",
+      "omissionCounts": {
+        "dispatches": 1,
+        "effects": 0
+      }
+    },
+    "commands": [
+      {
+        "argv": [
+          "node",
+          "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+          "ABSOLUTE_PREBUILT_CLI"
+        ],
+        "status": 0
+      }
+    ],
+    "does_not_establish": "that the model theorems hold, or that any other authority shape behaves so"
+  },
+  "host_correspondence": {
+    "what": "the exact selected bytes and the sessions the measurements came from",
+    "binary": {
+      "path": "/var/tmp/noble-target/debug/noble",
+      "sha256": "2bbe9f62681c79e806f33311460a21adc95b23b0787e298cd76ef3cf448fac17"
+    },
+    "sessions": [
+      "coherent-leaf-first",
+      "coherent-caller-first",
+      "coherent-sequential",
+      "coherent-omission"
+    ],
+    "does_not_establish": "any claim about a differently built CLI or a different fixture"
+  },
+  "inherited_coverage": {
+    "what": "revocation, abnormal prefix, stale-CAS/ABA and retention coverage measured elsewhere",
+    "lanes": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_relocation_witness.mjs",
+        "sha256": "50be035b2f21f8c44fbcd17afab674640560d7fdb99b948976e49c2036a5eb42",
+        "what": "independent policy revocation (denied effect) and the abnormal dispatch prefix"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_cas_policy.mjs",
+        "sha256": "9a6de66b46cfbfa7c940b1b7e831084851cec31285d6ec9321f54a291ba45432",
+        "what": "stale-CAS/ABA publication controls"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_selected_retention.mjs",
+        "sha256": "02473d4f84f5d30b0e7e3f82d0f86c71d0c53c2bc782a5359f4a5600af631fdd",
+        "what": "old-root/new-root retention"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+        "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
+        "what": "LSLOT-02 nested and transitive roots"
+      }
+    ],
+    "does_not_establish": "that those lanes were re-run here; only their bytes are bound"
+  },
+  "non_claims": [
+    "the deliberately broken per-dispatch-current-map duplicate control is not constructible from this authority shape",
+    "republishing a slot twice in one session always stale-rejects, so version pairs come from separate sessions",
+    "no conformance case (LSLOT-*) is promoted by this receipt"
+  ]
+}
