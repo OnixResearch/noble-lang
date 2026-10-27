@@ -10,8 +10,11 @@
 
 ## Phase 2: Model and fixtures (future, not started)
 
-- [ ] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+- [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
 - [ ] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
+  Partial: duality is proved definitional and involutive, one step is proved to advance exactly to the
+  send node's continuation with identity fields unchanged, and copy/discard/capture are refused. No
+  endpoint duplication is not yet a general theorem over every transition, so the task stays open.
 - [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
 - [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
 - [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]

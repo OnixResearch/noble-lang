@@ -1,0 +1,319 @@
+{
+  "schema": "noble-nested-session-proof/v1",
+  "result": "passed",
+  "source_commit": "f5efac13a4ff89206cb7d3484e5e9bd207fd8217",
+  "source_tree": "f6f8d38190652c7d217156b2c03b0523ced33c4d",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "bindings": {
+    "model": {
+      "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+      "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
+      "sources_sha256": {
+        "proofs/m6/NestedSession.lean": "7d19958fb65068b42d579a23cd01f14b6fbcb2a63720204f99035ada6e533282",
+        "proofs/m6/nested-session-inventory.json": "268f46e863e3d8b92ec59ea69ffa630caf177708415e58138628b1e2504d4824"
+      }
+    },
+    "component": null,
+    "helper": null,
+    "engine": null,
+    "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
+  },
+  "claims": {
+    "model_theorems": 15,
+    "implementation_theorems": 0,
+    "correspondence": "none",
+    "liveness": "none",
+    "cancellation": "unsupported and unmodelled"
+  },
+  "sources_sha256": {
+    "proofs/m6/NestedSession.lean": "7d19958fb65068b42d579a23cd01f14b6fbcb2a63720204f99035ada6e533282",
+    "proofs/m6/nested-session-inventory.json": "268f46e863e3d8b92ec59ea69ffa630caf177708415e58138628b1e2504d4824",
+    "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
+  },
+  "theorem_count": 15,
+  "theorems": [
+    {
+      "name": "NestedSession.dual_is_involutive",
+      "role": "WIT-SESSION-01: duality is definitional and involutive on every node",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dual_is_involutive : ∀ (node : NestedSession.Node), NestedSession.dual (NestedSession.dual node) = node",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.dual_swaps_send_and_recv",
+      "role": "WIT-SESSION-01: duality swaps Send/Recv on the same ordered message type",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dual_swaps_send_and_recv : ∀ (message : NestedSession.MessageType) (continuation : Nat), NestedSession.dual (NestedSession.Node.send message continuation) = NestedSession.Node.recv message continuation",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.dual_swaps_choose_and_offer",
+      "role": "WIT-SESSION-01: internal choice duals to external choice on the same branch",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dual_swaps_choose_and_offer : ∀ (branch continuation : Nat), NestedSession.dual (NestedSession.Node.choose branch continuation) = NestedSession.Node.offer branch continuation",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.resolve_refuses_exhaustion",
+      "role": "WIT-SESSION-01: bounded unfolding refuses a nested constructor at depth zero instead of accepting it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.resolve_refuses_exhaustion : ∀ (definitions : List NestedSession.Node) (index name parameter : Nat), definitions[index]? = some (NestedSession.Node.nested name parameter) → NestedSession.resolve definitions 0 index = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_unfolds_with_depth",
+      "role": "WIT-SESSION-01: a nested constructor resolves to its named definition rather than expanding without bound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.resolve_unfolds_with_depth : ∀ (definitions : List NestedSession.Node) (index name parameter : Nat), definitions[index]? = some (NestedSession.Node.nested name parameter) → NestedSession.resolve definitions 1 index = definitions[name]?",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_refuses_unknown_definition",
+      "role": "WIT-SESSION-01: an index outside the closed table is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.resolve_refuses_unknown_definition : ∀ (definitions : List NestedSession.Node) (depth : Nat), NestedSession.resolve definitions depth definitions.length = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.send_step_does_not_observe_a_peer",
+      "role": "WIT-SESSION-03: a send step observes no peer; receipt is not modelled",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.send_step_does_not_observe_a_peer : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint successor : NestedSession.Endpoint), NestedSession.stepSend definitions depth endpoint = some successor → successor.responder = endpoint.responder ∧ successor.channel = endpoint.channel",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.endpoint_copy_is_refused",
+      "role": "WIT-SESSION-02: endpoint copy is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.endpoint_copy_is_refused : ∀ (endpoint : NestedSession.Endpoint), NestedSession.copy endpoint = NestedSession.Outcome.refusedCopy",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.endpoint_discard_is_refused",
+      "role": "WIT-SESSION-02: endpoint discard is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.endpoint_discard_is_refused : ∀ (endpoint : NestedSession.Endpoint), NestedSession.discard endpoint = NestedSession.Outcome.refusedDiscard",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.endpoint_capture_is_refused",
+      "role": "WIT-SESSION-02: endpoint capture is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.endpoint_capture_is_refused : ∀ (endpoint : NestedSession.Endpoint), NestedSession.capture endpoint = NestedSession.Outcome.refusedCapture",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.stale_generation_is_refused",
+      "role": "WIT-SESSION-02: identity alone does not authorise an operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stale_generation_is_refused : ∀ (endpoint : NestedSession.Endpoint), NestedSession.useWith endpoint endpoint.generation.succ = NestedSession.Outcome.refusedStale",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.matching_generation_is_accepted",
+      "role": "WIT-SESSION-02: the control keeping the refusal non-vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.matching_generation_is_accepted : ∀ (endpoint : NestedSession.Endpoint), NestedSession.useWith endpoint endpoint.generation = NestedSession.Outcome.accepted",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.double_close_is_refused",
+      "role": "WIT-SESSION-02: a second close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.double_close_is_refused : ∀ (endpoint : NestedSession.Endpoint), NestedSession.closeOnce { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := endpoint.state, generation := endpoint.generation, closed := true } = NestedSession.Outcome.refusedDoubleClose",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.closed_endpoint_cannot_send",
+      "role": "WIT-SESSION-02/03: a closed endpoint cannot send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.closed_endpoint_cannot_send : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (message : NestedSession.MessageType) (continuation : Nat), NestedSession.resolve definitions depth endpoint.state = some (NestedSession.Node.send message continuation) → NestedSession.stepSend definitions depth { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := endpoint.state, generation := endpoint.generation, closed := true } = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.send_step_advances_to_the_continuation",
+      "role": "WIT-SESSION-04: one step advances exactly to the continuation and nothing outside the protocol",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.send_step_advances_to_the_continuation : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (message : NestedSession.MessageType) (continuation : Nat), NestedSession.resolve definitions depth endpoint.state = some (NestedSession.Node.send message continuation) → NestedSession.stepSend definitions depth { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := endpoint.state, generation := endpoint.generation, closed := false } = some { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := continuation, generation := endpoint.generation, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "argv": [
+        "build",
+        "NestedSession"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "/tmp/ns-c2/Audit.lean"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    }
+  ],
+  "implementation_theorem": false,
+  "scope": [
+    ".cairn/changes/nested-session-protocol WIT-SESSION-01/02 model: finite grammar, duality and the endpoint resource.",
+    "The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed,",
+    "no progress statement is made, endpoint delegation is excluded and send is never modelled as receipt."
+  ]
+}
