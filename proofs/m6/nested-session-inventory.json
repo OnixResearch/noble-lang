@@ -1,0 +1,141 @@
+{
+  "schema": "noble-nested-session-inventory/v1",
+  "scope": ".cairn/changes/nested-session-protocol WIT-SESSION-01/02: finite grammar with bounded unfolding, duality, and the opaque move-only endpoint resource. Definitions table is handwritten; no lowering/runtime/peer correspondence, no progress statement, delegation excluded.",
+  "theorems": [
+    {
+      "name": "NestedSession.dual_is_involutive",
+      "role": "WIT-SESSION-01: duality is definitional and involutive on every node",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dual_swaps_send_and_recv",
+      "role": "WIT-SESSION-01: duality swaps Send/Recv on the same ordered message type",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dual_swaps_choose_and_offer",
+      "role": "WIT-SESSION-01: internal choice duals to external choice on the same branch",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_refuses_exhaustion",
+      "role": "WIT-SESSION-01: bounded unfolding refuses a nested constructor at depth zero instead of accepting it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_unfolds_with_depth",
+      "role": "WIT-SESSION-01: a nested constructor resolves to its named definition rather than expanding without bound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_refuses_unknown_definition",
+      "role": "WIT-SESSION-01: an index outside the closed table is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.send_step_does_not_observe_a_peer",
+      "role": "WIT-SESSION-03: a send step observes no peer; receipt is not modelled",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.endpoint_copy_is_refused",
+      "role": "WIT-SESSION-02: endpoint copy is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.endpoint_discard_is_refused",
+      "role": "WIT-SESSION-02: endpoint discard is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.endpoint_capture_is_refused",
+      "role": "WIT-SESSION-02: endpoint capture is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stale_generation_is_refused",
+      "role": "WIT-SESSION-02: identity alone does not authorise an operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.matching_generation_is_accepted",
+      "role": "WIT-SESSION-02: the control keeping the refusal non-vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.double_close_is_refused",
+      "role": "WIT-SESSION-02: a second close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.closed_endpoint_cannot_send",
+      "role": "WIT-SESSION-02/03: a closed endpoint cannot send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.receive_in_a_send_state_is_refused",
+      "role": "WIT-SESSION-04: one step advances to the continuation and nothing outside the protocol",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ]
+}
