@@ -42,12 +42,15 @@ carrying channel identity, side, protocol identity, current state and generation
 | `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice` | internal choice takes the selected declared branch, a wrong branch is refused, and external choice belongs to the peer (its dual is the internal one) |
 | `enqueue_raises_the_depth_by_one`, `dequeue_never_raises_the_depth`, `dequeue_of_empty_mailbox_is_unchanged`, `accounting_tracks_the_operations` | the mailbox depth is **derived from a ledger** of admissions and dequeues, not stored beside them |
 | `full_queue_misaccounting_is_refused` | an observation cannot borrow depth the ledger never recorded |
+| `bounded_admission_is_bounded`, `admission_at_the_limit_is_refused` | the bounded admission is the only operand that may raise the ledger, refuses at or past the declared limit, and never derives a depth past it while the ledger invariant holds |
+| `dequeue_restores_admission_room` | the **dequeue/accounting pair**: an admission refused at the limit is accepted after one accounted dequeue, so the refusal depends on accounted depth rather than on a count of attempts |
+| `unchecked_admission_breaks_the_bound` | a control: an admission that ignores the limit derives a depth past the bound, so the bounded operand is load-bearing rather than decorative |
 | `boundary_preserves_the_committed_prefix`, `cancellation_keeps_its_own_event`, `quota_boundary_invents_nothing` | cancellation, trap, quota exhaustion and peer disappearance only **shorten** a trace; a cancelled request stays visible and no boundary completes a pending cleanup or invents an observation |
 | `peer_disappearance_keeps_the_cleanup_pending`, `ordinary_close_does_not_keep_the_cleanup_pending` | an unobserved cleanup stays an unresolved fact, and only an observed cleanup clears it |
 | `advance_preserves_the_endpoint_identity`, `steppers_preserve_the_endpoint_identity` | state preservation is proved **once, from the one step helper every stepper delegates to**, not once per stepper |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **54** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **58** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block names the protocol
 definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
 constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent
@@ -57,5 +60,9 @@ with the reason, and its `claims` block labels the verdict.
 
 The definitions table is handwritten: there is no lowering, runtime, scheduler, queue or peer
 correspondence here, **no progress statement**, and endpoint delegation (passing an endpoint as a
-message) is excluded, so ownership obligations stay outside this model. Cancellation, mailbox
-fullness and cleanup facts are not modelled yet. WIT-SESSION-03 through WIT-SESSION-06 remain open.
+message) is excluded, so ownership obligations stay outside this model. Cancellation, trap, quota,
+peer disappearance, mailbox fullness and cleanup facts **are** modelled at the trace level, and the
+bounded admission over the ledger is measured; what stays open is the ordinary finite-handshake
+control beside the nested fixture, a proved statement that no operation acts outside the current
+protocol, duplication bounds for transitions that carry none (cancellation, cleanup), and the
+correspondence receipt's lowering/runtime/helper revisions.

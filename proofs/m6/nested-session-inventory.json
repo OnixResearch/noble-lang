@@ -487,6 +487,42 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.bounded_admission_is_bounded",
+      "role": "WIT-SESSION-03 full-queue accounting: a bounded admission never derives a depth past the declared limit, given the ledger invariant",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.admission_at_the_limit_is_refused",
+      "role": "WIT-SESSION-03 full-queue misaccounting: a mailbox at its limit refuses the next admission instead of recording it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_restores_admission_room",
+      "role": "WIT-SESSION-03 dequeue/accounting pair: the admission refused at the limit is accepted after one accounted dequeue",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unchecked_admission_breaks_the_bound",
+      "role": "WIT-SESSION-03 control: an admission that ignores the limit derives a depth past the bound, so the bounded operand is load-bearing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

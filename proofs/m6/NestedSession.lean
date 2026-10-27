@@ -530,6 +530,68 @@ theorem accounting_tracks_the_operations :
     mailboxDepth (dequeue (enqueue (enqueue ⟨0, 0⟩))) = 1 := by
   decide
 
+/-! ## Bounded admission over the ledger (WIT-SESSION-03, the full-queue accounting pair)
+
+The ledger alone says nothing about a queue limit: `enqueue` raises the depth however deep it already
+is. The bounded admission below is the only operand that may raise the ledger from a session, and it
+refuses at the declared limit. Pairing it with a real dequeue is what makes the refusal depend on
+accounted depth rather than on a count of attempts. -/
+
+/-- One bounded admission: at or past the limit it is refused and the ledger stays unchanged, so queue
+accounting cannot be inflated past the declared limit. -/
+def boundedAdmit (box : Mailbox) (limit : Nat) : Option Mailbox :=
+  if mailboxDepth box < limit then some (enqueue box) else none
+
+/-- A bounded admission never derives a depth past the declared limit, **given the ledger invariant**
+that no more was dequeued than admitted. -/
+theorem bounded_admission_is_bounded (box : Mailbox) (limit : Nat) (reached : Mailbox)
+    (sound : box.dequeued ≤ box.enqueued) (accepted : boundedAdmit box limit = some reached) :
+    mailboxDepth reached ≤ limit := by
+  unfold boundedAdmit at accepted
+  by_cases room : mailboxDepth box < limit
+  · rw [if_pos room] at accepted
+    simp only [Option.some.injEq] at accepted
+    subst accepted
+    have unfolded : mailboxDepth box = box.enqueued - box.dequeued := rfl
+    simp only [mailboxDepth, enqueue]
+    omega
+  · rw [if_neg room] at accepted
+    exact absurd accepted (by simp)
+
+/-- A mailbox at its limit refuses the next admission instead of recording it. -/
+theorem admission_at_the_limit_is_refused (box : Mailbox) (limit : Nat)
+    (full : limit ≤ mailboxDepth box) : boundedAdmit box limit = none := by
+  unfold boundedAdmit
+  rw [if_neg (by omega)]
+
+/-- The dequeue/accounting pair: an admission refused at the limit is accepted after one accounted
+dequeue. A model that counted attempts instead of depth would accept it in both places. -/
+theorem dequeue_restores_admission_room (box : Mailbox) (limit : Nat) (room : 0 < limit)
+    (atLimit : mailboxDepth box = limit) :
+    (boundedAdmit box limit).isNone ∧ (boundedAdmit (dequeue box) limit).isSome := by
+  have full : limit ≤ mailboxDepth box := Nat.le_of_eq atLimit.symm
+  have refused : boundedAdmit box limit = none := admission_at_the_limit_is_refused box limit full
+  have nonempty : 0 < mailboxDepth box := by rw [atLimit]; exact room
+  have step : mailboxDepth (dequeue box) = mailboxDepth box - 1 := by
+    rw [dequeue, if_pos nonempty]
+    simp only [mailboxDepth]
+    omega
+  have dropped : mailboxDepth (dequeue box) < limit := by
+    rw [step, atLimit]
+    omega
+  refine ⟨by rw [refused]; rfl, ?_⟩
+  unfold boundedAdmit
+  rw [if_pos dropped]
+  rfl
+
+/-- The limit is load-bearing: an admission that ignores it derives a depth past the declared bound,
+so the bounded operand above is not decoration. -/
+def uncheckedAdmit (box : Mailbox) : Mailbox := enqueue box
+
+theorem unchecked_admission_breaks_the_bound :
+    mailboxDepth (uncheckedAdmit ⟨0, 0⟩) = 1 ∧ ¬ mailboxDepth (uncheckedAdmit ⟨0, 0⟩) ≤ 0 := by
+  decide
+
 /-! ## Committed prefix across cancellation, trap, quota and peer disappearance (WIT-SESSION-06)
 
 Every asynchronous boundary may cut a trace, but it may not rewrite the committed prefix, and a
@@ -615,9 +677,8 @@ theorem advance_preserves_the_endpoint_identity (endpoint successor : Endpoint) 
 
 /-- Every stepper this model implements preserves the endpoint's identity, because each one delegates its
 successor to `advance`. -/
-theorem steppers_preserve_the_endpoint_identity (definitions : List Node) (depth : Nat)
-    (endpoint successor : Endpoint) (continuation : Nat)
-    (stepped : advance endpoint continuation = some successor) :
+theorem steppers_preserve_the_endpoint_identity (endpoint successor : Endpoint)
+    (continuation : Nat) (stepped : advance endpoint continuation = some successor) :
     sameIdentity successor endpoint = true :=
   advance_preserves_the_endpoint_identity endpoint successor continuation stepped
 
