@@ -137,6 +137,39 @@ export const run = async binary => {
     'the retained map keeps the epoch the earlier root was pinned on');
   await callerFirstSession.close();
 
+  // Sequential-publication control: a root attempted between the two publications cannot execute
+  // at all because the slot its reference names holds no published program yet, so the mixed pair
+  // is the limit of the coherence premise rather than a root-snapshot defect. After the second
+  // publication lands the same root executes coherently on one pinned map.
+  const sequentialSession = await cli(binary, 'coherent-sequential', selectedAuthority({
+    sources, slots, grants, effects: ['live.dispatch', 'test.emit'], quota: 16,
+  }));
+  await expectRow(sequentialSession.configured, 'configured');
+  await expectRow(sequentialSession.issue({
+    operation: 'define', id: 'defTracedE', name: 'tracedE', source: sources.defTracedE, inputs: [],
+  }), 'definition-retained');
+  await expectRow(sequentialSession.issue({
+    operation: 'install', id: 'tracedE', source: sources.tracedE, inputs: ['I64'], selected_name: 'tracedE',
+  }), 'installed');
+  await expectRow(sequentialSession.issue({
+    operation: 'install', id: 'caller', source: sources.caller, inputs: ['I64', REF],
+  }), 'installed');
+  await expectRow(sequentialSession.issue({ operation: 'candidate', id: 'caller' }), 'candidate-staged');
+  await expectRow(sequentialSession.issue({
+    operation: 'publish', slot: 'B', id: 'caller', program_index: 0, expected_epoch: '0',
+  }), 'published');
+  const halfPublished = await sequentialSession.issue({
+    operation: 'invoke', id: 'caller', inputs: [{ kind: 'i64', value: '5' }],
+    refs: [{ position: 1, ordinal: 0, slot: 'E' }],
+  });
+  assert.equal(halfPublished.outcome, 'execution-failed', JSON.stringify(halfPublished).slice(0, 800));
+  assert.equal(halfPublished.diagnostic, 'Error: root reference has no pinned published slot');
+  assert.equal((halfPublished.request_trace ?? []).length, 0,
+    'a root attempted between the two publications must produce no trace rows');
+  assert.equal(halfPublished.session_state, 'terminated-after-guest-failure',
+    'the half-published root terminates the session rather than mixing maps');
+  await sequentialSession.close();
+
   // Omission control: a dispatch to a slot that does not emit keeps the dispatch and produces
   // no effect row, so the count assertion above distinguishes omission from coherence.
   const omissionSession = await cli(binary, 'coherent-omission', selectedAuthority({
@@ -173,6 +206,9 @@ export const run = async binary => {
     pinnedEpoch,
     refusedPublication: refusedPublication.outcome,
     freshRootCounts: counts(freshRoot),
+    halfPublishedOutcome: halfPublished.outcome,
+    halfPublishedRows: (halfPublished.request_trace ?? []).length,
+    halfPublishedSessionState: halfPublished.session_state,
     omissionCounts: counts(omissionRoot),
   };
 };
