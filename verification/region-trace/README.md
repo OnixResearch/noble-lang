@@ -52,6 +52,15 @@ well-formedness itself is a condition of the relation:
 `verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **33** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
+## Revisions the verdict depends on (WIT-TRACE-06)
+
+The receipt carries a `bindings` block: the model revision (pinned Lean version and executable hash,
+plus the source and inventory hashes) is bound, and `component`, `helper` and `engine` are recorded as
+**`null` with the reason stated** — no component, lowering helper or engine instance is a subject of
+these theorems, so binding one would imply a correspondence this package does not establish. A
+`claims` block labels the verdict: 33 model theorems, 0 implementation theorems, correspondence none,
+liveness none, cancellation unsupported and unmodelled.
+
 ## Non-claims
 
 The target alphabet is a **handwritten machine**, not an emitted step sequence: there is no

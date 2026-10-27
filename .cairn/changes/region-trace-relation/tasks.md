@@ -28,3 +28,8 @@
   Swapped requests and substituted responses at the host/WIT interface still need the instrumentation
   this package does not add, so the task stays open.
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
+  Partial: the retained receipt binds the source and model revisions (pinned Lean version and executable
+  hash, source and inventory hashes) and labels the verdict (model theorems 33, implementation theorems
+  0, correspondence none, liveness none, cancellation unsupported). `component`, `helper` and `engine`
+  are recorded as null with the reason, because no correspondence route exists yet; the task stays open
+  until those three are bound to real revisions.
