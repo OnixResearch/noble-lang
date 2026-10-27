@@ -24,39 +24,6 @@ through [`NobleFoundation/Branch.lean`](NobleFoundation/Branch.lean). Its
 branch theorems do not extend the arithmetic comparator's whitelist or
 claim universal equivalence of the generated original and variant.
 
-## Closed ServiceRef wire format (issue #48)
-
-`proofs/foundation/NobleFoundation/ServiceRefWire.lean` specifies the closed ServiceRef record
-`<service "NAME" #t>` / `<service "NAME" #f>` of
-`crates/noble-kernel/src/dataspace/wire.rs` in Lean over `List UInt8` and proves:
-
-* value round trip: for an admitted name and either readiness bit, decoding the encoding
-  returns the value (`decode_encode_replays`, with `decode_ready_record` and
-  `decode_notReady_record'` carrying the per-readiness step);
-* the exact bounds and their precedence: the 64-byte wire budget is checked before the schema
-  (`over_budget_precedes_schema`), a name of zero bytes or more than 32 bytes is refused
-  (`empty_name_refused`, `long_name_refused`), a byte outside the ASCII alphanumeric,
-  underscore and hyphen alphabet is refused (`non_alphabet_refused`), and a configured depth of
-  0 or above 4 is refused while 1 to 4 is permitted (`depth_zero_refused`,
-  `depth_five_refused`);
-* the depth scan refuses bracket nesting deeper than the configured bound before the schema
-  check (`deep_input_refused`).
-
-Non-claims and open items:
-
-* No extraction or refinement route from the Rust `encode_service` / `decode_service`
-  functions is proved; the Rust-to-model edge stays **open**.
-* Canonicality and full-input consumption (an accepted byte string is exactly the encoding of
-  the value it decodes to; a prefix decoder promoted to a document decoder is ruled out) are
-  **open**: `splitAtQuote` returns the name before the closing quote and the remainder, but the
-  inversion lemma relating arbitrary accepted bytes back to `prefix ++ name ++ suffix` is not
-  proved. The encoder is nevertheless deterministic, so at most one encoding per value is
-  produced.
-* The nesting of an *encoded* record is a hypothesis (`hnesting`) of the round-trip theorems
-  rather than a proved bound; proving it needs a monotonicity lemma over the depth scan.
-* UTF-8 rejection is modelled only through the admitted ASCII alphabet, not through a general
-  UTF-8 decoder, and nothing here covers limits beyond the wire format.
-
 ## Reproduce
 
 Prerequisites:
