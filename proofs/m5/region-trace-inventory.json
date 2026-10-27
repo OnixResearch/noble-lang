@@ -1,0 +1,56 @@
+{
+  "schema": "noble-region-trace-inventory/v1",
+  "scope": ".cairn/changes/region-trace-relation WIT-TRACE-01: source alphabet, target ABI alphabet and the relation; target model is a handwritten machine, not emitted steps.",
+  "theorems": [
+    {
+      "name": "RegionTrace.erase_preserves_projection",
+      "role": "WIT-TRACE-02: erasure of the two named bookkeeping classes never changes the projected source trace",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.related_erase_invariant",
+      "role": "WIT-TRACE-02: the relation is erasure-invariant, so an erased class cannot create or remove a source event",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.denial_projects_to_request_only",
+      "role": "WIT-TRACE-02: a refused request stays visible as its request step and gains no response",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.normal_success_projects_request_and_commit",
+      "role": "WIT-TRACE-01: a normal success projects its request and protected commit; decision, copy and return carry no source event",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.identity_is_decision_identity",
+      "role": "WIT-TRACE-01: the projection keeps the exact identity it was emitted with",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.retirement_is_not_a_guest_release",
+      "role": "WIT-TRACE-02: host retirement projects to its own commit kind, never to a guest release",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_class_is_not_in_the_projection",
+      "role": "WIT-TRACE-05 premise: the projection carries no abnormal-exit class, so the trap/quota/cleanup distinction is a target-side observation",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_classes_collapse_in_projection",
+      "role": "WIT-TRACE-05 premise: trap and quota exhaustion are indistinguishable in the projection",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.append_projection",
+      "role": "WIT-TRACE-04: projecting a concatenation is concatenating the projections (prefix compatibility)",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTrace.take_projection",
+      "role": "WIT-TRACE-04: a trace cut by an exhaustion boundary relates to the projection of its retained prefix",
+      "allowed_standard_axioms": []
+    }
+  ]
+}
