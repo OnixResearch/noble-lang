@@ -127,12 +127,10 @@ pub(super) fn check_request(
                     remaining,
                     owner_cost.saturating_add(site_cost)
                 ));
-                for (left, right) in owner_inst.bindings.iter().zip(&inst.bindings) {
-                    if !same_owner_binding(left, right) {
-                        return Err(super::Fail::Unsupported(
-                            crate::untrusted::UnsupportedKind::NodeForm,
-                        ));
-                    }
+                if !same_owner_bindings(owner_inst, inst) {
+                    return Err(super::Fail::Unsupported(
+                        crate::untrusted::UnsupportedKind::NodeForm,
+                    ));
                 }
             }
         }
@@ -170,6 +168,22 @@ pub(super) fn check_request(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; the comparison uses PartialEq on owned stack, type and effect values, which is not const."
 )]
+
+/// Compare both binding lists element-wise without returning from inside a nested
+/// loop: the extraction tool (Aeneas) rejects returns inside nested loops, and the
+/// agreement predicate leaves every examined pair identical.
+fn same_owner_bindings(owner_inst: &crate::words::Inst, inst: &crate::words::Inst) -> bool {
+    let mut index = 0usize;
+    let mut agree = true;
+    while index < owner_inst.bindings.len() && agree {
+        if !same_owner_binding(&owner_inst.bindings[index], &inst.bindings[index]) {
+            agree = false;
+        }
+        index += 1;
+    }
+    agree
+}
+
 fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Binding) -> bool {
     match (left, right) {
         (crate::words::Binding::Stack(a), crate::words::Binding::Stack(b)) => a == b,
