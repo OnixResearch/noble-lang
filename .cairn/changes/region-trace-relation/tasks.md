@@ -21,6 +21,19 @@
 - [x] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
 - [x] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
+  Partial: `crates/noble-cli/src/component/bounded_region.rs` now reports `exit_class`
+  (`normal` / `rejected` / `trap` / `quota-exhausted` / `adapter-invalid`), a `cleanup`
+  observation (`retired` / `failed` with the refusal reason / `already-retired` when no cleanup
+  call of ours can be attributed) and `fuel_remaining`, instead of collapsing every abnormal exit
+  into one `adapter-trap` label. A refused cleanup is now an observation rather than an error that
+  dropped the whole report, and the retained owner still stays available for recovery
+  (`abnormal_exit_cleanup`). Exercised: unit tests over a real `Trap::OutOfFuel` /
+  `Trap::UnreachableCodeReached` / adapter fault, plus a real compiled `bounded-region` component
+  end to end (`exit_class: normal|rejected`, `cleanup: already-retired`, `fuel_remaining` ~1e7).
+  Still open: no real execution currently reaches `trap` or `quota-exhausted` on this adapter — the
+  fuel boundary is fixed at 10,000,000 and no guest fixture traps — and a refused cleanup needs a
+  corrupted host context that a guest cannot produce, so those three classes are unit-exercised
+  rather than observed from a real execution.
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
   Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a

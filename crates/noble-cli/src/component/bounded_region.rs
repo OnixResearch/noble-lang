@@ -9,7 +9,7 @@ use wasmtime::{
     component::{
         types::ComponentItem, Component, Linker, Resource, ResourceAny, ResourceType, Val,
     },
-    Config, Engine, Store, StoreLimits, StoreLimitsBuilder,
+    Config, Engine, Store, StoreLimits, StoreLimitsBuilder, Trap,
 };
 
 use crate::workflow::encoding::{self, Json};
@@ -18,6 +18,82 @@ const INTERFACE: &str = "noble-test:bounded-region/regions@1.0.0";
 const MAX_REGION_BYTES: usize = 4096;
 const KIND: ResourceKind = ResourceKind(1);
 const READ: ownership::Rights = ownership::Rights(1);
+
+/// How a bounded-region invocation ended, as far as the host can actually observe. The three
+/// abnormal classes stay distinct instead of collapsing into one `adapter-trap` label: an exhausted
+/// fuel budget is a host-imposed boundary, a guest trap is the guest's own abnormal exit, and an
+/// adapter fault (missing export, malformed payload, usage) is neither. Nothing here infers a finer
+/// guest outcome from a report.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum ExitClass {
+    Normal,
+    Rejected,
+    Trap,
+    QuotaExhausted,
+    AdapterInvalid,
+}
+
+impl ExitClass {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Normal => "normal",
+            Self::Rejected => "rejected",
+            Self::Trap => "trap",
+            Self::QuotaExhausted => "quota-exhausted",
+            Self::AdapterInvalid => "adapter-invalid",
+        }
+    }
+
+    /// Classify an invocation error by what it actually is. Anything that is not a Wasmtime trap is
+    /// an adapter fault, so an adapter bug can never be reported as a guest trap.
+    fn of_error(error: &anyhow::Error) -> Self {
+        match error.downcast_ref::<Trap>() {
+            Some(Trap::OutOfFuel) => Self::QuotaExhausted,
+            Some(_) => Self::Trap,
+            None => Self::AdapterInvalid,
+        }
+    }
+
+    /// Classify an invocation that returned normally.
+    const fn of_return(rejection: bool) -> Self {
+        if rejection { Self::Rejected } else { Self::Normal }
+    }
+}
+
+/// What the host itself observed about post-exit cleanup. `Absent` is recorded where no observation
+/// exists rather than being read as a successful retirement.
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum CleanupObservation {
+    Retired,
+    Failed(String),
+    /// The retained owner was already gone, so no cleanup call of ours can be attributed.
+    AlreadyRetired,
+}
+
+impl CleanupObservation {
+    const fn label(&self) -> &'static str {
+        match self {
+            Self::Retired => "retired",
+            Self::Failed(_) => "failed",
+            Self::AlreadyRetired => "already-retired",
+        }
+    }
+
+    fn reason(&self) -> Option<&str> {
+        match self {
+            Self::Retired | Self::AlreadyRetired => None,
+            Self::Failed(reason) => Some(reason.as_str()),
+        }
+    }
+}
+
+/// What one bounded-region invocation returned, as the adapter observed it.
+struct Invocation {
+    label: String,
+    bytes: Option<Vec<u8>>,
+    reason: Option<String>,
+    rejected: bool,
+}
 
 struct Region;
 
@@ -164,12 +240,48 @@ impl Host {
         }
     }
 
-    fn report(&self, outcome: &str, bytes: Option<&[u8]>, error: Option<&str>) -> Json {
+    /// Abnormal guest exit must retire its owner even if no destructor ran. A refusal is retained as
+    /// an observation rather than turning the whole report into an error: the failed cleanup is the
+    /// fact the caller needs, and the owner stays available for recovery.
+    fn abnormal_exit_cleanup(&mut self) -> CleanupObservation {
+        if self.owner.is_none() {
+            return CleanupObservation::AlreadyRetired;
+        }
+        match self.release(1) {
+            Ok(()) => CleanupObservation::Retired,
+            Err(error) => CleanupObservation::Failed(format!("{error:#}")),
+        }
+    }
+
+    fn report(
+        &self,
+        outcome: &str,
+        exit_class: ExitClass,
+        cleanup: &CleanupObservation,
+        fuel_remaining: Option<u64>,
+        bytes: Option<&[u8]>,
+        error: Option<&str>,
+    ) -> Json {
         let observation = self.table.observation();
         encoding::object([
             ("schema", encoding::string("noble-bounded-region/v1")),
             ("stage", encoding::string("adapter")),
             ("outcome", encoding::string(outcome)),
+            ("exit_class", encoding::string(exit_class.label())),
+            (
+                "cleanup",
+                encoding::object([
+                    ("state", encoding::string(cleanup.label())),
+                    (
+                        "reason",
+                        cleanup.reason().map_or(Json::Null, encoding::string),
+                    ),
+                ]),
+            ),
+            (
+                "fuel_remaining",
+                fuel_remaining.map_or(Json::Null, Json::Number),
+            ),
             (
                 "bytes_hex",
                 bytes.map_or(Json::Null, |value| encoding::string(encoding::hex(value))),
@@ -324,7 +436,7 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         .context("missing read-region export")?;
     let owner = ResourceAny::try_from_resource(Resource::<Region>::new_own(1), &mut store)?;
     let mut results = [Val::Bool(false)];
-    let invoked = (|| -> Result<(String, Option<Vec<u8>>, Option<String>)> {
+    let invoked = (|| -> Result<Invocation> {
         function.call(
             &mut store,
             &[Val::Resource(owner), Val::S64(offset), Val::S64(length)],
@@ -346,28 +458,51 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
                         _ => bail!("invalid byte result"),
                     })
                     .collect::<Result<Vec<_>>>()?;
-                Ok(("read".into(), Some(bytes), None))
+                Ok(Invocation {
+                    label: "read".into(),
+                    bytes: Some(bytes),
+                    reason: None,
+                    rejected: false,
+                })
             }
             Err(Some(value)) => {
                 let Val::String(reason) = value.as_ref() else {
                     bail!("invalid rejection payload");
                 };
-                Ok((reason.clone(), None, Some(reason.clone())))
+                Ok(Invocation {
+                    label: reason.clone(),
+                    bytes: None,
+                    reason: Some(reason.clone()),
+                    rejected: true,
+                })
             }
             _ => bail!("invalid read-region variant"),
         }
     })();
-    let (outcome, returned, error) = match invoked {
-        Ok(row) => row,
-        Err(error) => ("adapter-trap".into(), None, Some(error.to_string())),
+    let fuel_remaining = store.get_fuel().ok();
+    let (outcome, exit_class, returned, error) = match invoked {
+        Ok(Invocation {
+            label,
+            bytes,
+            reason,
+            rejected,
+        }) => (label, ExitClass::of_return(rejected), bytes, reason),
+        Err(error) => (
+            "adapter-trap".into(),
+            ExitClass::of_error(&error),
+            None,
+            Some(error.to_string()),
+        ),
     };
-    // Abnormal guest exit must retire its owner even if no destructor ran.
-    if store.data().owner.is_some() {
-        store.data_mut().release(1)?;
-    }
-    Ok(store
-        .data()
-        .report(&outcome, returned.as_deref(), error.as_deref()))
+    let cleanup = store.data_mut().abnormal_exit_cleanup();
+    Ok(store.data().report(
+        &outcome,
+        exit_class,
+        &cleanup,
+        fuel_remaining,
+        returned.as_deref(),
+        error.as_deref(),
+    ))
 }
 
 pub(super) fn run(arguments: &[OsString]) -> std::process::ExitCode {
@@ -461,6 +596,56 @@ mod tests {
         assert!(host.release(1).is_err());
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
+    }
+
+    #[test]
+    fn exit_classes_distinguish_quota_trap_and_adapter_faults() {
+        let quota = anyhow::Error::new(Trap::OutOfFuel);
+        let guest = anyhow::Error::new(Trap::UnreachableCodeReached);
+        let adapter = anyhow::anyhow!("invalid success payload");
+        assert_eq!(ExitClass::of_error(&quota), ExitClass::QuotaExhausted);
+        assert_eq!(ExitClass::of_error(&guest), ExitClass::Trap);
+        assert_eq!(ExitClass::of_error(&adapter), ExitClass::AdapterInvalid);
+        assert_eq!(ExitClass::of_return(true), ExitClass::Rejected);
+        assert_eq!(ExitClass::of_return(false), ExitClass::Normal);
+        assert_eq!(ExitClass::QuotaExhausted.label(), "quota-exhausted");
+        assert_eq!(ExitClass::AdapterInvalid.label(), "adapter-invalid");
+    }
+
+    #[test]
+    fn abnormal_exit_cleanup_is_observed_rather_than_propagated() {
+        let mut host = Host::new(vec![0, 1, 2]).unwrap();
+        assert_eq!(host.abnormal_exit_cleanup(), CleanupObservation::Retired);
+        assert_eq!(host.releases, 1);
+        assert_eq!(host.table.observation().live, 0);
+        // A second pass has no retained owner left, so nothing is attributed to us.
+        assert_eq!(
+            host.abnormal_exit_cleanup(),
+            CleanupObservation::AlreadyRetired
+        );
+        assert_eq!(host.releases, 1);
+    }
+
+    #[test]
+    fn failed_cleanup_is_reported_as_a_failed_observation() {
+        // Test-only corrupted Host state: a guest cannot mutate this context.
+        let mut host = Host::new(vec![0, 1, 2]).unwrap();
+        let context = host.context;
+        let original = host.owner.as_ref().unwrap().handle();
+        host.context = ownership::Context(context.0.checked_add(1).unwrap());
+        match host.abnormal_exit_cleanup() {
+            CleanupObservation::Failed(reason) => {
+                assert!(reason.contains("region release refused"), "{reason}");
+                assert_eq!(CleanupObservation::Failed(reason).label(), "failed");
+            }
+            other => panic!("expected a failed cleanup observation, got {other:?}"),
+        }
+        assert_eq!(host.releases, 0);
+        assert_eq!(host.table.observation().live, 1);
+        assert_eq!(host.owner.as_ref().unwrap().handle(), original);
+        host.context = context;
+        assert_eq!(host.abnormal_exit_cleanup(), CleanupObservation::Retired);
+        assert_eq!(host.releases, 1);
     }
 
     #[test]
