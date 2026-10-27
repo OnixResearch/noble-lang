@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "2ba189e207eb3eef96d0851ab2cf8fe0291c9dc1",
-  "source_tree": "30a0dc121b415c63592283b849676f5af0159f1b",
+  "source_commit": "891f78558b13f17cc4430e655a236de0bfdc3ad1",
+  "source_tree": "97a2edd4f82af958c3704defe9aab671c15f4532",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "9f1b4abdac42325653f3128aca7da3959a8138b3de26698afd891ca3424b8aae",
-        "proofs/m6/nested-session-inventory.json": "be4d5e872412af1c2db5a79963243f753cd5586a918c0b3bea4ef9ff78ba4e84"
+        "proofs/m6/NestedSession.lean": "dfcbb72809221e36a4ed96946ee72ab674f45aba3261cb8ddfd4ed728c4be91a",
+        "proofs/m6/nested-session-inventory.json": "8d97744740b334ed7bdb6835bc8d555c3d89fd55d991c1617e8d7e20e5c0517f"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
@@ -31,18 +31,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 65,
+    "model_theorems": 68,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "9f1b4abdac42325653f3128aca7da3959a8138b3de26698afd891ca3424b8aae",
-    "proofs/m6/nested-session-inventory.json": "be4d5e872412af1c2db5a79963243f753cd5586a918c0b3bea4ef9ff78ba4e84",
+    "proofs/m6/NestedSession.lean": "dfcbb72809221e36a4ed96946ee72ab674f45aba3261cb8ddfd4ed728c4be91a",
+    "proofs/m6/nested-session-inventory.json": "8d97744740b334ed7bdb6835bc8d555c3d89fd55d991c1617e8d7e20e5c0517f",
     "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
   },
-  "theorem_count": 65,
+  "theorem_count": 68,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -925,6 +925,48 @@
       "status": "proved",
       "statement": "NestedSession.duplicating_operation_breaks_the_bound : ¬(NestedSession.duplicatingOperation { endpoints := [{ channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }], queued := 0, queueLimit := 3 }).endpoints.length ≤ { endpoints := [{ channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }], queued := 0, queueLimit := 3 }.endpoints.length",
       "axioms": []
+    },
+    {
+      "name": "NestedSession.guest_local_progress_on_a_declared_action",
+      "role": "WIT-SESSION-05 scoped progress: at an open owned endpoint whose resolved node declares the requested action, that action has a successor -- peer, scheduler, queue and delivery are outside the statement",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.guest_local_progress_on_a_declared_action : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (action : NestedSession.Action) (node : NestedSession.Node) (continuation : Nat), endpoint.closed = false → NestedSession.resolve definitions depth endpoint.state = some node → NestedSession.continuationOf action node = some continuation → ∃ successor, NestedSession.step definitions depth endpoint action = some successor",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.offer_state_offers_no_guest_action",
+      "role": "WIT-SESSION-05 scoped progress: a peer-side offer state declares no guest action, which is a named state rather than a deadlock claim",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.offer_state_offers_no_guest_action : ∀ (branch continuation : Nat) (action : NestedSession.Action), NestedSession.continuationOf action (NestedSession.Node.offer branch continuation) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.finished_state_declares_no_guest_action",
+      "role": "WIT-SESSION-05 scoped progress: a finished protocol declares no guest action, so progress ends in a named terminal state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.finished_state_declares_no_guest_action : ∀ (action : NestedSession.Action), NestedSession.continuationOf action NestedSession.Node.finished = none",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -974,7 +1016,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-3/Audit.lean"
+        "/tmp/ns-check-4/Audit.lean"
       ],
       "exit": 0
     },
