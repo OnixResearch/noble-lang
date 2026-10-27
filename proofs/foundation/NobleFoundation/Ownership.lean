@@ -241,4 +241,164 @@ theorem segment_conserved (segment : List Payload) (program : Program)
       subst accepted
       rfl
 
+/-! ## Branch join: the abstract stack two accepted arms share (issue #59 joins)
+
+A join is *not* "both branches have the same number of resources". It is a position-wise record of
+**both** arms' payloads, so an owner identity is never collapsed into another one and a nested
+payload is never forgotten because it is eligible or because the counts agree.
+
+The joined stack is built from both arms, so it represents each of them by construction; `mergePosition`
+is the per-position merge, and the controls show it never loses an arm's identity. The substantive
+theorem is `joined_word_admission_agrees`: over the straight-line fragment a word's admission depends
+only on per-position eligibility, so a stack pair whose positions agree on eligibility is admitted
+in both arms or in neither.
+
+Remaining work, recorded rather than implied: the same simulation lifted over a whole word
+*sequence*, which needs the intermediate stacks to keep agreeing. The branch constructor is outside
+this lane because it compares the two arms' actual results, so a join can never be used to skip
+accounting one arm (`branch_accounts_both_arms` and the mutation controls cover that case).
+-/
+
+/-- One joined position: the same payload in both arms, or two conflicting ones. -/
+inductive Merged where
+  | same (payload : Payload)
+  | conflicting (left right : Payload)
+deriving DecidableEq, Repr
+
+/-- Merge one position. Identical payloads collapse to `same`; anything else, including a data
+reference against a wrapped payload, is recorded as `conflicting`. -/
+def mergePosition (left right : Payload) : Merged :=
+  if left = right then .same left else .conflicting left right
+
+/-- The abstract stack two accepted arms share: both arm results, at equal length. The length premise is
+the join obligation — a position one arm lacks is not a shared obligation and is never padded. -/
+structure BranchJoin where
+  leftArm : List Payload
+  rightArm : List Payload
+  sameLength : leftArm.length = rightArm.length
+
+/-- The position-wise merge of both arms. -/
+def BranchJoin.merged (join : BranchJoin) : List Merged :=
+  List.zipWith (fun left right => mergePosition left right) join.leftArm join.rightArm
+
+/-- **Representation**: a merge never loses either arm's payload at a position. -/
+theorem merge_represents_each_arm (left right : Payload) :
+    ((∃ payload, mergePosition left right = .same payload ∧ payload = left ∧ payload = right) ∨
+      mergePosition left right = .conflicting left right) := by
+  unfold mergePosition
+  by_cases same : left = right
+  · rw [if_pos same]
+    exact Or.inl ⟨left, rfl, rfl, same⟩
+  · rw [if_neg same]
+    exact Or.inr rfl
+
+/-- **Distinct owners are never conflated**: two different payloads at the same position are recorded
+as conflicting rather than merged, so a join cannot pick one arm's owner and drop the other's. -/
+theorem distinct_owners_are_not_merged (left right : Payload) (different : left ≠ right) :
+    mergePosition left right = .conflicting left right := by
+  unfold mergePosition
+  rw [if_neg different]
+
+/-- The seeded one-armed join — keeping only the first arm at every position — is refuted wherever the
+arms differ, so it cannot be accepted as a join. -/
+theorem one_armed_join_is_refuted (left right : Payload) (different : left ≠ right) :
+    (Merged.same left) ≠ mergePosition left right := by
+  rw [distinct_owners_are_not_merged left right different]
+  simp only [ne_eq, reduceCtorEq, not_false_eq_true]
+
+/-- Equal counts with different identities are the control a "same number of resources" join fails:
+one resource against another is conflicting. -/
+theorem same_count_different_identity_is_conflicting :
+    mergePosition (.resource 1) (.resource 2) = .conflicting (.resource 1) (.resource 2) := by
+  decide
+
+/-- A nested payload is not forgotten because it is eligible: a wrapped data reference against a plain
+one is conflicting, even though both are duplicable. -/
+theorem nested_payload_is_not_merged_with_its_unwrapping :
+    mergePosition (.wrapped (.data 1)) (.data 1) = .conflicting (.wrapped (.data 1)) (.data 1) := by
+  decide
+
+/-- A wrapped must-use resource is never merged with a plain payload. -/
+theorem nested_resource_is_not_merged :
+    mergePosition (.wrapped (.resource 7)) (.data 1) =
+      .conflicting (.wrapped (.resource 7)) (.data 1) := by
+  decide
+
+/-- A join of arms of different lengths is not a `BranchJoin` at all: the premise is not optional and
+cannot be discharged by agreeing counts. -/
+theorem unequal_arms_cannot_be_joined :
+    ([.data 1] : List Payload).length ≠ ([.data 1, .data 2] : List Payload).length := by
+  decide
+
+/-- The eligibility class of an ordered stack: one decision per position, in order. -/
+def eligibilityClass (operands : List Payload) : List Bool := operands.map duplicable
+
+/-- Position-wise agreement on eligibility, at the same ordered positions and with the same length. -/
+def EligibilityAgrees (left right : List Payload) : Prop :=
+  eligibilityClass left = eligibilityClass right
+
+/-- **Word admission is decided by eligibility**: two stacks whose positions agree on eligibility are
+admitted by one word in both arms or in neither, so the joined abstract stack preserves this
+fragment's accounting decision rather than inventing one. -/
+theorem joined_word_admission_agrees (word : Word) (left right : List Payload)
+    (agree : EligibilityAgrees left right) :
+    (step word left).isSome = (step word right).isSome := by
+  cases word with
+  | dup =>
+      cases left with
+      | nil => cases right <;> simp_all [EligibilityAgrees, eligibilityClass]
+      | cons head rest =>
+          cases right with
+          | nil => simp_all [EligibilityAgrees, eligibilityClass]
+          | cons other tail =>
+              simp only [EligibilityAgrees, eligibilityClass, List.map_cons, List.cons.injEq] at agree
+              simp only [step]
+              rw [agree.1]
+              split <;> rfl
+  | drop =>
+      cases left with
+      | nil => cases right <;> simp_all [EligibilityAgrees, eligibilityClass]
+      | cons head rest =>
+          cases right with
+          | nil => simp_all [EligibilityAgrees, eligibilityClass]
+          | cons other tail =>
+              simp only [EligibilityAgrees, eligibilityClass, List.map_cons, List.cons.injEq] at agree
+              simp only [step]
+              rw [agree.1]
+              split <;> rfl
+  | quote =>
+      cases left with
+      | nil => cases right <;> simp_all [EligibilityAgrees, eligibilityClass]
+      | cons head rest =>
+          cases right with
+          | nil => simp_all [EligibilityAgrees, eligibilityClass]
+          | cons other tail =>
+              simp only [EligibilityAgrees, eligibilityClass, List.map_cons, List.cons.injEq] at agree
+              simp only [step]
+              rw [agree.1]
+              split <;> rfl
+  | swap =>
+      cases left with
+      | nil => cases right <;> simp_all [EligibilityAgrees, eligibilityClass]
+      | cons head rest =>
+          cases rest with
+          | nil =>
+              cases right with
+              | nil => rfl
+              | cons _ remaining =>
+                  cases remaining with
+                  | nil => simp only [step, Option.isSome_none]
+                  | cons _ _ => simp_all [EligibilityAgrees, eligibilityClass]
+          | cons second tail =>
+              cases right with
+              | nil => simp_all [EligibilityAgrees, eligibilityClass]
+              | cons other remaining =>
+                  cases remaining with
+                  | nil => simp_all [EligibilityAgrees, eligibilityClass]
+                  | cons otherSecond otherTail =>
+                      simp only [EligibilityAgrees, eligibilityClass, List.map_cons, List.cons.injEq] at agree
+                      simp only [step]
+                      rw [agree.1, agree.2.1]
+                      split <;> rfl
+
 end NobleFoundation.Ownership

@@ -2390,6 +2390,54 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "A slot table entry that names no interface input of that slot is refused."
+    },
+    {
+      "name": "NobleFoundation.Ownership.merge_represents_each_arm",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a per-position merge never loses either arm's payload"
+    },
+    {
+      "name": "NobleFoundation.Ownership.distinct_owners_are_not_merged",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "two different payloads at the same position are recorded as conflicting rather than merged"
+    },
+    {
+      "name": "NobleFoundation.Ownership.one_armed_join_is_refuted",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the seeded join that keeps only the first arm is refuted wherever the arms differ"
+    },
+    {
+      "name": "NobleFoundation.Ownership.same_count_different_identity_is_conflicting",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "equal counts with different identities are conflicting, so a count-only join is insufficient"
+    },
+    {
+      "name": "NobleFoundation.Ownership.nested_payload_is_not_merged_with_its_unwrapping",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a wrapped payload is not merged with its unwrapping even though both are eligible"
+    },
+    {
+      "name": "NobleFoundation.Ownership.nested_resource_is_not_merged",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a wrapped must-use resource is never merged with a plain payload"
+    },
+    {
+      "name": "NobleFoundation.Ownership.unequal_arms_cannot_be_joined",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "arms of different lengths cannot be joined and the length premise is not optional"
+    },
+    {
+      "name": "NobleFoundation.Ownership.joined_word_admission_agrees",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "two stacks whose positions agree on eligibility are admitted by one word in both arms or in neither"
     }
   ]
 }
