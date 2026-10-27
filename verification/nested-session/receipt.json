@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "2b22640c81c1e4b29fc13ccc070f5c1e88e33c26",
-  "source_tree": "dd134f69789cd7e691025ae823d33f39f3129047",
+  "source_commit": "51db9d002f99a961d9e88a4e23f5bff74b5ce411",
+  "source_tree": "b1abddc3844364ccbdb38ea62de66337d3fb6fa5",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "2cd9fabc3b12b46ef1a08000e4a99eda94286138d784255f7dc2eb8dd9f76e41",
-        "proofs/m6/nested-session-inventory.json": "8d4b74d52c73ecfd1c366d7b41dd08f91b3c18cf88a464c787683d3eed449e2d"
+        "proofs/m6/NestedSession.lean": "f7567afbb0847b027cad8247ff0ed9bb61c94b203df6e8a4d00aef0862eaf34f",
+        "proofs/m6/nested-session-inventory.json": "d2ac48623b75998c76bd6026e4c793b60687d4ad784c736db5075179c25d3c6a"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
@@ -31,18 +31,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 54,
+    "model_theorems": 58,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "2cd9fabc3b12b46ef1a08000e4a99eda94286138d784255f7dc2eb8dd9f76e41",
-    "proofs/m6/nested-session-inventory.json": "8d4b74d52c73ecfd1c366d7b41dd08f91b3c18cf88a464c787683d3eed449e2d",
+    "proofs/m6/NestedSession.lean": "f7567afbb0847b027cad8247ff0ed9bb61c94b203df6e8a4d00aef0862eaf34f",
+    "proofs/m6/nested-session-inventory.json": "d2ac48623b75998c76bd6026e4c793b60687d4ad784c736db5075179c25d3c6a",
     "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
   },
-  "theorem_count": 54,
+  "theorem_count": 58,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -711,7 +711,7 @@
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.steppers_preserve_the_endpoint_identity : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint successor : NestedSession.Endpoint) (continuation : Nat), NestedSession.advance endpoint continuation = some successor → NestedSession.sameIdentity successor endpoint = true",
+      "statement": "NestedSession.steppers_preserve_the_endpoint_identity : ∀ (endpoint successor : NestedSession.Endpoint) (continuation : Nat), NestedSession.advance endpoint continuation = some successor → NestedSession.sameIdentity successor endpoint = true",
       "axioms": [
         "propext",
         "Classical.choice",
@@ -771,6 +771,63 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.bounded_admission_is_bounded",
+      "role": "WIT-SESSION-03 full-queue accounting: a bounded admission never derives a depth past the declared limit, given the ledger invariant",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.bounded_admission_is_bounded : ∀ (box : NestedSession.Mailbox) (limit : Nat) (reached : NestedSession.Mailbox), box.dequeued ≤ box.enqueued → NestedSession.boundedAdmit box limit = some reached → NestedSession.mailboxDepth reached ≤ limit",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.admission_at_the_limit_is_refused",
+      "role": "WIT-SESSION-03 full-queue misaccounting: a mailbox at its limit refuses the next admission instead of recording it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.admission_at_the_limit_is_refused : ∀ (box : NestedSession.Mailbox) (limit : Nat), limit ≤ NestedSession.mailboxDepth box → NestedSession.boundedAdmit box limit = none",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_restores_admission_room",
+      "role": "WIT-SESSION-03 dequeue/accounting pair: the admission refused at the limit is accepted after one accounted dequeue",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dequeue_restores_admission_room : ∀ (box : NestedSession.Mailbox) (limit : Nat), 0 < limit → NestedSession.mailboxDepth box = limit → (NestedSession.boundedAdmit box limit).isNone = true ∧ (NestedSession.boundedAdmit (NestedSession.dequeue box) limit).isSome = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unchecked_admission_breaks_the_bound",
+      "role": "WIT-SESSION-03 control: an admission that ignores the limit derives a depth past the bound, so the bounded operand is load-bearing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.unchecked_admission_breaks_the_bound : NestedSession.mailboxDepth (NestedSession.uncheckedAdmit { enqueued := 0, dequeued := 0 }) = 1 ∧ ¬NestedSession.mailboxDepth (NestedSession.uncheckedAdmit { enqueued := 0, dequeued := 0 }) ≤ 0",
+      "axioms": []
     }
   ],
   "commands": [
@@ -820,7 +877,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-d5/Audit.lean"
+        "/tmp/ns-check-1/Audit.lean"
       ],
       "exit": 0
     },
