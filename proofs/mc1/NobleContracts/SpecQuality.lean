@@ -201,4 +201,40 @@ theorem separate_evidence_for_separate_obligations :
   · intro tail before params _ _ falsehood
     exact False.elim falsehood
 
+
+/-- A retained witness for one relation: the admissible assignment together with a
+satisfying output. It carries no solver status, so a searched-but-unreplayed model
+cannot be presented as a witness. -/
+structure Witness (spec : Spec) (after : Stack) where
+  before : Stack
+  params : Stack
+  admissible : Admissible spec before params
+  satisfies : spec.post before after params
+
+/-- Rechecking a witness recomputes the admissible assignment and the satisfaction
+from the raw stacks rather than trusting a producer's claim. The result is the
+witness itself, so a *failed* recheck cannot produce one. -/
+def Recheck (spec : Spec) (before after params : Stack) : Prop :=
+  Admissible spec before params ∧ spec.post before after params
+
+def recheck_yields_witness {spec : Spec} {before after params : Stack}
+    (checked : Recheck spec before after params) : Witness spec after :=
+  ⟨before, params, checked.1, checked.2⟩
+
+theorem witness_recheck_recovers_the_assignment {spec : Spec} {after : Stack}
+    (witness : Witness spec after) :
+    Recheck spec witness.before after witness.params :=
+  ⟨witness.admissible, witness.satisfies⟩
+
+/-- A witness for the underconstrained relation exists while determinacy is refused:
+the witness is not evidence of uniqueness. -/
+theorem witness_is_not_uniqueness :
+    Nonempty (Witness underconstrainedSpec [Value.bool true]) ∧ ¬ Deterministic underconstrainedSpec := by
+  refine ⟨⟨[.i64 0], [], ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩,
+    trivial⟩, ?_⟩
+  intro deterministic
+  have same := deterministic [.i64 0] [] [Value.bool true] [Value.bool false]
+    ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩ trivial trivial
+  cases same
+
 end NobleContracts.SpecQuality
