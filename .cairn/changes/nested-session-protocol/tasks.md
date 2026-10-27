@@ -15,6 +15,9 @@
   Partial: duality is proved definitional and involutive; state preservation is proved once from the one
   step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy/discard/capture
   are refused; and no modelled operation increases the endpoint inventory (`no_endpoint_duplication`).
+  No action outside the current protocol is now proved once for every guest action
+  (`step_acts_only_inside_the_current_protocol`, with the typed send/receive and internal choice
+  steppers defined as that operand rather than beside it).
   The duplication bound is proved for the modelled operations, not for every future transition
   (cancellation and cleanup still carry no transition), so the task stays open.
 - [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
@@ -23,7 +26,10 @@
   close once, bounded buffering stopping at the limit, the send-then-receive return half, and internal
   choice traces where two branches are two different traces over the event vocabulary (`choiceEvents`,
   the choice-state stepper `stepChoose` and its declared/undeclared-branch controls).
-- [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
+- [x] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
+  Done at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
+  `nested_entry_refused_at_depth_zero` measure the control. Recorded explicitly: **every** fixture in
+  this model is a model trace — nothing executes emitted Wasm or a native transport.
 - [x] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
   Complete at model level: copy, discard, capture, stale generation, double close, receive-after-close,
   a forged peer response without a dequeue, an omitted cleanup, wrong ordered message type, wrong order in

@@ -523,6 +523,42 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.step_acts_only_inside_the_current_protocol",
+      "role": "WIT-SESSION-05: no action outside the current protocol -- a successful step is exactly a resolved current node declaring that action, and its sole successor is that node's declared continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.handshake_resolves_without_unfolding",
+      "role": "WIT-SESSION-05 finite-handshake control: the ordinary handshake resolves at unfolding depth zero, node by node",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.handshake_trace_advances",
+      "role": "WIT-SESSION-05 finite-handshake control: its two guest actions advance through it and finish",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.nested_entry_refused_at_depth_zero",
+      "role": "WIT-SESSION-05: the nested fixture is not representable at depth zero while the handshake is, so the recursive entry needs an external stack rather than a wider finite table",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

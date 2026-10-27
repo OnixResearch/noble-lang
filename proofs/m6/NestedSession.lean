@@ -393,6 +393,60 @@ theorem closed_endpoint_cannot_receive (definitions : List Node) (depth : Nat) (
       endpoint.state, endpoint.generation, true⟩ = none := by
   simp only [stepRecv, atRecv, advance, if_true]
 
+/-! ## No action outside the current protocol (WIT-SESSION-05)
+
+The three typed steppers above are instances of one closed operand. `step` resolves the owned state
+against the closed table, takes the continuation that node declares *for that action* and advances;
+there is no other successor, and an action the node does not declare (including a mismatched message
+type or an undeclared branch) has no continuation to take. -/
+
+/-- The three communication actions a guest endpoint may take on an owned state. -/
+inductive Action where
+  | send (message : MessageType)
+  | recv (message : MessageType)
+  | choose (branch : Nat)
+  deriving DecidableEq, Repr
+
+/-- The continuation one node declares for one action. `none` is a refusal, never a default, and a
+`finished` or unresolved `nested` node declares no guest action. -/
+def continuationOf (action : Action) : Node → Option Nat
+  | .send declared continuation =>
+      match action with
+      | .send message => if declared = message then some continuation else none
+      | _ => none
+  | .recv declared continuation =>
+      match action with
+      | .recv message => if declared = message then some continuation else none
+      | _ => none
+  | .choose declared continuation =>
+      match action with
+      | .choose branch => if declared = branch then some continuation else none
+      | _ => none
+  | .finished => none
+  | .offer _ _ => none
+  | .nested _ _ => none
+
+/-- One guest action under the closed table. -/
+def step (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (action : Action) :
+    Option Endpoint :=
+  match resolve definitions depth endpoint.state with
+  | some node => (continuationOf action node).bind (advance endpoint)
+  | none => none
+
+/-- **No action outside the current protocol**: a successful step is exactly a resolved current node
+declaring that action, and its sole successor is that node's declared continuation. -/
+theorem step_acts_only_inside_the_current_protocol (definitions : List Node) (depth : Nat)
+    (endpoint successor : Endpoint) (action : Action)
+    (stepped : step definitions depth endpoint action = some successor) :
+    ∃ node continuation, resolve definitions depth endpoint.state = some node ∧
+      continuationOf action node = some continuation ∧ advance endpoint continuation = some successor := by
+  unfold step at stepped
+  split at stepped <;> try exact absurd stepped (by simp)
+  rename_i node resolved
+  rw [Option.bind_eq_some_iff] at stepped
+  obtain ⟨continuation, declared, advanced⟩ := stepped
+  exact ⟨node, continuation, resolved, declared, advanced⟩
+
 /-- Both choices stay distinct at the boundary: two internal branches are different nodes, and a
 receive node does not step as a send node. -/
 theorem both_choices_are_distinct_at_the_boundary :
@@ -405,22 +459,17 @@ A continuation is typed: a step carries the ordered message type it sends or rec
 is refused rather than coerced. Internal choice is chosen by the guest endpoint, external choice is
 offered by the peer, and a wrong branch is refused. -/
 
-/-- One typed send step. The supplied message type must be exactly the declared one, otherwise the
-step is refused: a type check is not ownership authority and is not silently coerced. -/
+/-- One typed send step, as the closed operand's send action. The supplied message type must be
+exactly the declared one, otherwise the step is refused: a type check is not ownership authority and
+is not silently coerced. -/
 def stepSendTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
     (message : MessageType) : Option Endpoint :=
-  match resolve definitions depth endpoint.state with
-  | some (.send declared continuation) =>
-      if declared = message then advance endpoint continuation else none
-  | _ => none
+  step definitions depth endpoint (.send message)
 
 /-- One typed receive step, refused for the same reasons. -/
 def stepRecvTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
     (message : MessageType) : Option Endpoint :=
-  match resolve definitions depth endpoint.state with
-  | some (.recv declared continuation) =>
-      if declared = message then advance endpoint continuation else none
-  | _ => none
+  step definitions depth endpoint (.recv message)
 
 /-- The matching ordered message type advances to the continuation. -/
 theorem typed_send_advances_on_the_declared_type :
@@ -444,10 +493,7 @@ theorem wrong_order_is_refused :
 taken. -/
 def stepChoose (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (branch : Nat) :
     Option Endpoint :=
-  match resolve definitions depth endpoint.state with
-  | some (.choose declared continuation) =>
-      if declared = branch then advance endpoint continuation else none
-  | _ => none
+  step definitions depth endpoint (.choose branch)
 
 /-- A closed protocol with both choices: `0` sends, `1` internally chooses branch `0`, `2` internally
 chooses branch `1`, `3` receives and `4` finishes. -/
@@ -711,6 +757,38 @@ continuation instead of collapsing into a shared state. -/
 theorem branch_one_accepts_the_bool_send :
     Option.map Endpoint.state
         (stepSendTyped branchingProtocol 2 ⟨5, false, 9, 2, 4, false⟩ MessageType.bool) = some 3 := by
+  decide
+
+/-! ## Finite-handshake control beside the nested fixture (WIT-SESSION-05)
+
+The nested fixture is non-regular: node `2` of `exampleProtocol` is a named nested constructor, so it
+has no resolution at unfolding depth zero. The ordinary handshake below declares no nested
+constructor and does resolve there, which is the control that keeps the nested fixture's
+non-representability a measured property rather than a description. -/
+
+/-- An ordinary finite handshake: send an `i64`, receive the acknowledgement, finish. -/
+def handshakeProtocol : List Node :=
+  [.send .i64 1, .recv .i64 2, .finished]
+
+/-- The handshake resolves at unfolding depth zero, node by node. -/
+theorem handshake_resolves_without_unfolding :
+    resolve handshakeProtocol 0 0 = some (.send .i64 1) ∧
+      resolve handshakeProtocol 0 1 = some (.recv .i64 2) ∧
+      resolve handshakeProtocol 0 2 = some .finished := by
+  decide
+
+/-- The handshake's two guest actions advance through it and finish. -/
+theorem handshake_trace_advances :
+    (step handshakeProtocol 0 ⟨5, false, 9, 0, 4, false⟩ (.send .i64)).bind
+        (fun mid => step handshakeProtocol 0 mid (.recv .i64)) =
+      some ⟨5, false, 9, 2, 4, false⟩ := by
+  decide
+
+/-- **The nested fixture is not representable at depth zero**: its recursive entry has no resolution
+without unfolding, while the handshake above does, so an external stack is what the nested fixture
+needs rather than a wider finite table. -/
+theorem nested_entry_refused_at_depth_zero :
+    resolve exampleProtocol 0 2 = none ∧ resolve exampleProtocol 2 2 = some (.send .i64 1) := by
   decide
 
 end NestedSession
