@@ -1,17 +1,17 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "f42ec25288c0d6ca31c22f19e8935be3602f11c4",
-  "source_tree": "326b4c824a8cd5b02217fe0f669ade48d3e26a25",
+  "source_commit": "5402326b3813f7a65d26f7e40858e714dbd50e0e",
+  "source_tree": "29485f71b0c1238ab08f4ab3c20c337154b9d282",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "b6ac40a3192c2e595d63a80319adbbb15d7849c4fb37cc8d6d257f85a8d98859",
-    "proofs/m5/region-trace-inventory.json": "27d6236baa8be2eaeae68666adfffec883e4625a19c6c92495f0834cd2c74150",
+    "proofs/m5/RegionTrace.lean": "9083f65d198bfc37c1075859f3859273296d7348ef96ef1d47ff4a14c73d7b5e",
+    "proofs/m5/region-trace-inventory.json": "dd6069959e6d15dcbb9141486487db18dbd7968092a892afece10499a3860838",
     "verification/region-trace/check.mjs": "2e91fc72b8f66736a5c3ad835ca33a362416f285b7a4cc7ca221ee8a514e3d0e"
   },
-  "theorem_count": 23,
+  "theorem_count": 30,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -328,6 +328,109 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_prefix",
+      "role": "WIT-TRACE-04: a retained trace is a prefix of the full trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_prefix : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.retainFrom fuel steps <+: steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.filterMap_prefix",
+      "role": "WIT-TRACE-04: a filtered prefix is a prefix (generic)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "@RegionTrace.filterMap_prefix : ∀ {alpha beta : Type} (project : alpha → Option beta) {left right : List alpha}, left <+: right → List.filterMap project left <+: List.filterMap project right",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_committed_prefix",
+      "role": "WIT-TRACE-04: the commits a retained trace projects are a prefix of the full trace commits",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_keeps_committed_prefix : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (RegionTrace.retainFrom fuel steps) <+: List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_cost_bounded",
+      "role": "WIT-TRACE-04: the retained trace cost stays inside the fuel budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_cost_bounded : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.traceCost (RegionTrace.retainFrom fuel steps) ≤ fuel",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_commit_identities",
+      "role": "WIT-TRACE-04: exhaustion cannot drop an already committed identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_keeps_commit_identities : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.commitIdentities (RegionTrace.retainFrom fuel steps) <+: RegionTrace.commitIdentities steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit",
+      "role": "WIT-TRACE-04 control: an unaffordable commit does not relate under the budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.retainFrom 1 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_relates_when_affordable",
+      "role": "WIT-TRACE-04 control: the same trace relates when the budget affords it (refusal not vacuous)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_relates_when_affordable : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.retainFrom 3 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -377,7 +480,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/rt-check3/Audit.lean"
+        "/tmp/rt-c5/Audit.lean"
       ],
       "exit": 0
     },

@@ -43,8 +43,11 @@ well-formedness itself is a condition of the relation:
 | `take_projection` | a cut trace relates only when its retained prefix is itself well formed |
 | `related_rejects_{substituted_identity,unexplained_read_commit,two_guest_releases,missing_protected_commit,host_cleanup_as_guest_release,denial_erased_into_success}` | the forged target traces are refused, each by the condition that names it |
 | `related_accepts_well_formed_success` | the refusals are not vacuous: a well-formed success relates |
+| `retainFrom_prefix`, `retainFrom_cost_bounded` | a trace retained before fuel exhausts is a prefix of the full trace and costs no more than the budget |
+| `filterMap_prefix`, `exhaustion_keeps_committed_prefix`, `exhaustion_keeps_commit_identities` | the retained trace's projected commits and identities are prefixes of the full trace's: exhaustion may cut a trace but cannot invent or drop a commit |
+| `exhaustion_cannot_relate_an_unaffordable_commit`, `exhaustion_relates_when_affordable` | the exhaustion rule bites, and the same trace relates when the budget affords it |
 
-`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **23** model
+`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **30** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Non-claims
