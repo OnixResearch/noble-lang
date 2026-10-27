@@ -513,3 +513,55 @@ These are defined before any inheritance.
 | Comment: negative cases for mismatched operations, stale revisions, missing dependencies, incompatible observations and resource eligibility | Decision 11 (negative cases) |
 | Comment: ambiguous two-bundle example plus tests that unrelated imports cannot silently change the selected law | Decision 11 (ambiguous example, tests i-iv); PREUSE-S22 |
 | Comment: distinction between packaging evidence, deriving a theorem and establishing correspondence | Decision 11 (packaging, deriving and correspondence table) |
+
+### Decision: the exact vocabulary T2–T5 need before their theorems can be stated
+
+Measured blocker (2026-10-27): T2–T5 cannot be written today because the vocabulary below does not
+exist in Lean, and adding a second caller/callee boundary definition beside `exportedNamedClaim`
+would create a second convention. These are the **exact** shapes to review before any of T2–T5 is
+attempted; none of them has been kernel-checked, and none is claimed here.
+
+```lean
+-- T3 (embed): callee-subject environment rows embed into a caller environment.
+-- The renaming is injective and preserves the whole source record, not just the slot number.
+structure Embedding where
+  rename : Nat → Nat
+  injective : ∀ a b, rename a = rename b → a = b
+  preserves_origin : ∀ entry, (lookup callee …).origin = (lookup caller …).origin
+  preserves_body : ∀ entry, body is transported unchanged
+  preserves_interface : ∀ entry, input/output are transported unchanged
+
+-- T2 (callFrame): an entry embedding plus a callee claim give the caller's frame discipline.
+structure EntryEmbedding where
+  embedding : Embedding
+  entry : NamedV1.Entry
+  calleeClaim : NamedV2.exportedNamedClaim callee [] P Q
+
+-- T5 (chainClaim): step certificates, bridges and a join.
+structure StepCertificate where
+  before : Stack
+  after : Stack
+  claim : Prop              -- a *pure* logical judgment, never a program invocation
+structure Bridge where
+  fromState : Stack
+  toState : Stack
+  obligation : Prop
+structure Chain where
+  steps : List StepCertificate
+  bridges : List Bridge
+  join : Stack → Stack → Prop
+```
+
+Review questions that must be answered before implementation, in this order:
+
+1. Is `Embedding` over *rows* (as `Embedding` above) or over *programs*, and does origin preservation
+   quantify over every row or only the reachable ones? T3 says every row.
+2. Does `EntryEmbedding.calleeClaim` take the callee's own types or the caller's frame types? The
+   design's T2 statement uses the caller's `frame ++ args` discipline, so the claim's stacks are
+   caller stacks.
+3. `StepCertificate.claim` is a **pure** proposition; a program call slice must stay a separate sort
+   (Decision 4). Confirm that a certificate cannot smuggle a `(pc-call …)` slice in.
+4. `Chain.join` is a premise the *caller* supplies, matching `pc_sequence`; confirm no step may
+   supply its own join.
+
+Nothing is ticked by this section: tasks 15–19 stay open, and T1/T6 remain the only landed theorems.
