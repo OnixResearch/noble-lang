@@ -165,4 +165,40 @@ theorem undefined_post_not_realizable :
     ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩
   exact undefined_predicate_never_satisfied [.i64 0] after [] holds
 
+
+/-- Criterion 6, typing half: every obligation carries its own kind, so evidence
+submitted for one obligation cannot be read as evidence for another. A consumer
+selects the kind explicitly; nothing here lets an implementation proof stand in
+for a specification-quality proof. -/
+inductive Obligation where
+  | specificationQuality
+  | implementationSatisfaction
+
+/-- Evidence is indexed by the obligation it discharges and by the proposition
+it actually proves. -/
+structure Claim (obligation : Obligation) (prop : Prop) : Prop where
+  evidence : prop
+
+theorem obligation_kinds_distinct :
+    Obligation.specificationQuality ≠ Obligation.implementationSatisfaction := by
+  intro same
+  cases same
+
+/-- The same retained relation carries two separately typed evidence records:
+determinacy refusal is a *specification-quality* claim, while the implementation
+claim stays the unchanged `exportedClaim` at *implementation-satisfaction* kind.
+Neither can be substituted for the other because both the kind and the proved
+proposition differ. -/
+theorem separate_evidence_for_separate_obligations :
+    Claim .specificationQuality (¬ Deterministic underconstrainedSpec) ∧
+      Claim .implementationSatisfaction
+        (Satisfied (incrementSpec fun _ _ _ => False)) := by
+  refine ⟨⟨?_⟩, ⟨?_⟩⟩
+  · intro deterministic
+    have same := deterministic [.i64 0] [] [Value.bool true] [Value.bool false]
+      ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩ trivial trivial
+    cases same
+  · intro tail before params _ _ falsehood
+    exact False.elim falsehood
+
 end NobleContracts.SpecQuality
