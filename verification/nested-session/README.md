@@ -51,10 +51,12 @@ carrying channel identity, side, protocol identity, current state and generation
 | `peer_disappearance_keeps_the_cleanup_pending`, `ordinary_close_does_not_keep_the_cleanup_pending` | an unobserved cleanup stays an unresolved fact, and only an observed cleanup clears it |
 | `advance_preserves_the_endpoint_identity`, `steppers_preserve_the_endpoint_identity` | state preservation is proved **once, from the one step helper every stepper delegates to**, not once per stepper |
 | `step_acts_only_inside_the_current_protocol` | **no action outside the current protocol**: a successful step is exactly a resolved current node declaring that action, and its sole successor is that node's declared continuation. The typed send, typed receive and internal choice steppers *are* this operand by definition, so a mismatched message type or an undeclared branch is one case of the same rule rather than a second convention |
+| `guest_local_progress_on_a_declared_action` | the **scoped progress statement**: at an open owned endpoint whose resolved node declares the requested guest action, that action has a successor. Its premises are exactly open endpoint + resolved state + declared action; peer behaviour, scheduling, queue capacity and delivery are **outside** it |
+| `offer_state_offers_no_guest_action`, `finished_state_declares_no_guest_action` | the two states where guest progress ends are named states rather than unnamed refusals: a peer-side offer declares no guest choice, and a finished protocol declares no guest action |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the non-regular nested fixture: the handshake resolves at unfolding depth zero and its two actions advance, while the nested fixture's recursive entry is refused there and resolves only under unfolding — the non-representability is measured, not described |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **65** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **68** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block names the protocol
 definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
 constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent
@@ -63,12 +65,14 @@ with the reason, and its `claims` block labels the verdict.
 ## Non-claims
 
 The definitions table is handwritten: there is no lowering, runtime, scheduler, queue or peer
-correspondence here, **no progress statement**, and endpoint delegation (passing an endpoint as a
+correspondence here, the progress statement is **guest-local only** (termination, fairness, eventual
+delivery, network reliability and deadlock freedom are separate and unclaimed), and endpoint
+delegation (passing an endpoint as a
 message) is excluded, so ownership obligations stay outside this model. Cancellation, trap, quota,
 peer disappearance, mailbox fullness and cleanup facts **are** modelled at the trace level, the
 bounded admission over the ledger is measured, and `step_acts_only_inside_the_current_protocol`
 covers every guest action with the finite-handshake control beside the nested fixture, and the
-inventory bound is stated over every operation including those that carry no transition; what stays
-open is the scoped progress statement and the correspondence receipt's lowering/runtime/helper
-revisions. The
+inventory bound is stated over every operation including those that carry no transition, and progress
+is stated for the guest's own step under three named premises. What stays open is the correspondence
+receipt's lowering/runtime/helper revisions. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.

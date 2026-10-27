@@ -20,7 +20,13 @@
   (`every_operation_preserves_the_endpoint_inventory`), including the two that carry no transition, with
   `duplicating_operation_breaks_the_bound` showing the bound load-bearing. The scope is the operations
   this model enumerates: a future transition outside `Operation` would need its own case.
-- [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
+- [x] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
+  Done as a deliberately narrow statement: `guest_local_progress_on_a_declared_action` gives a successor
+  at an open owned endpoint whose resolved node declares the requested guest action, under exactly
+  those three premises. Peer behaviour, scheduling, queue capacity and delivery are **outside** it, and
+  `offer_state_offers_no_guest_action` / `finished_state_declares_no_guest_action` name the two states
+  where guest progress ends. Termination, fairness, eventual delivery, network reliability and deadlock
+  freedom stay separate and unclaimed.
 - [x] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
   Complete at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
   close once, bounded buffering stopping at the limit, the send-then-receive return half, and internal

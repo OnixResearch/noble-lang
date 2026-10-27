@@ -836,4 +836,46 @@ theorem nested_entry_refused_at_depth_zero :
     resolve exampleProtocol 0 2 = none ∧ resolve exampleProtocol 2 2 = some (.send .i64 1) := by
   decide
 
+/-! ## The scoped progress statement (WIT-SESSION-05)
+
+Progress is stated **only** for the guest endpoint's own step, and only under the premises named in
+the theorem: the endpoint is open, its owned state resolves, and the resolved node declares the
+requested action. Nothing is claimed about the peer, the scheduler, the queue or delivery - a
+receive step here says the guest endpoint may take the step, never that a payload will arrive. A
+refused step is a *named* refusal (closed endpoint, unresolved node, peer-side state, wrong type or
+wrong branch), never an unnamed deadlock.
+
+This is deliberately not deadlock freedom: a frozen peer, participant, scheduler or host leaves the
+guest exactly where this statement puts it, and none of those premises is modelled. -/
+
+/-- **The scoped progress statement**: at an open owned endpoint whose resolved node declares the
+requested guest action, that action has a successor. The premises are exactly the three the theorem
+names; peer behaviour, scheduling and delivery are outside it. -/
+theorem guest_local_progress_on_a_declared_action (definitions : List Node) (depth : Nat)
+    (endpoint : Endpoint) (action : Action) (node : Node) (continuation : Nat)
+    (openState : endpoint.closed = false)
+    (resolved : resolve definitions depth endpoint.state = some node)
+    (declared : continuationOf action node = some continuation) :
+    exists successor, step definitions depth endpoint action = some successor := by
+  refine ⟨⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
+    endpoint.generation, endpoint.closed⟩, ?_⟩
+  unfold step
+  simp only [resolved, Option.bind, declared]
+  unfold advance
+  rw [openState]
+  simp
+
+/-- A peer-side state offers the guest no action at all: an `offer` node declares no guest choice, so
+no action progresses here. That is a named state, not a deadlock claim: the peer may offer, and what
+happens next is the peer's premise rather than the guest's progress. -/
+theorem offer_state_offers_no_guest_action (branch continuation : Nat) (action : Action) :
+    continuationOf action (.offer branch continuation) = none := by
+  cases action <;> rfl
+
+/-- A finished protocol declares no guest action either, so progress ends in a named terminal state
+rather than in an unnamed refusal. -/
+theorem finished_state_declares_no_guest_action (action : Action) :
+    continuationOf action .finished = none := by
+  cases action <;> rfl
+
 end NestedSession

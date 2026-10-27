@@ -586,6 +586,33 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.guest_local_progress_on_a_declared_action",
+      "role": "WIT-SESSION-05 scoped progress: at an open owned endpoint whose resolved node declares the requested action, that action has a successor -- peer, scheduler, queue and delivery are outside the statement",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.offer_state_offers_no_guest_action",
+      "role": "WIT-SESSION-05 scoped progress: a peer-side offer state declares no guest action, which is a named state rather than a deadlock claim",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.finished_state_declares_no_guest_action",
+      "role": "WIT-SESSION-05 scoped progress: a finished protocol declares no guest action, so progress ends in a named terminal state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
