@@ -909,6 +909,9 @@ table that differs from the graph's own prefix minima is refused
 non-aliasing and coverage (`accepted_implies_registers`,
 `accepted_implies_distinct`, `accepted_implies_coverage`).
 
+The clean-source kernel check is retained at `verification/foundation/receipts/09a307c64/`
+(393 theorems, `clean_source: true`, every axiom set inside the allow-list).
+
 Open item: the per-entry exactness obligation of the constant and slot tables is
 modelled (`constantEntryOk`, `slotEntryOk`) but its refusal theorem is not proved.
 Not claimed: no decoding of the Rust declaration's bytes, so nothing binds
