@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "dc20dfbdabe06dfa538ce0bf2dc4fb159fe13b46",
-  "source_tree": "04822e8d23c04de309843747d16f86ba79c82178",
+  "source_commit": "bf942cfad467fad4d90b0d3e931b4fdef0957834",
+  "source_tree": "62e5fb0e3074456d3b42f66e4d898e7b2c1d4522",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "e28d9dd80d7e5698dd0aba22fb055901263ad3cdc57cf2a41782abf4bb2a90dc",
-        "proofs/m6/nested-session-inventory.json": "196a32613f5deba99258006e9d09ff2d19d0b0a4bb32bd4bb9e9944b80cad4c9"
+        "proofs/m6/NestedSession.lean": "589a568412671bbaf528a121a4e914186942a4d68ac68e1bfb8309e7e0e7fe7a",
+        "proofs/m6/nested-session-inventory.json": "bc4361c5e5979eb8a79bd82ad837c03c3cdc14898400590fdea0562739ef59e1"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 32,
+    "model_theorems": 38,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "e28d9dd80d7e5698dd0aba22fb055901263ad3cdc57cf2a41782abf4bb2a90dc",
-    "proofs/m6/nested-session-inventory.json": "196a32613f5deba99258006e9d09ff2d19d0b0a4bb32bd4bb9e9944b80cad4c9",
+    "proofs/m6/NestedSession.lean": "589a568412671bbaf528a121a4e914186942a4d68ac68e1bfb8309e7e0e7fe7a",
+    "proofs/m6/nested-session-inventory.json": "bc4361c5e5979eb8a79bd82ad837c03c3cdc14898400590fdea0562739ef59e1",
     "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
   },
-  "theorem_count": 32,
+  "theorem_count": 38,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -454,6 +454,90 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.typed_send_advances_on_the_declared_type",
+      "role": "WIT-SESSION-04: the matching ordered message type advances to the continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.typed_send_advances_on_the_declared_type : NestedSession.stepSendTyped NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } NestedSession.MessageType.i64 = some { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.wrong_message_type_is_refused",
+      "role": "WIT-SESSION-04 negative control: a wrong ordered message type is refused, not coerced",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.wrong_message_type_is_refused : NestedSession.stepSendTyped NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } NestedSession.MessageType.text = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.wrong_order_is_refused",
+      "role": "WIT-SESSION-04 negative control: wrong order is refused in both directions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.wrong_order_is_refused : NestedSession.stepRecvTyped NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } NestedSession.MessageType.i64 = none ∧ NestedSession.stepSendTyped NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false } NestedSession.MessageType.i64 = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_internal_choice_branch_one",
+      "role": "WIT-SESSION-03 positive trace: a declared internal branch advances to its continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_internal_choice_branch_one : Option.map NestedSession.Endpoint.state (NestedSession.stepChoose NestedSession.choiceProtocol 2 { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false } 1) = some 6",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_wrong_branch_is_refused",
+      "role": "WIT-SESSION-03 negative control: a branch the protocol does not offer is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_wrong_branch_is_refused : NestedSession.stepChoose NestedSession.choiceProtocol 2 { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false } 0 = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.external_choice_is_not_guest_choice",
+      "role": "WIT-SESSION-04: external choice is the peer’s, and its dual is an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.external_choice_is_not_guest_choice : (NestedSession.stepChoose [NestedSession.Node.offer 0 5] 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } 0).isNone = true ∧ NestedSession.dual (NestedSession.Node.offer 0 5) = NestedSession.Node.choose 0 5",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -503,7 +587,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-c6/Audit.lean"
+        "/tmp/ns-c8/Audit.lean"
       ],
       "exit": 0
     },

@@ -38,8 +38,10 @@ carrying channel identity, side, protocol identity, current state and generation
 | `receive_after_dequeue_is_well_formed`, `forged_observation_without_dequeue_is_refused` | an observation needs a preceding dequeue; a forged peer response is refused |
 | `orderly_close_with_cleanup_is_well_formed`, `close_without_cleanup_is_refused` | an omitted cleanup is refused rather than read as a successful orderly close |
 | `both_choices_are_distinct_at_the_boundary` | internal choice branches stay distinct and a receive state does not step as a send |
+| `typed_send_advances_on_the_declared_type`, `wrong_message_type_is_refused`, `wrong_order_is_refused` | the continuation is typed: the declared message type and order are required, and a mismatch is refused rather than coerced |
+| `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice` | internal choice takes the selected declared branch, a wrong branch is refused, and external choice belongs to the peer (its dual is the internal one) |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **32** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **38** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block
 records `helper`, `runtime` and `peer` as explicitly absent with the reason, and its `claims` block
 labels the verdict.
