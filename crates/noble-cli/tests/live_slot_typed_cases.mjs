@@ -363,9 +363,71 @@ export const runMinimization = async (binary, fourCases) => {
   };
 };
 
+
+
+/**
+ * Bounded-budget boundary (issue #49 item 4): a genuinely reached retention
+ * budget, not a synthetic one. `record: true` retains one frozen root per
+ * executed invocation, and the CLI admits exactly the reviewed retention bound
+ * and then refuses at the command stage. The bound is declared here, not read
+ * back from the production report, and the refusal wording is reported for
+ * transparency only.
+ */
+const retentionBound = 128;
+
+const runRetentionFamily = async binary => {
+  const QUOTE = String.fromCharCode(34);
+  const defSource = `def traced [ drop ${QUOTE}A${QUOTE} test.emit drop 42 ]`;
+  const effects = ['live.dispatch', 'test.emit'];
+  const callerInput = refType(['I64'], ['I64'], effects);
+  const slots = [
+    { slotId: 'emit', input: ['I64'], output: ['I64'], effectCeiling: effects, proofRequired: false },
+    { slotId: 'caller', input: ['I64', callerInput], output: ['I64'], effectCeiling: effects, proofRequired: false },
+  ];
+  const grants = slots.flatMap(slot => ['publish', 'dispatch', 'effect'].map(operation => (
+    { operation, slotId: slot.slotId, allowed: true })));
+  const session = await cli(binary, 'typed-retention', selectedAuthority({
+    sources: { definition: defSource, named: 'traced', caller: 'slot.invoke' },
+    slots, grants, effects, quota: 32,
+  }));
+  const seen = [];
+  try {
+    await session.configured;
+    const issue = async request => { const row = await session.issue(request); seen.push(row); return row; };
+    await issue({ operation: 'install', id: 'caller', source: 'slot.invoke', inputs: ['I64', callerInput] });
+    await issue({ operation: 'define', id: 'definition', name: 'traced', source: defSource, inputs: [] });
+    await issue({ operation: 'install', id: 'named', source: 'traced', inputs: ['I64'], selected_name: 'traced' });
+    await issue({ operation: 'publish', slot: 'emit', id: 'named', program_index: 0, expected_epoch: '0' });
+    let retained = 0;
+    let refusal = null;
+    for (let pass = 0; pass <= retentionBound; pass += 1) {
+      const row = await issue({ operation: 'invoke', id: 'caller',
+        inputs: [{ kind: 'i64', value: '5' }],
+        refs: [{ position: 1, ordinal: 0, slot: 'emit' }], record: true });
+      if (row.outcome === 'executed') { retained += 1; continue; }
+      refusal = { pass, stage: row.stage, outcome: row.outcome, diagnostic: row.diagnostic };
+      break;
+    }
+    assert.equal(retained, retentionBound,
+      `the retention bound must admit exactly ${retentionBound} recorded roots, saw ${retained}`);
+    assert.ok(refusal, 'the invocation past the retention bound must be refused, not executed');
+    assert.equal(refusal.outcome, 'refused');
+    assert.equal(refusal.stage, 'command');
+    assert.equal(refusal.pass, retentionBound);
+    // An over-budget request is a refusal, never an executed root that quietly
+    // stopped being retained.
+    assert.equal(seen.filter(row => row.outcome === 'executed').length, retentionBound);
+    return { bound: retentionBound, retained, refusal_stage: refusal.stage,
+      observed_diagnostic: refusal.diagnostic };
+  } finally {
+    await session.close();
+  }
+};
+
 if (process.argv[1]?.endsWith('live_slot_typed_cases.mjs') === true) {
   const positives = await run(process.argv[2]);
   const negative = await runNegativeFamily(process.argv[2], positives);
   const minimization = await runMinimization(process.argv[2], negative);
-  process.stdout.write(`${JSON.stringify({ ...positives, negative, minimization })}\n`);
+  const retention = await runRetentionFamily(process.argv[2]);
+  process.stdout.write(`${JSON.stringify({ ...positives, negative, minimization, retention })}\n`);
 }
