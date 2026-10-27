@@ -1,0 +1,246 @@
+{
+  "schema": "noble-live-slot-typed-cases-receipt/v1",
+  "claim": "typed live-case coverage, controlled negatives, minimization, retention budget and type boundaries; not a theorem and not a promotion",
+  "model": {
+    "what": "kernel-checked LiveDispatch theorems about authorized and denied live dispatch",
+    "theorems": [
+      "NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation",
+      "NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event"
+    ],
+    "retained_receipt": {
+      "directory": "verification/foundation/receipts/d2aa7a382",
+      "theorem_count": 261,
+      "clean_source": true
+    },
+    "does_not_establish": "any dispatch/effect count, refusal class or boundary measured below"
+  },
+  "implementation_comparison": {
+    "what": "the measured lane output, as a behavioral comparison against the declared tables",
+    "lane": {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.mjs",
+      "sha256": "a178b4d47e226c805dffc6c37dd07518882d59de927f4a3df8f86efa78802dcf"
+    },
+    "runner": {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.rs",
+      "sha256": "456fee31834260bac6ace4af09fbc0bf0764f116c2b5b2f7d83b6a88c721a95c"
+    },
+    "helper": {
+      "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+      "sha256": "8f55ed81c5570a98789c9756fed345c707c19b38b60cb208cc9053cecf904046"
+    },
+    "observed": {
+      "seed": 20261027,
+      "coverage": {
+        "admitted": 4,
+        "by_shape": {
+          "direct": 4
+        },
+        "by_nesting": {
+          "single": 4
+        },
+        "by_ceiling": {
+          "pure": 2,
+          "dispatch+emit": 2
+        },
+        "by_repeated_reborrow": {
+          "once": 2,
+          "twice": 2
+        },
+        "total_dispatch_rows": 6,
+        "total_effect_rows": 3
+      },
+      "negative": {
+        "classes": [
+          "binding-foreign-root",
+          "binding-wrong-position",
+          "stack-incompatible",
+          "effect-not-granted"
+        ],
+        "by_stage": {
+          "command": 3,
+          "slot": 1
+        },
+        "refused": 4,
+        "diagnostics": [
+          {
+            "class": "binding-foreign-root",
+            "observed": [
+              "unregistered bound root slot"
+            ]
+          },
+          {
+            "class": "binding-wrong-position",
+            "observed": [
+              "root reference binding disagrees with checked caller or slot"
+            ]
+          },
+          {
+            "class": "stack-incompatible",
+            "observed": [
+              "root input is not a bounded signed i64"
+            ]
+          },
+          {
+            "class": "effect-not-granted",
+            "observed": [
+              "Error: checked guest execution returned status 5; control lane poisoned=false"
+            ]
+          }
+        ]
+      },
+      "minimization": {
+        "classes": [
+          "binding-foreign-root",
+          "binding-wrong-position",
+          "stack-incompatible",
+          "effect-not-granted"
+        ],
+        "minimal_starting_witnesses": 4,
+        "accepted_shrinks": 12,
+        "rejected_shrinks": [],
+        "detail": [
+          {
+            "class": "binding-foreign-root",
+            "accepted": [
+              "repeat",
+              "quota",
+              "program_index"
+            ],
+            "rejected": []
+          },
+          {
+            "class": "binding-wrong-position",
+            "accepted": [
+              "repeat",
+              "quota",
+              "program_index"
+            ],
+            "rejected": []
+          },
+          {
+            "class": "stack-incompatible",
+            "accepted": [
+              "repeat",
+              "quota",
+              "program_index"
+            ],
+            "rejected": []
+          },
+          {
+            "class": "effect-not-granted",
+            "accepted": [
+              "repeat",
+              "quota",
+              "program_index"
+            ],
+            "rejected": []
+          }
+        ],
+        "negative_family_classes": [
+          "binding-foreign-root",
+          "binding-wrong-position",
+          "stack-incompatible",
+          "effect-not-granted"
+        ]
+      },
+      "retention": {
+        "bound": 128,
+        "retained": 128,
+        "refusal_stage": "command",
+        "observed_diagnostic": "recorded root retention limit exhausted"
+      },
+      "typeBoundaries": {
+        "stack": {
+          "admitted": 128,
+          "refused_first": 129
+        },
+        "nesting": {
+          "admitted": 31,
+          "refused_first": 32
+        },
+        "refusal_stage": "authority",
+        "observed_diagnostics": [
+          "oversized input",
+          "type constructor nesting limit exceeded"
+        ]
+      }
+    },
+    "commands": [
+      {
+        "argv": [
+          "node",
+          "crates/noble-cli/tests/live_slot_typed_cases.mjs",
+          "ABSOLUTE_PREBUILT_CLI"
+        ],
+        "status": 0
+      },
+      {
+        "argv": [
+          "cargo",
+          "test",
+          "-p",
+          "noble-cli",
+          "--test",
+          "live_slot_typed_cases"
+        ]
+      }
+    ],
+    "does_not_establish": "that the model theorems hold for these fixtures, or that another authority shape behaves so"
+  },
+  "host_correspondence": {
+    "what": "the exact selected bytes and the sessions the measurements came from",
+    "binary": {
+      "path": "/var/tmp/noble-target/debug/noble",
+      "sha256": "2bbe9f62681c79e806f33311460a21adc95b23b0787e298cd76ef3cf448fac17"
+    },
+    "sessions": [
+      "typed-direct-pure-repeat1-0",
+      "typed-direct-pure-repeat2-1",
+      "typed-direct-dispatch+emit-repeat1-2",
+      "typed-direct-dispatch+emit-repeat2-3",
+      "typed-negative-binding-foreign-root-0",
+      "typed-negative-binding-wrong-position-1",
+      "typed-negative-stack-incompatible-2",
+      "typed-negative-effect-not-granted-3",
+      "typed-retention",
+      "type-stack-admitted",
+      "type-stack-refused",
+      "nesting-admitted",
+      "nesting-refused"
+    ],
+    "does_not_establish": "any claim about a differently built CLI or a different fixture authority"
+  },
+  "inherited_coverage": {
+    "what": "coherent maps, revocation, abnormal prefix, stale-CAS/ABA and nested roots measured elsewhere",
+    "lanes": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+        "sha256": "655753e3d7f84003ce06a56e4af03c04c649d4983a697ebb5180ede2ba282539",
+        "what": "coherent entry maps (VC-LIVE-03)"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_relocation_witness.mjs",
+        "sha256": "50be035b2f21f8c44fbcd17afab674640560d7fdb99b948976e49c2036a5eb42",
+        "what": "independent policy revocation (denied effect) and the abnormal dispatch prefix"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_cas_policy.mjs",
+        "sha256": "9a6de66b46cfbfa7c940b1b7e831084851cec31285d6ec9321f54a291ba45432",
+        "what": "stale-CAS/ABA publication controls"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+        "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
+        "what": "LSLOT-02 nested and transitive roots"
+      }
+    ],
+    "does_not_establish": "that those lanes were re-run here; only their bytes are bound"
+  },
+  "non_claims": [
+    "a passing typed case is not a theorem and promotes no LSLOT conformance case",
+    "the negative family asserts declared semantic classes and stages, never diagnostic wording; observed diagnostics are reported for transparency only",
+    "minimality is along the tried witness dimensions (repeat, quota, program index) only",
+    "quota is a declared retention quota field, not an invocation budget; no exhausted class is asserted for it",
+    "the nested chain shape is refused rather than mistyped, so it is outside this coverage"
+  ]
+}
