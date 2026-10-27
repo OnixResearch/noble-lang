@@ -153,6 +153,42 @@ fn editor_failures_preserve_category_and_bounded_node_paths(
     );
     assert!(report.contains("\"node_path\":null"), "{report}");
 
+    // A nested hole addresses its own node, not the quotation that contains it:
+    // the refusal is located at the first hole's generated span, and paths stay
+    // stable within one input rather than claiming source-file offsets.
+    let (code, report) = invoke(
+        &temporary,
+        "admit",
+        r#"{"format":1,"nodes":[{"kind":"quotation","nodes":[{"kind":"integer","value":1},{"kind":"quotation","nodes":[{"kind":"hole"}]}]}]}"#,
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(
+        report.contains("\"source_stage\":\"acceptance\""),
+        "{report}"
+    );
+    assert!(report.contains("\"category\":\"invalid\""), "{report}");
+    assert!(
+        report.contains("\"node_path_status\":\"mapped\""),
+        "{report}"
+    );
+    assert!(
+        report.contains("\"node_path\":[0,1,0]"),
+        "the inner hole names its own nested path: {report}"
+    );
+
+    // With two holes the first one is named, so the address does not depend on
+    // iteration order beyond the input itself.
+    let (code, report) = invoke(
+        &temporary,
+        "admit",
+        r#"{"format":1,"nodes":[{"kind":"integer","value":1},{"kind":"quotation","nodes":[{"kind":"hole"}]},{"kind":"hole"}]}"#,
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(
+        report.contains("\"node_path\":[1,0]"),
+        "the first hole is the one named: {report}"
+    );
+
     // A hole-free refusal addresses the node it came from; the single hole of
     // this candidate is node 0.
     let (code, report) = invoke(

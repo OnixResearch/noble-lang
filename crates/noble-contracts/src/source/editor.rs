@@ -46,6 +46,9 @@ struct Builder {
     tree: super::Tree,
     source: Vec<u8>,
     holes: usize,
+    /// The generated span of the first hole. An admission refusal is located there rather than at
+    /// the whole tree, so a client learns which node to fix and a nested hole maps to its own path.
+    first_hole: Option<crate::Span>,
     /// One entry per generated node: its synthetic span and the bounded editor
     /// path that produced it. Paths are indices into the editor node tree, so
     /// they are stable within one input and never claim to be source offsets.
@@ -223,6 +226,9 @@ impl Emitter {
                     "editor node limit exceeded",
                 ));
             }
+            if matches!(kind, super::Kind::EditorHole) && self.builder.first_hole.is_none() {
+                self.builder.first_hole = Some(crate::Span { start, end });
+            }
             let own_index = frame.next.saturating_sub(1) as u32;
             let mut leaf_path = ancestors(frames.as_slice());
             leaf_path.push(own_index);
@@ -263,6 +269,7 @@ impl Candidate {
                 },
                 source: Vec::new(),
                 holes: 0,
+                first_hole: None,
                 paths: Vec::new(),
             },
             meter: crate::Meter::new(limits),
@@ -295,12 +302,11 @@ impl Candidate {
     pub fn admitted_source(&self, limits: crate::Limits) -> Result<Vec<u8>, super::Error> {
         let (builder, _) = attempt!(self.build(limits));
         if builder.holes != 0 {
+            // Located at the first hole's own generated span, not at the whole tree.
+            let span = builder.first_hole.unwrap_or(builder.tree.span);
             return Err(super::Error::at(
                 super::Stage::Acceptance,
-                crate::invalid(
-                    builder.tree.span,
-                    "editor hole cannot enter source admission",
-                ),
+                crate::invalid(span, "editor hole cannot enter source admission"),
             ));
         }
         Ok(builder.source)
@@ -439,6 +445,54 @@ mod tests {
             assert!(span.start <= span.end);
             assert!(!path.is_empty());
         }
+    }
+
+    #[test]
+    fn a_hole_admission_refusal_is_located_at_the_first_hole() {
+        // Issue #63: the refusal used to carry the whole tree's span, so a nested hole reported the
+        // outer quotation as its address. It now carries the first hole's own generated span, and the
+        // later hole is not silently chosen instead.
+        let candidate = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![Node::Quotation(alloc::vec![
+                Node::Integer(1),
+                Node::Quotation(alloc::vec![Node::Hole]),
+            ])],
+        };
+        let paths = candidate
+            .editor_paths(crate::Limits::default())
+            .expect("nested paths");
+        let error = candidate
+            .admitted_source(crate::Limits::default())
+            .expect_err("a hole cannot enter admission");
+        assert_eq!(error.stage(), super::super::Stage::Acceptance);
+        assert_eq!(error.diagnostic().kind.category(), "invalid");
+        let (span, path) = paths
+            .iter()
+            .find(|(span, _)| *span == error.diagnostic().span)
+            .expect("the refusal names a node the emitter produced");
+        assert_eq!(*span, error.diagnostic().span);
+        assert_eq!(*path, alloc::vec![0, 1, 0], "the inner hole's own path");
+
+        let trailing = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![
+                Node::Integer(1),
+                Node::Quotation(alloc::vec![Node::Hole]),
+                Node::Hole,
+            ],
+        };
+        let paths = trailing
+            .editor_paths(crate::Limits::default())
+            .expect("first-hole paths");
+        let error = trailing
+            .admitted_source(crate::Limits::default())
+            .expect_err("a hole cannot enter admission");
+        let (_, path) = paths
+            .iter()
+            .find(|(span, _)| *span == error.diagnostic().span)
+            .expect("the first hole is the one named");
+        assert_eq!(*path, alloc::vec![1, 0], "the first hole, not the last");
     }
 
     #[test]

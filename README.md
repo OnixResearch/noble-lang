@@ -89,7 +89,11 @@ fields so further additive detail keeps `v1`:
   editor source, never an original `.noble`-file or caller-JSON position.
 - `node_path` is the bounded editor node path that produced the span, and
   `node_path_status` says whether the mapping is `mapped` or `unmapped`. An
-  unmapped failure reports `"node_path": null` instead of guessing.
+  unmapped failure reports `"node_path": null` instead of guessing. A nested
+  node names its own path (`[0,1,0]`, not the quotation containing it): a hole
+  admission refusal is located at the **first** hole node's generated span, and
+  parse refusals stay `unmapped` because the emitter cannot build the tree they
+  come from.
 - `join`, when available, carries `failing_word`, `expected_stack`,
   `actual_stack`, `constraint` and `value_origin` (a generated span, or `null`
   when the origin is unavailable).
