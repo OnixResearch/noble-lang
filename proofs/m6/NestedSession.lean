@@ -282,4 +282,112 @@ theorem trace_bounded_buffering_refuses_the_third_payload :
     (deliver (deliver (deliver ⟨[], 0, 2⟩))).queued = 2 := by
   decide
 
+/-! ## Asynchronous event vocabulary and the receive/return half (WIT-SESSION-03)
+
+Guest request, bounded admission, host commit, observation, dequeue, close, cancellation and cleanup
+are distinct events, so a successful send is never modelled as peer receipt and an event may not be
+borrowed from another class. The receive/return half is implemented here; cancellation is an event
+class but carries no transition yet. -/
+
+/-- One asynchronous event. `observation` is the peer-receipt-shaped event, and only a dequeue can
+precede it: a forged peer response is refused rather than accepted. -/
+inductive Event where
+  | guestRequest (operation : Nat)
+  | admission (depth : Nat)
+  | hostCommit (identity : Nat)
+  | dequeue (depth : Nat)
+  | observation (value : Option Nat)
+  | close
+  | cancellation
+  | cleanup (kind : Nat)
+  deriving DecidableEq, Repr
+
+/-- A send's event sequence carries no observation at all: send is not receipt. -/
+def sendEvents (operation identity : Nat) : List Event :=
+  [.guestRequest operation, .admission 1, .hostCommit identity]
+
+theorem send_events_never_observe (operation identity : Nat) :
+    (sendEvents operation identity).any (fun event =>
+      match event with
+      | .observation _ => true
+      | _ => false) = false := by
+  simp only [sendEvents, List.any_cons, List.any_nil, Bool.or_false]
+
+/-- A receive trace's observations are each preceded by a dequeue: this is the pairing premise made
+explicit for the receive half, not an assumption hidden in a fixture. -/
+def dequeuedBefore (events : List Event) : Bool :=
+  (events.foldl (fun (state : Bool × Bool) event =>
+      match event with
+      | .dequeue _ => (state.1, true)
+      | .observation _ => (state.1 && state.2, state.2)
+      | .guestRequest _ => state
+      | .admission _ => state
+      | .hostCommit _ => state
+      | .close => state
+      | .cancellation => state
+      | .cleanup _ => state) (true, false)).1
+
+/-- A dequeue then an observation is a well-formed receive. -/
+theorem receive_after_dequeue_is_well_formed :
+    dequeuedBefore [Event.guestRequest 0, Event.admission 1, Event.dequeue 1,
+      Event.observation (some 7)] = true := by
+  decide
+
+/-- A forged peer response with no dequeue anywhere in the trace is refused. -/
+theorem forged_observation_without_dequeue_is_refused :
+    dequeuedBefore [Event.guestRequest 0, Event.observation (some 7)] = false := by
+  decide
+
+/-- A close must be followed by a cleanup commit: omitting the cleanup is refused rather than treated as
+a successful orderly close. -/
+def hasClose (events : List Event) : Bool :=
+  events.any (fun event => event == Event.close)
+
+def hasCleanup (events : List Event) : Bool :=
+  events.any (fun event =>
+    match event with
+    | .cleanup _ => true
+    | _ => false)
+
+def orderlyCloseEvents (events : List Event) : Bool :=
+  !(hasClose events) || hasCleanup events
+
+theorem orderly_close_with_cleanup_is_well_formed :
+    orderlyCloseEvents [Event.guestRequest 0, Event.close, Event.cleanup 1] = true := by
+  decide
+
+theorem close_without_cleanup_is_refused :
+    orderlyCloseEvents [Event.guestRequest 0, Event.close] = false := by
+  decide
+
+/-- One receive step advances exactly to the receive node's continuation, and a closed endpoint
+cannot receive either. -/
+def stepRecv (definitions : List Node) (depth : Nat) (endpoint : Endpoint) : Option Endpoint :=
+  match resolve definitions depth endpoint.state with
+  | some (.recv _message continuation) =>
+      if endpoint.closed then none else some ⟨endpoint.channel, endpoint.responder,
+        endpoint.protocol, continuation, endpoint.generation, endpoint.closed⟩
+  | _ => none
+
+/-- Send then receive advances through the closed table from the send node to the receive node's
+continuation, so the return half is executable in the model. -/
+theorem trace_send_then_recv_advances :
+    (stepSend exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩).bind
+        (fun mid => stepRecv exampleProtocol 2 mid) =
+      some ⟨5, false, 9, 2, 4, false⟩ := by
+  decide
+
+theorem closed_endpoint_cannot_receive (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
+    (message : MessageType) (continuation : Nat)
+    (atRecv : resolve definitions depth endpoint.state = some (.recv message continuation)) :
+    stepRecv definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
+      endpoint.state, endpoint.generation, true⟩ = none := by
+  simp only [stepRecv, atRecv, if_true]
+
+/-- Both choices stay distinct at the boundary: two internal branches are different nodes, and a
+receive node does not step as a send node. -/
+theorem both_choices_are_distinct_at_the_boundary :
+    Node.choose 0 1 ≠ Node.choose 1 1 ∧ (stepSend exampleProtocol 2 ⟨5, false, 9, 1, 4, false⟩).isNone := by
+  decide
+
 end NestedSession

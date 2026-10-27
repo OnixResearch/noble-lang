@@ -217,6 +217,78 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.send_events_never_observe",
+      "role": "WIT-SESSION-03: a send event sequence carries no observation; send is never receipt",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.receive_after_dequeue_is_well_formed",
+      "role": "WIT-SESSION-03: an observation preceded by a dequeue is a well-formed receive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.forged_observation_without_dequeue_is_refused",
+      "role": "WIT-SESSION-03 negative control: a forged peer response is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.orderly_close_with_cleanup_is_well_formed",
+      "role": "WIT-SESSION-03: close followed by cleanup is a well-formed orderly close",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.close_without_cleanup_is_refused",
+      "role": "WIT-SESSION-03 negative control: an omitted cleanup is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_send_then_recv_advances",
+      "role": "WIT-SESSION-03 positive trace: send then receive advances through the closed table (the return half)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.closed_endpoint_cannot_receive",
+      "role": "WIT-SESSION-02 negative control: receive-after-close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.both_choices_are_distinct_at_the_boundary",
+      "role": "WIT-SESSION-01/03: internal choice branches stay distinct and a receive state does not step as a send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
