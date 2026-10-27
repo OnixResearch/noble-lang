@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "f5efac13a4ff89206cb7d3484e5e9bd207fd8217",
-  "source_tree": "f6f8d38190652c7d217156b2c03b0523ced33c4d",
+  "source_commit": "f244791d5c5816f70230762af9c6f1d5a9bca517",
+  "source_tree": "cf6842fb017b0e4f0df5b60105bffba0ac6b9631",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "7d19958fb65068b42d579a23cd01f14b6fbcb2a63720204f99035ada6e533282",
-        "proofs/m6/nested-session-inventory.json": "268f46e863e3d8b92ec59ea69ffa630caf177708415e58138628b1e2504d4824"
+        "proofs/m6/NestedSession.lean": "3e40f644e44fb060bfbbd545d1181861fb3ab9c77cef76046dd17d2670fb02ad",
+        "proofs/m6/nested-session-inventory.json": "3ea10072c50664c31137400943b8bfb6bc2dc610de61b48423a00bc024eefbb2"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 15,
+    "model_theorems": 24,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "7d19958fb65068b42d579a23cd01f14b6fbcb2a63720204f99035ada6e533282",
-    "proofs/m6/nested-session-inventory.json": "268f46e863e3d8b92ec59ea69ffa630caf177708415e58138628b1e2504d4824",
+    "proofs/m6/NestedSession.lean": "3e40f644e44fb060bfbbd545d1181861fb3ab9c77cef76046dd17d2670fb02ad",
+    "proofs/m6/nested-session-inventory.json": "3ea10072c50664c31137400943b8bfb6bc2dc610de61b48423a00bc024eefbb2",
     "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
   },
-  "theorem_count": 15,
+  "theorem_count": 24,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -231,6 +231,121 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.admitOne_is_bounded",
+      "role": "WIT-SESSION-03: admission keeps the mailbox depth inside the limit, given a well-formed session",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.admitOne_is_bounded : ∀ (queued limit : Nat), queued ≤ limit → NestedSession.admitOne queued limit ≤ limit",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.admission_is_bounded",
+      "role": "WIT-SESSION-03: a session admission never exceeds the declared queue limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.admission_is_bounded : ∀ (session : NestedSession.Session), session.queued ≤ session.queueLimit → (NestedSession.deliver session).queued ≤ session.queueLimit",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.full_mailbox_is_unchanged",
+      "role": "WIT-SESSION-03: a full mailbox refuses by leaving the session unchanged, never a silent drop",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.full_mailbox_is_unchanged : ∀ (session : NestedSession.Session), session.queueLimit ≤ session.queued → NestedSession.deliver session = session",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.admission_preserves_the_endpoint_inventory",
+      "role": "WIT-SESSION-05: admission copies and removes no endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.admission_preserves_the_endpoint_inventory : ∀ (session : NestedSession.Session), (NestedSession.deliver session).endpoints = session.endpoints",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.no_endpoint_duplication",
+      "role": "WIT-SESSION-05: no operation in this model increases the endpoint inventory",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.no_endpoint_duplication : ∀ (session : NestedSession.Session), (NestedSession.deliver session).endpoints.length ≤ session.endpoints.length",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.trace_send_then_recv",
+      "role": "WIT-SESSION-03 positive trace: sequenced send advances the state and observes no peer",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_send_then_recv : Option.map (fun endpoint => endpoint.state) (NestedSession.stepSend NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }) = some 1",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_recursive_entry_unfolds_to_the_send_node",
+      "role": "WIT-SESSION-03 positive trace: recursive entry unfolds to the declared definition instead of expanding",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_recursive_entry_unfolds_to_the_send_node : NestedSession.resolve NestedSession.exampleProtocol 2 2 = some (NestedSession.Node.send NestedSession.MessageType.i64 1)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_orderly_close",
+      "role": "WIT-SESSION-03 positive trace: orderly close is accepted once and a second close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_orderly_close : NestedSession.closeOnce { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := false } = NestedSession.Outcome.accepted ∧ NestedSession.closeOnce { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := true } = NestedSession.Outcome.refusedDoubleClose",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.trace_bounded_buffering_refuses_the_third_payload",
+      "role": "WIT-SESSION-03 positive trace: bounded buffering stops at the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_bounded_buffering_refuses_the_third_payload : (NestedSession.deliver (NestedSession.deliver (NestedSession.deliver { endpoints := [], queued := 0, queueLimit := 2 }))).queued = 2",
+      "axioms": []
     }
   ],
   "commands": [
@@ -280,7 +395,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-c2/Audit.lean"
+        "/tmp/ns-c4/Audit.lean"
       ],
       "exit": 0
     },

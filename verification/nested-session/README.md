@@ -30,8 +30,11 @@ carrying channel identity, side, protocol identity, current state and generation
 | `stale_generation_is_refused`, `matching_generation_is_accepted`, `double_close_is_refused` | identity alone is not authority; the matching generation is the non-vacuous control; a second close is refused |
 | `closed_endpoint_cannot_send`, `send_step_advances_to_the_continuation` | a closed endpoint cannot send, and one step advances exactly to the send node's continuation with peer/channel/protocol/generation unchanged |
 | `send_step_does_not_observe_a_peer` | a send step returns only the endpoint's own successor: **receipt is not modelled** |
+| `admitOne_is_bounded`, `admission_is_bounded`, `full_mailbox_is_unchanged` | admission keeps the mailbox depth inside the declared limit (given a well-formed session) and a full mailbox refuses without a silent drop |
+| `admission_preserves_the_endpoint_inventory`, `no_endpoint_duplication` | no operation in this model increases the endpoint inventory |
+| `trace_send_then_recv`, `trace_recursive_entry_unfolds_to_the_send_node`, `trace_orderly_close`, `trace_bounded_buffering_refuses_the_third_payload` | positive traces over one closed table: sequencing, recursive entry unfolding to its definition, orderly close once, bounded buffering stopping at the limit |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: 15 model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **24** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block
 records `helper`, `runtime` and `peer` as explicitly absent with the reason, and its `claims` block
 labels the verdict.
