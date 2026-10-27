@@ -157,3 +157,23 @@ commutative subtraction, and implicit contraction. Each is caught by a named
 retained expectation, and `all_declared_mutations_are_caught` states that no
 declared variant escapes. Detection is kernel-checked model disagreement, not a
 Rust-side mutation run; the packed-evaluator replay remains open.
+
+## aa13a54e9 — WITHDRAWN foundation run
+
+`aa13a54e9/` records clean source commit
+`aa13a54e996947942e04f1d4e1a3eaba5182bba9`, tree `3b48bbac7af1bfdd8fc66d63095d32ed69cc028e`,
+from `verification/foundation/check.mjs --output`. **Its subject was withdrawn at `53c078b3a`**:
+the run included a second `RegionTrace` module under `proofs/foundation`, which duplicated the
+existing `proofs/m5/RegionTrace.lean` subject, so the module and its inventory rows were deleted.
+
+The receipt bytes are retained unchanged as the record of that commit's run, per the rule that
+historical receipts are not rewritten. They are **stale for the current foundation** and must not
+be cited: `aa13a54e9/WITHDRAWN.md` states the scope. Region-trace results belong to the m5 module
+and its own lanes.
+
+## cc147dd40 — bounded task-interleaving model (issue #46)
+
+`cc147dd40/` records the clean run that added `NobleFoundation.TaskInterleaving` (23 inventoried
+theorems; that run reported 428 in total). It is model evidence for `TaskId`/`Lifecycle`/`Slot`/`Table`
+step relations, interleavings and lossy observations; it is not a universal theorem and says
+nothing about compiler correspondence.
