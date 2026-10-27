@@ -1393,3 +1393,5 @@ describe the Rust kernel, `test.emit`, or the runtime's handle tables.
 The CI recipe and its limits are in the Phase 4 section above. The retained
 receipts are under
 [`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md).
+Receipt [`verification/foundation/receipts/b3655a9cd/`](../../verification/foundation/receipts/b3655a9cd/foundation-check.json)
+(435 theorems, `clean_source: true`).
