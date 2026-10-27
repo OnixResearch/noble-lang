@@ -179,3 +179,30 @@ question.
 Recorded so the next attempt does not repeat the three dead ends: bare emitting
 fragment (status 5), `Program` literal plus `run` (status 5), and definition
 without a consumed input (join refusal at hop time).
+
+### Addendum 4: what the interleaved-publication retention case actually hits
+
+Task 2 of the change wants one event per coherent entry map *with publications interleaved
+at the existing checkpoints* and an already-pinned root retaining its own map. Authoring that
+on top of the relocation witness refuted three of the obvious shapes, and the refusals are
+more informative than a passing lane would be:
+
+- staging a replacement candidate for the slot **being dispatched** and publishing it while
+  the root is held at that dispatch is refused
+  `operator candidate is not idle-staged under exact slot contract` even though the same
+  candidate reported `candidate-staged` immediately before the invocation;
+- re-staging mid-flight instead expires the hold: `selected checkpoint expired before operator
+  resume` (the hold has an eight-second deadline, so the staging round-trip must precede the
+  invocation);
+- reflecting a program's interface to compare it against the slot contract is not available
+  before a root is pinned: `unknown checked dispatch site`, and the session then terminates
+  with `internal-failure`.
+
+What the existing pinned lane already proves without an event, and what the relocation
+witness already proves without a checkpoint, is therefore the honest state: coherent one-event
+per published map (witness), and map retention through an ordered publication for inert
+programs (nested-roots lane). The *combination* — retention of a map that performs a
+distinguished event while a publication commits mid-root — remains unproven, and closing it
+needs the two disjoint-ref shape the nested-roots fixture uses (a dispatcher program that
+invokes the leaf twice, holding at the second occurrence so the leaf is idle when its
+replacement commits).
