@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "bf942cfad467fad4d90b0d3e931b4fdef0957834",
-  "source_tree": "62e5fb0e3074456d3b42f66e4d898e7b2c1d4522",
+  "source_commit": "216a4c6410d41c28d70e4ab6946ce5c98f4cb61a",
+  "source_tree": "94c17e90cb887c4590b8834266b876a4bd83dac2",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "589a568412671bbaf528a121a4e914186942a4d68ac68e1bfb8309e7e0e7fe7a",
-        "proofs/m6/nested-session-inventory.json": "bc4361c5e5979eb8a79bd82ad837c03c3cdc14898400590fdea0562739ef59e1"
+        "proofs/m6/NestedSession.lean": "5eca921ef024cfed5df0e848d0e45418554ea39528c4f56a2ec5220bf6f23ba0",
+        "proofs/m6/nested-session-inventory.json": "9c89f0f416287a94e4fc43e2dc6efb3397114d44ef4ffd1d7846d49b2d3f5e46"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 38,
+    "model_theorems": 43,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "589a568412671bbaf528a121a4e914186942a4d68ac68e1bfb8309e7e0e7fe7a",
-    "proofs/m6/nested-session-inventory.json": "bc4361c5e5979eb8a79bd82ad837c03c3cdc14898400590fdea0562739ef59e1",
+    "proofs/m6/NestedSession.lean": "5eca921ef024cfed5df0e848d0e45418554ea39528c4f56a2ec5220bf6f23ba0",
+    "proofs/m6/nested-session-inventory.json": "9c89f0f416287a94e4fc43e2dc6efb3397114d44ef4ffd1d7846d49b2d3f5e46",
     "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
   },
-  "theorem_count": 38,
+  "theorem_count": 43,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -538,6 +538,74 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.enqueue_raises_the_depth_by_one",
+      "role": "WIT-SESSION-03: an enqueue raises the derived depth by one under the ledger invariant",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.enqueue_raises_the_depth_by_one : ∀ (box : NestedSession.Mailbox), box.dequeued ≤ box.enqueued → NestedSession.mailboxDepth (NestedSession.enqueue box) = NestedSession.mailboxDepth box + 1",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_never_raises_the_depth",
+      "role": "WIT-SESSION-03: accounting cannot be inflated by dequeuing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dequeue_never_raises_the_depth : ∀ (box : NestedSession.Mailbox), NestedSession.mailboxDepth (NestedSession.dequeue box) ≤ NestedSession.mailboxDepth box",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_of_empty_mailbox_is_unchanged",
+      "role": "WIT-SESSION-03: a dequeue of an empty mailbox leaves the ledger unchanged",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dequeue_of_empty_mailbox_is_unchanged : ∀ (box : NestedSession.Mailbox), NestedSession.mailboxDepth box = 0 → NestedSession.dequeue box = box",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.full_queue_misaccounting_is_refused",
+      "role": "WIT-SESSION-03 negative control: an observation cannot borrow depth the ledger never recorded",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.full_queue_misaccounting_is_refused : NestedSession.mailboxDepth (NestedSession.dequeue (NestedSession.dequeue { enqueued := 0, dequeued := 0 })) = 0 ∧ (NestedSession.dequeue { enqueued := 0, dequeued := 0 }).dequeued = 0",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.accounting_tracks_the_operations",
+      "role": "WIT-SESSION-03: the derived depth tracks admissions and dequeues",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.accounting_tracks_the_operations : NestedSession.mailboxDepth (NestedSession.dequeue (NestedSession.enqueue (NestedSession.enqueue { enqueued := 0, dequeued := 0 }))) = 1",
+      "axioms": []
     }
   ],
   "commands": [
@@ -587,7 +655,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-c8/Audit.lean"
+        "/tmp/ns-d1/Audit.lean"
       ],
       "exit": 0
     },

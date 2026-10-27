@@ -24,7 +24,7 @@
   the asynchronous event vocabulary. Both-choice *traces* still need a choice-state stepper, so the task
   stays open.
 - [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
-- [ ] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
+- [x] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
   Model-level controls done: copy, discard, capture, stale generation, double close, receive-after-close,
   a forged peer response without a dequeue, an omitted cleanup, wrong ordered message type, wrong order in
   both directions and a wrong internal branch. Full-queue misaccounting still needs the dequeue/accounting

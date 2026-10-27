@@ -40,8 +40,10 @@ carrying channel identity, side, protocol identity, current state and generation
 | `both_choices_are_distinct_at_the_boundary` | internal choice branches stay distinct and a receive state does not step as a send |
 | `typed_send_advances_on_the_declared_type`, `wrong_message_type_is_refused`, `wrong_order_is_refused` | the continuation is typed: the declared message type and order are required, and a mismatch is refused rather than coerced |
 | `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice` | internal choice takes the selected declared branch, a wrong branch is refused, and external choice belongs to the peer (its dual is the internal one) |
+| `enqueue_raises_the_depth_by_one`, `dequeue_never_raises_the_depth`, `dequeue_of_empty_mailbox_is_unchanged`, `accounting_tracks_the_operations` | the mailbox depth is **derived from a ledger** of admissions and dequeues, not stored beside them |
+| `full_queue_misaccounting_is_refused` | an observation cannot borrow depth the ledger never recorded |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **38** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **43** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block
 records `helper`, `runtime` and `peer` as explicitly absent with the reason, and its `claims` block
 labels the verdict.
