@@ -14,6 +14,7 @@ import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
 import NobleFoundation.GraphRewrite
+import NobleFoundation.SymbolicMutations
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver
 import NobleFoundation.Certificate

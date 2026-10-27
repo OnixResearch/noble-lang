@@ -2576,6 +2576,48 @@
       "phase": 6,
       "role": "task-interleaving",
       "claim": "the same two delivery records in the other order are a different documented observation"
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "A seeded wrong-operation face refutes the addition face that the reference pair keeps in agreement."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.wrong_operand_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "A seeded wrong-operand face (one node reached twice) refutes the reference addition face."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.wrong_constant_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "A seeded wrong-constant face refutes the reference addition face."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.wrong_output_order_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "Reversing the declared ordered outputs changes the ordered results, and the reference over the declared order catches it."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.shifted_encoding_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "A shifted witness encoder round-trips at the slot it recorded while the graph reads another slot, so the verdict flips against the reference replay of the candidate's own bits."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.output_blind_verdict_is_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "A verdict that inspects only the first ordered result reports agreement on a pair whose second ordered result differs, and the reference comparison reports the refutation."
+    },
+    {
+      "name": "NobleFoundation.SymbolicPair.Mutations.all_declared_mutations_are_caught",
+      "phase": 2,
+      "role": "symbolic-mutation-lane",
+      "claim": "No declared faulty graph, output-order, encoder or verdict variant escapes the retained reference expectations."
     }
   ]
 }

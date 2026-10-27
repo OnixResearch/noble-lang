@@ -1110,6 +1110,37 @@ Still open, and explicitly not claimed here:
 - guards, input facts, `F32`, resources, live slots, recursion and dynamic calls
   remain outside the slice.
 
+### Seeded fault variants for the symbolic query lane (issue #56, acceptance item 4)
+
+`NobleFoundation/SymbolicMutations.lean` is the test-local faulty-variant lane the
+bounded query needs, so that "the search found nothing" cannot stand in for the
+reference result. Each variant differs from a reference face in exactly one place,
+and a named reference expectation catches it:
+
+| Variant | Fault | Caught by |
+|---|---|---|
+| `opMutated` | subtracts where the reference adds | `wrong_op_is_caught` |
+| `operandMutated` | reaches one node twice (`5 + 5`) | `wrong_operand_is_caught` |
+| `constantMutated` | holds six where the reference holds three | `wrong_constant_is_caught` |
+| `twoOutSwapped` | asks the right face for its ordered outputs in the other order | `wrong_output_order_is_caught` |
+| `encodeShifted` | records each slot's exact bits at the next slot | `shifted_encoding_is_caught` |
+| `refutedFirstOnly` | inspects only the first ordered result | `output_blind_verdict_is_caught` |
+
+The encoding and verdict variants are the interesting ones because both are shapes
+of *agreement that proves nothing*. The shifted encoder **round-trips at the slot it
+recorded**, so two consumers of that one corrupted encoding agree the bits are
+present; the graph reads a different slot, and the verdict flips from agreement to
+refutation against the reference replay of the candidate's own bits. The
+output-blind verdict reports agreement on a pair whose **second** ordered result
+differs, while the reference comparison over both declared outputs reports the
+refutation. `all_declared_mutations_are_caught` closes the lane: no declared variant
+escapes.
+
+This lane is model-level detection. It does **not** supply the missing encoder
+correspondence to `extract/symbolic.rs`, the B2 I64 harness legs or any emitted
+Wasm, and it involves no solver, timeout budget or certificate. Seven inventoried
+theorems (29 for the #56 slice).
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained
