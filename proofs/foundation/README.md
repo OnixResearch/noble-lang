@@ -739,10 +739,26 @@ Open, and deliberately not closed:
 - no correspondence claim relates the model to
   `crates/noble-kernel/src/authority`: there is no authority extraction yet, so
   this is finite model evidence rather than an implementation theorem;
-- finite Rust comparisons for multiple outstanding witnesses sharing quota,
-  both admission orders, quota exhaustion, facts changing between
-  authorization/admission and finalization between admission/start are Phase 2
-  work;
+- the finite Rust comparisons of Phase 2 are named, measured results over the real
+  authority table rather than theorems, and they are partial: two witnesses
+  sharing one checkpoint's quota is measured by
+  `bindings::same_checkpoint_quota_is_reserved_across_distinct_witnesses`;
+  admission order independence by `phase2::both_admission_orders_charge_the_same_quota`
+  (both orders commit exactly one and refuse exactly one, with identical
+  counters); exhaustion *before any charge* by
+  `phase2::quota_exhaustion_stops_before_consumption`; a fresh snapshot that does
+  not carry prior reservations by `phase2::a_fresh_snapshot_without_carry_forward_is_refused`,
+  which observes `Denial::InconsistentQuota` rather than extra capacity; and
+  finalization between admission and start by
+  `phase2::finishing_the_invocation_between_admission_and_start_stops_the_start`
+  (the start is refused `InvocationFinished`, no protected operation runs, and
+  the consumed witness is not restored). Facts changing between authorization
+  and admission are measured for a changed quota snapshot (refused
+  `InconsistentQuota`) and for revocation
+  (`phase2::revocation_between_authorization_and_admission_refuses_the_admission`:
+  refused `Denial::Revoked` with no attempt registered, nothing consumed and the
+  witness left retirable); a change of credentials, policy or checkpoint between
+  those two calls has no separate Rust scenario;
 - no concurrency, crash-recovery, remote-revocation atomicity or exactly-once
   claim, and no cross-checkpoint conservation claim without the carry-forward
   premise.

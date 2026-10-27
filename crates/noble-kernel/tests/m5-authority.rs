@@ -4,6 +4,8 @@
 
 #[path = "m5-authority/bindings.rs"]
 mod bindings;
+#[path = "m5-authority/phase2.rs"]
+mod phase2;
 #[path = "m5-authority/receipts.rs"]
 mod receipts;
 #[path = "m5-authority/sequencing.rs"]
