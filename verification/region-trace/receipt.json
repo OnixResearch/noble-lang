@@ -1,8 +1,8 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "d9a6af54aaded91c3c459a6f1db9ffbe7bee30e7",
-  "source_tree": "46844a402a16fbed39831ee3d25ccc3b2435c40f",
+  "source_commit": "998d2cf085f3f0593636067bbc27a8ee4900946f",
+  "source_tree": "181b4a47c6da1f102b7de4643020913af74020c5",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "168b3498b1d5a79be91738b6a7126acab93e085549d425f2cbb070352ff4b4ea",
-        "proofs/m5/region-trace-inventory.json": "f7391bd0e902865dde20b9a1fd84da5d0d8c288abed3d2e699ae9d54bf685b26"
+        "proofs/m5/RegionTrace.lean": "5552291e78c82a3775251a5a0a2ac7baba2eec24e0281a2111708e30ff54077d",
+        "proofs/m5/region-trace-inventory.json": "34631b08dbf857ad8b0171b1978192a0ef61e68be02860721cac059401cdaa96"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 33,
+    "model_theorems": 39,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "168b3498b1d5a79be91738b6a7126acab93e085549d425f2cbb070352ff4b4ea",
-    "proofs/m5/region-trace-inventory.json": "f7391bd0e902865dde20b9a1fd84da5d0d8c288abed3d2e699ae9d54bf685b26",
+    "proofs/m5/RegionTrace.lean": "5552291e78c82a3775251a5a0a2ac7baba2eec24e0281a2111708e30ff54077d",
+    "proofs/m5/region-trace-inventory.json": "34631b08dbf857ad8b0171b1978192a0ef61e68be02860721cac059401cdaa96",
     "verification/region-trace/check.mjs": "8ca57112a417381d384937d4cacd94a4f6c34282c6c1dec3a14801c81e7c06ab"
   },
-  "theorem_count": 33,
+  "theorem_count": 39,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -495,6 +495,90 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "RegionTrace.fixture_ordinary_error",
+      "role": "WIT-TRACE-05 fixture: ordinary error with a reason relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_ordinary_error : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead none (some \"bounds-reject\")] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_host_bounds_refusal",
+      "role": "WIT-TRACE-05 fixture: host bounds refusal keeps the request visible and copies nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_host_bounds_refusal : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_trap_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: a trap after a protected copy relates to the request, the class staying target-side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_trap_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_cleanup_failure_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: cleanup failure stays distinct from trap and quota exhaustion on the target side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_cleanup_failure_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cleanupFailure] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_stops_before_the_copy",
+      "role": "WIT-TRACE-05 fixture: a quota boundary that stops before the copy relates to the request alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_quota_prefix_stops_before_the_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 2 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit",
+      "role": "WIT-TRACE-05 fixture: measurability control for the quota boundary",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 10 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8]) = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -544,7 +628,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/rt-b1/Audit.lean"
+        "/tmp/rt-f1/Audit.lean"
       ],
       "exit": 0
     },

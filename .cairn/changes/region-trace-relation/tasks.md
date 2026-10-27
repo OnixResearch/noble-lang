@@ -22,6 +22,11 @@
 - [x] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
+  Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
+  after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
+  measurability control showing the boundary tracks the budget. Cancellation stays unsupported because
+  the alphabets have no cancellation event. The host-side observations that would record these from a
+  real execution are still absent, so the task stays open.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
   Model-level controls done: substituted identity, unexplained read commit, second release, missing
   protected commit, host cleanup as guest release and a denial traded for a success are refused.
