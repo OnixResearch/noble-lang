@@ -23,7 +23,8 @@ use std::hash::{DefaultHasher, Hasher};
 use noble_ngraph::ir::Digest;
 use noble_ngraph::{IdentityHasher, IdentityScheme};
 
-/// The test scheme.
+/// The test scheme. Copy, so a lane can hold it and pass it by reference in the same test.
+#[derive(Clone, Copy)]
 pub struct TestScheme;
 
 /// The scheme instance used by the library tests.

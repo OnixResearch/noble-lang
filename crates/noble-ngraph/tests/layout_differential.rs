@@ -1,3 +1,17 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::ambiguous_params,
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; this integration harness builds checked graphs and asserts their layout and execution outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Differential execution of a compiled, layout-validated endpoint (issue #43).
 //!
 //! The packed layout is validated against the graph, and the same graph is then
@@ -9,41 +23,14 @@
 use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
-use noble_ngraph::identity::{IdentityHasher, IdentityScheme};
-use noble_ngraph::ir::{Digest, Graph, GraphBuilder, ScalarType, SubProfile, Subject};
+use noble_ngraph::ir::{Graph, GraphBuilder, ScalarType, SubProfile, Subject};
 use noble_ngraph::layout::{check as layout_check, PackedLayout, Refusal};
 use noble_ngraph::sem::Value;
 
-struct TestHasher(u64);
-
-impl IdentityHasher for TestHasher {
-    fn update(&mut self, bytes: &[u8]) {
-        for &byte in bytes {
-            self.0 = self.0.wrapping_mul(31).wrapping_add(u64::from(byte));
-        }
-    }
-
-    fn finish(self: Box<Self>) -> Digest {
-        let mut digest = [0u8; 32];
-        digest[..8].copy_from_slice(&self.0.to_le_bytes());
-        digest
-    }
-}
-
-struct TestIds;
-
-impl IdentityScheme for TestIds {
-    fn name(&self) -> &'static str {
-        "test"
-    }
-
-    fn start(&self) -> Box<dyn IdentityHasher + '_> {
-        Box::new(TestHasher(0))
-    }
-}
+mod common;
 
 fn f32_chain() -> Graph {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::F32,
         Subject::authored(&scheme, "layout-differential-f32"),
@@ -58,7 +45,7 @@ fn f32_chain() -> Graph {
 }
 
 fn i64_guarded() -> Graph {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
         Subject::authored(&scheme, "layout-differential-i64"),
@@ -74,12 +61,12 @@ fn i64_guarded() -> Graph {
 }
 
 fn checked(graph: &Graph) -> CheckedGraph {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     check::check(&scheme, graph.clone()).expect("endpoint checks")
 }
 
 fn execute(checked: &CheckedGraph, inputs: &[Value]) -> (Obs, Obs) {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let compiled = Compiled::new(&scheme, checked);
     let mut control_a = Control::default();
     let mut control_b = Control::default();
@@ -103,7 +90,7 @@ fn assert_agree(left: &Obs, right: &Obs, context: &str) {
 fn a_validated_f32_endpoint_agrees_with_the_reference_interpreter() {
     let graph = f32_chain();
     let checked = checked(&graph);
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let layout = Compiled::new(&scheme, &checked).packed_layout();
     assert_eq!(layout_check(&checked, &layout), Ok(()));
     let inputs = [
@@ -121,7 +108,7 @@ fn a_validated_f32_endpoint_agrees_with_the_reference_interpreter() {
 fn a_validated_guarded_endpoint_agrees_or_fails_the_same_guard() {
     let graph = i64_guarded();
     let checked = checked(&graph);
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let layout = Compiled::new(&scheme, &checked).packed_layout();
     assert_eq!(layout_check(&checked, &layout), Ok(()));
     // One admitting sum and one sum that is not an exact bit.
@@ -144,7 +131,7 @@ fn a_validated_guarded_endpoint_agrees_or_fails_the_same_guard() {
 fn a_layout_that_miscounts_instructions_is_refused_before_execution() {
     let graph = i64_guarded();
     let checked = checked(&graph);
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let compiled = Compiled::new(&scheme, &checked);
     let layout = compiled.packed_layout();
     let mut truncated = layout.clone();
@@ -162,8 +149,16 @@ fn a_layout_that_miscounts_instructions_is_refused_before_execution() {
 
 /// A checked graph and the compiler's own packed layout for it (issue #68).
 fn compiled_layout(builder: GraphBuilder) -> (CheckedGraph, PackedLayout) {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let accepted = checked(&builder.finish());
+    let layout = Compiled::new(&scheme, &accepted).packed_layout();
+    (accepted, layout)
+}
+
+/// The compiler's own packed layout for an already-built graph, under the test scheme.
+fn compiled_layout_crate(graph: noble_ngraph::ir::Graph) -> (CheckedGraph, PackedLayout) {
+    let scheme = common::IDS;
+    let accepted = checked(&graph);
     let layout = Compiled::new(&scheme, &accepted).packed_layout();
     (accepted, layout)
 }
@@ -173,7 +168,7 @@ fn a_compiled_parameter_layout_is_measured_by_the_validator() {
     // Issue #68: the compiler puts both slot kinds in the same `slot_regs` table, so the validator
     // must recognise an entry for either kind. This fixture is the compiler's own layout, not a
     // handcrafted one.
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::F32,
         Subject::authored(&scheme, "compiled-parameter-layout"),
@@ -193,7 +188,7 @@ fn a_compiled_parameter_layout_is_measured_by_the_validator() {
 
 #[test]
 fn several_parameters_and_parameter_only_layouts_are_measured() {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let mut two = GraphBuilder::new(
         SubProfile::F32,
         Subject::authored(&scheme, "compiled-two-parameters"),
@@ -226,11 +221,55 @@ fn several_parameters_and_parameter_only_layouts_are_measured() {
     assert_eq!(layout_check(&integer, &integer_layout), Ok(()));
 }
 
+#[test]
+fn the_real_training_fixtures_pass_layout_validation() {
+    // Issue #68 asks for the existing F32 training graphs, not only a purpose-built fixture. These
+    // are the graphs the trainer and the gradient reference actually use; each carries parameter
+    // slots created by `GraphBuilder::param()`, and their compiler-produced tables must validate.
+    let scheme = common::IDS;
+    for guarded in [false, true] {
+        let (checked, layout) = compiled_layout_crate(crate::common::linear(guarded, false));
+        assert_eq!(
+            checked.graph().slots.len(),
+            3,
+            "one input and two parameter slots"
+        );
+        assert_eq!(
+            layout.slot_regs.len(),
+            3,
+            "the compiler declares one register per slot of either kind"
+        );
+        assert_eq!(
+            layout_check(&checked, &layout),
+            Ok(()),
+            "the training model's own packed layout validates (guarded = {guarded})"
+        );
+        assert!(
+            checked
+                .graph()
+                .slots
+                .iter()
+                .filter(|slot| slot.kind == noble_ngraph::ir::SlotKind::Param)
+                .count()
+                == 2,
+            "the fixture really carries two parameter slots"
+        );
+    }
+    let (checked, layout) = compiled_layout_crate(crate::common::mse());
+    assert_eq!(layout.slot_regs.len(), 2, "two inputs, no parameters");
+    assert_eq!(
+        layout_check(&checked, &layout),
+        Ok(()),
+        "the loss graph's layout validates"
+    );
+    let _ = scheme;
+}
+
 /// Mutations of a real parameter table stay refused, so recognising `Param` did not weaken the
 /// exact register-to-slot identity or the one-entry-per-slot rule.
 #[test]
 fn malformed_parameter_layouts_are_refused() {
-    let scheme = TestIds;
+    let scheme = common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::F32,
         Subject::authored(&scheme, "compiled-parameter-mutations"),
