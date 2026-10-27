@@ -1356,6 +1356,9 @@ fuel/budget truncation keeps the committed prefix rather than inventing a comple
 (`take_is_a_prefix`, `excerpt_keeps_the_committed_prefix`); and two target traces agreeing on
 their visible events project to the same source trace (`internal_stutter_is_invisible`), which
 is the whole justification for the one class that may stutter.
+Receipt
+[verification/foundation/receipts/aa13a54e9/](../../verification/foundation/receipts/aa13a54e9/foundation-check.json)
+(440 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
 Open, and deliberately not closed:
 
