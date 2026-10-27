@@ -129,8 +129,8 @@
       ]
     },
     {
-      "name": "NestedSession.receive_in_a_send_state_is_refused",
-      "role": "WIT-SESSION-04: one step advances to the continuation and nothing outside the protocol",
+      "name": "NestedSession.send_step_advances_to_the_continuation",
+      "role": "WIT-SESSION-04: one step advances exactly to the continuation and nothing outside the protocol",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",

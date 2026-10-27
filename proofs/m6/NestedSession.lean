@@ -185,9 +185,9 @@ theorem closed_endpoint_cannot_send (definitions : List Node) (depth : Nat) (end
   simp only [stepSend, atSend]
   simp only [if_true]
 
-/-- An operation the current protocol state does not offer is refused: no action outside the
-protocol. -/
-theorem receive_in_a_send_state_is_refused (definitions : List Node) (depth : Nat)
+/-- One step from a send node advances the endpoint to exactly that node's continuation, and the
+peer, channel, protocol and generation are unchanged: no action outside the protocol. -/
+theorem send_step_advances_to_the_continuation (definitions : List Node) (depth : Nat)
     (endpoint : Endpoint) (message : MessageType) (continuation : Nat)
     (atSend : resolve definitions depth endpoint.state = some (.send message continuation)) :
     stepSend definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
