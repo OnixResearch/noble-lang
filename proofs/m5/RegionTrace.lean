@@ -502,4 +502,42 @@ theorem exhaustion_relates_when_affordable :
          .cleanup .guestRelease 7]) = true := by
   decide
 
+/-! ## RegionProtocol corollaries (WIT-TRACE-03)
+
+Derived from the relation, never stated alongside it: an ordered permitted prefix, an exact identity
+that came from a decision, an explained read commit and an at-most-once release. The premises the
+corollaries still need — the host's own identity supply and response-to-request pairing — stay
+premises and are not silently discharged here. -/
+
+/-- A permitted ordered prefix of a source trace: the retained trace's projection is a prefix of the
+related source trace itself, not merely of the full target trace. So an exhaustion boundary composes
+with the relation at the source level. -/
+theorem retained_projection_is_permitted_prefix (fuel : Nat) (source : List SourceEvent)
+    (steps : List AbiStep) (relatedTrace : related source steps = true) :
+    (retainFrom fuel steps).filterMap projectStep <+: source := by
+  have both := relatedTrace
+  rw [related, Bool.and_eq_true, beq_iff_eq] at both
+  rw [both.1]
+  exact exhaustion_keeps_committed_prefix fuel steps
+
+/-- No forged identity survives at the source level: every identity the related source trace commits
+was decided by the target trace it relates to. -/
+theorem source_commits_are_decided (source : List SourceEvent) (steps : List AbiStep)
+    (relatedTrace : related source steps = true) :
+    (commitIdentities steps).all (fun identity => (decisions steps).contains identity) = true := by
+  have both := relatedTrace
+  rw [related, Bool.and_eq_true] at both
+  simp only [wellFormed, identitiesDecided, Bool.and_eq_true] at both
+  exact both.2.1.1
+
+/-- A related source trace never performs two guest releases: at-most-once release is inherited by
+the source alphabet rather than asserted about it. -/
+theorem source_release_is_at_most_once (source : List SourceEvent) (steps : List AbiStep)
+    (relatedTrace : related source steps = true) :
+    (List.range 3).all (fun member => (releaseMembers steps).count member ≤ 1) = true := by
+  have both := relatedTrace
+  rw [related, Bool.and_eq_true] at both
+  simp only [wellFormed, atMostOnce, Bool.and_eq_true] at both
+  exact both.2.2
+
 end RegionTrace

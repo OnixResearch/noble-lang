@@ -271,6 +271,33 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.retained_projection_is_permitted_prefix",
+      "role": "WIT-TRACE-03 corollary: an ordered permitted prefix of the related *source* trace, so exhaustion composes with the relation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_commits_are_decided",
+      "role": "WIT-TRACE-03 corollary: no forged identity at the source level",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_release_is_at_most_once",
+      "role": "WIT-TRACE-03 corollary: at-most-once release inherited by the source alphabet",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
