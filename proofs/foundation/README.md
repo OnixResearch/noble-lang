@@ -906,6 +906,9 @@ an unknown rule token refuses the step (`unknown_rule_token_refused`); and a sta
 revision token refuses decoding before any step is inspected
 (`stale_revision_token_refused`).
 
+The clean-source kernel check is retained at `verification/foundation/receipts/26fca0806/`
+(381 theorems, `clean_source: true`, every axiom set inside the allow-list).
+
 Not claimed: tokens are modelled as strings and no byte-level envelope is modelled,
 so nothing here binds the `serde`/binary bytes the Rust encoder writes; envelope
 digests, replay-budget accounting and the identity rules are out of scope.
