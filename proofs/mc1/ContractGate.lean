@@ -1,4 +1,5 @@
 import NobleContracts
+import NobleContracts.NamedV3
 import Lean
 
 open Lean Elab Command
@@ -28,7 +29,9 @@ elab "check_contract_library" : command => do
     ``NobleContracts.captureBuilder_family, ``NobleContracts.captureBuilder_exported,
     ``NobleContracts.maps_append, ``NobleContracts.snapshot_distinction,
     ``NobleContracts.undefined_not_is_undefined,
-    ``NobleContracts.TypedPC.compose, ``NobleContracts.increment_missing_implication]
+    ``NobleContracts.TypedPC.compose, ``NobleContracts.increment_missing_implication,
+    ``NobleContracts.NamedV3.exec_append_iff, ``NobleContracts.NamedV3.holds_true₂,
+    ``NobleContracts.NamedV3.holds_eq₂_iff]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
