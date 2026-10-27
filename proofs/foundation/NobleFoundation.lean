@@ -27,3 +27,4 @@ import NobleFoundation.Laws
 import NobleFoundation.Effects
 import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
+import NobleFoundation.RegionTrace

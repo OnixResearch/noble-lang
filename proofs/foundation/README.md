@@ -1330,6 +1330,48 @@ Open, and deliberately not closed:
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal
   sticky-failure theorem.
 
+## Prefix-safe source/target trace relation (issue #50)
+
+`NobleFoundation/RegionTrace.lean` is the first Lean slice of the `region-trace-relation`
+change: the relation is defined *first*, and every property below is derived from it, because
+non-identical traces do not preserve arbitrary properties by themselves. The source alphabet is
+RegionProtocol-v1's request/response/commit classes over the pilot's exact resource identity
+(`swap`); the target alphabet is the ABI step sequence the bounded-region host performs —
+guest-visible calls and acknowledgements, the protected store, one **named internal bookkeeping
+class** with a per-step tag, host retirement, and the trap exit.
+
+Two erasures would make a broken execution look correct, so the projection refuses them instead
+of performing them: a **host retirement is never rewritten into a guest release**
+(`project_refuses_retirement`, `retirement_is_not_a_guest_release`) and a **trap exit is never
+dropped** (`project_refuses_trap_exit`). Denials are not erasable either. Only the tagged
+bookkeeping class stutters, and `only_bookkeeping_and_terminators_stutter` states exactly that:
+an event has no source translation iff it is internal bookkeeping or a refused terminator.
+
+Derived from the relation: a clean target trace projects to exactly its visible events in order
+(`project_is_the_visible_projection`, `project_keeps_the_order`), so every protected store
+appears as its own commit in both directions (`project_keeps_every_commit`) and a refused
+acknowledgement appears as a refused response (`project_keeps_denials`); any target prefix
+relates to a source prefix of the related source trace (`prefix_of_projection`), so a
+fuel/budget truncation keeps the committed prefix rather than inventing a completed source run
+(`take_is_a_prefix`, `excerpt_keeps_the_committed_prefix`); and two target traces agreeing on
+their visible events project to the same source trace (`internal_stutter_is_invisible`), which
+is the whole justification for the one class that may stutter.
+
+Open, and deliberately not closed:
+
+- **no correspondence claim** relates these events to the emitted steps of
+  `crates/noble-cli/src/component/bounded_region.rs` with pinned revisions, and none about a real
+  Wasmtime instance; a theorem about two alphabets stays a model theorem;
+- the trap/quota/cleanup distinction the issue asks for is *not* modelled here: the host's single
+  `adapter-trap` label cannot distinguish them today, so the distinction stays **unknown** rather
+  than synthesized (`WIT-TRACE-05` remains open on the host side);
+- normal return is a premise, never a consequence: prefix safety implies neither eventual return
+  nor successful cleanup, and cancellation remains unsupported because no real control exists;
+- the cost relation here is a truncation bound, not Wasmtime fuel accounting; and the finite
+  success/error/refusal/trap/quota-prefix fixtures and the adversarial controls (swapped request,
+  substituted response/resource, erased denial, missing commit, retirement disguised as release)
+  are Phase 2 work that needs observations the host does not emit yet.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |

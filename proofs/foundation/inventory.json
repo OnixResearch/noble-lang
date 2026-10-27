@@ -2576,6 +2576,78 @@
       "phase": 6,
       "role": "task-interleaving",
       "claim": "the same two delivery records in the other order are a different documented observation"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_refuses_retirement",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "a host retirement has no source translation"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_refuses_trap_exit",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "a trap exit is refused rather than dropped from the prefix"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.retirement_is_not_a_guest_release",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "retirement alone relates to no source trace, so it cannot be presented as a guest release"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.only_bookkeeping_and_terminators_stutter",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "an event has no source translation exactly when it is internal bookkeeping or a refused terminator"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_is_the_visible_projection",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "a target trace with no refused terminator projects to exactly its visible events in order"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_keeps_every_commit",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "every protected store appears as its own commit, in both directions"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_keeps_denials",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "a refused acknowledgement appears as a refused response"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.project_keeps_the_order",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "the source trace is the target's visible subsequence rather than a permutation of it"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.prefix_of_projection",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "any target prefix of a related trace relates to a source prefix of the related source trace"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.take_is_a_prefix",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "truncating a trace gives a prefix of it"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.excerpt_keeps_the_committed_prefix",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "a fuel/budget truncation still relates to a source prefix instead of a completed source run"
+    },
+    {
+      "name": "NobleFoundation.RegionTrace.internal_stutter_is_invisible",
+      "phase": 6,
+      "role": "region-trace",
+      "claim": "two target traces agreeing on their visible events project to the same source trace"
     }
   ]
 }
