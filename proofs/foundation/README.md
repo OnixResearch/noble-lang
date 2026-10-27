@@ -918,7 +918,11 @@ Per-entry exactness is tied to the readable obligation by `constant_predicate_if
 retained at `verification/foundation/receipts/9b1b93055/` (397 theorems, `clean_source: true`).
 Not claimed: no decoding of the Rust declaration's bytes, so nothing binds
 `serde`/binary output to these tables; the layout build key, compiler revision and
-identity scheme are out of scope.
+identity scheme are out of scope. The node vocabulary modelled here is the pure-`I64`
+fragment, so the slot table obligation is the one for **input** slots: the `ngraph-f32/0`
+profile's `Op::Param` slots and its F32 instructions are not modelled. The Rust validator
+covers both slot kinds in one table, as issue #68 required the validator to recognise after
+it refused the compiler's own parameter layouts.
 
 ## Replayable certificate codec (issue #42, codec half)
 

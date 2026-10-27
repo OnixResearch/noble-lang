@@ -11,7 +11,7 @@ use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
 use noble_ngraph::identity::{IdentityHasher, IdentityScheme};
 use noble_ngraph::ir::{Digest, Graph, GraphBuilder, ScalarType, SubProfile, Subject};
-use noble_ngraph::layout::{check as layout_check, Refusal};
+use noble_ngraph::layout::{check as layout_check, PackedLayout, Refusal};
 use noble_ngraph::sem::Value;
 
 struct TestHasher(u64);
@@ -158,4 +158,149 @@ fn a_layout_that_miscounts_instructions_is_refused_before_execution() {
     );
     // The real layout is still fine, so the refusal is about the mutation.
     assert_eq!(layout_check(&checked, &layout), Ok(()));
+}
+
+/// A checked graph and the compiler's own packed layout for it (issue #68).
+fn compiled_layout(builder: GraphBuilder) -> (CheckedGraph, PackedLayout) {
+    let scheme = TestIds;
+    let accepted = checked(&builder.finish());
+    let layout = Compiled::new(&scheme, &accepted).packed_layout();
+    (accepted, layout)
+}
+
+#[test]
+fn a_compiled_parameter_layout_is_measured_by_the_validator() {
+    // Issue #68: the compiler puts both slot kinds in the same `slot_regs` table, so the validator
+    // must recognise an entry for either kind. This fixture is the compiler's own layout, not a
+    // handcrafted one.
+    let scheme = TestIds;
+    let mut builder = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&scheme, "compiled-parameter-layout"),
+    );
+    let input = builder.input(ScalarType::F32);
+    let weight = builder.param();
+    let product = builder.op(noble_ngraph::ir::Op::F32Mul(input, weight));
+    builder.output(product);
+    let (checked, layout) = compiled_layout(builder);
+    assert_eq!(
+        layout.slot_regs.len(),
+        2,
+        "input and parameter share the table"
+    );
+    assert_eq!(layout_check(&checked, &layout), Ok(()));
+}
+
+#[test]
+fn several_parameters_and_parameter_only_layouts_are_measured() {
+    let scheme = TestIds;
+    let mut two = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&scheme, "compiled-two-parameters"),
+    );
+    let input = two.input(ScalarType::F32);
+    let weight = two.param();
+    let bias = two.param();
+    let scaled = two.op(noble_ngraph::ir::Op::F32Mul(input, weight));
+    let shifted = two.op(noble_ngraph::ir::Op::F32Add(scaled, bias));
+    two.output(shifted);
+    let (checked, layout) = compiled_layout(two);
+    assert_eq!(layout.slot_regs.len(), 3);
+    assert_eq!(layout_check(&checked, &layout), Ok(()));
+
+    let mut only = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&scheme, "compiled-parameter-only"),
+    );
+    let left = only.param();
+    let right = only.param();
+    let product = only.op(noble_ngraph::ir::Op::F32Mul(left, right));
+    only.output(product);
+    let (checked, layout) = compiled_layout(only);
+    assert_eq!(layout.slot_regs.len(), 2);
+    assert_eq!(layout_check(&checked, &layout), Ok(()));
+
+    // The input-only integer control keeps the ordinary behaviour: no parameter needed.
+    let integer = crate::checked(&i64_guarded());
+    let integer_layout = Compiled::new(&scheme, &integer).packed_layout();
+    assert_eq!(layout_check(&integer, &integer_layout), Ok(()));
+}
+
+/// Mutations of a real parameter table stay refused, so recognising `Param` did not weaken the
+/// exact register-to-slot identity or the one-entry-per-slot rule.
+#[test]
+fn malformed_parameter_layouts_are_refused() {
+    let scheme = TestIds;
+    let mut builder = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&scheme, "compiled-parameter-mutations"),
+    );
+    let input = builder.input(ScalarType::F32);
+    let weight = builder.param();
+    let product = builder.op(noble_ngraph::ir::Op::F32Mul(input, weight));
+    builder.output(product);
+    let (checked, layout) = compiled_layout(builder);
+    assert_eq!(
+        layout_check(&checked, &layout),
+        Ok(()),
+        "the pristine table passes"
+    );
+    let parameter = *layout
+        .slot_regs
+        .iter()
+        .find(|(_, slot)| {
+            checked.graph().slots[*slot as usize].kind == noble_ngraph::ir::SlotKind::Param
+        })
+        .expect("the fixture has one parameter entry");
+    let input_entry = *layout
+        .slot_regs
+        .iter()
+        .find(|(_, slot)| {
+            checked.graph().slots[*slot as usize].kind == noble_ngraph::ir::SlotKind::Input
+        })
+        .expect("the fixture has one input entry");
+
+    // Wrong register for the parameter.
+    let mut wrong_register = layout.clone();
+    for entry in &mut wrong_register.slot_regs {
+        if *entry == parameter {
+            entry.0 = u32::MAX;
+        }
+    }
+    assert_eq!(
+        layout_check(&checked, &wrong_register),
+        Err(Refusal::SlotTable),
+        "a register no parameter node carries is refused"
+    );
+
+    // Duplicate parameter entry.
+    let mut duplicated = layout.clone();
+    duplicated.slot_regs.push(parameter);
+    assert_eq!(
+        layout_check(&checked, &duplicated),
+        Err(Refusal::SlotTable),
+        "one slot is covered once"
+    );
+
+    // Omitted parameter entry.
+    let mut omitted = layout.clone();
+    omitted.slot_regs.retain(|entry| *entry != parameter);
+    assert_eq!(
+        layout_check(&checked, &omitted),
+        Err(Refusal::SlotTable),
+        "every slot node is declared"
+    );
+
+    // The parameter entry claiming the input's slot identity.
+    let mut swapped = layout.clone();
+    for entry in &mut swapped.slot_regs {
+        if *entry == parameter {
+            entry.1 = input_entry.1;
+        }
+    }
+    assert_eq!(
+        layout_check(&checked, &swapped),
+        Err(Refusal::SlotTable),
+        "slot identities are not interchangeable across kinds"
+    );
 }

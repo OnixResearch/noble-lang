@@ -26,6 +26,12 @@ What this is not: no decoding of the Rust declaration's bytes is modelled, so no
 binds `serde`/binary output to these tables; the failure-suffix table is modelled as a
 declared list compared against the graph's own prefix minima, and no statement covers the
 layout build key, the compiler revision or the identity scheme.
+
+The node vocabulary here is the pure-`I64` fragment (`input`, `constant` and the four
+integer instructions), so the modelled slot table is the one for **input** slots. The
+`ngraph-f32/0` profile has a second slot kind — `Op::Param` — and the Rust validator covers
+both kinds in one table (issue #68); this file models neither the parameter nodes nor the
+F32 instructions, so it says nothing about parameter layouts.
 -/
 import Init.Data.List.Lemmas
 import NobleFoundation.PackedSchedule

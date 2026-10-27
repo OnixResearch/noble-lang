@@ -154,19 +154,30 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
             return Err(Refusal::ConstantTable);
         }
     }
+    // Both slot kinds share one table in the compiler, so an entry may describe an input node or a
+    // parameter node. Each declared slot is still covered exactly once: a second entry for the same
+    // slot, a swapped kind, or a register that no node of that slot carries is refused.
+    let mut covered = alloc::vec![false; graph.slots.len()];
     for &(register, slot) in &layout.slot_regs {
         let matching = graph
             .nodes
             .iter()
             .enumerate()
             .filter(|(index, node)| {
-                matches!(node.op, Op::Input(k) if k == slot)
+                matches!(node.op, Op::Input(k) | Op::Param(k) if k == slot)
                     && layout.reg.get(*index).copied() == Some(register)
             })
             .count();
         if matching != 1 {
             return Err(Refusal::SlotTable);
         }
+        let Some(seen) = covered.get_mut(slot as usize) else {
+            return Err(Refusal::SlotTable);
+        };
+        if *seen {
+            return Err(Refusal::SlotTable);
+        }
+        *seen = true;
     }
     let declared_constants = layout.consts.len();
     let constant_nodes = graph
@@ -224,12 +235,12 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
         return Err(Refusal::LayerCoverage);
     }
     let declared_slots = layout.slot_regs.len();
-    let input_nodes = graph
+    let slot_nodes = graph
         .nodes
         .iter()
-        .filter(|node| matches!(node.op, Op::Input(_)))
+        .filter(|node| matches!(node.op, Op::Input(_) | Op::Param(_)))
         .count();
-    if declared_slots != input_nodes {
+    if declared_slots != slot_nodes {
         return Err(Refusal::SlotTable);
     }
     Ok(())
