@@ -24,6 +24,26 @@ fn clone_stack(stack: &[crate::types::Ty]) -> alloc::vec::Vec<crate::types::Ty> 
     out
 }
 
+
+/// Deep-copy one nominal shape by cloning only its `Ty` payloads.
+///
+/// `Ty`'s own `Clone` must not go through `NominalShape`'s derived `Clone`: the two
+/// impls call each other, and Aeneas rejects mutually recursive definitions (and its
+/// Lean backend additionally refuses termination clauses for that shape). Cloning the
+/// payloads here keeps the call graph one-directional: `NominalShape::clone` may call
+/// `Ty::clone`, never the reverse.
+fn clone_shape(shape: &crate::types::NominalShape) -> crate::types::NominalShape {
+    match shape {
+        crate::types::NominalShape::Opaque(representation) => {
+            crate::types::NominalShape::Opaque(alloc::boxed::Box::new((**representation).clone()))
+        }
+        crate::types::NominalShape::Variant(left, right) => crate::types::NominalShape::Variant(
+            alloc::boxed::Box::new((**left).clone()),
+            alloc::boxed::Box::new((**right).clone()),
+        ),
+    }
+}
+
 /// Deep-copy one type.
 impl Clone for crate::types::Ty {
     fn clone(&self) -> crate::types::Ty {
@@ -60,24 +80,12 @@ impl Clone for crate::types::Ty {
             crate::types::Ty::Resource(kind) => crate::types::Ty::Resource(*kind),
             crate::types::Ty::Nominal(id, shape) => crate::types::Ty::Nominal(
                 *id,
-                alloc::boxed::Box::new(match &**shape {
-                    crate::types::NominalShape::Opaque(representation) => {
-                        crate::types::NominalShape::Opaque(alloc::boxed::Box::new(
-                            (**representation).clone(),
-                        ))
-                    }
-                    crate::types::NominalShape::Variant(left, right) => {
-                        crate::types::NominalShape::Variant(
-                            alloc::boxed::Box::new((**left).clone()),
-                            alloc::boxed::Box::new((**right).clone()),
-                        )
-                    }
-                }),
+                alloc::boxed::Box::new(clone_shape(&**shape)),
             ),
             crate::types::Ty::GenericNominal(id, args, shape) => crate::types::Ty::GenericNominal(
                 *id,
                 alloc::boxed::Box::new([args[0].clone(), args[1].clone()]),
-                alloc::boxed::Box::new((**shape).clone()),
+                alloc::boxed::Box::new(clone_shape(&**shape)),
             ),
         }
     }
@@ -255,6 +263,28 @@ fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> 
     }
 }
 
+
+/// Render one nominal shape, closing it, so `Ty`'s `Debug` never calls
+/// `NominalShape`'s derived `Debug` (mutually recursive pair, see `clone_shape`).
+fn debug_shape(
+    shape: &crate::types::NominalShape,
+    f: &mut core::fmt::Formatter<'_>,
+) -> core::fmt::Result {
+    match shape {
+        crate::types::NominalShape::Opaque(representation) => {
+            attempt!(core::fmt::Formatter::write_str(f, "Opaque("));
+            attempt!(core::fmt::Debug::fmt(&**representation, f));
+        }
+        crate::types::NominalShape::Variant(left, right) => {
+            attempt!(core::fmt::Formatter::write_str(f, "Variant("));
+            attempt!(core::fmt::Debug::fmt(&**left, f));
+            attempt!(core::fmt::Formatter::write_str(f, ", "));
+            attempt!(core::fmt::Debug::fmt(&**right, f));
+        }
+    }
+    core::fmt::Formatter::write_str(f, ")")
+}
+
 /// Render one type in its constructor form.
 impl core::fmt::Debug for crate::types::Ty {
     #[allow(
@@ -321,19 +351,7 @@ impl core::fmt::Debug for crate::types::Ty {
                 attempt!(core::fmt::Formatter::write_str(f, "Nominal("));
                 attempt!(core::fmt::Debug::fmt(id, f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
-                match &**shape {
-                    crate::types::NominalShape::Opaque(representation) => {
-                        attempt!(core::fmt::Formatter::write_str(f, "Opaque("));
-                        attempt!(core::fmt::Debug::fmt(&**representation, f));
-                    }
-                    crate::types::NominalShape::Variant(left, right) => {
-                        attempt!(core::fmt::Formatter::write_str(f, "Variant("));
-                        attempt!(core::fmt::Debug::fmt(&**left, f));
-                        attempt!(core::fmt::Formatter::write_str(f, ", "));
-                        attempt!(core::fmt::Debug::fmt(&**right, f));
-                    }
-                }
-                attempt!(core::fmt::Formatter::write_str(f, ")"));
+                attempt!(debug_shape(&**shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
             crate::types::Ty::GenericNominal(id, args, shape) => {
@@ -342,7 +360,7 @@ impl core::fmt::Debug for crate::types::Ty {
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
                 attempt!(debug_stack(args.as_slice(), f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
-                attempt!(core::fmt::Debug::fmt(&**shape, f));
+                attempt!(debug_shape(&**shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
         }
