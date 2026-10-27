@@ -390,4 +390,86 @@ theorem both_choices_are_distinct_at_the_boundary :
     Node.choose 0 1 ≠ Node.choose 1 1 ∧ (stepSend exampleProtocol 2 ⟨5, false, 9, 1, 4, false⟩).isNone := by
   decide
 
+/-! ## Typed continuation and choice stepping (WIT-SESSION-04, WIT-SESSION-05)
+
+A continuation is typed: a step carries the ordered message type it sends or receives, and a mismatch
+is refused rather than coerced. Internal choice is chosen by the guest endpoint, external choice is
+offered by the peer, and a wrong branch is refused. -/
+
+/-- One typed send step. The supplied message type must be exactly the declared one, otherwise the
+step is refused: a type check is not ownership authority and is not silently coerced. -/
+def stepSendTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
+    (message : MessageType) : Option Endpoint :=
+  match resolve definitions depth endpoint.state with
+  | some (.send declared continuation) =>
+      if declared = message && !endpoint.closed then
+        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
+          endpoint.generation, endpoint.closed⟩
+      else none
+  | _ => none
+
+/-- One typed receive step, refused for the same reasons. -/
+def stepRecvTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
+    (message : MessageType) : Option Endpoint :=
+  match resolve definitions depth endpoint.state with
+  | some (.recv declared continuation) =>
+      if declared = message && !endpoint.closed then
+        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
+          endpoint.generation, endpoint.closed⟩
+      else none
+  | _ => none
+
+/-- The matching ordered message type advances to the continuation. -/
+theorem typed_send_advances_on_the_declared_type :
+    stepSendTyped exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ MessageType.i64 =
+      some ⟨5, false, 9, 1, 4, false⟩ := by
+  decide
+
+/-- A wrong ordered message type is refused: the continuation is typed, not coerced. -/
+theorem wrong_message_type_is_refused :
+    stepSendTyped exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ MessageType.text = none := by
+  decide
+
+/-- Wrong order is refused: a receive step in a send state is refused, and a send step in a receive
+state is refused. -/
+theorem wrong_order_is_refused :
+    stepRecvTyped exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ MessageType.i64 = none ∧
+      stepSendTyped exampleProtocol 2 ⟨5, false, 9, 1, 4, false⟩ MessageType.i64 = none := by
+  decide
+
+/-- Internal choice: the guest endpoint selects one declared branch and that branch's continuation is
+taken. -/
+def stepChoose (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (branch : Nat) :
+    Option Endpoint :=
+  match resolve definitions depth endpoint.state with
+  | some (.choose declared continuation) =>
+      if declared = branch && !endpoint.closed then
+        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
+          endpoint.generation, endpoint.closed⟩
+      else none
+  | _ => none
+
+/-- A closed protocol with both choices: `0` sends, `1` internally chooses branch `0`, `2` internally
+chooses branch `1`, `3` receives and `4` finishes. -/
+def choiceProtocol : List Node :=
+  [.send .i64 1, .choose 0 5, .choose 1 6, .recv .bool 4, .finished, .finished, .finished]
+
+/-- Choosing a declared internal branch advances to that branch's continuation. -/
+theorem trace_internal_choice_branch_one :
+    Option.map Endpoint.state
+        (stepChoose choiceProtocol 2 ⟨5, false, 9, 2, 4, false⟩ 1) = some 6 := by
+  decide
+
+/-- A branch the protocol does not offer is refused rather than defaulted. -/
+theorem trace_wrong_branch_is_refused :
+    stepChoose choiceProtocol 2 ⟨5, false, 9, 2, 4, false⟩ 0 = none := by
+  decide
+
+/-- External choice is not the guest's choice: a `offer` state is not choosable by the guest endpoint,
+and its dual remains an internal choice for the peer. -/
+theorem external_choice_is_not_guest_choice :
+    (stepChoose [.offer 0 5] 2 ⟨5, false, 9, 0, 4, false⟩ 0).isNone ∧
+      dual (Node.offer 0 5) = Node.choose 0 5 := by
+  decide
+
 end NestedSession

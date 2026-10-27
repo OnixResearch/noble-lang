@@ -289,6 +289,60 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.typed_send_advances_on_the_declared_type",
+      "role": "WIT-SESSION-04: the matching ordered message type advances to the continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.wrong_message_type_is_refused",
+      "role": "WIT-SESSION-04 negative control: a wrong ordered message type is refused, not coerced",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.wrong_order_is_refused",
+      "role": "WIT-SESSION-04 negative control: wrong order is refused in both directions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_internal_choice_branch_one",
+      "role": "WIT-SESSION-03 positive trace: a declared internal branch advances to its continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_wrong_branch_is_refused",
+      "role": "WIT-SESSION-03 negative control: a branch the protocol does not offer is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.external_choice_is_not_guest_choice",
+      "role": "WIT-SESSION-04: external choice is the peer\u2019s, and its dual is an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
