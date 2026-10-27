@@ -912,8 +912,9 @@ non-aliasing and coverage (`accepted_implies_registers`,
 The clean-source kernel check is retained at `verification/foundation/receipts/09a307c64/`
 (393 theorems, `clean_source: true`, every axiom set inside the allow-list).
 
-Open item: the per-entry exactness obligation of the constant and slot tables is
-modelled (`constantEntryOk`, `slotEntryOk`) but its refusal theorem is not proved.
+Per-entry exactness is tied to the readable obligation by `constant_predicate_iff` and
+`slot_predicate_iff`, and an entry that names no node is refused
+(`constant_entry_refused`, `slot_entry_refused`).
 Not claimed: no decoding of the Rust declaration's bytes, so nothing binds
 `serde`/binary output to these tables; the layout build key, compiler revision and
 identity scheme are out of scope.

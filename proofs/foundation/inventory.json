@@ -2366,6 +2366,30 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "An accepted layout's last layer range ends exactly at the instruction count."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.constant_predicate_iff",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The per-node constant match predicate holds exactly when the node is that constant and declares that register."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.slot_predicate_iff",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The per-node slot match predicate holds exactly when the node is that input and declares that register."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.constant_entry_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A constant table entry that names no node is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.slot_entry_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A slot table entry that names no interface input of that slot is refused."
     }
   ]
 }

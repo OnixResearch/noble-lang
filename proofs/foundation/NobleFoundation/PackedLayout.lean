@@ -11,9 +11,9 @@ tables and the obligations*, not the Rust bytes, and proves:
   above the highest declared register but no further;
 * a missing register, an out-of-range register and a shared register are each refused
   (`missing_register_refused`, `out_of_range_refused`, `alias_refused`);
-* the constant table must have one entry per constant node (`constant_count_refused`); the
-  per-entry exactness obligation is modelled (`constantEntryOk`, `slotEntryOk`) but its
-  refusal theorem is not proved here and is an open item;
+* the constant table must have one entry per constant node (`constant_count_refused`), and an
+  entry that names no node is refused (`constant_entry_refused`); the Boolean table check is
+  tied to the readable obligation by `constant_predicate_iff` and `slot_predicate_iff`;
 * the layer table must have one ordered range per layer (`layer_shape_refused`,
   `layers_unordered_refused`) and its ranges must cover exactly the instruction nodes
   (`coverage_refused`);
@@ -27,6 +27,7 @@ binds `serde`/binary output to these tables; the failure-suffix table is modelle
 declared list compared against the graph's own prefix minima, and no statement covers the
 layout build key, the compiler revision or the identity scheme.
 -/
+import Init.Data.List.Lemmas
 import NobleFoundation.PackedSchedule
 
 namespace NobleFoundation.PackedLayout
@@ -82,11 +83,10 @@ def registerCount (graph : Graph) (layout : Layout) (register : Nat) : Nat :=
 /-- A constant table entry names exactly one node whose constant bits are exactly the
 declared bits and whose register is the declared register. -/
 def constantEntryOk (graph : Graph) (layout : Layout) (entry : Nat × BitVec 64) : Bool :=
-  let matching := ((List.range graph.arity).filter fun index =>
+  decide (((List.range graph.arity).filter fun index =>
     match graph.node index, layout.reg index with
     | .constant bits, some register => register = entry.1 ∧ bits = entry.2
-    | _, _ => false).length
-  decide (matching = 1)
+    | _, _ => false).length = 1)
 
 /-- The constant table has one entry per constant node. -/
 def constantCountOk (graph : Graph) (layout : Layout) : Bool :=
@@ -98,11 +98,10 @@ def constantCountOk (graph : Graph) (layout : Layout) : Bool :=
 
 /-- A slot table entry names exactly one interface input node of that slot. -/
 def slotEntryOk (graph : Graph) (layout : Layout) (entry : Nat × Nat) : Bool :=
-  let matching := ((List.range graph.arity).filter fun index =>
+  decide (((List.range graph.arity).filter fun index =>
     match graph.node index, layout.reg index with
     | .input slot, some register => register = entry.1 ∧ slot = entry.2
-    | _, _ => false).length
-  decide (matching = 1)
+    | _, _ => false).length = 1)
 
 /-- The layer table declares one range per layer. -/
 def layerShapeOk (layerCount : Nat) (layout : Layout) : Bool :=
@@ -209,6 +208,64 @@ theorem alias_refused (graph : Graph) (layout : Layout) (first second : Nat)
   simp only [Bool.not_eq_true]
   rw [List.all_eq_false]
   exact ⟨second, List.mem_range.mpr hsecondIn, by simp [hdistinct, hfirst, hsecond]⟩
+
+/-- The per-node constant match predicate is true exactly when the node is that constant and
+declares that register. The table obligation counts matches, so this correspondence is what
+ties the Boolean table check to the readable obligation. -/
+theorem constant_predicate_iff (graph : Graph) (layout : Layout) (entry : Nat × BitVec 64)
+    (index : Nat) :
+    ((match graph.node index, layout.reg index with
+        | .constant bits, some register => decide (register = entry.1 ∧ bits = entry.2)
+        | _, _ => false) = true) ↔
+      (layout.reg index = some entry.1 ∧ graph.node index = .constant entry.2) := by
+  cases hnode : graph.node index <;> cases hregister : layout.reg index <;>
+    simp [decide_eq_true_eq]
+
+/-- The per-node slot match predicate is true exactly when the node is that interface input
+and declares that register. -/
+theorem slot_predicate_iff (graph : Graph) (layout : Layout) (entry : Nat × Nat)
+    (index : Nat) :
+    ((match graph.node index, layout.reg index with
+        | .input slot, some register => decide (register = entry.1 ∧ slot = entry.2)
+        | _, _ => false) = true) ↔
+      (layout.reg index = some entry.1 ∧ graph.node index = .input entry.2) := by
+  cases hnode : graph.node index <;> cases hregister : layout.reg index <;>
+    simp [decide_eq_true_eq]
+
+/-- A constant table entry that names no node is refused: the table obligation counts matches,
+so zero matches fail it. -/
+theorem constant_entry_refused (graph : Graph) (layout : Layout) (entry : Nat × BitVec 64)
+    (hmatching : ∀ index, index < graph.arity →
+      ¬ (layout.reg index = some entry.1 ∧ graph.node index = .constant entry.2)) :
+    constantEntryOk graph layout entry = false := by
+  unfold constantEntryOk
+  have hempty : ((List.range graph.arity).filter fun index =>
+      match graph.node index, layout.reg index with
+      | .constant bits, some register => register = entry.1 ∧ bits = entry.2
+      | _, _ => false) = [] := by
+    rw [List.filter_eq_nil_iff]
+    intro index hmem hpredicate
+    exact hmatching index (List.mem_range.mp hmem)
+      ((constant_predicate_iff graph layout entry index).mp hpredicate)
+  rw [hempty]
+  simp
+
+/-- A slot table entry that names no interface input of that slot is refused. -/
+theorem slot_entry_refused (graph : Graph) (layout : Layout) (entry : Nat × Nat)
+    (hmatching : ∀ index, index < graph.arity →
+      ¬ (layout.reg index = some entry.1 ∧ graph.node index = .input entry.2)) :
+    slotEntryOk graph layout entry = false := by
+  unfold slotEntryOk
+  have hempty : ((List.range graph.arity).filter fun index =>
+      match graph.node index, layout.reg index with
+      | .input slot, some register => register = entry.1 ∧ slot = entry.2
+      | _, _ => false) = [] := by
+    rw [List.filter_eq_nil_iff]
+    intro index hmem hpredicate
+    exact hmatching index (List.mem_range.mp hmem)
+      ((slot_predicate_iff graph layout entry index).mp hpredicate)
+  rw [hempty]
+  simp
 
 /-- A constant table with fewer entries than constant nodes is refused. -/
 theorem constant_count_refused (graph : Graph) (layout : Layout) (expected : Nat)
