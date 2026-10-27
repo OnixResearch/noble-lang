@@ -1,0 +1,38 @@
+# noble-rewrite-cost/v1
+# Pre-registered continuation thresholds and stage declarations for the certified rewrite cost
+# lane (issue #64 items 5-7). This manifest is frozen BEFORE any measurement is taken: the lane
+# in `crates/noble-ngraph/tests/rewrite_cost.rs` reads these thresholds and reports every fixture
+# against them instead of choosing a threshold after seeing the numbers.
+#
+# Fixing them before measurement means a failing threshold is a real regression signal, not a
+# retro-fitted pass. Thresholds are workload-specific to this corpus only; nothing here is an
+# upstream performance expectation.
+
+schema noble-rewrite-cost/v1
+corpus rewrite-quality-v1.txt
+lens crates/noble-ngraph/src/cert.rs
+
+# The certified path is retained for this workload only when BOTH hold:
+#   residual  the declared residual target is reached under the strongest proposer this lane runs
+#   check     the measured warm certificate-check cost per derivation step stays below the ceiling
+#
+# `residual` is a hard gate (an unchanged graph can be valid and still fail it). `check` is reported
+# and recorded as a decision, and is deliberately generous because the host is shared: 50 microseconds
+# per step is far above the measured figure for a corpus of this size, so crossing it would be a real
+# signal rather than noise.
+threshold retention | residual no-foldable-sites | check-per-step-us 50
+
+# Stages of the end-to-end accounting (issue #64 item 5). A stage this lane cannot observe is
+# reported as `unmeasured` with its reason and NEVER as zero.
+stage input-admission | status unmeasured | reason no admission stage is in this lane's path
+stage proposal-search | status measured | reason cert::propose
+stage certificate-construction | status measured | reason included in cert::propose's returned derivation
+stage certificate-checking | status measured | reason cert::check
+stage certificate-wire-bytes | status unmeasured | reason no Rust certificate encoder exists; the in-memory structural footprint is reported instead
+stage decoding-replay | status unmeasured | reason the token codec is a Lean model only; no Rust decode exists in this path
+stage candidate-admission | status unmeasured | reason no candidate admission stage is in this lane's path
+stage schedule-validation | status unmeasured | reason issue #43's validator is not in this lane's path
+stage backend-preparation | status unmeasured | reason no backend stage is in this lane's path
+stage first-execution | status unmeasured | reason this lane never executes a program
+stage warm-execution | status unmeasured | reason this lane never executes a program
+stage retained-memory | status unmeasured | reason no allocator/RSS measurement is installed

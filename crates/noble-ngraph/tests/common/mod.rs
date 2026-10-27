@@ -16,6 +16,8 @@
 
 #![allow(dead_code)]
 
+pub mod rewrite_corpus;
+
 use std::hash::{DefaultHasher, Hasher};
 
 use noble_ngraph::ir::Digest;
