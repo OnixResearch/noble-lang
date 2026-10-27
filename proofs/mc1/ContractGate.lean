@@ -1,5 +1,6 @@
 import NobleContracts
 import NobleContracts.NamedV3
+import NobleContracts.SpecQuality
 import Lean
 
 open Lean Elab Command
@@ -31,7 +32,12 @@ elab "check_contract_library" : command => do
     ``NobleContracts.undefined_not_is_undefined,
     ``NobleContracts.TypedPC.compose, ``NobleContracts.increment_missing_implication,
     ``NobleContracts.NamedV3.exec_append_iff, ``NobleContracts.NamedV3.holds_true₂,
-    ``NobleContracts.NamedV3.holds_eq₂_iff]
+    ``NobleContracts.NamedV3.holds_eq₂_iff,
+    ``NobleContracts.SpecQuality.increment_inhabited,
+    ``NobleContracts.SpecQuality.increment_realizable,
+    ``NobleContracts.SpecQuality.increment_deterministic,
+    ``NobleContracts.SpecQuality.contradictory_not_realizable,
+    ``NobleContracts.SpecQuality.false_precondition_is_vacuous]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
