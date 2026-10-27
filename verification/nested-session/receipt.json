@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "51db9d002f99a961d9e88a4e23f5bff74b5ce411",
-  "source_tree": "b1abddc3844364ccbdb38ea62de66337d3fb6fa5",
+  "source_commit": "1ddfdea467da4dcc50b1ad29ba4ba7016ce9a80e",
+  "source_tree": "3584a0cf617c494290dcf33a77510283c2d7d1c7",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "f7567afbb0847b027cad8247ff0ed9bb61c94b203df6e8a4d00aef0862eaf34f",
-        "proofs/m6/nested-session-inventory.json": "d2ac48623b75998c76bd6026e4c793b60687d4ad784c736db5075179c25d3c6a"
+        "proofs/m6/NestedSession.lean": "0ca73581ea64e9d09fa671bac73d0e597fce3c3517d2d236f1a3a715909b1b62",
+        "proofs/m6/nested-session-inventory.json": "8b3cdbcdd622b5fb6408ce6264a59a5f3e66228f155b7955253f04413118e366"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
@@ -31,18 +31,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 58,
+    "model_theorems": 62,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "f7567afbb0847b027cad8247ff0ed9bb61c94b203df6e8a4d00aef0862eaf34f",
-    "proofs/m6/nested-session-inventory.json": "d2ac48623b75998c76bd6026e4c793b60687d4ad784c736db5075179c25d3c6a",
+    "proofs/m6/NestedSession.lean": "0ca73581ea64e9d09fa671bac73d0e597fce3c3517d2d236f1a3a715909b1b62",
+    "proofs/m6/nested-session-inventory.json": "8b3cdbcdd622b5fb6408ce6264a59a5f3e66228f155b7955253f04413118e366",
     "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
   },
-  "theorem_count": 58,
+  "theorem_count": 62,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -828,6 +828,63 @@
       "status": "proved",
       "statement": "NestedSession.unchecked_admission_breaks_the_bound : NestedSession.mailboxDepth (NestedSession.uncheckedAdmit { enqueued := 0, dequeued := 0 }) = 1 ∧ ¬NestedSession.mailboxDepth (NestedSession.uncheckedAdmit { enqueued := 0, dequeued := 0 }) ≤ 0",
       "axioms": []
+    },
+    {
+      "name": "NestedSession.step_acts_only_inside_the_current_protocol",
+      "role": "WIT-SESSION-05: no action outside the current protocol -- a successful step is exactly a resolved current node declaring that action, and its sole successor is that node's declared continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.step_acts_only_inside_the_current_protocol : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint successor : NestedSession.Endpoint) (action : NestedSession.Action), NestedSession.step definitions depth endpoint action = some successor → ∃ node continuation, NestedSession.resolve definitions depth endpoint.state = some node ∧ NestedSession.continuationOf action node = some continuation ∧ NestedSession.advance endpoint continuation = some successor",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.handshake_resolves_without_unfolding",
+      "role": "WIT-SESSION-05 finite-handshake control: the ordinary handshake resolves at unfolding depth zero, node by node",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.handshake_resolves_without_unfolding : NestedSession.resolve NestedSession.handshakeProtocol 0 0 = some (NestedSession.Node.send NestedSession.MessageType.i64 1) ∧ NestedSession.resolve NestedSession.handshakeProtocol 0 1 = some (NestedSession.Node.recv NestedSession.MessageType.i64 2) ∧ NestedSession.resolve NestedSession.handshakeProtocol 0 2 = some NestedSession.Node.finished",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.handshake_trace_advances",
+      "role": "WIT-SESSION-05 finite-handshake control: its two guest actions advance through it and finish",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.handshake_trace_advances : ((NestedSession.step NestedSession.handshakeProtocol 0 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } (NestedSession.Action.send NestedSession.MessageType.i64)).bind fun mid => NestedSession.step NestedSession.handshakeProtocol 0 mid (NestedSession.Action.recv NestedSession.MessageType.i64)) = some { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.nested_entry_refused_at_depth_zero",
+      "role": "WIT-SESSION-05: the nested fixture is not representable at depth zero while the handshake is, so the recursive entry needs an external stack rather than a wider finite table",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.nested_entry_refused_at_depth_zero : NestedSession.resolve NestedSession.exampleProtocol 0 2 = none ∧ NestedSession.resolve NestedSession.exampleProtocol 2 2 = some (NestedSession.Node.send NestedSession.MessageType.i64 1)",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -877,7 +934,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-1/Audit.lean"
+        "/tmp/ns-check-2/Audit.lean"
       ],
       "exit": 0
     },
