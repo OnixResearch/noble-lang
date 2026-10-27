@@ -19,6 +19,7 @@ import NobleFoundation.SymbolicSolver
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
 import NobleFoundation.PackedLayout
+import NobleFoundation.ServiceRefWire
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice
