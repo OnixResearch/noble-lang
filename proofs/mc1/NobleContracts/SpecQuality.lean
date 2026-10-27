@@ -1,5 +1,6 @@
 import NobleContracts.Examples
 import NobleContracts.Obligation
+import NobleContracts.NamedV2
 
 /-! Specification-quality claims kept strictly separate from implementation
 satisfaction (`issue 65`). These are claims about the *retained relation*, not
@@ -105,5 +106,63 @@ theorem false_precondition_is_vacuous :
     exact False.elim falsehood
   · rintro ⟨before, params, admissible⟩
     exact admissible.2.2
+
+
+/-- An underconstrained Bool-output relation over the same input type. It makes
+no implementation claim and is intentionally relational in its outputs, so
+determinacy must be *refused* here rather than assumed. -/
+def underconstrainedSpec : Spec where
+  code := []
+  input := [.i64]
+  output := [.bool]
+  params := []
+  pre := fun _ _ _ => True
+  post := fun _ _ _ => True
+
+/-- Criterion 3: one admissible input with two checked, distinct, exactly typed
+satisfying outputs. Distinctness is decided, so this is evidence rather than a
+statement that some other output might exist. -/
+theorem underconstrained_has_two_outputs :
+    Admissible underconstrainedSpec [.i64 0] [] ∧
+      StackTyped ([Value.bool true] : Stack) underconstrainedSpec.output ∧
+      StackTyped ([Value.bool false] : Stack) underconstrainedSpec.output ∧
+      underconstrainedSpec.post [.i64 0] [Value.bool true] [] ∧
+      underconstrainedSpec.post [.i64 0] [Value.bool false] [] ∧
+      ¬ Deterministic underconstrainedSpec := by
+  refine ⟨⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩,
+    StackTyped.cons HasType.bool StackTyped.nil,
+    StackTyped.cons HasType.bool StackTyped.nil, trivial, trivial, ?_⟩
+  intro deterministic
+  have same := deterministic [.i64 0] [] [Value.bool true] [Value.bool false]
+    ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩ trivial trivial
+  cases same
+
+/-- Criterion 7, Lean side: an undefined predicate is never satisfied, so a
+relation whose postcondition is that predicate is not realizable given an
+admissible input. Exhaustion and unsupported syntax are refused by the same
+rule — a missing value is never a successful check. -/
+theorem undefined_predicate_never_satisfied (before after params : Stack) :
+    ¬ Holds (.not (.head .nil)) before after params := by
+  intro holds
+  simp [Holds] at holds
+  nomatch holds
+
+/-- A relation whose postcondition is an undefined predicate is not realizable,
+and the admissible input is retained as the witness. -/
+def undefinedPostSpec : Spec where
+  code := increment
+  input := [.i64]
+  output := [.i64]
+  params := []
+  pre := fun _ _ _ => True
+  post := fun before after params => Holds (.not (.head .nil)) before after params
+
+theorem undefined_post_not_realizable :
+    ¬ Realizable undefinedPostSpec ∧ Admissible undefinedPostSpec [.i64 0] [] := by
+  refine ⟨?_, ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩⟩
+  intro realizable
+  obtain ⟨after, _, holds⟩ := realizable [.i64 0] []
+    ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩
+  exact undefined_predicate_never_satisfied [.i64 0] after [] holds
 
 end NobleContracts.SpecQuality

@@ -37,7 +37,10 @@ elab "check_contract_library" : command => do
     ``NobleContracts.SpecQuality.increment_realizable,
     ``NobleContracts.SpecQuality.increment_deterministic,
     ``NobleContracts.SpecQuality.contradictory_not_realizable,
-    ``NobleContracts.SpecQuality.false_precondition_is_vacuous]
+    ``NobleContracts.SpecQuality.false_precondition_is_vacuous,
+    ``NobleContracts.SpecQuality.underconstrained_has_two_outputs,
+    ``NobleContracts.SpecQuality.undefined_predicate_never_satisfied,
+    ``NobleContracts.SpecQuality.undefined_post_not_realizable]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
