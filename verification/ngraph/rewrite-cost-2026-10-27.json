@@ -1,0 +1,373 @@
+{
+  "schema": "noble-rewrite-cost-receipt/v1",
+  "source_commit": "ab1f240f068e5cbc11076116f3dafe103f24c436",
+  "source_tree": "c832bc07b4d0c98caee8de9c35f89b9e79f0aab2",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+  "host": "Linux 6.18.54 x64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-target cargo test -p noble-ngraph --test rewrite_cost --offline --locked -- --nocapture",
+  "manifest": "verification/ngraph/rewrite-cost-v1.txt",
+  "corpus": "rewrite-quality-v1.txt",
+  "report": {
+    "schema": "noble-rewrite-cost-report/v1",
+    "corpus": "rewrite-quality-v1.txt",
+    "samples_per_row": 200,
+    "threshold": {
+      "residual": "no-foldable-sites",
+      "check_per_step_us": 50
+    },
+    "coverage": {
+      "attempts": 20,
+      "accepted": 19,
+      "refused": 1,
+      "target_reached": 10
+    },
+    "stages": [
+      {
+        "name": "input-admission",
+        "status": "unmeasured",
+        "reason": "no admission stage is in this lane's path"
+      },
+      {
+        "name": "proposal-search",
+        "status": "measured",
+        "reason": "cert::propose"
+      },
+      {
+        "name": "certificate-construction",
+        "status": "measured",
+        "reason": "included in cert::propose's returned derivation"
+      },
+      {
+        "name": "certificate-checking",
+        "status": "measured",
+        "reason": "cert::check"
+      },
+      {
+        "name": "certificate-wire-bytes",
+        "status": "unmeasured",
+        "reason": "no Rust certificate encoder exists; the in-memory structural footprint is reported instead"
+      },
+      {
+        "name": "decoding-replay",
+        "status": "unmeasured",
+        "reason": "the token codec is a Lean model only; no Rust decode exists in this path"
+      },
+      {
+        "name": "candidate-admission",
+        "status": "unmeasured",
+        "reason": "no candidate admission stage is in this lane's path"
+      },
+      {
+        "name": "schedule-validation",
+        "status": "unmeasured",
+        "reason": "issue #43's validator is not in this lane's path"
+      },
+      {
+        "name": "backend-preparation",
+        "status": "unmeasured",
+        "reason": "no backend stage is in this lane's path"
+      },
+      {
+        "name": "first-execution",
+        "status": "unmeasured",
+        "reason": "this lane never executes a program"
+      },
+      {
+        "name": "warm-execution",
+        "status": "unmeasured",
+        "reason": "this lane never executes a program"
+      },
+      {
+        "name": "retained-memory",
+        "status": "unmeasured",
+        "reason": "no allocator/RSS measurement is installed"
+      }
+    ],
+    "rows": [
+      {
+        "fixture": "independent-folds",
+        "proposer": "identity",
+        "steps": 0,
+        "refused": false,
+        "residual": 2,
+        "propose_us": 13.71,
+        "propose_iqr_us": 0.05,
+        "check_us": 13.42,
+        "check_iqr_us": 0.16,
+        "check_per_step_us": null,
+        "in_memory_footprint_bytes": 125,
+        "check_threshold_met": false
+      },
+      {
+        "fixture": "independent-folds",
+        "proposer": "first-eligible",
+        "steps": 1,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 14.48,
+        "propose_iqr_us": 0.05,
+        "check_us": 13.78,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "independent-folds",
+        "proposer": "single-pass",
+        "steps": 2,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 14.69,
+        "propose_iqr_us": 0.04,
+        "check_us": 13.92,
+        "check_iqr_us": 0.07,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 205,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "independent-folds",
+        "proposer": "fixed-point",
+        "steps": 2,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 14.81,
+        "propose_iqr_us": 0.04,
+        "check_us": 13.92,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 205,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "single-fold",
+        "proposer": "identity",
+        "steps": 0,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 11.17,
+        "propose_iqr_us": 0.05,
+        "check_us": 10.77,
+        "check_iqr_us": 0.03,
+        "check_per_step_us": null,
+        "in_memory_footprint_bytes": 125,
+        "check_threshold_met": false
+      },
+      {
+        "fixture": "single-fold",
+        "proposer": "first-eligible",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 11.21,
+        "propose_iqr_us": 0.04,
+        "check_us": 10.61,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "single-fold",
+        "proposer": "single-pass",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 11.29,
+        "propose_iqr_us": 0.04,
+        "check_us": 10.63,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "single-fold",
+        "proposer": "fixed-point",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 11.28,
+        "propose_iqr_us": 0.04,
+        "check_us": 10.69,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "chained-folds",
+        "proposer": "identity",
+        "steps": 0,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 13.34,
+        "propose_iqr_us": 0.04,
+        "check_us": 12.85,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": null,
+        "in_memory_footprint_bytes": 125,
+        "check_threshold_met": false
+      },
+      {
+        "fixture": "chained-folds",
+        "proposer": "first-eligible",
+        "steps": 1,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 13.38,
+        "propose_iqr_us": 0.05,
+        "check_us": 12.77,
+        "check_iqr_us": 0.07,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "chained-folds",
+        "proposer": "single-pass",
+        "steps": 1,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 13.6,
+        "propose_iqr_us": 0.05,
+        "check_us": 12.77,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "chained-folds",
+        "proposer": "fixed-point",
+        "steps": 2,
+        "refused": true,
+        "residual": 0,
+        "propose_us": 13.69,
+        "propose_iqr_us": 0.06,
+        "check_us": 12.82,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 205,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "ordered-outputs",
+        "proposer": "identity",
+        "steps": 0,
+        "refused": false,
+        "residual": 2,
+        "propose_us": 13.34,
+        "propose_iqr_us": 0.03,
+        "check_us": 12.84,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": null,
+        "in_memory_footprint_bytes": 125,
+        "check_threshold_met": false
+      },
+      {
+        "fixture": "ordered-outputs",
+        "proposer": "first-eligible",
+        "steps": 1,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 13.42,
+        "propose_iqr_us": 0.04,
+        "check_us": 12.82,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "ordered-outputs",
+        "proposer": "single-pass",
+        "steps": 2,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 13.61,
+        "propose_iqr_us": 0.07,
+        "check_us": 12.77,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 205,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "ordered-outputs",
+        "proposer": "fixed-point",
+        "steps": 2,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 13.62,
+        "propose_iqr_us": 0.05,
+        "check_us": 12.83,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 205,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "shared-operand",
+        "proposer": "identity",
+        "steps": 0,
+        "refused": false,
+        "residual": 1,
+        "propose_us": 11.97,
+        "propose_iqr_us": 0.04,
+        "check_us": 11.52,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": null,
+        "in_memory_footprint_bytes": 125,
+        "check_threshold_met": false
+      },
+      {
+        "fixture": "shared-operand",
+        "proposer": "first-eligible",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 12.37,
+        "propose_iqr_us": 0.04,
+        "check_us": 11.76,
+        "check_iqr_us": 0.05,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "shared-operand",
+        "proposer": "single-pass",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 12.5,
+        "propose_iqr_us": 0.04,
+        "check_us": 11.79,
+        "check_iqr_us": 0.04,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      },
+      {
+        "fixture": "shared-operand",
+        "proposer": "fixed-point",
+        "steps": 1,
+        "refused": false,
+        "residual": 0,
+        "propose_us": 12.49,
+        "propose_iqr_us": 0.04,
+        "check_us": 11.79,
+        "check_iqr_us": 0.06,
+        "check_per_step_us": 0.01,
+        "in_memory_footprint_bytes": 165,
+        "check_threshold_met": true
+      }
+    ],
+    "break_even": "unmeasured: this lane never executes a program, so no per-run saving exists to amortize the additional certificate-check cost",
+    "cold_warm": "warm medians with interquartile ranges over 200 samples per row; the library caches nothing across calls, so a cold figure would price page faults rather than work",
+    "comparison": "unchanged and certified paths are compared on identical fixture inputs: the identity row carries no steps, so any certificate-bearing row pays check cost without a measured saving"
+  }
+}

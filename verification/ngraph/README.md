@@ -27,8 +27,46 @@ residual reaches zero under `FixedPoint`) and *uncertified* (the checker refuses
 claim is made about them, and `SinglePass` passing the frozen fixtures is not evidence that a
 one-pass proposer is sufficient in general.
 
-Not measured yet: performance (cold/warm execution, certificate bytes, break-even) and the end-to-end
-stage-cost accounting of issue #64 item 5, which needs the integrated stages.
+### Cost accounting (issue #64 items 5-7)
+
+The quality lane above prices nothing. [rewrite-cost.mjs](rewrite-cost.mjs) runs a second lane
+(`crates/noble-ngraph/tests/rewrite_cost.rs`) and retains
+[rewrite-cost-2026-10-27.json](rewrite-cost-2026-10-27.json): schema
+`noble-rewrite-cost-receipt/v1`, source `ab1f240f0`, clean source, `rustc 1.96.0-nightly`
+(2026-03-20), host `Linux 6.18.54 x86_64`, 200 warm samples per row, 20 rows (five fixtures x four
+proposers).
+
+The continuation thresholds are **pre-registered** in
+[rewrite-cost-v1.txt](rewrite-cost-v1.txt) before any measurement: retention requires the declared
+residual target to be reached *and* the warm certificate-check cost per derivation step to stay
+under 50 µs. The residual condition is a hard gate; the cost ceiling is reported per row as
+`check_threshold_met` and is deliberately generous because this host is shared.
+
+Measured, warm medians with interquartile ranges, 20 rows:
+
+| Quantity | Value |
+| --- | --- |
+| Proposal/search (`cert::propose`) | 10.7–13.3 µs per call (IQR ≤ 0.07 µs) |
+| Certificate checking (`cert::check`) | 10.3–12.5 µs per call, one outlier IQR of 7.45 µs on the refused two-step derivation |
+| Certificate check cost per derivation step | 0.01 µs, ceiling 50 µs |
+| In-memory structural derivation footprint | 125 B (zero steps), 165 B (one step), 205 B (two steps) |
+| Coverage | 20 attempts, 19 accepted, 1 refused (`Malformed`, the chained fixed-point derivation), 10 reaching the residual target |
+
+The comparison of the unchanged and certified paths is on identical fixture inputs: the identity row
+carries **no steps** and reaches no target, so every certificate-bearing row pays check cost with no
+measured saving. Retaining the baseline is valid, and nothing here shows the certified path pays for
+itself.
+
+Reported **unmeasured, with the reason, never zero**: input admission, certificate wire bytes (no Rust
+encoder exists; the structural footprint above is not wire bytes), decoding/replay (the token codec
+is a Lean model only), candidate admission, schedule validation, backend preparation, first execution,
+warm execution, retained memory (no allocator/RSS measurement is installed). **Break-even is
+unmeasured** because this lane never executes a program, so there is no per-run saving to amortize
+check cost against. "Cold" is not reported separately: the library caches nothing across calls, so a
+cold figure would price page faults rather than work.
+
+Still open in #64: the integrated stages that would make a true end-to-end total possible, and any
+per-run saving measurement.
 
 ## Files
 
