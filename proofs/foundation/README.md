@@ -890,6 +890,26 @@ Open, and deliberately not closed:
   about fuel, allocation, cancellation behaviour or recipe identity;
 - finite fixtures are not a universal claim about any scheduler or transformation.
 
+## Replayable certificate codec (issue #42, codec half)
+
+`NobleFoundation/CertificateCodec.lean` models a token codec for the same
+`ngraph-cert/0` derivation: one seven-token chunk per step, a rule token that must
+decode through the modelled rule set, decimal bit tokens that must stay inside the
+64-bit range, and a revision token the decoder re-checks before any step.
+
+Proved: decoding an encoded step returns the same step (`decode_encode_step_replays`)
+and decoding an encoded derivation returns the derivation itself
+(`decode_encode_replays`), so acceptance is invariant under a transport round trip
+(`acceptance_preserved_by_codec`); a step is exactly seven tokens
+(`encodeStep_length`), so a six-token tail is refused (`truncated_step_refused`);
+an unknown rule token refuses the step (`unknown_rule_token_refused`); and a stale
+revision token refuses decoding before any step is inspected
+(`stale_revision_token_refused`).
+
+Not claimed: tokens are modelled as strings and no byte-level envelope is modelled,
+so nothing here binds the `serde`/binary bytes the Rust encoder writes; envelope
+digests, replay-budget accounting and the identity rules are out of scope.
+
 ## Replayable certificate format (issue #42, format half)
 
 `NobleFoundation/Certificate.lean` models the `ngraph-cert/0` derivation format that

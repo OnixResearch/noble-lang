@@ -2252,6 +2252,48 @@
       "phase": 2,
       "role": "certificate",
       "claim": "An accepted certificate fold step denotes the claimed constant through the model own graph checker."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.decode_encode_step_replays",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "Decoding an encoded step whose rule identity is modelled returns the same step."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.decode_encode_replays",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "Decoding an encoded derivation returns the derivation itself for the modelled revision and rules."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.encodeStep_length",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A step occupies exactly seven tokens."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.truncated_step_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A truncated step envelope of six tokens is refused."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.unknown_rule_token_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A rule token outside the modelled set refuses the step."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.stale_revision_token_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A stale revision token refuses decoding before any step is inspected."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.acceptance_preserved_by_codec",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A transport round trip preserves acceptance of a derivation."
     }
   ]
 }

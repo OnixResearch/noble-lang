@@ -17,6 +17,7 @@ import NobleFoundation.GraphRewrite
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver
 import NobleFoundation.Certificate
+import NobleFoundation.CertificateCodec
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice
