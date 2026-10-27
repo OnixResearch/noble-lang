@@ -89,3 +89,33 @@ An absent function, or a missing translation record, is rejected as `function-no
 The entry point always regenerates Charon and Aeneas output into a fresh artifact directory, so a stale artifact cannot be presented as current.
 Freshness rejection, unsupported-body rejection, edited-output rejection, and proof-required rejection belong to task 3.2.
 The generated Lean module compiles against the pinned backend; this does not establish refinement, Wasm correspondence, or cache authenticity.
+
+## Aeneas acceptance of kernel loops (measured 2026-10-27)
+
+The extraction route above was attempted end to end on this host: the pinned toolchain is
+reproducible locally (`.#extraction-rust` rebuilds the exact pinned
+`/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18`, rustc
+1.100.0-nightly `8fa1c96cf`), `.#charon`/`.#aeneas`/`.#extract-kernel` build, and the verifier reaches
+`kernel-aeneas`. It does **not** pass yet. Refusal classes appeared one after another, each revealed
+only after the previous one was fixed:
+
+| # | Aeneas refusal | Site | Fix |
+|---|---|---|---|
+| 1 | Early returns inside of loops | `acceptance/nodes.rs` `fold_slot` | first refusal recorded, walk stopped |
+| 2 | Returns inside of nested loops | `acceptance/preflight.rs` binding scans | loop-free helper + accumulating result |
+| 3 | Returns inside a single loop | `preflight.rs` (`attempt!` in a loop body *is* an early return) | three scans → `signed_self_check`, `reject_slot_invoke`, `signed_site_check` |
+| 4 | Breaks to outer loops | `preflight.rs` `guard_inst` nested stack scan | `guard_one_binding` / `guard_stack_entries` |
+| 5 | Continue to outer loops | `contracts/live.rs` `catalog_valid`, `valid_ref` | `catalog_row_valid`, `ref_node_valid`, `effects_known`, `types_valid` |
+| 6 | Returns inside of nested loops | `contracts/clone_budget.rs` `?` in `for` | accumulating `Option` scans |
+| 7 | **Mixed mutually recursive definitions** | hand-written `Clone` and `Debug` impls for `types::Ty` ↔ `types::NominalShape` (`types/impls.rs` lines 28–84, 259–350) | **not fixed** |
+
+Classes 1–6 share one mechanical cure and are landed with every `noble-kernel` test target passing.
+Class 7 is a different kind of limitation: it needs either recursion-free `Clone`/`Debug` impls, or a
+reviewed Charon `--exclude`/`--opaque` decision (which would add unreviewed local extraction
+boundaries that the verifier's `allowedOpaque` list rejects), or regenerated reviewed extraction
+artifacts. Until one of those is decided, extraction stays rejected and **no refinement, M1 acceptance
+or correspondence claim is made** — the boundary this document already states.
+
+Related stale pin, fixed: the verifier required the pre-growth verdict string `MC1-CONTRACT-LIBRARY: 43
+required theorems` while the library now reports 58 (NamedV3 T1/T6 and the specification-quality
+module). The exact-string comparison remains, so the verdict stays non-substitutable.
