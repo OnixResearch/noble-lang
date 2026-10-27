@@ -314,8 +314,58 @@ export const runNegativeFamily = async (binary, positives) => {
   };
 };
 
+
+/**
+ * Failure-class-preserving minimization (issue #49 item 6). Each candidate shrinks one witness
+ * dimension; a candidate is accepted only when the *same* declared class is still observed at the
+ * same stage. A shrink that converts the failure into a different refusal class is rejected, and
+ * for these four classes the starting witness is already minimal — which the report states rather
+ * than implying a deep reduction happened.
+ */
+export const minimizeFamily = async (binary, oneCase, mutation, baseline) => {
+  const candidates = [
+    { dimension: 'repeat', value: 1 },
+    { dimension: 'quota', value: 1 },
+    { dimension: 'program_index', value: 0 },
+  ];
+  const accepted = [];
+  const rejected = [];
+  for (const candidate of candidates) {
+    const attempt = { ...mutation, mutate: base => ({ ...mutation.mutate(base), [candidate.dimension]: candidate.value }) };
+    const result = await runNegative(binary, oneCase, attempt, `${baseline.class}-${candidate.dimension}`);
+    if (result.class === baseline.class && result.stage === baseline.stage) accepted.push(candidate.dimension);
+    else rejected.push({ dimension: candidate.dimension, observed: result.class });
+  }
+  // "Minimal" here means the class survives every candidate shrink, so none of the witness
+  // dimensions tried is load-bearing for it.
+  return { class: baseline.class, accepted, rejected,
+    minimal: accepted.length === candidates.length, starting_witness: mutation.class };
+};
+
+export const runMinimization = async (binary, fourCases) => {
+  const oneCase = {
+    shape: 'direct', nesting: 'single', callerSource: 'slot.invoke',
+    ceiling: 'dispatch+emit', effects: ['live.dispatch', 'test.emit'], leaf: 'emitting', repeat: 1,
+    refs: [{ position: 1, ordinal: 0, slot: 'A' }],
+  };
+  const results = [];
+  for (const [ordinal, mutation] of negativeMutations.entries()) {
+    results.push(await minimizeFamily(binary, oneCase, mutation,
+      { class: mutation.class, stage: mutation.stage }));
+  }
+  return {
+    classes: results.map(row => row.class),
+    minimal_starting_witnesses: results.filter(row => row.minimal).length,
+    accepted_shrinks: results.reduce((total, row) => total + row.accepted.length, 0),
+    rejected_shrinks: results.flatMap(row => row.rejected),
+    detail: results.map(row => ({ class: row.class, accepted: row.accepted, rejected: row.rejected })),
+    negative_family_classes: fourCases.classes,
+  };
+};
+
 if (process.argv[1]?.endsWith('live_slot_typed_cases.mjs') === true) {
   const positives = await run(process.argv[2]);
   const negative = await runNegativeFamily(process.argv[2], positives);
-  process.stdout.write(`${JSON.stringify({ ...positives, negative })}\n`);
+  const minimization = await runMinimization(process.argv[2], negative);
+  process.stdout.write(`${JSON.stringify({ ...positives, negative, minimization })}\n`);
 }
