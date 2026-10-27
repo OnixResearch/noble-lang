@@ -68,7 +68,7 @@ unchanged. It needs `proofs/m3/.lake` populated the same way
 - refuses a dirty worktree (`--allow-dirty` records `clean_source:false`)
   and ambient `LEAN*`/`LAKE*`/`NODE*`/`GIT_*`/`NIX_*`/loader overrides;
 - requires every Lake package checkout to be clean at its manifest revision;
-- scans `NobleFoundation/` for `sorry`, `admit`, `native_decide`,
+- scans `NobleFoundation/` for `sorry`, `acquire`, `native_decide`,
   `implemented_by`, `extern`, `unsafe`, `opaque`, `partial` and `axiom`;
 - requires the declared theorems and [`inventory.json`](inventory.json) to
   be the same set;
@@ -204,7 +204,7 @@ admission route, `verification/foundation/slice.mjs` runs the two
 existing routes that PAA-1 joins, over the same consumer-selected source
 bytes:
 - Route B: `noble build --require-proof`;
-- Route A: `noble admit-artifact`.
+- Route A: `noble acquire-artifact`.
 
 This is a strengthened trusted build. It is **not** translation
 validation.
@@ -219,7 +219,7 @@ validation.
 | E6 runtime helpers | [`Helper.lean`](NobleFoundation/Helper.lean) transcribes `$op_add/$op_sub/$op_mul`, `$pop_kind`, `$take`, `$push_tag`, `$need`, `$fail`. `helper_refines_step`/`helper_fails_when_stuck` prove they refine MC1 `Step` (operand order, untouched remainder, refusal of non-I64). The text of each transcribed function is pinned in [`helper-transcription.json`](../../verification/foundation/slice/helper-transcription.json) | **proved over a transcription**. Pin **checked**. Transcription fidelity is **assumed** (manual review). `$op_quote_typed`, `$op_compose` and `$op_run` are **open** |
 | E7 WAT → Wasm (`wasm-tools parse`) | pinned path and hash | **assumed**. Validation shows format/type only |
 | E8 `wasm-opt -O2` (opt on) | separate receipts per mode | **assumed** (PAA-1 O2 open) |
-| E9 candidate = consumer rebuild | `admit-artifact` reports `correspondence: byte-exact` for opt off and opt on | **checked** (identity, not semantics) |
+| E9 candidate = consumer rebuild | `acquire-artifact` reports `correspondence: byte-exact` for opt off and opt on | **checked** (identity, not semantics) |
 | E10 instantiation/loader/V8 | Route A instantiates the compared buffer (code reading) | **assumed** (PO-18, PAA-1 O3 open) |
 | E11 execution | drivers `x [ … ] run` for `x ∈ {41, max, min}` and a `Bool`/`I64` preserved prefix, opt off/on, through admission. Expectations are kernel-checked against `MathlibI64.wrap` | **tested** (finite) |
 | E12 one PAA-1 envelope joining A and B | — | **open** (#10) |
@@ -230,8 +230,8 @@ fails.
 | Control | #10 id | Result required |
 |---|---|---|
 | valid `[1 +]` proof, source `[ quote [ 2 + ] compose run ]` | ACORR-CASE-03 | Route B not released |
-| `[2 +]` bytes admitted against the `[1 +]` source | ACORR-CASE-03 | `correspondence-reject` |
-| opt-on bytes admitted under consumer opt off | S-CASE-07 option mismatch | `correspondence-reject` |
+| `[2 +]` bytes acquired against the `[1 +]` source | ACORR-CASE-03 | `correspondence-reject` |
+| opt-on bytes acquired under consumer opt off | S-CASE-07 option mismatch | `correspondence-reject` |
 | `$op_sub` with swapped pops, reassembled for `3 8 -` | ACORR-CASE-08 (changed helper, operand order) | `correspondence-reject`; the Lean transcription pin also refuses (`helper-transcription-stale`) |
 | interface/recipe data string `[I64]` → `[I65]`, code unchanged | ACORR-CASE-06 | `correspondence-reject` |
 | foundation receipt from another tree | ACORR-CASE-04 (stale version) | `stale-proof-subject` |
@@ -310,12 +310,12 @@ covers one scalar `if`, or one `inl`/`inr` I64 payload followed by `case`.
 Both bodies contain only I64 literals and `+`, `-`, `*`. The selector,
 scalar input and Bool/I64 bottom prefix are fixed literals in the complete
 source program. Both branches have the same ordered stack interface and
-the entire source is independently admitted through the real frontend and
+the entire source is independently acquired through the real frontend and
 kernel before execution. A valid but unexecuted word outside this model
 is still ineligible.
 
 The deterministic corpus has 16–64 positive pairs and three tagged refusal
-probes: an out-of-range literal, a wrong branch type, and an admitted word
+probes: an out-of-range literal, a wrong branch type, and an acquired word
 outside the model whitelist. Only one declared site in the untaken branch
 changes: a constant, arithmetic operator, neutral insertion, or neutral
 removal. Refused pairs are eligibility outcomes, not compiler disagreements.
@@ -355,7 +355,7 @@ WAT and executes the resulting Wasm in both opt modes. It is not a forged
 expected value.
 
 The shrinker changes the program/variant/fixed-input triple, including the
-mutation site. Every retained candidate is re-admitted, freshly checked by
+mutation site. Every retained candidate is re-acquired, freshly checked by
 Lean and re-executed while preserving eligibility and the discrepancy
 class. Its 64-attempt bound, outcomes and local-minimal/bound-exhausted
 status are recorded. Replay the retained lowering-control discrepancy with:
@@ -661,9 +661,9 @@ operand blocks every word (`resource_operand_blocks_every_word`), dropping and
 duplication therefore only move data obligations (`drop_consumes_one`,
 `dup_duplicates_one`), quoting retains rather than consumes
 (`quote_retains_one`), the opaque segment's must-use obligations are conserved
-by every admitted program (`segment_conserved`), a two-arm branch accounts for
+by every acquired program (`segment_conserved`), a two-arm branch accounts for
 the same obligations on both arms (`branch_accounts_both_arms`), and an ordinary
-error return is admitted only with no outstanding operand
+error return is acquired only with no outstanding operand
 (`fail_requires_empty_operands`), plus the branch-join theorems below. Twenty-six
 ownership theorems in total, all inventoried.
 
@@ -683,7 +683,7 @@ with its unwrapping although both are eligible
 (`nested_payload_is_not_merged_with_its_unwrapping`), and a wrapped must-use
 resource is never merged with a plain payload (`nested_resource_is_not_merged`).
 The substantive preservation result is `joined_word_admission_agrees`: two stacks
-whose ordered positions agree on eligibility are admitted by one word in both arms
+whose ordered positions agree on eligibility are acquired by one word in both arms
 or in neither, so the joined abstract stack preserves this fragment's accounting
 decision rather than inventing one.
 
@@ -725,7 +725,7 @@ Open, and deliberately not closed by this model:
   decision and reports the split;
 - OWN-PO-2 (scope escape) and any future scoped-borrow syntax, package
   retention/reclamation and the host-ledger OWN-PO-4..7 obligations;
-- host resource release: no admitted decision in this fragment releases a native
+- host resource release: no acquired decision in this fragment releases a native
   object, and no runtime claim follows for an unimplemented profile.
 
 ## Checkpoint-scoped authority ledger (issue #66)
@@ -747,7 +747,7 @@ witness and registers exactly one not-yet-started attempt
 checkpoint quota bound and attempt/charge accounting
 (`admission_preserves_alignment`, `admission_preserves_uniqueness`,
 `admission_preserves_quota`, `admission_preserves_attempts_charged`); any finite
-serialized prefix keeps alignment (`admitPrefix_preserves_alignment`); an
+serialized prefix keeps alignment (`acquirePrefix_preserves_alignment`); an
 altered requested plan, revoked or stale facts, or an already started attempt
 mint nothing (`altered_plan_cannot_mint`, `stale_facts_cannot_mint`,
 `started_attempt_cannot_start_again`). Four mutation models break the
@@ -799,7 +799,7 @@ Open, and deliberately not closed:
 well-formed acyclic graph over the reals with explicit input and parameter slots,
 exact finite constants, addition and multiplication, and one selected output.
 Guards, indexing, Boolean paths, activation corners, surrogate rules, and the
-subtraction and ordered affine terms the issue admits only later are outside the
+subtraction and ordered affine terms the issue grants only later are outside the
 file, as are dynamic Programs.
 
 Proved: a node's evaluation is differentiable along a direction line whenever its
@@ -859,7 +859,7 @@ its ordered operands' registers already hold theirs (`step_computes`), reference
 values are stable once later nodes are added (`valuesUpTo_eq_value`), and by
 induction on the untrusted order every already-processed node's register holds its
 reference value (`execSchedule_sound`). The closure is **validator soundness**:
-for every admitted input the packed machine's selected output register equals the
+for every acquired input the packed machine's selected output register equals the
 graph reference (`schedule_sound`) — acceptance implies complete ordered result
 equivalence, with refusal allowed for unsupported valid schedules.
 
@@ -1195,7 +1195,7 @@ deterministic; a contradictory postcondition derives non-realizability with its
 admissible assignment; one admissible input with two distinct permitted `Bool`
 outputs derives non-determinacy with both outputs named; an uninhabited domain
 derives vacuity while its universal proposition holds; and an intentionally
-relational contract is admitted with no obligation forced.
+relational contract is acquired with no obligation forced.
 
 Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
 target launches it against the selected CLI): the refusal classes above,
@@ -1261,12 +1261,78 @@ Open, and deliberately not closed:
 - atomic multi-slot replacement, state/resource migration, new
   contextual-effect inference, liveness and exactly-once effects are outside it.
 
+## Bounded M6 task-interleaving model (issue #46)
+
+`NobleFoundation/TaskInterleaving.lean` is a two-record subject for a
+schedule explorer rather than a scheduler: it names which interleavings are
+reachable and what holds at every reachable prefix, so a full-search baseline
+exists before any reduction is claimed. Records carry a generation, a pin and
+wakeup-reservation units; the table carries a shared admission capacity, a
+sticky first abnormal failure, and ordered delivery and settlement records.
+Actions are `acquire`, `cancel`, `complete`, `deliver`, `staleCallback`,
+`settle`, `cleanup` and `finish`; native stop is not among them because it is
+an input observation, not something cancellation proves. Every refusal is a
+single guard, an action naming a generation must name the live one, and
+same-slot reuse needs a different generation.
+
+Proved, and the enumeration baseline with it: the empty table satisfies the
+invariants (`empty_table_satisfies_the_invariants`), every acquired step
+preserves them (`step_preserves_invariants`) and therefore every reachable
+prefix of any action list does (`reachable_prefixes_satisfy_the_invariants`);
+a full table refuses the other id's admission
+(`baseline_admission_is_refused`) until finishing a live record releases the
+slot (`finishing_a_slot_releases_the_capacity`), after which that other id's
+admission is enabled (`releasing_a_slot_enables_another_id`); a stale-generation
+callback leaves the table untouched (`stale_generation_callback_changes_nothing`);
+delivery after retirement (`late_delivery_after_retirement_is_refused`), a
+second delivery of the same generation (`double_delivery_is_refused`) and
+settlement before delivery (`settlement_requires_a_delivery`) are refused
+rather than recorded; settlement after delivery appends the ordered pair
+(`settlement_after_delivery_is_taken`), finishing keeps the delivery record
+(`finish_keeps_its_delivery_record`) and cancellation keeps the pin held
+(`cancellation_keeps_the_pin`); a recorded abnormal failure survives later
+failures, later successes and refused or acquired actions
+(`abnormal_failure_survives_a_second_failure`,
+`abnormal_failure_survives_a_later_success`,
+`abnormal_failure_survives_refused_and_acquired_actions`) and two failures keep
+the first code (`first_failure_code_is_kept_as_the_sticky_one`). Twenty-three
+theorems, all inventoried, plus the three guard-reading lemmas
+(`some_or_none_eq_some`, `none_or_some_eq_some`, `some_or_some_eq_some`).
+
+The observation contract is `observe` — per-id generations, pins and
+reservations, the sticky failure, and the ordered delivery and settlement
+records. `lossyObserve` deliberately drops the failure and the generations, and
+is measured as lossy instead of being used as an equivalence test:
+`lossy_observation_hides_the_failure_difference` and
+`ordered_delivery_prefixes_are_distinguished` present histories with the same
+lossy observation but different documented ones, the second pair differing only
+in delivery order.
+
+The deliberately unsound independence rule is refuted, not assumed:
+`different_ids_are_not_independent` shows two actions on *different* task ids do
+not commute, because the second one's enabledness depends on the first one's
+released slot (acquire-then-finish refuses the admission, finish-then-acquire takes
+it). Cancellation/delivery races, generation reuse and shared-capacity
+conflicts therefore stay dependent.
+
+Open, and deliberately not closed:
+
+- this is a bounded subject, not a scheduler and not a new source-level async
+  model, and no payload/outcome class outside the listed actions is enumerated;
+- no correspondence claim relates the model to the Rust table API in
+  `crates/noble-kernel/src/async_tasks/table`; the invariants are model claims;
+- the universal reduction theorem is not proved and no reduced search exists;
+  weak-memory ordering, liveness, fairness, callback-delivery guarantees,
+  cleanup after host death and once-only remote effects are outside the model;
+- `abnormal_failure_*` are concrete reachable witnesses rather than a universal
+  sticky-failure theorem.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |
 |---|---|---|
 | 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
-| 3 | one example from Lean spec to admitted bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
+| 3 | one example from Lean spec to acquired bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
 | 4 | seeded differential comparator; separate fixed-input scalar if/case EMI; Lean-checked expectations, opt off/on, shrinking and replay, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files; Rust renderer/lowering refinement and universal compiler equivalence |
 | 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
 

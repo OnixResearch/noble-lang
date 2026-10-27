@@ -559,7 +559,7 @@
       "name": "NobleFoundation.exec_branchCode_untaken",
       "phase": 4,
       "role": "emi-branch",
-      "claim": "changing only the untaken branch leaves all normal MC1 outcomes unchanged on admitted selector inputs"
+      "claim": "changing only the untaken branch leaves all normal MC1 outcomes unchanged on acquired selector inputs"
     },
     {
       "name": "NobleFoundation.branchVisits_selected",
@@ -1015,7 +1015,7 @@
       "name": "NobleFoundation.LinkBoundary.same_signature_wrong_body_refused",
       "phase": 3,
       "role": "negative-control",
-      "claim": "same artifact target, source identity and ordered signature do not admit a different callee body"
+      "claim": "same artifact target, source identity and ordered signature do not acquire a different callee body"
     },
     {
       "name": "NobleFoundation.LinkBoundary.embedded_callee_substitution_refused",
@@ -1285,7 +1285,7 @@
       "name": "NobleFoundation.ServiceWire.nameByte_excludes_structure",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "an admitted name byte is neither the closing quote nor an angle bracket"
+      "claim": "an acquired name byte is neither the closing quote nor an angle bracket"
     },
     {
       "name": "NobleFoundation.ServiceWire.recordPrefix_length",
@@ -1315,13 +1315,13 @@
       "name": "NobleFoundation.ServiceWire.openBrackets_of_name",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "a name drawn from the admitted alphabet opens no bracket"
+      "claim": "a name drawn from the acquired alphabet opens no bracket"
     },
     {
       "name": "NobleFoundation.ServiceWire.depthExceeds_encode",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the canonical encoding opens exactly one bracket, so an admitted configured depth accepts it"
+      "claim": "the canonical encoding opens exactly one bracket, so an acquired configured depth accepts it"
     },
     {
       "name": "NobleFoundation.ServiceWire.takeName_encode",
@@ -1333,13 +1333,13 @@
       "name": "NobleFoundation.ServiceWire.parseService_encode",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the closed-schema parser recognizes the canonical encoding of an admitted value"
+      "claim": "the closed-schema parser recognizes the canonical encoding of an acquired value"
     },
     {
       "name": "NobleFoundation.ServiceWire.decode_encode",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "a value round-trips: for an admitted name and configured depth, decoding the canonical encoding yields that value"
+      "claim": "a value round-trips: for an acquired name and configured depth, decoding the canonical encoding yields that value"
     },
     {
       "name": "NobleFoundation.ServiceWire.encode_of_accepted",
@@ -1351,7 +1351,7 @@
       "name": "NobleFoundation.ServiceWire.longest_name_fits_wire_budget",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the longest admitted name still fits the 64-byte wire budget"
+      "claim": "the longest acquired name still fits the 64-byte wire budget"
     },
     {
       "name": "NobleFoundation.ServiceWire.byte_limit_precedes_depth_scan",
@@ -1363,7 +1363,7 @@
       "name": "NobleFoundation.ServiceWire.depth_configuration_precedes_schema",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "an unadmitted configured depth rejects a well-formed record as a depth failure"
+      "claim": "an unacquired configured depth rejects a well-formed record as a depth failure"
     },
     {
       "name": "NobleFoundation.ServiceWire.depth_scan_precedes_schema",
@@ -1393,7 +1393,7 @@
       "name": "NobleFoundation.ServiceWire.foreign_name_byte_is_schema",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "a name byte outside the admitted alphabet is rejected, which is the model form of the non-ASCII and wrong-alphabet rejections"
+      "claim": "a name byte outside the acquired alphabet is rejected, which is the model form of the non-ASCII and wrong-alphabet rejections"
     },
     {
       "name": "NobleFoundation.ServiceWire.overlong_name_is_rejected",
@@ -1405,13 +1405,13 @@
       "name": "NobleFoundation.ServiceWire.longest_name_round_trips",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the longest admitted name round-trips, which is the name bound exact accepting edge"
+      "claim": "the longest acquired name round-trips, which is the name bound exact accepting edge"
     },
     {
       "name": "NobleFoundation.ServiceWire.shortest_name_round_trips",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "the shortest admitted name round-trips"
+      "claim": "the shortest acquired name round-trips"
     },
     {
       "name": "NobleFoundation.Ownership.duplicable_iff",
@@ -1507,7 +1507,7 @@
       "name": "NobleFoundation.Ownership.fail_requires_empty_operands",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "a normal error return is admitted only with no outstanding operand"
+      "claim": "a normal error return is acquired only with no outstanding operand"
     },
     {
       "name": "NobleFoundation.Ownership.fail_rejects_outstanding_operand",
@@ -1519,7 +1519,7 @@
       "name": "NobleFoundation.Ownership.segment_conserved",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "the opaque segment and its must-use obligations are conserved by every admitted program"
+      "claim": "the opaque segment and its must-use obligations are conserved by every acquired program"
     },
     {
       "name": "NobleFoundation.LiveDispatch.publish_preserves_other_keys",
@@ -1669,7 +1669,7 @@
       "name": "NobleFoundation.AuthorityLedger.admission_preserves_quota",
       "phase": 1,
       "role": "preservation",
-      "claim": "One admission keeps checkpoint charges within the supplied snapshot when the admitted cost fits."
+      "claim": "One admission keeps checkpoint charges within the supplied snapshot when the acquired cost fits."
     },
     {
       "name": "NobleFoundation.AuthorityLedger.started_attempt_cannot_start_again",
@@ -1933,7 +1933,7 @@
       "name": "NobleFoundation.PackedSchedule.schedule_sound",
       "phase": 1,
       "role": "packed-schedule",
-      "claim": "Complete ordered result equivalence: the selected output register of a validated packed schedule equals the graph reference's value for every admitted input."
+      "claim": "Complete ordered result equivalence: the selected output register of a validated packed schedule equals the graph reference's value for every acquired input."
     },
     {
       "name": "NobleFoundation.PackedSchedule.exampleGraph_wellFormed",
@@ -2437,7 +2437,145 @@
       "name": "NobleFoundation.Ownership.joined_word_admission_agrees",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "two stacks whose positions agree on eligibility are admitted by one word in both arms or in neither"
+      "claim": "two stacks whose positions agree on eligibility are acquired by one word in both arms or in neither"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.some_or_none_eq_some",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "an `if`-guarded acquired step equals its guard and its acquired table"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.none_or_some_eq_some",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a refused-or-acquired step equals the negation of its guard and its acquired table"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.some_or_some_eq_some",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "two acquired branches under one guard disjoin their guards and acquired tables"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.empty_table_satisfies_the_invariants",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the empty bounded table satisfies the capacity and slot invariants"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.step_preserves_invariants",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every acquired step preserves the capacity and slot invariants"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.reachable_prefixes_satisfy_the_invariants",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every reachable prefix of any action list satisfies the invariants"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_second_failure",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a recorded abnormal failure is not replaced by a later failure code"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_later_success",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a recorded abnormal failure survives a later successful completion"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.abnormal_failure_survives_refused_and_acquired_actions",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a recorded abnormal failure survives refused and acquired actions"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.first_failure_code_is_kept_as_the_sticky_one",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "two failures keep the first recorded code rather than the newest"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.baseline_admission_is_refused",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a full bounded table refuses the other id's admission"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.finishing_a_slot_releases_the_capacity",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "finishing a live record releases its acquired slot"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.releasing_a_slot_enables_another_id",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "after a release the other id's admission is enabled"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.different_ids_are_not_independent",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the unsound different-ids-are-independent rule: two actions on distinct ids do not commute"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.stale_generation_callback_changes_nothing",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a stale-generation callback leaves the table untouched"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.late_delivery_after_retirement_is_refused",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "delivery after retirement is refused rather than appended"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.double_delivery_is_refused",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a second delivery of the same generation is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.settlement_requires_a_delivery",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "settlement before delivery is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.settlement_after_delivery_is_taken",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "settlement after delivery appends the ordered pair"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.finish_keeps_its_delivery_record",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "finishing a delivered record keeps its delivery record"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.cancellation_keeps_the_pin",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "cancellation keeps the pin held for a live record"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.lossy_observation_hides_the_failure_difference",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "two histories with the same lossy observation differ in the documented one"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.ordered_delivery_prefixes_are_distinguished",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the same two delivery records in the other order are a different documented observation"
     }
   ]
 }
