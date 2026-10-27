@@ -123,10 +123,34 @@ const final = {
   status: run(git, ['status', '--porcelain=v1', '--untracked-files=all']).trim(),
 };
 requireThat(final.status === initial.status && final.commit === initial.commit, 'source tree changed during proof check');
+const bindings = {
+  // WIT-TRACE-06: every revision this pilot's verdicts depend on is bound or explicitly absent.
+  model: {
+    lean: version,
+    lean_sha256: spawnSync('sha256sum', [join(leanBin, 'lean')], { encoding: 'utf8' }).stdout.split(' ')[0],
+    sources_sha256: Object.fromEntries([codeFile, inventoryFile].map(file => [file,
+      spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
+  },
+  component: null,
+  helper: null,
+  engine: null,
+  absent_bindings_reason:
+    'This pilot proves a relation between two handwritten alphabets. No component, lowering helper or ' +
+    'engine instance is a subject of these theorems, so binding one would imply a correspondence this ' +
+    'package does not establish. WIT-TRACE-06 stays open until the correspondence route has one.',
+};
+const claims = {
+  model_theorems: names.length,
+  implementation_theorems: 0,
+  correspondence: 'none',
+  liveness: 'none',
+  cancellation: 'unsupported and unmodelled',
+};
 const receipt = {
   schema: 'noble-region-trace-proof/v1', result: 'passed',
   source_commit: initial.commit, source_tree: initial.tree, clean_source: initial.status === '',
   allow_dirty: allowDirty, lean: version,
+  bindings, claims,
   sources_sha256: Object.fromEntries([codeFile, inventoryFile,
     'verification/region-trace/check.mjs'].map(file => [file,
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
