@@ -57,7 +57,6 @@ pub(super) fn catalog_valid(env: &super::Env) -> bool {
     valid
 }
 
-
 /// Validate one resource-catalog row against its declaration, its kind and every
 /// earlier row. Loop-free so its early returns and the duplicate scan stay
 /// extractable (Aeneas rejects returns/continue inside nested loops).
@@ -106,7 +105,7 @@ pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::Resour
 /// Only root-positioned borrowed references may be used as authority. Their
 /// signatures are finite concrete trees; a borrowed input may itself be a
 /// root-provided reference, but no result or value child may contain one.
-
+///
 /// Return the known-effect flag for one ordered effect list without returning
 /// from inside a loop.
 pub(super) fn effects_known(env: &super::Env, effects: &[crate::types::EffId]) -> bool {

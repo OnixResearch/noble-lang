@@ -356,7 +356,12 @@ const fn source_outcome(error: &noble_contracts::source::Error) -> &'static str 
 
 const fn exit(outcome: &str) -> u8 {
     match outcome.as_bytes() {
-        b"normal" | b"defined" | b"linked" | b"ready" | b"source-observation-released" => 0,
+        b"normal"
+        | b"defined"
+        | b"linked"
+        | b"ready"
+        | b"reported"
+        | b"source-observation-released" => 0,
         b"unsupported" => 4,
         b"exhausted" | b"runtime-exhausted" => 5,
         b"trap" => 1,

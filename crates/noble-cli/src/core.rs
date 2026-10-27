@@ -11,6 +11,7 @@ pub(crate) mod live;
 pub(crate) mod live_slot;
 pub(crate) mod output;
 mod report;
+pub(crate) mod spec_quality;
 pub(crate) mod worker;
 mod worker_candidate;
 pub(crate) mod worker_package;
@@ -166,6 +167,11 @@ pub const USAGE: &str = "usage:
   Local synthetic-send shell: authorize checked inert Send against a separately
   selected exact grant, then cancel a pinned native task before late completion.
   No network send or portable package/export authority is provided.
+  noble spec-quality MANIFEST_JSON
+  Report submitted specification-quality evidence against the declared pure-I64/Bool profile,
+  refusing a submitted obligation kind, predicate revision, model revision, observation relation
+  or parameter binding that does not match it. Four obligations stay separate: specification
+  quality, implementation satisfaction, termination and correspondence.
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
   CLAIMS_JSON: {\"claimed_effects\":[]}; optional source/digest/allowed/trusted_correspondence are ignored
   --source and --allow-effects are selected by the host invoker, never by candidate claims.

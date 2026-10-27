@@ -24,7 +24,6 @@ fn clone_stack(stack: &[crate::types::Ty]) -> alloc::vec::Vec<crate::types::Ty> 
     out
 }
 
-
 /// Deep-copy one nominal shape by cloning only its `Ty` payloads.
 ///
 /// `Ty`'s own `Clone` must not go through `NominalShape`'s derived `Clone`: the two
@@ -78,14 +77,13 @@ impl Clone for crate::types::Ty {
                 effects.clone(),
             ),
             crate::types::Ty::Resource(kind) => crate::types::Ty::Resource(*kind),
-            crate::types::Ty::Nominal(id, shape) => crate::types::Ty::Nominal(
-                *id,
-                alloc::boxed::Box::new(clone_shape(&**shape)),
-            ),
+            crate::types::Ty::Nominal(id, shape) => {
+                crate::types::Ty::Nominal(*id, alloc::boxed::Box::new(clone_shape(shape)))
+            }
             crate::types::Ty::GenericNominal(id, args, shape) => crate::types::Ty::GenericNominal(
                 *id,
                 alloc::boxed::Box::new([args[0].clone(), args[1].clone()]),
-                alloc::boxed::Box::new(clone_shape(&**shape)),
+                alloc::boxed::Box::new(clone_shape(shape)),
             ),
         }
     }
@@ -263,7 +261,6 @@ fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> 
     }
 }
 
-
 /// Render one nominal shape, closing it, so `Ty`'s `Debug` never calls
 /// `NominalShape`'s derived `Debug` (mutually recursive pair, see `clone_shape`).
 fn debug_shape(
@@ -351,7 +348,7 @@ impl core::fmt::Debug for crate::types::Ty {
                 attempt!(core::fmt::Formatter::write_str(f, "Nominal("));
                 attempt!(core::fmt::Debug::fmt(id, f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
-                attempt!(debug_shape(&**shape, f));
+                attempt!(debug_shape(shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
             crate::types::Ty::GenericNominal(id, args, shape) => {
@@ -360,7 +357,7 @@ impl core::fmt::Debug for crate::types::Ty {
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
                 attempt!(debug_stack(args.as_slice(), f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
-                attempt!(debug_shape(&**shape, f));
+                attempt!(debug_shape(shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
         }

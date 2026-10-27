@@ -145,8 +145,6 @@ pub(super) fn check_request(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; the comparison uses PartialEq on owned stack, type and effect values, which is not const."
 )]
-
-
 /// The signed-self node of `node`, or `None`: the loop-free helper shape the
 /// extraction tool needs, since a return inside a loop body is not extractable.
 fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words::Inst> {
@@ -197,6 +195,10 @@ fn reject_slot_invoke(node: &crate::untrusted::Node) -> Result<(), super::Fail> 
 
 /// Charge and compare one signed site against the owner instance. Loop-free so
 /// its early returns stay extractable.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-maintainers; the scheme, owner instance and cost, quoted site, request, instantiation position, shared context and metered allowance are distinct caller-supplied inputs, and grouping them would invent a struct nothing else uses."
+)]
 fn signed_site_check(
     scheme: &crate::words::Scheme,
     owner_inst: &crate::words::Inst,
@@ -269,7 +271,6 @@ fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Bindin
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the request-local work allowance is threaded by exclusive reference so every binding is charged before it is walked; exhaustion is a typed outcome, not an assertion failure."
 )]
-
 /// Charge one instance binding and its nested types. Loop-free, so its early
 /// returns stay extractable by Aeneas.
 fn guard_one_binding(
@@ -291,8 +292,9 @@ fn guard_one_binding(
             guard_stack_entries(stack.as_slice(), request, remaining)
                 .map(|charged| charged.saturating_add(1))
         }
-        crate::words::Binding::Value(ty) => guard_ty(ty, request, remaining)
-            .map(|charged| charged.saturating_add(1)),
+        crate::words::Binding::Value(ty) => {
+            guard_ty(ty, request, remaining).map(|charged| charged.saturating_add(1))
+        }
         crate::words::Binding::Effect(effects) => {
             let effect_count = u32::try_from(effects.as_slice().len())
                 .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;

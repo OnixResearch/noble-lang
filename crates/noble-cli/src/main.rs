@@ -252,6 +252,12 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "spec-quality")
+    {
+        return core::spec_quality::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "admit-artifact")
     {
         return core::artifact::run(&arguments);

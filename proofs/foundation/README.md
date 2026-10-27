@@ -1091,8 +1091,40 @@ Fifteen inventoried theorems; receipt
 (301 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+### Reporting layer (issue #65)
+
+`noble spec-quality MANIFEST_JSON` reports submitted evidence against the declared
+pure-`I64`/`Bool` profile. It declares the bindings the evidence depends on once —
+predicate revision 1 (MC1 `Expression.Holds` as pinned by the contract gate),
+obligation-shape model revision 1, `exact-scalar-equality` as the observation
+relation, and `ordered-exact-i64-bool` as the parameter binding — and refuses a
+submission that carries any other one, each with its own diagnostic
+(`wrong-predicate-revision`, `wrong-model-revision`,
+`wrong-observation-relation`, `wrong-parameter-binding`). A coarser observational
+relation cannot be selected by a producer to make determinacy pass.
+
+Obligation kinds are paired, not interchangeable: a specification-quality claim
+(`inhabited`, `realizable`, `deterministic`) submitted as implementation
+satisfaction, or the implementation claim submitted as specification quality, is
+refused as `wrong-obligation` by type-level pairing rather than by convention.
+
+The report keeps four obligations apart: `specification_quality` (per-obligation
+rows plus established/not-established/vacuous tallies — a vacuous universal claim
+is counted as vacuous, never as established evidence), `partial_correctness` (the
+unchanged `exportedClaim`, reported only when that claim is itself checked),
+`termination` (never claimed) and `correspondence` (never claimed). It performs no
+guest execution and no source mutation; every report states
+`guest_requests: 0, protected_operations: 0`.
+
+Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
+target launches it against the selected CLI): ten refusal classes, six distinct
+outcomes, and the four separated obligations.
+
 Open, and deliberately not closed:
 
+- the producer reports a submitted manifest; it does not yet read a retained
+  contract and generate the expected propositions itself, so evidence is still
+  assembled outside this repository's own report;
 - no correspondence claim relates these relations to the retained contracts or
   to `crates/noble-contracts/src/rendering`: the model fixes the obligation
   shapes, not the renderer, so this is model evidence rather than an
