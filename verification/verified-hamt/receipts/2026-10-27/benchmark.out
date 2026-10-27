@@ -1,0 +1,34 @@
+cold/build-inclusive and repeated-lookup costs, measured on this host
+size 1 build list: 651 us total, 326 ns per operation
+size 1 build index: 2240 us total, 1121 ns per operation
+size 1 lookup list hit-first: 658 us total, 330 ns per operation
+size 1 lookup index hit-first: 1145 us total, 573 ns per operation
+size 1 lookup list hit-last: 652 us total, 327 ns per operation
+size 1 lookup index hit-last: 1130 us total, 566 ns per operation
+size 1 lookup list absent: 566 us total, 284 ns per operation
+size 1 lookup index absent: 961 us total, 481 ns per operation
+size 8 build list: 1441 us total, 721 ns per operation
+size 8 build index: 10771 us total, 5386 ns per operation
+size 8 lookup list hit-first: 688 us total, 345 ns per operation
+size 8 lookup index hit-first: 1201 us total, 601 ns per operation
+size 8 lookup list hit-last: 1403 us total, 702 ns per operation
+size 8 lookup index hit-last: 1195 us total, 598 ns per operation
+size 8 lookup list absent: 1320 us total, 661 ns per operation
+size 8 lookup index absent: 1009 us total, 505 ns per operation
+size 64 build list: 8276 us total, 4139 ns per operation
+size 64 build index: 85591 us total, 42796 ns per operation
+size 64 lookup list hit-first: 777 us total, 389 ns per operation
+size 64 lookup index hit-first: 2260 us total, 1131 ns per operation
+size 64 lookup list hit-last: 7911 us total, 3956 ns per operation
+size 64 lookup index hit-last: 1835 us total, 918 ns per operation
+size 64 lookup list absent: 7762 us total, 3882 ns per operation
+size 64 lookup index absent: 2193 us total, 1097 ns per operation
+size 512 build list: 67963 us total, 33982 ns per operation
+size 512 build index: 1399496 us total, 699749 ns per operation
+size 512 lookup list hit-first: 719 us total, 360 ns per operation
+size 512 lookup index hit-first: 1749 us total, 875 ns per operation
+size 512 lookup list hit-last: 52670 us total, 26336 ns per operation
+size 512 lookup index hit-last: 1632 us total, 817 ns per operation
+size 512 lookup list absent: 51065 us total, 25533 ns per operation
+size 512 lookup index absent: 1535 us total, 768 ns per operation
+checksum: 4696000

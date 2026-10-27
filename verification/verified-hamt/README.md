@@ -101,6 +101,55 @@ unit chooses silently.
 - The three axiom sets are allow-list-compatible; that is not a claim that the
   theorems are axiom-free or that they mean what Noble's environment means.
 
+## Adapter unit (2026-10-27): the decision, the relation and the measured costs
+
+**Decision: stop before adoption.** The duplicate policy is **first-wins for arbitrary lists**, not a
+unique-slot premise, because `NamedV1.Environment.lookup` is total over an arbitrary environment and
+the type carries no uniqueness proof: an adapter that relied on `ExactClosure`'s existing
+`Nodup` obligation implicitly would refuse inputs the reference rule accepts.
+
+`adapter/Environment.lean` builds the index with `foldr`, so the first occurrence of a slot is
+inserted last and wins. `lookup_first_match` proves, on **every** list, duplicate-free or not, that
+the index's lookup is the reference first-match lookup and returns the **complete** first entry.
+`index_keeps_the_order` keeps the ordered list as the source of truth, `absent_slot_remains_absent`
+makes `none` a real answer, and `different_slot_insertion_is_unaffected` shows inserting an entry
+under another slot at either end changes nothing (lawful equality/hashing remains the premise).
+
+`adapter/corpus.lean` is an **oracle**, not a second adapter: every expected value is written
+literally from the reference rule, and the corpus covers empty, singleton, absent key, sparse slots,
+collision-heavy slots, repeated identical duplicates and repeated duplicates with **different**
+provenance and body. The different-duplicate fixture is the control that detects accidentally
+choosing the last entry: `lastWins repeatedDifferent` returns a different entry, measured. Substituted
+provenance and substituted interfaces are different entries, and a dropped entry reads as absent.
+Map lookups are not reducible by `decide`, so each adapter assertion goes through the proved relation
+to the reference rule and only that rule is decided.
+
+**Measured costs** (`receipts/2026-10-27/benchmark.out`, 2000 repeats, this host only):
+
+| Size | build list | build index | lookup hit-first list/index | hit-last list/index | absent list/index |
+|---|---|---|---|---|
+| 1 | 326 ns | 1121 ns | 330 / 573 ns | 327 / 566 ns | 284 / 481 ns |
+| 8 | 721 ns | 5386 ns | 345 / 601 ns | 702 / 598 ns | 661 / 505 ns |
+| 64 | 4139 ns | 42796 ns | 389 / 1131 ns | 3956 / 918 ns | 3882 / 1097 ns |
+| 512 | 33982 ns | 699749 ns | 360 / 875 ns | 26336 / 817 ns | 25533 / 768 ns |
+
+So the index is 3.4x-20x more expensive to build at the sizes a named environment actually has, is
+**slower** for a first-slot hit at every measured size, and only becomes clearly faster for
+last-slot and absent lookups from about 64 entries upward. No allocation or retained-memory
+measurement was taken; the numbers above are wall-clock per operation over an already built
+representation for the lookup rows and build-inclusive for the build rows.
+
+**Why the decision is stop rather than continue.** Nothing in this corpus or these numbers shows a
+benefit at Noble's sizes, the upstream axiom receipts cannot be reused under Noble's toolchain, and
+adopting a dependency would put an unverified-for-Noble library in the lookup path of accepted table
+slots. The adapter stays an isolated evaluation artifact: the production representation, proof
+authority and `crates/noble-contracts/src/rendering` are untouched.
+
+**Receipts** (`receipts/2026-10-27/`): `pins.json` (library commit `24bbc61c`, toolchain, adapter
+sources, theorem list, decision and basis), `adapter-build.out` (both adapter files transcribed with
+the pinned Lean, empty output = no errors or warnings), `benchmark.out`, `sha256sums.txt` binding the
+exact sources the numbers belong to, `run.md` for the method.
+
 ## Next unit when this is taken up
 
 1. Map-backed adapter that keeps the ordered entry list as the source of truth

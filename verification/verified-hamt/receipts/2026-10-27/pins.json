@@ -1,0 +1,31 @@
+{
+  "schema": "noble-verified-hamt-adapter-pins/v1",
+  "verified_hamt_commit": "24bbc61c6ca37ef38f984566399461c9afa2b0d3",
+  "verified_hamt_ref": "refs/heads/main",
+  "license": "Apache-2.0",
+  "upstream_declared_toolchain": "leanprover/lean4:v4.32.0",
+  "external_packages": [],
+  "noble_toolchain_used": "lean 4.31.0 (nix store noble-lean-release-4.31.0), library rebuilt with its lean-toolchain overridden to v4.31.0",
+  "library_build_under_4_31": "success (24 targets)",
+  "adapter_sources": [
+    "verification/verified-hamt/adapter/Environment.lean",
+    "verification/verified-hamt/adapter/corpus.lean",
+    "verification/verified-hamt/adapter/bench.lean"
+  ],
+  "duplicate_policy": "first-wins for arbitrary lists",
+  "theorems": [
+    "NobleVerifiedHamtAdapter.lookup_first_match",
+    "NobleVerifiedHamtAdapter.index_keeps_the_order",
+    "NobleVerifiedHamtAdapter.empty_build_looks_up_nothing",
+    "NobleVerifiedHamtAdapter.absent_slot_remains_absent",
+    "NobleVerifiedHamtAdapter.foldr_preserves_lookup_aux",
+    "NobleVerifiedHamtAdapter.foldr_preserves_lookup",
+    "NobleVerifiedHamtAdapter.different_slot_insertion_is_unaffected",
+    "NobleVerifiedHamtAdapter.beq_comm_nat"
+  ],
+  "decision": "stop before adoption",
+  "decision_basis": {
+    "compatibility": "the library builds under Noble's pinned Lean 4.31.0, but the upstream axiom-dependency receipts cannot be reused there",
+    "performance": "see benchmark.out: build-inclusive index cost is 3.4x-20x the list cost at sizes 1-512, and repeated first-slot lookup is 1.5-2.5x slower while last-slot and absent lookups become far faster only from about 64 entries"
+  }
+}

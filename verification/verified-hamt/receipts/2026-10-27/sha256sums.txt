@@ -1,0 +1,3 @@
+12f3cb6bc05ce83648101fe0863ac803ba80f1ee81d4ecd21c47f1ce1fc6c5af  verification/verified-hamt/adapter/Environment.lean
+3782350f6124b16118eb92df9b8a3c9563a09a0ff6136f736878bb8bfa4fae97  verification/verified-hamt/adapter/bench.lean
+56298dcca36bb292e3199ef98134fb152ea3651c9fc66eb699e423dbccbc2123  verification/verified-hamt/adapter/corpus.lean
