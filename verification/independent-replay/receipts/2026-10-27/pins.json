@@ -1,0 +1,24 @@
+{
+  "schema": "noble-independent-replay-integrity/v1",
+  "source_commit": "80736e7c23d715e1659c2dc216b46bacbc2cfcb3",
+  "olean_build": "the NobleFoundation artifacts from the clean foundation build retained at verification/foundation/receipts/e0ec33f66; the Lean sources are unchanged since",
+  "lean_toolchain": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin (lake env leanchecker, lean 4.31.0)",
+  "host": "Linux 6.18.54 x64",
+  "manifest": "verification/independent-replay/olean-integrity.txt",
+  "manifest_file_count": 2032,
+  "manifest_total_bytes": 507453848,
+  "hash_files_consulted": false,
+  "note": "leanchecker does not consult .olean.hash, so the frozen manifest is the digest step the replay depends on",
+  "replay": {"class": "replay-accepted", "status": 0, "silent": true, "elapsed_ms": 7066},
+  "controls": [
+    {"name": "single-byte-flip", "target": "NobleFoundation.olean byte 2284 flipped", "result": "artifact-integrity refusal, digest mismatch, checker_invoked=false"},
+    {"name": "removed-artifact", "result": "artifact-integrity refusal, missing Batteries/Classes/Order.olean, checker_invoked=false"},
+    {"name": "unexpected-artifact", "result": "artifact-integrity refusal, unexpected Extra.olean, checker_invoked=false"},
+    {"name": "untouched-copy", "result": "artifact-intact, 2032 files"}
+  ],
+  "non_claims": [
+    "no separately implemented kernel was evaluated: leanchecker uses the Lean kernel itself",
+    "no declaration-level negative control (substituted valid claim, dropped dependency, parseable-but-corrupted proof body) exists in this lane; the controls here are artifact-level",
+    "a passing replay says nothing about source authenticity, exact per-theorem claim binding, or Wasm/engine correspondence"
+  ]
+}

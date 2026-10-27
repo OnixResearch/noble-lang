@@ -1,0 +1,36 @@
+{
+  "intact": {
+    "integrity": "artifact-intact",
+    "detail": "2032 files",
+    "checker_invoked": false
+  },
+  "controls": [
+    {
+      "name": "single-byte-flip",
+      "target": "../../../../var/tmp/noble-olean-controls-RdajxR/path-8/NobleFoundation.olean",
+      "position": 2284,
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "digest mismatch proofs/foundation/.lake/build/lib/lean/NobleFoundation.olean",
+        "checker_invoked": false
+      }
+    },
+    {
+      "name": "removed-artifact",
+      "target": "../../../../var/tmp/noble-olean-controls-RdajxR/path-0/Batteries/Classes/Order.olean",
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "missing proofs/foundation/.lake/packages/batteries/.lake/build/lib/lean/Batteries/Classes/Order.olean",
+        "checker_invoked": false
+      }
+    },
+    {
+      "name": "unexpected-artifact",
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "unexpected proofs/foundation/.lake/packages/batteries/.lake/build/lib/lean/Extra.olean",
+        "checker_invoked": false
+      }
+    }
+  ]
+}

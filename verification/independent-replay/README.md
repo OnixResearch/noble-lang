@@ -60,6 +60,30 @@ checker to notice corruption.
 | Node/subtree closure matches a specific claim | **no** — replay accepts whatever the environment contains | exact claim binding, per-theorem closure |
 | Emitted artifact, runtime or compiler correspondence | **no** | anything about `wasm`, the engine or the loader |
 
+## Artifact integrity step (2026-10-27)
+
+The single-byte control above was the reason this lane could not be promoted: `leanchecker` accepted a
+flipped `.olean` silently. [replay.mjs](replay.mjs) now refuses **before** invoking any checker when
+the retained `.olean` set does not match a frozen digest manifest, and the
+[olean-integrity.txt](olean-integrity.txt) manifest binds the exact set replay resolves through
+`lake env`'s `LEAN_PATH`: 2032 artifacts, 507,453,848 bytes, one `<sha256> <bytes> <path>` row each.
+The checker does not consult `.olean.hash`, so this manifest *is* the digest step.
+
+Measured at `80736e7c` (`receipts/2026-10-27/`): the retained set verifies `artifact-intact` and then
+replays `kernel-accepted`, `status=0`, silent, 7066 ms. Corruption controls run against a copy of the
+whole search path, so they cannot damage the retained artifacts:
+
+| Control | Result |
+| --- | --- |
+| Untouched copy of the search path | `artifact-intact`, 2032 files |
+| **One flipped byte** in `NobleFoundation.olean` (byte 2284) | `artifact-integrity` refusal, `digest mismatch`, **checker never invoked** |
+| One artifact removed | `artifact-integrity` refusal, `missing Batteries/Classes/Order.olean`, checker never invoked |
+| One artifact added | `artifact-integrity` refusal, `unexpected Extra.olean`, checker never invoked |
+
+So the previously silent corruption is now a named refusal class rather than an acceptance. What this
+does **not** do: it does not make the checker independent (it still uses the Lean kernel), and it does
+not bind a claim to a declaration — it binds *bytes* to a replayed environment.
+
 ## Requirements before this becomes a gate
 
 1. A checker implemented independently of Lean's kernel (not shipped with the
@@ -70,17 +94,20 @@ checker to notice corruption.
 2. Exact claim binding: independently selected theorem identities and complete
    dependency closures, so that checking an unrelated valid declaration cannot
    satisfy the lane.
-3. Artifact integrity for the replayed `.olean` set, given the measured
-   single-byte control.
+3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
+   manifest refuses a corrupted, removed or extra artifact before the checker runs.
 4. Explicit refusal classes for unsupported constructs, timeout, export failure
    and rejection — none of which may be reported as success.
 
 ## Non-claims
 
 - No second kernel implementation was evaluated: none exists for this toolchain.
-- No negative control was constructed at the *declaration* level (substituted
-  valid claim, dropped dependency, corrupted proof body inside a parseable file):
-  the measured controls are artifact-level only.
+- No negative control was constructed at the *declaration* level in **this** lane (substituted valid
+  claim, dropped dependency, corrupted proof body inside a parseable file): the controls here are
+  artifact-level only. The declaration-level equivalents exist in the producer-consumer lane
+  (`verification/mc1/gate.mjs`: duplicate/missing/cyclic dependency, forbidden axiom, free variable,
+  wrong-theorem-type, trusted-name override, erased forbidden axiom) and are not evidence about a
+  separately implemented checker.
 - No external checker accepted anything about Noble; the replay is
   producer-independent, not implementation-independent.
 - A passing replay is not a correctness claim about any Rust, Wasm or engine

@@ -1,0 +1,1 @@
+{"outcome":"kernel-accepted","class":"replay-accepted","checker_invoked":true,"status":0,"elapsed_ms":7066,"silent":true,"log_tail":"","source_commit":"80736e7c23d715e1659c2dc216b46bacbc2cfcb3","project":"proofs/foundation","module":"NobleFoundation","manifest":"verification/independent-replay/olean-integrity.txt","host":"Linux 6.18.54 x64"}
