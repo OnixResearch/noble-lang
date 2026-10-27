@@ -1,17 +1,17 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "5402326b3813f7a65d26f7e40858e714dbd50e0e",
-  "source_tree": "29485f71b0c1238ab08f4ab3c20c337154b9d282",
+  "source_commit": "47ffe83b9f24ebb4790857689104ee4023e98ccf",
+  "source_tree": "9b17b2707f45ba454aba63ef0ad057f2afd8ac24",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "9083f65d198bfc37c1075859f3859273296d7348ef96ef1d47ff4a14c73d7b5e",
-    "proofs/m5/region-trace-inventory.json": "dd6069959e6d15dcbb9141486487db18dbd7968092a892afece10499a3860838",
+    "proofs/m5/RegionTrace.lean": "168b3498b1d5a79be91738b6a7126acab93e085549d425f2cbb070352ff4b4ea",
+    "proofs/m5/region-trace-inventory.json": "f7391bd0e902865dde20b9a1fd84da5d0d8c288abed3d2e699ae9d54bf685b26",
     "verification/region-trace/check.mjs": "2e91fc72b8f66736a5c3ad835ca33a362416f285b7a4cc7ca221ee8a514e3d0e"
   },
-  "theorem_count": 30,
+  "theorem_count": 33,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -431,6 +431,49 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "RegionTrace.retained_projection_is_permitted_prefix",
+      "role": "WIT-TRACE-03 corollary: an ordered permitted prefix of the related *source* trace, so exhaustion composes with the relation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retained_projection_is_permitted_prefix : ∀ (fuel : Nat) (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → List.filterMap RegionTrace.projectStep (RegionTrace.retainFrom fuel steps) <+: source",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_commits_are_decided",
+      "role": "WIT-TRACE-03 corollary: no forged identity at the source level",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.source_commits_are_decided : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → ((RegionTrace.commitIdentities steps).all fun identity => (RegionTrace.decisions steps).contains identity) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_release_is_at_most_once",
+      "role": "WIT-TRACE-03 corollary: at-most-once release inherited by the source alphabet",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.source_release_is_at_most_once : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → ((List.range 3).all fun member => decide (List.count member (RegionTrace.releaseMembers steps) ≤ 1)) = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -480,7 +523,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/rt-c5/Audit.lean"
+        "/tmp/rt-c7/Audit.lean"
       ],
       "exit": 0
     },

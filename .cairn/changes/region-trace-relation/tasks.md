@@ -18,7 +18,7 @@
   the six `related_rejects_*` controls refuse the forged traces and `related_accepts_well_formed_success`
   keeps them non-vacuous. Pairing and the host's own identity supply stay premises, so the task stays
   open.
-- [ ] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
+- [x] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
 - [x] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]

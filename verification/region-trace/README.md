@@ -46,8 +46,10 @@ well-formedness itself is a condition of the relation:
 | `retainFrom_prefix`, `retainFrom_cost_bounded` | a trace retained before fuel exhausts is a prefix of the full trace and costs no more than the budget |
 | `filterMap_prefix`, `exhaustion_keeps_committed_prefix`, `exhaustion_keeps_commit_identities` | the retained trace's projected commits and identities are prefixes of the full trace's: exhaustion may cut a trace but cannot invent or drop a commit |
 | `exhaustion_cannot_relate_an_unaffordable_commit`, `exhaustion_relates_when_affordable` | the exhaustion rule bites, and the same trace relates when the budget affords it |
+| `retained_projection_is_permitted_prefix` | WIT-TRACE-03 corollary: a retained projection is a permitted ordered prefix of the *source* trace |
+| `source_commits_are_decided`, `source_release_is_at_most_once` | WIT-TRACE-03 corollaries: exact identity and at-most-once release are inherited by the source alphabet |
 
-`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **30** model
+`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **33** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Non-claims
