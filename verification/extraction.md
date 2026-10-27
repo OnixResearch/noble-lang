@@ -107,14 +107,18 @@ only after the previous one was fixed:
 | 4 | Breaks to outer loops | `preflight.rs` `guard_inst` nested stack scan | `guard_one_binding` / `guard_stack_entries` |
 | 5 | Continue to outer loops | `contracts/live.rs` `catalog_valid`, `valid_ref` | `catalog_row_valid`, `ref_node_valid`, `effects_known`, `types_valid` |
 | 6 | Returns inside of nested loops | `contracts/clone_budget.rs` `?` in `for` | accumulating `Option` scans |
-| 7 | **Mixed mutually recursive definitions** | hand-written `Clone` and `Debug` impls for `types::Ty` ↔ `types::NominalShape` (`types/impls.rs` lines 28–84, 259–350) | **not fixed** |
+| 7 | Mixed mutually recursive definitions | `Clone`/`Debug` impls for `types::Ty` ↔ `types::NominalShape` | `clone_shape`/`debug_shape`: `Ty` renders the shape's payloads itself, so the pair is one-directional |
+| 8 | **Unimplemented** (symbolic `translate_fwd_ty`) | a translated function signature references a `core::vec::Vec` type (`alloc/src/vec/mod.rs` line 461) | **not fixed** |
 
 Classes 1–6 share one mechanical cure and are landed with every `noble-kernel` test target passing.
-Class 7 is a different kind of limitation: it needs either recursion-free `Clone`/`Debug` impls, or a
-reviewed Charon `--exclude`/`--opaque` decision (which would add unreviewed local extraction
-boundaries that the verifier's `allowedOpaque` list rejects), or regenerated reviewed extraction
-artifacts. Until one of those is decided, extraction stays rejected and **no refinement, M1 acceptance
-or correspondence claim is made** — the boundary this document already states.
+Class 7 was measured, not guessed: Aeneas rejects mutual recursion outright, and
+`-decreases-clauses` (which would allow it) is refused by the Lean backend for mutually recursive
+definitions, while a Charon `--exclude` of the impls module gets past the pass and then hits an
+internal error (`acceptance/frames.rs`). The source fix — one payload-only helper used by both
+nominal arms — is what made the pass succeed. Class 8 is a different, signature-level gap: Aeneas
+cannot translate some function signature that mentions a `Vec` type. Until it is resolved,
+extraction stays rejected and **no refinement, M1 acceptance or correspondence claim is made** —
+the boundary this document already states.
 
 Related stale pin, fixed: the verifier required the pre-growth verdict string `MC1-CONTRACT-LIBRARY: 43
 required theorems` while the library now reports 58 (NamedV3 T1/T6 and the specification-quality
