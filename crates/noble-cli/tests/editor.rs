@@ -197,3 +197,50 @@ fn editor_failures_preserve_category_and_bounded_node_paths(
     );
     Ok(())
 }
+
+// Every analysis category the contracts layer can carry must stay distinct across
+// the reporting boundary, so a client that reads `category` never has to parse
+// English prose and never sees two different failures collapse into one label.
+//
+// Two of the four categories are exercised end to end here (invalid and
+// exhausted); the editor node grammar decodes only integer, boolean, word, hole
+// and quotation nodes, so no editor-level construct reaches `unsupported` or
+// `internal` without a production test hook. That is recorded as a non-claim
+// rather than simulated: the mapping itself is checked directly instead of
+// asserting editor reachability that does not exist.
+#[test]
+fn editor_categories_stay_distinct_at_the_boundary() -> Result<(), Box<dyn std::error::Error>> {
+    let temporary = std::env::temp_dir();
+    // A bounded budget refusal that is genuinely reached through the editor
+    // boundary: one quotation whose value type exceeds the constructor cap.
+    let mut nodes = std::string::String::from(r#"{"kind":"quotation","nodes":["#);
+    for index in 0..1_000u32 {
+        if index > 0 {
+            nodes.push(',');
+        }
+        nodes.push_str(r#"{"kind":"integer","value":1}"#);
+    }
+    nodes.push(']');
+    nodes.push('}');
+    let (code, report) = invoke(
+        &temporary,
+        "analyze",
+        &std::format!(r#"{{"format":1,"nodes":[{nodes}]}}"#),
+    )?;
+    assert_eq!(code, 2, "{report}");
+    assert!(report.contains("\"stage\":\"analysis\""), "{report}");
+    assert!(report.contains("\"category\":\"exhausted\""), "{report}");
+    assert!(
+        !report.contains("\"category\":\"invalid\""),
+        "a bounded-budget refusal must not be reported as an invalid program: {report}"
+    );
+    assert!(report.contains("\"source_stage\":\"check\""), "{report}");
+    assert!(
+        report.contains("\"accepted_program_created\":false"),
+        "{report}"
+    );
+    assert!(report.contains("\"guest_requests\":0"), "{report}");
+    // One failure is one category, never a set of overlapping labels.
+    assert_eq!(report.matches("\"category\":").count(), 1, "{report}");
+    Ok(())
+}
