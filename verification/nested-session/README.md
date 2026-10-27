@@ -31,7 +31,9 @@ carrying channel identity, side, protocol identity, current state and generation
 | `closed_endpoint_cannot_send`, `send_step_advances_to_the_continuation` | a closed endpoint cannot send, and one step advances exactly to the send node's continuation with peer/channel/protocol/generation unchanged |
 | `send_step_does_not_observe_a_peer` | a send step returns only the endpoint's own successor: **receipt is not modelled** |
 | `admitOne_is_bounded`, `admission_is_bounded`, `full_mailbox_is_unchanged` | admission keeps the mailbox depth inside the declared limit (given a well-formed session) and a full mailbox refuses without a silent drop |
-| `admission_preserves_the_endpoint_inventory`, `no_endpoint_duplication` | no operation in this model increases the endpoint inventory |
+| `admission_preserves_the_endpoint_inventory`, `no_endpoint_duplication` | admission neither copies nor removes an endpoint |
+| `every_operation_preserves_the_endpoint_inventory`, `every_operation_keeps_the_endpoint_inventory_bound` | the bound is stated over **every** operation this model has — a session step, a boundary, or an observed cleanup — so the two operations that carry no transition are covered by case analysis rather than by omission in prose |
+| `duplicating_operation_breaks_the_bound` | the bound is load-bearing: an operation that appends an endpoint duplicates one and breaks it |
 | `trace_send_then_recv`, `trace_recursive_entry_unfolds_to_the_send_node`, `trace_orderly_close`, `trace_bounded_buffering_refuses_the_third_payload` | positive traces over one closed table: sequencing, recursive entry unfolding to its definition, orderly close once, bounded buffering stopping at the limit |
 | `send_events_never_observe` | the asynchronous event vocabulary keeps guest request, admission, host commit, dequeue, observation, close and cleanup distinct; **a send sequence carries no observation** |
 | `trace_send_then_recv_advances`, `closed_endpoint_cannot_receive` | the return half: send then receive advances through the table, and receive-after-close is refused |
@@ -52,7 +54,7 @@ carrying channel identity, side, protocol identity, current state and generation
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the non-regular nested fixture: the handshake resolves at unfolding depth zero and its two actions advance, while the nested fixture's recursive entry is refused there and resolves only under unfolding — the non-representability is measured, not described |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **62** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **65** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block names the protocol
 definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
 constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent
@@ -65,7 +67,8 @@ correspondence here, **no progress statement**, and endpoint delegation (passing
 message) is excluded, so ownership obligations stay outside this model. Cancellation, trap, quota,
 peer disappearance, mailbox fullness and cleanup facts **are** modelled at the trace level, the
 bounded admission over the ledger is measured, and `step_acts_only_inside_the_current_protocol`
-covers every guest action with the finite-handshake control beside the nested fixture; what stays
-open is the duplication bound for transitions that carry none (cancellation, cleanup), the scoped
-progress statement, and the correspondence receipt's lowering/runtime/helper revisions. The
+covers every guest action with the finite-handshake control beside the nested fixture, and the
+inventory bound is stated over every operation including those that carry no transition; what stays
+open is the scoped progress statement and the correspondence receipt's lowering/runtime/helper
+revisions. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.

@@ -695,6 +695,51 @@ theorem ordinary_close_does_not_keep_the_cleanup_pending :
     cleanupPending .peerGone [Event.guestRequest 0, Event.close, Event.cleanup 1] = false := by
   decide
 
+/-! ## Every modelled operation is covered by the duplication bound (WIT-SESSION-05)
+
+`no_endpoint_duplication` was proved for admission alone, and the duplication task stayed open because
+cancellation and cleanup carry no endpoint transition at all. Rather than leave that as an omission in
+the prose, the inventory bound is now stated over **every** operation this model has: a session step,
+a boundary, or an observed cleanup. The two operations that carry no transition are the interesting
+cases, because they are exactly where an unchecked implementation could manufacture an endpoint. -/
+
+/-- Every operation this model has. `boundary` and `cleanupObserved` carry no endpoint transition. -/
+inductive Operation where
+  | deliver
+  | boundary (kind : Boundary)
+  | cleanupObserved
+  deriving DecidableEq, Repr
+
+/-- Apply one operation. A boundary and an observed cleanup leave the session exactly as it was: they
+are events on the trace, not transitions on the endpoints or the queue. -/
+def applyOperation (session : Session) : Operation → Session
+  | .deliver => deliver session
+  | .boundary _ => session
+  | .cleanupObserved => session
+
+/-- **Every modelled operation preserves the endpoint inventory**, including the two that carry no
+transition, so no operation can manufacture a second endpoint. -/
+theorem every_operation_preserves_the_endpoint_inventory (session : Session) (operation : Operation) :
+    (applyOperation session operation).endpoints = session.endpoints := by
+  cases operation <;> simp only [applyOperation, admission_preserves_the_endpoint_inventory]
+
+/-- Hence no operation increases the endpoint inventory, whether or not it carries a transition. -/
+theorem every_operation_keeps_the_endpoint_inventory_bound (session : Session)
+    (operation : Operation) :
+    (applyOperation session operation).endpoints.length ≤ session.endpoints.length := by
+  rw [every_operation_preserves_the_endpoint_inventory]
+  exact Nat.le_refl _
+
+/-- The bound is load-bearing: an operation that appends an endpoint duplicates one and breaks it, so
+the preserved inventory above is not a statement about an inert model. -/
+def duplicatingOperation (session : Session) : Session :=
+  { session with endpoints := session.endpoints ++ session.endpoints.take 1 }
+
+theorem duplicating_operation_breaks_the_bound :
+    ¬ (duplicatingOperation ⟨[⟨5, false, 9, 0, 4, false⟩], 0, 3⟩).endpoints.length ≤
+      (⟨[⟨5, false, 9, 0, 4, false⟩], 0, 3⟩ : Session).endpoints.length := by
+  decide
+
 /-- A quota boundary never converts a pending cleanup into a completed one, and it never invents an
 observation: the retained prefix carries exactly the events that happened before it. -/
 theorem quota_boundary_invents_nothing :

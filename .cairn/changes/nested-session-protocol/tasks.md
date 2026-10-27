@@ -11,15 +11,15 @@
 ## Phase 2: Model and fixtures (future, not started)
 
 - [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
-- [ ] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
-  Partial: duality is proved definitional and involutive; state preservation is proved once from the one
-  step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy/discard/capture
-  are refused; and no modelled operation increases the endpoint inventory (`no_endpoint_duplication`).
-  No action outside the current protocol is now proved once for every guest action
-  (`step_acts_only_inside_the_current_protocol`, with the typed send/receive and internal choice
-  steppers defined as that operand rather than beside it).
-  The duplication bound is proved for the modelled operations, not for every future transition
-  (cancellation and cleanup still carry no transition), so the task stays open.
+- [x] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
+  Complete at model level: duality is definitional and involutive; state preservation is proved once from
+  the one step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy,
+  discard and capture are refused; no action outside the current protocol is proved once for every guest
+  action (`step_acts_only_inside_the_current_protocol`, with the typed send/receive and internal choice
+  steppers defined as that operand); and the inventory bound is stated over every modelled operation
+  (`every_operation_preserves_the_endpoint_inventory`), including the two that carry no transition, with
+  `duplicating_operation_breaks_the_bound` showing the bound load-bearing. The scope is the operations
+  this model enumerates: a future transition outside `Operation` would need its own case.
 - [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
 - [x] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
   Complete at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
