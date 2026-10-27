@@ -1,0 +1,24 @@
+# noble-rewrite-quality/v1
+# Frozen optimization-quality corpus for certified graph rewrites (issue #64).
+#
+# Each fixture declares its nodes in canonical creation order and the quality target its
+# certificate-bearing result must reach. The target is a residual property, not exact text:
+# `no-foldable-sites` means `cert::residual_fold_sites` is zero.
+#
+# Node specifications:
+#   const:<decimal>       an I64 constant
+#   add:<left>:<right>    an I64 addition of two earlier nodes
+#   mul:<left>:<right>    an I64 multiplication of two earlier nodes
+#
+# This manifest binds the rules it exercises and the source identity it was frozen against;
+# a fixture may not be relabelled unsupported to improve coverage.
+
+schema noble-rewrite-quality/v1
+rules fold-add-constants neutral-add-left neutral-mul-right
+lens noble-ngraph cert.rs
+
+fixture independent-folds | target no-foldable-sites | nodes const:5 const:7 add:0:1 const:3 const:4 add:3:4
+fixture single-fold | target no-foldable-sites | nodes const:5 const:7 add:0:1
+fixture chained-folds | target no-foldable-sites | nodes const:5 const:7 add:0:1 const:3 add:2:3
+fixture ordered-outputs | target no-foldable-sites | nodes const:2 const:3 add:0:1 const:10 add:0:3
+fixture shared-operand | target no-foldable-sites | nodes const:5 const:1 add:0:1 mul:2:0

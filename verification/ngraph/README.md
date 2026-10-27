@@ -4,6 +4,32 @@ Phase B of [numeric-graph-profile](../../.cairn/archive/2026-10-16-numeric-graph
 
 Since the `numeric-graph-v1` change, the graph library is the `no_std` crate [noble-ngraph](../../crates/noble-ngraph/Cargo.toml) and `noble-ngraph-experiment` is its evidence harness (bins, L1, oracles, workloads, fixtures), with the BLAKE3 identity scheme injected. The receipts below were produced before that split, at the source revisions they record. After the split, `tests/identity_agreement.rs` reproduces every identity of the pre-split record `crates/noble-ngraph-experiment/tests/fixtures/identities-66eb7cd.txt` (including B5), and `ngraph-phase-b --out <tmp>` at `bc34ed0` reported `result: passed` (8/8 records) with the B5 identities below; that run is a check of the cutover, not a new receipt.
 
+## Certified-rewrite quality corpus (issue #64)
+
+[rewrite-quality-v1.txt](rewrite-quality-v1.txt) is the frozen optimization-quality corpus for the
+certified graph rewrites of `crates/noble-ngraph/src/cert.rs`: its schema is
+`noble-rewrite-quality/v1`, it binds the three rules it exercises and declares, per fixture, the
+residual property its result must reach (`no-foldable-sites`). Fixtures are frozen before any tuning,
+so a difficult one cannot be relabelled to improve coverage.
+
+`cargo test -p noble-ngraph --test rewrite_quality` measures certificate validity and optimization
+coverage **separately**, with four proposer controls over the same validator:
+
+| Control | Measured |
+|---|---|
+| `Identity` | valid certificate over identical endpoints, residual equals the untouched site count — **correctness alone fails the quality target** |
+| `FirstEligible` | valid certificate, one fold applied, sites left behind on every multi-site fixture |
+| `SinglePass` | valid certificate; reaches the target on fixtures whose folds all consume original constants |
+| `FixedPoint` | reaches the target on a chained fixture too, but that derivation is **refused** `Malformed`: the certificate format binds every premise to the original graph, so a step consuming an earlier step's result is unsupported rather than silently accepted |
+
+That last row is the honest boundary of this corpus: chained opportunities are *possible* (the
+residual reaches zero under `FixedPoint`) and *uncertified* (the checker refuses it). No optimization
+claim is made about them, and `SinglePass` passing the frozen fixtures is not evidence that a
+one-pass proposer is sufficient in general.
+
+Not measured yet: performance (cold/warm execution, certificate bytes, break-even) and the end-to-end
+stage-cost accounting of issue #64 item 5, which needs the integrated stages.
+
 ## Files
 
 | File | Content |

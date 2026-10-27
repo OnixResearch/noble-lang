@@ -179,6 +179,108 @@ pub fn emit(ids: &dyn IdentityScheme, graph: &Graph) -> (Derivation, Graph) {
     (derivation, result)
 }
 
+/// Which rewrites a proposer offers.
+///
+/// A weaker proposer can still emit a **valid** certificate, so certificate validity alone never
+/// says the transformation did useful work. Issue #64 measures the two separately.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Proposer {
+    /// Emit no step at all: the empty derivation over identical endpoints.
+    Identity,
+    /// Emit exactly one step, the first eligible fold in node order.
+    FirstEligible,
+    /// One ascending pass over the nodes: a node is offered a rewrite once and never revisited.
+    SinglePass,
+    /// Repeat passes until no fold is applicable.
+    FixedPoint,
+}
+
+/// The fold step for `index`, if the node is an `I64` addition of two exact constants.
+fn fold_site(graph: &Graph, index: usize) -> Option<Step> {
+    let node = graph.nodes.get(index)?;
+    let Op::I64Add(first, second) = node.op else {
+        return None;
+    };
+    let (Some(first_bits), Some(second_bits)) =
+        (constant_bits(graph, first), constant_bits(graph, second))
+    else {
+        return None;
+    };
+    Some(Step {
+        rule: Rule::FoldAddConstants,
+        node: NodeId(u32::try_from(index).ok()?),
+        operands: [first, second],
+        first_bits,
+        second_bits,
+        claimed: wrapping_add(first_bits, second_bits),
+    })
+}
+
+/// Replaces the step's node by its folded constant.
+fn apply_fold(graph: &mut Graph, step: &Step) {
+    let Ok(index) = usize::try_from(step.node.0) else {
+        return;
+    };
+    if let Some(target) = graph.nodes.get_mut(index) {
+        target.op = Op::Const(Literal::I64(step.claimed.cast_signed()));
+    }
+}
+
+/// The number of nodes where `fold-add-constants` still applies: the residual property a quality
+/// target names, counted separately from certificate validity.
+#[must_use]
+pub fn residual_fold_sites(graph: &Graph) -> usize {
+    (0..graph.nodes.len())
+        .filter(|index| fold_site(graph, *index).is_some())
+        .count()
+}
+
+/// Proposes rewrites under `proposer` and returns the derivation with the graph it produces.
+///
+/// Steps stay in strictly increasing node order in every case, so each proposer's certificate is
+/// checked by the same validator; the proposers differ only in how much work they do.
+#[must_use]
+pub fn propose(ids: &dyn IdentityScheme, proposer: Proposer, graph: &Graph) -> (Derivation, Graph) {
+    let mut result = graph.clone();
+    let mut steps = alloc::vec::Vec::new();
+    match proposer {
+        Proposer::Identity => {}
+        Proposer::FirstEligible => {
+            if let Some(step) = (0..graph.nodes.len()).find_map(|index| fold_site(&result, index)) {
+                apply_fold(&mut result, &step);
+                steps.push(step);
+            }
+        }
+        Proposer::SinglePass => {
+            // Recorded from the original graph so a step's premises stay the ones the validator
+            // compares, then applied to the result in ascending order.
+            let sites: alloc::vec::Vec<Step> = (0..graph.nodes.len())
+                .filter_map(|index| fold_site(graph, index))
+                .collect();
+            for step in sites {
+                apply_fold(&mut result, &step);
+                steps.push(step);
+            }
+        }
+        Proposer::FixedPoint => {
+            while let Some(step) =
+                (0..result.nodes.len()).find_map(|index| fold_site(&result, index))
+            {
+                apply_fold(&mut result, &step);
+                steps.push(step);
+            }
+        }
+    }
+    steps.sort_by_key(|step| step.node.0);
+    let derivation = Derivation {
+        revision: alloc::string::String::from(CERT_REVISION),
+        steps,
+        left: graph.logical_id(ids),
+        right: result.logical_id(ids),
+    };
+    (derivation, result)
+}
+
 fn checked_bits(graph: &Graph, node: NodeId, declared: u64) -> Result<u64, Refusal> {
     match constant_bits(graph, node) {
         Some(actual) if actual == declared => Ok(actual),
