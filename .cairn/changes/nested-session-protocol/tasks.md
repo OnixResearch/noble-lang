@@ -19,10 +19,15 @@
   dequeue, cancellation, cleanup are unimplemented), so the task stays open.
 - [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
 - [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
-  Partial: sequencing, recursive entry (unfolding to its declared definition), orderly close once and
-  bounded buffering stopping at the limit have model traces. Both-choice traces and the receive/return
-  half still need the mailbox event vocabulary this model does not yet carry, so the task stays open.
+  Partial: sequencing, recursive entry (unfolding to its declared definition), orderly close once,
+  bounded buffering stopping at the limit, and the send-then-receive return half have model traces over
+  the asynchronous event vocabulary. Both-choice *traces* still need a choice-state stepper, so the task
+  stays open.
 - [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
 - [ ] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
+  Model-level controls done: copy, discard, capture, stale generation, double close, receive-after-close,
+  a forged peer response without a dequeue, and an omitted cleanup. Wrong type/order and wrong branch
+  controls need the typed continuation relation this model does not yet carry, and full-queue
+  misaccounting needs the dequeue/accounting pair, so the task stays open.
 - [ ] [serial] Preserve the committed trace prefix across cancellation, trap, quota exhaustion and peer disappearance, retaining unresolved cleanup facts. r[WIT-SESSION-06]
 - [ ] [serial] Bind protocol definitions, endpoint identities, queue limits and lowering/runtime/helper revisions in a retained correspondence receipt. r[WIT-SESSION-06]

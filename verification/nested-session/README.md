@@ -33,8 +33,13 @@ carrying channel identity, side, protocol identity, current state and generation
 | `admitOne_is_bounded`, `admission_is_bounded`, `full_mailbox_is_unchanged` | admission keeps the mailbox depth inside the declared limit (given a well-formed session) and a full mailbox refuses without a silent drop |
 | `admission_preserves_the_endpoint_inventory`, `no_endpoint_duplication` | no operation in this model increases the endpoint inventory |
 | `trace_send_then_recv`, `trace_recursive_entry_unfolds_to_the_send_node`, `trace_orderly_close`, `trace_bounded_buffering_refuses_the_third_payload` | positive traces over one closed table: sequencing, recursive entry unfolding to its definition, orderly close once, bounded buffering stopping at the limit |
+| `send_events_never_observe` | the asynchronous event vocabulary keeps guest request, admission, host commit, dequeue, observation, close and cleanup distinct; **a send sequence carries no observation** |
+| `trace_send_then_recv_advances`, `closed_endpoint_cannot_receive` | the return half: send then receive advances through the table, and receive-after-close is refused |
+| `receive_after_dequeue_is_well_formed`, `forged_observation_without_dequeue_is_refused` | an observation needs a preceding dequeue; a forged peer response is refused |
+| `orderly_close_with_cleanup_is_well_formed`, `close_without_cleanup_is_refused` | an omitted cleanup is refused rather than read as a successful orderly close |
+| `both_choices_are_distinct_at_the_boundary` | internal choice branches stay distinct and a receive state does not step as a send |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **24** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **32** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block
 records `helper`, `runtime` and `peer` as explicitly absent with the reason, and its `claims` block
 labels the verdict.

@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "f244791d5c5816f70230762af9c6f1d5a9bca517",
-  "source_tree": "cf6842fb017b0e4f0df5b60105bffba0ac6b9631",
+  "source_commit": "dc20dfbdabe06dfa538ce0bf2dc4fb159fe13b46",
+  "source_tree": "04822e8d23c04de309843747d16f86ba79c82178",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "3e40f644e44fb060bfbbd545d1181861fb3ab9c77cef76046dd17d2670fb02ad",
-        "proofs/m6/nested-session-inventory.json": "3ea10072c50664c31137400943b8bfb6bc2dc610de61b48423a00bc024eefbb2"
+        "proofs/m6/NestedSession.lean": "e28d9dd80d7e5698dd0aba22fb055901263ad3cdc57cf2a41782abf4bb2a90dc",
+        "proofs/m6/nested-session-inventory.json": "196a32613f5deba99258006e9d09ff2d19d0b0a4bb32bd4bb9e9944b80cad4c9"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 24,
+    "model_theorems": 32,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "3e40f644e44fb060bfbbd545d1181861fb3ab9c77cef76046dd17d2670fb02ad",
-    "proofs/m6/nested-session-inventory.json": "3ea10072c50664c31137400943b8bfb6bc2dc610de61b48423a00bc024eefbb2",
+    "proofs/m6/NestedSession.lean": "e28d9dd80d7e5698dd0aba22fb055901263ad3cdc57cf2a41782abf4bb2a90dc",
+    "proofs/m6/nested-session-inventory.json": "196a32613f5deba99258006e9d09ff2d19d0b0a4bb32bd4bb9e9944b80cad4c9",
     "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
   },
-  "theorem_count": 24,
+  "theorem_count": 32,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -346,6 +346,114 @@
       "status": "proved",
       "statement": "NestedSession.trace_bounded_buffering_refuses_the_third_payload : (NestedSession.deliver (NestedSession.deliver (NestedSession.deliver { endpoints := [], queued := 0, queueLimit := 2 }))).queued = 2",
       "axioms": []
+    },
+    {
+      "name": "NestedSession.send_events_never_observe",
+      "role": "WIT-SESSION-03: a send event sequence carries no observation; send is never receipt",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.send_events_never_observe : ∀ (operation identity : Nat), ((NestedSession.sendEvents operation identity).any fun event => match event with | NestedSession.Event.observation value => true | x => false) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.receive_after_dequeue_is_well_formed",
+      "role": "WIT-SESSION-03: an observation preceded by a dequeue is a well-formed receive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.receive_after_dequeue_is_well_formed : NestedSession.dequeuedBefore [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1, NestedSession.Event.dequeue 1, NestedSession.Event.observation (some 7)] = true",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.forged_observation_without_dequeue_is_refused",
+      "role": "WIT-SESSION-03 negative control: a forged peer response is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.forged_observation_without_dequeue_is_refused : NestedSession.dequeuedBefore [NestedSession.Event.guestRequest 0, NestedSession.Event.observation (some 7)] = false",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.orderly_close_with_cleanup_is_well_formed",
+      "role": "WIT-SESSION-03: close followed by cleanup is a well-formed orderly close",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.orderly_close_with_cleanup_is_well_formed : NestedSession.orderlyCloseEvents [NestedSession.Event.guestRequest 0, NestedSession.Event.close, NestedSession.Event.cleanup 1] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.close_without_cleanup_is_refused",
+      "role": "WIT-SESSION-03 negative control: an omitted cleanup is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.close_without_cleanup_is_refused : NestedSession.orderlyCloseEvents [NestedSession.Event.guestRequest 0, NestedSession.Event.close] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_send_then_recv_advances",
+      "role": "WIT-SESSION-03 positive trace: send then receive advances through the closed table (the return half)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_send_then_recv_advances : ((NestedSession.stepSend NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }).bind fun mid => NestedSession.stepRecv NestedSession.exampleProtocol 2 mid) = some { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.closed_endpoint_cannot_receive",
+      "role": "WIT-SESSION-02 negative control: receive-after-close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.closed_endpoint_cannot_receive : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (message : NestedSession.MessageType) (continuation : Nat), NestedSession.resolve definitions depth endpoint.state = some (NestedSession.Node.recv message continuation) → NestedSession.stepRecv definitions depth { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := endpoint.state, generation := endpoint.generation, closed := true } = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.both_choices_are_distinct_at_the_boundary",
+      "role": "WIT-SESSION-01/03: internal choice branches stay distinct and a receive state does not step as a send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.both_choices_are_distinct_at_the_boundary : NestedSession.Node.choose 0 1 ≠ NestedSession.Node.choose 1 1 ∧ (NestedSession.stepSend NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false }).isNone = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -395,7 +503,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-c4/Audit.lean"
+        "/tmp/ns-c6/Audit.lean"
       ],
       "exit": 0
     },
