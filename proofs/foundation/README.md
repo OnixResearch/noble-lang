@@ -1233,6 +1233,19 @@ target launches it against the selected CLI): the refusal classes above,
 `self-attested-obligation`, `undefined-relation` and `unsupported-relation`,
 nine derived propositions, and the four separated obligations.
 
+The Lean side of the same discipline is in `proofs/mc1/NobleContracts/SpecQuality.lean`:
+a `Submission` records the kind, observation relation, parameter binding and
+assignment it *claims*, and `Accepts` recomputes all of them from the retained
+`Spec` and the raw stacks, so the artifact an accepted submission yields is the
+derived witness rather than the submitted claim. The mc1 contract-library gate now
+pins five of those refusals under the strict axiom list — a matching increment
+submission really rechecks, while a wrong obligation, a wrong observation relation
+(`[.bool]` claimed for an `I64`-output relation), a wrong parameter binding, and a
+merely asserted satisfaction of a contradictory postcondition all yield no
+artifact. Scalar types are compared by explicit traversal rather than a derived
+`DecidableEq`, so a silently changed instance cannot make two observation
+relations look equal.
+
 Open, and deliberately not closed:
 
 - the producer derives from the relation the submission states; it does not read

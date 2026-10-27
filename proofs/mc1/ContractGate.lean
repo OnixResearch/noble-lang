@@ -44,7 +44,12 @@ elab "check_contract_library" : command => do
     ``NobleContracts.SpecQuality.obligation_kinds_distinct,
     ``NobleContracts.SpecQuality.separate_evidence_for_separate_obligations,
     ``NobleContracts.SpecQuality.witness_recheck_recovers_the_assignment,
-    ``NobleContracts.SpecQuality.witness_is_not_uniqueness]
+    ``NobleContracts.SpecQuality.witness_is_not_uniqueness,
+    ``NobleContracts.SpecQuality.accepted_submission_yields_the_derived_witness,
+    ``NobleContracts.SpecQuality.wrong_obligation_cannot_be_accepted,
+    ``NobleContracts.SpecQuality.wrong_observation_relation_cannot_be_accepted,
+    ``NobleContracts.SpecQuality.wrong_parameter_binding_cannot_be_accepted,
+    ``NobleContracts.SpecQuality.asserted_satisfaction_yields_no_artifact]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()

@@ -237,4 +237,111 @@ theorem witness_is_not_uniqueness :
     ⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩ trivial trivial
   cases same
 
+/-! ### Submitted evidence is derived, not trusted (issue #65 residual)
+
+A doc comment cannot attach to a mutual block, so this section is documented as prose.
+Structural equality of scalar types is an explicit traversal rather than a derived instance, so a
+submitted observation relation cannot be read as equal to the retained one by an instance that
+silently changes. -/
+mutual
+  def sameType : Ty → Ty → Bool
+    | .unit, .unit => true
+    | .bool, .bool => true
+    | .i64, .i64 => true
+    | .text, .text => true
+    | .syntax, .syntax => true
+    | .pair left right, .pair otherLeft otherRight =>
+        sameType left otherLeft && sameType right otherRight
+    | .sum left right, .sum otherLeft otherRight =>
+        sameType left otherLeft && sameType right otherRight
+    | .list item, .list other => sameType item other
+    | .program inputs outputs, .program otherInputs otherOutputs =>
+        sameTypes inputs otherInputs && sameTypes outputs otherOutputs
+    | _, _ => false
+  def sameTypes : List Ty → List Ty → Bool
+    | [], [] => true
+    | head :: tail, other :: otherTail => sameType head other && sameTypes tail otherTail
+    | _, _ => false
+end
+
+/-- A submitted evidence artifact (issue #65 residual): it *claims* which obligation it discharges,
+which retained relation it is about — kind, observation relation (input/output types) and parameter
+binding — and which assignment it asserts. Nothing in it is trusted: acceptance recomputes every
+one of those from the retained `Spec` and the raw stacks. -/
+structure Submission where
+  obligation : Obligation
+  input : List Ty
+  output : List Ty
+  params : List Ty
+  before : Stack
+  after : Stack
+  ghosts : Stack
+
+/-- A submission is evidence only when its claimed kind matches, every claimed observation-relation
+and parameter-binding field equals the retained relation's, **and** the raw stacks recheck. A
+submission that merely asserts satisfaction satisfies no conjunct of `Recheck` and so is refused. -/
+def Accepts (spec : Spec) (submission : Submission) : Prop :=
+  submission.obligation = Obligation.specificationQuality ∧
+    submission.input = spec.input ∧
+    submission.output = spec.output ∧
+    submission.params = spec.params ∧
+    Recheck spec submission.before submission.after submission.ghosts
+
+/-- The artifact an accepted submission yields is the **derived** witness of the retained
+relation, not the submitted claim. -/
+def acceptedWitness {spec : Spec} {submission : Submission} (accepted : Accepts spec submission) :
+    Witness spec submission.after :=
+  recheck_yields_witness accepted.2.2.2.2
+
+/-- A matching increment submission whose raw stacks really recheck is evidence. -/
+def incrementSubmission : Submission where
+  obligation := Obligation.specificationQuality
+  input := [.i64]
+  output := [.i64]
+  params := []
+  before := [.i64 0]
+  after := [.i64 1]
+  ghosts := []
+
+theorem accepted_submission_yields_the_derived_witness :
+    Accepts (incrementSpec fun _ _ _ => True) incrementSubmission := by
+  refine ⟨rfl, rfl, rfl, rfl, ?_⟩
+  refine ⟨⟨StackTyped.cons HasType.i64 StackTyped.nil, StackTyped.nil, trivial⟩, ?_⟩
+  exact ⟨0, rfl, rfl⟩
+
+/-- Wrong **obligation**: evidence submitted for implementation satisfaction cannot be read as
+specification-quality evidence for the same relation. -/
+theorem wrong_obligation_cannot_be_accepted :
+    ¬ Accepts (incrementSpec fun _ _ _ => True)
+      { incrementSubmission with obligation := Obligation.implementationSatisfaction } := by
+  intro accepted
+  cases accepted.1
+
+/-- Wrong **observation relation**: a submission whose claimed output types are not the retained
+relation's output types is refused, even when its claimed input, parameters and stacks all match
+and do recheck. -/
+theorem wrong_observation_relation_cannot_be_accepted :
+    ¬ Accepts (incrementSpec fun _ _ _ => True)
+      { incrementSubmission with output := [.bool] } := by
+  intro accepted
+  cases accepted.2.2.1
+
+/-- Wrong **parameter binding**: a submission that binds a ghost parameter the retained relation
+does not declare is refused, so an extra parameter cannot stand in for the relation's own. -/
+theorem wrong_parameter_binding_cannot_be_accepted :
+    ¬ Accepts (incrementSpec fun _ _ _ => True)
+      { incrementSubmission with params := [.i64] } := by
+  intro accepted
+  cases accepted.2.2.2.1
+
+/-- Assertion is not evidence: a submission whose types match but whose raw stacks do not satisfy
+the postcondition yields no artifact, because acceptance requires the recomputed `Recheck` rather
+than the producer's claim. -/
+theorem asserted_satisfaction_yields_no_artifact :
+    ¬ Accepts contradictorySpec
+      { incrementSubmission with
+        before := [.i64 0], after := [.i64 1], ghosts := [] } := by
+  intro accepted
+  exact accepted.2.2.2.2.2
+
 end NobleContracts.SpecQuality

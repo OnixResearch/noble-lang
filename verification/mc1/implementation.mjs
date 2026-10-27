@@ -122,10 +122,10 @@ try {
   run('lean-build', tool('lean', 'lake'), ['build', 'NobleContracts',
     'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
-  // The contract library grew with NamedV3 (T1/T6) and the specification-quality
-  // module (#65), so the strict verdict now pins 58 required theorems; the exact
-  // string keeps the verdict non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 58 required theorems; strict axioms accepted')) {
+  // The contract library grew with NamedV3 (T1/T6), the specification-quality module
+  // (#65) and the submission-refusal witnesses for #65, so the strict verdict now pins
+  // 63 required theorems; the exact string keeps the verdict non-substitutable.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 63 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);
