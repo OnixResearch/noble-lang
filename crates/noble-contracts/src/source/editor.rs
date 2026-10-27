@@ -448,6 +448,80 @@ mod tests {
     }
 
     #[test]
+    fn repeated_and_unicode_words_keep_their_own_generated_spans() {
+        // Issue #63 span mapping: every emitted node keeps its own generated span and its own bounded
+        // path, so two identical words never share an address and a repeated word is addressed by
+        // position rather than by text.
+        let repeated = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![
+                Node::Word(String::from("+")),
+                Node::Word(String::from("+")),
+                Node::Quotation(alloc::vec![Node::Word(String::from("+"))]),
+                Node::Word(String::from("+")),
+            ],
+        };
+        let paths = repeated
+            .editor_paths(crate::Limits::default())
+            .expect("repeated mapping");
+        assert_eq!(paths.len(), 5, "four words and one quotation");
+        let direct_paths: alloc::vec::Vec<_> = paths
+            .iter()
+            .take(3)
+            .map(|(_, path)| path.clone())
+            .collect();
+        assert_eq!(
+            direct_paths,
+            alloc::vec![alloc::vec![0], alloc::vec![1], alloc::vec![2, 0]],
+            "repeated words keep distinct paths rather than collapsing into one"
+        );
+        assert_eq!(paths[3].1, alloc::vec![2], "the quotation's own path");
+        assert_eq!(paths[4].1, alloc::vec![3], "the trailing word's own path");
+        let mut spans: alloc::vec::Vec<_> = paths.iter().map(|(span, _)| *span).collect();
+        spans.sort_by_key(|span| span.start);
+        spans.dedup();
+        assert_eq!(spans.len(), paths.len(), "no two nodes share a span");
+
+        // Spans are byte ranges of the generated source rather than character counts, and each
+        // word's span is exactly its own bytes: a hole-free tree lets the same emitter's bytes be
+        // read back at a word's span.
+        let source = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![Node::Integer(10), Node::Word(String::from("+"))],
+        };
+        let bytes = source
+            .admitted_source(crate::Limits::default())
+            .expect("a hole-free tree becomes source");
+        let paths = source
+            .editor_paths(crate::Limits::default())
+            .expect("word mapping");
+        let word_span = paths[1].0;
+        let start = usize::try_from(word_span.start).expect("bounded span");
+        let end = usize::try_from(word_span.end).expect("bounded span");
+        // The emitted span covers the node and the separator the emitter writes after it, so the
+        // bytes it names start with the word itself rather than being an assumed character count.
+        assert!(
+            bytes[start..end].starts_with("+".as_bytes()),
+            "the span names the word's own bytes first"
+        );
+        assert_eq!(start, 3, "the two-byte integer and its separator precede the word");
+
+        // Unicode coverage is a refusal rather than a silent transliteration: the editor word
+        // grammar admits ASCII words only, so a non-ASCII word is refused at the parse stage at the
+        // refused node's own bounded span instead of being mapped or rewritten.
+        let unicode = Candidate {
+            format: FORMAT,
+            nodes: alloc::vec![Node::Integer(10), Node::Word(String::from("λ"))],
+        };
+        let refusal = unicode
+            .editor_paths(crate::Limits::default())
+            .expect_err("a non-ASCII word is refused, never transliterated");
+        assert_eq!(refusal.stage(), super::super::Stage::Parse);
+        assert_eq!(refusal.diagnostic().kind.category(), "invalid");
+        assert_eq!(refusal.diagnostic().span.start, refusal.diagnostic().span.end);
+    }
+
+    #[test]
     fn a_hole_admission_refusal_is_located_at_the_first_hole() {
         // Issue #63: the refusal used to carry the whole tree's span, so a nested hole reported the
         // outer quotation as its address. It now carries the first hole's own generated span, and the

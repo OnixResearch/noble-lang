@@ -108,6 +108,17 @@ so malformed JSON is never reclassified as an analysis outcome. Editor
 analysis creates no accepted program, executes no guest body and performs no
 protected operation.
 
+What is exercised end to end, and what is not: `invalid` and `exhausted` are
+reached by real editor inputs (a lexical-word parse refusal, a hole admission
+refusal, and a genuinely reached value-type budget of one quotation), while
+`unsupported` and `internal` are covered by controlled injection at the
+reporting adapter only, because the editor node grammar decodes no construct
+that reaches them. Repeated ASCII words keep distinct bounded paths and spans
+rather than collapsing by text, and a non-ASCII editor word is refused at the
+parse stage instead of being transliterated: the word grammar admits ASCII
+words only, so Unicode coverage is that refusal rather than a silently mapped
+node.
+
 The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 [its configuration](crates/noble-cli/src/core/runtime/config.json). Missing or
 incompatible tools produce an explicit refusal. The development shell alone
