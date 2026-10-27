@@ -208,6 +208,69 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_prefix",
+      "role": "WIT-TRACE-04: a retained trace is a prefix of the full trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.filterMap_prefix",
+      "role": "WIT-TRACE-04: a filtered prefix is a prefix (generic)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_committed_prefix",
+      "role": "WIT-TRACE-04: the commits a retained trace projects are a prefix of the full trace commits",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_cost_bounded",
+      "role": "WIT-TRACE-04: the retained trace cost stays inside the fuel budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_commit_identities",
+      "role": "WIT-TRACE-04: exhaustion cannot drop an already committed identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit",
+      "role": "WIT-TRACE-04 control: an unaffordable commit does not relate under the budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_relates_when_affordable",
+      "role": "WIT-TRACE-04 control: the same trace relates when the budget affords it (refusal not vacuous)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

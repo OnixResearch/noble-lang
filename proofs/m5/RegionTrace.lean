@@ -101,18 +101,20 @@ def projectStep : AbiStep → Option SourceEvent
   | .storeBookkeeping _ => none
 
 /-- The identities the host decided on, in order. -/
+def decisionStep : AbiStep → Option Nat
+  | .hostDecision _ _ identity => some identity
+  | _ => none
+
 def decisions (steps : List AbiStep) : List Nat :=
-  steps.filterMap fun step =>
-    match step with
-    | .hostDecision _ _ identity => some identity
-    | _ => none
+  steps.filterMap decisionStep
 
 /-- The identities of the commits a trace performed, in order. -/
+def commitStep : AbiStep → Option Nat
+  | .cleanup _ identity => some identity
+  | _ => none
+
 def commitIdentities (steps : List AbiStep) : List Nat :=
-  steps.filterMap fun step =>
-    match step with
-    | .cleanup _ identity => some identity
-    | _ => none
+  steps.filterMap commitStep
 
 /-- The read crossings a trace performed, in order. -/
 def readCrossings (steps : List AbiStep) : List (Nat × Nat) :=
@@ -195,15 +197,15 @@ theorem erase_preserves_decisions (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, decisions] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, decisions] using ih
-      | importCrossing op offset length => simpa [erase, eraseStep, decisions] using ih
-      | hostDecision op accepted identity => simpa [erase, eraseStep, decisions] using ih
-      | protectedCopy length => simpa [erase, eraseStep, decisions] using ih
-      | returned op value reason => simpa [erase, eraseStep, decisions] using ih
-      | normalReturn => simpa [erase, eraseStep, decisions] using ih
-      | abnormalExit exitClass => simpa [erase, eraseStep, decisions] using ih
-      | cleanup kind identity => simpa [erase, eraseStep, decisions] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | importCrossing op offset length => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | hostDecision op accepted identity => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | protectedCopy length => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | returned op value reason => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | normalReturn => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | abnormalExit exitClass => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | cleanup kind identity => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
 
 theorem erase_preserves_commit_identities (steps : List AbiStep) :
     commitIdentities (erase steps) = commitIdentities steps := by
@@ -211,15 +213,15 @@ theorem erase_preserves_commit_identities (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, commitIdentities] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, commitIdentities] using ih
-      | importCrossing op offset length => simpa [erase, eraseStep, commitIdentities] using ih
-      | hostDecision op accepted identity => simpa [erase, eraseStep, commitIdentities] using ih
-      | protectedCopy length => simpa [erase, eraseStep, commitIdentities] using ih
-      | returned op value reason => simpa [erase, eraseStep, commitIdentities] using ih
-      | normalReturn => simpa [erase, eraseStep, commitIdentities] using ih
-      | abnormalExit exitClass => simpa [erase, eraseStep, commitIdentities] using ih
-      | cleanup kind identity => simpa [erase, eraseStep, commitIdentities] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | importCrossing op offset length => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | hostDecision op accepted identity => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | protectedCopy length => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | returned op value reason => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | normalReturn => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | abnormalExit exitClass => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
+      | cleanup kind identity => simpa [erase, eraseStep, commitIdentities, commitStep, List.filterMap_cons] using ih
 
 theorem erase_preserves_read_crossings (steps : List AbiStep) :
     readCrossings (erase steps) = readCrossings steps := by
@@ -387,6 +389,117 @@ theorem related_accepts_well_formed_success :
     related [.req .regionRead 0 8, .commit .guestRelease 7]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
        .protectedCopy 8, .cleanup .guestRelease 7] = true := by
+  decide
+
+/-! ## Cost and the exhaustion boundary (WIT-TRACE-04)
+
+Fuel is an explicit accounting relation, never a free "the target may trap anywhere" clause: each
+emitted step charges a declared cost, a trace retained before fuel exhausts is a prefix of the full
+trace, its own cost stays inside the budget, and the commits it projects are a prefix of the commits
+the full trace projects. So exhaustion may cut a trace but cannot invent or drop a commit. -/
+
+/-- The declared cost of one emitted step. A protected copy charges its byte length; every other
+step charges one unit. This is an admission estimate, not a claim about allocator behaviour. -/
+def stepCost : AbiStep → Nat
+  | .protectedCopy length => length
+  | .importCrossing _ _ _ => 1
+  | .hostDecision _ _ _ => 1
+  | .returned _ _ _ => 1
+  | .normalReturn => 1
+  | .abnormalExit _ => 1
+  | .cleanup _ _ => 1
+  | .handleTableIndex _ => 1
+  | .storeBookkeeping _ => 1
+
+def traceCost (steps : List AbiStep) : Nat :=
+  (steps.map stepCost).sum
+
+/-- The steps the host can still afford: a greedy prefix that stops before the first step whose
+cost exceeds what remains. A step is emitted whole or not at all, so a partly charged step never
+appears. -/
+def retainFrom (fuel : Nat) : List AbiStep → List AbiStep
+  | [] => []
+  | step :: rest =>
+      if fuel < stepCost step then [] else step :: retainFrom (fuel - stepCost step) rest
+
+/-- A retained trace is a prefix of the full trace, so exhaustion cannot reorder or invent steps. -/
+theorem retainFrom_prefix (fuel : Nat) (steps : List AbiStep) : retainFrom fuel steps <+: steps := by
+  induction steps generalizing fuel with
+  | nil => exact List.nil_prefix
+  | cons head tail ih =>
+      by_cases affordable : stepCost head ≤ fuel
+      · rw [retainFrom, if_neg (Nat.not_lt.mpr affordable)]
+        exact (List.cons_prefix_cons.mpr ⟨rfl, ih (fuel - stepCost head)⟩)
+      · rw [retainFrom, if_pos (Nat.lt_of_not_le affordable)]
+        exact List.nil_prefix
+
+/-- A projected prefix is a prefix of the projection, so the relation composes with exhaustion. -/
+theorem filterMap_prefix {alpha beta : Type} (project : alpha → Option beta)
+    {left right : List alpha} (pref : left <+: right) :
+    left.filterMap project <+: right.filterMap project := by
+  induction left generalizing right with
+  | nil => exact List.nil_prefix
+  | cons head tail ih =>
+      cases right with
+      | nil =>
+          obtain ⟨rest, impossible⟩ := pref
+          exact absurd impossible (by simp)
+      | cons step rest =>
+          obtain ⟨same, restPrefix⟩ := List.cons_prefix_cons.mp pref
+          have sameProjection : project head = project step := by rw [same]
+          simp only [List.filterMap_cons, sameProjection]
+          cases projected : project step with
+          | none => exact ih restPrefix
+          | some event => exact List.cons_prefix_cons.mpr ⟨rfl, ih restPrefix⟩
+
+/-- The committed prefix is preserved across the exhaustion boundary: the commits a retained trace
+projects are a prefix of the commits the full trace projects. -/
+theorem exhaustion_keeps_committed_prefix (fuel : Nat) (steps : List AbiStep) :
+    (retainFrom fuel steps).filterMap projectStep <+:
+      steps.filterMap projectStep :=
+  filterMap_prefix projectStep (retainFrom_prefix fuel steps)
+
+/-- The retained trace's own cost stays inside the fuel budget it was retained under. -/
+theorem retainFrom_cost_bounded (fuel : Nat) (steps : List AbiStep) :
+    traceCost (retainFrom fuel steps) ≤ fuel := by
+  induction steps generalizing fuel with
+  | nil => exact Nat.zero_le fuel
+  | cons head tail ih =>
+      by_cases affordable : stepCost head ≤ fuel
+      · rw [retainFrom, if_neg (Nat.not_lt.mpr affordable)]
+        have bounded : traceCost (retainFrom (fuel - stepCost head) tail) ≤ fuel - stepCost head :=
+          ih (fuel - stepCost head)
+        calc traceCost (head :: retainFrom (fuel - stepCost head) tail)
+            = stepCost head + traceCost (retainFrom (fuel - stepCost head) tail) := by
+                simp only [traceCost, List.map_cons, List.sum_cons]
+          _ ≤ stepCost head + (fuel - stepCost head) := Nat.add_le_add_left bounded _
+          _ = fuel := by omega
+      · rw [retainFrom, if_pos (Nat.lt_of_not_le affordable)]
+        simp only [traceCost, List.map_nil, List.sum_nil]
+        exact Nat.zero_le fuel
+
+/-- The commit identities a retained trace projects are a prefix of the full trace's commit
+identities: an exhaustion boundary cannot drop an already committed identity. -/
+theorem exhaustion_keeps_commit_identities (fuel : Nat) (steps : List AbiStep) :
+    commitIdentities (retainFrom fuel steps) <+: commitIdentities steps :=
+  filterMap_prefix commitStep (retainFrom_prefix fuel steps)
+
+/-- The exhaustion rule bites: a source trace claiming a commit that the retained prefix could not
+afford does not relate to that target under the fuel budget. -/
+theorem exhaustion_cannot_relate_an_unaffordable_commit :
+    related [.req .regionRead 0 8, .commit .guestRelease 7]
+      (retainFrom 1
+        [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+         .cleanup .guestRelease 7]) = false := by
+  decide
+
+/-- The same trace relates under a budget that affords every step, so the refusal above is not an
+artefact of the fixture. -/
+theorem exhaustion_relates_when_affordable :
+    related [.req .regionRead 0 8, .commit .guestRelease 7]
+      (retainFrom 3
+        [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+         .cleanup .guestRelease 7]) = true := by
   decide
 
 end RegionTrace
