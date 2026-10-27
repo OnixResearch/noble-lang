@@ -283,15 +283,30 @@ impl super::Env {
         cost.vector::<crate::types::ResourceKind>(self.resource_kinds.len())?;
         cost.vector::<Option<u64>>(self.definition_owners.len())?;
         cost.vector::<crate::types::EffId>(self.effects.len())?;
-        for row in &self.deps {
-            cost.vector::<super::Definition>(row.len())?;
+        // Accumulate the first budget refusal instead of returning from inside a
+        // loop: the extraction tool (Aeneas) rejects returns inside loop bodies,
+        // and a refused element stops the walk exactly as `?` did.
+        let mut index = 0;
+        let mut walked: Option<()> = Some(());
+        while index < self.deps.len() && walked.is_some() {
+            walked = cost.vector::<super::Definition>(self.deps[index].len());
+            index += 1;
         }
-        for scheme in &self.defs {
-            cost.scheme(scheme)?;
+        walked?;
+        let mut index = 0;
+        let mut walked: Option<()> = Some(());
+        while index < self.defs.len() && walked.is_some() {
+            walked = cost.scheme(&self.defs[index]);
+            index += 1;
         }
-        for decl in &self.nominals {
-            cost.nominal(&decl.shape, 0, &mut 0)?;
+        walked?;
+        let mut index = 0;
+        let mut walked: Option<()> = Some(());
+        while index < self.nominals.len() && walked.is_some() {
+            walked = cost.nominal(&self.nominals[index].shape, 0, &mut 0);
+            index += 1;
         }
+        walked?;
         let reserved_bytes = cost
             .bytes
             .checked_mul(2)?

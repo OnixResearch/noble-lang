@@ -38,41 +38,29 @@ pub(super) fn check_request(
     // The validation stages and body consume one request-local work allowance.
     // Do not restart it when crossing a preflight or machine boundary.
     let mut remaining = attempt!(super::validate::dependencies(env, request.limits.work));
-    for node in &candidate.nodes {
-        if let crate::untrusted::Node::SignedSelf { def, .. } = node {
-            remaining = attempt!(super::parts::charge(remaining, 1));
-            let owner = usize::try_from(def.0)
-                .ok()
-                .and_then(|index| env.definition_owners.get(index));
-            if signed_owner.map(|(owner, _)| owner) != Some(*def)
-                || env.kind(*def) != Some(crate::contracts::Behavior::Named)
-                || env.caller_module.is_none()
-                || owner != Some(&env.caller_module)
-            {
-                return Err(super::Fail::Unsupported(
-                    crate::untrusted::UnsupportedKind::NodeForm,
-                ));
-            }
-            // Compare the actual binders only after scheme/witness validation
-            // bounds their nested types and effect identities below.
-        }
+    let mut node_index = 0;
+    let mut signed_self_scan: Result<(), super::Fail> = Ok(());
+    while node_index < candidate.nodes.len() && signed_self_scan.is_ok() {
+        signed_self_scan = signed_self_check(
+            env,
+            &candidate.nodes[node_index],
+            signed_owner,
+            &mut remaining,
+        );
+        node_index += 1;
     }
+    attempt!(signed_self_scan);
     let remaining = attempt!(super::validate::schemas(env, remaining));
     let mut remaining = attempt!(validate_nominals(env, request, remaining));
     attempt!(reject_ambient_emit(env, candidate));
     if !env.live_slots {
         let mut index = 0;
-        while index < candidate.nodes.len() {
-            if matches!(
-                candidate.nodes[index],
-                crate::untrusted::Node::SlotInvoke { .. }
-            ) {
-                return Err(super::Fail::Unsupported(
-                    crate::untrusted::UnsupportedKind::NodeForm,
-                ));
-            }
+        let mut slot_scan: Result<(), super::Fail> = Ok(());
+        while index < candidate.nodes.len() && slot_scan.is_ok() {
+            slot_scan = reject_slot_invoke(&candidate.nodes[index]);
             index += 1;
         }
+        attempt!(slot_scan);
     }
     attempt!(super::schemes::validate(env, request));
     if let Some((owner, owner_inst)) = signed_owner {
@@ -107,33 +95,22 @@ pub(super) fn check_request(
                 crate::untrusted::UnsupportedKind::NodeForm,
             ));
         }
-        for node in &candidate.nodes {
-            if let crate::untrusted::Node::SignedSelf { inst, .. } = node {
-                let site_cost = attempt!(guard_inst(inst, request, &mut remaining));
-                let (site, _) = attempt!(super::parts::instantiate::apply(
-                    scheme, inst, None, at, &context,
-                ));
-                remaining = attempt!(super::parts::charge(
-                    remaining,
-                    attempt!(super::parts::scheme_cost(scheme))
-                        .saturating_add(attempt!(super::parts::join_cost(&site)))
-                ));
-                if owner_inst.bindings.len() != inst.bindings.len() {
-                    return Err(super::Fail::Unsupported(
-                        crate::untrusted::UnsupportedKind::NodeForm,
-                    ));
-                }
-                remaining = attempt!(super::parts::charge(
-                    remaining,
-                    owner_cost.saturating_add(site_cost)
-                ));
-                if !same_owner_bindings(owner_inst, inst) {
-                    return Err(super::Fail::Unsupported(
-                        crate::untrusted::UnsupportedKind::NodeForm,
-                    ));
-                }
-            }
+        let mut site_index = 0;
+        let mut site_scan: Result<(), super::Fail> = Ok(());
+        while site_index < candidate.nodes.len() && site_scan.is_ok() {
+            site_scan = signed_site_check(
+                scheme,
+                owner_inst,
+                owner_cost,
+                node_signed_self(&candidate.nodes[site_index]),
+                request,
+                at,
+                &context,
+                &mut remaining,
+            );
+            site_index += 1;
         }
+        attempt!(site_scan);
     }
     let context = super::parts::Ctx {
         request,
@@ -169,6 +146,96 @@ pub(super) fn check_request(
     reason = "Owner: noble-maintainers; the comparison uses PartialEq on owned stack, type and effect values, which is not const."
 )]
 
+
+/// The signed-self node of `node`, or `None`: the loop-free helper shape the
+/// extraction tool needs, since a return inside a loop body is not extractable.
+fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words::Inst> {
+    match node {
+        crate::untrusted::Node::SignedSelf { inst, .. } => Some(inst),
+        _ => None,
+    }
+}
+
+/// Validate one signed-self node against the request-local work allowance. No
+/// loop appears in this body, so its early returns stay extractable.
+fn signed_self_check(
+    env: &crate::contracts::Env,
+    node: &crate::untrusted::Node,
+    signed_owner: Option<(crate::contracts::Definition, &crate::words::Inst)>,
+    remaining: &mut u32,
+) -> Result<(), super::Fail> {
+    let crate::untrusted::Node::SignedSelf { def, .. } = node else {
+        return Ok(());
+    };
+    *remaining = attempt!(super::parts::charge(*remaining, 1));
+    let owner = usize::try_from(def.0)
+        .ok()
+        .and_then(|index| env.definition_owners.get(index));
+    if signed_owner.map(|(owner, _)| owner) != Some(*def)
+        || env.kind(*def) != Some(crate::contracts::Behavior::Named)
+        || env.caller_module.is_none()
+        || owner != Some(&env.caller_module)
+    {
+        return Err(super::Fail::Unsupported(
+            crate::untrusted::UnsupportedKind::NodeForm,
+        ));
+    }
+    // Compare the actual binders only after scheme/witness validation bounds
+    // their nested types and effect identities below.
+    Ok(())
+}
+
+/// Reject one live-slot invocation node outside the live-slot profile.
+fn reject_slot_invoke(node: &crate::untrusted::Node) -> Result<(), super::Fail> {
+    if matches!(node, crate::untrusted::Node::SlotInvoke { .. }) {
+        return Err(super::Fail::Unsupported(
+            crate::untrusted::UnsupportedKind::NodeForm,
+        ));
+    }
+    Ok(())
+}
+
+/// Charge and compare one signed site against the owner instance. Loop-free so
+/// its early returns stay extractable.
+fn signed_site_check(
+    scheme: &crate::words::Scheme,
+    owner_inst: &crate::words::Inst,
+    owner_cost: u32,
+    site: Option<&crate::words::Inst>,
+    request: &crate::untrusted::Request,
+    at: super::parts::Site,
+    context: &super::parts::Ctx,
+    remaining: &mut u32,
+) -> Result<(), super::Fail> {
+    let Some(inst) = site else {
+        return Ok(());
+    };
+    let site_cost = attempt!(guard_inst(inst, request, remaining));
+    let (joined, _) = attempt!(super::parts::instantiate::apply(
+        scheme, inst, None, at, context,
+    ));
+    *remaining = attempt!(super::parts::charge(
+        *remaining,
+        attempt!(super::parts::scheme_cost(scheme))
+            .saturating_add(attempt!(super::parts::join_cost(&joined)))
+    ));
+    if owner_inst.bindings.len() != inst.bindings.len() {
+        return Err(super::Fail::Unsupported(
+            crate::untrusted::UnsupportedKind::NodeForm,
+        ));
+    }
+    *remaining = attempt!(super::parts::charge(
+        *remaining,
+        owner_cost.saturating_add(site_cost)
+    ));
+    if !same_owner_bindings(owner_inst, inst) {
+        return Err(super::Fail::Unsupported(
+            crate::untrusted::UnsupportedKind::NodeForm,
+        ));
+    }
+    Ok(())
+}
+
 /// Compare both binding lists element-wise without returning from inside a nested
 /// loop: the extraction tool (Aeneas) rejects returns inside nested loops, and the
 /// agreement predicate leaves every examined pair identical.
@@ -202,41 +269,73 @@ fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Bindin
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the request-local work allowance is threaded by exclusive reference so every binding is charged before it is walked; exhaustion is a typed outcome, not an assertion failure."
 )]
+
+/// Charge one instance binding and its nested types. Loop-free, so its early
+/// returns stay extractable by Aeneas.
+fn guard_one_binding(
+    binding: &crate::words::Binding,
+    request: &crate::untrusted::Request,
+    remaining: &mut u32,
+) -> Result<u32, super::Fail> {
+    *remaining = attempt!(super::parts::charge(*remaining, 1));
+    match binding {
+        crate::words::Binding::Stack(stack) => {
+            if u32::try_from(stack.len())
+                .ok()
+                .is_none_or(|len| len > request.limits.stack_height)
+            {
+                return Err(super::Fail::Exhausted(
+                    crate::untrusted::LimitKind::StackHeight,
+                ));
+            }
+            guard_stack_entries(stack.as_slice(), request, remaining)
+                .map(|charged| charged.saturating_add(1))
+        }
+        crate::words::Binding::Value(ty) => guard_ty(ty, request, remaining)
+            .map(|charged| charged.saturating_add(1)),
+        crate::words::Binding::Effect(effects) => {
+            let effect_count = u32::try_from(effects.as_slice().len())
+                .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
+            *remaining = attempt!(super::parts::charge(*remaining, effect_count));
+            Ok(effect_count.saturating_add(1))
+        }
+        crate::words::Binding::Ref(_) => Ok(1),
+    }
+}
+
+/// Guard every type of one stack binding, accumulating the charge without
+/// returning from inside the loop.
+fn guard_stack_entries(
+    stack: &[crate::types::Ty],
+    request: &crate::untrusted::Request,
+    remaining: &mut u32,
+) -> Result<u32, super::Fail> {
+    let mut index = 0;
+    let mut cost = 0u32;
+    let mut walked: Result<(), super::Fail> = Ok(());
+    while index < stack.len() && walked.is_ok() {
+        walked = guard_ty(&stack[index], request, remaining)
+            .map(|charged| cost = cost.saturating_add(charged));
+        index += 1;
+    }
+    attempt!(walked);
+    Ok(cost)
+}
+
 fn guard_inst(
     inst: &crate::words::Inst,
     request: &crate::untrusted::Request,
     remaining: &mut u32,
 ) -> Result<u32, super::Fail> {
+    let mut index = 0;
     let mut cost = 0u32;
-    for binding in &inst.bindings {
-        *remaining = attempt!(super::parts::charge(*remaining, 1));
-        cost = cost.saturating_add(1);
-        match binding {
-            crate::words::Binding::Stack(stack) => {
-                if u32::try_from(stack.len())
-                    .ok()
-                    .is_none_or(|len| len > request.limits.stack_height)
-                {
-                    return Err(super::Fail::Exhausted(
-                        crate::untrusted::LimitKind::StackHeight,
-                    ));
-                }
-                for ty in stack {
-                    cost = cost.saturating_add(attempt!(guard_ty(ty, request, remaining)));
-                }
-            }
-            crate::words::Binding::Value(ty) => {
-                cost = cost.saturating_add(attempt!(guard_ty(ty, request, remaining)));
-            }
-            crate::words::Binding::Effect(effects) => {
-                let effect_count = u32::try_from(effects.as_slice().len())
-                    .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
-                *remaining = attempt!(super::parts::charge(*remaining, effect_count));
-                cost = cost.saturating_add(effect_count);
-            }
-            crate::words::Binding::Ref(_) => {}
-        }
+    let mut walked: Result<(), super::Fail> = Ok(());
+    while index < inst.bindings.len() && walked.is_ok() {
+        walked = guard_one_binding(&inst.bindings[index], request, remaining)
+            .map(|charged| cost = cost.saturating_add(charged));
+        index += 1;
     }
+    attempt!(walked);
     Ok(cost)
 }
 
@@ -403,13 +502,12 @@ fn first_nominal_failure(
     limits: &crate::untrusted::Limits,
 ) -> Option<NominalFailure> {
     let mut index = 0;
-    while index < env.nominals.len() {
-        if let Some(problem) = nominal_failure_at(env, limits, index) {
-            return Some(problem);
-        }
+    let mut first = None;
+    while index < env.nominals.len() && first.is_none() {
+        first = nominal_failure_at(env, limits, index);
         index += 1;
     }
-    None
+    first
 }
 
 /// New definitions keep their separate node bound; their work charge is
