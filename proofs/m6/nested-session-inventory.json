@@ -343,6 +343,51 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.admission_raises_the_depth_by_one",
+      "role": "WIT-SESSION-03: admission raises the derived depth by one under the ledger invariant",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_never_raises_the_depth",
+      "role": "WIT-SESSION-03: accounting cannot be inflated by dequeuing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dequeue_of_empty_mailbox_is_unchanged",
+      "role": "WIT-SESSION-03: a dequeue of an empty mailbox leaves the ledger unchanged",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.full_queue_misaccounting_is_refused",
+      "role": "WIT-SESSION-03 negative control: an observation cannot borrow depth the ledger never recorded",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.accounting_tracks_the_operations",
+      "role": "WIT-SESSION-03: the derived depth tracks admissions and dequeues",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

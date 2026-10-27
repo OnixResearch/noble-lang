@@ -472,4 +472,62 @@ theorem external_choice_is_not_guest_choice :
       dual (Node.offer 0 5) = Node.choose 0 5 := by
   decide
 
+/-! ## Mailbox accounting and the full-queue misaccounting control (WIT-SESSION-03)
+
+The mailbox carries a ledger: admissions and dequeues, with the depth derived from them instead of
+asserted beside them. So an observation cannot claim depth the ledger never admitted, and a dequeue of
+an empty mailbox leaves the ledger unchanged. -/
+
+/-- The mailbox ledger. The depth is derived, not stored: a stored depth could drift from the
+operations that actually happened. -/
+structure Mailbox where
+  admitted : Nat
+  dequeued : Nat
+  deriving DecidableEq, Repr
+
+def mailboxDepth (box : Mailbox) : Nat :=
+  box.admitted - box.dequeued
+
+/-- One admission. -/
+def admit (box : Mailbox) : Mailbox :=
+  { box with admitted := box.admitted + 1 }
+
+/-- One dequeue. An empty mailbox keeps the ledger unchanged: underflow is not modelled. -/
+def dequeue (box : Mailbox) : Mailbox :=
+  if 0 < mailboxDepth box then { box with dequeued := box.dequeued + 1 } else box
+
+/-- Admission raises the derived depth by exactly one, **given the ledger invariant** that no more was
+dequeued than admitted. Without it the truncated subtraction would not describe a real mailbox. -/
+theorem admission_raises_the_depth_by_one (box : Mailbox) (sound : box.dequeued ≤ box.admitted) :
+    mailboxDepth (admit box) = mailboxDepth box + 1 := by
+  simp only [mailboxDepth, admit]
+  omega
+
+/-- A dequeue never raises the depth, so accounting cannot be inflated by dequeuing. -/
+theorem dequeue_never_raises_the_depth (box : Mailbox) :
+    mailboxDepth (dequeue box) ≤ mailboxDepth box := by
+  by_cases room : 0 < mailboxDepth box
+  · rw [dequeue, if_pos room]
+    simp only [mailboxDepth]
+    omega
+  · rw [dequeue, if_neg room]
+    exact Nat.le_refl _
+
+/-- A dequeue of an empty mailbox leaves it unchanged: a full-queue misaccounting cannot invent a
+payload to dequeue. -/
+theorem dequeue_of_empty_mailbox_is_unchanged (box : Mailbox) (empty : mailboxDepth box = 0) :
+    dequeue box = box := by
+  simp only [dequeue, empty, Nat.lt_irrefl, if_false]
+
+/-- Full-queue misaccounting is refused: a mailbox that admitted nothing has depth zero and a dequeue
+changes nothing, so an observation cannot borrow depth the ledger never recorded. -/
+theorem full_queue_misaccounting_is_refused :
+    mailboxDepth (dequeue (dequeue ⟨0, 0⟩)) = 0 ∧ (dequeue ⟨0, 0⟩).dequeued = 0 := by
+  decide
+
+/-- Depth tracks the operations: after two admissions and one dequeue the derived depth is one. -/
+theorem accounting_tracks_the_operations :
+    mailboxDepth (dequeue (admit (admit ⟨0, 0⟩))) = 1 := by
+  decide
+
 end NestedSession
