@@ -110,3 +110,25 @@ What is not settled: whether the `test.emit` word needs an explicit host binding
 the quota-replay fixture obtains through a definition source rather than a bare
 program fragment. That is the next thing to check, and it is the reason this task
 stays open rather than reported done.
+
+### Addendum: isolation probes after the attempt
+
+Two throwaway probes (not committed, run against the same real CLI) narrowed the
+status-5 result without settling it:
+
+- A bare live-slot fragment that emits — `'"relocated" test.emit drop 21'` —
+  **installs** cleanly, so the `test.emit` word is accepted at ingress. That rules
+  out "the fragment needs a `require` header to parse the word".
+- Bootstrap requires **two or three** checked slots (`bootstrap requires two or
+  three checked slots`), so a single-slot emit probe is not constructible; with a
+  second inert slot the same emitting candidate is refused at bootstrap with
+  `checked bootstrap candidate differs from selected slot interface or effect
+  ceiling` — for ceilings `['test.emit']` and `['live.dispatch', 'test.emit']`
+  alike. The publish path the quota-replay fixture uses (`publish` at epoch 0)
+  does not share that bootstrap comparison, which is why its emitting program
+  reaches execution there.
+
+So the unresolved question is now narrower: whether a **bootstrapped** emitting
+candidate can match a slot ceiling at all, or whether the relocation witness has to
+be built on the publish path. Both remaining options are inside declared
+operations; neither is claimed done.
