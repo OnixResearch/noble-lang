@@ -76,3 +76,37 @@ invoke/bootstrap:
 - Nothing here binds `NobleFoundation/LiveDispatch.lean` to these rows; the model
   proof, the implementation comparison and the host correspondence stay separate
   receipts.
+
+## First attempt at the fixture, and where it stopped
+
+The fixture was actually written into the LSLOT-02 lane and run against a real
+CLI (`/var/tmp/noble-target/debug/noble`, pinned Node, `env -i`). It is **not**
+kept: the attempt stopped short and the lane is unchanged, so nothing above is
+promoted to execution evidence. What the attempt measured, in order:
+
+1. A caller that both invokes and emits needs the dispatch effect declared:
+   installing it under `effects: ['test.emit']` alone refused with
+   `unavailable selected host effect`.
+2. With the caller declaring `LiveRef<I64,I64,live.dispatch+test.emit>`, bootstrap
+   accepted the pair, but the invocation refused
+   `root reference binding disagrees with checked caller or slot`: the borrowed
+   reference's declared `(input, output, ceiling)` must equal the bound slot's own
+   contract exactly
+   (`crates/noble-cli/src/core/live_slot.rs:3348-3367`).
+3. With the reference narrow enough to match the slot, the dispatch row appears in
+   `request_trace` but the guest completes with **status 5**
+   (`crates/noble-cli/src/core/runtime/slot-engine.mjs:2200-2205`), and with the
+   emit placed before the dispatch the trace is empty and the same status returns.
+   `5` is the pre-select failure code
+   (`crates/noble-wasm/src/source/emit/live.rs:28-30`), so this is a guest-side
+   refusal at the caller's own effect site, not a host or policy refusal.
+4. Two binding positions were tried: `position` is the **formal index** (`1` for
+   the second formal — bindings that disagree are refused at step 2), so the
+   `position: ordinal + 1` shape used by the LSLOT-02 fixtures applies to their
+   deeper stacks, not to a two-formal caller.
+
+What is not settled: whether the `test.emit` word needs an explicit host binding
+(`require emit Text -- ! test.emit`) inside the live-slot source fragment, which
+the quota-replay fixture obtains through a definition source rather than a bare
+program fragment. That is the next thing to check, and it is the reason this task
+stays open rather than reported done.
