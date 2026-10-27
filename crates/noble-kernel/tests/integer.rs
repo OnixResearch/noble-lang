@@ -56,19 +56,15 @@ fn multiplication_wraps_instead_of_trapping_or_saturating() {
 #[test]
 fn equality_accepts_matching_values() {
     for value in [i64::MIN, -1, 0, 1, i64::MAX] {
-        assert!(
-            noble_kernel::integer::I64::from_i64(value)
-                .is_equal(noble_kernel::integer::I64::from_i64(value))
-        );
+        assert!(noble_kernel::integer::I64::from_i64(value)
+            .is_equal(noble_kernel::integer::I64::from_i64(value)));
     }
 }
 
 #[test]
 fn equality_rejects_distinct_values() {
     for (left, right) in [(0, 1), (-1, 1), (i64::MIN, i64::MAX)] {
-        assert!(
-            !noble_kernel::integer::I64::from_i64(left)
-                .is_equal(noble_kernel::integer::I64::from_i64(right))
-        );
+        assert!(!noble_kernel::integer::I64::from_i64(left)
+            .is_equal(noble_kernel::integer::I64::from_i64(right)));
     }
 }
