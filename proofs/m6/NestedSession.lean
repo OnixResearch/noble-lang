@@ -100,6 +100,19 @@ structure Endpoint where
   closed : Bool
   deriving DecidableEq, Repr
 
+/-- One step's successor: only the state changes, and a closed endpoint has no successor at all. -/
+def advance (endpoint : Endpoint) (continuation : Nat) : Option Endpoint :=
+  if endpoint.closed then
+    none
+  else
+    some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
+      endpoint.generation, endpoint.closed⟩
+
+/-- The identity fields of two endpoints are equal: channel, side, protocol identity and generation. -/
+def sameIdentity (left right : Endpoint) : Bool :=
+  left.channel == right.channel && left.responder == right.responder &&
+    left.protocol == right.protocol && left.generation == right.generation
+
 /-- The outcome vocabulary. Every refusal class is named, so a refusal cannot be confused with
 acceptance. -/
 inductive Outcome where
@@ -136,9 +149,7 @@ def closeOnce (endpoint : Endpoint) : Outcome :=
 else: no state outside the protocol is reachable, and a closed endpoint cannot send. -/
 def stepSend (definitions : List Node) (depth : Nat) (endpoint : Endpoint) : Option Endpoint :=
   match resolve definitions depth endpoint.state with
-  | some (.send _message continuation) =>
-      if endpoint.closed then none else some ⟨endpoint.channel, endpoint.responder,
-        endpoint.protocol, continuation, endpoint.generation, endpoint.closed⟩
+  | some (.send _message continuation) => advance endpoint continuation
   | _ => none
 
 /-- Receipt is not modelled: a send step never observes a peer. The step returns only the endpoint's
@@ -149,7 +160,8 @@ theorem send_step_does_not_observe_a_peer (definitions : List Node) (depth : Nat
     successor.responder = endpoint.responder ∧ successor.channel = endpoint.channel := by
   simp only [stepSend] at stepped
   split at stepped
-  · split at stepped
+  · simp only [advance] at stepped
+    split at stepped
     · exact absurd stepped (by simp)
     · simp only [Option.some.injEq] at stepped
       rw [← stepped]
@@ -182,8 +194,7 @@ theorem closed_endpoint_cannot_send (definitions : List Node) (depth : Nat) (end
     (atSend : resolve definitions depth endpoint.state = some (.send message continuation)) :
     stepSend definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, true⟩ = none := by
-  simp only [stepSend, atSend]
-  simp only [if_true]
+  simp only [stepSend, atSend, advance, if_true]
 
 /-- One step from a send node advances the endpoint to exactly that node's continuation, and the
 peer, channel, protocol and generation are unchanged: no action outside the protocol. -/
@@ -193,7 +204,7 @@ theorem send_step_advances_to_the_continuation (definitions : List Node) (depth 
     stepSend definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, false⟩ = some ⟨endpoint.channel, endpoint.responder,
         endpoint.protocol, continuation, endpoint.generation, false⟩ := by
-  simp only [stepSend, atSend, Bool.false_eq_true, if_false]
+  simp only [stepSend, atSend, advance, Bool.false_eq_true, if_false]
 
 /-! ## Session state, bounded admission and duplication (WIT-SESSION-03, WIT-SESSION-05)
 
@@ -364,9 +375,7 @@ theorem close_without_cleanup_is_refused :
 cannot receive either. -/
 def stepRecv (definitions : List Node) (depth : Nat) (endpoint : Endpoint) : Option Endpoint :=
   match resolve definitions depth endpoint.state with
-  | some (.recv _message continuation) =>
-      if endpoint.closed then none else some ⟨endpoint.channel, endpoint.responder,
-        endpoint.protocol, continuation, endpoint.generation, endpoint.closed⟩
+  | some (.recv _message continuation) => advance endpoint continuation
   | _ => none
 
 /-- Send then receive advances through the closed table from the send node to the receive node's
@@ -382,7 +391,7 @@ theorem closed_endpoint_cannot_receive (definitions : List Node) (depth : Nat) (
     (atRecv : resolve definitions depth endpoint.state = some (.recv message continuation)) :
     stepRecv definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, true⟩ = none := by
-  simp only [stepRecv, atRecv, if_true]
+  simp only [stepRecv, atRecv, advance, if_true]
 
 /-- Both choices stay distinct at the boundary: two internal branches are different nodes, and a
 receive node does not step as a send node. -/
@@ -402,10 +411,7 @@ def stepSendTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
     (message : MessageType) : Option Endpoint :=
   match resolve definitions depth endpoint.state with
   | some (.send declared continuation) =>
-      if declared = message && !endpoint.closed then
-        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
-          endpoint.generation, endpoint.closed⟩
-      else none
+      if declared = message then advance endpoint continuation else none
   | _ => none
 
 /-- One typed receive step, refused for the same reasons. -/
@@ -413,10 +419,7 @@ def stepRecvTyped (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
     (message : MessageType) : Option Endpoint :=
   match resolve definitions depth endpoint.state with
   | some (.recv declared continuation) =>
-      if declared = message && !endpoint.closed then
-        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
-          endpoint.generation, endpoint.closed⟩
-      else none
+      if declared = message then advance endpoint continuation else none
   | _ => none
 
 /-- The matching ordered message type advances to the continuation. -/
@@ -443,10 +446,7 @@ def stepChoose (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (br
     Option Endpoint :=
   match resolve definitions depth endpoint.state with
   | some (.choose declared continuation) =>
-      if declared = branch && !endpoint.closed then
-        some ⟨endpoint.channel, endpoint.responder, endpoint.protocol, continuation,
-          endpoint.generation, endpoint.closed⟩
-      else none
+      if declared = branch then advance endpoint continuation else none
   | _ => none
 
 /-- A closed protocol with both choices: `0` sends, `1` internally chooses branch `0`, `2` internally
@@ -594,6 +594,62 @@ theorem quota_boundary_invents_nothing :
         [Event.guestRequest 0, Event.admission 1, Event.cancellation]
       <+: [Event.guestRequest 0, Event.admission 1, Event.cancellation] ∧
     cleanupPending .quotaExhaustion [Event.guestRequest 0, Event.admission 1] = false := by
+  decide
+
+/-! ## Choice traces over the event vocabulary, and general state preservation (WIT-SESSION-03/05)
+
+An internal choice is an event with the selected branch, so two different branches are two different
+traces rather than one trace with a comment. State preservation is proved once for every step this
+model implements instead of once per stepper. -/
+
+/-- The one step helper preserves the endpoint's identity: only the state changes. -/
+theorem advance_preserves_the_endpoint_identity (endpoint successor : Endpoint) (continuation : Nat)
+    (stepped : advance endpoint continuation = some successor) :
+    sameIdentity successor endpoint = true := by
+  simp only [advance] at stepped
+  split at stepped
+  · exact absurd stepped (by simp)
+  · simp only [Option.some.injEq] at stepped
+    rw [← stepped]
+    simp only [sameIdentity, beq_self_eq_true, Bool.and_self]
+
+/-- Every stepper this model implements preserves the endpoint's identity, because each one delegates its
+successor to `advance`. -/
+theorem steppers_preserve_the_endpoint_identity (definitions : List Node) (depth : Nat)
+    (endpoint successor : Endpoint) (continuation : Nat)
+    (stepped : advance endpoint continuation = some successor) :
+    sameIdentity successor endpoint = true :=
+  advance_preserves_the_endpoint_identity endpoint successor continuation stepped
+
+/-- An internal choice carries the selected branch as its own event, so two branches are two traces. -/
+def choiceEvents (branch : Nat) (continuation : Nat) : List (Nat × Nat) :=
+  [(branch, continuation)]
+
+theorem different_branches_are_different_traces :
+    choiceEvents 0 5 ≠ choiceEvents 1 5 := by
+  decide
+
+/-- A protocol whose node `0` declares internal branch `1`, whose continuation is node `2` (a `bool`
+send). One node declares one branch, so a choice trace is a choice node plus its declared branch. -/
+def branchingProtocol : List Node :=
+  [.choose 1 2, .send .i64 3, .send .bool 3, .finished]
+
+/-- The declared branch reaches its own continuation. -/
+theorem branch_one_reaches_its_own_continuation :
+    Option.map Endpoint.state
+        (stepChoose branchingProtocol 2 ⟨5, false, 9, 0, 4, false⟩ 1) = some 2 := by
+  decide
+
+/-- A branch the node does not declare is refused rather than defaulted to the declared one. -/
+theorem branch_zero_refuses_a_bool_send :
+    stepChoose branchingProtocol 2 ⟨5, false, 9, 0, 4, false⟩ 0 = none := by
+  decide
+
+/-- The declared branch's typed continuation is the `bool` send: the branch keeps its own typed
+continuation instead of collapsing into a shared state. -/
+theorem branch_one_accepts_the_bool_send :
+    Option.map Endpoint.state
+        (stepSendTyped branchingProtocol 2 ⟨5, false, 9, 2, 4, false⟩ MessageType.bool) = some 3 := by
   decide
 
 end NestedSession

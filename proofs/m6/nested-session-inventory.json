@@ -433,6 +433,60 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.advance_preserves_the_endpoint_identity",
+      "role": "WIT-SESSION-05: the one step helper changes only the state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.steppers_preserve_the_endpoint_identity",
+      "role": "WIT-SESSION-05: every stepper delegates its successor to the proven helper",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.different_branches_are_different_traces",
+      "role": "WIT-SESSION-03: two internal branches are two traces over the event vocabulary",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_one_reaches_its_own_continuation",
+      "role": "WIT-SESSION-03 positive trace: the declared branch reaches its own continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_zero_refuses_a_bool_send",
+      "role": "WIT-SESSION-03 negative control: a branch the node does not declare is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_one_accepts_the_bool_send",
+      "role": "WIT-SESSION-03: the declared branch keeps its own typed continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
