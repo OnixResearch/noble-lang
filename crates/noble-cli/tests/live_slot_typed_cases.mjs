@@ -205,7 +205,117 @@ export const run = async binary => {
   };
 };
 
+
+
+/**
+ * Controlled negative family (issue #49 item 4/5): mutate exactly one premise of the typed
+ * direct-shape case and assert the *semantic refusal class* and the stage it is refused at, never
+ * the incidental diagnostic wording. Each mutation leaves every other premise intact so the
+ * failure stays attributable.
+ *
+ * The classes are declared here rather than read back from the production reports; the observed
+ * diagnostics are returned for transparency only.
+ */
+const negativeMutations = [
+  {
+    class: 'binding-foreign-root',
+    stage: 'command',
+    // The caller has no formal that names slot X, so the reference cannot bind.
+    mutate: oneCase => ({ ...oneCase, refs: [{ position: 1, ordinal: 0, slot: 'X' }] }),
+  },
+  {
+    class: 'binding-wrong-position',
+    stage: 'command',
+    // The reference is bound at the value formal instead of the reference formal.
+    mutate: oneCase => ({ ...oneCase, refs: [{ position: 0, ordinal: 0, slot: 'A' }] }),
+  },
+  {
+    class: 'stack-incompatible',
+    stage: 'command',
+    // The invocation supplies a value the caller's first formal does not admit.
+    mutate: oneCase => ({ ...oneCase, stack: [{ kind: 'bool', value: 'true' }] }),
+  },
+  {
+    class: 'effect-not-granted',
+    stage: 'slot',
+    // Authority withholds the leaf's declared effect while the program still declares it.
+    mutate: oneCase => ({ ...oneCase, denyEffect: true }),
+  },
+];
+
+const runNegative = async (binary, oneCase, mutation, ordinal) => {
+  const mutated = mutation.mutate(oneCase);
+  const variant = `typed-negative-${mutation.class}-${ordinal}`;
+  const emit = oneCase.effects.includes('test.emit');
+  const contracts = [
+    { slotId: 'A', input: ['I64'], output: ['I64'], effectCeiling: oneCase.effects, proofRequired: false },
+    { slotId: 'B', input: ['I64', refType(['I64'], ['I64'], oneCase.effects)], output: ['I64'],
+      effectCeiling: oneCase.effects, proofRequired: false },
+  ];
+  const grants = contracts.flatMap(slot => ['publish', 'dispatch', 'effect'].map(operation => ({
+    operation, slotId: slot.slotId,
+    allowed: !(operation === 'effect' && (!emit || (mutated.denyEffect === true && slot.slotId === 'A'))),
+  })));
+  const session = await cli(binary, variant, selectedAuthority({
+    sources: { defLeaf: leafPrograms[oneCase.leaf].source, leaf: leafPrograms[oneCase.leaf].name,
+      callerA: oneCase.callerSource },
+    slots: contracts, grants, effects: oneCase.effects, quota: 32,
+  }));
+  const outcomes = [];
+  try {
+    outcomes.push(await session.configured);
+    const issue = async request => { const row = await session.issue(request); outcomes.push(row); return row; };
+    await issue({ operation: 'define', id: 'defLeaf', name: leafPrograms[oneCase.leaf].name,
+      source: leafPrograms[oneCase.leaf].source, inputs: [] });
+    await issue({ operation: 'install', id: 'leaf', source: leafPrograms[oneCase.leaf].name,
+      inputs: ['I64'], selected_name: leafPrograms[oneCase.leaf].name });
+    await issue({ operation: 'install', id: 'callerA', source: oneCase.callerSource,
+      inputs: ['I64', refType(['I64'], ['I64'], oneCase.effects)] });
+    await issue({ operation: 'candidate', id: 'callerA' });
+    const leafEpoch = (await issue({ operation: 'publish', slot: 'A', id: 'leaf', program_index: 0,
+      expected_epoch: '0' })).epoch;
+    await issue({ operation: 'publish', slot: 'B', id: 'callerA', program_index: 0,
+      expected_epoch: leafEpoch });
+    const invoke = () => issue({ operation: 'invoke', id: 'callerA',
+      inputs: mutated.stack ?? [{ kind: 'i64', value: '5' }], refs: mutated.refs });
+    for (let pass = 0; pass < (mutated.repeat ?? oneCase.repeat); pass += 1) await invoke();
+  } finally {
+    await session.close();
+  }
+  // The mutation must be refused, and refused at the declared stage, without being folded into a
+  // different class: the refusal of the mutated request itself is the one that matters.
+  const refused = outcomes.filter(row => row.outcome === 'refused' || row.outcome === 'execution-failed');
+  assert.ok(refused.length > 0, `${variant}: mutation must be refused, saw ${JSON.stringify(outcomes).slice(0, 600)}`);
+  const matching = refused.filter(row => row.stage === mutation.stage);
+  assert.ok(matching.length > 0,
+    `${variant}: expected a refusal at stage ${mutation.stage}, saw ${JSON.stringify(refused).slice(0, 600)}`);
+  return { variant, class: mutation.class, stage: mutation.stage, refused: matching.length,
+    diagnostics: refused.map(row => row.diagnostic ?? row.outcome) };
+};
+
+export const runNegativeFamily = async (binary, positives) => {
+  const oneCase = {
+    shape: 'direct', nesting: 'single', callerSource: 'slot.invoke',
+    ceiling: 'dispatch+emit', effects: ['live.dispatch', 'test.emit'], leaf: 'emitting', repeat: 1,
+    refs: [{ position: 1, ordinal: 0, slot: 'A' }],
+  };
+  const results = [];
+  for (const [ordinal, mutation] of negativeMutations.entries()) {
+    results.push(await runNegative(binary, oneCase, mutation, ordinal));
+  }
+  assert.equal(results.length, negativeMutations.length);
+  return {
+    classes: results.map(row => row.class),
+    by_stage: Object.fromEntries([...new Set(results.map(row => row.stage))]
+      .map(stage => [stage, results.filter(row => row.stage === stage).length])),
+    refused: results.reduce((total, row) => total + row.refused, 0),
+    diagnostics: results.map(row => ({ class: row.class, observed: row.diagnostics })),
+    positives_admitted: positives.admitted,
+  };
+};
+
 if (process.argv[1]?.endsWith('live_slot_typed_cases.mjs') === true) {
-  const summary = await run(process.argv[2]);
-  process.stdout.write(`${JSON.stringify(summary)}\n`);
+  const positives = await run(process.argv[2]);
+  const negative = await runNegativeFamily(process.argv[2], positives);
+  process.stdout.write(`${JSON.stringify({ ...positives, negative })}\n`);
 }
