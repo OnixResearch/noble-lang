@@ -424,10 +424,74 @@ const runRetentionFamily = async binary => {
   }
 };
 
+
+
+/**
+ * Declared type boundaries (issue #49 item 4, type half). Each boundary is a
+ * pair: the last admitted width/depth configures, the next one is refused at
+ * the authority stage. Both numbers are declared here from the measured
+ * boundary, and the refusal wording is reported for transparency only.
+ */
+const typeStackBound = 128;
+const constructorNestingBound = 31;
+
+const nestedLiveRef = depth => {
+  let ty = 'I64';
+  for (let level = 0; level < depth; level += 1) ty = refType([ty], ['I64'], ['live.dispatch']);
+  return ty;
+};
+
+const configureAttempt = async (binary, variant, slotInput) => {
+  const session = await cli(binary, variant, selectedAuthority({
+    sources: { caller: 'slot.invoke' },
+    slots: [{ slotId: 'wide', input: slotInput, output: ['I64'],
+      effectCeiling: ['live.dispatch'], proofRequired: false }],
+    grants: [], effects: ['live.dispatch'], quota: 8,
+  }));
+  try {
+    const configured = await session.configured;
+    return { variant, outcome: configured.outcome, stage: configured.stage,
+      diagnostic: configured.diagnostic };
+  } finally {
+    await session.close();
+  }
+};
+
+const runTypeBoundaryFamily = async binary => {
+  const wide = width => Array.from({ length: width }, () => 'I64');
+  const observations = [
+    await configureAttempt(binary, 'type-stack-admitted', wide(typeStackBound)),
+    await configureAttempt(binary, 'type-stack-refused', wide(typeStackBound + 1)),
+    await configureAttempt(binary, 'nesting-admitted', [nestedLiveRef(constructorNestingBound)]),
+    await configureAttempt(binary, 'nesting-refused', [nestedLiveRef(constructorNestingBound + 1)]),
+  ];
+  const [admittedStack, refusedStack, admittedNesting, refusedNesting] = observations;
+  assert.equal(admittedStack.outcome, 'configured',
+    `${JSON.stringify(admittedStack)}: a ${typeStackBound}-type stack must configure`);
+  assert.equal(refusedStack.outcome, 'refused',
+    `${JSON.stringify(refusedStack)}: a ${typeStackBound + 1}-type stack must be refused`);
+  assert.equal(refusedStack.stage, 'authority');
+  assert.equal(admittedNesting.outcome, 'configured',
+    `${JSON.stringify(admittedNesting)}: nest depth ${constructorNestingBound} must configure`);
+  assert.equal(refusedNesting.outcome, 'refused',
+    `${JSON.stringify(refusedNesting)}: nest depth ${constructorNestingBound + 1} must be refused`);
+  assert.equal(refusedNesting.stage, 'authority');
+  // The admitted side never becomes a refusal and the refused side never
+  // configures: a boundary pair, not two independent observations.
+  return {
+    stack: { admitted: typeStackBound, refused_first: typeStackBound + 1 },
+    nesting: { admitted: constructorNestingBound, refused_first: constructorNestingBound + 1 },
+    refusal_stage: 'authority',
+    observed_diagnostics: [refusedStack.diagnostic, refusedNesting.diagnostic],
+  };
+};
+
 if (process.argv[1]?.endsWith('live_slot_typed_cases.mjs') === true) {
   const positives = await run(process.argv[2]);
   const negative = await runNegativeFamily(process.argv[2], positives);
   const minimization = await runMinimization(process.argv[2], negative);
   const retention = await runRetentionFamily(process.argv[2]);
-  process.stdout.write(`${JSON.stringify({ ...positives, negative, minimization, retention })}\n`);
+  const typeBoundaries = await runTypeBoundaryFamily(process.argv[2]);
+  process.stdout.write(`${JSON.stringify({ ...positives, negative, minimization, retention,
+    typeBoundaries })}\n`);
 }
