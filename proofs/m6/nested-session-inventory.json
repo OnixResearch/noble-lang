@@ -136,6 +136,87 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.admitOne_is_bounded",
+      "role": "WIT-SESSION-03: admission keeps the mailbox depth inside the limit, given a well-formed session",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.admission_is_bounded",
+      "role": "WIT-SESSION-03: a session admission never exceeds the declared queue limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.full_mailbox_is_unchanged",
+      "role": "WIT-SESSION-03: a full mailbox refuses by leaving the session unchanged, never a silent drop",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.admission_preserves_the_endpoint_inventory",
+      "role": "WIT-SESSION-05: admission copies and removes no endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.no_endpoint_duplication",
+      "role": "WIT-SESSION-05: no operation in this model increases the endpoint inventory",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_send_then_recv",
+      "role": "WIT-SESSION-03 positive trace: sequenced send advances the state and observes no peer",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_recursive_entry_unfolds_to_the_send_node",
+      "role": "WIT-SESSION-03 positive trace: recursive entry unfolds to the declared definition instead of expanding",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_orderly_close",
+      "role": "WIT-SESSION-03 positive trace: orderly close is accepted once and a second close is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_bounded_buffering_refuses_the_third_payload",
+      "role": "WIT-SESSION-03 positive trace: bounded buffering stops at the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

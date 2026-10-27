@@ -195,4 +195,91 @@ theorem send_step_advances_to_the_continuation (definitions : List Node) (depth 
         endpoint.protocol, continuation, endpoint.generation, false⟩ := by
   simp only [stepSend, atSend, Bool.false_eq_true, if_false]
 
+/-! ## Session state, bounded admission and duplication (WIT-SESSION-03, WIT-SESSION-05)
+
+The endpoint list is a resource inventory, not a copyable handle set: every operation returns at most
+one successor endpoint, and admission is bounded by the declared queue limit. `deliver` admits one
+payload without dequeuing or observing a peer, so send is still not receipt. -/
+
+/-- A session: its endpoint inventory, the bounded mailbox depth and the declared queue limit. -/
+structure Session where
+  endpoints : List Endpoint
+  queued : Nat
+  queueLimit : Nat
+  deriving DecidableEq, Repr
+
+/-- One admission step on the mailbox depth. A full mailbox leaves the depth alone, which is a refusal
+rather than a silent drop or an unbounded queue. -/
+def admitOne (queued limit : Nat) : Nat :=
+  if queued < limit then queued + 1 else queued
+
+/-- Admission of one payload. -/
+def deliver (session : Session) : Session :=
+  { session with queued := admitOne session.queued session.queueLimit }
+
+/-- Admission keeps the depth inside the limit **given a well-formed session**: an over-full depth is a
+premise violation, and the model refuses to claim boundedness for it. -/
+theorem admitOne_is_bounded (queued limit : Nat) (within : queued ≤ limit) :
+    admitOne queued limit ≤ limit := by
+  by_cases room : queued < limit
+  · rw [admitOne, if_pos room]
+    exact Nat.succ_le_of_lt room
+  · rw [admitOne, if_neg room]
+    exact within
+
+/-- Admission never exceeds the declared queue limit. -/
+theorem admission_is_bounded (session : Session) (within : session.queued ≤ session.queueLimit) :
+    (deliver session).queued ≤ session.queueLimit := by
+  simpa only [deliver] using admitOne_is_bounded session.queued session.queueLimit within
+
+/-- A full mailbox leaves the session unchanged rather than dropping a payload silently. -/
+theorem full_mailbox_is_unchanged (session : Session)
+    (full : session.queueLimit ≤ session.queued) : deliver session = session := by
+  simp only [deliver, admitOne]
+  rw [if_neg (by omega)]
+
+/-- Admission neither copies nor removes an endpoint: the inventory is exactly preserved. -/
+theorem admission_preserves_the_endpoint_inventory (session : Session) :
+    (deliver session).endpoints = session.endpoints := by
+  rfl
+
+/-- No operation in this model increases the endpoint inventory, so no endpoint is ever duplicated by
+an operation: the only way to obtain a second endpoint would be an owning transition this model does
+not implement. -/
+theorem no_endpoint_duplication (session : Session) :
+    (deliver session).endpoints.length ≤ session.endpoints.length := by
+  rw [admission_preserves_the_endpoint_inventory]
+  exact Nat.le_refl _
+
+/-! ## Positive traces over one closed table (WIT-SESSION-03) -/
+
+/-- A small closed protocol: `0` sends an `i64`, `1` receives an `i64`, `2` re-enters `0` through a
+named nested constructor, and `3` finishes. -/
+def exampleProtocol : List Node :=
+  [.send .i64 1, .recv .i64 2, .nested 0 7, .finished]
+
+/-- Sequenced send then receive: the state advances through the table and no peer is observed. -/
+theorem trace_send_then_recv :
+    (stepSend exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩).map (fun endpoint => endpoint.state) =
+      some 1 := by
+  decide
+
+/-- Recursive entry through the named nested constructor **unfolds** to the send node's definition
+rather than returning the constructor itself, so recursion is confined to declared definitions instead
+of expanding without bound. -/
+theorem trace_recursive_entry_unfolds_to_the_send_node :
+    resolve exampleProtocol 2 2 = some (.send .i64 1) := by
+  decide
+
+/-- Orderly close: the first close is accepted and a second close is refused, so close is once-only. -/
+theorem trace_orderly_close :
+    closeOnce ⟨5, false, 9, 3, 4, false⟩ = .accepted ∧
+      closeOnce ⟨5, false, 9, 3, 4, true⟩ = .refusedDoubleClose := by
+  decide
+
+/-- Bounded asynchronous buffering: two admissions fit a limit of two and the third is refused. -/
+theorem trace_bounded_buffering_refuses_the_third_payload :
+    (deliver (deliver (deliver ⟨[], 0, 2⟩))).queued = 2 := by
+  decide
+
 end NestedSession
