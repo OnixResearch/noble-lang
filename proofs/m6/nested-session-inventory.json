@@ -388,6 +388,51 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.boundary_preserves_the_committed_prefix",
+      "role": "WIT-SESSION-06: cancellation, trap, quota exhaustion and peer disappearance only shorten a trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.cancellation_keeps_its_own_event",
+      "role": "WIT-SESSION-06: a cancelled request stays visible in the retained prefix",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.peer_disappearance_keeps_the_cleanup_pending",
+      "role": "WIT-SESSION-06: an unobserved cleanup stays an unresolved fact",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.ordinary_close_does_not_keep_the_cleanup_pending",
+      "role": "WIT-SESSION-06 control: the pending fact is cleared only by an observed cleanup",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.quota_boundary_invents_nothing",
+      "role": "WIT-SESSION-06: a quota boundary neither completes a pending cleanup nor invents an observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

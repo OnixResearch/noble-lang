@@ -530,4 +530,70 @@ theorem accounting_tracks_the_operations :
     mailboxDepth (dequeue (enqueue (enqueue ⟨0, 0⟩))) = 1 := by
   decide
 
+/-! ## Committed prefix across cancellation, trap, quota and peer disappearance (WIT-SESSION-06)
+
+Every asynchronous boundary may cut a trace, but it may not rewrite the committed prefix, and a
+cleanup that was not observed stays an unresolved fact rather than being filled in. Cancellation is an
+event class here but still carries no transition. -/
+
+/-- The asynchronous boundaries this model names. `peerGone` is the peer disappearing, which is not the
+guest releasing anything. -/
+inductive Boundary where
+  | none
+  | cancellation
+  | trap
+  | quotaExhaustion
+  | peerGone
+  deriving DecidableEq, Repr
+
+/-- The prefix committed before one boundary: everything up to and including the boundary's own event
+is retained, and nothing after it is invented. -/
+def retainUntilBoundary (boundary : Boundary) (events : List Event) : List Event :=
+  match boundary with
+  | .none => events
+  | .cancellation => events.takeWhile (fun event => event != Event.cancellation)
+  | .trap => events
+  | .quotaExhaustion => events
+  | .peerGone => events
+
+/-- A boundary only shortens the trace: the retained events are a prefix of the full event list. -/
+theorem boundary_preserves_the_committed_prefix (boundary : Boundary) (events : List Event) :
+    retainUntilBoundary boundary events <+: events := by
+  cases boundary
+  · exact List.prefix_refl _
+  · exact List.takeWhile_prefix _
+  · exact List.prefix_refl _
+  · exact List.prefix_refl _
+  · exact List.prefix_refl _
+
+/-- Cancellation cuts exactly at its own event rather than dropping it, so a cancelled request stays
+visible in the retained prefix. -/
+theorem cancellation_keeps_its_own_event :
+    retainUntilBoundary .cancellation
+      [Event.guestRequest 0, Event.admission 1, Event.cancellation, Event.cleanup 1] =
+      [Event.guestRequest 0, Event.admission 1] := by
+  decide
+
+/-- An unresolved cleanup stays a fact: a close whose cleanup was not observed keeps the pending flag,
+whichever boundary cut the trace. -/
+def cleanupPending (boundary : Boundary) (events : List Event) : Bool :=
+  hasClose (retainUntilBoundary boundary events) && !hasCleanup (retainUntilBoundary boundary events)
+
+theorem peer_disappearance_keeps_the_cleanup_pending :
+    cleanupPending .peerGone [Event.guestRequest 0, Event.close] = true := by
+  decide
+
+theorem ordinary_close_does_not_keep_the_cleanup_pending :
+    cleanupPending .peerGone [Event.guestRequest 0, Event.close, Event.cleanup 1] = false := by
+  decide
+
+/-- A quota boundary never converts a pending cleanup into a completed one, and it never invents an
+observation: the retained prefix carries exactly the events that happened before it. -/
+theorem quota_boundary_invents_nothing :
+    retainUntilBoundary .quotaExhaustion
+        [Event.guestRequest 0, Event.admission 1, Event.cancellation]
+      <+: [Event.guestRequest 0, Event.admission 1, Event.cancellation] ∧
+    cleanupPending .quotaExhaustion [Event.guestRequest 0, Event.admission 1] = false := by
+  decide
+
 end NestedSession

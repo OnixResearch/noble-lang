@@ -124,16 +124,22 @@ const final = {
 };
 requireThat(final.status === initial.status && final.commit === initial.commit, 'source tree changed during proof check');
 const bindings = {
-  // WIT-TRACE-06: every revision this pilot's verdicts depend on is bound or explicitly absent.
+  // WIT-SESSION-06: every revision this model's verdicts depend on is bound or explicitly absent.
   model: {
     lean: version,
     lean_sha256: spawnSync('sha256sum', [join(leanBin, 'lean')], { encoding: 'utf8' }).stdout.split(' ')[0],
     sources_sha256: Object.fromEntries([codeFile, inventoryFile].map(file => [file,
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
   },
-  component: null,
+  // The closed definitions table, the endpoint identity fields and the mailbox accounting are this
+  // model's own constants: their bytes are the source hash above, so they are bound through it and
+  // named here rather than left implicit.
+  protocol_definitions: 'proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol',
+  endpoint_identity_fields: ['channel', 'responder', 'protocol', 'state', 'generation', 'closed'],
+  queue_accounting: 'depth derived from the enqueued/dequeued ledger, never stored beside it',
   helper: null,
-  engine: null,
+  runtime: null,
+  peer: null,
   absent_bindings_reason:
     'This model proves grammar, duality and endpoint-resource theorems over a handwritten closed ' +
     'definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding ' +
