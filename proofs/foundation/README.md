@@ -1298,6 +1298,9 @@ failures, later successes and refused or acquired actions
 the first code (`first_failure_code_is_kept_as_the_sticky_one`). Twenty-three
 theorems, all inventoried, plus the three guard-reading lemmas
 (`some_or_none_eq_some`, `none_or_some_eq_some`, `some_or_some_eq_some`).
+Receipt
+[verification/foundation/receipts/cc147dd40/](../../verification/foundation/receipts/cc147dd40/foundation-check.json)
+(428 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
 The observation contract is `observe` — per-id generations, pins and
 reservations, the sticky failure, and the ordered delivery and settlement
