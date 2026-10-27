@@ -421,8 +421,20 @@ let contracts = import "./architecture.contracts.ncl" in
     # bin+test shard had 32,926 constructors, over the 32,768 cap, with 38,339
     # calls, 9,263 expansions, 4,630 items, 2,275 configuration facts and at
     # least 41,366 distinct fact spans; only the constructor cap is doubled.
-    max_units = 96,
-    max_shards = 96,
+    # 106 units (2026-10-27): the 96-unit capacity above no longer matched the
+    # selected workspace, so `checks.x86_64-linux.source-coverage` failed on
+    # `selected compiler architecture units exceed policy limit 96`. The failure
+    # reproduced at b972fb5f and at its parent e1af0feb, so it predates the
+    # symbolic mutation lane; the collector aborted at the limit rather than
+    # reporting a count. A scratch collection of b972fb5f with `max_units` and
+    # `max_shards` only raised to 200 observed expected=106, observed=106,
+    # 0 missing, 0 unexpected, 0 duplicate unit ids, 0 invalid shards,
+    # status=complete, and a 249,908,443-byte IR. Every other cap is unchanged
+    # and the collection was complete without widening one, so this is a
+    # capacity re-measurement rather than a classification waiver, source/native
+    # assurance approval, or a gate PASS.
+    max_units = 106,
+    max_shards = 106,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
