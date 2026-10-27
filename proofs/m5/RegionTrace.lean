@@ -540,4 +540,56 @@ theorem source_release_is_at_most_once (source : List SourceEvent) (steps : List
   simp only [wellFormed, atMostOnce, Bool.and_eq_true] at both
   exact both.2.2
 
+/-! ## Fixtures (WIT-TRACE-05, model level)
+
+The design lists five observable executions. Each is a handwritten target trace here — the host-side
+instrumentation that would record them from a real execution is exactly what this package does not
+add, so these are fixtures of the *relation*, not observations of an execution. Cancellation stays
+unsupported and unmodelled: the alphabets have no cancellation event. -/
+
+/-- Fixture: ordinary error — a rejected response carrying a reason. -/
+theorem fixture_ordinary_error :
+    related [.req .regionRead 0 8, .resp .regionRead none (some "bounds-reject")]
+      [.importCrossing .regionRead 0 8, .hostDecision .regionRead false 7,
+       .returned .regionRead none (some "bounds-reject")] = true := by
+  decide
+
+/-- Fixture: host refusal on bounds — the request is visible and nothing was copied. -/
+theorem fixture_host_bounds_refusal :
+    related [.req .regionRead 0 8]
+      [.importCrossing .regionRead 0 8, .hostDecision .regionRead false 7] = true := by
+  decide
+
+/-- Fixture: trap after a protected copy. The copy carries no source event and the trap is a
+target-side class, so the source trace is still the request. -/
+theorem fixture_trap_after_protected_copy :
+    related [.req .regionRead 0 8]
+      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+       .protectedCopy 8, .abnormalExit (ExitClass.trap)] = true := by
+  decide
+
+/-- Fixture: cleanup failure, kept distinct from trap and from quota exhaustion on the target side. -/
+theorem fixture_cleanup_failure_after_protected_copy :
+    related [.req .regionRead 0 8]
+      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+       .protectedCopy 8, .abnormalExit (ExitClass.cleanupFailure)] = true := by
+  decide
+
+/-- Fixture: quota prefix — the budget affords the request and the decision but not the copy, so the
+retained trace is the request alone and it relates to exactly that source trace. -/
+theorem fixture_quota_prefix_stops_before_the_copy :
+    related [.req .regionRead 0 8]
+      (retainFrom 2
+        [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+         .protectedCopy 8, .cleanup .guestRelease 7]) = true := by
+  decide
+
+/-- The same budget stops before a commit when the copy is affordable but the commit is not, so the
+quota boundary is measured rather than assumed. -/
+theorem fixture_quota_prefix_keeps_the_affordable_commit :
+    related [.req .regionRead 0 8]
+      (retainFrom 10
+        [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .protectedCopy 8]) = true := by
+  decide
+
 end RegionTrace

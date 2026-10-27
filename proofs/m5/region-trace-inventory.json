@@ -298,6 +298,60 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.fixture_ordinary_error",
+      "role": "WIT-TRACE-05 fixture: ordinary error with a reason relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_host_bounds_refusal",
+      "role": "WIT-TRACE-05 fixture: host bounds refusal keeps the request visible and copies nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_trap_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: a trap after a protected copy relates to the request, the class staying target-side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_cleanup_failure_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: cleanup failure stays distinct from trap and quota exhaustion on the target side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_stops_before_the_copy",
+      "role": "WIT-TRACE-05 fixture: a quota boundary that stops before the copy relates to the request alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit",
+      "role": "WIT-TRACE-05 fixture: measurability control for the quota boundary",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
