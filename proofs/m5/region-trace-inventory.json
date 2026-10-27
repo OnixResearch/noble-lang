@@ -5,52 +5,209 @@
     {
       "name": "RegionTrace.erase_preserves_projection",
       "role": "WIT-TRACE-02: erasure of the two named bookkeeping classes never changes the projected source trace",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_decisions",
+      "role": "WIT-TRACE-02: erasure leaves the decided identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_commit_identities",
+      "role": "WIT-TRACE-02: erasure leaves the commit identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_crossings",
+      "role": "WIT-TRACE-02: erasure leaves the read crossings alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_release_members",
+      "role": "WIT-TRACE-02: erasure leaves the release/retirement members alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_commits",
+      "role": "WIT-TRACE-02: erasure leaves the protected read commits alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_well_formedness",
+      "role": "WIT-TRACE-02: erasure cannot repair a forged target trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.related_erase_invariant",
       "role": "WIT-TRACE-02: the relation is erasure-invariant, so an erased class cannot create or remove a source event",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.denial_projects_to_request_only",
       "role": "WIT-TRACE-02: a refused request stays visible as its request step and gains no response",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.normal_success_projects_request_and_commit",
       "role": "WIT-TRACE-01: a normal success projects its request and protected commit; decision, copy and return carry no source event",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.identity_is_decision_identity",
       "role": "WIT-TRACE-01: the projection keeps the exact identity it was emitted with",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.retirement_is_not_a_guest_release",
       "role": "WIT-TRACE-02: host retirement projects to its own commit kind, never to a guest release",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.abnormal_exit_class_is_not_in_the_projection",
       "role": "WIT-TRACE-05 premise: the projection carries no abnormal-exit class, so the trap/quota/cleanup distinction is a target-side observation",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.abnormal_exit_classes_collapse_in_projection",
       "role": "WIT-TRACE-05 premise: trap and quota exhaustion are indistinguishable in the projection",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.append_projection",
       "role": "WIT-TRACE-04: projecting a concatenation is concatenating the projections (prefix compatibility)",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     },
     {
       "name": "RegionTrace.take_projection",
       "role": "WIT-TRACE-04: a trace cut by an exhaustion boundary relates to the projection of its retained prefix",
-      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_identity",
+      "role": "WIT-TRACE-01 negative control: a commit identity the host never decided is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_unexplained_read_commit",
+      "role": "WIT-TRACE-02 negative control: a read commit with no preceding crossing is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_two_guest_releases",
+      "role": "WIT-TRACE-03 negative control: a second release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_missing_protected_commit",
+      "role": "WIT-TRACE-03 negative control: a source protected commit missing from the target is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_host_cleanup_as_guest_release",
+      "role": "WIT-TRACE-02 negative control: host retirement disguised as a guest release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_denial_erased_into_success",
+      "role": "WIT-TRACE-02 negative control: a denial cannot be traded for a success commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_well_formed_success",
+      "role": "WIT-TRACE-01 positive control: the refusals above are not vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
