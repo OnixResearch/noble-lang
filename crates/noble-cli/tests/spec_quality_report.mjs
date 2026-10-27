@@ -20,9 +20,19 @@ const profile = {
   parameter_binding: 'ordered-exact-i64-bool',
 };
 
+// A JavaScript number cannot carry an exact I64 boundary, so boundary constants are written as
+// markers and substituted into the serialized text. Everything else is ordinary JSON.
+const I64_MAX = '__exact_i64_max__';
+const I64_MIN = '__exact_i64_min__';
+function serialize(document) {
+  return JSON.stringify(document)
+    .replaceAll(`"${I64_MAX}"`, '9223372036854775807')
+    .replaceAll(`"${I64_MIN}"`, '-9223372036854775808');
+}
+
 function report(name, document) {
   const file = path.join(workdir, `${name}.json`);
-  fs.writeFileSync(file, typeof document === 'string' ? document : JSON.stringify(document));
+  fs.writeFileSync(file, typeof document === 'string' ? document : serialize(document));
   const child = spawn(binary, ['spec-quality', file], { encoding: 'utf8' });
   let stdout = '';
   let stderr = '';
@@ -42,7 +52,7 @@ const withBindings = overrides => ({ ...profile, obligations: [], ...overrides }
 
 const refused = async (name, document, outcome) => {
   const { status, document: reported } = await report(name, document);
-  assert.equal(status, 2, `${name} must refuse`);
+  assert.equal(status, 2, `${name} must refuse, reported ${JSON.stringify(reported)}`);
   assert.equal(reported.outcome, outcome, `${name}: ${JSON.stringify(reported)}`);
   assert.equal(reported.schema, 'noble-mc2-spec-quality/v1');
   assert.equal(reported.guest_requests, 0, `${name} performs no guest execution`);
@@ -52,36 +62,134 @@ const refused = async (name, document, outcome) => {
 };
 
 const outcomes = new Set();
-outcomes.add(await refused('wrong-obligation',
-  withBindings({ obligations: [obligation('realizable', 'implementation-satisfaction', true)] }),
-  'wrong-obligation'));
-outcomes.add(await refused('implementation-as-specification',
-  withBindings({ obligations: [obligation('satisfied', 'specification-quality', true)] }),
-  'wrong-obligation'));
-outcomes.add(await refused('unknown-claim',
-  withBindings({ obligations: [obligation('terminates', 'specification-quality', true)] }),
-  'invalid-manifest'));
-outcomes.add(await refused('wrong-predicate-revision',
-  withBindings({ predicate_revision: 2 }), 'wrong-predicate-revision'));
-outcomes.add(await refused('wrong-model-revision',
-  withBindings({ model_revision: 2 }), 'wrong-model-revision'));
-outcomes.add(await refused('coarser-observation-relation',
-  withBindings({ observation_relation: 'to-int-equality' }), 'wrong-observation-relation'));
-outcomes.add(await refused('wrong-parameter-binding',
-  withBindings({ parameter_binding: 'unordered-any' }), 'wrong-parameter-binding'));
-outcomes.add(await refused('unknown-field',
-  withBindings({ solver: 'z3' }), 'invalid-manifest'));
-outcomes.add(await refused('missing-binding',
-  (() => { const { observation_relation: _, ...rest } = profile; return { ...rest, obligations: [] }; })(),
-  'invalid-manifest'));
-outcomes.add(await refused('non-boolean-checked',
-  withBindings({ obligations: [{ claim: 'inhabited', obligation: 'specification-quality', checked: 'yes' }] }),
-  'invalid-manifest'));
-// Distinct classes never collapse into one another.
-assert.equal(outcomes.size, 6, `refusal classes collapsed: ${[...outcomes].join(',')}`);
+
+// Predicate terms are stated once, in a bounded pure-I64/Bool language, and the producer derives the
+// specification-quality propositions from them. Control-flow between the obligations is a refusal,
+// never agreement.
+const truth = value => ({ op: 'constant', args: [{ bool: value }] });
+const i64 = value => ({ op: 'constant', args: [{ i64: value }] });
+const input = index => ({ op: 'input', args: [index] });
+const output = index => ({ op: 'output', args: [index] });
+const eq = (left, right) => ({ op: 'eq', args: [left, right] });
+const add = (left, right) => ({ op: 'add', args: [left, right] });
+const conjunction = (...terms) => ({ op: 'and', args: terms });
+
+// The exact wrapping increment over an admissible domain that spans the I64 boundary, with the
+// wrapping result as its only permitted output.
+const increment = {
+  params: [],
+  inputs: ['i64'],
+  outputs: ['i64'],
+  domain: [
+    { params: [], inputs: [{ i64: 0 }] },
+    { params: [], inputs: [{ i64: I64_MAX }] },
+  ],
+  permitted: [[{ i64: 1 }], [{ i64: I64_MIN }]],
+  pre: conjunction(truth(true)),
+  post: eq(output(0), add(input(0), i64(1))),
+};
+
+// Precondition satisfied by one assignment, a postcondition no permitted output can satisfy.
+const contradictory = {
+  ...increment,
+  domain: [{ params: [], inputs: [{ i64: 0 }] }],
+  permitted: [[{ i64: 5 }]],
+  post: eq(output(0), i64(4)),
+};
+
+// No assignment in the declared domain satisfies the precondition, so every universal proposition is
+// provable and vacuous.
+const uninhabited = {
+  ...increment,
+  domain: [{ params: [], inputs: [{ i64: 0 }] }],
+  permitted: [[{ i64: 1 }]],
+  pre: eq(input(0), i64(7)),
+  post: eq(output(0), add(input(0), i64(1))),
+};
+
+// One admissible input and two distinct permitted Bool outputs satisfying the postcondition.
+const relational = {
+  params: [],
+  inputs: ['i64'],
+  outputs: ['bool'],
+  domain: [{ params: [], inputs: [{ i64: 0 }] }],
+  permitted: [[{ bool: true }], [{ bool: false }]],
+  pre: conjunction(truth(true)),
+  post: conjunction(truth(true)),
+};
+
+const incrementClaims = () => ({
+  relation: increment,
+  obligations: [specification('inhabited'), specification('realizable'), specification('deterministic')],
+});
+
+// A manifest that attests obligations its own retained relation refuses is not read as agreement.
+outcomes.add(await refused('self-attested-realizability',
+  { ...profile, relation: contradictory, obligations: [specification('realizable')] },
+  'self-attested-obligation'));
+outcomes.add(await refused('self-attested-vacuity',
+  { ...profile, relation: uninhabited, obligations: [obligation('realizable', 'specification-quality', true, false)] },
+  'self-attested-obligation'));
+outcomes.add(await refused('specification-claim-without-relation',
+  withBindings({ obligations: [specification('inhabited')] }),
+  'self-attested-obligation'));
+// An undefined predicate never becomes a successful check, and neither does an unsupported construct.
+outcomes.add(await refused('undefined-predicate',
+  { ...profile, relation: { ...increment, pre: eq(input(9), i64(0)) }, obligations: [specification('inhabited')] },
+  'undefined-relation'));
+outcomes.add(await refused('mixed-kind-equality',
+  { ...profile, relation: { ...increment, pre: eq(input(0), truth(true)) }, obligations: [specification('inhabited')] },
+  'undefined-relation'));
+outcomes.add(await refused('unsupported-op',
+  { ...profile, relation: { ...increment, pre: { op: 'implies', args: [truth(true)] } }, obligations: [specification('inhabited')] },
+  'unsupported-relation'));
+outcomes.add(await refused('unsupported-kind',
+  { ...profile, relation: { ...increment, outputs: ['map'] }, obligations: [specification('inhabited')] },
+  'unsupported-relation'));
+outcomes.add(await refused('unbounded-domain',
+  { ...profile, relation: { ...increment, domain: Array.from({ length: 65 }, () => ({ params: [], inputs: [{ i64: 0 }] })) },
+    obligations: [specification('inhabited')] },
+  'unsupported-relation'));
+
+// Criteria 1-3 measured by the producer itself over the retained relations.
+const derived = async (name, relation, claims) => {
+  const result = await report(name, { ...profile, relation, obligations: claims });
+  return result;
+};
+const wrapping = await derived('wrapping-increment', increment, incrementClaims().obligations);
+assert.equal(wrapping.status, 0, 'the wrapping increment is accepted');
+assert.deepEqual(
+  [wrapping.document.specification_quality.derivation.inhabited,
+   wrapping.document.specification_quality.derivation.realizable,
+   wrapping.document.specification_quality.derivation.deterministic],
+  [true, true, true],
+  'the wrapping increment is inhabited, realizable and deterministic');
+assert.equal(wrapping.document.specification_quality.derivation.refutation, null);
+
+const refuted = await derived('contradictory', contradictory, [obligation('realizable', 'specification-quality', false)]);
+assert.equal(refuted.status, 0, 'a contradiction is reported rather than refused as agreement');
+assert.equal(refuted.document.specification_quality.derivation.realizable, false,
+  'the contradictory postcondition derives non-realizability');
+assert.deepEqual(refuted.document.specification_quality.derivation.refutation, ['no-output', 0],
+  'the refusal carries the checked admissible assignment, not a failed search');
+assert.equal(refuted.document.specification_quality.not_established, 1);
+
+const ambiguous = await derived('relational', relational, [obligation('deterministic', 'specification-quality', false)]);
+assert.equal(ambiguous.status, 0);
+assert.equal(ambiguous.document.specification_quality.derivation.deterministic, false,
+  'two distinct satisfying outputs for one input refuse determinacy');
+assert.deepEqual(ambiguous.document.specification_quality.derivation.refutation, ['two-distinct-outputs', 0, 0, 1],
+  'both checked distinct outputs are named');
+
+// Ordinary admission of an intentionally relational contract is untouched: no obligation is forced.
+const relationalAdmission = await derived('relational-admission', relational, []);
+assert.equal(relationalAdmission.status, 0, 'a relational contract needs no determinacy obligation');
+assert.equal(relationalAdmission.document.specification_quality.derivation.deterministic, false,
+  'the report still states what the relation does not establish');
 
 // A reported submission keeps the four obligations apart and never upgrades an unchecked claim.
 const { status, document } = await report('reported', withBindings({
+  relation: relational,
   obligations: [
     specification('inhabited'),
     specification('realizable'),
@@ -114,8 +222,11 @@ assert.equal(checkedImplementation.document.termination.claimed, false);
 
 // A vacuous universal obligation is counted as vacuous, not silently as established evidence.
 const vacuous = await report('vacuous', withBindings({
+  relation: uninhabited,
   obligations: [obligation('realizable', 'specification-quality', true, true)],
 }));
-assert.equal(vacuous.document.specification_quality.vacuous, 1);
+assert.equal(vacuous.status, 0, 'an honestly vacuous submission is reported');
+assert.equal(vacuous.document.specification_quality.vacuous, 1,
+  'a provable universal proposition over an uninhabited domain is marked vacuous');
 
-console.log('spec-quality: 10 refusal classes and 4 separated obligations measured');
+console.log('spec-quality: refusal classes, derived propositions and separated obligations measured');

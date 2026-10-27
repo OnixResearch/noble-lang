@@ -6,12 +6,19 @@
 //! obligation kind, predicate revision, model revision, observation relation or parameter binding is
 //! refused with its own diagnostic instead of being read as agreement.
 //!
+//! The negotiation of a specification-quality obligation is *derived*, not attested: the submission
+//! states the retained relation once and `relation` recomputes inhabitation, realizability and
+//! determinacy itself, so the submitted `checked`/`vacuous` flags are compared with what was derived
+//! rather than trusted. A manifest whose flags disagree with its own retained relation is refused.
+//!
 //! Four obligations are reported and never merged: specification quality, implementation
 //! satisfaction (the unchanged `exportedClaim`), termination, and correspondence.
 
 use super::output::{ErrorContext, Failure, Report};
 use super::report::Value;
 use crate::workflow::encoding::{object, string, Json};
+
+mod relation;
 
 const USAGE: &str = "usage: noble spec-quality MANIFEST_JSON";
 const MANIFEST_LIMIT: u32 = 4096;
@@ -184,7 +191,7 @@ fn obligations(
 }
 
 /// The reported obligations, separated by what each one actually establishes.
-fn spec_block(list: &[Obligation]) -> Json {
+fn spec_block(list: &[Obligation], derived: &relation::Derived) -> Json {
     let mut established = 0_u64;
     let mut refuted_or_unchecked = 0_u64;
     let mut vacuous = 0_u64;
@@ -198,6 +205,12 @@ fn spec_block(list: &[Obligation]) -> Json {
         } else {
             refuted_or_unchecked += 1;
         }
+        let derived_value = match entry.claim {
+            "inhabited" => Some(derived.inhabited),
+            "realizable" => Some(derived.realizable),
+            "deterministic" => Some(derived.deterministic),
+            _ => None,
+        };
         rows.push(object([
             ("claim", string(entry.claim)),
             (
@@ -210,9 +223,12 @@ fn spec_block(list: &[Obligation]) -> Json {
             ),
             ("checked", Json::Bool(entry.checked)),
             ("vacuous", Json::Bool(entry.vacuous)),
+            ("derived", derived_value.map_or(Json::Null, Json::Bool)),
         ]));
     }
     object([
+        ("schema", string("noble-mc2-spec-quality-derivation/v1")),
+        ("derivation", derived.json()),
         ("obligations", Json::Array(rows)),
         ("established", Json::Number(established)),
         ("not_established", Json::Number(refuted_or_unchecked)),
@@ -220,8 +236,9 @@ fn spec_block(list: &[Obligation]) -> Json {
         (
             "scope",
             string(
-                "Relation claims over the bounded pure-I64/Bool profile. A missing value, an undefined \
-                 predicate, an unsupported construct or an exhausted budget is never a successful check.",
+                "Relation claims derived from the retained relation over the bounded pure-I64/Bool \
+                 profile. A missing value, an undefined predicate, an unsupported construct or an \
+                 exhausted budget is never a successful check.",
             ),
         ),
     ])
@@ -299,6 +316,7 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
                 | "model_revision"
                 | "observation_relation"
                 | "parameter_binding"
+                | "relation"
                 | "obligations"
         ) {
             return Ok(refusal("invalid-manifest", "unknown manifest field"));
@@ -328,6 +346,46 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
         Ok(list) => list,
         Err((class, message)) => return Ok(refusal(class, message)),
     };
+    // The spec claims are derived from the retained relation, and the submitted flags are only
+    // compared with the derivation. An implementation claim needs no relation.
+    let retained = fields.get("relation");
+    let derived = match retained {
+        Some(Value::Null) | None => relation::Derived::unavailable(),
+        Some(value) => match relation::derive(value) {
+            Ok(derived) => derived,
+            Err((class, message)) => return Ok(refusal(class, message)),
+        },
+    };
+    for entry in &list {
+        let attested = match entry.claim {
+            "inhabited" => derived.inhabited,
+            "realizable" => derived.realizable,
+            "deterministic" => derived.deterministic,
+            _ => continue,
+        };
+        if entry.checked != attested {
+            let message = std::format!(
+                "claim {} is submitted as {} but its retained relation derives {}",
+                entry.claim,
+                if entry.checked {
+                    "checked"
+                } else {
+                    "unchecked"
+                },
+                attested
+            );
+            return Ok(refusal("self-attested-obligation", message));
+        }
+        if entry.vacuous != derived.vacuous {
+            let message = std::format!(
+                "claim {} declares vacuous={} but its retained relation derives vacuous={}",
+                entry.claim,
+                entry.vacuous,
+                derived.vacuous
+            );
+            return Ok(refusal("self-attested-obligation", message));
+        }
+    }
     let [partial_correctness, termination, correspondence] = separated(&list);
     let json = object([
         ("schema", string(SCHEMA)),
@@ -341,7 +399,7 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
         ("model_revision", Json::Number(u64::from(MODEL_REVISION))),
         ("observation_relation", string(OBSERVATION_RELATION)),
         ("parameter_binding", string(PARAMETER_BINDING)),
-        ("specification_quality", spec_block(&list)),
+        ("specification_quality", spec_block(&list, &derived)),
         partial_correctness,
         termination,
         correspondence,

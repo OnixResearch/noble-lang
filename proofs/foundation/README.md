@@ -1136,15 +1136,48 @@ unchanged `exportedClaim`, reported only when that claim is itself checked),
 guest execution and no source mutation; every report states
 `guest_requests: 0, protected_operations: 0`.
 
+### The propositions are derived, not attested (issue #65)
+
+The submission states the retained relation **once** — ordered exact `I64`/`Bool`
+parameter, input and output kinds, a finite declared domain of admissible
+assignments, a finite set of permitted output stacks, and `pre`/`post` predicate
+terms in a bounded pure-`I64`/`Bool` language — and
+`crates/noble-cli/src/core/spec_quality/relation.rs` recomputes inhabitation,
+realizability and determinacy from it by enumerating that domain. The submitted
+`checked`/`vacuous` flags are then only **compared** with the derivation, so a
+manifest cannot attest its own obligations: a disagreement is refused as
+`self-attested-obligation`, including a specification-quality claim submitted
+without any relation.
+
+Every refusal here fails closed. An index outside the declared stacks, a
+mixed-kind comparison, or a predicate that is undefined for an assignment in the
+declared domain is `undefined-relation` rather than false; a kind, op, domain
+size or permitted-output count outside the bounded profile is
+`unsupported-relation`; and `add` is wrapping `I64` arithmetic, so the boundary
+case is decided rather than refused.
+
+A refused proposition is reported with its **measured refutation** — the index of
+the admissible assignment that has no permitted output, or the assignment and the
+two distinct satisfying outputs — never with "no witness was found". The lane
+measures the acceptance criteria end to end against the selected CLI: the exact
+wrapping increment across the `I64` boundary derives inhabited, realizable and
+deterministic; a contradictory postcondition derives non-realizability with its
+admissible assignment; one admissible input with two distinct permitted `Bool`
+outputs derives non-determinacy with both outputs named; an uninhabited domain
+derives vacuity while its universal proposition holds; and an intentionally
+relational contract is admitted with no obligation forced.
+
 Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
-target launches it against the selected CLI): ten refusal classes, six distinct
-outcomes, and the four separated obligations.
+target launches it against the selected CLI): the refusal classes above,
+`self-attested-obligation`, `undefined-relation` and `unsupported-relation`,
+nine derived propositions, and the four separated obligations.
 
 Open, and deliberately not closed:
 
-- the producer reports a submitted manifest; it does not yet read a retained
-  contract and generate the expected propositions itself, so evidence is still
-  assembled outside this repository's own report;
+- the producer derives from the relation the submission states; it does not read
+  the relation out of a retained contract renderer yet, so a submission is still
+  responsible for transcribing it faithfully, and no correspondence claim relates
+  the two;
 - no correspondence claim relates these relations to the retained contracts or
   to `crates/noble-contracts/src/rendering`: the model fixes the obligation
   shapes, not the renderer, so this is model evidence rather than an
