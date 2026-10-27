@@ -132,3 +132,28 @@ So the unresolved question is now narrower: whether a **bootstrapped** emitting
 candidate can match a slot ceiling at all, or whether the relocation witness has to
 be built on the publish path. Both remaining options are inside declared
 operations; neither is claimed done.
+
+### Addendum 2: the status-5 blocker is the emit site, not the borrowed reference
+
+A publish-path probe with **no borrowed references at all** — two slots, the
+emitting program `drop "relocated" test.emit drop 21` published into its slot —
+publishes and then fails guest execution with the same **status 5** and an empty
+`request_trace`. So the blocker recorded above is **not** about binding a borrowed
+reference: it is the `test.emit` word's own execution in a live-slot program
+fragment.
+
+Two further facts from the same probes:
+
+- the fragment shape matters at publication: `"relocated" test.emit drop 21` is
+  refused for a ceiling mismatch while `drop "relocated" test.emit drop 21` is
+  published, so the checked interface of a fragment does not simply follow the
+  stack one writes;
+- the definition route (`def traced [ … ]` plus `install … selected_name`) is the
+  shape the quota-replay fixture uses, and installing `run` behind it refuses
+  `stack/program join: expected ?stack Program<?stack -- ?stack>; actual [] I64`,
+  i.e. that route needs a `Program` value on the stack, which a bare
+  `inputs: ['I64']` install does not provide.
+
+Consequence for VC-LIVE-03: the relocation witness needs the definition/`Program`
+route rather than a bare emitting fragment, and until that is built the four tasks
+stay open. This is a narrower, more useful statement than "status 5 unexplained".
