@@ -157,3 +157,25 @@ Two further facts from the same probes:
 Consequence for VC-LIVE-03: the relocation witness needs the definition/`Program`
 route rather than a bare emitting fragment, and until that is built the four tasks
 stay open. This is a narrower, more useful statement than "status 5 unexplained".
+
+### Addendum 3: the emitting shape that does execute
+
+The quota-replay fixture does execute emits, and its shape is specific: a
+`define` of `def traced [ … test.emit … ]`, an `install … selected_name: 'traced'`
+that binds a checked `DefinitionId`, a `publish` of that installed id, and an
+invocation **through a borrowed reference** from a `slot.invoke` caller whose only
+effect is the dispatch. That is the same shape a relocation witness needs for its
+new version (the event lives in the callee's definition).
+
+Probing that shape here refused, but at *hop* time rather than at execution:
+`stack/program join: expected ?stack I64 I64; actual [] I64; word +` and
+`expected ?stack Program<?stack -- ?stack>; actual [] I64; word run` — i.e. my
+emit-only definition bodies do not consume the formal stack a published slot
+contract expects, so the `+` / `run` words cannot be resolved. The next step is
+therefore a **callable definition body that consumes the slot's declared input**
+and still emits once, which is a source-authoring question rather than a host
+question.
+
+Recorded so the next attempt does not repeat the three dead ends: bare emitting
+fragment (status 5), `Program` literal plus `run` (status 5), and definition
+without a consumed input (join refusal at hop time).
