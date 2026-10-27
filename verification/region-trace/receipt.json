@@ -1,0 +1,226 @@
+{
+  "schema": "noble-region-trace-proof/v1",
+  "result": "passed",
+  "source_commit": "2ef57ad8356d4429c5af04872a2a17d219a75fab",
+  "source_tree": "d348bcc6d4db056321d228269a413c0ef9add970",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "sources_sha256": {
+    "proofs/m5/RegionTrace.lean": "8c0b2d3f8ca615febcc305c06daaa2dd85a40aff99186213c041aa2529b189ad",
+    "proofs/m5/region-trace-inventory.json": "5591aadd0b58897d2cdf23c471021f04793426fffdfec2ada36f63cf21eb9c29",
+    "verification/region-trace/check.mjs": "2e91fc72b8f66736a5c3ad835ca33a362416f285b7a4cc7ca221ee8a514e3d0e"
+  },
+  "theorem_count": 10,
+  "theorems": [
+    {
+      "name": "RegionTrace.erase_preserves_projection",
+      "role": "WIT-TRACE-02: erasure of the two named bookkeeping classes never changes the projected source trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_projection : ∀ (steps : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (RegionTrace.erase steps) = List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_erase_invariant",
+      "role": "WIT-TRACE-02: the relation is erasure-invariant, so an erased class cannot create or remove a source event",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_erase_invariant : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = RegionTrace.related source (RegionTrace.erase target)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.denial_projects_to_request_only",
+      "role": "WIT-TRACE-02: a refused request stays visible as its request step and gains no response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.denial_projects_to_request_only : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.normal_success_projects_request_and_commit",
+      "role": "WIT-TRACE-01: a normal success projects its request and protected commit; decision, copy and return carry no source event",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.normal_success_projects_request_and_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.normalReturn, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = true",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.identity_is_decision_identity",
+      "role": "WIT-TRACE-01: the projection keeps the exact identity it was emitted with",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.identity_is_decision_identity : ∀ (kind : RegionTrace.CommitKind) (identity : Nat), RegionTrace.projectStep (RegionTrace.AbiStep.cleanup kind identity) = some (RegionTrace.SourceEvent.commit kind identity)",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.retirement_is_not_a_guest_release",
+      "role": "WIT-TRACE-02: host retirement projects to its own commit kind, never to a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retirement_is_not_a_guest_release : ∀ (identity : Nat), ∃ committed, RegionTrace.projectStep (RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire identity) = some (RegionTrace.SourceEvent.commit committed identity) ∧ committed ≠ RegionTrace.CommitKind.guestRelease",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_class_is_not_in_the_projection",
+      "role": "WIT-TRACE-05 premise: the projection carries no abnormal-exit class, so the trap/quota/cleanup distinction is a target-side observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_class_is_not_in_the_projection : ∀ (exitClass : RegionTrace.ExitClass), RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit exitClass) = none",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_classes_collapse_in_projection",
+      "role": "WIT-TRACE-05 premise: trap and quota exhaustion are indistinguishable in the projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_classes_collapse_in_projection : RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap) = RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.quotaExhaustion)",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.append_projection",
+      "role": "WIT-TRACE-04: projecting a concatenation is concatenating the projections (prefix compatibility)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.append_projection : ∀ (first second : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (first ++ second) = List.filterMap RegionTrace.projectStep first ++ List.filterMap RegionTrace.projectStep second",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.take_projection",
+      "role": "WIT-TRACE-04: a trace cut by an exhaustion boundary relates to the projection of its retained prefix",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.take_projection : ∀ (steps : List RegionTrace.AbiStep) (bound : Nat), RegionTrace.related (List.filterMap RegionTrace.projectStep (List.take bound steps)) (List.take bound steps) = true",
+      "axioms": []
+    }
+  ],
+  "commands": [
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "argv": [
+        "build",
+        "RegionTrace"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "/tmp/rt-check/Audit.lean"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    }
+  ],
+  "implementation_theorem": false,
+  "scope": [
+    ".cairn/changes/region-trace-relation WIT-TRACE-01 model: source alphabet, target ABI alphabet and the relation.",
+    "The target alphabet is a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,",
+    "no Rust host or lowering claim, and no liveness claim. Pairing and the host supplying the exact identity stay premises."
+  ]
+}

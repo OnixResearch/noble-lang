@@ -9,8 +9,12 @@
 
 ## Phase 2: Pilot (future, not started)
 
-- [ ] [serial] Implement the Lean source and target alphabets and the relation definition, with the target model separate from any real engine instance. r[WIT-TRACE-01]
+- [x] [serial] Implement the Lean source and target alphabets and the relation definition, with the target model separate from any real engine instance. r[WIT-TRACE-01]
 - [ ] [serial] Prove one justification per erased ABI bookkeeping class and show the relation preserves ordering, pairing, identity and every protected commit. r[WIT-TRACE-02]
+  Partial: `proofs/m5/RegionTrace.lean` proves the erasure justification (`erase_preserves_projection`,
+  `related_erase_invariant`), the denial and retirement controls, the exact-identity projection and
+  prefix/ordering composition (`append_projection`, `take_projection`). Pairing and the host's own
+  identity supply stay premises; the task stays open until they are discharged.
 - [ ] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
 - [ ] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
