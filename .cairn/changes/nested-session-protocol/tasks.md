@@ -12,17 +12,17 @@
 
 - [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
 - [ ] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
-  Partial: duality is proved definitional and involutive, one step is proved to advance exactly to the
-  send node's continuation with identity fields unchanged, copy/discard/capture are refused, and no
-  operation in the modelled session increases the endpoint inventory (`no_endpoint_duplication`).
-  The duplication bound is proved for the modelled operations, not for every future transition (mailbox
-  dequeue, cancellation, cleanup are unimplemented), so the task stays open.
+  Partial: duality is proved definitional and involutive; state preservation is proved once from the one
+  step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy/discard/capture
+  are refused; and no modelled operation increases the endpoint inventory (`no_endpoint_duplication`).
+  The duplication bound is proved for the modelled operations, not for every future transition
+  (cancellation and cleanup still carry no transition), so the task stays open.
 - [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
-- [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
-  Partial: sequencing, recursive entry (unfolding to its declared definition), orderly close once,
-  bounded buffering stopping at the limit, and the send-then-receive return half have model traces over
-  the asynchronous event vocabulary. Both-choice *traces* still need a choice-state stepper, so the task
-  stays open.
+- [x] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
+  Complete at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
+  close once, bounded buffering stopping at the limit, the send-then-receive return half, and internal
+  choice traces where two branches are two different traces over the event vocabulary (`choiceEvents`,
+  the choice-state stepper `stepChoose` and its declared/undeclared-branch controls).
 - [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
 - [x] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
   Model-level controls done: copy, discard, capture, stale generation, double close, receive-after-close,

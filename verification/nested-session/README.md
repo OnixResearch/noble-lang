@@ -44,8 +44,10 @@ carrying channel identity, side, protocol identity, current state and generation
 | `full_queue_misaccounting_is_refused` | an observation cannot borrow depth the ledger never recorded |
 | `boundary_preserves_the_committed_prefix`, `cancellation_keeps_its_own_event`, `quota_boundary_invents_nothing` | cancellation, trap, quota exhaustion and peer disappearance only **shorten** a trace; a cancelled request stays visible and no boundary completes a pending cleanup or invents an observation |
 | `peer_disappearance_keeps_the_cleanup_pending`, `ordinary_close_does_not_keep_the_cleanup_pending` | an unobserved cleanup stays an unresolved fact, and only an observed cleanup clears it |
+| `advance_preserves_the_endpoint_identity`, `steppers_preserve_the_endpoint_identity` | state preservation is proved **once, from the one step helper every stepper delegates to**, not once per stepper |
+| `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **48** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **54** model
 theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block names the protocol
 definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
 constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent

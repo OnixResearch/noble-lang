@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "32c83688dc3d4d3e8a0cdeb3076ad1b0285d3b60",
-  "source_tree": "fbda3bd837101583f7c0090a1f99b31a48d59959",
+  "source_commit": "2b22640c81c1e4b29fc13ccc070f5c1e88e33c26",
+  "source_tree": "dd134f69789cd7e691025ae823d33f39f3129047",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "461d2b4c29ac8211f79e002dd01a914c1bad359e820ca60811ea55c57758f8ab",
-        "proofs/m6/nested-session-inventory.json": "11c61aebf17c0c1684e74eb9729bb557cefd19f2905a753b30ec2794741ec33a"
+        "proofs/m6/NestedSession.lean": "2cd9fabc3b12b46ef1a08000e4a99eda94286138d784255f7dc2eb8dd9f76e41",
+        "proofs/m6/nested-session-inventory.json": "8d4b74d52c73ecfd1c366d7b41dd08f91b3c18cf88a464c787683d3eed449e2d"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
@@ -31,18 +31,18 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 48,
+    "model_theorems": 54,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "461d2b4c29ac8211f79e002dd01a914c1bad359e820ca60811ea55c57758f8ab",
-    "proofs/m6/nested-session-inventory.json": "11c61aebf17c0c1684e74eb9729bb557cefd19f2905a753b30ec2794741ec33a",
+    "proofs/m6/NestedSession.lean": "2cd9fabc3b12b46ef1a08000e4a99eda94286138d784255f7dc2eb8dd9f76e41",
+    "proofs/m6/nested-session-inventory.json": "8d4b74d52c73ecfd1c366d7b41dd08f91b3c18cf88a464c787683d3eed449e2d",
     "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
   },
-  "theorem_count": 48,
+  "theorem_count": 54,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -685,6 +685,92 @@
         "propext",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.advance_preserves_the_endpoint_identity",
+      "role": "WIT-SESSION-05: the one step helper changes only the state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.advance_preserves_the_endpoint_identity : ∀ (endpoint successor : NestedSession.Endpoint) (continuation : Nat), NestedSession.advance endpoint continuation = some successor → NestedSession.sameIdentity successor endpoint = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.steppers_preserve_the_endpoint_identity",
+      "role": "WIT-SESSION-05: every stepper delegates its successor to the proven helper",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.steppers_preserve_the_endpoint_identity : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint successor : NestedSession.Endpoint) (continuation : Nat), NestedSession.advance endpoint continuation = some successor → NestedSession.sameIdentity successor endpoint = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.different_branches_are_different_traces",
+      "role": "WIT-SESSION-03: two internal branches are two traces over the event vocabulary",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.different_branches_are_different_traces : NestedSession.choiceEvents 0 5 ≠ NestedSession.choiceEvents 1 5",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.branch_one_reaches_its_own_continuation",
+      "role": "WIT-SESSION-03 positive trace: the declared branch reaches its own continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.branch_one_reaches_its_own_continuation : Option.map NestedSession.Endpoint.state (NestedSession.stepChoose NestedSession.branchingProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } 1) = some 2",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_zero_refuses_a_bool_send",
+      "role": "WIT-SESSION-03 negative control: a branch the node does not declare is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.branch_zero_refuses_a_bool_send : NestedSession.stepChoose NestedSession.branchingProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } 0 = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_one_accepts_the_bool_send",
+      "role": "WIT-SESSION-03: the declared branch keeps its own typed continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.branch_one_accepts_the_bool_send : Option.map NestedSession.Endpoint.state (NestedSession.stepSendTyped NestedSession.branchingProtocol 2 { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false } NestedSession.MessageType.bool) = some 3",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -734,7 +820,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-d3/Audit.lean"
+        "/tmp/ns-d5/Audit.lean"
       ],
       "exit": 0
     },
