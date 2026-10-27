@@ -481,26 +481,26 @@ an empty mailbox leaves the ledger unchanged. -/
 /-- The mailbox ledger. The depth is derived, not stored: a stored depth could drift from the
 operations that actually happened. -/
 structure Mailbox where
-  admitted : Nat
+  enqueued : Nat
   dequeued : Nat
   deriving DecidableEq, Repr
 
 def mailboxDepth (box : Mailbox) : Nat :=
-  box.admitted - box.dequeued
+  box.enqueued - box.dequeued
 
-/-- One admission. -/
-def admit (box : Mailbox) : Mailbox :=
-  { box with admitted := box.admitted + 1 }
+/-- One enqueue into the mailbox ledger. -/
+def enqueue (box : Mailbox) : Mailbox :=
+  { box with enqueued := box.enqueued + 1 }
 
 /-- One dequeue. An empty mailbox keeps the ledger unchanged: underflow is not modelled. -/
 def dequeue (box : Mailbox) : Mailbox :=
   if 0 < mailboxDepth box then { box with dequeued := box.dequeued + 1 } else box
 
-/-- Admission raises the derived depth by exactly one, **given the ledger invariant** that no more was
+/-- An enqueue raises the derived depth by exactly one, **given the ledger invariant** that no more was
 dequeued than admitted. Without it the truncated subtraction would not describe a real mailbox. -/
-theorem admission_raises_the_depth_by_one (box : Mailbox) (sound : box.dequeued ≤ box.admitted) :
-    mailboxDepth (admit box) = mailboxDepth box + 1 := by
-  simp only [mailboxDepth, admit]
+theorem enqueue_raises_the_depth_by_one (box : Mailbox) (sound : box.dequeued ≤ box.enqueued) :
+    mailboxDepth (enqueue box) = mailboxDepth box + 1 := by
+  simp only [mailboxDepth, enqueue]
   omega
 
 /-- A dequeue never raises the depth, so accounting cannot be inflated by dequeuing. -/
@@ -527,7 +527,7 @@ theorem full_queue_misaccounting_is_refused :
 
 /-- Depth tracks the operations: after two admissions and one dequeue the derived depth is one. -/
 theorem accounting_tracks_the_operations :
-    mailboxDepth (dequeue (admit (admit ⟨0, 0⟩))) = 1 := by
+    mailboxDepth (dequeue (enqueue (enqueue ⟨0, 0⟩))) = 1 := by
   decide
 
 end NestedSession

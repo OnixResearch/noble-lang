@@ -345,8 +345,8 @@
       ]
     },
     {
-      "name": "NestedSession.admission_raises_the_depth_by_one",
-      "role": "WIT-SESSION-03: admission raises the derived depth by one under the ledger invariant",
+      "name": "NestedSession.enqueue_raises_the_depth_by_one",
+      "role": "WIT-SESSION-03: an enqueue raises the derived depth by one under the ledger invariant",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
