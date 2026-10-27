@@ -2294,6 +2294,78 @@
       "phase": 2,
       "role": "certificate-codec",
       "claim": "A transport round trip preserves acceptance of a derivation."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.count_inflated_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A declared register count more than one above its registers is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.missing_register_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A node declared without a register is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.out_of_range_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A register outside the declared count is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.alias_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "Two distinct nodes that declare one register alias it and are refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.constant_count_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A constant table with a different entry count than the graph's constant nodes is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.layer_shape_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A layer table without one range per layer is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.layers_unordered_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A layer range that is not ordered inside itself and against its predecessor is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.coverage_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A layer table whose last range does not end at the instruction count is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.fail_suffix_mismatch_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A declared failure-suffix table that differs from the graph's own prefix minima is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.accepted_implies_registers",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "An accepted layout declares a register for every node."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.accepted_implies_distinct",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "An accepted layout never aliases a register."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.accepted_implies_coverage",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "An accepted layout's last layer range ends exactly at the instruction count."
     }
   ]
 }

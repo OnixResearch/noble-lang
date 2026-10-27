@@ -890,6 +890,31 @@ Open, and deliberately not closed:
   about fuel, allocation, cancellation behaviour or recipe identity;
 - finite fixtures are not a universal claim about any scheduler or transformation.
 
+## Declared packed graph layout (issue #43)
+
+`NobleFoundation/PackedLayout.lean` models the declared packed layout that
+`crates/noble-ngraph/src/layout.rs` emits and the obligations its checker applies:
+a revision, a declared register count, one declared register per node, the constant
+and interface-slot tables, one instruction range per layer, the failure-suffix
+prefix minima and the acceptance conjunction of those obligations.
+
+Proved: an inflated register count is refused (`count_inflated_refused`); a missing,
+out-of-range or shared register is refused (`missing_register_refused`,
+`out_of_range_refused`, `alias_refused`); a constant table with the wrong entry count
+is refused (`constant_count_refused`); the layer table must have one ordered range
+per layer (`layer_shape_refused`, `layers_unordered_refused`) and its ranges must
+cover exactly the instruction nodes (`coverage_refused`); a declared failure-suffix
+table that differs from the graph's own prefix minima is refused
+(`fail_suffix_mismatch_refused`); and acceptance implies a register per node,
+non-aliasing and coverage (`accepted_implies_registers`,
+`accepted_implies_distinct`, `accepted_implies_coverage`).
+
+Open item: the per-entry exactness obligation of the constant and slot tables is
+modelled (`constantEntryOk`, `slotEntryOk`) but its refusal theorem is not proved.
+Not claimed: no decoding of the Rust declaration's bytes, so nothing binds
+`serde`/binary output to these tables; the layout build key, compiler revision and
+identity scheme are out of scope.
+
 ## Replayable certificate codec (issue #42, codec half)
 
 `NobleFoundation/CertificateCodec.lean` models a token codec for the same
