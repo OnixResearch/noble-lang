@@ -1,4 +1,5 @@
 .pi/
+.octet/
 node_modules/
 target
 .lake/
