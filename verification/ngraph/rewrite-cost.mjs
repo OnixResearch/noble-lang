@@ -51,12 +51,31 @@ if (!enclosed) {
   throw new Error('a stage is neither measured nor unmeasured with a reason');
 }
 
+// nix develop writes store/GC progress to the same stream, so a version line is taken from the
+// first line that carries one rather than from the whole capture.
+function versionLine(text) {
+  const line = text.split('\n').map((part) => part.trim())
+    .find((part) => /^(rustc|cargo)\s+\d/.test(part));
+  if (line === undefined) {
+    throw new Error(`no toolchain version line in:\n${text.slice(-2000)}`);
+  }
+  return line;
+}
+
+function git(...argv) {
+  const result = spawnSync('git', argv, { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) {
+    throw new Error(`git ${argv.join(' ')} failed: ${result.stderr}`);
+  }
+  return result.stdout.trim();
+}
+
 const receipt = {
   schema: 'noble-rewrite-cost-receipt/v1',
-  source_commit: run(['git', 'rev-parse', 'HEAD'], root).trim(),
-  source_tree: run(['git', 'rev-parse', 'HEAD^{tree}'], root).trim(),
-  clean_source: run(['git', 'status', '--porcelain'], root).trim() === '',
-  toolchain: run(['rustc', '--version'], root).trim(),
+  source_commit: git('rev-parse', 'HEAD'),
+  source_tree: git('rev-parse', 'HEAD^{tree}'),
+  clean_source: git('status', '--porcelain') === '',
+  toolchain: versionLine(run(['rustc', '--version', '--verbose'], root)),
   host: `${os.type()} ${os.release()} ${os.arch()}`,
   command,
   manifest: 'verification/ngraph/rewrite-cost-v1.txt',
