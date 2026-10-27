@@ -1,17 +1,17 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "2ef57ad8356d4429c5af04872a2a17d219a75fab",
-  "source_tree": "d348bcc6d4db056321d228269a413c0ef9add970",
+  "source_commit": "f42ec25288c0d6ca31c22f19e8935be3602f11c4",
+  "source_tree": "326b4c824a8cd5b02217fe0f669ade48d3e26a25",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "8c0b2d3f8ca615febcc305c06daaa2dd85a40aff99186213c041aa2529b189ad",
-    "proofs/m5/region-trace-inventory.json": "5591aadd0b58897d2cdf23c471021f04793426fffdfec2ada36f63cf21eb9c29",
+    "proofs/m5/RegionTrace.lean": "b6ac40a3192c2e595d63a80319adbbb15d7849c4fb37cc8d6d257f85a8d98859",
+    "proofs/m5/region-trace-inventory.json": "27d6236baa8be2eaeae68666adfffec883e4625a19c6c92495f0834cd2c74150",
     "verification/region-trace/check.mjs": "2e91fc72b8f66736a5c3ad835ca33a362416f285b7a4cc7ca221ee8a514e3d0e"
   },
-  "theorem_count": 10,
+  "theorem_count": 23,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -28,6 +28,91 @@
       ]
     },
     {
+      "name": "RegionTrace.erase_preserves_decisions",
+      "role": "WIT-TRACE-02: erasure leaves the decided identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_decisions : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.decisions (RegionTrace.erase steps) = RegionTrace.decisions steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_commit_identities",
+      "role": "WIT-TRACE-02: erasure leaves the commit identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_commit_identities : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.commitIdentities (RegionTrace.erase steps) = RegionTrace.commitIdentities steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_crossings",
+      "role": "WIT-TRACE-02: erasure leaves the read crossings alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_read_crossings : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.readCrossings (RegionTrace.erase steps) = RegionTrace.readCrossings steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_release_members",
+      "role": "WIT-TRACE-02: erasure leaves the release/retirement members alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_release_members : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.releaseMembers (RegionTrace.erase steps) = RegionTrace.releaseMembers steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_commits",
+      "role": "WIT-TRACE-02: erasure leaves the protected read commits alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_read_commits : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.readCommits (RegionTrace.erase steps) = RegionTrace.readCommits steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_well_formedness",
+      "role": "WIT-TRACE-02: erasure cannot repair a forged target trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_well_formedness : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.wellFormed (RegionTrace.erase steps) = RegionTrace.wellFormed steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.related_erase_invariant",
       "role": "WIT-TRACE-02: the relation is erasure-invariant, so an erased class cannot create or remove a source event",
       "allowed_standard_axioms": [
@@ -38,7 +123,8 @@
       "status": "proved",
       "statement": "RegionTrace.related_erase_invariant : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = RegionTrace.related source (RegionTrace.erase target)",
       "axioms": [
-        "propext"
+        "propext",
+        "Quot.sound"
       ]
     },
     {
@@ -51,7 +137,9 @@
       ],
       "status": "proved",
       "statement": "RegionTrace.denial_projects_to_request_only : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
-      "axioms": []
+      "axioms": [
+        "propext"
+      ]
     },
     {
       "name": "RegionTrace.normal_success_projects_request_and_commit",
@@ -63,7 +151,9 @@
       ],
       "status": "proved",
       "statement": "RegionTrace.normal_success_projects_request_and_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.normalReturn, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = true",
-      "axioms": []
+      "axioms": [
+        "propext"
+      ]
     },
     {
       "name": "RegionTrace.identity_is_decision_identity",
@@ -136,8 +226,108 @@
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "RegionTrace.take_projection : ∀ (steps : List RegionTrace.AbiStep) (bound : Nat), RegionTrace.related (List.filterMap RegionTrace.projectStep (List.take bound steps)) (List.take bound steps) = true",
-      "axioms": []
+      "statement": "RegionTrace.take_projection : ∀ (steps : List RegionTrace.AbiStep) (bound : Nat), RegionTrace.wellFormed (List.take bound steps) = true → RegionTrace.related (List.filterMap RegionTrace.projectStep (List.take bound steps)) (List.take bound steps) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_identity",
+      "role": "WIT-TRACE-01 negative control: a commit identity the host never decided is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 9, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_unexplained_read_commit",
+      "role": "WIT-TRACE-02 negative control: a read commit with no preceding crossing is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_unexplained_read_commit : RegionTrace.related [RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 5] [RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_two_guest_releases",
+      "role": "WIT-TRACE-03 negative control: a second release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_two_guest_releases : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_missing_protected_commit",
+      "role": "WIT-TRACE-03 negative control: a source protected commit missing from the target is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_missing_protected_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.normalReturn] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_host_cleanup_as_guest_release",
+      "role": "WIT-TRACE-02 negative control: host retirement disguised as a guest release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_host_cleanup_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_denial_erased_into_success",
+      "role": "WIT-TRACE-02 negative control: a denial cannot be traded for a success commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_denial_erased_into_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_well_formed_success",
+      "role": "WIT-TRACE-01 positive control: the refusals above are not vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_well_formed_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -187,7 +377,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/rt-check/Audit.lean"
+        "/tmp/rt-check3/Audit.lean"
       ],
       "exit": 0
     },

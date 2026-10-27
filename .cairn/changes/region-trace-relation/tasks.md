@@ -11,13 +11,20 @@
 
 - [x] [serial] Implement the Lean source and target alphabets and the relation definition, with the target model separate from any real engine instance. r[WIT-TRACE-01]
 - [ ] [serial] Prove one justification per erased ABI bookkeeping class and show the relation preserves ordering, pairing, identity and every protected commit. r[WIT-TRACE-02]
-  Partial: `proofs/m5/RegionTrace.lean` proves the erasure justification (`erase_preserves_projection`,
-  `related_erase_invariant`), the denial and retirement controls, the exact-identity projection and
-  prefix/ordering composition (`append_projection`, `take_projection`). Pairing and the host's own
-  identity supply stay premises; the task stays open until they are discharged.
+  Partial: `proofs/m5/RegionTrace.lean` proves the erasure justification over every scan input
+  (`erase_preserves_*`), the denial and retirement controls, the exact-identity projection and
+  prefix/ordering composition (`append_projection`, `take_projection`). Exact identity, read-commit
+  explicability and at-most-once release are now **conditions of the relation** rather than claims:
+  the six `related_rejects_*` controls refuse the forged traces and `related_accepts_well_formed_success`
+  keeps them non-vacuous. Pairing and the host's own identity supply stay premises, so the task stays
+  open.
 - [ ] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
 - [ ] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
+  Model-level controls done: substituted identity, unexplained read commit, second release, missing
+  protected commit, host cleanup as guest release and a denial traded for a success are refused.
+  Swapped requests and substituted responses at the host/WIT interface still need the instrumentation
+  this package does not add, so the task stays open.
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]

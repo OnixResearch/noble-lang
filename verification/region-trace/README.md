@@ -21,29 +21,37 @@ unless `--allow-dirty` is passed explicitly (a dirty receipt records it, it does
 The source alphabet is `RegionProtocol-v1`'s `Req`/`Resp`/`Commit`; the target alphabet is the
 emitted ABI step sequence this host performs (`importCrossing`, `hostDecision`, `protectedCopy`,
 `returned`, `normalReturn`, `abnormalExit`, `cleanup`, and the two named erasable bookkeeping steps).
-The relation is the projection of a target trace onto the source alphabet.
+The relation is the projection of a **well-formed** target trace onto the source alphabet, where
+well-formedness itself is a condition of the relation:
+
+* every commit identity was decided by a `hostDecision` first (a rep number or handle class can never
+  stand in for the exact identity);
+* every protected read commit is preceded by the crossing that asked for exactly that region;
+* a release or retirement kind commits at most once.
 
 | Theorem | Claim |
 |---|---|
-| `erase_preserves_projection` | erasing the two named bookkeeping classes never changes the projected source trace |
+| `erase_preserves_projection`, `erase_preserves_{decisions,commit_identities,read_crossings,release_members,read_commits}` | erasing the two named bookkeeping classes changes none of the projected trace's scan inputs |
+| `erase_preserves_well_formedness` | erasure cannot repair a forged target trace |
 | `related_erase_invariant` | the relation is erasure-invariant |
 | `denial_projects_to_request_only` | a refused request stays visible and gains no response |
 | `normal_success_projects_request_and_commit` | a normal success projects its request and its protected commit |
 | `identity_is_decision_identity` | the projection keeps the exact identity it was emitted with |
 | `retirement_is_not_a_guest_release` | host retirement projects to its own commit kind |
-| `abnormal_exit_class_is_not_in_the_projection` | the trap/quota/cleanup distinction is a target-side observation |
-| `abnormal_exit_classes_collapse_in_projection` | trap and quota exhaustion are indistinguishable in the projection |
+| `abnormal_exit_class_is_not_in_the_projection`, `abnormal_exit_classes_collapse_in_projection` | the trap/quota/cleanup distinction is a target-side observation |
 | `append_projection` | prefix compatibility: projections compose over concatenation |
-| `take_projection` | a trace cut by an exhaustion boundary relates to the projection of its retained prefix |
+| `take_projection` | a cut trace relates only when its retained prefix is itself well formed |
+| `related_rejects_{substituted_identity,unexplained_read_commit,two_guest_releases,missing_protected_commit,host_cleanup_as_guest_release,denial_erased_into_success}` | the forged target traces are refused, each by the condition that names it |
+| `related_accepts_well_formed_success` | the refusals are not vacuous: a well-formed success relates |
 
-`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: 10 model
-theorems, `propext` the only reported axiom and inside the standard allow-list.
+`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **23** model
+theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Non-claims
 
 The target alphabet is a **handwritten machine**, not an emitted step sequence: there is no
 Canonical-ABI, Wasmtime, Rust host or lowering correspondence here, no liveness claim and no
-cancellation model. Two premises stay premises rather than theorems: that the host supplies the
-exact resource identity, and response-to-request pairing (a target response step carries its own
-operation, but which request it answers is not proved). WIT-TRACE-02 through WIT-TRACE-06 remain
+cancellation model. Response-to-request pairing stays a premise (a target response step carries its
+own operation, but which request it answers is not proved), and so does the host's own supply of the
+identity the relation then checks against its decisions. WIT-TRACE-02 through WIT-TRACE-06 remain
 open.
