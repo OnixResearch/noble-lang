@@ -18,7 +18,7 @@
     "what": "the measured lane output, as a behavioral comparison against the declared tables",
     "lane": {
       "path": "crates/noble-cli/tests/live_slot_typed_cases.mjs",
-      "sha256": "a178b4d47e226c805dffc6c37dd07518882d59de927f4a3df8f86efa78802dcf"
+      "sha256": "79421f92beb3a64e8b3271f23f29cca44d6809bc445f155e3218df9a3066d3cf"
     },
     "runner": {
       "path": "crates/noble-cli/tests/live_slot_typed_cases.rs",
@@ -31,12 +31,14 @@
     "observed": {
       "seed": 20261027,
       "coverage": {
-        "admitted": 4,
+        "admitted": 5,
         "by_shape": {
-          "direct": 4
+          "direct": 4,
+          "chain": 1
         },
         "by_nesting": {
-          "single": 4
+          "single": 4,
+          "nested": 1
         },
         "by_ceiling": {
           "pure": 2,
@@ -46,7 +48,7 @@
           "once": 2,
           "twice": 2
         },
-        "total_dispatch_rows": 6,
+        "total_dispatch_rows": 9,
         "total_effect_rows": 3
       },
       "negative": {
@@ -191,7 +193,7 @@
     "what": "the exact selected bytes and the sessions the measurements came from",
     "binary": {
       "path": "/var/tmp/noble-target/debug/noble",
-      "sha256": "2bbe9f62681c79e806f33311460a21adc95b23b0787e298cd76ef3cf448fac17"
+      "sha256": "ab1e25135b7b47b9a67979cce52d85d22af362abd29fc174fbb7c594c8cd570e"
     },
     "sessions": [
       "typed-direct-pure-repeat1-0",
@@ -206,7 +208,8 @@
       "type-stack-admitted",
       "type-stack-refused",
       "nesting-admitted",
-      "nesting-refused"
+      "nesting-refused",
+      "typed-chain-nested-repeat1-4"
     ],
     "does_not_establish": "any claim about a differently built CLI or a different fixture authority"
   },
@@ -234,37 +237,13 @@
         "what": "LSLOT-02 nested and transitive roots"
       }
     ],
-    "does_not_establish": "that those lanes were re-run here; only their bytes are bound",
-    "verified_this_session": {
-      "what": "the canonical LSLOT-02 nested-roots lane was executed and observed (not merely digest-bound)",
-      "lane": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
-      "argv": [
-        "node",
-        "crates/noble-cli/tests/live_slot_nested_roots.mjs",
-        "ABSOLUTE_PREBUILT_CLI"
-      ],
-      "results": [
-        {
-          "name": "base-parent-child",
-          "status": "observed",
-          "initial_epoch": "1",
-          "committed_epoch": "2"
-        },
-        {
-          "name": "transitive-A-B-C",
-          "status": "observed",
-          "initial_epoch": "1",
-          "committed_epoch": "2"
-        }
-      ],
-      "does_not_establish": "any claim about the typed lane\u2019s own generator, which does not emit the nested shape"
-    }
+    "does_not_establish": "that those lanes were re-run here; only their bytes are bound"
   },
   "non_claims": [
     "a passing typed case is not a theorem and promotes no LSLOT conformance case",
     "the negative family asserts declared semantic classes and stages, never diagnostic wording; observed diagnostics are reported for transparency only",
     "minimality is along the tried witness dimensions (repeat, quota, program index) only",
-    "quota is a declared retention quota field, not an invocation budget, so no exhausted class is asserted for it",
-    "the nested chain shape is covered by the canonical LSLOT-02 lane (base parent-child and transitive A-B-C, both observed); a synthetic nested derivation built by the typed generator is refused before pinning with \"root reference has no pinned published slot\", so its absence here is deliberate rather than a coverage hole"
+    "quota is a declared retention quota field, not an invocation budget; no exhausted class is asserted for it",
+    "the nested chain case is one fixture assembled through the canonical bootstrap derivation; it does not establish that every nested or transitive chain type-checks"
   ]
 }

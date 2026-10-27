@@ -83,7 +83,8 @@ save('lane.stderr', run.stderr ?? '');
 assert.equal(run.status, 0, `typed-case lane failed: ${(run.stderr ?? '').slice(-800)}`);
 const observed = JSON.parse((run.stdout ?? '').trim().split('\n').filter(Boolean).at(-1));
 
-assert.deepEqual(observed.coverage.by_shape, { direct: 4 });
+assert.deepEqual(observed.coverage.by_shape, { direct: 4, chain: 1 });
+assert.deepEqual(observed.coverage.by_nesting, { single: 4, nested: 1 });
 assert.deepEqual(observed.coverage.by_repeated_reborrow, { once: 2, twice: 2 });
 assert.deepEqual(observed.negative.by_stage, { command: 3, slot: 1 });
 assert.equal(observed.negative.refused, 4);
@@ -131,7 +132,7 @@ save('receipt.json', {
       'typed-negative-binding-foreign-root-0', 'typed-negative-binding-wrong-position-1',
       'typed-negative-stack-incompatible-2', 'typed-negative-effect-not-granted-3',
       'typed-retention', 'type-stack-admitted', 'type-stack-refused',
-      'nesting-admitted', 'nesting-refused'],
+      'nesting-admitted', 'nesting-refused', 'typed-chain-nested-repeat1-4'],
     does_not_establish: 'any claim about a differently built CLI or a different fixture authority',
   },
   inherited_coverage: {
@@ -144,7 +145,7 @@ save('receipt.json', {
     'the negative family asserts declared semantic classes and stages, never diagnostic wording; observed diagnostics are reported for transparency only',
     'minimality is along the tried witness dimensions (repeat, quota, program index) only',
     'quota is a declared retention quota field, not an invocation budget; no exhausted class is asserted for it',
-    'the nested chain shape is refused rather than mistyped, so it is outside this coverage',
+    'the nested chain case is one fixture assembled through the canonical bootstrap derivation; it does not establish that every nested or transitive chain type-checks',
   ],
 });
 process.stdout.write(`${JSON.stringify({ receipt: path.join(output, 'receipt.json'),

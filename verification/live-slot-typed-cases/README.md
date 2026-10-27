@@ -34,14 +34,22 @@ of the recipe rather than decoration.
 - Minimality is along the tried witness dimensions (repeat, quota, program index) only.
 - `quota` is a declared retention quota field, not an invocation budget, so no exhausted class is
   asserted for it.
-- The nested chain shape is refused rather than mistyped, so it is outside this coverage.
+- The nested chain case is one fixture assembled through the canonical bootstrap derivation; it does
+  not establish that every nested or transitive chain type-checks.
 
 ## Nested chain shape
 
-The typed lane does **not** emit the nested chain shape. A synthetic nested derivation built by its
-generator is refused *before pinning* with `root reference has no pinned published slot`, so the
-exclusion is deliberate rather than a coverage hole. Nested roots are covered by the canonical
-LSLOT-02 lane (`crates/noble-cli/tests/live_slot_nested_roots.mjs`), which was executed this session
-and observed both fixtures — `base-parent-child` and `transitive-A-B-C`, each entering at epoch 1 and
-committing at epoch 2. That observation is recorded under `inherited_coverage.verified_this_session`
-and establishes nothing about the typed generator.
+The typed lane **does** now emit the nested chain shape, through its own derivation
+(`runChainCase`): the caller's declared formals include a reference to a slot that itself takes a
+reference, so the chain cannot be assembled by the sequential publish loop (the nested type has no
+pinned published slot yet). It is assembled the canonical way instead — each member installed under
+its own selected host source identity, one `bootstrap` publishing both members at epoch 1, then
+`reflect` and a single invocation — and the report asserts the declared expectation (the middle
+slot dispatches once per reference reaching it: A, B, B, with one pinned epoch) plus an independent
+control in which a member that does not match its slot interface is refused before anything is
+published.
+
+That is still one fixture, not a general nested-type generator: transitive chains and repeated
+nested references are not generated here. The canonical LSLOT-02 lane
+(`crates/noble-cli/tests/live_slot_nested_roots.mjs`) remains the owner of the interleaved
+bootstrap/checkpoint behaviour of nested roots and is only digest-bound in this receipt.
