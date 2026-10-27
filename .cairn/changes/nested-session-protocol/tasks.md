@@ -29,5 +29,9 @@
   a forged peer response without a dequeue, an omitted cleanup, wrong ordered message type, wrong order in
   both directions and a wrong internal branch. Full-queue misaccounting still needs the dequeue/accounting
   pair, so the task stays open.
-- [ ] [serial] Preserve the committed trace prefix across cancellation, trap, quota exhaustion and peer disappearance, retaining unresolved cleanup facts. r[WIT-SESSION-06]
+- [x] [serial] Preserve the committed trace prefix across cancellation, trap, quota exhaustion and peer disappearance, retaining unresolved cleanup facts. r[WIT-SESSION-06]
 - [ ] [serial] Bind protocol definitions, endpoint identities, queue limits and lowering/runtime/helper revisions in a retained correspondence receipt. r[WIT-SESSION-06]
+  Partial: the retained receipt binds the model revision, names the two closed definitions tables, the six
+  endpoint identity fields and the ledger-based queue accounting, and records helper/runtime/peer as null
+  with the reason. Lowering/runtime/helper revisions cannot be bound because no correspondence route
+  exists, so the task stays open.

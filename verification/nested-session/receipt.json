@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "216a4c6410d41c28d70e4ab6946ce5c98f4cb61a",
-  "source_tree": "94c17e90cb887c4590b8834266b876a4bd83dac2",
+  "source_commit": "32c83688dc3d4d3e8a0cdeb3076ad1b0285d3b60",
+  "source_tree": "fbda3bd837101583f7c0090a1f99b31a48d59959",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,28 +11,38 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "5eca921ef024cfed5df0e848d0e45418554ea39528c4f56a2ec5220bf6f23ba0",
-        "proofs/m6/nested-session-inventory.json": "9c89f0f416287a94e4fc43e2dc6efb3397114d44ef4ffd1d7846d49b2d3f5e46"
+        "proofs/m6/NestedSession.lean": "461d2b4c29ac8211f79e002dd01a914c1bad359e820ca60811ea55c57758f8ab",
+        "proofs/m6/nested-session-inventory.json": "11c61aebf17c0c1684e74eb9729bb557cefd19f2905a753b30ec2794741ec33a"
       }
     },
-    "component": null,
+    "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
+    "endpoint_identity_fields": [
+      "channel",
+      "responder",
+      "protocol",
+      "state",
+      "generation",
+      "closed"
+    ],
+    "queue_accounting": "depth derived from the enqueued/dequeued ledger, never stored beside it",
     "helper": null,
-    "engine": null,
+    "runtime": null,
+    "peer": null,
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 43,
+    "model_theorems": 48,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "5eca921ef024cfed5df0e848d0e45418554ea39528c4f56a2ec5220bf6f23ba0",
-    "proofs/m6/nested-session-inventory.json": "9c89f0f416287a94e4fc43e2dc6efb3397114d44ef4ffd1d7846d49b2d3f5e46",
-    "verification/nested-session/check.mjs": "6985800dad90ec872c3c4b1fe9d842b405b413f3bd4d5f88ab49a2478d90b52e"
+    "proofs/m6/NestedSession.lean": "461d2b4c29ac8211f79e002dd01a914c1bad359e820ca60811ea55c57758f8ab",
+    "proofs/m6/nested-session-inventory.json": "11c61aebf17c0c1684e74eb9729bb557cefd19f2905a753b30ec2794741ec33a",
+    "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
   },
-  "theorem_count": 43,
+  "theorem_count": 48,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -606,6 +616,75 @@
       "status": "proved",
       "statement": "NestedSession.accounting_tracks_the_operations : NestedSession.mailboxDepth (NestedSession.dequeue (NestedSession.enqueue (NestedSession.enqueue { enqueued := 0, dequeued := 0 }))) = 1",
       "axioms": []
+    },
+    {
+      "name": "NestedSession.boundary_preserves_the_committed_prefix",
+      "role": "WIT-SESSION-06: cancellation, trap, quota exhaustion and peer disappearance only shorten a trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.boundary_preserves_the_committed_prefix : ∀ (boundary : NestedSession.Boundary) (events : List NestedSession.Event), NestedSession.retainUntilBoundary boundary events <+: events",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.cancellation_keeps_its_own_event",
+      "role": "WIT-SESSION-06: a cancelled request stays visible in the retained prefix",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.cancellation_keeps_its_own_event : NestedSession.retainUntilBoundary NestedSession.Boundary.cancellation [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1, NestedSession.Event.cancellation, NestedSession.Event.cleanup 1] = [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1]",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.peer_disappearance_keeps_the_cleanup_pending",
+      "role": "WIT-SESSION-06: an unobserved cleanup stays an unresolved fact",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.peer_disappearance_keeps_the_cleanup_pending : NestedSession.cleanupPending NestedSession.Boundary.peerGone [NestedSession.Event.guestRequest 0, NestedSession.Event.close] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.ordinary_close_does_not_keep_the_cleanup_pending",
+      "role": "WIT-SESSION-06 control: the pending fact is cleared only by an observed cleanup",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.ordinary_close_does_not_keep_the_cleanup_pending : NestedSession.cleanupPending NestedSession.Boundary.peerGone [NestedSession.Event.guestRequest 0, NestedSession.Event.close, NestedSession.Event.cleanup 1] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.quota_boundary_invents_nothing",
+      "role": "WIT-SESSION-06: a quota boundary neither completes a pending cleanup nor invents an observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.quota_boundary_invents_nothing : NestedSession.retainUntilBoundary NestedSession.Boundary.quotaExhaustion [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1, NestedSession.Event.cancellation] <+: [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1, NestedSession.Event.cancellation] ∧ NestedSession.cleanupPending NestedSession.Boundary.quotaExhaustion [NestedSession.Event.guestRequest 0, NestedSession.Event.admission 1] = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
     }
   ],
   "commands": [
@@ -655,7 +734,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-d1/Audit.lean"
+        "/tmp/ns-d3/Audit.lean"
       ],
       "exit": 0
     },

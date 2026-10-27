@@ -42,11 +42,14 @@ carrying channel identity, side, protocol identity, current state and generation
 | `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice` | internal choice takes the selected declared branch, a wrong branch is refused, and external choice belongs to the peer (its dual is the internal one) |
 | `enqueue_raises_the_depth_by_one`, `dequeue_never_raises_the_depth`, `dequeue_of_empty_mailbox_is_unchanged`, `accounting_tracks_the_operations` | the mailbox depth is **derived from a ledger** of admissions and dequeues, not stored beside them |
 | `full_queue_misaccounting_is_refused` | an observation cannot borrow depth the ledger never recorded |
+| `boundary_preserves_the_committed_prefix`, `cancellation_keeps_its_own_event`, `quota_boundary_invents_nothing` | cancellation, trap, quota exhaustion and peer disappearance only **shorten** a trace; a cancelled request stays visible and no boundary completes a pending cleanup or invents an observation |
+| `peer_disappearance_keeps_the_cleanup_pending`, `ordinary_close_does_not_keep_the_cleanup_pending` | an unobserved cleanup stays an unresolved fact, and only an observed cleanup clears it |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **43** model
-theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block
-records `helper`, `runtime` and `peer` as explicitly absent with the reason, and its `claims` block
-labels the verdict.
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **48** model
+theorems, `propext` the only reported axiom and inside the standard allow-list. Its `bindings` block names the protocol
+definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
+constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent
+with the reason, and its `claims` block labels the verdict.
 
 ## Non-claims
 
