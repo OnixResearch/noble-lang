@@ -664,12 +664,42 @@ duplication therefore only move data obligations (`drop_consumes_one`,
 by every admitted program (`segment_conserved`), a two-arm branch accounts for
 the same obligations on both arms (`branch_accounts_both_arms`), and an ordinary
 error return is admitted only with no outstanding operand
-(`fail_requires_empty_operands`). Eighteen theorems in total, all inventoried.
+(`fail_requires_empty_operands`), plus the branch-join theorems below. Twenty-six
+ownership theorems in total, all inventoried.
+
+### Branch join (issue #59 joins)
+
+The two-arm branch's abstract stack is a join, not "both branches have the same
+number of resources". `BranchJoin` carries both arm results at equal length, so a
+position one arm lacks is refused rather than padded
+(`unequal_arms_cannot_be_joined`), and `mergePosition` records both arms at every
+position (`merge_represents_each_arm`). Two different payloads at one position are
+recorded as conflicting rather than merged (`distinct_owners_are_not_merged`), so
+the seeded join that keeps only the first arm is refuted wherever the arms differ
+(`one_armed_join_is_refuted`). The controls that a weaker join fails are proved as
+theorems: equal counts with different identities are conflicting
+(`same_count_different_identity_is_conflicting`), a wrapped payload is not merged
+with its unwrapping although both are eligible
+(`nested_payload_is_not_merged_with_its_unwrapping`), and a wrapped must-use
+resource is never merged with a plain payload (`nested_resource_is_not_merged`).
+The substantive preservation result is `joined_word_admission_agrees`: two stacks
+whose ordered positions agree on eligibility are admitted by one word in both arms
+or in neither, so the joined abstract stack preserves this fragment's accounting
+decision rather than inventing one.
+
+The branch constructor stays outside the join lane on purpose: it compares the two
+arms' actual results, so a join can never be used to skip accounting one arm, which
+is what `branch_accounts_both_arms` and the mutation controls establish. The join
+controls are model-level only; the production acceptance machine has no join
+concept, and a join is never presented as an executable production control.
+
+Not proved, and recorded rather than implied: the admission simulation lifted over
+a whole word *sequence*, which needs the intermediate stacks to keep agreeing.
 
 The retained receipt is
-[`verification/foundation/receipts/e7cc00993/`](../../verification/foundation/receipts/e7cc00993/foundation-check.json):
-252 theorems, eighteen of them ownership, `clean_source: true`, axiom sets
-inside `propext`/`Classical.choice`/`Quot.sound`.
+[`verification/foundation/receipts/e0ec33f66/`](../../verification/foundation/receipts/e0ec33f66/foundation-check.json):
+405 theorems, twenty-six of them ownership, `clean_source: true`, axiom sets inside
+`propext`/`Classical.choice`/`Quot.sound`.
 
 The comparison is finite and deliberately narrow:
 [`verification/ownership/differential.json`](../../verification/ownership/differential.json)
