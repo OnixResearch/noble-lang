@@ -35,3 +35,13 @@ of the recipe rather than decoration.
 - `quota` is a declared retention quota field, not an invocation budget, so no exhausted class is
   asserted for it.
 - The nested chain shape is refused rather than mistyped, so it is outside this coverage.
+
+## Nested chain shape
+
+The typed lane does **not** emit the nested chain shape. A synthetic nested derivation built by its
+generator is refused *before pinning* with `root reference has no pinned published slot`, so the
+exclusion is deliberate rather than a coverage hole. Nested roots are covered by the canonical
+LSLOT-02 lane (`crates/noble-cli/tests/live_slot_nested_roots.mjs`), which was executed this session
+and observed both fixtures — `base-parent-child` and `transitive-A-B-C`, each entering at epoch 1 and
+committing at epoch 2. That observation is recorded under `inherited_coverage.verified_this_session`
+and establishes nothing about the typed generator.

@@ -234,13 +234,37 @@
         "what": "LSLOT-02 nested and transitive roots"
       }
     ],
-    "does_not_establish": "that those lanes were re-run here; only their bytes are bound"
+    "does_not_establish": "that those lanes were re-run here; only their bytes are bound",
+    "verified_this_session": {
+      "what": "the canonical LSLOT-02 nested-roots lane was executed and observed (not merely digest-bound)",
+      "lane": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+      "argv": [
+        "node",
+        "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+        "ABSOLUTE_PREBUILT_CLI"
+      ],
+      "results": [
+        {
+          "name": "base-parent-child",
+          "status": "observed",
+          "initial_epoch": "1",
+          "committed_epoch": "2"
+        },
+        {
+          "name": "transitive-A-B-C",
+          "status": "observed",
+          "initial_epoch": "1",
+          "committed_epoch": "2"
+        }
+      ],
+      "does_not_establish": "any claim about the typed lane\u2019s own generator, which does not emit the nested shape"
+    }
   },
   "non_claims": [
     "a passing typed case is not a theorem and promotes no LSLOT conformance case",
     "the negative family asserts declared semantic classes and stages, never diagnostic wording; observed diagnostics are reported for transparency only",
     "minimality is along the tried witness dimensions (repeat, quota, program index) only",
-    "quota is a declared retention quota field, not an invocation budget; no exhausted class is asserted for it",
-    "the nested chain shape is refused rather than mistyped, so it is outside this coverage"
+    "quota is a declared retention quota field, not an invocation budget, so no exhausted class is asserted for it",
+    "the nested chain shape is covered by the canonical LSLOT-02 lane (base parent-child and transitive A-B-C, both observed); a synthetic nested derivation built by the typed generator is refused before pinning with \"root reference has no pinned published slot\", so its absence here is deliberate rather than a coverage hole"
   ]
 }
