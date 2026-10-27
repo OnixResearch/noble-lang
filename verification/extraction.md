@@ -108,7 +108,23 @@ only after the previous one was fixed:
 | 5 | Continue to outer loops | `contracts/live.rs` `catalog_valid`, `valid_ref` | `catalog_row_valid`, `ref_node_valid`, `effects_known`, `types_valid` |
 | 6 | Returns inside of nested loops | `contracts/clone_budget.rs` `?` in `for` | accumulating `Option` scans |
 | 7 | Mixed mutually recursive definitions | `Clone`/`Debug` impls for `types::Ty` ↔ `types::NominalShape` | `clone_shape`/`debug_shape`: `Ty` renders the shape's payloads itself, so the pair is one-directional |
-| 8 | **Unimplemented** (symbolic `translate_fwd_ty`) | a translated function signature references a `core::vec::Vec` type (`alloc/src/vec/mod.rs` line 461) | **not fixed** |
+| 8 | **Unimplemented** (symbolic `translate_fwd_ty`) | whole-library translation included a function signature mentioning a `core::vec::Vec` type (`alloc/src/vec/mod.rs` line 461) | fixed by bounding the translation to the declared subject |
+
+Class 8 is a scope defect, not a signature defect. Charon previously translated the *whole library*, so
+Aeneas had to translate signatures of functions that the declared subject does not reach — one of which
+mentions a `Vec` type Aeneas cannot forward-translate. Measuring the closure settled it: translating only
+`noble_kernel::consume_budget` and everything it reaches is accepted by Aeneas and generated Lean that
+compiles. The entry point therefore translates the declared subject closure
+(`extraction_start_from` in the selection policy), which is also what "bounded" always meant; the whole
+library is not the bound. Measured 2026-10-27: `extract-kernel` reports
+`extraction passed (not M1 acceptance)` and `extract-kernel verify` reports
+`binding and outputs consistent (not M1 acceptance, not refinement)` on a fresh artifact directory.
+
+The same run also exposed a second, environment-level defect: Charon resolves the workspace lock offline, and
+the entry point used a fresh `CARGO_HOME` with no pinned registry, so it failed with
+`no matching package named wat found` before reaching Aeneas. The entry point now installs a cargo
+configuration that replaces crates.io with the reviewed `importCargoLock` vendor of this repository's
+`Cargo.lock`, so the offline resolution uses pinned bytes instead of a host registry.
 
 Classes 1–6 share one mechanical cure and are landed with every `noble-kernel` test target passing.
 Class 7 was measured, not guessed: Aeneas rejects mutual recursion outright, and

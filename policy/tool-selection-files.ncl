@@ -45,7 +45,7 @@
   "crates/noble-wasm/wit/syndicate.wit" = "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
   "dylint.toml" = "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
   "flake.lock" = "709df81d5a19c565946291861e7e07555db8be47edf0e30b6fe19e56d8c80179",
-  "flake.nix" = "41cb9fcc2c9c3769f4c49a1e336a5bf7f48c7f9fe0f74f967b6b84d06c249127",
+  "flake.nix" = "9020f8f47c7b06b2a110918563ecd93bf95861e777752c42dc2c092499b1826a",
   "nix/aeneas-string-escaping.patch" = "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
   "nix/octet-patched-source.nix" = "6d8ace72aa19c49166133fa24560c7b47603e5bc2dab2d84d5fb381d7a6b3c68",
   "nix/octet-typed-call-collector.patch" = "aaccd1b6d1fb9dfe6568856093b318bb3f9b6875bdfcb3ed3a8b5e14bc113429",

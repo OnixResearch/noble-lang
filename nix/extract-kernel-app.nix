@@ -5,12 +5,23 @@
   aeneas,
   leanTool,
   extractionRust,
+  extractionVendor,
   leanDependenciesCheck,
   selection,
 }:
 let
   config = selection.configuration;
   lean = selection.lean;
+  # Charon resolves the workspace lock offline, so the pinned registry bytes come from the reviewed
+  # `importCargoLock` vendor of this repository's Cargo.lock rather than from a host cargo registry.
+  cargoConfig = pkgs.writeText "noble-extraction-cargo-config" ''
+    [source.crates-io]
+    replace-with = "vendored-sources"
+    [source.vendored-sources]
+    directory = "${extractionVendor}"
+    [net]
+    offline = true
+  '';
 in
 pkgs.writeShellApplication {
   name = "extract-kernel";
@@ -35,6 +46,7 @@ pkgs.writeShellApplication {
     aeneas_rev=${pkgs.lib.escapeShellArg selection.sources.aeneas.rev}
     charon_rev=${pkgs.lib.escapeShellArg selection.sources.charon.rev}
     subject_manifest=${pkgs.lib.escapeShellArg config.extraction_subject}
+    start_from=${pkgs.lib.escapeShellArg config.extraction_start_from}
     requested_function="noble_kernel::consume_budget"
 
     usage() {
@@ -175,6 +187,7 @@ pkgs.writeShellApplication {
       export CARGO_HOME="$artifacts/cargo"
       export CARGO_TARGET_DIR="$artifacts/extraction-target"
       mkdir -p "$CARGO_HOME"
+      cp ${cargoConfig} "$CARGO_HOME/config.toml"
 
       local bootstrap="passed"
       if [ -d "$proof_dir/.lake/packages" ]; then
@@ -196,6 +209,7 @@ pkgs.writeShellApplication {
       (
         cd "$root"
         timeout 300 charon cargo --preset=aeneas --error-on-warnings \
+          --start-from "$start_from" \
           --dest-file "$artifacts/llbc/noble_kernel.llbc" -- \
           --manifest-path "$subject_manifest" --lib --all-features --target "$target" --locked --offline
       ) > "$artifacts/charon.log" 2>&1

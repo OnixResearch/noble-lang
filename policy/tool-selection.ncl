@@ -57,6 +57,8 @@ let Pin = { rev | String, narHash | String } in
     overflow_checks | Bool = true,
     extraction_profile | String = "dev",
     extraction_subject | String = "crates/noble-kernel/Cargo.toml",
+    # The declared subject: Charon translates this item and what it reaches, not the whole library.
+    extraction_start_from | String = "noble_kernel::consume_budget",
     charon_args | Array String = ["--preset=aeneas", "--error-on-warnings"],
     cargo_args | Array String = ["--lib", "--all-features", "--target", "x86_64-unknown-linux-gnu", "--locked", "--offline"],
     aeneas_args | Array String = ["-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar", "-emit-json"],

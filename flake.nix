@@ -256,6 +256,7 @@
         aeneas = selectedAeneas;
         leanTool = lean;
         extractionRust = extractionRust;
+        extractionVendor = pkgs.rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
         leanDependenciesCheck = leanDependenciesCheck;
         selection = selectionPolicy;
       };
