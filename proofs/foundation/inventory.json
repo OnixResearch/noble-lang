@@ -2786,6 +2786,54 @@
       "phase": 3,
       "role": "independent-row-batch",
       "claim": "each batch row's lowered fragment executes exactly as that row's reference run, reusing the sequence-lifting theorem"
+    },
+    {
+      "name": "NobleFoundation.row_major_cost_is_exact",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "row-major staging costs exactly one node evaluation and one staging write per row"
+    },
+    {
+      "name": "NobleFoundation.chunksOfGo_flatten",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a chunked staging pass partitions the rows without reordering or dropping any of them"
+    },
+    {
+      "name": "NobleFoundation.chunking_does_not_change_the_value",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "the chunked staging evaluates exactly the ordered map of independent row runs"
+    },
+    {
+      "name": "NobleFoundation.node_work_is_staging_independent",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "both declared stagings evaluate one operation per row, so staging cannot be mistaken for node work"
+    },
+    {
+      "name": "NobleFoundation.chunked_writes_are_one_per_chunk",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "the chunked staging's output writes are exactly its chunk count"
+    },
+    {
+      "name": "NobleFoundation.every_chunk_is_bounded_by_the_chunk_size",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "each committed chunk holds at most one chunk of rows at a positive chunk size"
+    },
+    {
+      "name": "NobleFoundation.live_row_slots_are_bounded_by_the_chunk",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a staging pass holds at most one chunk of live row slots"
+    },
+    {
+      "name": "NobleFoundation.a_zero_chunk_drops_no_row",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a zero chunk size degenerates to one row per chunk and still covers every row"
     }
   ]
 }

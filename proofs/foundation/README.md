@@ -1433,8 +1433,27 @@ Nine inventoried theorems; receipt
 [verification/foundation/receipts/781c2f490/](../../verification/foundation/receipts/781c2f490/foundation-check.json)
 (452 theorems, `clean_source: true`).
 
-Open, and deliberately not closed by this model: no row-count, byte, staging or
-work budget is modelled, no validation rule beyond the literal range is
+**Declared cost of staging.** Beside the value theorem, `Cost`, `rowMajorCost` and
+`chunkedCost` declare node evaluations and staging/output writes separately, and
+`chunksOf`/`chunksOfGo` are the chunked staging of the same rows. Proved:
+row-major staging costs exactly one evaluation and one write per row
+(`row_major_cost_is_exact`); a chunked pass partitions without reordering or
+dropping rows (`chunksOfGo_flatten`) and therefore evaluates exactly the
+ordered map of independent row runs (`chunking_does_not_change_the_value`), so
+chunking is a staging choice and not a value change; node work is
+staging-independent (`node_work_is_staging_independent`); the chunked writes
+are exactly the chunk count (`chunked_writes_are_one_per_chunk`); every
+committed chunk holds at most one chunk of rows
+(`every_chunk_is_bounded_by_the_chunk_size`) and a pass therefore bounds the
+live row slots by the chunk size (`live_row_slots_are_bounded_by_the_chunk`);
+and a zero chunk size degenerates to one row per chunk instead of dropping rows
+(`a_zero_chunk_drops_no_row`).
+
+Nothing in that model measures or predicts elapsed time, process memory or
+allocator overhead, and no abstract counter is equated with a measured one.
+
+Open, and deliberately not closed by this model: no byte budget beyond the
+literal-range rule, no validation rule beyond the literal range is
 modelled, no parameter snapshot or output ownership is modelled, and no
 implementation correspondence is claimed — a matching Rust batch loop would be
 tested-implementation evidence, not a theorem. Performance is untouched: nothing

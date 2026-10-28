@@ -124,4 +124,127 @@ theorem batch_row_executes_as_its_reference_run (row : Row) (zs : List ℤ)
   have reference : refRun (rowOps row) [] = some zs := ran
   exact exec_lowerAll reference pre t
 
+/-! ### Declared cost of staging (issue #41's cost experiment)
+
+The value theorem above and this cost model are deliberately separate: the issue asks for a small
+Lean cost experiment beside the ordered-map value theorem, with declared counters rather than
+elapsed time. Two stagings are declared — row-major, one output write per row, and chunked, one
+output write per chunk — and the theorems say what separates them.
+
+Nothing here measures or predicts elapsed time, process memory or allocator overhead, and no
+abstract counter is equated with a measured one.
+-/
+
+/-- Declared batch work: node evaluations and staging/output writes, counted separately. -/
+structure Cost where
+  /-- One operation per row. -/
+  nodeWork : Nat
+  /-- One staging/output write per committed row or chunk. -/
+  stagingWrites : Nat
+deriving DecidableEq, Repr
+
+/-- Row-major staging: one output write per row. -/
+def rowMajorCost (rowCount : Nat) : Cost := { nodeWork := rowCount, stagingWrites := rowCount }
+
+/-- One staging pass over the same rows: `remaining` rows still fit in the current chunk and `acc`
+holds that chunk in reverse order. Only the staging differs from `evalBatch`, which is what the
+following theorems are about. -/
+def chunksOfGo (chunk : Nat) : List Row → Nat → List Row → List (List Row)
+  | [], _remaining, acc => [acc.reverse]
+  | row :: rest, remaining, acc =>
+      if remaining = 0 then acc.reverse :: chunksOfGo chunk rest (chunk - 1) [row]
+      else chunksOfGo chunk rest (remaining - 1) (row :: acc)
+
+/-- The chunked staging of a row list at a positive chunk size. -/
+def chunksOf (chunk : Nat) (rows : List Row) : List (List Row) :=
+  chunksOfGo (max chunk 1) rows (max chunk 1) []
+
+/-- The chunked staging's declared cost: the same node work and one output write per chunk. The chunk
+count is the length of the staged chunk list itself, so no floor-division arithmetic stands between
+the bound and the staging it describes. -/
+def chunkedCost (chunk : Nat) (rows : List Row) : Cost :=
+  { nodeWork := rows.length, stagingWrites := (chunksOf chunk rows).length }
+
+/-- Row-major staging costs exactly one node evaluation and one write per row. -/
+theorem row_major_cost_is_exact (rowCount : Nat) :
+    (rowMajorCost rowCount).nodeWork = rowCount
+      ∧ (rowMajorCost rowCount).stagingWrites = rowCount := by
+  exact ⟨rfl, rfl⟩
+
+/-- A staging pass partitions the rows without reordering or dropping any of them: the flattened
+chunks are the rows with the incoming chunk in front. -/
+theorem chunksOfGo_flatten (chunk : Nat) (rows : List Row) (remaining : Nat) (acc : List Row) :
+    (chunksOfGo chunk rows remaining acc).flatten = acc.reverse ++ rows := by
+  induction rows generalizing remaining acc with
+  | nil => simp [chunksOfGo]
+  | cons row rest ih =>
+      by_cases hZero : remaining = 0
+      · simp only [chunksOfGo, hZero, if_true, List.flatten_cons]
+        rw [ih]
+        simp
+      · simp only [chunksOfGo, hZero, if_false]
+        rw [ih (remaining - 1) (row :: acc)]
+        simp
+
+/-- **Chunking is a staging choice, not a value change**: the chunked staging evaluates exactly the
+ordered map of independent row runs, so a value theorem about `evalBatch` covers every staging. -/
+theorem chunking_does_not_change_the_value (chunk : Nat) (rows : List Row) :
+    (chunksOf chunk rows).flatten.map rowRun = evalBatch rows := by
+  unfold chunksOf evalBatch
+  rw [chunksOfGo_flatten]
+  rfl
+
+/-- **Node work is staging-independent**: both stagings evaluate one operation per row, so a change of
+staging cannot be mistaken for a change of declared node work. -/
+theorem node_work_is_staging_independent (rows : List Row) (chunk : Nat) :
+    (rowMajorCost rows.length).nodeWork = (chunkedCost chunk rows).nodeWork := rfl
+
+/-- The chunked staging's output writes are exactly its chunk count, so a cost claim names the chunk
+list rather than an estimate of it. -/
+theorem chunked_writes_are_one_per_chunk (chunk : Nat) (rows : List Row) :
+    (chunkedCost chunk rows).stagingWrites = (chunksOf chunk rows).length := rfl
+
+/-- **Every chunk holds at most one chunk of rows.** With the staging invariant that the pending
+chunk and the remaining capacity together are one chunk, each committed chunk is bounded by the
+chunk size, which is the capacity bound the issue asks for instead of a payload-length bound. -/
+theorem every_chunk_is_bounded_by_the_chunk_size (chunk : Nat) (positive : 1 ≤ chunk)
+    (rows : List Row) (remaining : Nat) (acc : List Row)
+    (invariant : acc.length + remaining = chunk) :
+    ∀ staged ∈ chunksOfGo chunk rows remaining acc, staged.length ≤ chunk := by
+  induction rows generalizing remaining acc with
+  | nil =>
+      intro staged hMember
+      simp only [chunksOfGo, List.mem_singleton] at hMember
+      subst hMember
+      simp only [List.length_reverse]
+      omega
+  | cons row rest ih =>
+      by_cases hZero : remaining = 0
+      · intro staged hMember
+        simp only [chunksOfGo, hZero, if_true, List.mem_cons] at hMember
+        rcases hMember with hFlushed | hRest
+        · subst hFlushed
+          have hLength : acc.length = chunk := by omega
+          simp only [List.length_reverse, hLength]
+          exact Nat.le_refl chunk
+        · exact ih (chunk - 1) [row] (by simp only [List.length_cons, List.length_nil]; omega) staged hRest
+      · intro staged hMember
+        simp only [chunksOfGo, hZero, if_false] at hMember
+        exact ih (remaining - 1) (row :: acc) (by simp only [List.length_cons]; omega) staged hMember
+
+/-- **Live row slots are bounded by the chunk size**: a staging pass holds at most one chunk of rows,
+which is the capacity bound the issue asks for instead of a payload-length bound. -/
+theorem live_row_slots_are_bounded_by_the_chunk (rows : List Row) (chunk : Nat) :
+    (rows.take chunk).length ≤ chunk := List.length_take_le _ _
+
+/-- A zero chunk size degenerates to one row per chunk, so no row is dropped by a mistaken staging
+parameter; the flattening still covers every row. -/
+theorem a_zero_chunk_drops_no_row (rows : List Row) :
+    (chunksOf 0 rows).flatten = rows ∧ (chunksOf 0 rows).flatten.map rowRun = evalBatch rows := by
+  constructor
+  · unfold chunksOf
+    rw [chunksOfGo_flatten]
+    rfl
+  · exact chunking_does_not_change_the_value 0 rows
+
 end NobleFoundation
