@@ -35,9 +35,12 @@ one-pass proposer is sufficient in general.
 The quality lane above prices nothing. [rewrite-cost.mjs](rewrite-cost.mjs) runs a second lane
 (`crates/noble-ngraph/tests/rewrite_cost.rs`) and retains
 [rewrite-cost-2026-10-27.json](rewrite-cost-2026-10-27.json): schema
-`noble-rewrite-cost-receipt/v1`, source `0f9c3cc68`, clean source, `rustc 1.96.0-nightly`
+`noble-rewrite-cost-receipt/v1`, source `8ce33f961`, clean source, `rustc 1.96.0-nightly`
 (2026-03-20), host `Linux 6.18.54 x86_64` (shared, load-dependent), 200 warm samples per row, 28
-rows (seven fixtures x four proposers).
+rows (seven fixtures x four proposers). The receipt also carries `lens`: the SHA-256 of each of the
+25 `.rs` files the quality manifest declares as its lens crate (`noble-ngraph`, because that crate
+is dependency-free and cannot hash itself), so the corpus binding names a source identity rather
+than a path.
 
 The continuation thresholds are **pre-registered** in
 [rewrite-cost-v1.txt](rewrite-cost-v1.txt) before any measurement: retention requires the declared
