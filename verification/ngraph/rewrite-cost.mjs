@@ -32,7 +32,9 @@ function run(argv, cwd) {
 const root = process.cwd();
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-target cargo test -p noble-ngraph ' +
   '--test rewrite_cost --offline --locked -- --nocapture';
-const text = run(['bash', '-lc', command], root);
+// A login shell (`bash -lc`) re-reads the host profile and drops the devShell PATH, so `cargo`
+// was not found (exit 127) when this runner was replayed; `-c` keeps the devShell environment.
+const text = run(['bash', '-c', command], root);
 
 // The lane prints exactly one JSON report between the first `{` line and the matching closing brace.
 const start = text.indexOf('\n{\n');
