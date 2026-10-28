@@ -935,6 +935,12 @@ when **every** executed node avoids writing its register
 if another node aliases that register. These are model properties, not graph
 guard semantics, Rust runtime checks or validation of emitted instruction bodies.
 
+The complete eighteen-theorem `PackedSchedule` set is audited in
+[`verification/foundation/receipts/8eef09184/`](../../verification/foundation/receipts/8eef09184/foundation-check.json):
+484 total foundation theorems at source `8eef0918484ab1d887ba773f99eab13fa31d3ab3`,
+`clean_source: true`, `implementation_theorem: false`. The five additions use
+only `propext` and, for the second-operand theorem, `Quot.sound`.
+
 Open, and deliberately not closed:
 
 - **no binding to the actually emitted artifact**: the file models a schedule and
