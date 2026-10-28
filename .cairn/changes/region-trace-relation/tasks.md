@@ -30,16 +30,25 @@
   (`abnormal_exit_cleanup`). Exercised: unit tests over a real `Trap::OutOfFuel` /
   `Trap::UnreachableCodeReached` / adapter fault, plus a real compiled `bounded-region` component
   end to end (`exit_class: normal|rejected`, `cleanup: already-retired`, `fuel_remaining` ~1e7).
-  Still open: no real execution currently reaches `trap` or `quota-exhausted` on this adapter — the
-  fuel boundary is fixed at 10,000,000 and no guest fixture traps — and a refused cleanup needs a
-  corrupted host context that a guest cannot produce, so those three classes are unit-exercised
-  rather than observed from a real execution.
+  Observed from real executions at `70619c2fd`
+  (`verification/host-locality/evidence-70619c2fd.json`, clean source, 11 cases): `normal`,
+  `rejected`, `trap` and `quota-exhausted`. The lane executes the selected guest plus three mutated
+  emitted-core artifacts and binds `exit_class`, `cleanup` and `fuel_remaining` on every case: `trap`
+  comes from a real `unreachable` after the genuine `region.read` import and from both malformed
+  result-area mutants, and `quota-exhausted` from a `loop`/`br 0` guest fault that exhausts the fixed
+  10,000,000 fuel budget (`fuel_remaining: 0`). Measured rather than assumed: the malformed
+  result-area mutants classify as `trap`, not `adapter-invalid`, because guest code writes the
+  corruption into its own result area and Wasmtime traps inside the guest. `adapter-invalid`
+  therefore stays unit-exercised only, and a refused cleanup still cannot be induced from this
+  interface, so the observation remains partial.
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
   Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
   measurability control showing the boundary tracks the budget. Cancellation stays unsupported because
-  the alphabets have no cancellation event. The host-side observations that would record these from a
-  real execution are still absent, so the task stays open.
+  the alphabets have no cancellation event. Host-side observations now exist for four classes
+  (`verification/host-locality/evidence-70619c2fd.json`: `normal`, `rejected`, `trap`,
+  `quota-exhausted` with `fuel_remaining: 0`); `adapter-invalid` and a refused cleanup are not
+  producible from this interface, so the task stays open rather than being ticked.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
   Model-level controls done: substituted identity, unexplained read commit, second release, missing
   protected commit, host cleanup as guest release and a denial traded for a success are refused.
