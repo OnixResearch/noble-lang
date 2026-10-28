@@ -1266,7 +1266,7 @@ guest execution and no source mutation; every report states
 
 The submission states the retained relation **once** — ordered exact `I64`/`Bool`
 parameter, input and output kinds, a finite declared domain of admissible
-assignments, a finite set of permitted output stacks, and `pre`/`post` predicate
+assignments, a finite list of permitted output stacks, and `pre`/`post` predicate
 terms in a bounded pure-`I64`/`Bool` language — and
 `crates/noble-cli/src/core/spec_quality/relation.rs` recomputes inhabitation,
 realizability and determinacy from it by enumerating that domain. The submitted
@@ -1296,7 +1296,20 @@ relational contract is acquired with no obligation forced.
 Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
 target launches it against the selected CLI): the refusal classes above,
 `self-attested-obligation`, `undefined-relation` and `unsupported-relation`,
-nine derived propositions, and the four separated obligations.
+the three derived propositions, and the four separated obligations.
+
+The issue #70 regression matrix also checks duplicate and reordered outputs:
+`[true,true,false]` and `[true,false,true]` refute determinacy with original
+permitted indices `(0,2)` and `(0,1)`, while `[true,true,true]` stays deterministic.
+Postcondition filtering can remove the distinct output; when it instead removes
+a prefix, the witness still names original list indices `(1,3)`, not positions
+in the filtered list. A mixed `I64`/`Bool` stack differing only in its second cell
+is distinct. A distinct sixteenth output is examined; seventeen permitted outputs
+and a wrong-kind output are refused. All seven accepted regression reports are
+inhabited, realizable and non-vacuous. For the duplicate-first ambiguity, `checked: true` is refused as
+`self-attested-obligation`, while ordinary admission without a determinacy
+obligation remains accepted. This is finite production-CLI evidence, not a
+Lean↔Rust correspondence theorem.
 
 The Lean side of the same discipline is in `proofs/mc1/NobleContracts/SpecQuality.lean`:
 a `Submission` records the kind, observation relation, parameter binding and

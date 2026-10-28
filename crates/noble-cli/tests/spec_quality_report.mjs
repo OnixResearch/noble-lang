@@ -139,6 +139,9 @@ const incrementClaims = () => ({
 outcomes.add(await refused('self-attested-realizability',
   { ...profile, relation: contradictory, obligations: [specification('realizable')] },
   'self-attested-obligation'));
+outcomes.add(await refused('self-attested-determinacy',
+  { ...profile, relation: duplicateFirstPermitted, obligations: [specification('deterministic')] },
+  'self-attested-obligation'));
 outcomes.add(await refused('self-attested-vacuity',
   { ...profile, relation: uninhabited, obligations: [obligation('realizable', 'specification-quality', true, false)] },
   'self-attested-obligation'));
@@ -161,6 +164,14 @@ outcomes.add(await refused('unsupported-kind',
 outcomes.add(await refused('unbounded-domain',
   { ...profile, relation: { ...increment, domain: Array.from({ length: 65 }, () => ({ params: [], inputs: [{ i64: 0 }] })) },
     obligations: [specification('inhabited')] },
+  'unsupported-relation'));
+outcomes.add(await refused('too-many-permitted-outputs',
+  { ...profile, relation: { ...relational, permitted: Array.from({ length: 17 }, () => [{ bool: true }]) },
+    obligations: [specification('deterministic')] },
+  'unsupported-relation'));
+outcomes.add(await refused('wrong-permitted-output-kind',
+  { ...profile, relation: { ...relational, permitted: [[{ bool: true }], [{ i64: 1 }]] },
+    obligations: [specification('deterministic')] },
   'unsupported-relation'));
 
 // Criteria 1-3 measured by the producer itself over the retained relations.
@@ -193,25 +204,57 @@ assert.equal(ambiguous.document.specification_quality.derivation.deterministic, 
 assert.deepEqual(ambiguous.document.specification_quality.derivation.refutation, ['two-distinct-outputs', 0, 0, 1],
   'both checked distinct outputs are named');
 
-const duplicateFirst = await derived('duplicate-first-permitted', duplicateFirstPermitted,
-  [obligation('deterministic', 'specification-quality', false)]);
-assert.equal(duplicateFirst.status, 0);
-assert.equal(duplicateFirst.document.specification_quality.derivation.deterministic, false,
-  'a later distinct satisfying output refuses determinacy even when the first two coincide');
-assert.deepEqual(duplicateFirst.document.specification_quality.derivation.refutation,
-  ['two-distinct-outputs', 0, 0, 2],
-  'the checked witness names the later distinct permitted stack');
-
-// Duplicate permitted stacks alone are not an ambiguity witness, so the same relation with the third
-// output removed stays deterministic rather than becoming conservative.
-const duplicatedOnly = await derived('duplicate-only-permitted',
-  { ...duplicateFirstPermitted, permitted: [[{ bool: true }], [{ bool: true }]] }, incrementClaims().obligations);
-assert.equal(duplicatedOnly.status, 0);
-assert.equal(duplicatedOnly.document.specification_quality.derivation.deterministic, true,
-  'identical permitted stacks are not a distinct-output witness');
+// Issue #70: determinacy compares exact whole stacks after postcondition filtering, not just the
+// first two candidates. Witness indices refer to the original permitted list, including at its cap.
+const determinacyCases = [
+  ['duplicate-first-permitted', duplicateFirstPermitted, false, ['two-distinct-outputs', 0, 0, 2]],
+  ['reordered-permitted',
+    { ...relational, permitted: [[{ bool: true }], [{ bool: false }], [{ bool: true }]] },
+    false, ['two-distinct-outputs', 0, 0, 1]],
+  ['duplicate-only-permitted',
+    { ...relational, permitted: [[{ bool: true }], [{ bool: true }], [{ bool: true }]] },
+    true, null],
+  ['postcondition-filters-distinct-output',
+    { ...duplicateFirstPermitted, post: eq(output(0), truth(true)) },
+    true, null],
+  ['postcondition-filters-prefix', {
+    ...relational,
+    outputs: ['i64'],
+    permitted: [0, 1, 1, 2].map(value => [{ i64: value }]),
+    post: { op: 'not', args: [eq(output(0), i64(0))] },
+  }, false, ['two-distinct-outputs', 0, 1, 3]],
+  ['whole-stack-difference', {
+    ...relational,
+    outputs: ['i64', 'bool'],
+    permitted: [
+      [{ i64: 1 }, { bool: true }],
+      [{ i64: 1 }, { bool: true }],
+      [{ i64: 1 }, { bool: false }],
+    ],
+  }, false, ['two-distinct-outputs', 0, 0, 2]],
+  ['distinct-at-output-limit', {
+    ...relational,
+    permitted: [...Array.from({ length: 15 }, () => [{ bool: true }]), [{ bool: false }]],
+  }, false, ['two-distinct-outputs', 0, 0, 15]],
+];
+for (const [name, relation, deterministic, refutation] of determinacyCases) {
+  const result = await derived(name, relation, [
+    specification('inhabited'), specification('realizable'),
+    obligation('deterministic', 'specification-quality', deterministic),
+  ]);
+  assert.equal(result.status, 0, `${name}: a consistent derivation is reported`);
+  const quality = result.document.specification_quality;
+  assert.deepEqual(
+    [quality.derivation.inhabited, quality.derivation.realizable, quality.derivation.deterministic,
+     quality.derivation.vacuous, quality.derivation.refutation],
+    [true, true, deterministic, false, refutation],
+    `${name}: only distinct satisfying stacks refute non-vacuous determinacy`);
+  assert.equal(quality.established, deterministic ? 3 : 2, `${name}: only derived claims are established`);
+  assert.equal(quality.not_established, deterministic ? 0 : 1, `${name}: ambiguity remains unestablished`);
+}
 
 // Ordinary admission of an intentionally relational contract is untouched: no obligation is forced.
-const relationalAdmission = await derived('relational-admission', relational, []);
+const relationalAdmission = await derived('relational-admission', duplicateFirstPermitted, []);
 assert.equal(relationalAdmission.status, 0, 'a relational contract needs no determinacy obligation');
 assert.equal(relationalAdmission.document.specification_quality.derivation.deterministic, false,
   'the report still states what the relation does not establish');
