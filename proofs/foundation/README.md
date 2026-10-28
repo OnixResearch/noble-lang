@@ -1267,9 +1267,9 @@ The report keeps four obligations apart: `specification_quality` (only
 specification-quality rows, with disjoint established/not-established/vacuous
 tallies), `partial_correctness` (the submitted status for the unchanged
 `exportedClaim`, reported only when that claim is itself checked),
-`termination` (never claimed) and `correspondence` (never claimed). It performs no
-guest execution and no source mutation; every report states
-`guest_requests: 0, protected_operations: 0`.
+`termination` (never claimed) and `correspondence` (never claimed). Every report
+states `guest_requests: 0`; refusals also state `protected_operations: 0`.
+These counters alone are not independent evidence of effect isolation.
 
 Each specification-quality row contributes to exactly one tally: an unchecked
 claim is not established, a checked vacuous claim is vacuous, and only a checked
@@ -1302,6 +1302,15 @@ size or permitted-output count outside the bounded profile is
 `unsupported-relation`; and `add` is wrapping `I64` arithmetic, so the boundary
 case is decided rather than refused.
 
+The selected-CLI lane exercises both sides of the declared bounds: a complete
+4,096-byte manifest is accepted, while 4,097 bytes produces `exhausted` (exit
+`5`); eight term levels are accepted, while nine produces
+`unsupported-relation` (exit `2`). The final assignment of a 64-entry domain
+still exposes ambiguity with witness indices `(63,0,1)`; 65 entries are refused.
+Undefined preconditions and postconditions produce `undefined-relation`,
+including an undefined term behind a false conjunction or true disjunction.
+Neither short-circuiting nor an exceeded bound can supply evidence.
+
 A refused proposition is reported with its **measured refutation** — the index of
 the admissible assignment that has no permitted output, or the assignment and the
 two distinct satisfying outputs — never with "no witness was found". The lane
@@ -1311,12 +1320,24 @@ deterministic; a contradictory postcondition derives non-realizability with its
 admissible assignment; one admissible input with two distinct permitted `Bool`
 outputs derives non-determinacy with both outputs named; an uninhabited domain
 derives vacuity while its universal proposition holds; and an intentionally
-relational contract is acquired with no obligation forced.
+relational report is accepted without a determinacy obligation. This last case
+does **not** exercise ordinary program admission; that acceptance criterion
+remains open.
 
 Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
 target launches it against the selected CLI): the refusal classes above,
-`self-attested-obligation`, `undefined-relation` and `unsupported-relation`,
+`self-attested-obligation`, `undefined-relation`, `unsupported-relation` and `exhausted`,
 the three derived propositions, and the four separated obligations.
+
+Every case also compares the submitted manifest bytes before and after analysis.
+A separate full-syscall trace of all 42 CLI invocations observed only read-only
+file opens and report writes to inherited stdout: no child processes, additional
+executable images or shared writable mappings. A positive control writing a
+scratch file and launching another executable was detected by the same trace
+checks. Together with the scalar-only report dispatch, this is finite evidence
+for analysis without guest execution, source mutation or automatic contract
+strengthening, not a universal noninterference proof. The tracer is an external
+smoke check, not a new test-suite dependency.
 
 The issue #70 regression matrix also checks duplicate and reordered outputs:
 `[true,true,false]` and `[true,false,true]` refute determinacy with original

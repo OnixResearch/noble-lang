@@ -32,7 +32,8 @@ function serialize(document) {
 
 function report(name, document) {
   const file = path.join(workdir, `${name}.json`);
-  fs.writeFileSync(file, typeof document === 'string' ? document : serialize(document));
+  const submitted = Buffer.from(typeof document === 'string' ? document : serialize(document));
+  fs.writeFileSync(file, submitted);
   const child = spawn(binary, ['spec-quality', file], { encoding: 'utf8' });
   let stdout = '';
   let stderr = '';
@@ -41,6 +42,7 @@ function report(name, document) {
   return new Promise(resolve => {
     child.on('close', code => {
       assert.equal(stderr, '', `unexpected stderr for ${name}`);
+      assert.deepEqual(fs.readFileSync(file), submitted, `${name}: analysis must not rewrite its input`);
       resolve({ status: code ?? 2, document: JSON.parse(stdout) });
     });
   });
@@ -50,9 +52,9 @@ const obligation = (claim, kind, checked, vacuous = false) => ({ claim, obligati
 const specification = claim => obligation(claim, 'specification-quality', true);
 const withBindings = overrides => ({ ...profile, obligations: [], ...overrides });
 
-const refused = async (name, document, outcome) => {
+const refused = async (name, document, outcome, expectedStatus = 2) => {
   const { status, document: reported } = await report(name, document);
-  assert.equal(status, 2, `${name} must refuse, reported ${JSON.stringify(reported)}`);
+  assert.equal(status, expectedStatus, `${name} must refuse, reported ${JSON.stringify(reported)}`);
   assert.equal(reported.outcome, outcome, `${name}: ${JSON.stringify(reported)}`);
   assert.equal(reported.schema, 'noble-mc2-spec-quality/v1');
   assert.equal(reported.guest_requests, 0, `${name} performs no guest execution`);
@@ -177,6 +179,15 @@ outcomes.add(await refused('undefined-predicate',
 outcomes.add(await refused('mixed-kind-equality',
   { ...profile, relation: { ...increment, pre: eq(input(0), truth(true)) }, obligations: [specification('inhabited')] },
   'undefined-relation'));
+outcomes.add(await refused('undefined-postcondition',
+  { ...profile, relation: { ...increment, post: eq(output(9), i64(0)) }, obligations: [specification('realizable')] },
+  'undefined-relation'));
+outcomes.add(await refused('false-conjunct-does-not-hide-undefined',
+  { ...profile, relation: { ...increment, pre: conjunction(truth(false), eq(input(9), i64(0))) }, obligations: [] },
+  'undefined-relation'));
+outcomes.add(await refused('true-disjunct-does-not-hide-undefined',
+  { ...profile, relation: { ...increment, pre: { op: 'or', args: [truth(true), eq(input(9), i64(0))] } }, obligations: [] },
+  'undefined-relation'));
 outcomes.add(await refused('unsupported-op',
   { ...profile, relation: { ...increment, pre: { op: 'implies', args: [truth(true)] } }, obligations: [specification('inhabited')] },
   'unsupported-relation'));
@@ -210,6 +221,26 @@ assert.deepEqual(
   [true, true, true],
   'the wrapping increment is inhabited, realizable and deterministic');
 assert.equal(wrapping.document.specification_quality.derivation.refutation, null);
+
+// Exhaustion must not become evidence, and the final allowed byte/term level must remain usable.
+const incrementManifest = serialize(withBindings(incrementClaims()));
+const manifestAtLimit = incrementManifest + ' '.repeat(4096 - Buffer.byteLength(incrementManifest));
+const byteBoundary = await report('manifest-at-byte-limit', manifestAtLimit);
+assert.equal(byteBoundary.status, 0);
+assert.deepEqual(byteBoundary.document.specification_quality, wrapping.document.specification_quality,
+  'a complete manifest at the byte cap retains the same derived evidence');
+outcomes.add(await refused('manifest-over-byte-limit', `${manifestAtLimit} `, 'exhausted', 5));
+
+let preAtDepthLimit = truth(false);
+for (let depth = 0; depth < 7; depth += 1) preAtDepthLimit = { op: 'not', args: [preAtDepthLimit] };
+const depthBoundary = await derived('predicate-at-depth-limit',
+  { ...increment, pre: preAtDepthLimit }, incrementClaims().obligations);
+assert.equal(depthBoundary.status, 0);
+assert.deepEqual(depthBoundary.document.specification_quality, wrapping.document.specification_quality,
+  'seven negations of false remain a true precondition at the final allowed term level');
+outcomes.add(await refused('predicate-over-depth-limit',
+  withBindings({ ...incrementClaims(), relation: { ...increment, pre: { op: 'not', args: [preAtDepthLimit] } } }),
+  'unsupported-relation'));
 
 const refuted = await derived('contradictory', contradictory, [obligation('realizable', 'specification-quality', false)]);
 assert.equal(refuted.status, 0, 'a contradiction is reported rather than refused as agreement');
@@ -258,6 +289,11 @@ const determinacyCases = [
     ...relational,
     permitted: [...Array.from({ length: 15 }, () => [{ bool: true }]), [{ bool: false }]],
   }, false, ['two-distinct-outputs', 0, 0, 15]],
+  ['ambiguity-at-domain-limit', {
+    ...relational,
+    domain: Array.from({ length: 64 }, (_, index) => ({ params: [], inputs: [{ i64: index }] })),
+    pre: eq(input(0), i64(63)),
+  }, false, ['two-distinct-outputs', 63, 0, 1]],
 ];
 for (const [name, relation, deterministic, refutation] of determinacyCases) {
   const result = await derived(name, relation, [
@@ -275,10 +311,11 @@ for (const [name, relation, deterministic, refutation] of determinacyCases) {
   assert.equal(quality.not_established, deterministic ? 0 : 1, `${name}: ambiguity remains unestablished`);
 }
 
-// Ordinary admission of an intentionally relational contract is untouched: no obligation is forced.
-const relationalAdmission = await derived('relational-admission', duplicateFirstPermitted, []);
-assert.equal(relationalAdmission.status, 0, 'a relational contract needs no determinacy obligation');
-assert.equal(relationalAdmission.document.specification_quality.derivation.deterministic, false,
+// The report accepts an intentionally relational contract without a determinacy obligation. This is
+// report acceptance, not evidence that the separate ordinary program-admission path accepts it.
+const relationalReport = await derived('relational-without-determinacy', duplicateFirstPermitted, []);
+assert.equal(relationalReport.status, 0, 'a relational report needs no determinacy obligation');
+assert.equal(relationalReport.document.specification_quality.derivation.deterministic, false,
   'the report still states what the relation does not establish');
 
 // A reported submission keeps the four obligations apart and never upgrades an unchecked claim.
