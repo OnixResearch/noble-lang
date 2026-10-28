@@ -9,8 +9,11 @@ Since the `numeric-graph-v1` change, the graph library is the `no_std` crate [no
 [rewrite-quality-v1.txt](rewrite-quality-v1.txt) is the frozen optimization-quality corpus for the
 certified graph rewrites of `crates/noble-ngraph/src/cert.rs`: its schema is
 `noble-rewrite-quality/v1`, it binds the three rules it exercises and declares, per fixture, the
-residual property its result must reach (`no-foldable-sites`). Fixtures are frozen before any tuning,
-so a difficult one cannot be relabelled to improve coverage.
+residual property its result must reach (`no-foldable-sites`). Its seven fixtures cover independent
+and chained opportunities, ordered outputs, shared operands, an `i64::MAX + 1` wrapping boundary and
+a constant in the right operand. Fixtures are frozen before any tuning, and the lane pins the
+reviewed corpus itself (`REVIEWED_FIXTURES`): a fixture that disappears, is renamed, is relabelled
+unsupported or has its declared nodes weakened fails the lane instead of improving coverage.
 
 `cargo test -p noble-ngraph --test rewrite_quality` measures certificate validity and optimization
 coverage **separately**, with four proposer controls over the same validator:
@@ -18,7 +21,7 @@ coverage **separately**, with four proposer controls over the same validator:
 | Control | Measured |
 |---|---|
 | `Identity` | valid certificate over identical endpoints, residual equals the untouched site count — **correctness alone fails the quality target** |
-| `FirstEligible` | valid certificate, one fold applied, sites left behind on every multi-site fixture |
+| `FirstEligible` | valid certificate, one fold applied, sites left behind on every multi-site fixture (`independent-folds`, `ordered-outputs`) |
 | `SinglePass` | valid certificate; reaches the target on fixtures whose folds all consume original constants |
 | `FixedPoint` | reaches the target on a chained fixture too, but that derivation is **refused** `Malformed`: the certificate format binds every premise to the original graph, so a step consuming an earlier step's result is unsupported rather than silently accepted |
 
@@ -32,9 +35,9 @@ one-pass proposer is sufficient in general.
 The quality lane above prices nothing. [rewrite-cost.mjs](rewrite-cost.mjs) runs a second lane
 (`crates/noble-ngraph/tests/rewrite_cost.rs`) and retains
 [rewrite-cost-2026-10-27.json](rewrite-cost-2026-10-27.json): schema
-`noble-rewrite-cost-receipt/v1`, source `ab1f240f0`, clean source, `rustc 1.96.0-nightly`
-(2026-03-20), host `Linux 6.18.54 x86_64`, 200 warm samples per row, 20 rows (five fixtures x four
-proposers).
+`noble-rewrite-cost-receipt/v1`, source `0f9c3cc68`, clean source, `rustc 1.96.0-nightly`
+(2026-03-20), host `Linux 6.18.54 x86_64` (shared, load-dependent), 200 warm samples per row, 28
+rows (seven fixtures x four proposers).
 
 The continuation thresholds are **pre-registered** in
 [rewrite-cost-v1.txt](rewrite-cost-v1.txt) before any measurement: retention requires the declared
@@ -42,15 +45,20 @@ residual target to be reached *and* the warm certificate-check cost per derivati
 under 50 µs. The residual condition is a hard gate; the cost ceiling is reported per row as
 `check_threshold_met` and is deliberately generous because this host is shared.
 
-Measured, warm medians with interquartile ranges, 20 rows:
+Measured, warm medians with interquartile ranges, 28 rows on a shared host:
 
 | Quantity | Value |
 | --- | --- |
-| Proposal/search (`cert::propose`) | 10.7–13.3 µs per call (IQR ≤ 0.07 µs) |
-| Certificate checking (`cert::check`) | 10.3–12.5 µs per call, one outlier IQR of 7.45 µs on the refused two-step derivation |
+| Proposal/search (`cert::propose`) | 11.0-14.5 µs per call (IQR at most 1.76 µs; the host was loaded, so these medians are informational) |
+| Certificate checking (`cert::check`) | 10.5-13.8 µs per call (IQR at most 1.77 µs) |
 | Certificate check cost per derivation step | 0.01 µs, ceiling 50 µs |
 | In-memory structural derivation footprint | 125 B (zero steps), 165 B (one step), 205 B (two steps) |
-| Coverage | 20 attempts, 19 accepted, 1 refused (`Malformed`, the chained fixed-point derivation), 10 reaching the residual target |
+| Coverage | 28 attempts, 27 accepted, 1 refused (`Malformed`, the chained fixed-point derivation), 16 reaching the residual target |
+| Residual target reached | `SinglePass` and `FixedPoint` reach zero sites on 6 of 7 fixtures; `FirstEligible` on the 4 single-site fixtures (`single-fold`, `shared-operand`, `wrapping-boundary`, `operand-order`) |
+
+The wrapping-boundary and operand-order fixtures are new in this record: both reach the residual
+target under every step-bearing proposer, and `Identity` still reaches none of it. They raised the
+cost lane's denominator from 20 to 28 attempts, so coverage is reported against the larger corpus.
 
 The comparison of the unchanged and certified paths is on identical fixture inputs: the identity row
 carries **no steps** and reaches no target, so every certificate-bearing row pays check cost with no
