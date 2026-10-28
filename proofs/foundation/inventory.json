@@ -1906,6 +1906,30 @@
       "claim": "The direction line at t = 0 is the declared assignment, so tangents start from the declared values."
     },
     {
+      "name": "NobleFoundation.ReverseAD.adjointDot_step",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "pairing the accumulated adjoints with a direction adds exactly the processed consumer's contributions at each reverse step"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.exampleGraph_adjointDot",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on the checked fixture the sweep's accumulated adjoints pair with the declared direction to exactly the tangent"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.the_overwriting_update_pairs_to_four",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "an overwriting update pairs to four on the fixture's second slot"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.the_sweep_pairs_to_eight_on_the_second_slot",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "the sweep pairs to eight on the same slot, so the fixture tells the two updates apart"
+    },
+    {
       "name": "NobleFoundation.PackedSchedule.run_emitNodes_eq",
       "phase": 1,
       "role": "model-mapping",

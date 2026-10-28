@@ -195,9 +195,13 @@ make it load-bearing rather than decorative:
 * contributions only flow to strictly earlier nodes, so an adjoint is already
   final when its own node is processed.
 
-The full summation theorem and the transpose identity (`Σ adjoint·direction =
-tangent`) are named as open obligations: this file proves the per-step account
-arithmetic and the stability the later theorem needs, not the identity itself.
+The transpose identity is proved at two scopes below: a generic *one-step pairing
+invariant* (`adjointDot_step`), which pairs the accumulated adjoints with a
+direction over the graph's slots and adds exactly the processed consumer's
+contributions, and the fixture-level identity (`exampleGraph_adjointDot`), where
+the reverse sweep's accumulated adjoints pair with the declared direction to
+exactly the tangent. What stays open is the identity over *arbitrary* graphs: no
+theorem here says the sweep equals the derivative for every well-formed DAG.
 -/
 
 /-- The partial-derivative coefficient of one node with respect to one operand,
@@ -212,9 +216,13 @@ def stepCoefficient (values : Nat → ℝ) (node : Node) (operand : Nat) : ℝ :
   | .param _ => 0
   | .constant _ => 0
 
-/-- Contribution of one processed consumer to one operand's adjoint. -/
-def contribution (values adjoints : Nat → ℝ) (node : Node) (operand : Nat) : ℝ :=
-  adjoints operand * stepCoefficient values node operand
+/-- Contribution of one processed consumer to one operand's adjoint: the **consumer's** own adjoint
+multiplies its partial-derivative coefficient. The first draft of this model multiplied the *operand's*
+adjoint instead, which cannot carry a seed from the output node to its operands at all; the
+fixture-level transpose identity below refuted it, and the model was corrected rather than the
+identity being weakened. -/
+def contribution (values : Nat → ℝ) (consumerAdjoint : ℝ) (node : Node) (operand : Nat) : ℝ :=
+  consumerAdjoint * stepCoefficient values node operand
 
 /-- The adjoints after processing `fuel` nodes from the top of the stored order
 downwards. The seed is the initial adjoint vector, which carries the selected
@@ -224,12 +232,14 @@ def adjointAfter (graph : Graph) (values seed : Nat → ℝ) : Nat → (Nat → 
   | fuel + 1 =>
       let consumer := graph.arity - 1 - fuel
       let previous := adjointAfter graph values seed fuel
-      fun operand => previous operand + contribution values (adjointAfter graph values seed fuel) (graph.node consumer) operand
+      fun operand =>
+        previous operand + contribution values (previous consumer) (graph.node consumer) operand
 
 /-- The contribution of a repeated operand is counted twice, which is accumulation
 rather than overwriting. -/
-theorem repeated_operand_contributes_twice (values adjoints : Nat → ℝ) (a : Nat) :
-    contribution values adjoints (.mul a a) a = adjoints a * (values a + values a) := by
+theorem repeated_operand_contributes_twice (values : Nat → ℝ) (consumerAdjoint : ℝ) (a : Nat) :
+    contribution values consumerAdjoint (.mul a a) a
+      = consumerAdjoint * (values a + values a) := by
   simp [contribution, stepCoefficient]
 
 /-- Accumulation adds the consumer's contribution to the operand's own adjoint;
@@ -238,7 +248,8 @@ theorem adjoint_step_adds_contribution (graph : Graph) (values seed : Nat → �
     (fuel operand : Nat) :
     adjointAfter graph values seed (fuel + 1) operand
       = adjointAfter graph values seed fuel operand +
-          contribution values (adjointAfter graph values seed fuel)
+          contribution values
+            (adjointAfter graph values seed fuel (graph.arity - 1 - fuel))
             (graph.node (graph.arity - 1 - fuel)) operand := rfl
 
 /-- A node that is not an operand of the processed node leaves every adjoint
@@ -251,6 +262,32 @@ theorem adjoint_unchanged_when_operand_absent (graph : Graph) (values seed : Nat
     simp only [stepCoefficient]
     split <;> simp_all [eq_comm, Node.operands]
   simp [adjointAfter, contribution, hcoefficient]
+
+/-- The transpose pairing: the accumulated adjoints paired with a direction over the graph's slots. -/
+def adjointDot (graph : Graph) (adjoints direction : Nat → ℝ) : ℝ :=
+  ∑ index ∈ Finset.range graph.arity, adjoints index * direction index
+
+/-- One processed consumer's contributions paired with the direction. -/
+def contributionDot (graph : Graph) (values : Nat → ℝ) (consumerAdjoint : ℝ)
+    (direction : Nat → ℝ) (consumer : Nat) : ℝ :=
+  ∑ operand ∈ Finset.range graph.arity,
+    contribution values consumerAdjoint (graph.node consumer) operand * direction operand
+
+/-- **The reverse-loop pairing invariant**: pairing the adjoints after one more processed consumer
+with a direction adds exactly that consumer's contributions and nothing else, so accumulation is
+what the sweep does step by step rather than only at the end. -/
+theorem adjointDot_step (graph : Graph) (values seed direction : Nat → ℝ) (fuel : Nat) :
+    adjointDot graph (adjointAfter graph values seed (fuel + 1)) direction
+      = adjointDot graph (adjointAfter graph values seed fuel) direction
+        + contributionDot graph values
+            (adjointAfter graph values seed fuel (graph.arity - 1 - fuel)) direction
+            (graph.arity - 1 - fuel) := by
+  unfold adjointDot contributionDot
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl ?_
+  intro operand _
+  simp only [adjointAfter, contribution]
+  ring
 
 /-! ### Concrete checked fixtures
 
@@ -313,6 +350,47 @@ theorem unused_input_slot_tangent :
 theorem non_unit_seed_unconsumed :
     adjointAfter exampleGraph (fun _ => 3) (fun operand => if operand = 3 then 5 else 0) 1 3 = 5 := by
   simp only [adjointAfter, contribution, stepCoefficient, exampleGraph]
+  try norm_num
+
+/-- The evaluated node values of the fixture at the declared assignment `inputs = 3`. The reverse
+sweep needs these, not the input assignment: passing the assignment where node values belong is
+what the first draft of this fixture did, and it read `6` instead of the tangent's `8`. -/
+def exampleGraphValues : Nat → ℝ := fun index => value exampleGraph (fun _ => 3) (fun _ => 0) index
+
+/-- On the checked fixture the reverse sweep's accumulated adjoints pair with the declared direction
+to exactly the tangent `8`, so the accumulated adjoints reproduce the declared derivative for this
+graph rather than only per step. -/
+theorem exampleGraph_adjointDot :
+    adjointDot exampleGraph
+        (adjointAfter exampleGraph exampleGraphValues
+          (fun operand => if operand = 3 then 1 else 0) 4)
+        (fun slot => if slot = 0 then 1 else 0) = 8 := by
+  simp [adjointDot, adjointAfter, contribution, stepCoefficient, exampleGraph, exampleGraphValues,
+    value, valuesUpTo, evalStep]
+  try norm_num
+
+/-- Updating an adjoint by overwriting instead of accumulating the repeated operand's two
+contributions pairs to `4` on the same fixture, where the sweep pairs to `8`: the fixture
+discriminates the update rule rather than agreeing with anything. -/
+def overwritingAdjoints : Nat → ℝ :=
+  fun operand =>
+    if operand = 0 then 8 else if operand = 1 then 8 else if operand = 2 then 4 else 1
+
+/-- The overwriting update pairs to `4` on the fixture's second slot. -/
+theorem the_overwriting_update_pairs_to_four :
+    adjointDot exampleGraph overwritingAdjoints (fun slot => if slot = 2 then 1 else 0) = 4 := by
+  simp [adjointDot, exampleGraph, overwritingAdjoints]
+  try norm_num
+
+/-- The sweep pairs to `8` on the same slot, so the two updates are told apart rather than both
+being accepted. -/
+theorem the_sweep_pairs_to_eight_on_the_second_slot :
+    adjointDot exampleGraph
+        (adjointAfter exampleGraph exampleGraphValues
+          (fun operand => if operand = 3 then 1 else 0) 4)
+        (fun slot => if slot = 2 then 1 else 0) = 8 := by
+  simp [adjointDot, adjointAfter, contribution, stepCoefficient, exampleGraph, exampleGraphValues,
+    value, valuesUpTo, evalStep]
   try norm_num
 
 end NobleFoundation.ReverseAD

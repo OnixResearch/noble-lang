@@ -812,13 +812,26 @@ adjoint (`adjoint_step_adds_contribution`), a repeated operand contributes twice
 so accumulation adds rather than overwrites (`repeated_operand_contributes_twice`),
 and a node that is not an operand of the processed consumer is left unchanged,
 which is what makes the descending order finalize an adjoint before its own step
-(`adjoint_unchanged_when_operand_absent`). Nine concrete fixtures exercise the
-model: the example graph's well-formedness, denotation `16`, tangent `8` and its
-Mathlib derivative statement; a direction on an unused input slot contributing
-nothing; and a non-unit seed surviving until a consumer contributes. Twelve
-inventoried theorems; receipt
-[`verification/foundation/receipts/5dd0dd5d1/`](../../verification/foundation/receipts/5dd0dd5d1/foundation-check.json)
-(314 theorems, `clean_source: true`, axiom sets inside the allow-list,
+(`adjoint_unchanged_when_operand_absent`). A contribution multiplies the
+**consumer's** own adjoint by its partial-derivative coefficient; the first draft
+multiplied the *operand's* adjoint instead, which cannot carry a seed from the
+output node to its operands at all, and the transpose identity below refuted it.
+The transpose is then proved at two scopes: the reverse-loop **pairing
+invariant** (`adjointDot_step`) says pairing the accumulated adjoints with a
+direction over the graph's slots adds exactly the processed consumer's
+contributions, and the fixture-level **transpose identity**
+(`exampleGraph_adjointDot`) says the sweep's accumulated adjoints pair with the
+declared direction to exactly the tangent `8`. The overwrite control
+(`the_overwriting_update_pairs_to_four`) pairs to `4` on the same slot where the
+sweep pairs to `8` (`the_sweep_pairs_to_eight_on_the_second_slot`), so the fixture
+discriminates the update rule rather than agreeing with anything.
+
+Fixtures exercise the model: the example graph's well-formedness, denotation
+`16`, tangent `8` and its Mathlib derivative statement; a direction on an unused
+input slot contributing nothing; a non-unit seed surviving until a consumer
+contributes; and the pairing identity with its overwrite control. Receipt
+[`verification/foundation/receipts/3a4d3e1c4/`](../../verification/foundation/receipts/3a4d3e1c4/foundation-check.json)
+(458 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
 Open, and deliberately not closed:
@@ -826,9 +839,10 @@ Open, and deliberately not closed:
 - no ordered **binary32** gradient model: a real-valued theorem does not
   establish that binary32 gradients equal exact derivatives, and no
   reassociation, FMA contraction or parallel reduction is authorisation;
-- the **transpose identity** (`Σ adjoint·direction = tangent`) and the full
-  summation theorem stating each final adjoint as seed plus its consumers are
-  named obligations rather than proved statements here;
+- the transpose identity is proved for the **one-step pairing and one checked
+  fixture**, not for every well-formed graph, and the full summation theorem
+  stating each final adjoint as seed plus its consumers stays a named
+  obligation;
 - no correspondence claim relates this file to
   `crates/noble-ngraph/src/grad.rs`, so the ordered Rust loop's refinement is
   open, and its admission, error and quota behaviour is untouched;
