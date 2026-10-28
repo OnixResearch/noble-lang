@@ -52,7 +52,9 @@ if (plain(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim()
   throw new Error('shrinker receipt requires a clean tree: commit the lane before recording');
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
-const host = run(['uname', '-srm'], root).trim();
+// `uname` needs no devShell, and `run` would fold store/GC progress into the recorded
+// host string.
+const host = plain(['uname', '-srm'], root).trim();
 // Inside `nix develop` the host profile's `bash` wrapper replaces PATH with the host
 // profile's, which carries no cargo (exit 127); `sh -c` keeps the devShell PATH.
 const testRun = run(['sh', '-c', command], root);
