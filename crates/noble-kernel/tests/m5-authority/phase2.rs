@@ -218,3 +218,104 @@ fn revocation_between_authorization_and_admission_refuses_the_admission() -> Res
     assert_eq!(fixture.table.retire_witness(retained), Ok(()));
     Ok(())
 }
+
+#[test]
+fn advancing_the_checkpoint_invalidates_stale_facts_without_restoring_authority(
+) -> Result<(), String> {
+    // A stale checkpoint is refused as stale facts rather than as capacity, and the refusal neither
+    // resurrects the consumed witness nor adds a protected execution. The fresh snapshot then has to
+    // carry the prior reservation forward: the same quota that admitted once admits nothing more.
+    let mut fixture = support::fixture()?;
+    quote(&mut fixture.facts, UNITS);
+    let (first, second) = two_witnesses(&mut fixture)?;
+    let consumed = first.claim();
+    assert!(matches!(
+        admit_witness(&mut fixture, first),
+        noble_kernel::authority::Admission::Committed(_)
+    ));
+    let stale = fixture.facts.clone();
+    assert_eq!(
+        fixture
+            .table
+            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
+                sequence: 4,
+                now: 51,
+            }),
+        Ok(()),
+        "a monotone checkpoint is accepted"
+    );
+    // Reusing the pre-advance checkpoint is stale facts.
+    let mut backwards = support::fixture()?;
+    assert_eq!(
+        backwards
+            .table
+            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
+                sequence: 3,
+                now: 50,
+            }),
+        Err(noble_kernel::authority::SetupError::StaleCheckpoint),
+        "a repeated sequence is refused by the table"
+    );
+    let denied = match admit_witness(&mut fixture, second) {
+        noble_kernel::authority::Admission::Denied { witness, rejection } => {
+            assert_eq!(
+                rejection.receipt().description().denial,
+                Some(noble_kernel::authority::Denial::StaleFacts),
+                "a pre-advance snapshot is stale facts, not a quota denial"
+            );
+            witness.ok_or("a denial returns the original obligation")?
+        }
+        other => return Err(std::format!("expected a stale-facts denial: {other:?}")),
+    };
+    assert_eq!(
+        fixture.table.witness_snapshot(consumed),
+        Ok(noble_kernel::authority::WitnessSnapshot {
+            claim: consumed,
+            state: noble_kernel::authority::WitnessState::Consumed
+        }),
+        "the stale denial does not resurrect the consumed witness"
+    );
+    assert_eq!(
+        fixture.table.counters().protected_operations,
+        0,
+        "a stale denial adds no protected execution: only an approved observation counts one"
+    );
+    assert_eq!(
+        fixture.table.counters().attempts_admitted,
+        1,
+        "no attempt is admitted by a stale denial"
+    );
+
+    // The fresh facts carry the reservation forward, so the same quota admits nothing more.
+    let mut fresh = stale;
+    fresh.checkpoint = noble_kernel::authority::Checkpoint {
+        sequence: 4,
+        now: 51,
+    };
+    fixture.facts = fresh;
+    quote(&mut fixture.facts, 0);
+    let still_denied = match admit_witness(&mut fixture, denied) {
+        noble_kernel::authority::Admission::Denied { witness, rejection } => {
+            let denial = rejection.receipt().description().denial;
+            assert!(
+                matches!(
+                    denial,
+                    Some(noble_kernel::authority::Denial::QuotaExhausted)
+                        | Some(noble_kernel::authority::Denial::InconsistentQuota)
+                ),
+                "a carried-forward snapshot has no capacity left: {denial:?}"
+            );
+            witness.ok_or("a denial returns the original obligation")?
+        }
+        other => return Err(std::format!("expected a quota denial: {other:?}")),
+    };
+    assert_eq!(
+        fixture.table.witness_snapshot(still_denied.claim()),
+        Ok(noble_kernel::authority::WitnessSnapshot {
+            claim: still_denied.claim(),
+            state: noble_kernel::authority::WitnessState::Live
+        }),
+        "the quota denial spends nothing either"
+    );
+    Ok(())
+}
