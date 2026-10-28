@@ -830,7 +830,7 @@ Fixtures exercise the model: the example graph's well-formedness, denotation
 `16`, tangent `8` and its Mathlib derivative statement; a direction on an unused
 input slot contributing nothing; a non-unit seed surviving until a consumer
 contributes; and the pairing identity with its overwrite control. Receipt
-[`verification/foundation/receipts/3a4d3e1c4/`](../../verification/foundation/receipts/3a4d3e1c4/foundation-check.json)
+[`verification/foundation/receipts/b91f5504c/`](../../verification/foundation/receipts/b91f5504c/foundation-check.json)
 (458 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
