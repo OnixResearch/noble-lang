@@ -143,13 +143,11 @@ fn a_dropped_generation_check_is_detected_by_the_handle_guard() -> Result<(), St
         "the refused callback changed nothing"
     );
 
-    assert!(
-        generation_accepted(
-            Rule::Documented,
-            stale.generation,
-            retained.handle.generation
-        ) == false
-    );
+    assert!(!generation_accepted(
+        Rule::Documented,
+        stale.generation,
+        retained.handle.generation
+    ));
     assert!(generation_accepted(
         Rule::DroppedGenerationCheck,
         stale.generation,
