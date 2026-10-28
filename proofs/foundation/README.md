@@ -1335,6 +1335,10 @@ Proved, all over finite input lists:
   (`batch_row_executes_as_its_reference_run`), by reusing the sequence-lifting
   theorem `exec_lowerAll` rather than restating it.
 
+Nine inventoried theorems; receipt
+[verification/foundation/receipts/781c2f490/](../../verification/foundation/receipts/781c2f490/foundation-check.json)
+(452 theorems, `clean_source: true`).
+
 Open, and deliberately not closed by this model: no row-count, byte, staging or
 work budget is modelled, no validation rule beyond the literal range is
 modelled, no parameter snapshot or output ownership is modelled, and no
