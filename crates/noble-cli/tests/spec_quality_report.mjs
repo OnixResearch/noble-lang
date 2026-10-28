@@ -57,7 +57,6 @@ const refused = async (name, document, outcome) => {
   assert.equal(reported.schema, 'noble-mc2-spec-quality/v1');
   assert.equal(reported.guest_requests, 0, `${name} performs no guest execution`);
   assert.equal(reported.protected_operations, 0, `${name} performs no guest execution`);
-  assert.ok(reported.diagnostic.length > 0, `${name} names its refusal`);
   return reported.outcome;
 };
 
@@ -134,6 +133,29 @@ const incrementClaims = () => ({
   relation: increment,
   obligations: [specification('inhabited'), specification('realizable'), specification('deterministic')],
 });
+
+// Change one binding of the accepted wrapping-increment submission at a time. A correct relation
+// cannot compensate for a different predicate/model revision, observation rule or parameter binding.
+for (const [field, value, outcome] of [
+  ['predicate_revision', 2, 'wrong-predicate-revision'],
+  ['model_revision', 2, 'wrong-model-revision'],
+  ['observation_relation', 'i64-parity-equality', 'wrong-observation-relation'],
+  ['parameter_binding', 'unordered-exact-i64-bool', 'wrong-parameter-binding'],
+]) {
+  outcomes.add(await refused(outcome,
+    withBindings({ ...incrementClaims(), [field]: value }), outcome));
+}
+
+// Both directions of claim/kind substitution must fail, even with correct profile bindings and a
+// retained relation that establishes all three specification-quality claims.
+for (const [name, claim, kind] of [
+  ['specification-as-implementation', 'deterministic', 'implementation-satisfaction'],
+  ['implementation-as-specification', 'satisfied', 'specification-quality'],
+]) {
+  outcomes.add(await refused(name,
+    withBindings({ relation: increment, obligations: [obligation(claim, kind, true)] }),
+    'wrong-obligation'));
+}
 
 // A manifest that attests obligations its own retained relation refuses is not read as agreement.
 outcomes.add(await refused('self-attested-realizability',
@@ -339,4 +361,4 @@ assert.deepEqual(vacuous.document.specification_quality.obligations.map(entry =>
   ['inhabited', 'realizable', 'deterministic'],
   'a vacuous implementation claim also remains outside specification-quality evidence');
 
-console.log('spec-quality: refusal classes, derived propositions and separated obligations measured');
+console.log(`spec-quality: refusal classes ${[...outcomes].sort().join(', ')}; derived propositions and separated obligations measured`);

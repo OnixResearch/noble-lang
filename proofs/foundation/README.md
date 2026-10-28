@@ -1252,7 +1252,16 @@ relation cannot be selected by a producer to make determinacy pass.
 Obligation kinds are paired, not interchangeable: a specification-quality claim
 (`inhabited`, `realizable`, `deterministic`) submitted as implementation
 satisfaction, or the implementation claim submitted as specification quality, is
-refused as `wrong-obligation` by type-level pairing rather than by convention.
+refused as `wrong-obligation` by explicit claim/kind validation.
+
+The selected-CLI lane checks criterion 6 with six artifact controls: predicate
+revision `2`, model revision `2`, an unselected `i64-parity-equality` observation
+rule, an `unordered-exact-i64-bool` parameter binding, and claim/kind substitution
+in both directions (`deterministic` as implementation satisfaction and `satisfied`
+as specification quality). Each exits `2` with its specific refusal class; the
+matching wrapping-increment submission remains accepted. The four binding
+controls alter only one field of that otherwise valid submission, so an
+unrelated malformed relation cannot account for their refusal.
 
 The report keeps four obligations apart: `specification_quality` (only
 specification-quality rows, with disjoint established/not-established/vacuous
