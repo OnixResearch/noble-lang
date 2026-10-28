@@ -53,7 +53,9 @@ if (plain(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim()
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
 const host = run(['uname', '-srm'], root).trim();
-const testRun = run(['bash', '-c', command], root);
+// Inside `nix develop` the host profile's `bash` wrapper replaces PATH with the host
+// profile's, which carries no cargo (exit 127); `sh -c` keeps the devShell PATH.
+const testRun = run(['sh', '-c', command], root);
 for (const lane of lanes) {
   if (!new RegExp(`test ${lane} \\.\.\. ok`).test(testRun)) {
     throw new Error(`shrinker lane did not pass: ${lane}\n${testRun.slice(-2000)}`);
