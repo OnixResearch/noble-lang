@@ -134,7 +134,10 @@ pub fn parse(path: &Path) -> Result<Manifest, Box<dyn std::error::Error>> {
 ///
 /// Node specifications are `const:<decimal>`, `add:<left>:<right>` and `mul:<left>:<right>`, where
 /// the operands name earlier nodes by canonical creation index. The last node is the output.
-pub fn build(ids: &dyn IdentityScheme, fixture: &Fixture) -> Result<Graph, Box<dyn std::error::Error>> {
+pub fn build(
+    ids: &dyn IdentityScheme,
+    fixture: &Fixture,
+) -> Result<Graph, Box<dyn std::error::Error>> {
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
         Subject::authored(ids, &std::format!("rewrite-quality-{}", fixture.name)),

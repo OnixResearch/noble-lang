@@ -28,7 +28,8 @@ struct Row {
 }
 
 fn measure(graph: &noble_ngraph::ir::Graph, proposer: Proposer) -> Row {
-    let (derivation, result): (Derivation, noble_ngraph::ir::Graph) = cert::propose(&IDS, proposer, graph);
+    let (derivation, result): (Derivation, noble_ngraph::ir::Graph) =
+        cert::propose(&IDS, proposer, graph);
     let verdict = cert::check(&IDS, graph, &result, &derivation);
     let residual = cert::residual_fold_sites(&result);
     Row {

@@ -465,11 +465,8 @@ mod tests {
             .editor_paths(crate::Limits::default())
             .expect("repeated mapping");
         assert_eq!(paths.len(), 5, "four words and one quotation");
-        let direct_paths: alloc::vec::Vec<_> = paths
-            .iter()
-            .take(3)
-            .map(|(_, path)| path.clone())
-            .collect();
+        let direct_paths: alloc::vec::Vec<_> =
+            paths.iter().take(3).map(|(_, path)| path.clone()).collect();
         assert_eq!(
             direct_paths,
             alloc::vec![alloc::vec![0], alloc::vec![1], alloc::vec![2, 0]],
@@ -504,7 +501,10 @@ mod tests {
             bytes[start..end].starts_with("+".as_bytes()),
             "the span names the word's own bytes first"
         );
-        assert_eq!(start, 3, "the two-byte integer and its separator precede the word");
+        assert_eq!(
+            start, 3,
+            "the two-byte integer and its separator precede the word"
+        );
 
         // Unicode coverage is a refusal rather than a silent transliteration: the editor word
         // grammar admits ASCII words only, so a non-ASCII word is refused at the parse stage at the
@@ -518,7 +518,10 @@ mod tests {
             .expect_err("a non-ASCII word is refused, never transliterated");
         assert_eq!(refusal.stage(), super::super::Stage::Parse);
         assert_eq!(refusal.diagnostic().kind.category(), "invalid");
-        assert_eq!(refusal.diagnostic().span.start, refusal.diagnostic().span.end);
+        assert_eq!(
+            refusal.diagnostic().span.start,
+            refusal.diagnostic().span.end
+        );
     }
 
     #[test]

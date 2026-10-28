@@ -76,8 +76,9 @@ fn measure(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
     let (derivation, result): (Derivation, Graph) = cert::propose(&IDS, proposer, graph);
     let (propose_median, propose_iqr) =
         warm_stats(samples, || drop(cert::propose(&IDS, proposer, graph)));
-    let (check_median, check_iqr) =
-        warm_stats(samples, || drop(cert::check(&IDS, graph, &result, &derivation)));
+    let (check_median, check_iqr) = warm_stats(samples, || {
+        drop(cert::check(&IDS, graph, &result, &derivation))
+    });
     // Structural in-memory estimate: one `Step` per step plus the derivation header. This is not the
     // wire size, and no Rust encoder exists to produce that.
     let footprint_bytes = std::mem::size_of::<Derivation>()
@@ -162,7 +163,10 @@ fn certified_rewrite_costs_are_reported_apart_from_validity_and_coverage(
         "the continuation threshold is pre-registered, not discovered"
     );
     assert!(
-        manifest.stages.iter().any(|stage| stage.status == "measured"),
+        manifest
+            .stages
+            .iter()
+            .any(|stage| stage.status == "measured"),
         "some stage is observed"
     );
     assert!(
@@ -224,7 +228,11 @@ fn certified_rewrite_costs_are_reported_apart_from_validity_and_coverage(
                     "{}: identity derivation has no steps",
                     fixture.name
                 );
-                assert!(row.residual > 0, "{}: identity reaches no target", fixture.name);
+                assert!(
+                    row.residual > 0,
+                    "{}: identity reaches no target",
+                    fixture.name
+                );
             }
             assert!(
                 row.check_us >= 0.0 && row.propose_us >= 0.0,
@@ -266,7 +274,9 @@ fn certified_rewrite_costs_are_reported_apart_from_validity_and_coverage(
         .map(|stage| {
             std::format!(
                 "{{\"name\": \"{}\", \"status\": \"{}\", \"reason\": \"{}\"}}",
-                stage.name, stage.status, stage.reason
+                stage.name,
+                stage.status,
+                stage.reason
             )
         })
         .collect::<Vec<_>>()

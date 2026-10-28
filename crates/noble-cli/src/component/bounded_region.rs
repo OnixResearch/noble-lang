@@ -56,7 +56,11 @@ impl ExitClass {
 
     /// Classify an invocation that returned normally.
     const fn of_return(rejection: bool) -> Self {
-        if rejection { Self::Rejected } else { Self::Normal }
+        if rejection {
+            Self::Rejected
+        } else {
+            Self::Normal
+        }
     }
 }
 
