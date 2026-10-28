@@ -1362,13 +1362,48 @@ released slot (acquire-then-finish refuses the admission, finish-then-acquire ta
 it). Cancellation/delivery races, generation reuse and shared-capacity
 conflicts therefore stay dependent.
 
+The independence rules are then **proved or refuted separately at the declared
+bound**, so a reduction is only ever proposed for a swap the model supports:
+
+- slot-local actions on the distinct ids **commute**: `cancel_orders_agree_on_distinct_ids`
+  and `finish_orders_agree_on_distinct_ids` reach the same documented
+  observation in either order, so the swap preserves enabledness, the related
+  state and the observation for those actions;
+- delivery is **not** independent: `delivery_orders_disagree_on_distinct_ids`
+  differs because the documented observation keeps one ordered delivery record,
+  while `delivery_orders_agree_under_the_lossy_observation` shows the same two
+  orders agreeing under the lossy projection — so an equivalence read from that
+  projection would hide a dependence the documented observation retains;
+- the shared slot, not the id, decides enabledness:
+  `admission_depends_on_which_id_holds_the_shared_slot` reaches two different
+  documented observations from one released slot, and
+  `composed_admissions_agree_while_the_prefixes_differ` records that both
+  *composed* admission orders end refused, so an equality read from the
+  composition would hide the reachable-prefix dependence rather than prove
+  independence;
+- the sticky first failure is shared: `failure_orders_disagree_on_distinct_ids`
+  differs across the two failing-completion orders on the two-generation
+  `pairedGenerations` table;
+- `stale_callback_is_observation_free` states the one action that is
+  observation-free at the declared bound.
+
+Two first drafts of the admission and failure witnesses were *refuted* by the
+kernel checker because both of their first steps were refused; the statements
+were corrected to reachable prefixes and two live generations rather than
+weakened into tautologies. Eight further inventoried theorems, receipt
+[verification/foundation/receipts/729e5d199/](../../verification/foundation/receipts/729e5d199/foundation-check.json)
+(443 theorems, `clean_source: true`).
+
 Open, and deliberately not closed:
 
 - this is a bounded subject, not a scheduler and not a new source-level async
   model, and no payload/outcome class outside the listed actions is enumerated;
 - no correspondence claim relates the model to the Rust table API in
   `crates/noble-kernel/src/async_tasks/table`; the invariants are model claims;
-- the universal reduction theorem is not proved and no reduced search exists;
+- the universal reduction theorem is not proved and no reduced search exists:
+  the independence fragment above is bounded evidence at the declared bound,
+  with concrete witnesses rather than a theorem over every table and action
+  list, so it never enables a reduction by itself;
   weak-memory ordering, liveness, fairness, callback-delivery guarantees,
   cleanup after host death and once-only remote effects are outside the model;
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal
