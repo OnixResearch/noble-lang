@@ -22,3 +22,5 @@ fixture single-fold | target no-foldable-sites | nodes const:5 const:7 add:0:1
 fixture chained-folds | target no-foldable-sites | nodes const:5 const:7 add:0:1 const:3 add:2:3
 fixture ordered-outputs | target no-foldable-sites | nodes const:2 const:3 add:0:1 const:10 add:0:3
 fixture shared-operand | target no-foldable-sites | nodes const:5 const:1 add:0:1 mul:2:0
+fixture wrapping-boundary | target no-foldable-sites | nodes const:9223372036854775807 const:1 add:0:1
+fixture operand-order | target no-foldable-sites | nodes const:5 const:7 add:1:0

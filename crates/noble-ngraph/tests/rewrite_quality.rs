@@ -39,6 +39,20 @@ fn measure(graph: &noble_ngraph::ir::Graph, proposer: Proposer) -> Row {
     }
 }
 
+/// The reviewed corpus, in manifest order, with each fixture's measured number of foldable
+/// sites. Pinning both binds the fixtures' *content*, not just their names: a fixture that
+/// disappears, is renamed, is relabelled unsupported, or has its declared nodes weakened changes
+/// this row and fails here, so coverage cannot improve by editing the manifest alone.
+const REVIEWED_FIXTURES: [(&str, usize); 7] = [
+    ("independent-folds", 2),
+    ("single-fold", 1),
+    ("chained-folds", 1),
+    ("ordered-outputs", 2),
+    ("shared-operand", 1),
+    ("wrapping-boundary", 1),
+    ("operand-order", 1),
+];
+
 #[test]
 fn quality_acceptance_is_separate_from_certificate_validity(
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -57,6 +71,20 @@ fn quality_acceptance_is_separate_from_certificate_validity(
         "the manifest binds the rules it exercises"
     );
     assert!(!manifest.fixtures.is_empty(), "the corpus is not empty");
+    // The corpus itself is frozen: declared order and measured sites must match the reviewed
+    // rows, so a fixture cannot silently disappear or be weakened to improve coverage.
+    assert_eq!(
+        manifest
+            .fixtures
+            .iter()
+            .map(|fixture| fixture.name.as_str())
+            .collect::<Vec<_>>(),
+        REVIEWED_FIXTURES
+            .iter()
+            .map(|(name, _)| *name)
+            .collect::<Vec<_>>(),
+        "the reviewed fixture set changed"
+    );
 
     let mut valid_but_unoptimized = 0_usize;
     for fixture in &manifest.fixtures {
@@ -64,6 +92,16 @@ fn quality_acceptance_is_separate_from_certificate_validity(
         let graph = rewrite_corpus::build(&IDS, fixture)?;
         let sites = cert::residual_fold_sites(&graph);
         assert!(sites > 0, "{} declares nothing to optimize", fixture.name);
+        let reviewed = REVIEWED_FIXTURES
+            .iter()
+            .find(|(name, _)| *name == fixture.name)
+            .map(|(_, sites)| *sites)
+            .ok_or_else(|| std::format!("{} is not a reviewed fixture", fixture.name))?;
+        assert_eq!(
+            sites, reviewed,
+            "{} declares {} foldable sites, the reviewed corpus declares {reviewed}",
+            fixture.name, sites
+        );
 
         let identity = measure(&graph, Proposer::Identity);
         assert_eq!(
