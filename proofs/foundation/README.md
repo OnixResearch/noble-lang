@@ -1343,6 +1343,10 @@ configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
 substitutions and seeded generated values, with three `control-` cases that a
 counting-only depth scan would decide differently. The lane agrees on every case.
 
+Nineteen inventoried theorems; receipt
+[verification/foundation/receipts/134b215c5/](../../verification/foundation/receipts/134b215c5/foundation-check.json)
+(454 theorems, `clean_source: true`).
+
 Open, and deliberately not closed: no extraction or refinement proof relates
 `wire.rs` to the model, so the differential is finite evidence on one host and
 target rather than a correspondence theorem; the canonicality theorems apply to

@@ -10,6 +10,8 @@
 - [x] [serial] Compare the Rust codec against that case file in \`crates/noble-kernel/tests/service_ref_differential.rs\`, asserting the one documented bracket-scan divergence rather than pinning it as agreement. r[VC-REF-02]
 - [x] [serial] Retain \`verification/service-ref/differential.json\`: clean commit, \`rustc 1.96.0-nightly\`, host \`Linux 6.18.54 x86_64\`, the case-file and lane digests, the coverage counts and the open Rust-to-model edge. r[VC-REF-03]
 
+- [x] [serial] Correct the model's depth scan to a balanced one after a finite Lean-generated corpus comparison disagreed with the codec on one stray-opener input, realign \`verification/service-ref/cases.mjs\` and replace the recorded divergence with three \`control-\` cases that a counting-only scan would decide differently; receipt \`verification/foundation/receipts/134b215c5/\` records 454 theorems with \`clean_source: true\`. r[VC-REF-02]
+
 ## Phase 3: Promotion (not selected)
 
 - [ ] [serial] Relate \`crates/noble-kernel/src/dataspace/wire.rs\` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-REF-03]
