@@ -66,6 +66,7 @@
 
 extern crate alloc;
 
+pub mod batch;
 pub mod cert;
 pub mod check;
 pub mod compiled;
@@ -83,6 +84,7 @@ pub mod sem;
 pub mod snapshot;
 pub mod train;
 
+pub use batch::{declared_row_work, evaluate, evaluate_into, Row, RowOp};
 pub use check::{check, check_with, Budgets, CheckedGraph};
 pub use diag::{BudgetKind, Code, Diagnostic, Malformed, Outcome, Site};
 pub use eval::{reference, Control, Obs, Report};
