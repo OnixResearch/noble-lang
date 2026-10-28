@@ -1552,8 +1552,27 @@ weakened into tautologies. Eight further inventoried theorems, receipt
 [verification/foundation/receipts/729e5d199/](../../verification/foundation/receipts/729e5d199/foundation-check.json)
 (443 theorems, `clean_source: true`).
 
+**The bounded explorer.** `exploreAlphabet`, `sequencesOfLength` and `sequencesUpTo`
+populate a baseline observation set from the declared alphabet up to depth three
+(`baselineObservations`, `declaredBaseline`), refused steps contributing no
+observation rather than a silent state. The enumeration is proved complete for
+that bound: it contains every sequence of the declared length over the declared
+alphabet (`mem_sequencesOfLength`), a deeper enumeration contains every shorter
+one (`sequencesUpTo_contains_shorter`), and therefore every sequence within the
+declared depth appears in it (`the_baseline_enumeration_is_complete`) — so a
+reduction may not claim agreement against a smaller search than this one.
+
+Full/reduced agreement is then *measured* on the declared pairs: the independent
+pair's swap preserves the documented observation in both orders
+(`the_independent_pairs_swap_preserves_the_observation`), while the delivery pair
+changes it (`the_reduction_must_exclude_the_delivery_pair`), so a reduction that
+kept the delivery swap would be unsound rather than merely unproven.
+
 Open, and deliberately not closed:
 
+- **reproducible witness shrinking is absent**: a first-witness scan over prefix
+  lengths is the next step, and it is deliberately not approximated by a scan
+  that returns a witness without proving it is the first one;
 - this is a bounded subject, not a scheduler and not a new source-level async
   model, and no payload/outcome class outside the listed actions is enumerated;
 - no correspondence claim relates the model to the Rust table API in

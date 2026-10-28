@@ -2692,6 +2692,36 @@
       "claim": "the sticky first failure is shared, so the two failing-completion orders reach different observations"
     },
     {
+      "name": "NobleFoundation.TaskInterleaving.mem_sequencesOfLength",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the enumeration contains every sequence of the declared length over the declared alphabet"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.sequencesUpTo_contains_shorter",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a deeper enumeration contains every shorter one"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_baseline_enumeration_is_complete",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every sequence over the declared alphabet within the declared depth appears in the enumeration the baseline is populated from"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_independent_pairs_swap_preserves_the_observation",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the measured independent pair's swap preserves the documented observation in both declared orders"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_reduction_must_exclude_the_delivery_pair",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "swapping the delivery pair changes the documented observation, so an agreement-measured reduction must exclude it"
+    },
+    {
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",

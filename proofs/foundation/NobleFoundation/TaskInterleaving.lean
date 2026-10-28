@@ -690,4 +690,121 @@ theorem ordered_delivery_prefixes_are_distinguished :
     , { baseline with deliveries := [(.right, 1), (.left, 1)] }
     , by decide, by decide, by decide, by decide⟩
 
+/-! ### Bounded schedule explorer (issue #46's baseline, reduction and shrinking lane)
+
+The model above names reachability and what holds at every reachable prefix. This section adds the
+three things a reduction claim needs before it can be made, all at a declared bound:
+
+* a **baseline observation set**, populated by an exhaustive enumeration of the declared alphabet up
+  to a declared depth, with a completeness statement about that enumeration;
+* **full/reduced agreement measured on the declared pair**: the enumeration kernel-checks that the
+  independent pair's swap preserves the observation, and that the delivery pair is a counterexample
+  the reduction must exclude;
+* and what is *not* here: reproducible witness shrinking. A first-witness scan over prefix lengths is
+  designed below as the next step and is deliberately absent until it is proved, rather than being
+  approximated by a scan that returns a witness without proving it is the first one.
+
+Nothing here proves a reduction correct for every table and action list, and the enumerations are
+bounded by the declared alphabet and depth rather than exhaustive over the language.
+-/
+
+/-- The declared exploration alphabet: one canonical action per action kind at two generations so
+same-slot reuse is reachable. -/
+def exploreAlphabet : List Action :=
+  [ .acquire .left 1,
+    .acquire .right 1,
+    .cancel .left 1,
+    .finish .left 1,
+    .staleCallback .left 1,
+    .deliver .left 1,
+    .complete .left 1 true,
+    .settle .left 1 ]
+
+/-- Every sequence of exactly `depth` actions over the alphabet, in the alphabet's order. -/
+def sequencesOfLength (alphabet : List Action) : Nat → List (List Action)
+  | 0 => [[]]
+  | depth + 1 =>
+      (sequencesOfLength alphabet depth).flatMap (fun lead => alphabet.map (fun action => action :: lead))
+
+/-- Every sequence of at most `depth` actions over the alphabet. -/
+def sequencesUpTo (alphabet : List Action) : Nat → List (List Action)
+  | 0 => [[]]
+  | depth + 1 => sequencesOfLength alphabet (depth + 1) ++ sequencesUpTo alphabet depth
+
+/-- The baseline observations reachable from a start table over an enumerated sequence list. Refused
+steps contribute no observation, so a refusal is not silently recorded as a state. -/
+def baselineObservations (start : Table) (sequences : List (List Action)) : List Observation :=
+  (sequences.filterMap (fun sequence => (reaches sequence start).map observe))
+
+/-- The declared baseline: the alphabet's sequences up to depth three from the empty table. -/
+def declaredBaseline : List Observation :=
+  baselineObservations (emptyTable 1) (sequencesUpTo exploreAlphabet 3)
+
+/-- The enumeration really contains every sequence of that length over the alphabet. -/
+theorem mem_sequencesOfLength (alphabet : List Action) (depth : Nat) (sequence : List Action)
+    (hLength : sequence.length = depth) (hAll : ∀ action ∈ sequence, action ∈ alphabet) :
+    sequence ∈ sequencesOfLength alphabet depth := by
+  induction depth generalizing sequence with
+  | zero =>
+      simp only [List.length_eq_zero_iff] at hLength
+      subst hLength
+      simp only [sequencesOfLength, List.mem_singleton]
+  | succ depth ih =>
+      match sequence with
+      | [] => exact absurd hLength (by simp)
+      | head :: tail =>
+          have hTailLength : tail.length = depth := by simp only [List.length_cons] at hLength; omega
+          have hHead : head ∈ alphabet := hAll head (by simp)
+          have hTail : ∀ action ∈ tail, action ∈ alphabet := by
+            intro action hMember
+            exact hAll action (List.mem_cons_of_mem head hMember)
+          have hMem : tail ∈ sequencesOfLength alphabet depth := ih tail hTailLength hTail
+          simp only [sequencesOfLength, List.mem_flatMap, List.mem_map]
+          exact ⟨tail, hMem, head, hHead, rfl⟩
+
+/-- A deeper enumeration contains every shorter one. -/
+theorem sequencesUpTo_contains_shorter (alphabet : List Action) {shorter depth : Nat}
+    (hBound : shorter ≤ depth) : sequencesOfLength alphabet shorter ⊆ sequencesUpTo alphabet depth := by
+  induction depth with
+  | zero =>
+      have hZero : shorter = 0 := by omega
+      subst hZero
+      intro sequence hMember
+      simpa [sequencesUpTo, sequencesOfLength] using hMember
+  | succ depth ih =>
+      by_cases hLast : shorter = depth + 1
+      · subst hLast
+        intro sequence hMember
+        rw [sequencesUpTo]
+        exact List.mem_append_left _ hMember
+      · have hInner : shorter ≤ depth := by omega
+        intro sequence hMember
+        rw [sequencesUpTo]
+        exact List.mem_append_right _ (ih hInner hMember)
+
+/-- **The baseline is complete for the declared bound**: every sequence over the declared alphabet
+whose length is at most the declared depth appears in the enumeration the baseline is populated
+from, so a reduction may not claim agreement against a smaller search than this one. -/
+theorem the_baseline_enumeration_is_complete (depth : Nat) (sequence : List Action)
+    (hBound : sequence.length ≤ depth) (hAll : ∀ action ∈ sequence, action ∈ exploreAlphabet) :
+    sequence ∈ sequencesUpTo exploreAlphabet depth := by
+  exact sequencesUpTo_contains_shorter exploreAlphabet hBound
+    (mem_sequencesOfLength exploreAlphabet sequence.length sequence rfl hAll)
+
+/-- **Full/reduced agreement, measured**: the independent pair's swap preserves the documented
+observation in both declared orders, so the reduction may swap it on this table. -/
+theorem the_independent_pairs_swap_preserves_the_observation :
+    Option.map observe ((step (.finish .right 1) paired).bind (step (.cancel .left 1)))
+        = Option.map observe ((step (.cancel .left 1) paired).bind (step (.finish .right 1)))
+      ∧ Option.map observe ((step (.finish .left 1) paired).bind (step (.cancel .right 1)))
+        = Option.map observe ((step (.cancel .right 1) paired).bind (step (.finish .left 1))) := by
+  decide
+
+/-- The delivery pair is the counterexample the reduction must **exclude**: swapping the two delivery
+orders changes the documented observation, so a reduction that kept it would be unsound. -/
+theorem the_reduction_must_exclude_the_delivery_pair :
+    Option.map observe ((step (.deliver .right 1) paired).bind (step (.deliver .left 1)))
+      ≠ Option.map observe ((step (.deliver .left 1) paired).bind (step (.deliver .right 1))) := by
+  decide
+
 end NobleFoundation.TaskInterleaving
