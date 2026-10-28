@@ -49,7 +49,11 @@ elab "check_contract_library" : command => do
     ``NobleContracts.SpecQuality.wrong_obligation_cannot_be_accepted,
     ``NobleContracts.SpecQuality.wrong_observation_relation_cannot_be_accepted,
     ``NobleContracts.SpecQuality.wrong_parameter_binding_cannot_be_accepted,
-    ``NobleContracts.SpecQuality.asserted_satisfaction_yields_no_artifact]
+    ``NobleContracts.SpecQuality.asserted_satisfaction_yields_no_artifact,
+    ``NobleContracts.SpecQuality.admissible_pins_its_lengths,
+    ``NobleContracts.SpecQuality.a_shrunk_assignment_never_rechecks,
+    ``NobleContracts.SpecQuality.a_prefix_candidate_is_refused,
+    ``NobleContracts.SpecQuality.every_shorter_candidate_is_refused]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()

@@ -344,4 +344,67 @@ theorem asserted_satisfaction_yields_no_artifact :
   intro accepted
   exact accepted.2.2.2.2.2
 
+/-! ### Recheck during shrinking (issue #65 residual)
+
+A witness is only evidence for the assignment it rechecks at. A shrinker that hands back a shorter
+ordered input stack must therefore hand it back as a *candidate*: the same `Recheck` applies to the
+shrunk stacks, and in this exact ordered profile no strictly shorter assignment can satisfy it.
+
+Refuted first draft: "shrinking preserves the witness", i.e. that a prefix of a witnessing assignment
+witnesses the same proposition. Prefixes of an exact ordered stack are typed against a shorter type
+list, never the retained one, so the retained relation's own `Admissible` refuses them; the theorem
+below states that refusal rather than assuming shrinking away. -/
+
+/-- A shrink proposal: a strictly shorter ordered input stack than the witness used. -/
+def Shrinks (before shrunk : Stack) : Prop :=
+  shrunk.length < before.length
+
+/-- Exact ordered typing pins the stack length, so a producer cannot choose an assignment length. -/
+theorem StackTyped.length_eq {stack : Stack} {types : List Ty} (typed : StackTyped stack types) :
+    stack.length = types.length := by
+  induction typed with
+  | nil => rfl
+  | cons _ _ ih => simp only [List.length_cons, List.length_cons, ih]
+
+/-- An admissible assignment's stacks are exactly as long as their declared type lists, so its own
+length is pinned by the retained relation rather than by the producer. -/
+theorem admissible_pins_its_lengths {spec : Spec} {before params : Stack}
+    (admissible : Admissible spec before params) :
+    before.length = spec.input.length ∧ params.length = spec.params.length :=
+  ⟨StackTyped.length_eq admissible.1, StackTyped.length_eq admissible.2.1⟩
+
+/-- A strictly shorter assignment never rechecks, so a producer cannot shrink a witness and keep the
+same evidence: the shrink has to be refused, not trusted. -/
+theorem a_shrunk_assignment_never_rechecks {spec : Spec} {before shrunk after params : Stack}
+    (shrinks : Shrinks before shrunk) (admissible : Admissible spec before params) :
+    ¬ Recheck spec shrunk after params := by
+  intro rechecked
+  have shrunkLength : shrunk.length = spec.input.length :=
+    (admissible_pins_its_lengths rechecked.1).1
+  have witnessLength : before.length = spec.input.length :=
+    (admissible_pins_its_lengths admissible).1
+  unfold Shrinks at shrinks
+  rw [shrunkLength, witnessLength] at shrinks
+  exact Nat.lt_irrefl spec.input.length shrinks
+
+/-- A prefix candidate examined by a shrinker: the witness assignment with `offset` inputs kept. -/
+theorem a_prefix_candidate_is_refused {spec : Spec} {before after params : Stack}
+    (admissible : Admissible spec before params) {offset : Nat} (hShorter : offset < before.length) :
+    ¬ Recheck spec (before.take offset) after params := by
+  have hLength : (before.take offset).length = offset := by
+    rw [List.length_take, Nat.min_eq_left (by omega)]
+  refine a_shrunk_assignment_never_rechecks ?_ admissible
+  unfold Shrinks
+  rw [hLength]
+  exact hShorter
+
+/-- **Recheck during shrinking, measured**: every strictly shorter candidate assignment of a witness
+is refused by the retained relation, so a shrinker may propose candidates but never report a smaller
+one as evidence. The statement ranges over all shorter stacks rather than only the prefixes a scan
+would visit. -/
+theorem every_shorter_candidate_is_refused (spec : Spec) (before after params : Stack)
+    (admissible : Admissible spec before params) :
+    ∀ candidate : Stack, Shrinks before candidate → ¬ Recheck spec candidate after params :=
+  fun _candidate shrinks => a_shrunk_assignment_never_rechecks shrinks admissible
+
 end NobleContracts.SpecQuality
