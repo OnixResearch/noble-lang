@@ -1254,13 +1254,24 @@ Obligation kinds are paired, not interchangeable: a specification-quality claim
 satisfaction, or the implementation claim submitted as specification quality, is
 refused as `wrong-obligation` by type-level pairing rather than by convention.
 
-The report keeps four obligations apart: `specification_quality` (per-obligation
-rows plus established/not-established/vacuous tallies — a vacuous universal claim
-is counted as vacuous, never as established evidence), `partial_correctness` (the
-unchanged `exportedClaim`, reported only when that claim is itself checked),
+The report keeps four obligations apart: `specification_quality` (only
+specification-quality rows, with disjoint established/not-established/vacuous
+tallies), `partial_correctness` (the submitted status for the unchanged
+`exportedClaim`, reported only when that claim is itself checked),
 `termination` (never claimed) and `correspondence` (never claimed). It performs no
 guest execution and no source mutation; every report states
 `guest_requests: 0, protected_operations: 0`.
+
+Each specification-quality row contributes to exactly one tally: an unchecked
+claim is not established, a checked vacuous claim is vacuous, and only a checked
+non-vacuous claim is established. Implementation claims never appear in these
+rows or counters, whether checked, unchecked or vacuous. Selected-CLI regressions
+check implementation-only reports, mixed reports, and the invariant that adding
+an implementation claim cannot alter the specification-quality block. A false
+precondition produces two vacuous universal claims and one unestablished
+inhabitation claim, not established specification-quality evidence. These are
+report-classification checks, not verification of a submitted implementation
+claim or a Lean↔Rust correspondence theorem.
 
 ### The propositions are derived, not attested (issue #65)
 

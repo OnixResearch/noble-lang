@@ -272,8 +272,12 @@ const { status, document } = await report('reported', withBindings({
 assert.equal(status, 0, 'a consistent submission is reported');
 assert.equal(document.outcome, 'reported');
 assert.equal(document.specification_quality.established, 2);
-assert.equal(document.specification_quality.not_established, 2);
+assert.equal(document.specification_quality.not_established, 1,
+  'an unchecked implementation claim does not count as a specification-quality failure');
 assert.equal(document.specification_quality.vacuous, 0);
+assert.deepEqual(document.specification_quality.obligations.map(entry => entry.claim),
+  ['inhabited', 'realizable', 'deterministic'],
+  'implementation claims do not appear among specification-quality obligations');
 assert.equal(document.partial_correctness.substituted_by_specification_quality, false,
   'specification quality never discharges the implementation claim');
 assert.equal(document.partial_correctness.reported, false,
@@ -283,22 +287,56 @@ assert.equal(document.correspondence.claimed, false, 'correspondence is never cl
 assert.equal(document.observation_relation, profile.observation_relation,
   'the report states the observation relation it used');
 
-// A checked implementation claim is reported, and still does not move termination or correspondence.
-const checkedImplementation = await report('implementation', withBindings({
-  obligations: [obligation('satisfied', 'implementation-satisfaction', true)],
-}));
-assert.equal(checkedImplementation.status, 0);
-assert.equal(checkedImplementation.document.partial_correctness.reported, true);
-assert.equal(checkedImplementation.document.specification_quality.established, 1);
-assert.equal(checkedImplementation.document.termination.claimed, false);
+// Without a retained relation, an implementation claim cannot establish any specification quality,
+// whether checked, unchecked or vacuous. Its own reported status remains separate.
+for (const [name, checked, vacuous] of [
+  ['implementation', true, false],
+  ['unchecked-implementation', false, false],
+  ['vacuous-implementation', true, true],
+]) {
+  const implementation = await report(name, withBindings({
+    obligations: [obligation('satisfied', 'implementation-satisfaction', checked, vacuous)],
+  }));
+  assert.equal(implementation.status, 0);
+  const quality = implementation.document.specification_quality;
+  assert.deepEqual([quality.established, quality.not_established, quality.vacuous, quality.obligations],
+    [0, 0, 0, []], `${name}: an implementation claim supplies no specification-quality evidence`);
+  assert.equal(implementation.document.partial_correctness.reported, checked);
+  assert.equal(implementation.document.termination.claimed, false);
+  assert.equal(implementation.document.correspondence.claimed, false);
+}
+
+// Adding a checked implementation claim to genuinely derived specification-quality claims must not
+// alter any of their evidence. Conversely, those claims alone did not establish partial correctness.
+const combined = await derived('increment-with-implementation', increment,
+  [...incrementClaims().obligations, obligation('satisfied', 'implementation-satisfaction', true)]);
+assert.equal(combined.status, 0);
+assert.deepEqual(combined.document.specification_quality, wrapping.document.specification_quality,
+  'implementation evidence cannot change specification-quality rows, tallies or derivation');
+assert.equal(wrapping.document.partial_correctness.reported, false);
+assert.equal(combined.document.partial_correctness.reported, true);
+assert.equal(combined.document.termination.claimed, false);
+assert.equal(combined.document.correspondence.claimed, false);
 
 // A vacuous universal obligation is counted as vacuous, not silently as established evidence.
 const vacuous = await report('vacuous', withBindings({
   relation: uninhabited,
-  obligations: [obligation('realizable', 'specification-quality', true, true)],
+  obligations: [
+    obligation('inhabited', 'specification-quality', false, true),
+    obligation('realizable', 'specification-quality', true, true),
+    obligation('deterministic', 'specification-quality', true, true),
+    obligation('satisfied', 'implementation-satisfaction', true, true),
+  ],
 }));
 assert.equal(vacuous.status, 0, 'an honestly vacuous submission is reported');
-assert.equal(vacuous.document.specification_quality.vacuous, 1,
-  'a provable universal proposition over an uninhabited domain is marked vacuous');
+assert.deepEqual(
+  [vacuous.document.specification_quality.established,
+   vacuous.document.specification_quality.not_established,
+   vacuous.document.specification_quality.vacuous],
+  [0, 1, 2],
+  'vacuous universal claims are not established evidence; false inhabitation stays unestablished');
+assert.deepEqual(vacuous.document.specification_quality.obligations.map(entry => entry.claim),
+  ['inhabited', 'realizable', 'deterministic'],
+  'a vacuous implementation claim also remains outside specification-quality evidence');
 
 console.log('spec-quality: refusal classes, derived propositions and separated obligations measured');

@@ -197,33 +197,26 @@ fn spec_block(list: &[Obligation], derived: &relation::Derived) -> Json {
     let mut vacuous = 0_u64;
     let mut rows = std::vec::Vec::new();
     for entry in list {
-        if entry.checked {
-            established += 1;
-            if entry.vacuous {
-                vacuous += 1;
-            }
-        } else {
-            refuted_or_unchecked += 1;
-        }
+        // Implementation satisfaction belongs only to the separate partial-correctness block.
         let derived_value = match entry.claim {
-            "inhabited" => Some(derived.inhabited),
-            "realizable" => Some(derived.realizable),
-            "deterministic" => Some(derived.deterministic),
-            _ => None,
+            "inhabited" => derived.inhabited,
+            "realizable" => derived.realizable,
+            "deterministic" => derived.deterministic,
+            _ => continue,
         };
+        if !entry.checked {
+            refuted_or_unchecked += 1;
+        } else if entry.vacuous {
+            vacuous += 1;
+        } else {
+            established += 1;
+        }
         rows.push(object([
             ("claim", string(entry.claim)),
-            (
-                "kind",
-                string(if entry.claim == IMPLEMENTATION_CLAIM {
-                    "implementation-satisfaction"
-                } else {
-                    "specification-quality"
-                }),
-            ),
+            ("kind", string("specification-quality")),
             ("checked", Json::Bool(entry.checked)),
             ("vacuous", Json::Bool(entry.vacuous)),
-            ("derived", derived_value.map_or(Json::Null, Json::Bool)),
+            ("derived", Json::Bool(derived_value)),
         ]));
     }
     object([
