@@ -35,15 +35,25 @@ function run(argv, cwd) {
   return text;
 }
 
+// Host tools (git, uname) are called directly: inside `nix develop` a store auto-GC prints progress
+// lines into the captured text, which would read as a dirty tree.
+function runHost(argv, cwd) {
+  const result = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', timeout: 120_000 });
+  if (result.status !== 0) {
+    throw new Error(`host command failed (${result.status}): ${argv.join(' ')}\n${`${result.stdout ?? ''}${result.stderr ?? ''}`.slice(-2000)}`);
+  }
+  return result.stdout ?? '';
+}
+
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex');
 
-const head = run(['git', 'rev-parse', 'HEAD'], root).trim();
-const tree = run(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
-if (run(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().length > 0) {
+const head = runHost(['git', 'rev-parse', 'HEAD'], root).trim();
+const tree = runHost(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
+if (runHost(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().length > 0) {
   throw new Error('differential receipt requires a clean tree: commit the lane before recording');
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
-const host = run(['uname', '-srm'], root).trim();
+const host = runHost(['uname', '-srm'], root).trim();
 const laneRun = run(['bash', '-c', command], root);
 for (const lane of lanes) {
   if (!new RegExp(`test ${lane} \\.\.\. ok`).test(laneRun)) {
