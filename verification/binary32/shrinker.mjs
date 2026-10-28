@@ -33,13 +33,22 @@ function run(argv, cwd) {
   return text;
 }
 
+// Host git does not need the devShell, and running it through `nix develop` mixes
+// store/GC progress into stderr, which would make the clean-tree check fire on noise
+// rather than on a modification. Plain stdout only.
+function plain(argv, cwd) {
+  const result = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`${argv.join(' ')} failed: ${result.stderr}`);
+  return result.stdout;
+}
+
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex');
 
-const head = run(['git', 'rev-parse', 'HEAD'], root).trim();
-const tree = run(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
+const head = plain(['git', 'rev-parse', 'HEAD'], root).trim();
+const tree = plain(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
 // A witness recorded from a dirty tree is not attributable to a commit, so the
 // runner refuses instead of recording a soft warning nobody reads.
-if (run(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().length > 0) {
+if (plain(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().length > 0) {
   throw new Error('shrinker receipt requires a clean tree: commit the lane before recording');
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
