@@ -576,6 +576,148 @@ fn flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness() {
     assert_eq!(witness.candidate, 0x0000_0000, "{witness:?}");
 }
 
+/// The observation class of a binary32 encoding: the classes a retained expectation
+/// distinguishes, so a shrink that moves a witness into another class is rejected
+/// rather than reported as progress.
+fn binary32_class(bits: u32) -> &'static str {
+    let exponent = bits >> 23 & 0xFF;
+    let mantissa = bits & 0x7F_FFFF;
+    if exponent == 0xFF {
+        if mantissa == 0 {
+            "infinite"
+        } else {
+            "nan"
+        }
+    } else if exponent == 0 {
+        if mantissa == 0 {
+            "zero"
+        } else {
+            "subnormal"
+        }
+    } else {
+        "normal"
+    }
+}
+
+// Issue #38 open task: drive the shrinker from a retained-expectation discrepancy
+// (kernel-checked model expectation versus tested implementation) instead of a bare
+// operation discrepancy. Every retained expectation the candidate disagrees with is
+// shrunk, so a future expectation failure becomes a minimized deterministic record
+// that names the expectation it came from, rather than a bare failure.
+#[test]
+fn retained_expectation_discrepancies_shrink_and_preserve_their_classes() {
+    use shrink::{minimize, replays, DEFAULT_ATTEMPTS};
+
+    let authority = |operation: u8, left: u32, right: u32| -> u32 {
+        match operation {
+            2 => (f32::from_bits(left) * f32::from_bits(right)).to_bits(),
+            other => panic!("unsupported operation {other}"),
+        }
+    };
+    let candidate = |operation: u8, left: u32, right: u32| -> u32 {
+        match operation {
+            2 => noble_ngraph_experiment::fixtures::ftz_mul(
+                f32::from_bits(left),
+                f32::from_bits(right),
+            )
+            .to_bits(),
+            other => panic!("unsupported operation {other}"),
+        }
+    };
+    let operation_code = |operation: &str| -> u8 {
+        match operation {
+            "mul" => 2,
+            other => panic!(
+                "the expectation-driven lane selected {other}, which this walk does not carry"
+            ),
+        }
+    };
+    let is_nan = |bits: u32| bits >> 23 & 0xFF == 0xFF && bits & 0x7F_FFFF != 0;
+
+    let mut disagreements = 0_usize;
+    let mut carried = 0_usize;
+    for (index, (operation, left, right, retained)) in
+        retained_expectations().into_iter().enumerate()
+    {
+        // This walk carries multiplication only: the flush-to-zero candidate applies to
+        // it, and the additive retained expectations have no such candidate here. Their
+        // own replay lanes above cover them; skipping them is stated rather than a panic.
+        if operation != "mul" {
+            continue;
+        }
+        carried += 1;
+        let operation_code = operation_code(&operation);
+        let observed = candidate(operation_code, left, right);
+        // A retained expectation the candidate still reproduces is not a discrepancy
+        // and must not be shrunk into one.
+        let agrees = if is_nan(retained) {
+            noble_ngraph::sem::obs_eq(Value::F32(observed), Value::F32(retained))
+        } else {
+            observed == retained
+        };
+        if agrees {
+            continue;
+        }
+        disagreements += 1;
+        // The model expectation replays through the host operation (the first replay
+        // test above), so the walk's authority and the retained expectation agree on
+        // this pair: the discrepancy is exactly candidate-versus-expectation.
+        assert_eq!(
+            authority(operation_code, left, right),
+            retained,
+            "expectation {index} does not replay through the authority, so it is not a candidate discrepancy"
+        );
+        let witness = minimize(
+            operation_code,
+            &authority,
+            &candidate,
+            (left, right),
+            DEFAULT_ATTEMPTS,
+        )
+        .expect("a retained-expectation discrepancy disagrees under the walk");
+        assert!(replays(&witness, &authority, &candidate), "{witness:?}");
+        let again = minimize(
+            operation_code,
+            &authority,
+            &candidate,
+            (left, right),
+            DEFAULT_ATTEMPTS,
+        )
+        .expect("the retained pair still disagrees");
+        assert_eq!(
+            again, witness,
+            "expectation {index}: the walk is deterministic"
+        );
+        assert!(
+            !witness.budget_exhausted,
+            "expectation {index}: {witness:?}"
+        );
+        // Class preservation: the minimized witness must still show the class the
+        // retained expectation declared, so the shrink cannot silently convert a
+        // subnormal rounding discrepancy into an unrelated class.
+        assert_eq!(
+            binary32_class(witness.expected),
+            binary32_class(retained),
+            "expectation {index}: the shrink changed the failure class"
+        );
+        println!(
+            "expectation-shrink-witness expectation={index} operation={operation_code} retained={retained:#010x} class={} left={:#010x} right={:#010x} expected={:#010x} candidate={:#010x} attempts={} exhausted={}",
+            binary32_class(retained),
+            witness.left,
+            witness.right,
+            witness.expected,
+            witness.candidate,
+            witness.attempts,
+            witness.budget_exhausted,
+        );
+    }
+    println!("expectation-shrink-count={disagreements} carried={carried}");
+    assert!(
+        disagreements > 0,
+        "the flush-to-zero candidate must disagree with at least one retained expectation"
+    );
+}
+
 #[test]
 fn agreeing_pairs_produce_no_witness() {
     use shrink::{minimize, DEFAULT_ATTEMPTS};

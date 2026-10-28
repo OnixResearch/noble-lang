@@ -17,7 +17,10 @@ const outIndex = args.indexOf('--output');
 const output = outIndex >= 0 ? path.resolve(args[outIndex + 1]) : path.join(root, 'verification/binary32/shrinker.json');
 
 const laneFile = 'crates/noble-ngraph-experiment/tests/b2_differential.rs';
-const lane = 'flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness';
+const lanes = [
+  'flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness',
+  'retained_expectation_discrepancies_shrink_and_preserve_their_classes',
+];
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-binary32-shrink-target CARGO_INCREMENTAL=0 ' +
   `cargo test -p noble-ngraph-experiment --test b2_differential shrink -- --nocapture`;
 
@@ -42,27 +45,93 @@ if (run(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim().l
 const toolchain = run(['rustc', '-vV'], root).trim();
 const host = run(['uname', '-srm'], root).trim();
 const testRun = run(['bash', '-c', command], root);
-if (!new RegExp(`test ${lane} \\.\.\. ok`).test(testRun)) {
-  throw new Error(`shrinker lane did not pass: ${lane}\n${testRun.slice(-2000)}`);
+for (const lane of lanes) {
+  if (!new RegExp(`test ${lane} \\.\.\. ok`).test(testRun)) {
+    throw new Error(`shrinker lane did not pass: ${lane}\n${testRun.slice(-2000)}`);
+  }
 }
-const line = testRun.split('\n').find((candidate) => candidate.startsWith('shrink-witness '));
-if (!line) throw new Error(`shrinker lane printed no witness line\n${testRun.slice(-2000)}`);
-const fields = Object.fromEntries(line.trim().split(' ').slice(1).map((pair) => {
-  const [key, value] = pair.split('=');
-  return [key, value];
-}));
-for (const key of ['operation', 'left', 'right', 'expected', 'candidate', 'attempts', 'exhausted']) {
-  if (fields[key] === undefined) throw new Error(`witness line lacks ${key}: ${line}`);
+const parse = (line) => Object.fromEntries(
+  line.trim().split(' ').slice(1).map((pair) => {
+    const [key, value] = pair.split('=');
+    return [key, value];
+  }),
+);
+const encodings = ['left', 'right', 'expected', 'candidate'];
+const checkWitness = (fields, line, keys) => {
+  for (const key of keys) {
+    if (fields[key] === undefined) throw new Error(`witness line lacks ${key}: ${line}`);
+  }
+  for (const key of keys.filter((key) => encodings.includes(key))) {
+    const value = Number.parseInt(fields[key], 16);
+    if (!Number.isInteger(value) || value < 0 || value > 0xFFFF_FFFF) {
+      throw new Error(`witness ${key} is not a binary32 encoding: ${fields[key]}`);
+    }
+  }
+  if (fields.exhausted !== 'false') {
+    throw new Error(`witness walk exhausted its budget, so it is not a local minimum: ${line}`);
+  }
+};
+
+const lines = testRun.split('\n').filter((candidate) => candidate.startsWith('shrink-witness '));
+if (lines.length === 0) throw new Error(`shrinker lane printed no witness line\n${testRun.slice(-2000)}`);
+const witnesses = lines.map((line) => {
+  const fields = parse(line);
+  checkWitness(fields, line, ['operation', 'left', 'right', 'expected', 'candidate', 'attempts', 'exhausted']);
+  return {
+    operation: Number(fields.operation),
+    left: fields.left,
+    right: fields.right,
+    expected: fields.expected,
+    candidate: fields.candidate,
+    attempts: Number(fields.attempts),
+    budget_exhausted: false,
+  };
+});
+
+const expectationLines = testRun.split('\n')
+  .filter((candidate) => candidate.startsWith('expectation-shrink-witness '));
+if (expectationLines.length === 0) {
+  throw new Error(`the expectation-driven lane printed no witness line\n${testRun.slice(-2000)}`);
 }
-const encodings = ['left', 'right', 'expected', 'candidate'].map((key) => [key, Number.parseInt(fields[key], 16)]);
-for (const [key, value] of encodings) {
-  if (!Number.isInteger(value) || value < 0 || value > 0xFFFF_FFFF) throw new Error(`witness ${key} is not a binary32 encoding: ${fields[key]}`);
+const classes = ['zero', 'subnormal', 'normal', 'infinite', 'nan'];
+const expectationWitnesses = expectationLines.map((line) => {
+  const fields = parse(line);
+  checkWitness(fields, line, [
+    'expectation', 'operation', 'retained', 'class', 'left', 'right', 'expected', 'candidate',
+    'attempts', 'exhausted',
+  ]);
+  const retained = Number.parseInt(fields.retained, 16);
+  if (!Number.isInteger(retained) || retained < 0 || retained > 0xFFFF_FFFF) {
+    throw new Error(`retained expectation is not a binary32 encoding: ${fields.retained}`);
+  }
+  if (!classes.includes(fields.class)) {
+    throw new Error(`unexpected observation class: ${fields.class}`);
+  }
+  return {
+    expectation_index: Number(fields.expectation),
+    operation: Number(fields.operation),
+    retained: fields.retained,
+    class: fields.class,
+    left: fields.left,
+    right: fields.right,
+    expected: fields.expected,
+    candidate: fields.candidate,
+    attempts: Number(fields.attempts),
+    budget_exhausted: false,
+  };
+});
+
+const countLine = testRun.split('\n').find((candidate) => candidate.startsWith('expectation-shrink-count='));
+if (!countLine) throw new Error(`no expectation-shrink count line\n${testRun.slice(-2000)}`);
+const countFields = parse(countLine);
+if (Number(countFields['expectation-shrink-count']) !== expectationWitnesses.length) {
+  throw new Error(`expectation witness count disagrees with the lane: ${countLine}`);
 }
-if (fields.exhausted !== 'false') throw new Error(`witness walk exhausted its budget, so it is not a local minimum: ${line}`);
 
 const receipt = {
-  schema: 'noble-binary32-shrinker/v1',
-  assertion: 'the flush-to-zero disagreement between the host multiply and the packed multiplier shrinks, deterministically and inside its documented budget, to the recorded witness on this host and target; not kernel evidence',
+  schema: 'noble-binary32-shrinker/v2',
+  assertion: 'bare operation disagreements and retained-expectation discrepancies shrink, deterministically, inside their documented budget and without changing observation class, to the recorded witnesses on this host and target; not kernel evidence',
+  lanes,
   source_commit: head,
   source_tree: tree,
   clean_source: true,
@@ -71,16 +140,9 @@ const receipt = {
   command,
   lane_file: laneFile,
   lane_sha256: sha256(laneFile),
-  lane,
-  witness: {
-    operation: Number(fields.operation),
-    left: fields.left,
-    right: fields.right,
-    expected: fields.expected,
-    candidate: fields.candidate,
-    attempts: Number(fields.attempts),
-    budget_exhausted: false,
-  },
+  witnesses,
+  expectation_witnesses: expectationWitnesses,
+  carried_expectations: Number(countFields.carried),
   scope: {
     order: 'documented simplicity order over the documented simplification list',
     minimum: 'local minimum under that order, not a global minimum',
@@ -88,10 +150,19 @@ const receipt = {
   },
   claims: [
     'Tested-implementation evidence for the shrinker lane on this host and target only.',
-    'The witness is replayable and deterministic; it is not a retained kernel-checked expectation.',
+    'Every witness is replayable and deterministic; none is a retained kernel-checked expectation.',
+    'The expectation-driven witnesses name the retained expectation they came from (packet index and class) and preserve that class, so a shrink cannot convert a subnormal rounding discrepancy into another class.',
+    'The expectation-driven lane carries multiplication only: the additive and subtractive retained expectations have no flush-to-zero candidate and stay covered by their own replay lanes, not by this walk.',
     'No correspondence proof, no cross-platform claim, and no claim about wasm-opt, V8 or the loader.',
   ],
 };
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`);
-console.log(JSON.stringify({ outcome: 'recorded', output, witness: receipt.witness, host }));
+console.log(JSON.stringify({
+  outcome: 'recorded',
+  output,
+  witnesses: witnesses.length,
+  expectation_witnesses: expectationWitnesses.length,
+  carried_expectations: receipt.carried_expectations,
+  host,
+}));
