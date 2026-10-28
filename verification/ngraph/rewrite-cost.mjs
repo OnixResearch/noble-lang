@@ -5,6 +5,7 @@
 // work only; every stage it cannot observe is reported as unmeasured with a reason, never as zero.
 // The continuation thresholds come from `verification/ngraph/rewrite-cost-v1.txt`, frozen before
 // the run.
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -72,6 +73,46 @@ function git(...argv) {
   return result.stdout.trim();
 }
 
+// Item 1 of issue #64 asks the corpus binding to include source/model/tool identities. The
+// manifest names its lens (`lens noble-ngraph cert.rs`); that path is resolved to every file in the
+// named crate's `src` tree and digested here, because noble-ngraph is deliberately
+// dependency-free and cannot hash itself. A source edit that the corpus was not re-reviewed
+// against therefore changes the receipt instead of passing silently.
+function lensDigests(manifestPath) {
+  const lines = fs.readFileSync(path.join(root, manifestPath), 'utf8').split('\n');
+  const digests = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('lens ')) continue;
+    const [crate, module = ''] = trimmed.slice('lens '.length).trim().split(/\s+/);
+    const sourceRoot = path.join(root, 'crates', crate, 'src');
+    if (!fs.existsSync(sourceRoot)) {
+      throw new Error(`lens crate has no source tree: ${crate}`);
+    }
+    const files = [];
+    const walk = (dir) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name.endsWith('.rs')) files.push(full);
+      }
+    };
+    walk(sourceRoot);
+    files.sort();
+    const hashed = files.map((file) => ({
+      path: path.relative(root, file),
+      sha256: createHash('sha256').update(fs.readFileSync(file)).digest('hex'),
+    }));
+    digests.push({ lens: `${crate} ${module}`.trim(), crate, files: hashed });
+  }
+  if (digests.length === 0) {
+    throw new Error(`no lens declared in ${manifestPath}`);
+  }
+  return digests;
+}
+
+const manifestPath = path.join('verification', 'ngraph', 'rewrite-cost-v1.txt');
+const corpusManifestPath = path.join('verification', 'ngraph', 'rewrite-quality-v1.txt');
 const receipt = {
   schema: 'noble-rewrite-cost-receipt/v1',
   source_commit: git('rev-parse', 'HEAD'),
@@ -80,8 +121,9 @@ const receipt = {
   toolchain: versionLine(run(['rustc', '--version', '--verbose'], root)),
   host: `${os.type()} ${os.release()} ${os.arch()}`,
   command,
-  manifest: 'verification/ngraph/rewrite-cost-v1.txt',
+  manifest: manifestPath,
   corpus: report.corpus,
+  lens: lensDigests(corpusManifestPath),
   report,
 };
 fs.writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`);
