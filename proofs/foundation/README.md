@@ -1305,6 +1305,43 @@ Open, and deliberately not closed:
 - atomic multi-slot replacement, state/resource migration, new
   contextual-effect inference, liveness and exactly-once effects are outside it.
 
+## Bounded independent-row batch reference (issue #41)
+
+`NobleFoundation/BatchRows.lean` is the *model* end of issue #41's batch entry
+point, not an implementation. A row is one wrapping I64 operation over two
+explicit operands; `rowOps` builds the row's straight-line fragment, `rowRun` is
+one independent single-row run over the existing reference machine (`AOp.ref`,
+whose only arithmetic is the comparator oracle's `MathlibI64.wrap`), and
+`evalBatch` is the ordered map of those independent runs. It is deliberately not
+the optimized Rust loop under another name: it is the same independent machine
+the single-row theorems use.
+
+Proved, all over finite input lists:
+
+- the batch **is** the ordered map of independent row semantics
+  (`evalBatch_is_the_ordered_map`), and appending batches appends results, so
+  partial progress is the ordered map over the prefix (`evalBatch_append`);
+- a refused row stays local and cannot change any other row's result
+  (`a_refused_row_does_not_affect_later_rows`), and each row's run starts from an
+  empty stack, so rows cannot supply or consume each other's operands
+  (`a_rows_run_starts_from_an_empty_stack`);
+- a validated row's reference result is the wrapping operation on its operands
+  (`add_row_result_is_the_wrapping_sum`,
+  `sub_row_result_is_the_wrapping_difference`,
+  `mul_row_result_is_the_wrapping_product`), and an out-of-range literal row is
+  refused at its own position rather than silently coerced
+  (`out_of_range_row_is_refused`);
+- each batch row's lowered fragment executes exactly as that row's reference run
+  (`batch_row_executes_as_its_reference_run`), by reusing the sequence-lifting
+  theorem `exec_lowerAll` rather than restating it.
+
+Open, and deliberately not closed by this model: no row-count, byte, staging or
+work budget is modelled, no validation rule beyond the literal range is
+modelled, no parameter snapshot or output ownership is modelled, and no
+implementation correspondence is claimed — a matching Rust batch loop would be
+tested-implementation evidence, not a theorem. Performance is untouched: nothing
+here measures or predicts throughput, first-result latency or allocation.
+
 ## Bounded M6 task-interleaving model (issue #46)
 
 `NobleFoundation/TaskInterleaving.lean` is a two-record subject for a

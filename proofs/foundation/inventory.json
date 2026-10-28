@@ -2666,6 +2666,60 @@
       "phase": 2,
       "role": "symbolic-mutation-lane",
       "claim": "No declared faulty graph, output-order, encoder or verdict variant escapes the retained reference expectations."
+    },
+    {
+      "name": "NobleFoundation.evalBatch_is_the_ordered_map",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "the bounded batch is exactly the ordered map of independent row runs"
+    },
+    {
+      "name": "NobleFoundation.evalBatch_append",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "appending batches appends results, so partial progress is the ordered map over the prefix"
+    },
+    {
+      "name": "NobleFoundation.a_refused_row_does_not_affect_later_rows",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a refused row stands at its own position and cannot change any other row's result"
+    },
+    {
+      "name": "NobleFoundation.a_rows_run_starts_from_an_empty_stack",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "each row's run starts from an empty stack, so rows cannot supply or consume each other's operands"
+    },
+    {
+      "name": "NobleFoundation.add_row_result_is_the_wrapping_sum",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a validated addition row's reference result is the wrapping sum of its two operands"
+    },
+    {
+      "name": "NobleFoundation.sub_row_result_is_the_wrapping_difference",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a validated subtraction row's reference result is the wrapping difference of its two operands"
+    },
+    {
+      "name": "NobleFoundation.mul_row_result_is_the_wrapping_product",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "a validated multiplication row's reference result is the wrapping product of its two operands"
+    },
+    {
+      "name": "NobleFoundation.out_of_range_row_is_refused",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "an out-of-range literal row is refused at its own position rather than silently coerced"
+    },
+    {
+      "name": "NobleFoundation.batch_row_executes_as_its_reference_run",
+      "phase": 3,
+      "role": "independent-row-batch",
+      "claim": "each batch row's lowered fragment executes exactly as that row's reference run, reusing the sequence-lifting theorem"
     }
   ]
 }
