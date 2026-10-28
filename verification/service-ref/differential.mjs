@@ -54,7 +54,9 @@ if (runHost(['git', 'status', '--porcelain', '--untracked-files=no'], root).trim
 }
 const toolchain = run(['rustc', '-vV'], root).trim();
 const host = runHost(['uname', '-srm'], root).trim();
-const laneRun = run(['bash', '-c', command], root);
+// `sh -c`, not `bash -c`: inside `nix develop` a nested bash is the host profile wrapper and
+// replaces PATH, so cargo would be missing (exit 127).
+const laneRun = run(['sh', '-c', command], root);
 for (const lane of lanes) {
   if (!new RegExp(`test ${lane} \\.\.\. ok`).test(laneRun)) {
     throw new Error(`differential lane did not pass: ${lane}\n${laneRun.slice(-4000)}`);
