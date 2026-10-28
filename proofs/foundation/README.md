@@ -1568,6 +1568,10 @@ pair's swap preserves the documented observation in both orders
 changes it (`the_reduction_must_exclude_the_delivery_pair`), so a reduction that
 kept the delivery swap would be unsound rather than merely unproven.
 
+Receipt for the explorer:
+[verification/foundation/receipts/758ef29e5/](../../verification/foundation/receipts/758ef29e5/foundation-check.json)
+(476 theorems, `clean_source: true`, axiom sets inside the allow-list).
+
 Open, and deliberately not closed:
 
 - **reproducible witness shrinking is absent**: a first-witness scan over prefix
