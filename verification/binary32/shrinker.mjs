@@ -134,7 +134,14 @@ const expectationWitnesses = expectationLines.map((line) => {
 
 const countLine = testRun.split('\n').find((candidate) => candidate.startsWith('expectation-shrink-count='));
 if (!countLine) throw new Error(`no expectation-shrink count line\n${testRun.slice(-2000)}`);
-const countFields = parse(countLine);
+// The count line's first token is the count itself, so it is parsed whole rather
+// than by `parse` (which drops the leading token of a witness line).
+const countFields = Object.fromEntries(
+  countLine.trim().split(' ').map((pair) => {
+    const [key, value] = pair.split('=');
+    return [key, value];
+  }),
+);
 if (Number(countFields['expectation-shrink-count']) !== expectationWitnesses.length) {
   throw new Error(`expectation witness count disagrees with the lane: ${countLine}`);
 }
