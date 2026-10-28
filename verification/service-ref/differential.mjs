@@ -53,13 +53,13 @@ for (const lane of lanes) {
 const summary = laneRun.split('\n').find((line) => line.startsWith('service-ref-differential '));
 if (!summary) throw new Error(`differential lane printed no coverage line\n${laneRun.slice(-4000)}`);
 const cases = Number(/cases=(\d+)/u.exec(summary)?.[1]);
-const divergence = Number(/divergence=(\d+)/u.exec(summary)?.[1]);
+const controls = Number(/controls=(\d+)/u.exec(summary)?.[1]);
 if (!Number.isInteger(cases) || cases === 0) throw new Error(`coverage line lacks a case count: ${summary}`);
-if (!Number.isInteger(divergence)) throw new Error(`coverage line lacks a divergence count: ${summary}`);
+if (!Number.isInteger(controls) || controls === 0) throw new Error(`coverage line lacks a control count: ${summary}`);
 
 const receipt = {
   schema: 'noble-service-ref-differential/v1',
-  assertion: 'the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, except for the one documented bracket-scan divergence; not a refinement proof',
+  assertion: 'the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases; not a refinement proof',
   source_commit: head,
   source_tree: tree,
   clean_source: true,
@@ -73,16 +73,16 @@ const receipt = {
   reference_file_sha256: sha256(referenceFile),
   lane_file: laneFile,
   lane_file_sha256: sha256(laneFile),
-  coverage: { cases, documented_divergences: divergence, summary: summary.trim() },
+  coverage: { cases, depth_scan_controls: controls, summary: summary.trim() },
   correspondence: {
     route: 'handwritten Lean reference compared against the Rust functions by this differential lane',
-    model_theorems: 'proofs/foundation/receipts/b25314b1/foundation-check.json',
+    model_theorems: 'proofs/foundation/receipts/134b215c5/foundation-check.json',
     open_edge: 'no extraction or refinement proof relates crates/noble-kernel/src/dataspace/wire.rs to the Lean model; the differential is finite evidence on one host and target',
   },
   claims: [
     'Tested-implementation evidence for the Rust ServiceRef codec against a specification written down independently of it.',
     'The model-to-Rust edge stays open: no refinement proof, no cross-platform claim.',
-    'The model counts opening brackets for its depth scan; the documented divergence case records where that is stricter than the Rust scanner.',
+    'The model depth scan is balanced like the codec, and the control cases record what a counting-only scan would decide instead.',
   ],
 };
 fs.mkdirSync(path.dirname(output), { recursive: true });
