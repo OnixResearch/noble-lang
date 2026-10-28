@@ -189,4 +189,65 @@ def mul (x y : Bits) : Bits :=
       if product = 0 then zeroOf (isNegative x != isNegative y)
       else roundScaled product (sx + sy) (isNegative x != isNegative y)
 
+/-! ### Ordered affine fold (the `sem.rs` layer, classified in the #38 change)
+
+`affine` in `crates/noble-ngraph/src/sem.rs` is the documented *ordered* fold
+`v₀ = bias; vᵢ = rn(vᵢ₋₁ + rn(cᵢ × xᵢ))`, i.e. one multiply rounding and one
+add rounding per term, in stored term order. `fold` is that recursion over the
+same reference operations, so the fold's order is a model statement rather than
+a comment: every term rounds its product before the accumulator sees it, and the
+accumulator is never re-associated.
+-/
+
+/-- The ordered affine fold over a finite term list, one multiply rounding and one add
+rounding per term. -/
+def fold (accumulator : Bits) : List (Bits × Bits) → Bits
+  | [] => accumulator
+  | (coefficient, input) :: terms => fold (add accumulator (mul coefficient input)) terms
+
+/-- An empty term list returns the bias unchanged, so the fold is the documented recursion
+rather than an identity shortcut. -/
+theorem fold_empty (bias : Bits) : fold bias [] = bias := rfl
+
+/-- Splitting the terms splits the fold, so partial progress is the fold over the prefix. -/
+theorem fold_append (bias : Bits) (first second : List (Bits × Bits)) :
+    fold bias (first ++ second) = fold (fold bias first) second := by
+  induction first generalizing bias with
+  | nil => rfl
+  | cons term rest ih =>
+      simp only [List.cons_append, fold]
+      exact ih (add bias (mul term.1 term.2))
+
+/-- `1.0` as an encoding. -/
+def oneBits : Bits := 0x3F800000
+
+/-- `-1.0` as an encoding. -/
+def negOneBits : Bits := 0xBF800000
+
+/-- `2^24`, whose unit in the last place is `2`, so `1.0` is not representable beside it. -/
+def twoPow24Bits : Bits := 0x4B800000
+
+/-- The signed zero of the bias is retained: a negative-zero bias with a negative-zero
+product stays negative. -/
+theorem fold_negative_zero_bias_stays_negative :
+    fold (zeroOf true) [(oneBits, zeroOf true)] = zeroOf true := by
+  decide
+
+/-- A positive-zero bias with the same product stays positive, so the two fixtures separate the
+signs rather than sharing one expectation. -/
+theorem fold_positive_zero_bias_stays_positive :
+    fold (zeroOf false) [(oneBits, zeroOf true)] = zeroOf false := by
+  decide
+
+/-- **The fold's order is load-bearing**: at `bias = 1.0` the terms `1.0 · 2^24` then
+`-1.0 · 2^24` fold to zero, because the `1.0` is rounded away before the cancellation, while
+re-associating the same three values gives `1.0`. Any reassociation, FMA contraction or parallel
+reduction therefore changes this documented result, which is exactly what the `sem.rs` contract
+forbids. -/
+theorem fold_order_is_load_bearing :
+    fold oneBits [(oneBits, twoPow24Bits), (negOneBits, twoPow24Bits)] = zeroOf false
+      ∧ add oneBits (add (mul oneBits twoPow24Bits) (mul negOneBits twoPow24Bits))
+          = oneBits := by
+  constructor <;> decide
+
 end NobleFoundation.Binary32

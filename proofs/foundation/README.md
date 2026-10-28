@@ -589,6 +589,34 @@ Proved here:
 | `implicit_contraction_is_observable` | rounding the product before the sum differs from one rounding of the exact three-operand sum |
 | `multiplication_rounds_once` | multiplication takes the sign exclusive-or and rounds the exact operand product once |
 
+### The ordered `affine` fold, and the layer classification
+
+`fold` in the same model is the documented `sem.rs` recursion
+`v₀ = bias; vᵢ = rn(vᵢ₋₁ + rn(cᵢ × xᵢ))` over the reference operations, so the
+fold's order is a statement rather than a comment: `fold_empty`, `fold_append`
+(splitting the terms splits the fold) and, as fixtures, the two signed-zero
+biases staying distinct in sign (`fold_negative_zero_bias_stays_negative`,
+`fold_positive_zero_bias_stays_positive`). `fold_order_is_load_bearing` is the
+consequence a reader needs: at `bias = 1.0` the terms `1.0 · 2^24` then
+`-1.0 · 2^24` fold to `+0` because the `1.0` is rounded away before the
+cancellation, while re-associating the same three values gives `1.0` — so
+reassociation, FMA contraction and parallel reduction each change a documented
+result.
+
+The remaining `sem.rs` layers are classified rather than left ambiguous:
+
+| Layer | Status |
+|---|---|
+| per-operation rounding, add/subtract/multiply | **modelled and proved** (above; 26 retained expectations, mutation lane, packed and compiled replay) |
+| ordered `affine` fold | **modelled and proved** (`fold`, `fold_append`, `fold_order_is_load_bearing`) |
+| activations `relu`, `reglu`, `step` | **not modelled**: they are activation corners and surrogate policies, which the Numeric-Graph-v1 selection excludes; no theorem here says anything about them |
+| guard/index rules (`is_bit`, `select`, `index_position`) | **not modelled**: index refusal is a `crates/noble-ngraph` admission rule, not a binary32 operation, and no Lean model exists |
+| decimal import / codec (`exact_f32_decimal`) | **not modelled here**: #40 owns exact and RNE conversions and decimal import |
+| snapshot / parameter layout (`snapshot.rs`) | **not modelled**: layout and retention are #33/#43 subjects and have no binary32 obligation |
+| training admission (`grad.rs`) | **not modelled here**: #45 owns the derivative and training admission |
+| software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim |
+| optimizer slice | **not modelled**: no optimization strength or decision is claimed for binary32 |
+
 The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
 six wrong models that are compiled only in this project: away-from-zero ties,
 collapsing every zero result to `+0`, flush-to-zero, a zero-sign-insensitive
