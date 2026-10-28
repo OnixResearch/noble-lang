@@ -266,4 +266,6 @@ generated-record-62 4 accepted 6870356b5f6e6c377a65343361 1 3c736572766963652022
 generated-junk-62 4 schema - - f22c30e0f19a0792
 generated-record-63 4 accepted 376330346a70717671687274626c77357a642d647562357264635f78 0 3c736572766963652022376330346a70717671687274626c77357a642d647562357264635f78222023663e
 generated-junk-63 4 schema - - 33
-divergence-bracket-runs 4 depthLimit - - 3c3c3c3c3e3e3e3e3c3c3c3c
+control-stray-openers-are-schema 2 schema - - 3c7365727669636520223c61222023743e3c
+control-separated-runs-are-schema 4 schema - - 3c3c3c3c3e3e3e3e3c3c3c3c
+control-nested-openers-are-depth 4 depthLimit - - 3c3c3c3c3c3e3e3e3e3e

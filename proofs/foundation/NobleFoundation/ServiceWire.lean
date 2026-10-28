@@ -79,12 +79,22 @@ def takeName : List Nat → Option (List Nat × List Nat)
         | none => none
         | some (name, tail) => some (byte :: name, tail)
 
-/-- The number of opening brackets in a byte list. -/
-def openBrackets (bytes : List Nat) : Nat := (bytes.filter (· = 60)).length
+/-- One balanced depth scan: the current nesting depth and the largest depth reached so far. A
+closing byte at depth zero leaves the current depth at zero, exactly as the codec's bounded scan
+does, so unbalanced closers never *reduce* a depth. -/
+def depthScanAux : Nat → Nat → List Nat → Nat
+  | _current, reached, [] => reached
+  | current, reached, byte :: rest =>
+      if byte = 60 then depthScanAux (current + 1) (max reached (current + 1)) rest
+      else if byte = 62 then depthScanAux (current - 1) reached rest
+      else depthScanAux current reached rest
 
-/-- Whether the input opens more brackets than the configured depth admits. -/
+/-- The largest balanced nesting depth a byte list reaches. -/
+def maxDepthReached (bytes : List Nat) : Nat := depthScanAux 0 0 bytes
+
+/-- Whether the input nests deeper than the configured depth admits. -/
 def depthExceeds (maxDepth : Nat) (bytes : List Nat) : Bool :=
-  decide (maxDepth < openBrackets bytes)
+  decide (maxDepth < maxDepthReached bytes)
 
 /-- The closed-schema match. A trailing byte, an altered readiness tag, an
 embedded value or an escape all fail here, because the suffix patterns consume
@@ -128,50 +138,43 @@ theorem encode_length (name : List Nat) (ready : Bool) :
   rw [List.length_append, List.length_append, recordPrefix_length, recordSuffix_length]
   omega
 
-/-- A list draws less than two opening brackets when its head is not one and its
-tail has none. -/
-theorem openBrackets_cons (head : Nat) (tail : List Nat) (hHead : head ≠ 60)
-    (hTail : openBrackets tail = 0) : openBrackets (head :: tail) = 0 := by
-  unfold openBrackets at hTail ⊢
-  rw [List.filter_cons]
-  simp only [decide_eq_true_eq]
-  rw [if_neg hHead]
-  exact hTail
+/-- The record prefix opens exactly one bracket and closes none, so the scan reaches depth one. -/
+theorem depthScanAux_recordPrefix (rest : List Nat) :
+    depthScanAux 0 0 (recordPrefix ++ rest) = depthScanAux 1 1 rest := by
+  unfold recordPrefix
+  simp [depthScanAux]
 
-/-- A name draw from the admitted alphabet opens no bracket. -/
-theorem openBrackets_of_name (name : List Nat)
-    (hAll : ∀ byte ∈ name, nameByte byte = true) : openBrackets name = 0 := by
-  induction name with
+/-- A name byte is neither an opener nor a closer, so a name leaves the scan's state unchanged. -/
+theorem depthScanAux_of_plain (name : List Nat) (current reached : Nat) (rest : List Nat)
+    (hAll : ∀ byte ∈ name, nameByte byte = true) :
+    depthScanAux current reached (name ++ rest) = depthScanAux current reached rest := by
+  induction name generalizing current reached with
   | nil => rfl
   | cons head tail ih =>
-      have hHead : head ≠ 60 := (nameByte_excludes_structure head (hAll head (by simp))).2.1
+      have hStructure := nameByte_excludes_structure head (hAll head (by simp))
       have hTail : ∀ byte ∈ tail, nameByte byte = true := by
         intro byte hmem
         exact hAll byte (List.mem_cons_of_mem head hmem)
-      exact openBrackets_cons head tail hHead (ih hTail)
+      simp only [depthScanAux, List.cons_append, if_neg hStructure.2.1, if_neg hStructure.2.2]
+      exact ih current reached hTail
 
-/-- A name carries no structural byte, so the canonical encoding opens exactly
-one bracket: the record prefix's. -/
+/-- A record suffix closes the prefix's bracket and opens none, so the scan keeps reaching at
+most depth one. -/
+theorem depthScanAux_recordSuffix (ready : Bool) :
+    depthScanAux 1 1 (recordSuffix ready) = 1 := by
+  unfold recordSuffix
+  cases ready <;> simp [depthScanAux]
+
+/-- A name carries no structural byte, so the canonical encoding never nests deeper than one
+bracket: the record prefix's opener, closed by the suffix. -/
 theorem depthExceeds_encode (name : List Nat) (ready : Bool) (configuredDepth : Nat)
     (hDepth : 1 ≤ configuredDepth)
     (hAll : ∀ byte ∈ name, nameByte byte = true) :
     depthExceeds configuredDepth (encode name ready) = false := by
-  unfold depthExceeds
+  unfold depthExceeds maxDepthReached encode
+  rw [List.append_assoc, depthScanAux_recordPrefix, depthScanAux_of_plain name 1 1 _ hAll,
+    depthScanAux_recordSuffix]
   rw [decide_eq_false_iff_not]
-  intro hCount
-  have hPrefix : openBrackets recordPrefix = 1 := rfl
-  have hNoOpen : ∀ byte ∈ name, byte ≠ 60 := by
-    intro byte hmem
-    exact (nameByte_excludes_structure byte (hAll byte hmem)).2.1
-  have hSuffix : openBrackets (recordSuffix ready) = 0 := by
-    unfold recordSuffix openBrackets
-    cases ready <;> rfl
-  have hName : openBrackets name = 0 := openBrackets_of_name name hAll
-  have hAllCount : openBrackets (encode name ready) = 1 := by
-    unfold encode
-    unfold openBrackets at hPrefix hName hSuffix ⊢
-    rw [List.filter_append, List.filter_append]
-    rw [List.length_append, List.length_append, hPrefix, hName, hSuffix]
   omega
 
 /-- `takeName` succeeds on a name drawn from the admitted alphabet, and leaves
@@ -301,8 +304,18 @@ theorem depth_configuration_precedes_schema :
       ∧ decode (encode [99, 108, 111, 99, 107] true) 5 = .depthLimit := by
   decide
 
-/-- The depth scan is decided before the schema match: five opening brackets
-are a depth failure, not a schema failure. -/
+/-- The depth scan is balanced, so a closing byte below zero depth never reduces it: the input with
+one stray opener inside the pronunciation of the name and one after the record is a schema failure
+at depth 2, not a depth failure. The finite Rust comparison below found the first, counting-only
+scan disagreeing with the codec here, so the scan was corrected rather than the finding being
+dropped. -/
+theorem unbalanced_closers_do_not_count_toward_the_depth :
+    decode [60, 115, 101, 114, 118, 105, 99, 101, 32, 34, 60, 97, 34, 32, 35, 116, 62, 60] 2
+      = .schema := by
+  decide
+
+/-- The depth scan is decided before the schema match: five *nested* openers are a
+depth failure, not a schema failure. -/
 theorem depth_scan_precedes_schema :
     decode [60, 60, 60, 60, 60, 115, 101, 114, 118, 105, 99, 101, 34, 120, 34, 32, 35, 116, 62,
         62, 62, 62, 62] 4

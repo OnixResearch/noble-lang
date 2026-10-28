@@ -1305,6 +1305,50 @@ Open, and deliberately not closed:
 - atomic multi-slot replacement, state/resource migration, new
   contextual-effect inference, liveness and exactly-once effects are outside it.
 
+## Bounded canonical ServiceRef codec (issue #48)
+
+`NobleFoundation/ServiceWire.lean` specifies the one admitted Preserves text
+record of the dataspace codec, `<service "NAME" #t>` / `<service "NAME" #f>`,
+with the 64-byte wire budget, the `1..=4` configured depth and the 1..=32-byte
+name alphabet. Bytes are modelled as `List Nat`; the parser matches the record
+shape by literal byte patterns and requires the closing suffix to consume the
+rest of the input, so full-input consumption and canonicality are structural
+rather than checked postconditions.
+
+Proved: value round trip (`decode_encode`) and accepted-byte canonicality
+(`encode_of_accepted`); the exact name and wire bounds
+(`longest_name_fits_wire_budget`, `overlong_name_is_rejected`); and the decision
+precedence — byte budget before the configured depth
+(`byte_limit_precedes_depth_scan`), the configured depth before the schema match
+(`depth_configuration_precedes_schema`) and the depth scan before it
+(`depth_scan_precedes_schema`) — with the readiness tag, trailing bytes, the
+empty name and foreign name bytes separated as semantic classes rather than as
+diagnostic wording.
+
+The depth scan is **balanced**, like the codec's: `depthScanAux` tracks the
+current depth and the largest depth reached, and a closing byte at depth zero
+leaves the current depth at zero, so stray openers and separated runs are schema
+failures rather than depth failures
+(`unbalanced_closers_do_not_count_toward_the_depth`). The earlier scan counted
+opening brackets, which was stricter than the codec; the finite comparison below
+surfaced that disagreement, and the model was corrected rather than the finding
+being recorded and dropped.
+
+The independent comparison is `verification/service-ref/cases.mjs` — a decoder
+written from this model rather than from the Rust codec — against the real
+`crates/noble-kernel/src/dataspace/wire.rs` functions in the
+`service_ref_differential` lanes of `crates/noble-kernel/tests/m7-dataspace.rs`:
+271 cases over alphabet edges, name lengths 0/1/32/33, wire lengths 64/65,
+configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
+substitutions and seeded generated values, with three `control-` cases that a
+counting-only depth scan would decide differently. The lane agrees on every case.
+
+Open, and deliberately not closed: no extraction or refinement proof relates
+`wire.rs` to the model, so the differential is finite evidence on one host and
+target rather than a correspondence theorem; the canonicality theorems apply to
+this closed schema only, not to JSON documents in general; and no zero-copy,
+whole-parser or whole-compiler claim follows.
+
 ## Bounded independent-row batch reference (issue #41)
 
 `NobleFoundation/BatchRows.lean` is the *model* end of issue #41's batch entry

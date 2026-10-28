@@ -326,22 +326,16 @@ mod service_ref_differential {
         let cases = load_cases();
         let mut mismatches = Vec::new();
         let mut coverage: BTreeMap<&str, usize> = BTreeMap::new();
-        let mut divergence = 0;
+        let mut controls = 0;
         for case in &cases {
             let observed = decide(case);
             let expected = expected_label(case);
             *coverage.entry(case.expect.label()).or_default() += 1;
-            if case.name.starts_with("divergence-") {
-                // The documented model-to-Rust difference is reported, not silently
-                // accepted: the model rejects by bracket count and the decoder's
-                // saturating scan does not reach the configured depth.
-                assert_ne!(
-                    observed, expected,
-                    "{} no longer diverges: observed {observed}",
-                    case.name
-                );
-                divergence += 1;
-                continue;
+            if case.name.starts_with("control-") {
+                // The control cases separate the model's balanced depth scan from a
+                // counting-only one, so passing them means the comparison is sensitive
+                // to that rule rather than merely agreeing.
+                controls += 1;
             }
             if observed != expected {
                 mismatches.push(format!(
@@ -351,9 +345,18 @@ mod service_ref_differential {
             }
         }
         println!(
-            "service-ref-differential cases={} coverage={:?} divergence={divergence}",
+            "service-ref-differential cases={} coverage={:?} controls={controls}",
             cases.len(),
             coverage
+        );
+        assert!(
+            controls >= 3,
+            "the case file must carry the depth-scan control cases"
+        );
+        assert_eq!(
+            coverage.values().sum::<usize>(),
+            cases.len(),
+            "every case must fall in exactly one coverage class"
         );
         assert!(
             mismatches.is_empty(),

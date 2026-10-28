@@ -8,15 +8,15 @@
   },
   "seed": "0x5eed48",
   "coverage": {
-    "total": 269,
+    "total": 271,
     "accepted": 78,
     "byte_limit": 6,
     "depth_limit": 3,
-    "schema": 182,
+    "schema": 184,
     "families": [
       "alphabet",
       "configured",
-      "divergence",
+      "control",
       "generated",
       "name",
       "round",
@@ -9680,7 +9680,35 @@
       }
     },
     {
-      "name": "divergence-bracket-runs",
+      "name": "control-stray-openers-are-schema",
+      "bytes": [
+        60,
+        115,
+        101,
+        114,
+        118,
+        105,
+        99,
+        101,
+        32,
+        34,
+        60,
+        97,
+        34,
+        32,
+        35,
+        116,
+        62,
+        60
+      ],
+      "configured_depth": 2,
+      "expect": {
+        "kind": "schema"
+      },
+      "note": "the balanced scan returns to zero between the opener runs, so this is a schema failure; a counting-only scan would report a depth failure"
+    },
+    {
+      "name": "control-separated-runs-are-schema",
       "bytes": [
         60,
         60,
@@ -9697,9 +9725,29 @@
       ],
       "configured_depth": 4,
       "expect": {
+        "kind": "schema"
+      },
+      "note": "each run reaches depth four and returns to zero, so neither scan may call this a depth failure past four"
+    },
+    {
+      "name": "control-nested-openers-are-depth",
+      "bytes": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        62,
+        62,
+        62,
+        62,
+        62
+      ],
+      "configured_depth": 4,
+      "expect": {
         "kind": "depthLimit"
       },
-      "note": "the model counts eight opening brackets and rejects by depth; the Rust scanner returns to zero between the runs and never exceeds four"
+      "note": "five nested openers reach depth five, which both scans reject past the configured four"
     }
   ]
 }

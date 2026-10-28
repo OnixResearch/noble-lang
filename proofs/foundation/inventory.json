@@ -1306,18 +1306,6 @@
       "claim": "a canonical encoding is fourteen bytes longer than its name"
     },
     {
-      "name": "NobleFoundation.ServiceWire.openBrackets_cons",
-      "phase": 5,
-      "role": "service-ref-codec",
-      "claim": "a head that is not an opening bracket and a tail without one open no bracket"
-    },
-    {
-      "name": "NobleFoundation.ServiceWire.openBrackets_of_name",
-      "phase": 5,
-      "role": "service-ref-codec",
-      "claim": "a name drawn from the acquired alphabet opens no bracket"
-    },
-    {
       "name": "NobleFoundation.ServiceWire.depthExceeds_encode",
       "phase": 5,
       "role": "service-ref-codec",
@@ -1412,6 +1400,30 @@
       "phase": 5,
       "role": "service-ref-codec",
       "claim": "the shortest acquired name round-trips"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depthScanAux_recordPrefix",
+      "phase": 3,
+      "role": "service-ref-codec",
+      "claim": "the record prefix opens one bracket and closes none, so the balanced scan reaches depth one"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depthScanAux_of_plain",
+      "phase": 3,
+      "role": "service-ref-codec",
+      "claim": "a name byte is neither an opener nor a closer, so a name drawn from the admitted alphabet leaves the scan unchanged"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.depthScanAux_recordSuffix",
+      "phase": 3,
+      "role": "service-ref-codec",
+      "claim": "the record suffix closes the prefix's bracket and opens none, so the scan reaches at most depth one"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.unbalanced_closers_do_not_count_toward_the_depth",
+      "phase": 3,
+      "role": "service-ref-codec",
+      "claim": "an input with stray openers and a closing byte below zero depth is a schema failure at depth two, not a depth failure"
     },
     {
       "name": "NobleFoundation.Ownership.duplicable_iff",

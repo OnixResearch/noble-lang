@@ -7,10 +7,11 @@
 // bracket-count depth scan. The Rust test is compared against this file, so a
 // Rust behaviour change surfaces here rather than being re-pinned.
 //
-// The model's depth scan counts opening brackets, which is stricter than the
-// Rust scanner's saturating decrement on closing-bracket runs. Cases whose
-// decisions differ for that reason are labelled `diverges` and the Rust test
-// asserts the divergence: the model-to-Rust edge stays open and reported.
+// The model's depth scan is balanced, like the Rust scanner: it tracks the
+// current depth and the largest depth reached, and a closing byte at depth zero
+// leaves the current depth at zero. The `control-` cases document what a
+// counting-only scan would decide instead, so the comparison is measured as
+// sensitive to that rule rather than assumed to be.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,12 +35,31 @@ const encode = (name, ready) => [
   ...Buffer.from('<service "'), ...name, 0x22, 0x20, 0x23, ready ? 0x74 : 0x66, 0x3e,
 ];
 
-// The model decoder. `openBrackets` counts `<` bytes, which is the model's
-// precedence-preserving stand-in for the Rust scanner.
+// The model's balanced depth scan: the largest depth reached, with a closing
+// byte at depth zero leaving the depth at zero.
+function maxDepthReached(bytes) {
+  let depth = 0;
+  let reached = 0;
+  for (const byte of bytes) {
+    if (byte === 0x3c) {
+      depth += 1;
+      reached = Math.max(reached, depth);
+    } else if (byte === 0x3e) depth = Math.max(0, depth - 1);
+  }
+  return reached;
+}
+
+// The counting-only scan the model used before the finite comparison corrected
+// it. It is kept here only to check that the control cases would diverge.
+function countingOnlyExceeds(bytes, configuredDepth) {
+  return bytes.filter((byte) => byte === 0x3c).length > configuredDepth;
+}
+
+// The model decoder.
 function decode(bytes, configuredDepth) {
   if (bytes.length > MAX_WIRE_BYTES) return { kind: 'byteLimit' };
   if (configuredDepth < 1 || configuredDepth > MAX_WIRE_DEPTH) return { kind: 'depthLimit' };
-  if (bytes.filter((byte) => byte === 0x3c).length > configuredDepth) return { kind: 'depthLimit' };
+  if (maxDepthReached(bytes) > configuredDepth) return { kind: 'depthLimit' };
   const prefix = Buffer.from('<service "');
   if (bytes.length < 15) return { kind: 'schema' };
   for (let index = 0; index < prefix.length; index += 1)
@@ -60,18 +80,6 @@ function decode(bytes, configuredDepth) {
   if (encode(name, ready).length !== bytes.length) return { kind: 'schema' };
   if (!validName(name)) return { kind: 'schema' };
   return { kind: 'accepted', name: Buffer.from(name).toString('latin1'), ready };
-}
-
-// The Rust scanner's saturating depth, used only to label divergence cases.
-function rustDepthExceeds(bytes, configuredDepth) {
-  let depth = 0;
-  for (const byte of bytes) {
-    if (byte === 0x3c) {
-      depth += 1;
-      if (depth > configuredDepth) return true;
-    } else if (byte === 0x3e) depth = Math.max(0, depth - 1);
-  }
-  return false;
 }
 
 const cases = [];
@@ -164,16 +172,29 @@ for (let index = 0; index < 64; index += 1) {
   add(`generated-junk-${index}`, junk, 4, decode(junk, 4));
 }
 
-// Divergence cases: opening-bracket runs are counted by the model and scanned
-// with a saturating decrement by Rust, so some inputs decide differently. The
-// Rust test asserts the divergence instead of hiding it.
+// Control cases: inputs whose decision a counting-only scan would get wrong, and
+// inputs whose decision both scans get right. The Rust test treats them as ordinary
+// expectations, so a regression to either rule surfaces as a mismatch.
 {
-  const bytes = [0x3c, 0x3c, 0x3c, 0x3c, 0x3e, 0x3e, 0x3e, 0x3e, 0x3c, 0x3c, 0x3c, 0x3c];
-  const expect = decode(bytes, 4);
-  if (!(expect.kind === 'depthLimit' && !rustDepthExceeds(bytes, 4)))
-    throw new Error('the documented divergence case no longer diverges');
-  add('divergence-bracket-runs', bytes, 4, expect,
-    'the model counts eight opening brackets and rejects by depth; the Rust scanner returns to zero between the runs and never exceeds four');
+  const strayOpeners = [0x3c, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x20, 0x22, 0x3c, 0x61,
+    0x22, 0x20, 0x23, 0x74, 0x3e, 0x3c];
+  const expect = decode(strayOpeners, 2);
+  if (!(expect.kind === 'schema' && countingOnlyExceeds(strayOpeners, 2)))
+    throw new Error('the control case no longer separates the balanced scan from the counting-only one');
+  add('control-stray-openers-are-schema', strayOpeners, 2, expect,
+    'the balanced scan returns to zero between the opener runs, so this is a schema failure; a counting-only scan would report a depth failure');
+  const runs = [0x3c, 0x3c, 0x3c, 0x3c, 0x3e, 0x3e, 0x3e, 0x3e, 0x3c, 0x3c, 0x3c, 0x3c];
+  const runsExpect = decode(runs, 4);
+  if (!(runsExpect.kind === 'schema' && countingOnlyExceeds(runs, 4)))
+    throw new Error('the nested-runs control no longer separates the two scans');
+  add('control-separated-runs-are-schema', runs, 4, runsExpect,
+    'each run reaches depth four and returns to zero, so neither scan may call this a depth failure past four');
+  const nested = Array.from({ length: 5 }, () => 0x3c).concat(Array.from({ length: 5 }, () => 0x3e));
+  const nestedExpect = decode(nested, 4);
+  if (!(nestedExpect.kind === 'depthLimit' && countingOnlyExceeds(nested, 4)))
+    throw new Error('the nested-depth control no longer rejects past the configured depth');
+  add('control-nested-openers-are-depth', nested, 4, nestedExpect,
+    'five nested openers reach depth five, which both scans reject past the configured four');
 }
 
 const coverage = {
