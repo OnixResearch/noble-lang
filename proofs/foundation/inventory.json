@@ -2722,6 +2722,24 @@
       "claim": "swapping the delivery pair changes the documented observation, so an agreement-measured reduction must exclude it"
     },
     {
+      "name": "NobleFoundation.TaskInterleaving.scanFrom_none_all_agree",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "when the witness scan reports no disagreement, every prefix in its window agrees"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.scanFrom_some_finds_the_first",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "when the witness scan reports a disagreement it is the first in its window and every shorter prefix agrees"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.every_disagreement_has_a_shortest_witness",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a disagreeing sequence has a shortest prefix witness found by the scan, with every shorter prefix recorded as agreeing"
+    },
+    {
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",

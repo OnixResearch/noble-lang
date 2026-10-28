@@ -807,4 +807,117 @@ theorem the_reduction_must_exclude_the_delivery_pair :
       ≠ Option.map observe ((step (.deliver .left 1) paired).bind (step (.deliver .right 1))) := by
   decide
 
+/-- A sequence disagrees with a reference table when its reachable observation differs, or when it is
+refused where the reference is reachable. -/
+def disagrees (start reference : Table) (sequence : List Action) : Bool :=
+  match reaches sequence start with
+  | none => true
+  | some reached => decide (observe reached ≠ observe reference)
+
+/-- Examine prefix lengths upward from `offset`: the *first* disagreeing length found is therefore the
+shortest one, which is what makes a shrunk witness reproducible from the sequence rather than
+hand-picked. -/
+def scanFrom (start reference : Table) (sequence : List Action) : Nat → Nat → Option Nat
+  | 0, _offset => none
+  | fuel + 1, offset =>
+      if disagrees start reference (sequence.take offset) then some offset
+      else scanFrom start reference sequence fuel (offset + 1)
+
+/-- When the scan reports no disagreement, every prefix in its window agrees. -/
+theorem scanFrom_none_all_agree (start reference : Table) (sequence : List Action) :
+    ∀ fuel offset, (∀ shorter, shorter < offset →
+        disagrees start reference (sequence.take shorter) = false) →
+      scanFrom start reference sequence fuel offset = none →
+      ∀ length, offset ≤ length → length < offset + fuel →
+        disagrees start reference (sequence.take length) = false := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro offset _ _ length hLow hHigh
+      omega
+  | succ fuel ih =>
+      intro offset hAgreed hScan length hLow hHigh
+      by_cases hHere : disagrees start reference (sequence.take offset) = true
+      · simp only [scanFrom] at hScan
+        rw [if_pos hHere] at hScan
+        simp at hScan
+      · have hHereFalse : disagrees start reference (sequence.take offset) = false := by
+          cases hValue : disagrees start reference (sequence.take offset) <;> simp_all
+        simp only [scanFrom] at hScan
+        rw [if_neg hHere] at hScan
+        have hNext : ∀ shorter, shorter < offset + 1 →
+            disagrees start reference (sequence.take shorter) = false := by
+          intro shorter hShorter
+          by_cases hEq : shorter = offset
+          · subst hEq
+            exact hHereFalse
+          · exact hAgreed shorter (by omega)
+        by_cases hEq : length = offset
+        · subst hEq
+          exact hHereFalse
+        · exact ih (offset + 1) hNext hScan length (by omega) (by omega)
+
+/-- When the scan reports a disagreement, it is the first one in its window and every shorter prefix
+agrees. -/
+theorem scanFrom_some_finds_the_first (start reference : Table) (sequence : List Action) :
+    ∀ fuel offset, (∀ shorter, shorter < offset →
+        disagrees start reference (sequence.take shorter) = false) →
+      ∀ length, scanFrom start reference sequence fuel offset = some length →
+      offset ≤ length
+        ∧ length < offset + fuel
+        ∧ disagrees start reference (sequence.take length) = true
+        ∧ ∀ shorter, shorter < length →
+            disagrees start reference (sequence.take shorter) = false := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro offset _ length hScan
+      simp only [scanFrom] at hScan
+      cases hScan
+  | succ fuel ih =>
+      intro offset hAgreed length hScan
+      by_cases hHere : disagrees start reference (sequence.take offset) = true
+      · simp only [scanFrom] at hScan
+        rw [if_pos hHere] at hScan
+        simp only [Option.some.injEq] at hScan
+        subst hScan
+        exact ⟨Nat.le_refl offset, by omega, hHere, hAgreed⟩
+      · have hHereFalse : disagrees start reference (sequence.take offset) = false := by
+          cases hValue : disagrees start reference (sequence.take offset) <;> simp_all
+        simp only [scanFrom] at hScan
+        rw [if_neg hHere] at hScan
+        have hNext : ∀ shorter, shorter < offset + 1 →
+            disagrees start reference (sequence.take shorter) = false := by
+          intro shorter hShorter
+          by_cases hEq : shorter = offset
+          · subst hEq
+            exact hHereFalse
+          · exact hAgreed shorter (by omega)
+        have hWindow := ih (offset + 1) hNext length hScan
+        exact ⟨by omega, by omega, hWindow.2.2.1, hWindow.2.2.2⟩
+
+/-- **Reproducible witness shrinking**: a disagreeing sequence has a shortest prefix witness found by
+the scan, so a shrunk witness is replayed from the sequence's own prefix and every shorter prefix is
+recorded as agreeing. -/
+theorem every_disagreement_has_a_shortest_witness (start reference : Table) (sequence : List Action)
+    (h : disagrees start reference sequence = true) :
+    ∃ length, scanFrom start reference sequence (sequence.length + 1) 0 = some length
+      ∧ length ≤ sequence.length
+      ∧ disagrees start reference (sequence.take length) = true
+      ∧ ∀ shorter, shorter < length → disagrees start reference (sequence.take shorter) = false := by
+  have hVacuous : ∀ shorter, shorter < 0 →
+      disagrees start reference (sequence.take shorter) = false := by omega
+  cases hScan : scanFrom start reference sequence (sequence.length + 1) 0 with
+  | none =>
+      have hFull : disagrees start reference (sequence.take sequence.length) = false :=
+        scanFrom_none_all_agree start reference sequence (sequence.length + 1) 0 hVacuous hScan
+          sequence.length (by omega) (by omega)
+      rw [List.take_length] at hFull
+      rw [hFull] at h
+      cases h
+  | some length =>
+      have hWindow := scanFrom_some_finds_the_first start reference sequence (sequence.length + 1) 0
+        hVacuous length hScan
+      exact ⟨length, rfl, by omega, hWindow.2.2.1, hWindow.2.2.2⟩
+
 end NobleFoundation.TaskInterleaving

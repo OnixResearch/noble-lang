@@ -1572,11 +1572,22 @@ Receipt for the explorer:
 [verification/foundation/receipts/758ef29e5/](../../verification/foundation/receipts/758ef29e5/foundation-check.json)
 (476 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
+**Reproducible witness shrinking.** `disagrees` states when a sequence's reachable
+observation differs from a reference (or when it is refused where the reference
+is reachable), and `scanFrom` walks prefix lengths *upward*, so the first
+disagreeing length it finds is the shortest one. Proved: when the scan reports
+no disagreement every prefix in its window agrees (`scanFrom_none_all_agree`),
+when it reports one that length is the first in its window and every shorter
+prefix agrees (`scanFrom_some_finds_the_first`), and therefore a disagreeing
+sequence has a shortest prefix witness with every shorter prefix recorded as
+agreeing (`every_disagreement_has_a_shortest_witness`) — so a shrunk witness is
+replayed from the sequence's own prefix rather than hand-picked.
+
 Open, and deliberately not closed:
 
-- **reproducible witness shrinking is absent**: a first-witness scan over prefix
-  lengths is the next step, and it is deliberately not approximated by a scan
-  that returns a witness without proving it is the first one;
+- the scan is bounded by one declared sequence and the declared alphabet rather
+  than exhaustive over the language, and it shrinks prefixes only (no action
+  deletion or operand rewriting);
 - this is a bounded subject, not a scheduler and not a new source-level async
   model, and no payload/outcome class outside the listed actions is enumerated;
 - no correspondence claim relates the model to the Rust table API in
