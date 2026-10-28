@@ -617,6 +617,10 @@ The remaining `sem.rs` layers are classified rather than left ambiguous:
 | software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim |
 | optimizer slice | **not modelled**: no optimization strength or decision is claimed for binary32 |
 
+Receipt for the fold and the classification:
+[verification/foundation/receipts/c33885419/](../../verification/foundation/receipts/c33885419/foundation-check.json)
+(463 theorems, `clean_source: true`, axiom sets inside the allow-list).
+
 The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
 six wrong models that are compiled only in this project: away-from-zero ties,
 collapsing every zero result to `+0`, flush-to-zero, a zero-sign-insensitive
