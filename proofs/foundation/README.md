@@ -1568,9 +1568,9 @@ pair's swap preserves the documented observation in both orders
 changes it (`the_reduction_must_exclude_the_delivery_pair`), so a reduction that
 kept the delivery swap would be unsound rather than merely unproven.
 
-Receipt for the explorer:
-[verification/foundation/receipts/758ef29e5/](../../verification/foundation/receipts/758ef29e5/foundation-check.json)
-(476 theorems, `clean_source: true`, axiom sets inside the allow-list).
+Receipt for the explorer and the witness scan:
+[verification/foundation/receipts/e95adf748/](../../verification/foundation/receipts/e95adf748/foundation-check.json)
+(479 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
 **Reproducible witness shrinking.** `disagrees` states when a sequence's reachable
 observation differs from a reference (or when it is refused where the reference
