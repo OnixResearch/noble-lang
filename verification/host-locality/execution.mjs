@@ -254,6 +254,8 @@ function faultWAT(watBytes, kind) {
     injected = [`local.get ${resultArea}`, 'i32.const 2', 'i32.store8'];
   } else if (kind === 'malformed-result-length') {
     injected = [`local.get ${resultArea}`, 'i32.const -1', 'i32.store offset=8'];
+  } else if (kind === 'fuel-exhaustion-after-read') {
+    injected = ['loop', 'br 0', 'end'];
   } else throw Error(`unknown WAT fault: ${kind}`);
   lines.splice(callIndex + 1, 0, ...injected.map(line => `${indentation}${line}`));
   const result = Buffer.from(lines.join('\n'));
@@ -314,6 +316,13 @@ function checkReport(report, label, expected) {
       `${label}.${key}: expected ${stable(value)}, received ${stable(report[key])}`);
   }
   requireThat(report.native_memory_access === false, `${label}: adapter reported native-memory access`);
+  requireThat(typeof report.exit_class === 'string'
+    && ['normal', 'rejected', 'trap', 'quota-exhausted', 'adapter-invalid'].includes(report.exit_class),
+    `${label}: unexpected exit class ${report.exit_class}`);
+  requireThat(report.cleanup && ['retired', 'already-retired', 'failed'].includes(report.cleanup.state),
+    `${label}: unexpected cleanup state ${JSON.stringify(report.cleanup)}`);
+  requireThat(Number.isInteger(report.fuel_remaining) || report.fuel_remaining === null,
+    `${label}: unexpected fuel accounting ${JSON.stringify(report.fuel_remaining)}`);
   requireThat(report.released_owners === 1 && report.live_owners === 0 && report.native_pins === 0,
     `${label}: expected one successful cleanup and no live owner/pin`);
 }
@@ -431,20 +440,20 @@ function main() {
   const region = '000102';
   const normalCases = [
     { id: 'in-bounds-read-and-consuming-release', kind: 'normal-success', offset: 1, length: 2,
-      expected: { outcome: 'read', bytes_hex: '0102', error: null, protected_operations: 1, region_reads: 1 } },
+      expected: { outcome: 'read', exit_class: 'normal', bytes_hex: '0102', error: null, protected_operations: 1, region_reads: 1 } },
     { id: 'empty-read-at-end-and-consuming-release', kind: 'normal-success-boundary', offset: 3, length: 0,
-      expected: { outcome: 'read', bytes_hex: '', error: null, protected_operations: 1, region_reads: 1 } },
+      expected: { outcome: 'read', exit_class: 'normal', bytes_hex: '', error: null, protected_operations: 1, region_reads: 1 } },
     { id: 'partial-overrun-ordinary-error', kind: 'ordinary-bounds-error', offset: 2, length: 2,
-      expected: { outcome: 'bounds-reject', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
+      expected: { outcome: 'bounds-reject', exit_class: 'rejected', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
     { id: 'zero-length-outside-ordinary-error', kind: 'ordinary-bounds-error', offset: 4, length: 0,
-      expected: { outcome: 'bounds-reject', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
+      expected: { outcome: 'bounds-reject', exit_class: 'rejected', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
     { id: 'negative-offset-ordinary-error', kind: 'ordinary-bounds-error', offset: -1, length: 1,
-      expected: { outcome: 'bounds-reject', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
+      expected: { outcome: 'bounds-reject', exit_class: 'rejected', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
     { id: 'negative-length-ordinary-error', kind: 'ordinary-bounds-error', offset: 0, length: -1,
-      expected: { outcome: 'bounds-reject', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
+      expected: { outcome: 'bounds-reject', exit_class: 'rejected', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
     { id: 'checked-add-overflow-ordinary-error', kind: 'ordinary-bounds-error',
       offset: '9223372036854775807', length: 1,
-      expected: { outcome: 'bounds-reject', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
+      expected: { outcome: 'bounds-reject', exit_class: 'rejected', bytes_hex: null, error: 'bounds-reject', protected_operations: 0, region_reads: 0 } },
   ];
   for (const scenario of normalCases) {
     invokeCase({ out, cli, cliEnv, label: scenario.id, componentPath: baseComponentPath,
@@ -455,13 +464,19 @@ function main() {
   const sourceWAT = readFileSync(join(compiled.directory, 'module.wat'));
   const faultSpecs = [
     { id: 'guest-trap-after-host-read', kind: 'trap-after-read', observed: {
-      outcome: 'adapter-trap', bytes_hex: null, protected_operations: 1, region_reads: 1,
+      outcome: 'adapter-trap', exit_class: 'trap', bytes_hex: null, protected_operations: 1, region_reads: 1,
+    } },
+    { id: 'fuel-exhaustion-after-host-read', kind: 'fuel-exhaustion-after-read', observed: {
+      outcome: 'adapter-trap', exit_class: 'quota-exhausted', bytes_hex: null,
+      protected_operations: 1, region_reads: 1,
     } },
     { id: 'malformed-result-discriminant', kind: 'malformed-result-tag', observed: {
-      outcome: 'adapter-trap', bytes_hex: null, protected_operations: 1, region_reads: 1,
+      outcome: 'adapter-trap', exit_class: 'trap', bytes_hex: null,
+      protected_operations: 1, region_reads: 1,
     } },
     { id: 'malformed-result-list-length', kind: 'malformed-result-length', observed: {
-      outcome: 'adapter-trap', bytes_hex: null, protected_operations: 1, region_reads: 1,
+      outcome: 'adapter-trap', exit_class: 'trap', bytes_hex: null,
+      protected_operations: 1, region_reads: 1,
     } },
   ];
   const faultComponents = {};
@@ -472,6 +487,13 @@ function main() {
       expected: spec.observed, kind: 'emitted-core-wasm-fault-control' });
     requireThat(typeof row.observed.error === 'string' && row.observed.error.length > 0,
       `${spec.id}: trap report did not retain a diagnostic`);
+    if (spec.kind === 'fuel-exhaustion-after-read') {
+      requireThat(row.observed.fuel_remaining === 0,
+        `${spec.id}: an exhausted engine must report no remaining fuel, received ${JSON.stringify(row.observed.fuel_remaining)}`);
+    } else {
+      requireThat(typeof row.observed.fuel_remaining === 'number' && row.observed.fuel_remaining > 0,
+        `${spec.id}: a guest or adapter fault must leave engine fuel, received ${JSON.stringify(row.observed.fuel_remaining)}`);
+    }
     faultComponents[spec.id] = { ...fault, execution_case: row.id };
   }
 
@@ -485,13 +507,16 @@ function main() {
     'end_boundary_is_empty_success_and_zero_length_outside_refuses',
     'same_slot_and_generation_from_another_live_invocation_cannot_cross',
     'double_release_does_not_retire_the_owner_twice',
+    'exit_classes_distinguish_quota_trap_and_adapter_faults',
+    'abnormal_exit_cleanup_is_observed_rather_than_propagated',
+    'failed_cleanup_is_reported_as_a_failed_observation',
     'failed_cleanup_release_retains_owner_for_recovery',
   ];
   for (const name of hostTestNames) {
     requireThat(new RegExp(`test component::bounded_region::tests::${name}\\s+\\.\\.\\. ok`).test(hostTests.stdout),
       `direct Host test did not report success: ${name}`);
   }
-  requireThat(/test result: ok\. 5 passed; 0 failed/.test(hostTests.stdout),
+  requireThat(/test result: ok\. 8 passed; 0 failed/.test(hostTests.stdout),
     'direct Host control count differs from the receipt roster');
   const hostTestCommand = hostTests.record.id;
   const hostTestControls = [
