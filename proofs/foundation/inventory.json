@@ -2578,6 +2578,54 @@
       "claim": "the same two delivery records in the other order are a different documented observation"
     },
     {
+      "name": "NobleFoundation.TaskInterleaving.cancel_orders_agree_on_distinct_ids",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "cancelling the two ids in either order reaches the same documented observation at the declared bound"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.finish_orders_agree_on_distinct_ids",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "finishing the two ids in either order reaches the same documented observation at the declared bound"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.delivery_orders_disagree_on_distinct_ids",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the documented observation keeps one ordered delivery record, so the two delivery orders differ"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.delivery_orders_agree_under_the_lossy_observation",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the same two delivery orders agree under the lossy projection, which would hide the retained dependence"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.admission_depends_on_which_id_holds_the_shared_slot",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "with one shared unit, admitting either id succeeds and reaches a different documented observation"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.composed_admissions_agree_while_the_prefixes_differ",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "both composed admission orders end refused, so an equality read from the composition hides the prefix dependence"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.stale_callback_is_observation_free",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a stale callback passes the table through unchanged at the declared bound"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.failure_orders_disagree_on_distinct_ids",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the sticky first failure is shared, so the two failing-completion orders reach different observations"
+    },
+    {
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",

@@ -603,6 +603,76 @@ theorem cancellation_keeps_the_pin :
     (step (.cancel .left 1) baseline).map (fun table => table.left.pinHeld) = some true := by
   decide
 
+/-- The declared bound's paired baseline: both ids live at generation 1 against a capacity of two,
+    so each id's own slot decides the local actions that do not touch shared capacity. -/
+def paired : Table :=
+  { capacity := 2, left := liveSlot 1, right := liveSlot 1, failure := none
+    deliveries := [], settled := [] }
+
+/-- The independence rule for slot-local cancellation at the declared bound: cancelling the two ids in
+    either order reaches the same documented observation, so the swap preserves enabledness, the
+    related state and the observation for this action. -/
+theorem cancel_orders_agree_on_distinct_ids :
+    Option.map observe ((step (.cancel .right 1) paired).bind (step (.cancel .left 1))) =
+    Option.map observe ((step (.cancel .left 1) paired).bind (step (.cancel .right 1))) := by
+  decide
+
+/-- Retirement is slot-local too: finishing the two ids in either order reaches the same documented
+    observation even though the shared capacity is released twice. -/
+theorem finish_orders_agree_on_distinct_ids :
+    Option.map observe ((step (.finish .right 1) paired).bind (step (.finish .left 1))) =
+    Option.map observe ((step (.finish .left 1) paired).bind (step (.finish .right 1))) := by
+  decide
+
+/-- Delivery is deliberately *not* independent: the documented observation keeps one ordered
+    delivery record, so delivering the two ids in either order is a different observation. -/
+theorem delivery_orders_disagree_on_distinct_ids :
+    Option.map observe ((step (.deliver .right 1) paired).bind (step (.deliver .left 1))) ≠
+    Option.map observe ((step (.deliver .left 1) paired).bind (step (.deliver .right 1))) := by
+  decide
+
+/-- The same two delivery orders agree under the deliberately lossy projection, so an equivalence
+    claim read from it would hide a dependence the documented observation retains. -/
+theorem delivery_orders_agree_under_the_lossy_observation :
+    Option.map lossyObserve ((step (.deliver .right 1) paired).bind (step (.deliver .left 1))) =
+    Option.map lossyObserve ((step (.deliver .left 1) paired).bind (step (.deliver .right 1))) := by
+  decide
+
+/-- Admission depends on the shared slot, not on the id: with the left slot released and one shared
+    unit, admitting either id succeeds and reaches a *different* documented observation, so which id
+    holds the slot decides what the other can do. Composing both admissions in either order is
+    `none` both ways, so an equality read from the composed result would hide that dependence. -/
+theorem admission_depends_on_which_id_holds_the_shared_slot :
+    Option.map observe (step (.acquire .right 1) freedLeft) ≠
+    Option.map observe (step (.acquire .left 2) freedLeft) := by
+  decide
+
+/-- The composed admissions hide it: both orders end refused, so they are equal as composed results
+    while the reachable prefix above is not. -/
+theorem composed_admissions_agree_while_the_prefixes_differ :
+    Option.map observe ((step (.acquire .right 1) freedLeft).bind (step (.acquire .left 2))) =
+    Option.map observe ((step (.acquire .left 2) freedLeft).bind (step (.acquire .right 1))) := by
+  decide
+
+/-- A stale callback is observation-free: it is refused for a live generation and passes the table
+    through for any other, so it commutes with every action's result at the declared bound. -/
+theorem stale_callback_is_observation_free :
+    step (.staleCallback .left 2) paired = some paired := by
+  decide
+
+/-- Two live generations, so a failure on one id is distinguishable from a failure on the other. -/
+def pairedGenerations : Table :=
+  { paired with right := liveSlot 2 }
+
+/-- Sticky failure is shared, so the two failing completions keep the *first* recorded code and the two
+    orders reach different documented observations. -/
+theorem failure_orders_disagree_on_distinct_ids :
+    Option.map observe ((step (.complete .right 2 false) pairedGenerations).bind
+        (step (.complete .left 1 false))) ≠
+    Option.map observe ((step (.complete .left 1 false) pairedGenerations).bind
+        (step (.complete .right 2 false))) := by
+  decide
+
 /-- Two histories can end at the same lossy observation yet differ in the documented observation:
     the failure field is exactly what the lossy projection drops. -/
 theorem lossy_observation_hides_the_failure_difference :
