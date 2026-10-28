@@ -146,7 +146,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-8 claim-table rows, 7 proved, 5 tested-bearing and 3 open, 261 inventoried
+13 claim-table rows, 12 proved, 5 tested-bearing and 8 open, 484 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -172,7 +172,7 @@ Status words:
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
-| Packed I64/Bool schedule validator: acceptance implies complete ordered result equivalence | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (validator soundness over the untrusted schedule). Actual emitted-artifact binding, the Rust transcription, guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
+| Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
@@ -917,10 +917,23 @@ register per node in dependency order accepted without aliasing
 (`orderOk_cons`); and the control showing that **aliasing two live nodes onto one
 register changes the machine's value** (`aliasing_loses_the_constant`), which is
 why injectivity is a premise of the relation rather than a fresh-register
-assumption. Thirteen inventoried theorems; receipt
+assumption. The original thirteen-theorem set is retained in receipt
 [`verification/foundation/receipts/0ade1e4e9/`](../../verification/foundation/receipts/0ade1e4e9/foundation-check.json)
 (327 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+Five further theorems concern **missing operands and unwritten registers in the
+handwritten `Option Val` machine**. An empty first or second operand makes
+`add`/`sub`/`mul`/`eq` write `none` to the destination, including over an earlier
+value (`a_missing_operand_refuses_rather_than_fabricating`,
+`a_missing_second_operand_refuses_rather_than_fabricating`). A register with no
+executed writer preserves its initial contents
+(`an_unwritten_register_keeps_its_value`); it stays empty when the machine starts
+empty (`an_unwritten_register_stays_empty`). The selected output is `none` only
+when **every** executed node avoids writing its register
+(`an_omitted_output_node_yields_no_output`): omitting the output node is not enough
+if another node aliases that register. These are model properties, not graph
+guard semantics, Rust runtime checks or validation of emitted instruction bodies.
 
 Open, and deliberately not closed:
 
@@ -928,8 +941,8 @@ Open, and deliberately not closed:
   its instruction stream, not the `Compiled` layout key, layer ranges, register
   count or constant/slot tables that `Compiled::new` produces, so a sound abstract
   checker plus an unproved Rust transcription is not an end-to-end proof;
-- guards, `fail_suffix_min` canonical-first-failure behaviour, ordered affine and
-  `F32` instructions are outside the fragment (`F32` only after #38), as are
+- graph guards, `fail_suffix_min` canonical-first-failure behaviour, ordered affine
+  and `F32` instructions are outside the fragment (`F32` only after #38), as are
   effects, resources, aliasing *after* last use and any multi-output reconstruction;
 - refusal classes, bounded checking work, versioned encoding and fail-closed
   preflight are named obligations rather than implemented behaviour here;

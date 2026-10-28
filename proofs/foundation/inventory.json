@@ -1978,6 +1978,36 @@
       "claim": "The reference value of a node is stable once later nodes have been added."
     },
     {
+      "name": "NobleFoundation.PackedSchedule.a_missing_operand_refuses_rather_than_fabricating",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "In the handwritten Option-valued machine, an empty first operand makes add, sub, mul and eq write none to the destination, including over a previous value."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.a_missing_second_operand_refuses_rather_than_fabricating",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "In the handwritten machine, an empty second operand makes each arithmetic or equality instruction write none to the destination."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.an_unwritten_register_keeps_its_value",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A register no executed node writes preserves its initial contents through the model stream, even if initially nonempty."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.an_unwritten_register_stays_empty",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "From an empty model machine, a register with no executed writer stays empty."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.an_omitted_output_node_yields_no_output",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Starting from an empty model machine, the selected output is none if no executed node writes its register; the premise excludes aliased writers too."
+    },
+    {
       "name": "NobleFoundation.PackedSchedule.step_written",
       "phase": 1,
       "role": "packed-schedule",

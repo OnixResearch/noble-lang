@@ -222,6 +222,74 @@ theorem step_written (graph : Graph) (schedule : Schedule) (inputs : Nat → Bit
   unfold emitNode
   split <;> simp [step, hne]
 
+/-! ### Missing operands and unwritten registers (issue #43)
+
+These are properties of the handwritten `Option Val` machine, not checks of Rust instruction bytes
+or graph guard operations. An arithmetic or equality instruction with an empty operand writes `none`
+to its destination, including when that destination previously held a value. A register no executed
+node writes preserves its initial contents; emptiness therefore requires an empty initial register.
+Omitting an output node alone is insufficient if another executed node aliases its register.
+No layout acceptance or implementation-correspondence claim follows from these statements. -/
+
+/-- In the model, an empty first operand makes `add`, `sub`, `mul` and `eq` write `none`
+to their destination, even if that destination previously held a value. -/
+theorem a_missing_operand_refuses_rather_than_fabricating (inputs : Nat → BitVec 64)
+    (regs : Nat → Option Val) (dst x y : Nat) (missing : regs x = none) :
+    step inputs regs (.add dst x y) dst = none
+      ∧ step inputs regs (.sub dst x y) dst = none
+      ∧ step inputs regs (.mul dst x y) dst = none
+      ∧ step inputs regs (.eq dst x y) dst = none := by
+  simp [step, missing]
+
+/-- The same model property holds when the second operand register is empty. -/
+theorem a_missing_second_operand_refuses_rather_than_fabricating (inputs : Nat → BitVec 64)
+    (regs : Nat → Option Val) (dst x y : Nat) (missing : regs y = none) :
+    step inputs regs (.add dst x y) dst = none
+      ∧ step inputs regs (.sub dst x y) dst = none
+      ∧ step inputs regs (.mul dst x y) dst = none
+      ∧ step inputs regs (.eq dst x y) dst = none := by
+  simp [step, missing]
+
+/-- No executed node writes to a given register. -/
+def Unwritten (schedule : Schedule) (order : List Nat) (register : Nat) : Prop :=
+  ∀ index ∈ order, schedule.regOf index ≠ register
+
+/-- A register no executed node writes preserves its initial contents through the model stream.
+In particular, a nonempty initial register is not cleared merely by omitting its writer. -/
+theorem an_unwritten_register_keeps_its_value (graph : Graph) (schedule : Schedule)
+    (inputs : Nat → BitVec 64) :
+    ∀ (order : List Nat) (register : Nat), Unwritten schedule order register →
+      ∀ (regs : Nat → Option Val),
+        execSchedule graph schedule inputs order regs register = regs register := by
+  intro order
+  induction order with
+  | nil => intro register _ regs; rfl
+  | cons index rest ih =>
+      intro register unwritten regs
+      have hne : register ≠ schedule.regOf index :=
+        fun same => unwritten index (by simp) same.symm
+      have advanced := step_written graph schedule inputs regs index register hne
+      simp only [execSchedule]
+      rw [ih register (fun other member => unwritten other (by simp [member]))
+        (step inputs regs (emitNode graph schedule index))]
+      exact advanced
+
+/-- Starting from an empty machine, such a register stays empty. -/
+theorem an_unwritten_register_stays_empty (graph : Graph) (schedule : Schedule)
+    (inputs : Nat → BitVec 64) (order : List Nat) (register : Nat)
+    (unwritten : Unwritten schedule order register) :
+    execSchedule graph schedule inputs order (fun _ => none) register = none :=
+  an_unwritten_register_keeps_its_value graph schedule inputs order register unwritten
+    (fun _ => none)
+
+/-- Starting from an empty model machine, omitting every writer of the selected output register
+leaves it empty. The premise also excludes writes by nodes aliased onto that register. -/
+theorem an_omitted_output_node_yields_no_output (graph : Graph) (schedule : Schedule)
+    (inputs : Nat → BitVec 64) (order : List Nat)
+    (unwritten : Unwritten schedule order schedule.outReg) :
+    execSchedule graph schedule inputs order (fun _ => none) schedule.outReg = none :=
+  an_unwritten_register_stays_empty graph schedule inputs order schedule.outReg unwritten
+
 /-- A step computes its own node's graph value whenever its operands' registers
 already hold their graph values. -/
 theorem step_computes (graph : Graph) (hwf : WellFormed graph) (schedule : Schedule)
