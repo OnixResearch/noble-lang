@@ -118,6 +118,18 @@ const relational = {
   post: conjunction(truth(true)),
 };
 
+// One admissible input and three permitted Bool outputs whose first two coincide: only the third is
+// distinct, so a comparison restricted to the first two permitted stacks would call this deterministic.
+const duplicateFirstPermitted = {
+  params: [],
+  inputs: ['i64'],
+  outputs: ['bool'],
+  domain: [{ params: [], inputs: [{ i64: 0 }] }],
+  permitted: [[{ bool: true }], [{ bool: true }], [{ bool: false }]],
+  pre: conjunction(truth(true)),
+  post: conjunction(truth(true)),
+};
+
 const incrementClaims = () => ({
   relation: increment,
   obligations: [specification('inhabited'), specification('realizable'), specification('deterministic')],
@@ -180,6 +192,23 @@ assert.equal(ambiguous.document.specification_quality.derivation.deterministic, 
   'two distinct satisfying outputs for one input refuse determinacy');
 assert.deepEqual(ambiguous.document.specification_quality.derivation.refutation, ['two-distinct-outputs', 0, 0, 1],
   'both checked distinct outputs are named');
+
+const duplicateFirst = await derived('duplicate-first-permitted', duplicateFirstPermitted,
+  [obligation('deterministic', 'specification-quality', false)]);
+assert.equal(duplicateFirst.status, 0);
+assert.equal(duplicateFirst.document.specification_quality.derivation.deterministic, false,
+  'a later distinct satisfying output refuses determinacy even when the first two coincide');
+assert.deepEqual(duplicateFirst.document.specification_quality.derivation.refutation,
+  ['two-distinct-outputs', 0, 0, 2],
+  'the checked witness names the later distinct permitted stack');
+
+// Duplicate permitted stacks alone are not an ambiguity witness, so the same relation with the third
+// output removed stays deterministic rather than becoming conservative.
+const duplicatedOnly = await derived('duplicate-only-permitted',
+  { ...duplicateFirstPermitted, permitted: [[{ bool: true }], [{ bool: true }]] }, incrementClaims().obligations);
+assert.equal(duplicatedOnly.status, 0);
+assert.equal(duplicatedOnly.document.specification_quality.derivation.deterministic, true,
+  'identical permitted stacks are not a distinct-output witness');
 
 // Ordinary admission of an intentionally relational contract is untouched: no obligation is forced.
 const relationalAdmission = await derived('relational-admission', relational, []);

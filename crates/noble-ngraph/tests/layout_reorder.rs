@@ -77,7 +77,11 @@ fn an_interleaved_i64_schedule_with_shared_inputs_and_equality_is_validated() {
         "two declared slot registers (both shared inputs)"
     );
     assert_eq!(layout.consts.len(), 1, "one declared exact constant");
-    assert_eq!(layout.layers.len(), layout.fail_suffix_min.len() - 1, "one range and one minimum per layer");
+    assert_eq!(
+        layout.layers.len(),
+        layout.fail_suffix_min.len() - 1,
+        "one range and one minimum per layer"
+    );
 
     let compiled = Compiled::new(&scheme, &accepted);
     let cases: [[Value; 2]; 5] = [
@@ -103,21 +107,45 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
 
     let mut short = layout.clone();
     short.reg.pop();
-    assert_eq!(layout_check(&accepted, &short), Err(Refusal::RegisterMapShape), "missing register");
+    assert_eq!(
+        layout_check(&accepted, &short),
+        Err(Refusal::RegisterMapShape),
+        "missing register"
+    );
 
     let mut wrong_bits = layout.clone();
     if let Some(entry) = wrong_bits.consts.first_mut() {
         entry.1 ^= 1;
     }
-    assert_eq!(layout_check(&accepted, &wrong_bits), Err(Refusal::ConstantTable), "wrong constant bits");
+    assert_eq!(
+        layout_check(&accepted, &wrong_bits),
+        Err(Refusal::ConstantTable),
+        "wrong constant bits"
+    );
 
+    // Swapping whole `(register, ordinal)` pairs is a permutation of a valid table and is accepted;
+    // the declaration is wrong only when a register keeps its place while the ordinals swap.
     let mut swapped = layout.clone();
     if swapped.slot_regs.len() == 2 {
-        let first = swapped.slot_regs[0];
-        swapped.slot_regs[0] = swapped.slot_regs[1];
-        swapped.slot_regs[1] = first;
+        let first = swapped.slot_regs[0].1;
+        swapped.slot_regs[0].1 = swapped.slot_regs[1].1;
+        swapped.slot_regs[1].1 = first;
     }
-    assert_eq!(layout_check(&accepted, &swapped), Err(Refusal::SlotTable), "swapped slot table");
+    assert_eq!(
+        layout_check(&accepted, &swapped),
+        Err(Refusal::SlotTable),
+        "swapped slot ordinals"
+    );
+
+    let mut permuted = layout.clone();
+    if permuted.slot_regs.len() == 2 {
+        permuted.slot_regs.swap(0, 1);
+    }
+    assert_eq!(
+        layout_check(&accepted, &permuted),
+        Ok(()),
+        "a pair permutation is still a valid table"
+    );
 
     let mut aliased = layout.clone();
     if aliased.reg.len() >= 2 {
@@ -125,11 +153,18 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
     }
     let aliased_refusal = layout_check(&accepted, &aliased);
     assert!(
-        matches!(aliased_refusal, Err(Refusal::AliasedRegisters) | Err(Refusal::SlotTable)),
+        matches!(
+            aliased_refusal,
+            Err(Refusal::AliasedRegisters) | Err(Refusal::SlotTable)
+        ),
         "aliased registers: {aliased_refusal:?}"
     );
 
-    assert_eq!(layout_check(&accepted, &layout), Ok(()), "unmutated declaration");
+    assert_eq!(
+        layout_check(&accepted, &layout),
+        Ok(()),
+        "unmutated declaration"
+    );
 }
 
 #[test]
@@ -137,7 +172,11 @@ fn the_declared_constant_bits_are_the_authored_literal() {
     let graph = reordered_i64();
     let (_, layout) = compiled_layout(&graph);
     assert_eq!(
-        layout.consts.iter().map(|entry| entry.1).collect::<Vec<_>>(),
+        layout
+            .consts
+            .iter()
+            .map(|entry| entry.1)
+            .collect::<Vec<_>>(),
         vec![(-3i64) as u64],
         "declared constant bits"
     );

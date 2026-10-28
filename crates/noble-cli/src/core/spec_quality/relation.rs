@@ -471,15 +471,22 @@ pub(super) fn derive(value: &Value) -> Result<Derived, Refused> {
                 realizable = false;
                 refutation = Some(Refutation::NoOutput { assignment: index });
             }
-            [first, second, ..] if retained.permitted[*first] != retained.permitted[*second] => {
-                deterministic = false;
-                refutation = Some(Refutation::Ambiguous {
-                    assignment: index,
-                    first: *first,
-                    second: *second,
-                });
+            [first, rest @ ..] => {
+                // Every later satisfying stack must be compared, not only the second: a relation whose
+                // first two permitted outputs coincide can still be nondeterministic through a third.
+                let distinct = rest
+                    .iter()
+                    .copied()
+                    .find(|position| retained.permitted[*first] != retained.permitted[*position]);
+                if let Some(position) = distinct {
+                    deterministic = false;
+                    refutation = Some(Refutation::Ambiguous {
+                        assignment: index,
+                        first: *first,
+                        second: position,
+                    });
+                }
             }
-            _ => (),
         }
     }
     let inhabited = admitted > 0;
