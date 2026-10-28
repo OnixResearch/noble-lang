@@ -1452,6 +1452,10 @@ and a zero chunk size degenerates to one row per chunk instead of dropping rows
 Nothing in that model measures or predicts elapsed time, process memory or
 allocator overhead, and no abstract counter is equated with a measured one.
 
+Receipt for the cost model:
+[verification/foundation/receipts/f91cc50f7/](../../verification/foundation/receipts/f91cc50f7/foundation-check.json)
+(471 theorems, `clean_source: true`, axiom sets inside the allow-list).
+
 Open, and deliberately not closed by this model: no byte budget beyond the
 literal-range rule, no validation rule beyond the literal range is
 modelled, no parameter snapshot or output ownership is modelled, and no
