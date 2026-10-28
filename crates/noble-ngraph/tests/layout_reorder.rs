@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::assertion_density,
+    tigerstyle::ambiguous_params,
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; this integration harness builds an interleaved checked graph and asserts its validated layout and execution outcomes, so terse fixture names and unwraps are the readable form."
+)]
 use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};

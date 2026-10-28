@@ -433,8 +433,18 @@ let contracts = import "./architecture.contracts.ncl" in
     # and the collection was complete without widening one, so this is a
     # capacity re-measurement rather than a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 106,
-    max_shards = 106,
+    # 109 units (2026-10-28): the 106-unit capacity above no longer matched the
+    # selected workspace, so `checks.x86_64-linux.source-coverage` failed on
+    # `selected compiler architecture units exceed policy limit 106`. Measured
+    # at 598a88d0 in a scratch copy with `max_units` and `max_shards` only raised
+    # to 400 (the collector aborts at the limit rather than reporting a count):
+    # expected=109, observed=109, 0 missing, 0 unexpected, 0 duplicate unit ids,
+    # 0 invalid shards, status=complete, and a 251,473,781-byte IR. Every other
+    # cap was unchanged and the collection was complete without widening one, so
+    # this is a capacity re-measurement rather than a classification waiver,
+    # source/native assurance approval, or a gate PASS.
+    max_units = 109,
+    max_shards = 109,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
