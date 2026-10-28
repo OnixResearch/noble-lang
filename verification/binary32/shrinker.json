@@ -1,24 +1,56 @@
 {
-  "schema": "noble-binary32-shrinker/v1",
-  "assertion": "the flush-to-zero disagreement between the host multiply and the packed multiplier shrinks, deterministically and inside its documented budget, to the recorded witness on this host and target; not kernel evidence",
-  "source_commit": "38ce074788387ce98fc2649c1084b7788a76dd1a",
-  "source_tree": "9051a3462dacf85f233aaed317ed7c901accea95",
+  "schema": "noble-binary32-shrinker/v2",
+  "assertion": "bare operation disagreements and retained-expectation discrepancies shrink, deterministically, inside their documented budget and without changing observation class, to the recorded witnesses on this host and target; not kernel evidence",
+  "lanes": [
+    "flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness",
+    "retained_expectation_discrepancies_shrink_and_preserve_their_classes"
+  ],
+  "source_commit": "2a827a2fa941db8aa05c5b9db9b2d78639ae06e5",
+  "source_tree": "6278e7f6ff14a559f1ecb04dc43ec53f697ef53b",
   "clean_source": true,
-  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0\nrunning auto-GC to free 126770348032 bytes\nwaiting for the big garbage collector lock...\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\nvdollar_percent_expand: env var ${XDG_RUNTIME_DIR} has no value\r\n/home/brittonr/.ssh/config line 52: Invalid environment expansion ${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock.\r\n/home/brittonr/.ssh/config: terminating, 1 bad configuration options\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\nwarning: could not get HEAD ref for repository 'ssh://git@github.com/OnixResearch/bounded-exec.git'; using expired cached ref 'refs/heads/main'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'\nvdollar_percent_expand: env var ${XDG_RUNTIME_DIR} has no value\r\n/home/brittonr/.ssh/config line 52: Invalid environment expansion ${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock.\r\n/home/brittonr/.ssh/config: terminating, 1 bad configuration options\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\nwarning: could not get HEAD ref for repository 'ssh://git@github.com/OnixResearch/onix-artifact.git'; using expired cached ref 'refs/heads/main'",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-shrink-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential shrink -- --nocapture",
   "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
-  "lane_sha256": "d3153a4b261d0589daf6fd81f5a81e056080c97c08de647ee04b7c3b3c55e6aa",
-  "lane": "flush_to_zero_disagreement_shrinks_to_a_deterministic_replayable_witness",
-  "witness": {
-    "operation": 2,
-    "left": "0x00800000",
-    "right": "0x3f000000",
-    "expected": "0x00400000",
-    "candidate": "0x00000000",
-    "attempts": 36,
-    "budget_exhausted": false
-  },
+  "lane_sha256": "5a770de737aba87edb2ded5ce1088fe12fe3bd2e3ec1269d2257e78d3d428760",
+  "witnesses": [
+    {
+      "operation": 2,
+      "left": "0x00800000",
+      "right": "0x3f000000",
+      "expected": "0x00400000",
+      "candidate": "0x00000000",
+      "attempts": 36,
+      "budget_exhausted": false
+    }
+  ],
+  "expectation_witnesses": [
+    {
+      "expectation_index": 12,
+      "operation": 2,
+      "retained": "0x00000001",
+      "class": "subnormal",
+      "left": "0x00000001",
+      "right": "0x3f800000",
+      "expected": "0x00000001",
+      "candidate": "0x00000000",
+      "attempts": 36,
+      "budget_exhausted": false
+    },
+    {
+      "expectation_index": 14,
+      "operation": 2,
+      "retained": "0x00400000",
+      "class": "subnormal",
+      "left": "0x00800000",
+      "right": "0x3f000000",
+      "expected": "0x00400000",
+      "candidate": "0x00000000",
+      "attempts": 36,
+      "budget_exhausted": false
+    }
+  ],
+  "carried_expectations": 8,
   "scope": {
     "order": "documented simplicity order over the documented simplification list",
     "minimum": "local minimum under that order, not a global minimum",
@@ -26,7 +58,9 @@
   },
   "claims": [
     "Tested-implementation evidence for the shrinker lane on this host and target only.",
-    "The witness is replayable and deterministic; it is not a retained kernel-checked expectation.",
+    "Every witness is replayable and deterministic; none is a retained kernel-checked expectation.",
+    "The expectation-driven witnesses name the retained expectation they came from (packet index and class) and preserve that class, so a shrink cannot convert a subnormal rounding discrepancy into another class.",
+    "The expectation-driven lane carries multiplication only: the additive and subtractive retained expectations have no flush-to-zero candidate and stay covered by their own replay lanes, not by this walk.",
     "No correspondence proof, no cross-platform claim, and no claim about wasm-opt, V8 or the loader."
   ]
 }
