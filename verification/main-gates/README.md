@@ -1,5 +1,34 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-29 (all fourteen checks pass at `91a473c`)
+
+The [receipt](receipt-91a473c.json) records **14 PASS / 0 FAIL** at
+`91a473c816619a0ef0ba60ced54b4d761e02bc20`, completing the gate repair in
+[#72](https://github.com/OnixResearch/noble-lang/issues/72). Rust reports
+**867 passed, 0 failed and 7 ignored across 98 result groups**. Strict Octet's
+lint and architecture phases are clean. The sandboxed boundary matrix passes
+both positive baselines and all 16 negative fixtures; each native comparator
+verdict and case-output NAR identity is retained.
+
+The exact pinned extraction Rust, Charon, Aeneas and upstream pin-check
+outputs were realized on the verified builder. `tool-versions` and
+`tool-overrides` both pass. This establishes executable availability and
+override refusal, not a fresh extraction or compatibility replay.
+
+Source coverage and native assurance return valid with empty diagnostics.
+The inventory covers **109 units and 15,385 reviewed production paths**;
+all **7,981 authored bodies remain open refinement obligations**. Their first
+remote-store invocations failed before comparison because the local evaluator
+refused an unsigned remote IFD artifact. The successful recovery evaluates
+the byte-identical archived flake natively on that builder. No trusted key,
+signature check, selected tool or source policy was relaxed; both failed
+attempts remain in the receipt.
+
+This pass binds `91a473c` only. The receipt and current-source declarations
+are later documentation, not another full-roster execution. The earlier
+`13b5a35` failures and interrupted tool run remain unchanged. No milestone,
+case, proof obligation or Cairn archive is promoted by this gate restoration.
+
 ## Source repair — issue #72
 
 The strict-source repair keeps request work as an explicit returned value,
@@ -55,10 +84,10 @@ reviewed production paths (7,981 body/open, 4,239 generated, 3,165 structural),
 removes 63 stale closure/import/test names; no retained classification or
 package owner is changed. Accounting does not discharge refinement.
 
-These API and host-collector observations alone do **not** clear the
-fourteen-gate roster. The #72 boundary matrix and tool prerequisites require
-independent committed-source execution, recorded in a separate receipt; no
-milestone or Cairn archive follows from lint clearance.
+These API and host-collector observations alone did **not** clear the
+fourteen-gate roster. The independent committed-source execution is recorded
+above and in the linked receipt; no milestone or Cairn archive follows from
+lint clearance.
 
 ## Checking change log — 2026-10-28 (native source binding at `13b5a35`; not all gates pass)
 
