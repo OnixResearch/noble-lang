@@ -1,14 +1,26 @@
 {
   "schema": "noble-binary32-replay/v1",
   "assertion": "the packed Rust reference and the compiled graph legs agree with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence",
-  "source_commit": "53d7a560d53aa96e1bd563688c601245acef683e",
-  "source_tree": "831a683f1f307623e34ccdd84b6ceb75a4de03c4",
+  "source_commit": "834e14592fd74b2e4875c1b6bc475f769e191bd7",
+  "source_tree": "2ae9e4fd53552b1028f4ea996607882c10d310ca",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-replay-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture",
+  "target": {
+    "target_triple": "x86_64-unknown-linux-gnu",
+    "rustc_version": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+    "fp_configuration": {
+      "rustflags": "",
+      "cargo_encoded_rustflags": "",
+      "cargo_incremental": "0"
+    }
+  },
   "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
   "lane_sha256": "5a770de737aba87edb2ded5ce1088fe12fe3bd2e3ec1269d2257e78d3d428760",
+  "proposer_file": "verification/binary32/propose.py",
+  "proposer_sha256": "4ddb2ee0eb0ae702585bd5b166ce4e84a159103164b016bb2d9be1c5971e327a",
+  "proposal_file": "verification/binary32/proposals.json",
   "proposals_sha256": "850362e810b321b7620fba51132b25cff1527ac48855e57379adaef72f75bf6e",
   "retained_expectations": 26,
   "observations": "NaN expectations match by observation equality; every other class matches its exact encoding",
@@ -21,6 +33,11 @@
       {
         "receipt": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
         "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
+        "model_theorems": 21
+      },
+      {
+        "receipt": "verification/foundation/receipts/656ec91b4/foundation-check.json",
+        "source_commit": "656ec91b45983c4c394263a42bfc13fa7c9d12f3",
         "model_theorems": 21
       },
       {
