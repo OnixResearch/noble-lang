@@ -1,6 +1,6 @@
 {
   "schema": "noble-nested-session-inventory/v1",
-  "scope": ".cairn/changes/nested-session-protocol: finite grammar with bounded unfolding, duality, the opaque move-only endpoint resource and a bounded mailbox. Definitions table is handwritten; no lowering/runtime/peer correspondence; the only progress statement is guest-local; nested recursion is regular (the nested parameter is unused); delegation excluded.",
+  "scope": ".cairn/changes/nested-session-protocol: finite grammar with bounded unfolding, duality, the abstract move-only endpoint resource and a bounded mailbox. Definitions table is handwritten; no lowering/runtime/peer correspondence; the only progress statement is guest-local; the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs a return stack, while this model admits it only up to the declared stack limit; the legacy depth-only control drops returns; delegation excluded.",
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -608,6 +608,114 @@
     {
       "name": "NestedSession.finished_state_declares_no_guest_action",
       "role": "WIT-SESSION-05 scoped progress: a finished protocol declares no guest action, so progress ends in a named terminal state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stackAdvance_keeps_the_stack",
+      "role": "WIT-SESSION-05: a communication continuation preserves the saved return stack and declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stackAdvance_respects_the_limit",
+      "role": "WIT-SESSION-05: a successful communication continuation stays within an already valid stack limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stackState_within_the_limit",
+      "role": "WIT-SESSION-05: a successor carrying a bounded return stack preserves the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stackEnter_respects_the_limit",
+      "role": "WIT-SESSION-03: a successful nested entry adds one frame without exceeding the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_step_respects_the_limit",
+      "role": "WIT-SESSION-05 invariant: every successful stack step preserves the limit and stays within it from a bounded input stack",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_entry_and_return_at_depth_one",
+      "role": "WIT-SESSION-03 positive trace: one bounded nested entry saves and later pops its return continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_entry_and_return_at_depth_two",
+      "role": "WIT-SESSION-03 positive trace: two nested entries return in last-in-first-out order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_push_beyond_the_limit_is_refused",
+      "role": "WIT-SESSION-03 negative control: a return-stack push at the declared limit is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_two_recv_two_is_accepted",
+      "role": "WIT-SESSION-03 positive trace: the bounded balanced-table fixture accepts send squared followed by receive squared",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_two_recv_three_is_refused",
+      "role": "WIT-SESSION-03 negative control: an extra receive after two sends is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_three_recv_two_is_refused",
+      "role": "WIT-SESSION-03 negative control: two receives cannot close a three-send trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dropped_return_continuation_accepts_unbalanced_and_rejects_balanced",
+      "role": "WIT-SESSION-05 load-bearing mutant: dropping the saved continuation accepts an unbalanced trace, refuses the balanced trace, and the real stack refuses that unbalanced trace",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",

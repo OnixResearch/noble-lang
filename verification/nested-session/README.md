@@ -19,8 +19,12 @@ dirty worktree needs the explicit `--allow-dirty` flag (which the receipt then r
 
 The grammar is one finite set of nodes — `finished`, typed `send`, typed `recv`, internal `choose`,
 external `offer`, and a named `nested` constructor with explicit parameters — resolved against a closed
-definitions table under a **bounded** unfolding depth. The endpoint is an opaque move-only resource
-carrying channel identity, side, protocol identity, current state and generation.
+definitions table under a **bounded** unfolding depth. The endpoint is an abstract move-only resource
+carrying channel identity, side, protocol identity, current state and generation. The stack-aware
+operand carries a bounded return stack beside the endpoint: `enter` saves a nested parameter, and
+`finish` pops it (or orderly-ends when the stack is empty). The balanced table's unbounded trace
+language `sendⁿ·recvⁿ` is not regular and needs that return stack; this model admits it only up to the
+declared stack limit, so its accepted bounded subset is finite.
 
 | Theorem | Claim |
 |---|---|
@@ -34,9 +38,9 @@ carrying channel identity, side, protocol identity, current state and generation
 | `admission_preserves_the_endpoint_inventory`, `no_endpoint_duplication` | admission neither copies nor removes an endpoint |
 | `every_operation_preserves_the_endpoint_inventory`, `every_operation_keeps_the_endpoint_inventory_bound` | the bound is stated over **every** operation this model has — a session step, a boundary, or an observed cleanup — so the two operations that carry no transition are covered by case analysis rather than by omission in prose |
 | `duplicating_operation_breaks_the_bound` | the bound is load-bearing: an operation that appends an endpoint duplicates one and breaks it |
-| `trace_send_then_recv`, `trace_recursive_entry_unfolds_to_the_send_node`, `trace_orderly_close`, `trace_bounded_buffering_refuses_the_third_payload` | positive traces over one closed table: sequencing, recursive entry unfolding to its definition, orderly close once, bounded buffering stopping at the limit |
+| `trace_send_then_recv`, `trace_recursive_entry_unfolds_to_the_send_node`, `trace_orderly_close`, `trace_bounded_buffering_refuses_the_third_payload` | positive traces over one closed table: sequencing, the legacy depth-only nested control, orderly close once, bounded buffering stopping at the limit |
 | `send_events_never_observe` | the asynchronous event vocabulary keeps guest request, admission, host commit, dequeue, observation, close and cleanup distinct; **a send sequence carries no observation** |
-| `trace_send_then_recv_advances`, `closed_endpoint_cannot_receive` | send then receive advances through the table, and receive-after-close is refused. This is sequencing, not a recursive return: no return stack is modelled |
+| `trace_send_then_recv_advances`, `closed_endpoint_cannot_receive` | send then receive advances through the table, and receive-after-close is refused; the stack-aware recursive entry/return traces are listed below |
 | `receive_after_dequeue_is_well_formed`, `forged_observation_without_dequeue_is_refused` | an observation needs a preceding dequeue; a forged peer response is refused |
 | `orderly_close_with_cleanup_is_well_formed`, `close_without_cleanup_is_refused` | an omitted cleanup is refused rather than read as a successful orderly close |
 | `both_choices_are_distinct_at_the_boundary` | internal choice branches stay distinct and a receive state does not step as a send |
@@ -51,16 +55,22 @@ carrying channel identity, side, protocol identity, current state and generation
 | `peer_disappearance_keeps_the_cleanup_pending`, `ordinary_close_does_not_keep_the_cleanup_pending` | an unobserved cleanup stays an unresolved fact, and only an observed cleanup clears it |
 | `advance_preserves_the_endpoint_identity`, `steppers_preserve_the_endpoint_identity` | state preservation is proved **once, from the one step helper every stepper delegates to**, not once per stepper |
 | `step_acts_only_inside_the_current_protocol` | **no action outside the current protocol**: a successful step is exactly a resolved current node declaring that action, and its sole successor is that node's declared continuation. The typed send, typed receive and internal choice steppers *are* this operand by definition, so a mismatched message type or an undeclared branch is one case of the same rule rather than a second convention |
+| `stackAdvance_keeps_the_stack`, `stackAdvance_respects_the_limit`, `stackState_within_the_limit`, `stackEnter_respects_the_limit`, `stack_step_respects_the_limit` | communication continuations, nested entry and finished-node returns preserve the declared limit and keep every successful stack step within it when the input stack is within it |
+| `stack_entry_and_return_at_depth_one`, `stack_entry_and_return_at_depth_two` | the bounded stack saves one and two nested return continuations and pops them in last-in-first-out order |
+| `balanced_trace_send_two_recv_two_is_accepted` | `balancedProtocol` accepts two sends followed by two receives, with the stack empty at orderly end |
+| `balanced_trace_send_two_recv_three_is_refused`, `balanced_trace_send_three_recv_two_is_refused` | the balanced fixture refuses an extra receive and refuses a trace with too few receives to close all sends |
+| `stack_push_beyond_the_limit_is_refused` | a push at the declared return-stack limit is refused |
+| `dropped_return_continuation_accepts_unbalanced_and_rejects_balanced` | mutant control: dropping the saved continuation accepts two sends/one receive, refuses the balanced two-send/two-receive trace, while the real stack refuses the same unbalanced trace |
 | `guest_local_progress_on_a_declared_action` | the **scoped progress statement**: at an open owned endpoint whose resolved node declares the requested guest action, that action has a successor. Its premises are exactly open endpoint + resolved state + declared action; peer behaviour, scheduling, queue capacity and delivery are **outside** it |
 | `offer_state_offers_no_guest_action`, `finished_state_declares_no_guest_action` | the two states where guest progress ends are named states rather than unnamed refusals: a peer-side offer declares no guest choice, and a finished protocol declares no guest action |
-| `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the nested fixture: the handshake resolves at unfolding depth zero and its two actions advance, while the nested fixture's recursive entry is refused there and resolves only under unfolding. This does **not** show non-regularity: `resolve` ignores the nested parameter, so `exampleProtocol` is the regular loop `(send i64 · recv i64)*` |
+| `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **68** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **80** model
 theorems, every axiom inside the standard allow-list:
-- 20 theorems use no axiom;
-- 38 use `propext` alone;
-- 8 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged` and
+- 21 theorems use no axiom, including `stackState_within_the_limit`;
+- 47 use `propext` alone, including the bounded return-stack trace/control theorems;
+- 10 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged` and
   `step_acts_only_inside_the_current_protocol`;
 - 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and
   `steppers_preserve_the_endpoint_identity`.
@@ -81,14 +91,14 @@ message) is excluded, so ownership obligations stay outside this model. Cancella
 peer disappearance, mailbox fullness and cleanup facts **are** modelled at the trace level, the
 bounded admission over the ledger is measured, and `step_acts_only_inside_the_current_protocol`
 covers every guest action with the finite-handshake control beside the nested fixture, and the
-inventory bound is stated over every operation including those that carry no transition, and progress
-is stated for the guest's own step under three named premises. What stays open is the correspondence
-receipt's lowering/runtime/helper revisions, and four model items the 2026-10-29 audit found
-over-ticked:
+inventory bound is stated over every operation including those that carry no transition, progress is
+stated for the guest's own step under three named premises, and the balanced table's unbounded
+`sendⁿ·recvⁿ` trace language needs a return stack while this model admits it only up to the declared
+limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, and three
+model items remain outside this unit:
 - a protocol type-equality algorithm;
 - progress under queue, peer, scheduler and host premises;
-- external choice and recursive return in the positive traces;
-- a non-regular nested fixture, which needs a return stack.
+- an external-choice action and its positive trace (the recursive return traces are now modelled).
 
 The `claims` block names the progress, cancellation, nested-recursion and type-equality scope. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.

@@ -134,7 +134,8 @@ const bindings = {
   // The closed definitions table, the endpoint identity fields and the mailbox accounting are this
   // model's own constants: their bytes are the source hash above, so they are bound through it and
   // named here rather than left implicit.
-  protocol_definitions: 'proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol',
+  protocol_definitions:
+    'proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol',
   endpoint_identity_fields: ['channel', 'responder', 'protocol', 'state', 'generation', 'closed'],
   queue_accounting: 'depth derived from the enqueued/dequeued ledger, never stored beside it',
   helper: null,
@@ -152,7 +153,7 @@ const claims = {
   liveness: 'none',
   progress: 'guest-local only: an open endpoint whose resolved node declares the action has a successor; no queue, peer, scheduler or host premise',
   cancellation: 'an event class that cuts the committed prefix; it carries no endpoint or session transition',
-  nested_recursion: 'regular only: a nested constructor resolves to its definition and its parameter is unused; no return stack',
+  nested_recursion: 'the balanced table\'s unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence',
   type_equality: 'no algorithm; duality is definitional',
 };
 const receipt = {
@@ -167,7 +168,7 @@ const receipt = {
   implementation_theorem: false,
   scope: ['.cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.',
     'The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;',
-    'the only progress statement is guest-local; nested recursion is regular; endpoint delegation is excluded and send is never modelled as receipt.'],
+    'the only progress statement is guest-local; the balanced table\'s unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt.'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`NESTED-SESSION: ${names.length} model theorems; strict axioms accepted\n`);

@@ -12,8 +12,9 @@
 
 - [ ] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
   Un-ticked 2026-10-29: the grammar, bounded unfolding, duality and the endpoint resource exist
-  (`proofs/m6/NestedSession.lean`), but no protocol type-equality algorithm is defined, and `resolve`
-  ignores the nested parameter, so unfolding is regular.
+  (`proofs/m6/NestedSession.lean`), but no protocol type-equality algorithm is defined. The legacy
+  depth-only `resolve` path drops nested returns; the stack-aware operand now saves and pops the
+  nested parameter under a declared return-stack limit.
 - [x] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
   Complete at model level: duality is definitional and involutive; state preservation is proved once from
   the one step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy,
@@ -35,18 +36,22 @@
 - [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
   Un-ticked 2026-10-29: sequencing, orderly close and bounded buffering have positive traces. External
   choice cannot be taken (`continuationOf` declares no action at an `offer` node and `Action` has no
-  branch receive), recursive entry is shown only through `resolve` rather than a step, and the
-  "return half" below is send then receive, not a recursive return.
-  What exists at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
-  close once, bounded buffering stopping at the limit, the send-then-receive return half, and internal
-  choice traces where two branches are two different traces over the event vocabulary (`choiceEvents`,
-  the choice-state stepper `stepChoose` and its declared/undeclared-branch controls).
-- [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
-  Un-ticked 2026-10-29: the control exists, but the nested fixture is not non-regular. `resolve`
-  ignores the nested parameter, so `exampleProtocol` is the regular loop `(send i64 · recv i64)*`.
-  What exists at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
-  `nested_entry_refused_at_depth_zero` measure the control. Recorded explicitly: **every** fixture in
-  this model is a model trace — nothing executes emitted Wasm or a native transport.
+  branch receive), so that part remains open. Recursive entry/return is now proved by the bounded
+  `stackStep` operand, including depth-one/depth-two traces and balanced/unbalanced controls. The
+  "return half" below remains the separate send-then-receive control. The balanced table's unbounded
+  trace language `sendⁿ·recvⁿ` is not regular and needs the return stack; this model admits it only up
+  to the declared stack limit.
+  What exists at model level: sequencing, bounded recursive entry/return, orderly close once, bounded
+  buffering stopping at the limit, the send-then-receive return half, and internal choice traces where
+  two branches are two different traces over the event vocabulary (`choiceEvents`, the choice-state
+  stepper `stepChoose` and its declared/undeclared-branch controls). External-choice action remains
+  outside this change.
+- [x] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
+  Complete at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
+  `nested_entry_refused_at_depth_zero` measure the legacy depth-only control beside the nested fixture
+  `balancedProtocol`. Its unbounded `sendⁿ·recvⁿ` trace language is not regular and needs a return stack; this
+  model admits it only up to the declared stack limit. Recorded explicitly: **every** fixture in this
+  model is a model trace — nothing executes emitted Wasm or a native transport.
 - [x] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]
   Complete at model level: copy, discard, capture, stale generation, double close, receive-after-close,
   a forged peer response without a dequeue, an omitted cleanup, wrong ordered message type, wrong order in
@@ -55,7 +60,7 @@
   plus the `unchecked_admission_breaks_the_bound` control.
 - [x] [serial] Preserve the committed trace prefix across cancellation, trap, quota exhaustion and peer disappearance, retaining unresolved cleanup facts. r[WIT-SESSION-06]
 - [ ] [serial] Bind protocol definitions, endpoint identities, queue limits and lowering/runtime/helper revisions in a retained correspondence receipt. r[WIT-SESSION-06]
-  Partial: the retained receipt binds the model revision, names the two closed definitions tables, the six
+  Partial: the retained receipt binds the model revision, names the closed definitions fixtures, the six
   endpoint identity fields and the ledger-based queue accounting, and records helper/runtime/peer as null
   with the reason. Lowering/runtime/helper revisions cannot be bound because no correspondence route
   exists, so the task stays open.

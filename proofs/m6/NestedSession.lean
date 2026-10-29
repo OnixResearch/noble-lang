@@ -3,22 +3,25 @@
 
 `.cairn/changes/nested-session-protocol` fixes one finite grammar — `End`, typed `Send`, typed `Recv`,
 internal/external finite choice and named nested constructors with explicit parameters — under bounded
-unfolding, and an opaque move-only endpoint resource carrying channel identity, side, protocol
+unfolding, and an abstract move-only endpoint resource carrying channel identity, side, protocol
 identity, protocol state and generation.
 
-This module is a **closed model**: a definitions table and a bounded unfolding function, not a process
+This module is a **closed model**: a definitions table and bounded stepping functions, not a process
 calculus and not a lowering claim. Exhaustion is a refusal rather than an acceptance, duality is
 defined by construction and involutive, and every endpoint operation that would copy, discard,
-capture, use a stale generation or close twice is refused. Send is not receipt: nothing here models
-peer receipt.
+capture, use a stale generation or close twice is refused. A stack-aware nested step saves a return
+continuation and pops it at a finished node; the stack limit is the only bound on those returns.
+Send is not receipt: nothing here models peer receipt.
 
 Declared premises, kept premises:
 * the grammar is versioned but this model carries no version field yet;
 * a bounded mailbox is modelled per session, but no scheduler or peer is; the one progress statement
   (`guest_local_progress_on_a_declared_action`) is guest-local, assumes only an open endpoint whose
   state resolves and declares the action, and is not deadlock freedom;
-* a named nested constructor resolves to its definition and its parameter is not used, so recursion
-  here is regular: no return stack is modelled and no fixture needs one;
+* the depth-only `resolve`/`step` operand is retained as a legacy control, while `stackStep` is the
+  nested operand: a recursive entry saves the nested parameter and a finished node pops it. The
+  balanced table's unbounded trace language `sendⁿ·recvⁿ` is not regular and needs that return stack;
+  this model admits it only up to the declared stack limit, and claims no external runtime stack;
 * no protocol type-equality algorithm is defined: `dual` is definitional and endpoint identity is
   compared field by field;
 * endpoint delegation (passing an endpoint as a message) is excluded, so ownership obligations stay
@@ -95,7 +98,7 @@ theorem resolve_refuses_unknown_definition (definitions : List Node) (depth : Na
     resolve definitions depth definitions.length = none := by
   simp [resolve]
 
-/-- An endpoint is opaque and move-only: channel identity, side, protocol identity, current state and
+/-- An endpoint is abstract and move-only: channel identity, side, protocol identity, current state and
 generation. A descriptive handle is never authority, so nothing here compares a handle to a peer. -/
 structure Endpoint where
   channel : Nat
@@ -270,8 +273,9 @@ theorem no_endpoint_duplication (session : Session) :
 
 /-! ## Positive traces over one closed table (WIT-SESSION-03) -/
 
-/-- A small closed protocol: `0` sends an `i64`, `1` receives an `i64`, `2` re-enters `0` through a
-named nested constructor, and `3` finishes. -/
+/-- A small closed-table control: `0` sends an `i64`, `1` receives an `i64`, `2` names `0` through a
+nested constructor, and `3` finishes. Its parameter `7` is outside this four-entry table; the
+depth-only resolver below retains the old dropped-continuation behaviour. -/
 def exampleProtocol : List Node :=
   [.send .i64 1, .recv .i64 2, .nested 0 7, .finished]
 
@@ -281,9 +285,8 @@ theorem trace_send_then_recv :
       some 1 := by
   decide
 
-/-- Recursive entry through the named nested constructor **unfolds** to the send node's definition
-rather than returning the constructor itself, so recursion is confined to declared definitions instead
-of expanding without bound. -/
+/-- The legacy depth-only resolver unfolds the named nested constructor to the send node's definition
+instead of retaining its return parameter; stack-aware entry and return are proved below. -/
 theorem trace_recursive_entry_unfolds_to_the_send_node :
     resolve exampleProtocol 2 2 = some (.send .i64 1) := by
   decide
@@ -438,6 +441,278 @@ def step (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (action :
   match resolve definitions depth endpoint.state with
   | some node => (continuationOf action node).bind (advance endpoint)
   | none => none
+
+/-! ## Bounded nested return stack (WIT-SESSION-03, WIT-SESSION-05)
+
+The depth-only `resolve`/`step` pair above remains available as a finite-table control. The
+stack-aware operand below is the nested transition: `enter` saves the nested node's parameter as a
+return index and starts the named definition, while `finish` pops that index. A `skipNested` action
+is the optional branch in the balanced fixture; it takes the nested node's return index without
+entering it. The stack limit bounds pushes, so no separate unfolding-depth check is needed here.
+At a finished node, `finish` with an empty stack is the orderly end and leaves the finished state
+unchanged.
+-/
+
+/-- A balanced request/response table: node `0` sends, node `1` optionally enters node `0` again or
+skips to node `2`, node `2` receives, and node `3` finishes. A recursive entry saves `2`, so each
+entry contributes one send and one later receive. -/
+def balancedProtocol : List Node :=
+  [.send .i64 1, .nested 0 2, .recv .i64 3, .finished]
+
+/-- The endpoint plus its bounded nested return continuations. Existing `Endpoint` literals remain
+unchanged; this state carries the additional stack beside an endpoint only for nested traces. -/
+structure StackState where
+  endpoint : Endpoint
+  returnStack : List Nat
+  stackLimit : Nat
+  deriving DecidableEq, Repr
+
+/-- Guest-visible actions for the stack-aware operand. `skipNested` is the optional non-recursive
+branch at a nested call site, and `finish` either returns to a saved index or orderly-ends. -/
+inductive StackAction where
+  | send (message : MessageType)
+  | recv (message : MessageType)
+  | choose (branch : Nat)
+  | enter
+  | skipNested
+  | finish
+  deriving DecidableEq, Repr
+
+/-- Advance the endpoint portion of a stack state while preserving its return stack and limit. -/
+def stackAdvance (state : StackState) (continuation : Nat) : Option StackState :=
+  (advance state.endpoint continuation).map (fun endpoint => { state with endpoint := endpoint })
+
+/-- A communication continuation changes only the endpoint state, never the saved stack or limit. -/
+theorem stackAdvance_keeps_the_stack (state next : StackState) (continuation : Nat)
+    (stepped : stackAdvance state continuation = some next) :
+    next.returnStack = state.returnStack ∧ next.stackLimit = state.stackLimit := by
+  unfold stackAdvance at stepped
+  cases h : advance state.endpoint continuation with
+  | none => simp [h] at stepped
+  | some endpoint =>
+      simp [h] at stepped
+      cases stepped
+      exact ⟨rfl, rfl⟩
+
+/-- A successful endpoint continuation respects the stack limit when its input stack does. -/
+theorem stackAdvance_respects_the_limit (state next : StackState) (continuation : Nat)
+    (within : state.returnStack.length ≤ state.stackLimit)
+    (stepped : stackAdvance state continuation = some next) :
+    next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit := by
+  have kept := stackAdvance_keeps_the_stack state next continuation stepped
+  constructor
+  · exact kept.2
+  · rw [kept.1, kept.2]
+    exact within
+
+/-- A stack state constructor with a bounded stack has the corresponding successor bound. -/
+theorem stackState_within_the_limit (state next : StackState) (endpoint : Endpoint)
+    (stack : List Nat) (within : stack.length ≤ state.stackLimit)
+    (same : (⟨endpoint, stack, state.stackLimit⟩ : StackState) = next) :
+    next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit := by
+  cases same
+  exact ⟨rfl, by simpa using within⟩
+
+/-- Enter a nested node and report its refusal class alongside the optional successor. A full return
+stack is the named exhaustion refusal rather than an indistinguishable successful no-op. -/
+def stackEnter (definitions : List Node) (state : StackState) : Outcome × Option StackState :=
+  if state.endpoint.closed then
+    (.refusedUnsupported, none)
+  else
+    match definitions[state.endpoint.state]? with
+    | some (.nested name parameter) =>
+        if state.returnStack.length < state.stackLimit then
+          (.accepted,
+            some ⟨{ state.endpoint with state := name }, parameter :: state.returnStack,
+              state.stackLimit⟩)
+        else
+          (.refusedExhausted, none)
+    | _ => (.refusedUnsupported, none)
+
+/-- A successful nested entry preserves the limit and adds at most one frame. -/
+theorem stackEnter_respects_the_limit (definitions : List Node) (state next : StackState)
+    (entered : (stackEnter definitions state).2 = some next) :
+    next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit := by
+  by_cases closed : state.endpoint.closed
+  · simp [stackEnter, closed] at entered
+  · simp only [stackEnter, closed, Bool.false_eq_true, ↓reduceIte] at entered
+    split at entered
+    · rename_i name parameter
+      split at entered
+      · simp only [Option.some.injEq] at entered
+        subst next
+        constructor
+        · rfl
+        · simp only [List.length_cons]
+          omega
+      · simp at entered
+    · simp at entered
+
+/-- One stack-aware protocol step. A recursive entry pushes the nested parameter, a nested skip
+continues to that parameter without pushing, and a finished node pops one saved continuation. -/
+def stackStep (definitions : List Node) (state : StackState) (action : StackAction) :
+    Option StackState :=
+  match definitions[state.endpoint.state]? with
+  | some (.send declared continuation) =>
+      match action with
+      | .send message =>
+          if declared = message then stackAdvance state continuation else none
+      | _ => none
+  | some (.recv declared continuation) =>
+      match action with
+      | .recv message =>
+          if declared = message then stackAdvance state continuation else none
+      | _ => none
+  | some (.choose declared continuation) =>
+      match action with
+      | .choose branch =>
+          if declared = branch then stackAdvance state continuation else none
+      | _ => none
+  | some (.nested _ parameter) =>
+      match action with
+      | .enter => (stackEnter definitions state).2
+      | .skipNested => stackAdvance state parameter
+      | _ => none
+  | some .finished =>
+      if state.endpoint.closed then none else
+        match action with
+        | .finish =>
+            match state.returnStack with
+            | [] => some state
+            | continuation :: rest =>
+                some ⟨{ state.endpoint with state := continuation }, rest, state.stackLimit⟩
+        | _ => none
+  | some (.offer _ _) => none
+  | none => none
+
+/-- Every successful stack step preserves the declared limit and cannot exceed it when the input
+stack is within the limit. -/
+theorem stack_step_respects_the_limit (definitions : List Node) (state : StackState)
+    (action : StackAction) (next : StackState)
+    (within : state.returnStack.length ≤ state.stackLimit)
+    (stepped : stackStep definitions state action = some next) :
+    next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit := by
+  unfold stackStep at stepped
+  (repeat' split at stepped) <;> try simp_all
+  all_goals
+    try exact stackEnter_respects_the_limit definitions state next stepped
+    try exact stackAdvance_respects_the_limit state next _ within stepped
+    try
+      (refine stackState_within_the_limit state next _ _ ?_ stepped
+       omega)
+
+/-- A mutant that retains the real `.enter` refusal and limit check but drops the saved continuation.
+It is used only as a load-bearing negative control. -/
+def stackStepDroppingReturn (definitions : List Node) (state : StackState) (action : StackAction) :
+    Option StackState :=
+  match action with
+  | .enter =>
+      (stackStep definitions state .enter).map (fun next =>
+        { next with returnStack := state.returnStack })
+  | _ => stackStep definitions state action
+
+/-- Execute a finite trace with the supplied stack stepper. -/
+def runStackWith
+    (stepper : List Node → StackState → StackAction → Option StackState)
+    (definitions : List Node) : StackState → List StackAction → Option StackState
+  | state, [] => some state
+  | state, action :: actions =>
+      (stepper definitions state action).bind
+        (fun next => runStackWith stepper definitions next actions)
+
+/-- Execute a finite stack-aware trace. -/
+def runStack (definitions : List Node) : StackState → List StackAction → Option StackState :=
+  runStackWith stackStep definitions
+
+/-- Keep only traces that reach a finished node with no saved continuation. A stack transition can
+return a state before the trace's orderly end; such a trace is refused here. The finished node is
+looked up in the supplied definitions rather than being a fixture-specific state index. -/
+def acceptedStackTraceWith
+    (stepper : List Node → StackState → StackAction → Option StackState)
+    (definitions : List Node) (initial : StackState) (trace : List StackAction) : Option StackState :=
+  match runStackWith stepper definitions initial trace with
+  | some final =>
+      match definitions[final.endpoint.state]? with
+      | some .finished => if final.returnStack = [] then some final else none
+      | _ => none
+  | none => none
+
+/-- Accepted trace using the real bounded return-stack stepper. -/
+def acceptedStackTrace (definitions : List Node) (initial : StackState)
+    (trace : List StackAction) : Option StackState :=
+  acceptedStackTraceWith stackStep definitions initial trace
+
+/-- Accepted trace using the dropped-continuation mutant. -/
+def acceptedStackTraceDroppingReturn (definitions : List Node) (initial : StackState)
+    (trace : List StackAction) : Option StackState :=
+  acceptedStackTraceWith stackStepDroppingReturn definitions initial trace
+
+/-- The stack-aware entry/return operand is separate from the depth-only legacy `resolve` operand. -/
+theorem stack_entry_and_return_at_depth_one :
+    runStack balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish,
+          .recv .i64, .finish] =
+      some ⟨⟨5, false, 9, 3, 4, false⟩, [], 2⟩ := by
+  decide
+
+/-- Two nested entries save two return indices and pop them in last-in-first-out order. -/
+theorem stack_entry_and_return_at_depth_two :
+    runStack balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .enter, .send .i64, .skipNested,
+          .recv .i64, .finish, .recv .i64, .finish, .recv .i64, .finish] =
+      some ⟨⟨5, false, 9, 3, 4, false⟩, [], 2⟩ := by
+  decide
+
+/-- A return stack of length equal to the declared limit cannot be pushed further. -/
+theorem stack_push_beyond_the_limit_is_refused :
+    stackStep balancedProtocol
+        ⟨⟨5, false, 9, 1, 4, false⟩, [2], 1⟩ .enter = none ∧
+      (stackEnter balancedProtocol
+        ⟨⟨5, false, 9, 1, 4, false⟩, [2], 1⟩).1 = .refusedExhausted := by
+  decide
+
+/-- The stack-aware operand accepts two sends followed by two returns. -/
+theorem balanced_trace_send_two_recv_two_is_accepted :
+    acceptedStackTrace balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish,
+          .recv .i64, .finish] =
+      some ⟨⟨5, false, 9, 3, 4, false⟩, [], 2⟩ := by
+  decide
+
+/-- A third receive has no matching send in the two-entry trace and is refused. -/
+theorem balanced_trace_send_two_recv_three_is_refused :
+    acceptedStackTrace balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish,
+          .recv .i64, .finish, .recv .i64] = none := by
+  decide
+
+/-- Two receives cannot complete a three-entry trace, so the unbalanced trace is refused. -/
+theorem balanced_trace_send_three_recv_two_is_refused :
+    acceptedStackTrace balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .enter, .send .i64, .skipNested,
+          .recv .i64, .finish, .recv .i64, .finish] = none := by
+  decide
+
+/-- The dropped-continuation mutant accepts two sends followed by one receive, refuses the balanced
+two-send/two-receive trace, and the real stack refuses that same unbalanced trace. -/
+theorem dropped_return_continuation_accepts_unbalanced_and_rejects_balanced :
+    acceptedStackTraceDroppingReturn balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish] =
+      some ⟨⟨5, false, 9, 3, 4, false⟩, [], 2⟩ ∧
+    acceptedStackTraceDroppingReturn balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish,
+          .recv .i64, .finish] = none ∧
+    acceptedStackTrace balancedProtocol
+        ⟨⟨5, false, 9, 0, 4, false⟩, [], 2⟩
+        [.send .i64, .enter, .send .i64, .skipNested, .recv .i64, .finish] = none := by
+  decide
 
 /-- **No action outside the current protocol**: a successful step is exactly a resolved current node
 declaring that action, and its sole successor is that node's declared continuation. -/
@@ -812,11 +1087,12 @@ theorem branch_one_accepts_the_bool_send :
 
 /-! ## Finite-handshake control beside the nested fixture (WIT-SESSION-05)
 
-Node `2` of `exampleProtocol` is a named nested constructor, so it has no resolution at unfolding
-depth zero. The ordinary handshake below declares no nested constructor and does resolve there; that
-is what this control measures. It does **not** show non-regularity: `resolve` ignores the nested
-parameter, so `exampleProtocol` is the regular loop `(send i64 · recv i64)*`, and a protocol that
-needs a return stack is not modelled. -/
+Node `2` of the legacy `exampleProtocol` is a named nested constructor, so it has no resolution at
+unfolding depth zero. The ordinary handshake below declares no nested constructor and does resolve
+there; that is what this control measures. The unbounded `balancedProtocol` trace language
+`sendⁿ·recvⁿ` is not regular and needs the bounded return stack defined above; the theorem below
+remains specifically about the legacy depth-only operand.
+-/
 
 /-- An ordinary finite handshake: send an `i64`, receive the acknowledgement, finish. -/
 def handshakeProtocol : List Node :=
@@ -836,9 +1112,9 @@ theorem handshake_trace_advances :
       some ⟨5, false, 9, 2, 4, false⟩ := by
   decide
 
-/-- **The nested fixture is not representable at depth zero**: its recursive entry has no resolution
-without unfolding, while the handshake above does, so an external stack is what the nested fixture
-needs rather than a wider finite table. -/
+/-- **The legacy nested control is refused at depth zero**: its named entry has no depth-only
+resolution there, while the handshake above does. The stack-aware balanced fixture uses its own
+bounded return stack rather than this dropped-continuation operand. -/
 theorem nested_entry_refused_at_depth_zero :
     resolve exampleProtocol 0 2 = none ∧ resolve exampleProtocol 2 2 = some (.send .i64 1) := by
   decide
