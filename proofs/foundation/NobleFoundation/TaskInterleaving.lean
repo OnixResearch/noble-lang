@@ -1630,4 +1630,588 @@ theorem the_unsound_reduction_is_detected_only_where_ids_interleave :
           baselineObservations baseline (reducedUpTo differentIds exploreAlphabet 3))) = true := by
   decide +kernel
 
+/-! ### Valid client histories and the client projection (issue #46's Relinche-derived lane)
+
+`reaches` ends a history at its first refused step. A *client* keeps going: the table answers each
+call `accepted` or `rejected`, a rejected call leaves the table unchanged, and the client issues its
+next call. `advance`, `accepts` and `respond` give that client semantics, and `afterHistory` runs a
+whole client history.
+
+A *valid client* names only what it holds (`ValidClient`). It holds the handles its start table
+issued and the handles its own accepted admissions returned. A stale handle from an earlier
+generation stays held, so a stale call is a valid call that the table may reject. A forged handle,
+and a handle a rejected admission would have named, are not.
+
+The documented client projection (`projectClient`) keeps, per id, every call paired with its
+response, in order: handle identity and refusal outcomes included. It also keeps the documented
+observation of the final table: failure, pin, reservation, wake, cleanup and the ordered delivery
+and settlement records. The order between calls on different ids is observed only through shared
+state. `lossyClient` drops rejected calls and is measured as lossy.
+
+Independent calls commute under the client semantics too (`independent_is_client_sound`): neither
+changes whether the other is accepted, and the two orders reach the same table. So the canonical
+representative of a valid client history is valid and has the same projection, and the reduced
+search reaches the same projections as the full search (`reduced_client_search_agrees`).
+
+This is a sequential explorer. It is not a weak-memory or linearizability result. No concurrent
+wrapper is selected, so weak-memory controls are not applicable rather than passed, and no
+source/runtime event correspondence is claimed (that belongs to the #50 trace relation).
+-/
+
+/-- The table after a client call: an accepted call moves it, a rejected one leaves it unchanged. -/
+def advance (action : Action) (table : Table) : Table :=
+  (step action table).getD table
+
+/-- Whether the table accepts a client call. -/
+def accepts (action : Action) (table : Table) : Bool :=
+  (step action table).isSome
+
+/-- Testing a guarded result tests each branch. -/
+theorem isSome_ite {c : Prop} [Decidable c] (first second : Option Table) :
+    (if c then first else second).isSome = if c then first.isSome else second.isSome := by
+  by_cases held : c <;> simp [held]
+
+set_option maxHeartbeats 8000000 in
+/-- A right-id step taken first never changes whether an independent left-id call is accepted. -/
+theorem acceptance_kept_left_right (first second : Action) (table next : Table)
+    (hFirst : first.id = .left) (hSecond : second.id = .right)
+    (h : independent first second = true) (taken : step second table = some next) :
+    (step first next).isSome = (step first table).isSome := by
+  obtain ⟨capacity, ⟨leftLife, leftPin, leftReserved, leftWakeups, leftRetiring⟩,
+    ⟨rightLife, rightPin, rightReserved, rightWakeups, rightRetiring⟩,
+    failure, deliveries, settled⟩ := table
+  cases first <;> cases second <;>
+    (try simp only [Action.id] at hFirst hSecond) <;>
+    subst hFirst hSecond <;>
+    simp [independent, Action.id, Action.readsCapacity, Action.movesCapacity, Action.writesFailure,
+      Action.isDelivery, Action.isSettlement] at h <;>
+    (try (rcases h with h | h <;> subst h)) <;>
+    cases leftLife <;> cases rightLife <;>
+    simp only [step, slot, withSlot, liveCount, counted, liveSlot, retiredSlot] at taken <;>
+    (repeat' split at taken) <;>
+    simp only [Option.some.injEq, reduceCtorEq] at taken <;>
+    (try subst taken) <;>
+    simp only [step, slot, withSlot, isSome_ite, Option.isSome_some, Option.isSome_none, liveCount,
+      counted, liveSlot, retiredSlot] <;>
+    (repeat' split) <;> simp_all
+
+set_option maxHeartbeats 8000000 in
+/-- A left-id step taken first never changes whether an independent right-id call is accepted. -/
+theorem acceptance_kept_right_left (first second : Action) (table next : Table)
+    (hFirst : first.id = .right) (hSecond : second.id = .left)
+    (h : independent first second = true) (taken : step second table = some next) :
+    (step first next).isSome = (step first table).isSome := by
+  obtain ⟨capacity, ⟨leftLife, leftPin, leftReserved, leftWakeups, leftRetiring⟩,
+    ⟨rightLife, rightPin, rightReserved, rightWakeups, rightRetiring⟩,
+    failure, deliveries, settled⟩ := table
+  cases first <;> cases second <;>
+    (try simp only [Action.id] at hFirst hSecond) <;>
+    subst hFirst hSecond <;>
+    simp [independent, Action.id, Action.readsCapacity, Action.movesCapacity, Action.writesFailure,
+      Action.isDelivery, Action.isSettlement] at h <;>
+    (try (rcases h with h | h <;> subst h)) <;>
+    cases leftLife <;> cases rightLife <;>
+    simp only [step, slot, withSlot, liveCount, counted, liveSlot, retiredSlot] at taken <;>
+    (repeat' split at taken) <;>
+    simp only [Option.some.injEq, reduceCtorEq] at taken <;>
+    (try subst taken) <;>
+    simp only [step, slot, withSlot, isSome_ite, Option.isSome_some, Option.isSome_none, liveCount,
+      counted, liveSlot, retiredSlot] <;>
+    (repeat' split) <;> simp_all
+
+/-- An independent call never changes whether the other is accepted, whether it was itself accepted
+or rejected. -/
+theorem independent_keeps_acceptance (first second : Action) (table : Table)
+    (h : independent first second = true) :
+    accepts first (advance second table) = accepts first table := by
+  unfold accepts advance
+  cases hStep : step second table with
+  | none => rfl
+  | some next =>
+      simp only [Option.getD_some]
+      cases hFirst : first.id <;> cases hSecond : second.id
+      · simp [independent, hFirst, hSecond] at h
+      · exact acceptance_kept_left_right first second table next hFirst hSecond h hStep
+      · exact acceptance_kept_right_left first second table next hFirst hSecond h hStep
+      · simp [independent, hFirst, hSecond] at h
+
+/-- Independent calls commute under the client semantics, rejected calls included. -/
+theorem independent_advance_commute (first second : Action) (table : Table)
+    (h : independent first second = true) :
+    advance first (advance second table) = advance second (advance first table) := by
+  have hFirstKept := independent_keeps_acceptance first second table h
+  have hSecondKept := independent_keeps_acceptance second first table
+    (by rw [independent_symm]; exact h)
+  have hBind := independent_actions_commute first second table h
+  unfold accepts advance at *
+  cases hFirstStep : step first table with
+  | none =>
+      cases hSecondStep : step second table with
+      | none => simp [hFirstStep, hSecondStep]
+      | some afterSecond =>
+          simp only [hFirstStep, hSecondStep, Option.getD_some, Option.isSome_none,
+            Option.getD_none] at hFirstKept ⊢
+          cases hLate : step first afterSecond with
+          | none => simp
+          | some _ => simp [hLate] at hFirstKept
+  | some afterFirst =>
+      cases hSecondStep : step second table with
+      | none =>
+          simp only [hFirstStep, hSecondStep, Option.getD_some, Option.isSome_none,
+            Option.getD_none] at hSecondKept ⊢
+          cases hLate : step second afterFirst with
+          | none => simp
+          | some _ => simp [hLate] at hSecondKept
+      | some afterSecond =>
+          simp only [hFirstStep, hSecondStep, Option.getD_some, Option.isSome_some,
+            Option.bind_some] at hFirstKept hSecondKept hBind ⊢
+          cases hBoth : step first afterSecond with
+          | none => simp [hBoth] at hFirstKept
+          | some both =>
+              rw [hBoth] at hBind
+              simp [hBind]
+
+/-- A relation the client reduction may use: related calls are on different ids, neither changes
+whether the other is accepted, and the two orders reach the same table. -/
+def ClientSound (related : Action → Action → Bool) : Prop :=
+  ∀ first second, related first second = true → first.id ≠ second.id ∧
+    ∀ table, accepts first (advance second table) = accepts first table ∧
+      accepts second (advance first table) = accepts second table ∧
+      advance first (advance second table) = advance second (advance first table)
+
+/-- **The independence relation is sound for client histories.** -/
+theorem independent_is_client_sound : ClientSound independent := by
+  intro first second h
+  refine ⟨?_, fun table => ⟨independent_keeps_acceptance first second table h,
+    independent_keeps_acceptance second first table (by rw [independent_symm]; exact h),
+    independent_advance_commute first second table h⟩⟩
+  intro hSame
+  simp [independent, hSame] at h
+
+/-- The table's answer to a client call. -/
+inductive Response where
+  | accepted
+  | rejected
+deriving DecidableEq, Repr
+
+def respond (action : Action) (table : Table) : Response :=
+  if accepts action table then .accepted else .rejected
+
+/-- The table after a whole client history. -/
+def afterHistory : List Action → Table → Table
+  | [], table => table
+  | action :: rest, table => afterHistory rest (advance action table)
+
+/-- The calls naming one id, in order, each paired with the table's response. -/
+def callsOf (id : TaskId) : List Action → Table → List (Action × Response)
+  | [], _ => []
+  | action :: rest, table =>
+      (if action.id = id then [(action, respond action table)] else []) ++
+        callsOf id rest (advance action table)
+
+/-- The documented client projection: per-id calls with their responses, and the documented
+observation of the final table. -/
+structure ClientObservation where
+  leftCalls : List (Action × Response)
+  rightCalls : List (Action × Response)
+  final : Observation
+deriving DecidableEq, Repr
+
+def projectClient (start : Table) (history : List Action) : ClientObservation :=
+  { leftCalls := callsOf .left history start
+    rightCalls := callsOf .right history start
+    final := observe (afterHistory history start) }
+
+/-- The deliberately lossy client projection: rejected calls are dropped. -/
+def lossyClient (start : Table) (history : List Action) : ClientObservation :=
+  { leftCalls := (callsOf .left history start).filter (fun call => call.2 == .accepted)
+    rightCalls := (callsOf .right history start).filter (fun call => call.2 == .accepted)
+    final := observe (afterHistory history start) }
+
+/-- The handle a call names. Admission names none, because it is how a handle is issued; cleanup
+names its slot only. -/
+def Action.handle : Action → Option (TaskId × Nat)
+  | .acquire _ _ => none
+  | .cancel id generation => some (id, generation)
+  | .complete id generation _ => some (id, generation)
+  | .deliver id generation => some (id, generation)
+  | .staleCallback id generation => some (id, generation)
+  | .settle id generation => some (id, generation)
+  | .cleanup _ => none
+  | .finish id generation => some (id, generation)
+  | .wake id generation => some (id, generation)
+  | .takeWake id generation => some (id, generation)
+
+/-- The handle an admission issues when the table accepts it. -/
+def Action.issues : Action → Option (TaskId × Nat)
+  | .acquire id generation => some (id, generation)
+  | _ => none
+
+/-- Whether the client holds what a call names: the named handle, or for cleanup some handle on the
+slot. Admission needs nothing. -/
+def holds (held : List (TaskId × Nat)) (action : Action) : Bool :=
+  match action.handle with
+  | some handle => decide (handle ∈ held)
+  | none =>
+      match action with
+      | .cleanup id => decide (∃ handle ∈ held, handle.1 = id)
+      | _ => true
+
+/-- The handles held after a call: an accepted admission adds the handle it issued. -/
+def issue (held : List (TaskId × Nat)) (action : Action) (table : Table) : List (TaskId × Nat) :=
+  if accepts action table then action.issues.toList ++ held else held
+
+/-- Whether every call of a client history names only what the client holds when it makes the call.
+A rejected call does not end the history, and a rejected admission issues no handle. -/
+def validFrom : List (TaskId × Nat) → Table → List Action → Bool
+  | _, _, [] => true
+  | held, table, action :: rest =>
+      holds held action && validFrom (issue held action table) (advance action table) rest
+
+/-- The handles a start table has issued: the generation of each record it holds, live or retired. -/
+def issuedHandles (table : Table) : List (TaskId × Nat) :=
+  ((generationOf table.left.lifecycle).map (fun generation => (TaskId.left, generation))).toList ++
+    ((generationOf table.right.lifecycle).map (fun generation => (TaskId.right, generation))).toList
+
+/-- **The valid-client predicate**: from a start table, the client names only handles it holds. -/
+def ValidClient (start : Table) (history : List Action) : Bool :=
+  validFrom (issuedHandles start) start history
+
+/-- On a history with no rejected call, the client semantics reaches what `reaches` reaches. -/
+theorem afterHistory_of_reaches (history : List Action) (table last : Table)
+    (h : reaches history table = some last) : afterHistory history table = last := by
+  induction history generalizing table with
+  | nil =>
+      simp only [reaches, Option.some.injEq] at h
+      exact h
+  | cons action rest ih =>
+      simp only [reaches] at h
+      cases hStep : step action table with
+      | none => simp [hStep] at h
+      | some next =>
+          simp only [hStep, Option.bind_some] at h
+          simp only [afterHistory, advance, hStep, Option.getD_some]
+          exact ih next h
+
+/-- An admission issues a handle on its own id. -/
+theorem issues_names_its_id (action : Action) (handle : TaskId × Nat)
+    (h : action.issues = some handle) : handle.1 = action.id := by
+  cases action <;> simp only [Action.issues, reduceCtorEq] at h
+  simp only [Option.some.injEq] at h
+  subst h
+  rfl
+
+/-- Holding is decided by membership alone. -/
+theorem holds_congr (held other : List (TaskId × Nat)) (action : Action)
+    (h : ∀ handle, handle ∈ held ↔ handle ∈ other) : holds held action = holds other action := by
+  unfold holds
+  cases action.handle with
+  | some handle => simp [h handle]
+  | none => cases action <;> simp [h]
+
+theorem mem_issue_congr (held other : List (TaskId × Nat)) (action : Action) (table : Table)
+    (h : ∀ handle, handle ∈ held ↔ handle ∈ other) (handle : TaskId × Nat) :
+    handle ∈ issue held action table ↔ handle ∈ issue other action table := by
+  unfold issue
+  split <;> simp [h handle]
+
+/-- Validity is decided by which handles are held, not by their order. -/
+theorem validFrom_congr (history : List Action) :
+    ∀ (held other : List (TaskId × Nat)) (table : Table),
+      (∀ handle, handle ∈ held ↔ handle ∈ other) →
+        validFrom held table history = validFrom other table history := by
+  induction history with
+  | nil => intro _ _ _ _; rfl
+  | cons action rest ih =>
+      intro held other table h
+      simp only [validFrom]
+      rw [holds_congr held other action h,
+        ih (issue held action table) (issue other action table) (advance action table)
+          (mem_issue_congr held other action table h)]
+
+/-- A call's handle check ignores what an admission on another id issued. -/
+theorem holds_after_other_issue (held : List (TaskId × Nat)) (first second : Action) (table : Table)
+    (hIds : first.id ≠ second.id) : holds (issue held first table) second = holds held second := by
+  unfold issue
+  split
+  · cases hIssue : first.issues with
+    | none => rfl
+    | some issued =>
+        obtain ⟨issuedId, issuedGeneration⟩ := issued
+        have hIssued : issuedId = first.id := issues_names_its_id first _ hIssue
+        have hNe : issuedId ≠ second.id := by
+          rw [hIssued]
+          exact hIds
+        cases second <;> simp only [Action.id] at hNe <;>
+          simp [holds, Action.handle, hNe, Ne.symm hNe]
+  · rfl
+
+/-- Two admissions on different ids issue the same handles in either order. -/
+theorem mem_issue_swap (held : List (TaskId × Nat)) (first second : Action) (table : Table)
+    (hFirstKept : accepts first (advance second table) = accepts first table)
+    (hSecondKept : accepts second (advance first table) = accepts second table)
+    (handle : TaskId × Nat) :
+    handle ∈ issue (issue held first table) second (advance first table) ↔
+      handle ∈ issue (issue held second table) first (advance second table) := by
+  unfold issue
+  rw [hFirstKept, hSecondKept]
+  by_cases hFirst : accepts first table <;> by_cases hSecond : accepts second table <;>
+    simp [hFirst, hSecond, or_left_comm]
+
+theorem validFrom_swap (related : Action → Action → Bool) (hSound : ClientSound related)
+    (first second : Action) (hRelated : related first second = true) (rest : List Action)
+    (held : List (TaskId × Nat)) (table : Table) :
+    validFrom held table (first :: second :: rest) = validFrom held table (second :: first :: rest) := by
+  obtain ⟨hIds, hTable⟩ := hSound first second hRelated
+  obtain ⟨hFirstKept, hSecondKept, hCommute⟩ := hTable table
+  simp only [validFrom]
+  rw [holds_after_other_issue held first second table hIds,
+    holds_after_other_issue held second first table (Ne.symm hIds), hCommute,
+    validFrom_congr rest (issue (issue held first table) second (advance first table))
+      (issue (issue held second table) first (advance second table))
+      (advance second (advance first table))
+      (mem_issue_swap held first second table hFirstKept hSecondKept)]
+  cases holds held first <;> cases holds held second <;> rfl
+
+theorem callsOf_swap (related : Action → Action → Bool) (hSound : ClientSound related)
+    (first second : Action) (hRelated : related first second = true) (rest : List Action)
+    (id : TaskId) (table : Table) :
+    callsOf id (first :: second :: rest) table = callsOf id (second :: first :: rest) table := by
+  obtain ⟨hIds, hTable⟩ := hSound first second hRelated
+  obtain ⟨hFirstKept, hSecondKept, hCommute⟩ := hTable table
+  simp only [callsOf, respond, hFirstKept, hSecondKept, hCommute]
+  by_cases hFirstId : first.id = id <;> by_cases hSecondId : second.id = id
+  · exact absurd (hFirstId.trans hSecondId.symm) hIds
+  · simp [hFirstId, hSecondId]
+  · simp [hFirstId, hSecondId]
+  · simp [hFirstId, hSecondId]
+
+theorem afterHistory_swap (related : Action → Action → Bool) (hSound : ClientSound related)
+    (first second : Action) (hRelated : related first second = true) (rest : List Action)
+    (table : Table) :
+    afterHistory (first :: second :: rest) table = afterHistory (second :: first :: rest) table := by
+  obtain ⟨_, hTable⟩ := hSound first second hRelated
+  simp only [afterHistory, (hTable table).2.2]
+
+theorem validFrom_insertCanonical (related : Action → Action → Bool) (hSound : ClientSound related)
+    (action : Action) (rest : List Action) :
+    ∀ held table, validFrom held table (insertCanonical related action rest) =
+      validFrom held table (action :: rest) := by
+  induction rest with
+  | nil => intro _ _; rfl
+  | cons head tail ih =>
+      intro held table
+      simp only [insertCanonical]
+      split
+      · rename_i hOut
+        have hRelated : related action head = true := by
+          simp only [outOfOrder, Bool.and_eq_true] at hOut
+          exact hOut.1.1
+        rw [validFrom_swap related hSound action head hRelated tail held table]
+        simp only [validFrom, ih]
+      · rfl
+
+theorem callsOf_insertCanonical (related : Action → Action → Bool) (hSound : ClientSound related)
+    (action : Action) (rest : List Action) (id : TaskId) :
+    ∀ table, callsOf id (insertCanonical related action rest) table =
+      callsOf id (action :: rest) table := by
+  induction rest with
+  | nil => intro _; rfl
+  | cons head tail ih =>
+      intro table
+      simp only [insertCanonical]
+      split
+      · rename_i hOut
+        have hRelated : related action head = true := by
+          simp only [outOfOrder, Bool.and_eq_true] at hOut
+          exact hOut.1.1
+        rw [callsOf_swap related hSound action head hRelated tail id table]
+        simp only [callsOf, ih]
+      · rfl
+
+theorem afterHistory_insertCanonical (related : Action → Action → Bool)
+    (hSound : ClientSound related) (action : Action) (rest : List Action) :
+    ∀ table, afterHistory (insertCanonical related action rest) table =
+      afterHistory (action :: rest) table := by
+  induction rest with
+  | nil => intro _; rfl
+  | cons head tail ih =>
+      intro table
+      simp only [insertCanonical]
+      split
+      · rename_i hOut
+        have hRelated : related action head = true := by
+          simp only [outOfOrder, Bool.and_eq_true] at hOut
+          exact hOut.1.1
+        rw [afterHistory_swap related hSound action head hRelated tail table]
+        simp only [afterHistory, ih]
+      · rfl
+
+theorem validFrom_canonicalize (related : Action → Action → Bool) (hSound : ClientSound related)
+    (history : List Action) :
+    ∀ held table, validFrom held table (canonicalize related history) =
+      validFrom held table history := by
+  induction history with
+  | nil => intro _ _; rfl
+  | cons action rest ih =>
+      intro held table
+      simp only [canonicalize]
+      rw [validFrom_insertCanonical related hSound action (canonicalize related rest) held table]
+      simp only [validFrom, ih]
+
+theorem callsOf_canonicalize (related : Action → Action → Bool) (hSound : ClientSound related)
+    (history : List Action) (id : TaskId) :
+    ∀ table, callsOf id (canonicalize related history) table = callsOf id history table := by
+  induction history with
+  | nil => intro _; rfl
+  | cons action rest ih =>
+      intro table
+      simp only [canonicalize]
+      rw [callsOf_insertCanonical related hSound action (canonicalize related rest) id table]
+      simp only [callsOf, ih]
+
+theorem afterHistory_canonicalize (related : Action → Action → Bool)
+    (hSound : ClientSound related) (history : List Action) :
+    ∀ table, afterHistory (canonicalize related history) table = afterHistory history table := by
+  induction history with
+  | nil => intro _; rfl
+  | cons action rest ih =>
+      intro table
+      simp only [canonicalize]
+      rw [afterHistory_insertCanonical related hSound action (canonicalize related rest) table]
+      simp only [afterHistory, ih]
+
+/-- **The canonical representative of a client history is valid exactly when the history is, and
+has the same documented client projection.** -/
+theorem client_canonicalize (related : Action → Action → Bool) (hSound : ClientSound related)
+    (start : Table) (history : List Action) :
+    ValidClient start (canonicalize related history) = ValidClient start history ∧
+      projectClient start (canonicalize related history) = projectClient start history :=
+  ⟨validFrom_canonicalize related hSound history _ _, by
+    simp only [projectClient, callsOf_canonicalize related hSound history,
+      afterHistory_canonicalize related hSound history]⟩
+
+/-- The documented client projections of the valid client histories among a sequence list. -/
+def clientObservations (start : Table) (sequences : List (List Action)) : List ClientObservation :=
+  (sequences.filter (ValidClient start)).map (projectClient start)
+
+/-- **The reduced search agrees with the full search on valid client histories**: for every
+client-sound relation, start table, alphabet and depth, the two searches reach the same set of
+documented client projections. -/
+theorem reduced_client_search_agrees (related : Action → Action → Bool)
+    (hSound : ClientSound related) (start : Table) (alphabet : List Action) (depth : Nat)
+    (observation : ClientObservation) :
+    observation ∈ clientObservations start (sequencesUpTo alphabet depth) ↔
+      observation ∈ clientObservations start (reducedUpTo related alphabet depth) := by
+  simp only [clientObservations, List.mem_map, List.mem_filter]
+  constructor
+  · rintro ⟨history, ⟨hMember, hValid⟩, rfl⟩
+    obtain ⟨hLength, hAll⟩ := (mem_sequencesUpTo alphabet depth history).1 hMember
+    have hPerm := canonicalize_perm related history
+    obtain ⟨hValidSame, hProjected⟩ := client_canonicalize related hSound start history
+    refine ⟨canonicalize related history, ⟨(mem_reducedUpTo related alphabet depth _).2
+      ⟨?_, ?_, canonicalize_canonical related history⟩, by rw [hValidSame]; exact hValid⟩,
+      hProjected⟩
+    · rw [hPerm.length_eq]
+      exact hLength
+    · intro action hAction
+      exact hAll action (hPerm.mem_iff.1 hAction)
+  · rintro ⟨history, ⟨hMember, hValid⟩, rfl⟩
+    obtain ⟨hLength, hAll, _⟩ := (mem_reducedUpTo related alphabet depth history).1 hMember
+    exact ⟨history, ⟨(mem_sequencesUpTo alphabet depth history).2 ⟨hLength, hAll⟩, hValid⟩, rfl⟩
+
+/-- The declared client baselines: valid client histories over the declared bound, full and reduced. -/
+def declaredClientBaseline : List ClientObservation :=
+  declaredStarts.flatMap (fun start => clientObservations start (sequencesUpTo exploreAlphabet 3))
+
+def declaredReducedClientBaseline : List ClientObservation :=
+  declaredStarts.flatMap (fun start =>
+    clientObservations start (reducedUpTo independent exploreAlphabet 3))
+
+/-- Full and reduced agreement on valid client histories at the declared bound. -/
+theorem the_declared_client_reduction_agrees (observation : ClientObservation) :
+    observation ∈ declaredClientBaseline ↔ observation ∈ declaredReducedClientBaseline := by
+  simp only [declaredClientBaseline, declaredReducedClientBaseline, List.mem_flatMap]
+  constructor <;> rintro ⟨start, hStart, hMember⟩ <;> refine ⟨start, hStart, ?_⟩
+  · exact (reduced_client_search_agrees independent independent_is_client_sound start
+      exploreAlphabet 3 observation).1 hMember
+  · exact (reduced_client_search_agrees independent independent_is_client_sound start
+      exploreAlphabet 3 observation).2 hMember
+
+/-- The valid-client predicate on concrete histories: a handle the start never issued is forged, a
+rejected admission issues nothing, an accepted one issues its handle, and a stale handle stays held
+so its rejected call is still a valid call. -/
+theorem valid_client_examples :
+    ValidClient baseline [.deliver .right 1] = false ∧
+      ValidClient baseline [.acquire .right 1, .deliver .right 1] = false ∧
+      ValidClient baseline [.finish .left 1, .acquire .right 1, .deliver .right 1] = true ∧
+      ValidClient baseline [.finish .left 1, .acquire .left 2, .deliver .left 1] = true ∧
+      respond (.deliver .left 1) (afterHistory [.finish .left 1, .acquire .left 2] baseline)
+        = .rejected ∧
+      ValidClient paired [.deliver .right 1, .cleanup .left] = true := by
+  decide
+
+/-- Every coverage witness is a valid client history. -/
+theorem the_coverage_witnesses_are_valid_clients :
+    coverageWitnesses.all (fun witness => ValidClient witness.1 witness.2) = true := by
+  decide
+
+/-- **Positive histories**: each pair ends at the same table but differs in a rejected call — a
+delivery after cancellation, an old-generation delivery after reuse, a settlement after cleanup —
+and the documented client projection distinguishes it. The two cancel/deliver orders are
+distinguished by the delivery's response. -/
+theorem the_client_projection_discriminates :
+    afterHistory [.cancel .left 1, .deliver .left 1] baseline
+        = afterHistory [.cancel .left 1] baseline ∧
+      projectClient baseline [.cancel .left 1, .deliver .left 1]
+        ≠ projectClient baseline [.cancel .left 1] ∧
+      afterHistory [.finish .left 1, .acquire .left 2, .deliver .left 1] baseline
+        = afterHistory [.finish .left 1, .acquire .left 2] baseline ∧
+      projectClient baseline [.finish .left 1, .acquire .left 2, .deliver .left 1]
+        ≠ projectClient baseline [.finish .left 1, .acquire .left 2] ∧
+      afterHistory [.deliver .left 1, .cleanup .left, .settle .left 1] baseline
+        = afterHistory [.deliver .left 1, .cleanup .left] baseline ∧
+      projectClient baseline [.deliver .left 1, .cleanup .left, .settle .left 1]
+        ≠ projectClient baseline [.deliver .left 1, .cleanup .left] ∧
+      (projectClient baseline [.deliver .left 1, .cancel .left 1]).leftCalls
+        ≠ (projectClient baseline [.cancel .left 1, .deliver .left 1]).leftCalls := by
+  decide
+
+/-- **Negative histories**: the lossy projection, which drops rejected calls, identifies each pair
+above — the false equivalence that the documented projection exposes. -/
+theorem the_lossy_client_projection_hides_rejected_calls :
+    lossyClient baseline [.cancel .left 1, .deliver .left 1]
+        = lossyClient baseline [.cancel .left 1] ∧
+      lossyClient baseline [.finish .left 1, .acquire .left 2, .deliver .left 1]
+        = lossyClient baseline [.finish .left 1, .acquire .left 2] ∧
+      lossyClient baseline [.deliver .left 1, .cleanup .left, .settle .left 1]
+        = lossyClient baseline [.deliver .left 1, .cleanup .left] := by
+  decide
+
+/-- Deterministic counts of the valid client histories per declared start, kernel-checked. From
+`baseline` a client cannot name the right id until an accepted admission issues it a handle; from
+`paired` every sequence over the alphabet is a valid client history. -/
+theorem the_declared_client_history_counts :
+    ((sequencesUpTo exploreAlphabet 3).filter (ValidClient baseline)).length = 2384 ∧
+      ((reducedUpTo independent exploreAlphabet 3).filter (ValidClient baseline)).length = 2168 ∧
+      ((sequencesUpTo exploreAlphabet 3).filter (ValidClient paired)).length = 3616 ∧
+      ((reducedUpTo independent exploreAlphabet 3).filter (ValidClient paired)).length = 2717 := by
+  decide +kernel
+
+/-- **The client comparison detects the unsound rule from both starts**: it loses the right-first
+delivery order from `paired`, and from `baseline` it loses a rejected admission followed by the
+finish that would have enabled it, which the proved relation keeps. -/
+theorem the_unsound_client_reduction_loses_projections :
+    projectClient paired [.deliver .right 1, .deliver .left 1]
+        ∈ clientObservations paired (sequencesUpTo exploreAlphabet 3) ∧
+      projectClient paired [.deliver .right 1, .deliver .left 1]
+        ∉ clientObservations paired (reducedUpTo differentIds exploreAlphabet 3) ∧
+      projectClient baseline [.acquire .right 1, .finish .left 1]
+        ∈ clientObservations baseline (sequencesUpTo exploreAlphabet 3) ∧
+      projectClient baseline [.acquire .right 1, .finish .left 1]
+        ∉ clientObservations baseline (reducedUpTo differentIds exploreAlphabet 3) ∧
+      projectClient baseline [.acquire .right 1, .finish .left 1]
+        ∈ clientObservations baseline (reducedUpTo independent exploreAlphabet 3) := by
+  decide +kernel
+
 end NobleFoundation.TaskInterleaving

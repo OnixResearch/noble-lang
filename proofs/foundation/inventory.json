@@ -2986,6 +2986,192 @@
       "claim": "kernel-checked: the unsound reduction loses observations from paired but keeps every observation from baseline at the declared bound"
     },
     {
+      "name": "NobleFoundation.TaskInterleaving.isSome_ite",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "testing a guarded result tests each branch"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.acceptance_kept_left_right",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a right-id step taken first never changes whether an independent left-id call is accepted"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.acceptance_kept_right_left",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a left-id step taken first never changes whether an independent right-id call is accepted"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_keeps_acceptance",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "an independent call, accepted or rejected, never changes whether the other call is accepted"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_advance_commute",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "under the client semantics, where a rejected call leaves the table unchanged, independent calls reach the same table in either order"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_is_client_sound",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the independence relation is sound for client histories: related calls are on different ids, keep each other's acceptance and commute"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.afterHistory_of_reaches",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "on a history with no rejected call the client semantics reaches what reaches reaches"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.issues_names_its_id",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "an admission issues a handle on its own id"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.holds_congr",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "whether a client holds what a call names is decided by membership alone"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_issue_congr",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "membership-equivalent held handles stay equivalent after a call"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.validFrom_congr",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "client validity is decided by which handles are held, not by their order"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.holds_after_other_issue",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a call's handle check ignores what an admission on another id issued"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_issue_swap",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "two calls on different ids issue the same handles in either order when neither changes the other's acceptance"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.validFrom_swap",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "swapping a client-sound related pair preserves client validity"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.callsOf_swap",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "swapping a client-sound related pair preserves every id's ordered calls and responses"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.afterHistory_swap",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "swapping a client-sound related pair preserves the final table of a client history"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.validFrom_insertCanonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "canonical insertion preserves client validity"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.callsOf_insertCanonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "canonical insertion preserves every id's ordered calls and responses"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.afterHistory_insertCanonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "canonical insertion preserves the final table of a client history"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.validFrom_canonicalize",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative of a client history is valid exactly when the history is"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.callsOf_canonicalize",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative of a client history has the same ordered calls and responses per id"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.afterHistory_canonicalize",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative of a client history reaches the same final table"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.client_canonicalize",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative of a client history is valid exactly when the history is and has the same documented client projection"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.reduced_client_search_agrees",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "for every client-sound relation, start table, alphabet and depth, the full and reduced searches reach the same documented client projections of valid client histories"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_client_reduction_agrees",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "at the declared starts, alphabet and depth the full and reduced searches reach the same client projections of valid client histories"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.valid_client_examples",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a never-issued handle is forged, a rejected admission issues nothing, an accepted one issues its handle, and a stale handle stays held while its call is rejected"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_valid_clients",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every coverage witness is a valid client history"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_client_projection_discriminates",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "histories ending at the same table but differing in a rejected call, and the two cancel/deliver orders, are distinguished by the documented client projection"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_lossy_client_projection_hides_rejected_calls",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the lossy client projection, which drops rejected calls, identifies histories the documented projection distinguishes"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_client_history_counts",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: valid client histories are 2384 full and 2168 reduced from baseline, 3616 full and 2717 reduced from paired"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_unsound_client_reduction_loses_projections",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: the unsound different-ids reduction loses client projections from both declared starts that the full search and the proved relation keep"
+    },
+    {
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",
