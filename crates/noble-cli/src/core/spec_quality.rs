@@ -6,10 +6,10 @@
 //! obligation kind, predicate revision, model revision, observation relation or parameter binding is
 //! refused with its own diagnostic instead of being read as agreement.
 //!
-//! The negotiation of a specification-quality obligation is *derived*, not attested: the submission
-//! states the retained relation once and `relation` recomputes inhabitation, realizability and
-//! determinacy itself, so the submitted `checked`/`vacuous` flags are compared with what was derived
-//! rather than trusted. A manifest whose flags disagree with its own retained relation is refused.
+//! The negotiation of a specification-quality obligation is *derived*, not attested: native
+//! preparation supplies the typed predicates, and the manifest supplies only a finite domain and
+//! permitted outputs. Its source digest must match the bytes actually prepared. `relation`
+//! recomputes the restricted propositions; submitted flags are compared, never trusted.
 //!
 //! Four obligations are reported and never merged: specification quality, implementation
 //! satisfaction (the unchanged `exportedClaim`), termination, and correspondence.
@@ -18,11 +18,12 @@ use super::output::{ErrorContext, Failure, Report};
 use super::report::Value;
 use crate::workflow::encoding::{object, string, Json};
 
+mod predicate;
 mod relation;
 
-const USAGE: &str = "usage: noble spec-quality MANIFEST_JSON";
+const USAGE: &str = "usage: noble spec-quality CONTRACT MANIFEST_JSON";
 const MANIFEST_LIMIT: u32 = 4096;
-const SCHEMA: &str = "noble-mc2-spec-quality/v1";
+const SCHEMA: &str = "noble-mc2-spec-quality/v2";
 /// Predicate semantics this profile reports against: MC1 `Expression.Holds` as pinned by the
 /// contract gate. A different revision is refused rather than assumed compatible.
 const PREDICATE_REVISION: u32 = 1;
@@ -32,7 +33,7 @@ const MODEL_REVISION: u32 = 1;
 /// Exact scalar equality only; a coarser observational quotient has to be selected, versioned and
 /// checked separately, so a producer cannot choose one to make determinacy pass.
 const OBSERVATION_RELATION: &str = "exact-scalar-equality";
-/// Ordered exact `I64`/`Bool` stacks, both stacks declared in order.
+/// Ordered exact `I64`/`Bool` stacks, as declared by the checked native contract.
 const PARAMETER_BINDING: &str = "ordered-exact-i64-bool";
 const SPEC_CLAIMS: [&str; 3] = ["inhabited", "realizable", "deterministic"];
 const IMPLEMENTATION_CLAIM: &str = "satisfied";
@@ -229,9 +230,10 @@ fn spec_block(list: &[Obligation], derived: &relation::Derived) -> Json {
         (
             "scope",
             string(
-                "Relation claims derived from the retained relation over the bounded pure-I64/Bool \
-                 profile. A missing value, an undefined predicate, an unsupported construct or an \
-                 exhausted budget is never a successful check.",
+                "Checked native predicates restricted to the declared finite input/parameter \
+                 domain and permitted outputs, not universal native-contract realizability or \
+                 determinacy. Missing values, undefined predicates, unsupported constructs and \
+                 exhausted budgets never establish a claim.",
             ),
         ),
     ])
@@ -280,8 +282,9 @@ fn separated(established: &[Obligation]) -> [(&'static str, Json); 3] {
                 (
                     "scope",
                     string(
-                        "No correspondence route relates these obligations to lowering, runtime steps or \
-                         the retained contract renderer, so none is claimed here.",
+                        "Native source and checked predicates are bound by preparation and exact source \
+                         digest. No Lean/Rust, contract-renderer, lowering or runtime correspondence \
+                         theorem is claimed here.",
                     ),
                 ),
             ]),
@@ -290,11 +293,11 @@ fn separated(established: &[Obligation]) -> [(&'static str, Json); 3] {
 }
 
 fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
-    if arguments.len() != 2 {
+    if arguments.len() != 3 {
         return Err(usage());
     }
-    let path = std::path::PathBuf::from(&arguments[1]);
-    let bytes = attempt!(super::framing::read_file(&path, MANIFEST_LIMIT));
+    let path = std::path::Path::new(&arguments[2]);
+    let bytes = attempt!(super::framing::read_file(path, MANIFEST_LIMIT));
     let Ok(text) = std::str::from_utf8(&bytes) else {
         return Ok(refusal("invalid-manifest", "manifest is not UTF-8"));
     };
@@ -309,7 +312,9 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
                 | "model_revision"
                 | "observation_relation"
                 | "parameter_binding"
-                | "relation"
+                | "source_sha256"
+                | "domain"
+                | "permitted"
                 | "obligations"
         ) {
             return Ok(refusal("invalid-manifest", "unknown manifest field"));
@@ -339,15 +344,43 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
         Ok(list) => list,
         Err((class, message)) => return Ok(refusal(class, message)),
     };
-    // The spec claims are derived from the retained relation, and the submitted flags are only
-    // compared with the derivation. An implementation claim needs no relation.
-    let retained = fields.get("relation");
-    let derived = match retained {
-        Some(Value::Null) | None => relation::Derived::unavailable(),
-        Some(value) => match relation::derive(value) {
-            Ok(derived) => derived,
-            Err((class, message)) => return Ok(refusal(class, message)),
-        },
+    let (Some(domain), Some(permitted), Some(expected_digest)) = (
+        fields.get("domain"),
+        fields.get("permitted"),
+        fields.get("source_sha256").and_then(Value::text),
+    ) else {
+        return Ok(refusal(
+            "invalid-manifest",
+            "domain, permitted outputs and source digest are required",
+        ));
+    };
+    let limits = noble_contracts::Limits::default();
+    let source = attempt!(super::framing::read_file(
+        std::path::Path::new(&arguments[1]),
+        limits.bytes,
+    ));
+    let source_digest = crate::workflow::intrinsic::sha256(&source);
+    if expected_digest != source_digest {
+        return Ok(refusal(
+            "wrong-source-binding",
+            "manifest source digest does not match the native contract bytes",
+        ));
+    }
+    let contract = match noble_contracts::prepare(&source, limits) {
+        Ok(contract) => contract,
+        Err(error) => {
+            let class = match error.kind {
+                noble_contracts::DiagnosticKind::Invalid => "invalid-contract",
+                noble_contracts::DiagnosticKind::Unsupported => "unsupported-contract",
+                noble_contracts::DiagnosticKind::Exhausted => "exhausted",
+                noble_contracts::DiagnosticKind::Internal => "internal-failure",
+            };
+            return Ok(refusal(class, error.message));
+        }
+    };
+    let derived = match relation::derive(&contract, domain, permitted) {
+        Ok(derived) => derived,
+        Err((class, message)) => return Ok(refusal(class, message)),
     };
     for entry in &list {
         let attested = match entry.claim {
@@ -385,6 +418,25 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
         ("stage", string("report")),
         ("outcome", string("reported")),
         ("guest_requests", Json::Number(0)),
+        ("source_sha256", string(source_digest)),
+        (
+            "manifest_sha256",
+            string(crate::workflow::intrinsic::sha256(&bytes)),
+        ),
+        (
+            "contract",
+            object([
+                ("name", string(contract.name())),
+                (
+                    "candidate_format",
+                    Json::Number(u64::from(contract.candidate().format)),
+                ),
+                (
+                    "semantic_revision",
+                    Json::Number(u64::from(contract.candidate().revision)),
+                ),
+            ]),
+        ),
         (
             "predicate_revision",
             Json::Number(u64::from(PREDICATE_REVISION)),

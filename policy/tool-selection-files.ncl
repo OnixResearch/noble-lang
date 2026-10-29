@@ -149,7 +149,7 @@
   "verification/selected-vendor.mjs" = "da20d74af3549fa71889a0427ed9f58ae38d3dcd0df5b0cd20a38194058cf0da",
   "verification/wi03-final/gate.mjs" = "77f5d05a7362de5282fa2188fb68e2aa4aa32a76d3c3d85f9845ae2ac166e560",
   "verification/wi03/gate.mjs" = "603f2c0aef61d932a77f51e5b80026fe19d924fd637594f4e5985990c69b2d42",
-  "crates/noble-cli/src/core.rs" = "53a82db75a37cb3574845e74befd1b61b7538b8865275c98f13c358c778eea10",
+  "crates/noble-cli/src/core.rs" = "7dce9f224f75a75624637da15424c8fc0934250f50a79c62ccdb1e2c41a5adbe",
   "crates/noble-cli/src/core/arguments.rs" = "96c416510632af6efbff7c8b875370a8aa405881d3413db52299e804bf259c8b",
   "crates/noble-cli/src/core/companions/session.rs" = "5654737dbc34db714bb672506613f8ef60052ce0c56b0ba7015ec810fd51c3f3",
   "crates/noble-cli/src/core/entry.rs" = "1232f7162d5dcdf383f47c6b441e9aef2d9de01d2974b07ebcc52b50569c6c8e",

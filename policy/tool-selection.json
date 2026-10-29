@@ -88,7 +88,7 @@
     "crates/noble-cli/src/component.rs": "4b44812d9ac2ec7fb1cc253e34eff03fcdb54394034a5a20787595ac4b92717d",
     "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
     "crates/noble-cli/src/component/report.rs": "2ef03ca0f1e0f83d2a037fd9a1b945419974348526f7d47a9298433eafa43b01",
-    "crates/noble-cli/src/core.rs": "53a82db75a37cb3574845e74befd1b61b7538b8865275c98f13c358c778eea10",
+    "crates/noble-cli/src/core.rs": "7dce9f224f75a75624637da15424c8fc0934250f50a79c62ccdb1e2c41a5adbe",
     "crates/noble-cli/src/core/arguments.rs": "96c416510632af6efbff7c8b875370a8aa405881d3413db52299e804bf259c8b",
     "crates/noble-cli/src/core/arguments/bindings.rs": "9ebc866815018f2ca74b15aa2e6377ce979a1912d83e0b5b90183c9400f6051a",
     "crates/noble-cli/src/core/arguments/bindings/adapter.rs": "6a41ba2f57d9dd274a404d0994894ea38ac3d32d389d7c93449681b88d2a942e",

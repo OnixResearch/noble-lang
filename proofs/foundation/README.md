@@ -1239,162 +1239,108 @@ Fifteen inventoried theorems; receipt
 
 ### Reporting layer (issue #65)
 
-`noble spec-quality MANIFEST_JSON` reports submitted evidence against the declared
-pure-`I64`/`Bool` profile. It declares the bindings the evidence depends on once —
-predicate revision 1 (MC1 `Expression.Holds` as pinned by the contract gate),
-obligation-shape model revision 1, `exact-scalar-equality` as the observation
-relation, and `ordered-exact-i64-bool` as the parameter binding — and refuses a
-submission that carries any other one, each with its own diagnostic
-(`wrong-predicate-revision`, `wrong-model-revision`,
-`wrong-observation-relation`, `wrong-parameter-binding`). A coarser observational
-relation cannot be selected by a producer to make determinacy pass.
+`noble spec-quality CONTRACT MANIFEST_JSON` is the native source-bound reporting
+interface. `CONTRACT` is read as a `.noble-contract` source and `MANIFEST_JSON`
+is the separate v2 manifest. The manifest schema is
+`noble-mc2-spec-quality/v2`; its allowed required keys are `schema`,
+`source_sha256`, `predicate_revision` (`1`), `model_revision` (`1`),
+`observation_relation` (`exact-scalar-equality`),
+`parameter_binding` (`ordered-exact-i64-bool`), `domain`, `permitted` and
+`obligations`. Source paths and manifest paths are not identities. The report
+binds the exact source and manifest bytes with `source_sha256` and
+`manifest_sha256`, and reports the prepared contract as
+`contract = {name, candidate_format, semantic_revision}`.
 
-Obligation kinds are paired, not interchangeable: a specification-quality claim
-(`inhabited`, `realizable`, `deterministic`) submitted as implementation
-satisfaction, or the implementation claim submitted as specification quality, is
-refused as `wrong-obligation` by explicit claim/kind validation.
+The manifest carries only finite observations: every `domain` assignment has
+ordered scalar `inputs` and `params` stacks, and `permitted` is an array of
+ordered scalar output stacks. Scalars are exactly `{i64: exact-integer}` and
+`{bool: boolean}`. Domain entries and the top-level manifest reject unknown
+fields. A caller cannot supply `types`, `pre`, `post`, `relation`, or another
+legacy relation object: declared interface types and the `requires`/`ensures`
+roots come only from the native `Prepared` contract. Every report, including an
+implementation-only report, supplies `source_sha256`, `domain` and `permitted`.
 
-The selected-CLI lane checks criterion 6 with six artifact controls: predicate
-revision `2`, model revision `2`, an unselected `i64-parity-equality` observation
-rule, an `unordered-exact-i64-bool` parameter binding, and claim/kind substitution
-in both directions (`deterministic` as implementation satisfaction and `satisfied`
-as specification quality). Each exits `2` with its specific refusal class; the
-matching wrapping-increment submission remains accepted. The four binding
-controls alter only one field of that otherwise valid submission, so an
-unrelated malformed relation cannot account for their refusal.
+Source bytes are read once and hashed before native preparation. A digest mismatch
+is `wrong-source-binding` (exit `2`). Native preparation uses the default bounded
+`noble_contracts::Limits`: an invalid checked source is `invalid-contract` (exit
+`2`), a frontend-unsupported source form is `unsupported-contract`
+(exit `2`), and a limit failure is `exhausted` (exit `5`). Native inputs,
+outputs and parameters must be scalar `I64`/`Bool`; a non-scalar or effectful
+interface, a stack shape/kind mismatch, or a bound outside the finite profile is
+`unsupported-relation` (exit `2`). Missing `domain` or `permitted` is
+`invalid-manifest` (exit `2`). A manifest remains at most 4,096 bytes, a domain
+has 1..64 assignments, and each output list has 1..16 stacks. Native source
+remains at most 65,536 bytes; the byte limit applies before preparation.
 
-The report keeps four obligations apart: `specification_quality` (only
-specification-quality rows, with disjoint established/not-established/vacuous
-tallies), `partial_correctness` (the submitted status for the unchanged
-`exportedClaim`, reported only when that claim is itself checked),
-`termination` (never claimed) and `correspondence` (never claimed). Every report
-states `guest_requests: 0`; refusals also state `protected_operations: 0`.
-These counters alone are not independent evidence of effect isolation.
-
-Each specification-quality row contributes to exactly one tally: an unchecked
-claim is not established, a checked vacuous claim is vacuous, and only a checked
-non-vacuous claim is established. Implementation claims never appear in these
-rows or counters, whether checked, unchecked or vacuous. Selected-CLI regressions
-check implementation-only reports, mixed reports, and the invariant that adding
-an implementation claim cannot alter the specification-quality block. A false
-precondition produces two vacuous universal claims and one unestablished
-inhabitation claim, not established specification-quality evidence. These are
-report-classification checks, not verification of a submitted implementation
-claim or a Lean↔Rust correspondence theorem.
+The producer validates both native `requires` and `ensures` roots before
+enumeration. The supported expression fragment is native `I64`, `Bool`, input,
+output, parameter and transparent definition references, together with `not`,
+`and`, `or`, `eq`, `lt` and wrapping `add`; other native expression forms are
+`unsupported-relation`, including when unreachable under a Boolean operand.
+Reachable expression depth is bounded at eight levels (root depth zero), and
+Boolean operands are evaluated eagerly. Native frontend typing and scope errors
+therefore remain `invalid-contract`; an undefined evaluator result is never
+silently treated as false.
 
 ### The propositions are derived, not attested (issue #65)
 
-The submission states the retained relation **once** — ordered exact `I64`/`Bool`
-parameter, input and output kinds, a finite declared domain of admissible
-assignments, a finite list of permitted output stacks, and `pre`/`post` predicate
-terms in a bounded pure-`I64`/`Bool` language — and
-`crates/noble-cli/src/core/spec_quality/relation.rs` recomputes inhabitation,
-realizability and determinacy from it by enumerating that domain. The submitted
-`checked`/`vacuous` flags are then only **compared** with the derivation, so a
-manifest cannot attest its own obligations: a disagreement is refused as
-`self-attested-obligation`, including a specification-quality claim submitted
-without any relation.
+`crates/noble-cli/src/core/spec_quality/relation.rs` consumes the prepared native
+contract and the finite manifest stacks. It enumerates the declared domain and
+derives inhabitation, relational realizability and output determinacy from the
+native predicate roots; submitted `checked`/`vacuous` flags are compared with
+those derivations rather than trusted. A disagreement is
+`self-attested-obligation`. Refutations retain their measured finite witnesses:
+the admissible assignment with no satisfying permitted output, or the assignment
+and original permitted-list indices of two distinct satisfying output stacks.
+Exact whole-stack equality preserves duplicate-first, reordered-index,
+postcondition-filtering, mixed-stack and output/domain-boundary behavior. Exact
+wrapping `I64` arithmetic keeps the signed boundary finite and decidable.
 
-Every refusal here fails closed. An index outside the declared stacks, a
-mixed-kind comparison, or a predicate that is undefined for an assignment in the
-declared domain is `undefined-relation` rather than false; a kind, op, domain
-size or permitted-output count outside the bounded profile is
-`unsupported-relation`; and `add` is wrapping `I64` arithmetic, so the boundary
-case is decided rather than refused.
+The report still separates `specification_quality` (specification-quality rows
+and established/not-established/vacuous tallies), `partial_correctness` (the
+implementation-satisfaction status), `termination` (never claimed), and
+`correspondence` (never claimed). Implementation status is reported only; it is
+not independently proved by this lane. The report includes the finite derivation
+and refutation indices, `guest_requests: 0`, and the existing metadata. The
+selected-CLI regression lane retains controls for obligation separation, vacuity,
+duplicate and reordered outputs, exact I64 boundaries, output/domain limits and
+ordinary `verify` typing; it also controls changed native predicate/body/interface
+name/parameters, rebound predicates, native definition references, parameter and
+type binding, legacy manifest injection, source/manifest byte preservation and
+same-source bytes at different paths. These are finite production-CLI controls,
+not a Lean↔Rust correspondence theorem.
 
-The selected-CLI lane exercises both sides of the declared bounds: a complete
-4,096-byte manifest is accepted, while 4,097 bytes produces `exhausted` (exit
-`5`); eight term levels are accepted, while nine produces
-`unsupported-relation` (exit `2`). The final assignment of a 64-entry domain
-still exposes ambiguity with witness indices `(63,0,1)`; 65 entries are refused.
-Undefined preconditions and postconditions produce `undefined-relation`,
-including an undefined term behind a false conjunction or true disjunction.
-Neither short-circuiting nor an exceeded bound can supply evidence.
+The selected Rust wrapper passes against the source-built CLI. Four separate
+native CLI probes exercised matching source, stale source, a correctly rebound
+false postcondition with the old realizability flag, and its accepted finite
+refutation. Their full syscall traces observed only the initial CLI executable,
+no child creation, no writable opens or writable shared mappings, and writes
+only to report stdout. A deliberate file write and child executable calibrated
+the trace detector. Both input files stayed byte-identical. This is finite
+effect evidence combined with the scalar-only dispatch; tracing alone does not
+rule out in-process execution or establish universal noninterference.
 
-A refused proposition is reported with its **measured refutation** — the index of
-the admissible assignment that has no permitted output, or the assignment and the
-two distinct satisfying outputs — never with "no witness was found". The lane
-measures the acceptance criteria end to end against the selected CLI: the exact
-wrapping increment across the `I64` boundary derives inhabited, realizable and
-deterministic; a contradictory postcondition derives non-realizability with its
-admissible assignment; one admissible input with two distinct permitted `Bool`
-outputs derives non-determinacy with both outputs named; an uninhabited domain
-derives vacuity while its universal proposition holds; and an intentionally
-relational report is accepted without a determinacy obligation. This last case
-does **not** itself exercise ordinary program admission.
+The ordinary `noble verify` controls remain separate from this report: a native
+Bool contract with `requires true` / `ensures true` exercises ordinary admission,
+while a wrong-typed implementation remains an ordinary contract error. A
+specification-quality report does not create implementation evidence, and an
+ordinary verify result does not create a specification-quality artifact.
 
-Criterion 5 separately invokes `noble verify` on ordinary `.noble-contract`
-source: no inputs, one `Bool` output, and `requires true` / `ensures true`.
-Both `[ true ]` and `[ false ]` implementations have
-`ordinary_typing.outcome: accepted`, without a determinacy obligation or a
-specification-quality artifact. Missing implementation evidence remains
-`unknown` (exit `3`) with `independent_recheck: false`; ordinary admission does
-not manufacture a proof. Replacing the Bool implementation with `[ 0 ]` is
-`not-accepted` / `error` (exit `2`): a permissive postcondition cannot bypass
-ordinary typing.
+The separate Lean model in `proofs/mc1/NobleContracts/SpecQuality.lean` remains
+the retained model-level discipline: its `Submission` records the kind,
+observation relation, parameter binding and assignment it claims, while
+`Accepts` recomputes them from the model `Spec` and raw stacks. Its existing
+receipt and five model-level refusal controls are historical model evidence;
+they do not stand in for native source preparation or the finite CLI report.
 
-Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
-target launches it against the selected CLI): the refusal classes above,
-`self-attested-obligation`, `undefined-relation`, `unsupported-relation` and `exhausted`,
-the three derived propositions, and the four separated obligations.
-
-Every case also compares the submitted manifest bytes before and after analysis.
-At `88a91af8`, a separate full-syscall trace of the 42 `spec-quality` invocations
-observed only read-only file opens and report writes to inherited stdout: no
-child processes, additional executable images or shared writable mappings.
-A positive control writing a
-scratch file and launching another executable was detected by the same trace
-checks. Together with the scalar-only report dispatch, this is finite evidence
-for analysis without guest execution, source mutation or automatic contract
-strengthening, not a universal noninterference proof. The tracer is an external
-smoke check, not a new test-suite dependency.
-
-The issue #70 regression matrix also checks duplicate and reordered outputs:
-`[true,true,false]` and `[true,false,true]` refute determinacy with original
-permitted indices `(0,2)` and `(0,1)`, while `[true,true,true]` stays deterministic.
-Postcondition filtering can remove the distinct output; when it instead removes
-a prefix, the witness still names original list indices `(1,3)`, not positions
-in the filtered list. A mixed `I64`/`Bool` stack differing only in its second cell
-is distinct. A distinct sixteenth output is examined; seventeen permitted outputs
-and a wrong-kind output are refused. All seven accepted regression reports are
-inhabited, realizable and non-vacuous. For the duplicate-first ambiguity, `checked: true` is refused as
-`self-attested-obligation`, while report submission without a determinacy
-obligation remains accepted. This is finite production-CLI evidence, not a
-Lean↔Rust correspondence theorem.
-
-The Lean side of the same discipline is in `proofs/mc1/NobleContracts/SpecQuality.lean`:
-a `Submission` records the kind, observation relation, parameter binding and
-assignment it *claims*, and `Accepts` recomputes all of them from the retained
-`Spec` and the raw stacks, so the artifact an accepted submission yields is the
-derived witness rather than the submitted claim. The mc1 contract-library gate now
-pins five of those refusals under the strict axiom list — a matching increment
-submission really rechecks, while a wrong obligation, a wrong observation relation
-(`[.bool]` claimed for an `I64`-output relation), a wrong parameter binding, and a
-merely asserted satisfaction of a contradictory postcondition all yield no
-artifact. Scalar types are compared by explicit traversal rather than a derived
-`DecidableEq`, so a silently changed instance cannot make two observation
-relations look equal.
-
-Open, and deliberately not closed:
-
-- the producer derives from the relation the submission states; it does not read
-  the relation out of a retained contract renderer yet, so a submission is still
-  responsible for transcribing it faithfully, and no correspondence claim relates
-  the two;
-- no correspondence claim relates these relations to the retained contracts or
-  to `crates/noble-contracts/src/rendering`: the model fixes the obligation
-  shapes, not the renderer, so this is model evidence rather than an
-  implementation theorem;
-- no obligation is generated from a retained contract yet, no witness is
-  replayed during shrinking, and no solver proposal, timeout, `UNKNOWN`,
-  unsupported syntax or exhaustion lane is modelled: those are Phase 2 work in
-  issue #65;
-- determinacy is stated with exact scalar equality only; any observational
-  quotient has to be selected, versioned and checked separately;
-- relational realizability says nothing about termination, traps, quotas or
-  success, and determinacy says nothing about intended meaning. An observed
-  relational counterexample is not an implementation failure without separate
-  execution evidence.
+The earlier syscall trace at `88a91af8` remains historical evidence for the
+previous selected reporting lane; it is not reinterpreted as a v2 native source
+or correspondence result. The finite native report boundary likewise makes no
+claim about universal contract realizability, determinacy, termination, traps,
+quotas, runtime success, compiler correctness, lowering, Wasm execution or
+source/renderer correspondence. The Lean model and its receipt above remain
+separate historical model evidence and are not overwritten by this protocol
+description.
 
 ## Root-pinned live-dispatch model (issue #47)
 
