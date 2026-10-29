@@ -14,8 +14,6 @@
 //! **no correspondence theorem binds these bytes to that model**, and the layer
 //! ranges and guard registers are deliberately outside this check.
 
-use crate::ir::{Digest, Literal, Op};
-
 /// Layout declaration revision bound into every accepted layout.
 pub const LAYOUT_REVISION: &str = "ngraph-layout/0";
 
@@ -39,7 +37,7 @@ pub struct PackedLayout {
     /// Declared failure-suffix minimum of each layer, plus one trailing entry.
     pub fail_suffix_min: alloc::vec::Vec<u32>,
     /// Build key the layout was produced under.
-    pub layout_key: Digest,
+    pub layout_key: crate::ir::Digest,
 }
 
 /// Why a layout was refused.
@@ -71,25 +69,25 @@ pub enum Refusal {
     LayerCoverage,
 }
 
-fn guard(op: &Op) -> bool {
-    matches!(op, Op::Guard { .. })
+fn guard(op: &crate::ir::Op) -> bool {
+    matches!(op, crate::ir::Op::Guard { .. })
 }
 
 /// The exact bits a constant node occupies in its register, for every literal
 /// kind the compiler packs: `I64` as wrapping unsigned bits, `Bool` as 0 or 1 and
 /// `F32` as its binary32 bits.
-fn constant_bits(lit: Literal) -> u64 {
+fn constant_bits(lit: crate::ir::Literal) -> u64 {
     match lit {
-        Literal::I64(value) => value.cast_unsigned(),
-        Literal::Bool(value) => u64::from(value),
-        Literal::F32(bits) => u64::from(bits),
+        crate::ir::Literal::I64(value) => value.cast_unsigned(),
+        crate::ir::Literal::Bool(value) => u64::from(value),
+        crate::ir::Literal::F32(bits) => u64::from(bits),
     }
 }
 
 fn fails_suffix(node: &crate::ir::Node) -> bool {
     match &node.op {
-        Op::Guard { .. } => true,
-        Op::F32Index { below, above, .. } => {
+        crate::ir::Op::Guard { .. } => true,
+        crate::ir::Op::F32Index { below, above, .. } => {
             *below == crate::ir::OutOfRange::Refuse || *above == crate::ir::OutOfRange::Refuse
         }
         _ => false,
@@ -107,7 +105,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     if layout.reg.len() != graph.nodes.len() {
         return Err(Refusal::RegisterMapShape);
     }
-    let mut seen = alloc::vec::Vec::new();
+    let mut seen = alloc::vec::Vec::with_capacity(graph.nodes.len());
     let mut highest: Option<u32> = None;
     for (index, node) in graph.nodes.iter().enumerate() {
         let declared = layout
@@ -146,7 +144,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
             .iter()
             .enumerate()
             .filter(|(index, node)| {
-                matches!(node.op, Op::Const(lit) if constant_bits(lit) == bits)
+                matches!(node.op, crate::ir::Op::Const(lit) if constant_bits(lit) == bits)
                     && layout.reg.get(*index).copied() == Some(register)
             })
             .count();
@@ -164,7 +162,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
             .iter()
             .enumerate()
             .filter(|(index, node)| {
-                matches!(node.op, Op::Input(k) | Op::Param(k) if k == slot)
+                matches!(node.op, crate::ir::Op::Input(k) | crate::ir::Op::Param(k) if k == slot)
                     && layout.reg.get(*index).copied() == Some(register)
             })
             .count();
@@ -183,7 +181,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     let constant_nodes = graph
         .nodes
         .iter()
-        .filter(|node| matches!(node.op, Op::Const(_)))
+        .filter(|node| matches!(node.op, crate::ir::Op::Const(_)))
         .count();
     if declared_constants != constant_nodes {
         return Err(Refusal::ConstantTable);
@@ -226,7 +224,12 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     let instructions = graph
         .nodes
         .iter()
-        .filter(|node| !matches!(node.op, Op::Input(_) | Op::Param(_) | Op::Const(_)))
+        .filter(|node| {
+            !matches!(
+                node.op,
+                crate::ir::Op::Input(_) | crate::ir::Op::Param(_) | crate::ir::Op::Const(_)
+            )
+        })
         .count();
     let Ok(instructions) = u32::try_from(instructions) else {
         return Err(Refusal::LayerCoverage);
@@ -238,7 +241,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     let slot_nodes = graph
         .nodes
         .iter()
-        .filter(|node| matches!(node.op, Op::Input(_) | Op::Param(_)))
+        .filter(|node| matches!(node.op, crate::ir::Op::Input(_) | crate::ir::Op::Param(_)))
         .count();
     if declared_slots != slot_nodes {
         return Err(Refusal::SlotTable);
@@ -248,12 +251,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
 
 #[cfg(test)]
 mod tests {
-    use super::{PackedLayout, Refusal, LAYOUT_REVISION};
-    use crate::check;
-    use crate::compiled::Compiled;
     use crate::identity::IdentityScheme;
-    use crate::ir::Fact;
-    use crate::ir::{Digest, GraphBuilder, Op, SubProfile, Subject};
 
     struct TestHasher(u64);
 
@@ -264,7 +262,7 @@ mod tests {
             }
         }
 
-        fn finish(self: alloc::boxed::Box<Self>) -> Digest {
+        fn finish(self: alloc::boxed::Box<Self>) -> crate::ir::Digest {
             let mut digest = [0u8; 32];
             digest[..8].copy_from_slice(&self.0.to_le_bytes());
             digest
@@ -283,90 +281,105 @@ mod tests {
         }
     }
 
-    pub(super) fn sample() -> (crate::ir::Graph, crate::check::CheckedGraph, PackedLayout) {
+    pub(super) fn sample() -> (
+        crate::ir::Graph,
+        crate::check::CheckedGraph,
+        super::PackedLayout,
+    ) {
         let scheme = TestIds;
-        let mut builder =
-            GraphBuilder::new(SubProfile::I64, Subject::authored(&scheme, "layout-sample"));
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "layout-sample"),
+        );
         let input = builder.input(crate::ir::ScalarType::I64);
         let three = builder.i64_const(3);
-        let sum = builder.op(Op::I64Add(input, three));
-        builder.guard(Fact::Bit, sum);
+        let sum = builder.op(crate::ir::Op::I64Add(input, three));
+        builder.guard(crate::ir::Fact::Bit, sum);
         builder.output(sum);
         let graph = builder.finish();
-        let checked = check::check(&scheme, graph.clone()).expect("the sample checks");
-        let layout = Compiled::new(&scheme, &checked).packed_layout();
+        let checked = crate::check::check(&scheme, graph.clone()).expect("the sample checks");
+        let layout = crate::compiled::Compiled::new(&scheme, &checked).packed_layout();
         (graph, checked, layout)
     }
 
     #[test]
     fn a_real_compiled_layout_is_accepted() {
         let (_graph, checked, layout) = sample();
-        assert_eq!(layout.revision, LAYOUT_REVISION);
+        assert_eq!(layout.revision, super::LAYOUT_REVISION);
         assert!(super::check(&checked, &layout).is_ok());
     }
 
     #[test]
     fn mutated_layouts_are_refused_for_their_own_premise() {
         let (graph, checked, layout) = sample();
-        let check = |layout: &PackedLayout| super::check(&checked, layout);
+        let check = |layout: &super::PackedLayout| super::check(&checked, layout);
         let mut aliased = layout.clone();
         aliased.reg = alloc::vec![0; layout.reg.len()];
-        assert_eq!(check(&aliased), Err(Refusal::AliasedRegisters));
+        assert_eq!(check(&aliased), Err(super::Refusal::AliasedRegisters));
 
         let mut out_of_range = layout.clone();
         out_of_range.regs = 0;
-        assert_eq!(check(&out_of_range), Err(Refusal::RegisterOutOfRange));
+        assert_eq!(
+            check(&out_of_range),
+            Err(super::Refusal::RegisterOutOfRange)
+        );
 
         let mut wrong_bits = layout.clone();
         if let Some(entry) = wrong_bits.consts.first_mut() {
             entry.1 = entry.1.wrapping_add(1);
         }
-        assert_eq!(check(&wrong_bits), Err(Refusal::ConstantTable));
+        assert_eq!(check(&wrong_bits), Err(super::Refusal::ConstantTable));
 
         let mut wrong_slot = layout.clone();
         if let Some(entry) = wrong_slot.slot_regs.first_mut() {
             entry.1 = entry.1.saturating_add(9);
         }
-        assert_eq!(check(&wrong_slot), Err(Refusal::SlotTable));
+        assert_eq!(check(&wrong_slot), Err(super::Refusal::SlotTable));
 
         let mut dropped = layout.clone();
         dropped.consts.clear();
-        assert_eq!(check(&dropped), Err(Refusal::ConstantTable));
+        assert_eq!(check(&dropped), Err(super::Refusal::ConstantTable));
 
         let mut stale = layout.clone();
         stale.revision = alloc::string::String::from("ngraph-layout/1");
-        assert_eq!(check(&stale), Err(Refusal::StaleRevision));
+        assert_eq!(check(&stale), Err(super::Refusal::StaleRevision));
 
         let mut wrong_count = layout.clone();
         wrong_count.regs = layout.regs.saturating_add(2);
-        assert_eq!(check(&wrong_count), Err(Refusal::RegisterCount));
+        assert_eq!(check(&wrong_count), Err(super::Refusal::RegisterCount));
 
         // Declaring the sample's real guard a register is refused by the guard rule.
         let mut guard_register = layout.clone();
         let guard_index = graph
             .nodes
             .iter()
-            .position(|node| matches!(node.op, Op::Guard { .. }))
+            .position(|node| matches!(node.op, crate::ir::Op::Guard { .. }))
             .expect("the sample declares one guard");
         guard_register.reg[guard_index] = 0;
-        assert_eq!(check(&guard_register), Err(Refusal::GuardRegister));
+        assert_eq!(check(&guard_register), Err(super::Refusal::GuardRegister));
 
         let mut dropped_layer = layout.clone();
         dropped_layer.layers.pop();
-        assert_eq!(check(&dropped_layer), Err(Refusal::LayerShape));
+        assert_eq!(check(&dropped_layer), Err(super::Refusal::LayerShape));
 
         let mut unordered_layer = layout.clone();
         unordered_layer.layers = alloc::vec![(5, 2); layout.layers.len()];
-        assert_eq!(check(&unordered_layer), Err(Refusal::LayerOrder));
+        assert_eq!(check(&unordered_layer), Err(super::Refusal::LayerOrder));
 
         let mut smoothed_suffix = layout.clone();
         smoothed_suffix.fail_suffix_min = alloc::vec![u32::MAX; layout.fail_suffix_min.len()];
-        assert_eq!(check(&smoothed_suffix), Err(Refusal::FailSuffixMismatch));
+        assert_eq!(
+            check(&smoothed_suffix),
+            Err(super::Refusal::FailSuffixMismatch)
+        );
 
         let mut shifted_suffix = layout.clone();
         if let Some(entry) = shifted_suffix.fail_suffix_min.last_mut() {
             *entry = 0;
         }
-        assert_eq!(check(&shifted_suffix), Err(Refusal::FailSuffixMismatch));
+        assert_eq!(
+            check(&shifted_suffix),
+            Err(super::Refusal::FailSuffixMismatch)
+        );
     }
 }

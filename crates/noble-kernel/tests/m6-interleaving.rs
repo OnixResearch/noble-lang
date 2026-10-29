@@ -13,12 +13,11 @@
 //! implementation of the table. No correspondence claim is made between these controls and the Lean
 //! `TaskInterleaving` model, and a caught mutation is not a theorem.
 
+#[path = "m6_interleaving/capacity.rs"]
+mod capacity;
+
 #[path = "m6_interleaving/support.rs"]
 mod support;
-
-use noble_kernel::async_tasks::{
-    Completion, Context, Disposition, Error, Failure, Observation, Outcome, Snapshot, State,
-};
 
 /// One mutated rule. `Documented` is the rule the table actually implements.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -35,31 +34,36 @@ pub enum Rule {
     OverwrittenPrimaryFailure,
 }
 
-fn pins_after_completion(rule: Rule, record: &Snapshot) -> u64 {
+const fn pins_after_completion(rule: Rule, record: &noble_kernel::async_tasks::Snapshot) -> u64 {
     match rule {
-        Rule::Documented | Rule::DroppedGenerationCheck | Rule::DoubleDeliveryAccounting => {
-            record.pins
-        }
         Rule::EarlyPinRelease => 0,
-        Rule::OverwrittenPrimaryFailure => record.pins,
+        _ => record.pins,
     }
 }
 
-fn generation_accepted(rule: Rule, claimed: u64, retained: u64) -> bool {
+const fn generation_accepted(
+    rule: Rule,
+    claimed: &noble_kernel::async_tasks::Handle,
+    retained: &noble_kernel::async_tasks::Snapshot,
+) -> bool {
     match rule {
         Rule::DroppedGenerationCheck => true,
-        _ => claimed == retained,
+        _ => claimed.generation == retained.handle.generation,
     }
 }
 
-fn delivered_count(rule: Rule, deliveries: usize) -> usize {
+const fn delivered_count(rule: Rule, deliveries: usize) -> usize {
     match rule {
-        Rule::DoubleDeliveryAccounting => deliveries * 2,
+        Rule::DoubleDeliveryAccounting => deliveries.saturating_mul(2),
         _ => deliveries,
     }
 }
 
-fn failure_after_late_completion(rule: Rule, first: Failure, later: Failure) -> Failure {
+const fn failure_after_late_completion(
+    rule: Rule,
+    first: noble_kernel::async_tasks::Failure,
+    later: noble_kernel::async_tasks::Failure,
+) -> noble_kernel::async_tasks::Failure {
     match rule {
         Rule::OverwrittenPrimaryFailure => later,
         _ => first,
@@ -71,23 +75,36 @@ fn an_early_pin_release_is_detected_by_the_settlement_guard() -> Result<(), Stri
     let mut table = support::table(2)?;
     let admitted = support::accepted(table.admit(support::request(), ()))?;
     let callback = admitted.callback;
-    let completed =
-        support::accepted(table.complete(callback, Outcome::Success, support::completion()))?;
+    let completed = support::accepted(table.complete(
+        callback,
+        noble_kernel::async_tasks::Outcome::Success,
+        support::completion(),
+    ))?;
     // A successful completion makes the task deliverable; it does not settle the admitted pins.
-    assert_eq!(completed.record.state, State::Ready);
+    assert_eq!(
+        completed.record.state,
+        noble_kernel::async_tasks::State::Ready
+    );
     let retained = completed.record.pins;
     assert_eq!(retained, 3, "the admitted callback pins stay outstanding");
 
     // Retirement keeps the outstanding pins, and `finish` is then refused because the native
     // operation has not stopped: an early release would lose that refusal.
-    let retiring = support::accepted(table.retire(callback.task, Failure::Trap))?;
-    assert_eq!(retiring.record.state, State::Retiring);
+    let retiring =
+        support::accepted(table.retire(callback.task, noble_kernel::async_tasks::Failure::Trap))?;
+    assert_eq!(
+        retiring.record.state,
+        noble_kernel::async_tasks::State::Retiring
+    );
     assert_eq!(retiring.record.pins, retained);
     let premature = table
         .finish(callback.task)
         .err()
         .ok_or("finish succeeded before native stop and settlement")?;
-    assert_eq!(premature, Error::NativeStillRunning);
+    assert_eq!(
+        premature,
+        noble_kernel::async_tasks::Error::NativeStillRunning
+    );
 
     support::accepted(table.native_stopped(callback))?;
     let unsettled = table
@@ -101,7 +118,7 @@ fn an_early_pin_release_is_detected_by_the_settlement_guard() -> Result<(), Stri
         )
         .err()
         .ok_or("cleanup succeeded with pins unsettled")?;
-    assert_eq!(unsettled, Error::PinsOutstanding);
+    assert_eq!(unsettled, noble_kernel::async_tasks::Error::PinsOutstanding);
 
     let documented = pins_after_completion(Rule::Documented, &completed.record);
     let mutated = pins_after_completion(Rule::EarlyPinRelease, &completed.record);
@@ -133,25 +150,24 @@ fn a_dropped_generation_check_is_detected_by_the_handle_guard() -> Result<(), St
             task: stale,
             native: callback.native,
         },
-        Outcome::Success,
+        noble_kernel::async_tasks::Outcome::Success,
         support::completion(),
     );
-    assert_eq!(refused.err(), Some(Error::WrongGeneration));
+    assert_eq!(
+        refused.err(),
+        Some(noble_kernel::async_tasks::Error::WrongGeneration)
+    );
     assert_eq!(
         table.snapshot(callback.task.slot),
         Some(retained),
         "the refused callback changed nothing"
     );
 
-    assert!(!generation_accepted(
-        Rule::Documented,
-        stale.generation,
-        retained.handle.generation
-    ));
+    assert!(!generation_accepted(Rule::Documented, &stale, &retained));
     assert!(generation_accepted(
         Rule::DroppedGenerationCheck,
-        stale.generation,
-        retained.handle.generation
+        &stale,
+        &retained
     ));
     Ok(())
 }
@@ -161,9 +177,16 @@ fn double_delivery_accounting_is_detected_by_the_duplicate_callback_guard() -> R
     let mut table = support::table(2)?;
     let admitted = support::accepted(table.admit(support::request(), ()))?;
     let callback = admitted.callback;
-    support::accepted(table.complete(callback, Outcome::Success, support::completion()))?;
+    support::accepted(table.complete(
+        callback,
+        noble_kernel::async_tasks::Outcome::Success,
+        support::completion(),
+    ))?;
     let delivered = support::accepted(table.deliver(admitted.task, support::request().context))?;
-    assert_eq!(delivered.record.state, State::Delivered);
+    assert_eq!(
+        delivered.record.state,
+        noble_kernel::async_tasks::State::Delivered
+    );
     let after_first = table.observation();
     assert_eq!(after_first.delivered, 1);
     assert_eq!(after_first.retiring, 0);
@@ -171,9 +194,15 @@ fn double_delivery_accounting_is_detected_by_the_duplicate_callback_guard() -> R
     // A caller cannot express a repeated `deliver` at all: the task handle is move-only and the
     // first delivery consumed it. What a second delivery would charge is therefore measured on the
     // reachable duplicate surface instead: a repeated completion callback for a delivered task.
-    let repeated =
-        support::accepted(table.complete(callback, Outcome::Success, support::completion()))?;
-    assert_eq!(repeated.record.state, State::Delivered);
+    let repeated = support::accepted(table.complete(
+        callback,
+        noble_kernel::async_tasks::Outcome::Success,
+        support::completion(),
+    ))?;
+    assert_eq!(
+        repeated.record.state,
+        noble_kernel::async_tasks::State::Delivered
+    );
     assert_eq!(
         repeated.accounting,
         noble_kernel::async_tasks::Accounting::empty(),
@@ -198,67 +227,39 @@ fn an_overwritten_primary_failure_is_detected_by_the_sticky_failure_rule() -> Re
     let mut table = support::table(2)?;
     let admitted = support::accepted(table.admit(support::request(), ()))?;
     let callback = admitted.callback;
-    let cancelled = support::accepted(table.retire(callback.task, Failure::Cancelled))?;
-    assert_eq!(cancelled.record.failure, Some(Failure::Cancelled));
+    let cancelled = support::accepted(
+        table.retire(callback.task, noble_kernel::async_tasks::Failure::Cancelled),
+    )?;
+    assert_eq!(
+        cancelled.record.failure,
+        Some(noble_kernel::async_tasks::Failure::Cancelled)
+    );
     // A late completion keeps the first abnormal failure; the shell's retirement accounting
     // withdraws the delivered obligations instead of overwriting the cause.
-    let late =
-        support::accepted(table.complete(callback, Outcome::DomainError, support::completion()))?;
-    assert_eq!(late.record.state, State::Retiring);
+    let late = support::accepted(table.complete(
+        callback,
+        noble_kernel::async_tasks::Outcome::DomainError,
+        support::completion(),
+    ))?;
+    assert_eq!(
+        late.record.state,
+        noble_kernel::async_tasks::State::Retiring
+    );
     let first = late.record.failure.ok_or("the sticky failure was lost")?;
-    assert_eq!(first, Failure::Cancelled);
+    assert_eq!(first, noble_kernel::async_tasks::Failure::Cancelled);
 
-    let documented =
-        failure_after_late_completion(Rule::Documented, Failure::Cancelled, Failure::Internal);
+    let documented = failure_after_late_completion(
+        Rule::Documented,
+        noble_kernel::async_tasks::Failure::Cancelled,
+        noble_kernel::async_tasks::Failure::Internal,
+    );
     let mutated = failure_after_late_completion(
         Rule::OverwrittenPrimaryFailure,
-        Failure::Cancelled,
-        Failure::Internal,
+        noble_kernel::async_tasks::Failure::Cancelled,
+        noble_kernel::async_tasks::Failure::Internal,
     );
-    assert_eq!(documented, Failure::Cancelled);
-    assert_eq!(mutated, Failure::Internal);
+    assert_eq!(documented, noble_kernel::async_tasks::Failure::Cancelled);
+    assert_eq!(mutated, noble_kernel::async_tasks::Failure::Internal);
     assert_ne!(documented, mutated);
-    Ok(())
-}
-
-#[test]
-fn shared_capacity_decides_enabledness_so_distinct_ids_are_not_independent() -> Result<(), String> {
-    // The deliberately unsound rule "different task ids are independent" is refuted on the real
-    // table: with one task slot, the second id's admission depends on the first id's release.
-    let mut table = support::table(1)?;
-    let first = support::accepted(table.admit(support::request(), ()))?;
-    let admitted_pins = first.decision.record.pins;
-    let refused = table
-        .admit(support::request(), ())
-        .err()
-        .ok_or("the second admission succeeded with no released slot")?;
-    assert_eq!(refused.error, Error::TaskCapacity);
-    assert_eq!(table.observation().pending, 1);
-
-    // Releasing the first task is what enables the second, so the two ids are dependent.
-    let mut request = support::request();
-    request.native = noble_kernel::async_tasks::NativeId(12);
-    support::accepted(table.retire(first.callback.task, Failure::Cancelled))?;
-    // A late completion of a cancelled task withdraws the delivered obligations but keeps the
-    // primary failure, exactly as the retirement lane records.
-    support::accepted(table.complete(first.callback, Outcome::Success, support::completion()))?;
-    support::accepted(table.native_stopped(first.callback))?;
-    support::accepted(table.settle_pins(first.callback, admitted_pins))?;
-    // The cancelled task still owes every admitted input owner, result owner and buffer.
-    let debt = noble_kernel::async_tasks::Obligations {
-        inputs: 5,
-        results: 3,
-        buffers: 7,
-    };
-    support::accepted(table.cleanup(first.callback.task, debt))?;
-    support::accepted(table.finish(first.callback.task))?;
-    let observation: Observation = table.observation();
-    assert_eq!(observation.retired, 1);
-    let second = support::accepted(table.admit(request, ()))?;
-    assert_eq!(second.decision.record.state, State::Pending);
-    assert_eq!(table.observation().pending, 1);
-    let _context: Context = support::request().context;
-    let _completion: Completion = support::completion();
-    let _disposition: Disposition = support::completion().inputs;
     Ok(())
 }

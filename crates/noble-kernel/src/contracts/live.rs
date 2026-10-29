@@ -33,10 +33,6 @@ pub(super) fn register_resource(
     Ok(env)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
-)]
 /// Check the catalog itself, not just its registration path: `super::Env` fields
 /// are public and may have been altered after host registration.
 pub(super) fn catalog_valid(env: &super::Env) -> bool {
@@ -49,39 +45,49 @@ pub(super) fn catalog_valid(env: &super::Env) -> bool {
         return false;
     }
     let mut index = 0;
-    let mut valid = true;
-    while index < env.live_resource_nominals.len() && valid {
-        valid = catalog_row_valid(env, index);
+    let mut is_valid = true;
+    while index < env.live_resource_nominals.len() && is_valid {
+        is_valid = catalog_row_valid(env, index);
         index += 1;
     }
-    valid
+    is_valid
 }
 
-/// Validate one resource-catalog row against its declaration, its kind and every
-/// earlier row. Loop-free so its early returns and the duplicate scan stay
-/// extractable (Aeneas rejects returns/continue inside nested loops).
-fn catalog_row_valid(env: &super::Env, index: usize) -> bool {
+/// Validate a resource-catalog row against its declaration and kind.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; catalog validation uses non-const Env::nominal lookup and resource-kind comparison against the host-registered declaration."
+)]
+fn catalog_row_matches(env: &super::Env, index: usize) -> bool {
     let Some(decl) = env.nominal(env.live_resource_nominals[index]) else {
         return false;
     };
-    if !decl.exported
-        || decl.public != [false, false]
-        || resource_kind(decl) != Some(env.resource_kinds[index.saturating_add(1)])
-    {
-        return false;
-    }
+    let kind = env.resource_kinds[index.saturating_add(1)];
+    decl.exported && decl.public == [false, false] && resource_kind(decl) == Some(kind)
+}
+
+/// Validate a resource-catalog row against every earlier row.
+fn catalog_row_is_unique(env: &super::Env, index: usize) -> bool {
+    let kind = env.resource_kinds[index.saturating_add(1)];
+    let nominal = env.live_resource_nominals[index];
     let mut prior = 0;
-    let mut unique = true;
-    while prior < index && unique {
-        if env.resource_kinds[prior.saturating_add(1)]
-            == env.resource_kinds[index.saturating_add(1)]
-            || env.live_resource_nominals[prior] == env.live_resource_nominals[index]
+    let mut is_unique = true;
+    while prior < index && is_unique {
+        if env.resource_kinds[prior.saturating_add(1)] == kind
+            || env.live_resource_nominals[prior] == nominal
         {
-            unique = false;
+            is_unique = false;
         }
         prior += 1;
     }
-    unique
+    is_unique
+}
+
+/// Validate one resource-catalog row against its declaration, its kind and every
+/// earlier row. The duplicate scan accumulates its verdict so Aeneas can extract
+/// the bounded loop without returns or control-flow exits inside it.
+fn catalog_row_valid(env: &super::Env, index: usize) -> bool {
+    catalog_row_matches(env, index) && catalog_row_is_unique(env, index)
 }
 
 pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::ResourceKind) -> bool {
@@ -98,10 +104,6 @@ pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::Resour
     false
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
-)]
 /// Only root-positioned borrowed references may be used as authority. Their
 /// signatures are finite concrete trees; a borrowed input may itself be a
 /// root-provided reference, but no result or value child may contain one.
@@ -110,63 +112,97 @@ pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::Resour
 /// from inside a loop.
 pub(super) fn effects_known(env: &super::Env, effects: &[crate::types::EffId]) -> bool {
     let mut index = 0;
-    let mut known = true;
-    while index < effects.len() && known {
+    let mut is_known = true;
+    while index < effects.len() && is_known {
         if !env.knows_effect(effects[index]) {
-            known = false;
+            is_known = false;
         }
         index += 1;
     }
-    known
+    is_known
 }
 
 /// Validate one ordered type list at the fixed 512 nesting budget, accumulating
 /// the verdict instead of returning from inside the loop.
 pub(super) fn types_valid(env: &super::Env, types: &[crate::types::Ty]) -> bool {
     let mut index = 0;
-    let mut valid = true;
-    while index < types.len() && valid {
-        valid = env.valid_type(&types[index], 512);
+    let mut is_valid = true;
+    while index < types.len() && is_valid {
+        is_valid = env.valid_type(&types[index], 512);
         index += 1;
     }
-    valid
+    is_valid
 }
 
-/// Validate one reachable `LiveRef` node and queue its forwarded references.
-/// Loop-free apart from accumulating scans, so Aeneas can extract it.
-pub(super) fn ref_node_valid<'a>(
+/// Queue one live-reference input's forwarded references without changing order.
+/// The owned vector is returned so its allocation is reused by the outer walk.
+fn queue_forwarded_refs<'a>(
     env: &super::Env,
-    current: &'a crate::types::Ty,
-    pending: &mut alloc::vec::Vec<&'a crate::types::Ty>,
-) -> bool {
-    let crate::types::Ty::LiveRef(input, output, effects) = current else {
-        return false;
-    };
-    if input.len().saturating_add(output.len()) > 512 {
-        return false;
-    }
-    if !effects_known(env, effects.as_slice()) {
-        return false;
-    }
-    if !types_valid(env, output) {
-        return false;
-    }
+    input: &'a [crate::types::Ty],
+    mut pending: alloc::vec::Vec<&'a crate::types::Ty>,
+) -> (alloc::vec::Vec<&'a crate::types::Ty>, bool) {
     let mut index = 0;
-    let mut queued = true;
-    while index < input.len() && queued {
+    let mut is_queued = true;
+    while index < input.len() && is_queued {
         let value = &input[index];
         if matches!(value, crate::types::Ty::LiveRef(_, _, _)) {
             if pending.len() >= 512 {
-                queued = false;
+                is_queued = false;
             } else {
                 pending.push(value);
             }
         } else if !env.valid_type(value, 512) {
-            queued = false;
+            is_queued = false;
         }
         index += 1;
     }
-    queued
+    (pending, is_queued)
+}
+
+/// Validate one reachable `LiveRef` node and queue its forwarded references.
+/// The owned pending vector makes the state transition explicit while keeping
+/// its allocation and stack order intact for the bounded outer walk.
+pub(super) fn ref_node_valid<'a>(
+    env: &super::Env,
+    current: &'a crate::types::Ty,
+    pending: alloc::vec::Vec<&'a crate::types::Ty>,
+) -> (alloc::vec::Vec<&'a crate::types::Ty>, bool) {
+    let crate::types::Ty::LiveRef(input, output, effects) = current else {
+        return (pending, false);
+    };
+    if input.len().saturating_add(output.len()) > 512 {
+        return (pending, false);
+    }
+    if !effects_known(env, effects.as_slice()) {
+        return (pending, false);
+    }
+    if !types_valid(env, output) {
+        return (pending, false);
+    }
+    queue_forwarded_refs(env, input.as_slice(), pending)
+}
+
+/// Advance one bounded live-reference step, returning the next queued node.
+fn ref_step<'a>(
+    env: &super::Env,
+    current: &'a crate::types::Ty,
+    visited: usize,
+    pending: alloc::vec::Vec<&'a crate::types::Ty>,
+) -> (
+    alloc::vec::Vec<&'a crate::types::Ty>,
+    Option<&'a crate::types::Ty>,
+    bool,
+) {
+    if visited >= 512 {
+        return (pending, None, false);
+    }
+    let (mut pending, is_valid) = ref_node_valid(env, current, pending);
+    if is_valid {
+        let next = pending.pop();
+        (pending, next, true)
+    } else {
+        (pending, None, false)
+    }
 }
 
 pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
@@ -176,15 +212,12 @@ pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
     let mut pending: alloc::vec::Vec<&crate::types::Ty> = alloc::vec::Vec::new();
     let mut next = Some(ty);
     let mut visited = 0usize;
-    let mut valid = true;
+    let mut is_valid = true;
     while let Some(current) = next {
-        if visited >= 512 || !ref_node_valid(env, current, &mut pending) {
-            valid = false;
-            next = None;
-        } else {
+        (pending, next, is_valid) = ref_step(env, current, visited, pending);
+        if is_valid {
             visited += 1;
-            next = pending.pop();
         }
     }
-    valid
+    is_valid
 }

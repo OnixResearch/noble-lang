@@ -52,12 +52,25 @@ Measured, warm medians with interquartile ranges, 28 rows on a shared host:
 
 | Quantity | Value |
 | --- | --- |
-| Proposal/search (`cert::propose`) | 11.0-14.5 µs per call (IQR at most 1.76 µs; the host was loaded, so these medians are informational) |
-| Certificate checking (`cert::check`) | 10.5-13.8 µs per call (IQR at most 1.77 µs) |
-| Certificate check cost per derivation step | 0.01 µs, ceiling 50 µs |
+| Proposal/search (`cert::propose`) | 11.25-17.56 µs per call (IQR at most 7.41 µs; shared-host medians are informational) |
+| Certificate checking (`cert::check`) | 10.86-25.56 µs per call (IQR at most 10.64 µs) |
+| Certificate check cost per derivation step | 7.82-16.48 µs, derived from `check_us / steps` for the 21 step-bearing rows; ceiling 50 µs; see erratum below |
 | In-memory structural derivation footprint | 125 B (zero steps), 165 B (one step), 205 B (two steps) |
 | Coverage | 28 attempts, 27 accepted, 1 refused (`Malformed`, the chained fixed-point derivation), 16 reaching the residual target |
 | Residual target reached | `SinglePass` and `FixedPoint` reach zero sites on 6 of 7 fixtures; `FirstEligible` on the 4 single-site fixtures (`single-fold`, `shared-operand`, `wrapping-boundary`, `operand-order`) |
+
+**2026-10-29 erratum (issue #72):** the original lane converted `check_us` a
+second time when computing `check_per_step_us`, dividing by 1000 before rounding
+to two decimals. The immutable `8ce33f961` receipt retains those incorrect
+per-step values and threshold booleans; the earlier table's `0.01 µs` claim was
+wrong. Recomputing from its retained `check_us` and `steps` gives the range above.
+All 21 step-bearing rows remain below 50 µs, but that is a new arithmetic
+observation, not validation of the old threshold calculation. Rounded values
+in the bad column cannot simply be multiplied by 1000 to recover the originals.
+The per-call ranges above also replace stale summary numbers with the actual
+28 receipt rows. No historical receipt or measurement has been rewritten.
+The corrected helper and deterministic unit/zero-step regression preserve the
+documented microsecond field semantics in new reports.
 
 The wrapping-boundary and operand-order fixtures are new in this record: both reach the residual
 target under every step-bearing proposer, and `Identity` still reaches none of it. They raised the

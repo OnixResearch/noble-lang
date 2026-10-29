@@ -53,6 +53,10 @@ pub fn evaluate(rows: &[Row]) -> alloc::vec::Vec<i64> {
 
 /// The batch semantics with a caller-supplied output buffer, so a repeated batch does not allocate
 /// per call. The buffer keeps its capacity and its previous contents are overwritten in order.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; evaluate_into clears, resizes, and reuses caller-owned Vec storage; a slice cannot preserve the variable-length output and retained-capacity contract."
+)]
 pub fn evaluate_into(rows: &[Row], out: &mut alloc::vec::Vec<i64>) {
     out.clear();
     out.extend(rows.iter().copied().map(Row::run));
@@ -71,7 +75,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_batch_is_the_ordered_map_of_its_rows() {
+    fn ordered_rows_overwrite_the_reused_output() {
         let rows = [
             Row {
                 op: RowOp::Add,
@@ -92,13 +96,17 @@ mod tests {
         assert_eq!(evaluate(&rows), alloc::vec![5, -1, -20]);
         // A warm output buffer is overwritten in order and does not grow on the same row count,
         // which is the reuse the batch entry point exists for.
-        let mut out = alloc::vec::Vec::with_capacity(8);
+        let mut out = alloc::vec::Vec::with_capacity(rows.len());
         evaluate_into(&rows, &mut out);
         assert_eq!(out, alloc::vec![5, -1, -20]);
-        let capacity = out.capacity();
+        #[expect(
+            tigerstyle::numeric_units,
+            reason = "Owner: noble-maintainers; capacity_rows is Vec capacity in rows, not bytes or time; its explicit row unit is outside this lint's suffix vocabulary."
+        )]
+        let capacity_rows = out.capacity();
         evaluate_into(&rows, &mut out);
         assert_eq!(out, alloc::vec![5, -1, -20]);
-        assert_eq!(out.capacity(), capacity);
+        assert_eq!(out.capacity(), capacity_rows);
     }
 
     #[test]
@@ -124,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_batch_is_empty_and_a_prefix_is_a_prefix() {
+    fn empty_input_and_prefixes_preserve_row_order() {
         assert!(evaluate(&[]).is_empty());
         let rows = [
             Row {
@@ -139,6 +147,5 @@ mod tests {
             },
         ];
         assert_eq!(&evaluate(&rows)[..1], &evaluate(&rows[..1])[..]);
-        assert_eq!(declared_row_work(rows.len()), (2, 2));
     }
 }

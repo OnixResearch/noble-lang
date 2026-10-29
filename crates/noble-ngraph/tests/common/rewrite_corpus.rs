@@ -5,6 +5,10 @@
 //! lane adds only what its own manifest declares (`rules` for quality, `threshold`/`stage` for cost).
 
 #![allow(dead_code)]
+#![allow(
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this shared integration-test module keeps the frozen rewrite_corpus domain path across its independent quality and cost consumers."
+)]
 
 use std::path::Path;
 
@@ -45,78 +49,31 @@ pub struct Manifest {
 /// Parse a manifest and the fixtures it declares in the same file.
 pub fn parse(path: &Path) -> Result<Manifest, Box<dyn std::error::Error>> {
     let text = std::fs::read_to_string(path)?;
+    let line_count = text.lines().count();
     let mut schema = String::new();
     let mut rules = Vec::new();
     let mut lens = String::new();
     let mut corpus = String::new();
     let mut threshold = None;
-    let mut stages = Vec::new();
-    let mut fixtures = Vec::new();
+    let mut stages = Vec::with_capacity(line_count);
+    let mut fixtures = Vec::with_capacity(line_count);
     for line in text.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
-        if let Some(rest) = line.strip_prefix("schema ") {
-            schema = rest.trim().to_string();
-        } else if let Some(rest) = line.strip_prefix("rules ") {
-            rules = rest.split_whitespace().map(str::to_string).collect();
-        } else if let Some(rest) = line.strip_prefix("lens ") {
-            lens = rest.trim().to_string();
-        } else if let Some(rest) = line.strip_prefix("corpus ") {
-            corpus = rest.trim().to_string();
-        } else if let Some(rest) = line.strip_prefix("threshold ") {
-            let mut residual = String::new();
-            let mut check = 0.0_f64;
-            for part in rest.split('|').map(str::trim) {
-                if let Some(value) = part.strip_prefix("residual ") {
-                    residual = value.trim().to_string();
-                } else if let Some(value) = part.strip_prefix("check-per-step-us ") {
-                    check = value.trim().parse()?;
-                }
-            }
-            threshold = Some(Threshold {
-                residual,
-                check_per_step_us: check,
-            });
-        } else if let Some(rest) = line.strip_prefix("stage ") {
-            let mut parts = rest.split('|').map(str::trim);
-            let name = parts.next().ok_or("stage name")?.to_string();
-            let status = parts
-                .next()
-                .and_then(|part| part.strip_prefix("status "))
-                .ok_or("stage status")?
-                .to_string();
-            let reason = parts
-                .next()
-                .and_then(|part| part.strip_prefix("reason "))
-                .ok_or("stage reason")?
-                .to_string();
-            stages.push(Stage {
-                name,
-                status,
-                reason,
-            });
-        } else if let Some(rest) = line.strip_prefix("fixture ") {
-            let mut parts = rest.split('|').map(str::trim);
-            let name = parts.next().ok_or("fixture name")?.to_string();
-            let target = parts
-                .next()
-                .and_then(|part| part.strip_prefix("target "))
-                .ok_or("fixture target")?
-                .to_string();
-            let nodes = parts
-                .next()
-                .and_then(|part| part.strip_prefix("nodes "))
-                .ok_or("fixture nodes")?
-                .split_whitespace()
-                .map(str::to_string)
-                .collect();
-            fixtures.push(Fixture {
-                name,
-                target,
-                nodes,
-            });
+        let Some((kind, rest)) = line.split_once(' ') else {
+            continue;
+        };
+        match kind {
+            "schema" => schema = rest.trim().to_string(),
+            "rules" => rules = rest.split_whitespace().map(str::to_string).collect(),
+            "lens" => lens = rest.trim().to_string(),
+            "corpus" => corpus = rest.trim().to_string(),
+            "threshold" => threshold = Some(parse_threshold(rest)?),
+            "stage" => stages.push(parse_stage(rest)?),
+            "fixture" => fixtures.push(parse_fixture(rest)?),
+            _ => {}
         }
     }
     Ok(Manifest {
@@ -127,6 +84,64 @@ pub fn parse(path: &Path) -> Result<Manifest, Box<dyn std::error::Error>> {
         threshold,
         stages,
         fixtures,
+    })
+}
+
+fn parse_threshold(rest: &str) -> Result<Threshold, Box<dyn std::error::Error>> {
+    let mut residual = String::new();
+    let mut check = 0.0_f64;
+    for part in rest.split('|').map(str::trim) {
+        if let Some(value) = part.strip_prefix("residual ") {
+            residual = value.trim().to_string();
+        } else if let Some(value) = part.strip_prefix("check-per-step-us ") {
+            check = value.trim().parse()?;
+        }
+    }
+    Ok(Threshold {
+        residual,
+        check_per_step_us: check,
+    })
+}
+
+fn parse_stage(rest: &str) -> Result<Stage, Box<dyn std::error::Error>> {
+    let mut parts = rest.split('|').map(str::trim);
+    let name = parts.next().ok_or("stage name")?.to_string();
+    let status = parts
+        .next()
+        .and_then(|part| part.strip_prefix("status "))
+        .ok_or("stage status")?
+        .to_string();
+    let reason = parts
+        .next()
+        .and_then(|part| part.strip_prefix("reason "))
+        .ok_or("stage reason")?
+        .to_string();
+    Ok(Stage {
+        name,
+        status,
+        reason,
+    })
+}
+
+fn parse_fixture(rest: &str) -> Result<Fixture, Box<dyn std::error::Error>> {
+    let mut parts = rest.split('|').map(str::trim);
+    let name = parts.next().ok_or("fixture name")?.to_string();
+    let target = parts
+        .next()
+        .and_then(|part| part.strip_prefix("target "))
+        .ok_or("fixture target")?
+        .to_string();
+    let nodes = parts
+        .next()
+        .and_then(|part| part.strip_prefix("nodes "))
+        .ok_or("fixture nodes")?
+        .split_whitespace()
+        .map(str::to_string)
+        .collect();
+    Ok(Fixture {
+        name,
+        target,
+        nodes,
     })
 }
 
@@ -142,7 +157,7 @@ pub fn build(
         SubProfile::I64,
         Subject::authored(ids, &std::format!("rewrite-quality-{}", fixture.name)),
     );
-    let mut ids_by_index: Vec<NodeId> = Vec::new();
+    let mut ids_by_index: Vec<NodeId> = Vec::with_capacity(fixture.nodes.len());
     for spec in &fixture.nodes {
         let mut parts = spec.split(':');
         let kind = parts.next().ok_or("node kind")?;

@@ -1,5 +1,65 @@
 # Main gate restoration (issue #22)
 
+## Source repair — issue #72
+
+The strict-source repair keeps request work as an explicit returned value,
+separates signed-owner instantiation/charging from exact binding comparison,
+and keeps live-reference and resource-catalog refusals typed. Moving
+`capacity.rs` to `capacity/mod.rs` preserves `capacity::at_least` and its callers.
+The finite authority/checkpoint and async-interleaving controls remain tests,
+not extraction or refinement evidence. Historical translated files and
+receipts are unchanged.
+
+A native kernel API consumer accepted the live dispatch and refused a wrong
+forwarded type (`StackJoin`), missing/out-of-range forwarding
+(`BorrowProvenance`), a forged resource catalog (`InvalidContract`), and zero
+work (`Exhausted(Work)`). Signed-owner mismatches, an absent owner and a foreign
+caller returned `Unsupported(NodeForm)`. The two-site signed fixture accepted
+at 47 work units and exhausted at 46; that is an observed fixture boundary,
+not a universal cost claim. The kernel suite passed 174 tests in 17 result
+groups, with no failures or ignored tests.
+
+A separate real API consumer used BLAKE3 identities, emitted and checked the
+`40 + 2` certificate, and refused a forged claim. It validated an actual
+compiled packed layout and refused aliased registers and altered constant
+bits. The batch consumer retained ordered wrapping results, cleared old
+output for a shorter/empty batch, and retained buffer capacity. The graph
+validators reserve from graph size, never from an untrusted declared register
+count; this does not establish correspondence with the Lean models.
+
+The graph suite passed 77 tests with one ignored test across 15 result groups.
+A deterministic per-step cost regression first returned `0.01` instead of
+`5.01` microseconds: the reporting helper converted microseconds a second
+time. This predates the split: the `8ce33f961` receipt already contains the
+mis-scaled column; [the cost-lane erratum](../ngraph/README.md#cost-accounting-issue-64-items-5-7)
+derives corrected historical values without rewriting that receipt. The
+corrected helper preserves the unit and the zero-step `None` case.
+All 28 emitted cost rows agree with their reported per-call cost and step
+count, including seven zero-step rows; the corpus keeps its one refused
+derivation among 28 attempts. Timing remains measured, not a speed claim.
+
+The retained boundary baseline records 25 errors, four warnings and Cargo exit
+101. The pinned collector normalizes architecture shards only after Cargo
+succeeds, so the old bundle contains static artifacts but no compiler IR. The
+boundary adapter's missing-file refusal was therefore correct. The repaired
+pinned-hook run produces complete 109-unit IR with both strict phases clean.
+Artifact replay succeeds, but the unmodified boundary comparator rejects that
+real bundle with only `compiler-unit-roster`: its reviewed list still held 96
+units. The roster now includes the 13 already-existing test targets, with no
+removals; exact equality, both positive baselines, all negative fixtures and
+the 109-unit capacity remain unchanged.
+
+Source accounting is renewed from the complete selected collection: 15,385
+reviewed production paths (7,981 body/open, 4,239 generated, 3,165 structural),
+5,985 test-only paths and 88 macro origins. The measured delta adds 32 paths and
+removes 63 stale closure/import/test names; no retained classification or
+package owner is changed. Accounting does not discharge refinement.
+
+These API and host-collector observations alone do **not** clear the
+fourteen-gate roster. The #72 boundary matrix and tool prerequisites require
+independent committed-source execution, recorded in a separate receipt; no
+milestone or Cairn archive follows from lint clearance.
+
 ## Checking change log — 2026-10-28 (native source binding at `13b5a35`; not all gates pass)
 
 The [receipt](receipt-13b5a35.json) binds the #65 native-contract reporting

@@ -8,9 +8,7 @@
 )]
 #[expect(
     tigerstyle::function_length,
-    tigerstyle::compound_condition,
-    tigerstyle::nested_conditionals,
-    reason = "Owner: noble-maintainers; the B-CHECK-02 preflight and the signed-self owner checks stay in one ordered body so the rejection order is reviewable in the extracted subject; each compound admission predicate has side-effect-free operands."
+    reason = "Owner: noble-maintainers; the B-CHECK-02 preflight and signed-owner stages stay in one ordered body so their rejection order remains reviewable in the extracted subject."
 )]
 pub(super) fn check_request(
     env: &crate::contracts::Env,
@@ -41,12 +39,10 @@ pub(super) fn check_request(
     let mut node_index = 0;
     let mut signed_self_scan: Result<(), super::Fail> = Ok(());
     while node_index < candidate.nodes.len() && signed_self_scan.is_ok() {
-        signed_self_scan = signed_self_check(
-            env,
-            &candidate.nodes[node_index],
-            signed_owner,
-            &mut remaining,
-        );
+        match signed_self_check(env, &candidate.nodes[node_index], signed_owner, remaining) {
+            Ok(next_remaining) => remaining = next_remaining,
+            Err(failure) => signed_self_scan = Err(failure),
+        }
         node_index += 1;
     }
     attempt!(signed_self_scan);
@@ -78,7 +74,8 @@ pub(super) fn check_request(
             signed_owner: Some(owner),
         };
         let at = super::parts::site(None, Some(owner));
-        let owner_cost = attempt!(guard_inst(owner_inst, request, &mut remaining));
+        let (owner_cost, next_remaining) = attempt!(guard_inst(owner_inst, request, remaining));
+        remaining = next_remaining;
         let (interface, _) = attempt!(super::parts::instantiate::apply(
             scheme, owner_inst, None, at, &context,
         ));
@@ -95,19 +92,24 @@ pub(super) fn check_request(
                 crate::untrusted::UnsupportedKind::NodeForm,
             ));
         }
+        let owner = SignedOwner {
+            scheme,
+            inst: owner_inst,
+            cost: owner_cost,
+            at,
+        };
         let mut site_index = 0;
         let mut site_scan: Result<(), super::Fail> = Ok(());
         while site_index < candidate.nodes.len() && site_scan.is_ok() {
-            site_scan = signed_site_check(
-                scheme,
-                owner_inst,
-                owner_cost,
+            match signed_site_check(
+                &owner,
                 node_signed_self(&candidate.nodes[site_index]),
-                request,
-                at,
                 &context,
-                &mut remaining,
-            );
+                remaining,
+            ) {
+                Ok(next_remaining) => remaining = next_remaining,
+                Err(failure) => site_scan = Err(failure),
+            }
             site_index += 1;
         }
         attempt!(site_scan);
@@ -138,16 +140,9 @@ pub(super) fn check_request(
     }
 }
 
-/// Each site matches the independently supplied owner-body concrete witness,
-/// even when there is only one quoted site. Public structural results are not
-/// source authority; only sealed source ingress authenticates that witness.
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; the comparison uses PartialEq on owned stack, type and effect values, which is not const."
-)]
 /// The signed-self node of `node`, or `None`: the loop-free helper shape the
 /// extraction tool needs, since a return inside a loop body is not extractable.
-fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words::Inst> {
+const fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words::Inst> {
     match node {
         crate::untrusted::Node::SignedSelf { inst, .. } => Some(inst),
         _ => None,
@@ -156,35 +151,37 @@ fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words::Inst
 
 /// Validate one signed-self node against the request-local work allowance. No
 /// loop appears in this body, so its early returns stay extractable.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; signed-self validation reads the runtime definition-owner and behavior tables before returning the typed owner refusal, so the helper cannot be const."
+)]
 fn signed_self_check(
     env: &crate::contracts::Env,
     node: &crate::untrusted::Node,
     signed_owner: Option<(crate::contracts::Definition, &crate::words::Inst)>,
-    remaining: &mut u32,
-) -> Result<(), super::Fail> {
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let crate::untrusted::Node::SignedSelf { def, .. } = node else {
-        return Ok(());
+        return Ok(remaining);
     };
-    *remaining = attempt!(super::parts::charge(*remaining, 1));
+    let remaining = attempt!(super::parts::charge(remaining, 1));
     let owner = usize::try_from(def.0)
         .ok()
         .and_then(|index| env.definition_owners.get(index));
-    if signed_owner.map(|(owner, _)| owner) != Some(*def)
-        || env.kind(*def) != Some(crate::contracts::Behavior::Named)
-        || env.caller_module.is_none()
-        || owner != Some(&env.caller_module)
-    {
+    let is_valid = signed_owner.map(|(owner, _)| owner) == Some(*def)
+        && env.kind(*def) == Some(crate::contracts::Behavior::Named)
+        && env.caller_module.is_some()
+        && owner == Some(&env.caller_module);
+    if !is_valid {
         return Err(super::Fail::Unsupported(
             crate::untrusted::UnsupportedKind::NodeForm,
         ));
     }
-    // Compare the actual binders only after scheme/witness validation bounds
-    // their nested types and effect identities below.
-    Ok(())
+    Ok(remaining)
 }
 
 /// Reject one live-slot invocation node outside the live-slot profile.
-fn reject_slot_invoke(node: &crate::untrusted::Node) -> Result<(), super::Fail> {
+const fn reject_slot_invoke(node: &crate::untrusted::Node) -> Result<(), super::Fail> {
     if matches!(node, crate::untrusted::Node::SlotInvoke { .. }) {
         return Err(super::Fail::Unsupported(
             crate::untrusted::UnsupportedKind::NodeForm,
@@ -193,49 +190,76 @@ fn reject_slot_invoke(node: &crate::untrusted::Node) -> Result<(), super::Fail> 
     Ok(())
 }
 
+/// The owner-side values reused by every lexical signed site.
+struct SignedOwner<'a> {
+    scheme: &'a crate::words::Scheme,
+    inst: &'a crate::words::Inst,
+    cost: u32,
+    at: super::parts::Site,
+}
+
+/// Each site matches the independently supplied owner-body concrete witness,
+/// even when there is only one quoted site. Public structural results are not
+/// source authority; only sealed source ingress authenticates that witness.
 /// Charge and compare one signed site against the owner instance. Loop-free so
 /// its early returns stay extractable.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Owner: noble-maintainers; the scheme, owner instance and cost, quoted site, request, instantiation position, shared context and metered allowance are distinct caller-supplied inputs, and grouping them would invent a struct nothing else uses."
-)]
 fn signed_site_check(
-    scheme: &crate::words::Scheme,
-    owner_inst: &crate::words::Inst,
-    owner_cost: u32,
+    owner: &SignedOwner<'_>,
     site: Option<&crate::words::Inst>,
-    request: &crate::untrusted::Request,
-    at: super::parts::Site,
     context: &super::parts::Ctx,
-    remaining: &mut u32,
-) -> Result<(), super::Fail> {
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let Some(inst) = site else {
-        return Ok(());
+        return Ok(remaining);
     };
-    let site_cost = attempt!(guard_inst(inst, request, remaining));
+    let (site_cost, remaining) = attempt!(guard_inst(inst, context.request, remaining));
+    let remaining = attempt!(charge_signed_site(owner, inst, context, remaining));
+    let remaining = attempt!(super::parts::charge(
+        remaining,
+        owner.cost.saturating_add(site_cost)
+    ));
+    if !same_owner_bindings(owner.inst, inst) {
+        return Err(super::Fail::Unsupported(
+            crate::untrusted::UnsupportedKind::NodeForm,
+        ));
+    }
+    Ok(remaining)
+}
+
+/// Instantiate and charge one signed site, then check its binding cardinality
+/// before the caller charges the exact element-wise comparison.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; untrusted signed-site witnesses are validated by instantiation, bounded scheme/interface charging, and a typed cardinality refusal in that order; assertion panics would replace required rejection outcomes."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; signed-site instantiation and scheme/interface cost checks are runtime operations over the supplied environment."
+)]
+fn charge_signed_site(
+    owner: &SignedOwner<'_>,
+    inst: &crate::words::Inst,
+    context: &super::parts::Ctx,
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let (joined, _) = attempt!(super::parts::instantiate::apply(
-        scheme, inst, None, at, context,
+        owner.scheme,
+        inst,
+        None,
+        owner.at,
+        context,
     ));
-    *remaining = attempt!(super::parts::charge(
-        *remaining,
-        attempt!(super::parts::scheme_cost(scheme))
-            .saturating_add(attempt!(super::parts::join_cost(&joined)))
+    let remaining = attempt!(super::parts::charge(
+        remaining,
+        attempt!(super::parts::scheme_cost(owner.scheme))
+            .saturating_add(attempt!(super::parts::join_cost(&joined))),
     ));
-    if owner_inst.bindings.len() != inst.bindings.len() {
+    if owner.inst.bindings.len() != inst.bindings.len() {
         return Err(super::Fail::Unsupported(
             crate::untrusted::UnsupportedKind::NodeForm,
         ));
     }
-    *remaining = attempt!(super::parts::charge(
-        *remaining,
-        owner_cost.saturating_add(site_cost)
-    ));
-    if !same_owner_bindings(owner_inst, inst) {
-        return Err(super::Fail::Unsupported(
-            crate::untrusted::UnsupportedKind::NodeForm,
-        ));
-    }
-    Ok(())
+    Ok(remaining)
 }
 
 /// Compare both binding lists element-wise without returning from inside a nested
@@ -243,16 +267,20 @@ fn signed_site_check(
 /// agreement predicate leaves every examined pair identical.
 fn same_owner_bindings(owner_inst: &crate::words::Inst, inst: &crate::words::Inst) -> bool {
     let mut index = 0usize;
-    let mut agree = true;
-    while index < owner_inst.bindings.len() && agree {
+    let mut is_agree = true;
+    while index < owner_inst.bindings.len() && is_agree {
         if !same_owner_binding(&owner_inst.bindings[index], &inst.bindings[index]) {
-            agree = false;
+            is_agree = false;
         }
         index += 1;
     }
-    agree
+    is_agree
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; exact binding equality delegates to the runtime PartialEq implementations for Ty and EffSet, which are not const."
+)]
 fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Binding) -> bool {
     match (left, right) {
         (crate::words::Binding::Stack(a), crate::words::Binding::Stack(b)) => a == b,
@@ -267,18 +295,17 @@ fn same_owner_binding(left: &crate::words::Binding, right: &crate::words::Bindin
 /// potentially enormous witness. Each queued child is bounded and charged
 /// before insertion; the later equality walk is charged once more.
 #[expect(
-    tigerstyle::mutating_input_in_pure,
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the request-local work allowance is threaded by exclusive reference so every binding is charged before it is walked; exhaustion is a typed outcome, not an assertion failure."
+    reason = "Owner: noble-maintainers; the bounded binding walk preserves the request-local charge order and reports typed exhaustion rather than assertion failures."
 )]
 /// Charge one instance binding and its nested types. Loop-free, so its early
 /// returns stay extractable by Aeneas.
 fn guard_one_binding(
     binding: &crate::words::Binding,
     request: &crate::untrusted::Request,
-    remaining: &mut u32,
-) -> Result<u32, super::Fail> {
-    *remaining = attempt!(super::parts::charge(*remaining, 1));
+    remaining: u32,
+) -> Result<(u32, u32), super::Fail> {
+    let remaining = attempt!(super::parts::charge(remaining, 1));
     match binding {
         crate::words::Binding::Stack(stack) => {
             if u32::try_from(stack.len())
@@ -289,19 +316,21 @@ fn guard_one_binding(
                     crate::untrusted::LimitKind::StackHeight,
                 ));
             }
-            guard_stack_entries(stack.as_slice(), request, remaining)
-                .map(|charged| charged.saturating_add(1))
+            let (charged, remaining) =
+                attempt!(guard_stack_entries(stack.as_slice(), request, remaining,));
+            Ok((charged.saturating_add(1), remaining))
         }
         crate::words::Binding::Value(ty) => {
-            guard_ty(ty, request, remaining).map(|charged| charged.saturating_add(1))
+            let (charged, remaining) = attempt!(guard_ty(ty, request, remaining));
+            Ok((charged.saturating_add(1), remaining))
         }
         crate::words::Binding::Effect(effects) => {
             let effect_count = u32::try_from(effects.as_slice().len())
                 .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
-            *remaining = attempt!(super::parts::charge(*remaining, effect_count));
-            Ok(effect_count.saturating_add(1))
+            let remaining = attempt!(super::parts::charge(remaining, effect_count));
+            Ok((effect_count.saturating_add(1), remaining))
         }
-        crate::words::Binding::Ref(_) => Ok(1),
+        crate::words::Binding::Ref(_) => Ok((1, remaining)),
     }
 }
 
@@ -310,52 +339,64 @@ fn guard_one_binding(
 fn guard_stack_entries(
     stack: &[crate::types::Ty],
     request: &crate::untrusted::Request,
-    remaining: &mut u32,
-) -> Result<u32, super::Fail> {
+    remaining: u32,
+) -> Result<(u32, u32), super::Fail> {
     let mut index = 0;
     let mut cost = 0u32;
+    let mut remaining = remaining;
     let mut walked: Result<(), super::Fail> = Ok(());
     while index < stack.len() && walked.is_ok() {
-        walked = guard_ty(&stack[index], request, remaining)
-            .map(|charged| cost = cost.saturating_add(charged));
+        match guard_ty(&stack[index], request, remaining) {
+            Ok((charged, next_remaining)) => {
+                cost = cost.saturating_add(charged);
+                remaining = next_remaining;
+            }
+            Err(failure) => walked = Err(failure),
+        }
         index += 1;
     }
     attempt!(walked);
-    Ok(cost)
+    Ok((cost, remaining))
 }
 
 fn guard_inst(
     inst: &crate::words::Inst,
     request: &crate::untrusted::Request,
-    remaining: &mut u32,
-) -> Result<u32, super::Fail> {
+    remaining: u32,
+) -> Result<(u32, u32), super::Fail> {
     let mut index = 0;
     let mut cost = 0u32;
+    let mut remaining = remaining;
     let mut walked: Result<(), super::Fail> = Ok(());
     while index < inst.bindings.len() && walked.is_ok() {
-        walked = guard_one_binding(&inst.bindings[index], request, remaining)
-            .map(|charged| cost = cost.saturating_add(charged));
+        match guard_one_binding(&inst.bindings[index], request, remaining) {
+            Ok((charged, next_remaining)) => {
+                cost = cost.saturating_add(charged);
+                remaining = next_remaining;
+            }
+            Err(failure) => walked = Err(failure),
+        }
         index += 1;
     }
     attempt!(walked);
-    Ok(cost)
+    Ok((cost, remaining))
 }
 
 #[expect(
-    tigerstyle::mutating_input_in_pure,
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the bounded type walk charges the caller's exclusive request-local work allowance before each child is queued; type-size and work exhaustion are typed outcomes, not assertion failures."
+    reason = "Owner: noble-maintainers; the bounded type walk preserves charge-before-queue order and reports typed type-size/work exhaustion rather than assertion failures."
 )]
 fn guard_ty(
     ty: &crate::types::Ty,
     request: &crate::untrusted::Request,
-    remaining: &mut u32,
-) -> Result<u32, super::Fail> {
+    remaining: u32,
+) -> Result<(u32, u32), super::Fail> {
     let mut pending = alloc::vec![ty];
     let mut visited = 0u32;
     let mut reserved = 0u32;
+    let mut remaining = remaining;
     while let Some(next) = pending.pop() {
-        *remaining = attempt!(super::parts::charge(*remaining, 1));
+        remaining = attempt!(super::parts::charge(remaining, 1));
         visited = visited.saturating_add(1);
         if visited > request.limits.type_size {
             return Err(super::Fail::Exhausted(
@@ -381,7 +422,7 @@ fn guard_ty(
                 }
                 let count = u32::try_from(children.saturating_add(effects.as_slice().len()))
                     .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
-                *remaining = attempt!(super::parts::charge(*remaining, count));
+                remaining = attempt!(super::parts::charge(remaining, count));
                 reserved = reserved.saturating_add(count);
                 for child in input.iter().chain(output.iter()) {
                     pending.push(child);
@@ -416,7 +457,7 @@ fn guard_ty(
             | crate::types::Ty::Resource(_) => {}
         }
     }
-    Ok(visited.saturating_add(reserved))
+    Ok((visited.saturating_add(reserved), remaining))
 }
 
 /// No candidate arena node, including an unreachable one, may smuggle the

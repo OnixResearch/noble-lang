@@ -263,6 +263,14 @@ fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> 
 
 /// Render one nominal shape, closing it, so `Ty`'s `Debug` never calls
 /// `NominalShape`'s derived `Debug` (mutually recursive pair, see `clone_shape`).
+#[allow(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers. Formatting writes only the explicit caller-owned Formatter required by core::fmt; text layout is outside the semantic refinement boundary."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; debug_shape calls non-const core::fmt::Formatter::write_str and Debug::fmt, so a const helper cannot express this formatting boundary."
+)]
 fn debug_shape(
     shape: &crate::types::NominalShape,
     f: &mut core::fmt::Formatter<'_>,

@@ -1,11 +1,11 @@
 //! Shared fixtures for the issue #46 negative controls; the limits and request shapes mirror the
 //! M6 input planes so a control never depends on a fixture the table's own tests do not use.
 
-pub fn accepted<T, E: core::fmt::Debug>(result: Result<T, E>) -> Result<T, String> {
+pub(super) fn accepted<T, E: core::fmt::Debug>(result: Result<T, E>) -> Result<T, String> {
     result.map_err(|error| format!("{error:?}"))
 }
 
-pub fn limits(tasks: usize) -> noble_kernel::async_tasks::Limits {
+const fn limits(tasks: usize) -> noble_kernel::async_tasks::Limits {
     noble_kernel::async_tasks::Limits {
         tasks,
         terminal_results: 2,
@@ -18,7 +18,7 @@ pub fn limits(tasks: usize) -> noble_kernel::async_tasks::Limits {
     }
 }
 
-pub fn request() -> noble_kernel::async_tasks::Request {
+pub(super) const fn request() -> noble_kernel::async_tasks::Request {
     noble_kernel::async_tasks::Request {
         context: noble_kernel::async_tasks::Context(7),
         native: noble_kernel::async_tasks::NativeId(11),
@@ -32,7 +32,7 @@ pub fn request() -> noble_kernel::async_tasks::Request {
     }
 }
 
-pub fn completion() -> noble_kernel::async_tasks::Completion {
+pub(super) const fn completion() -> noble_kernel::async_tasks::Completion {
     noble_kernel::async_tasks::Completion {
         inputs: noble_kernel::async_tasks::Disposition {
             returned: 1,
@@ -44,7 +44,7 @@ pub fn completion() -> noble_kernel::async_tasks::Completion {
     }
 }
 
-pub fn table(tasks: usize) -> Result<noble_kernel::async_tasks::Table, String> {
+pub(super) fn table(tasks: usize) -> Result<noble_kernel::async_tasks::Table, String> {
     accepted(noble_kernel::async_tasks::Table::new(
         noble_kernel::async_tasks::TableId(3),
         limits(tasks),

@@ -1,8 +1,3 @@
-#![expect(
-    tigerstyle::path_segment_repetition,
-    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
-)]
-
 //! Replayable certificates for a small set of pure `I64` graph rewrites.
 //!
 //! The transformation stays untrusted. A certificate names, per rewritten node, the
@@ -19,9 +14,7 @@
 //! yet. Budgets, replay work, derivation depth and retained evidence sizes are
 //! likewise still open, as is every `F32`, guard, effect or resource rewrite.
 
-use crate::diag::{self, Diagnostic};
 use crate::identity::IdentityScheme;
-use crate::ir::{Digest, Graph, Literal, NodeId, Op};
 
 /// Certificate format revision bound into every accepted derivation.
 pub const CERT_REVISION: &str = "ngraph-cert/0";
@@ -59,9 +52,9 @@ pub struct Step {
     /// Rule identity.
     pub rule: Rule,
     /// The rewritten node.
-    pub node: NodeId,
+    pub node: crate::ir::NodeId,
     /// Ordered operand identities, destination order preserved.
-    pub operands: [NodeId; 2],
+    pub operands: [crate::ir::NodeId; 2],
     /// The exact bits of the first operand's constant.
     pub first_bits: u64,
     /// The exact bits of the second operand's constant.
@@ -78,9 +71,9 @@ pub struct Derivation {
     /// Ordered steps; node identities strictly increase.
     pub steps: alloc::vec::Vec<Step>,
     /// Digest of the original graph.
-    pub left: Digest,
+    pub left: crate::ir::Digest,
     /// Digest of the resulting graph.
-    pub right: Digest,
+    pub right: crate::ir::Digest,
 }
 
 /// Why a certificate was refused.
@@ -102,20 +95,35 @@ pub enum Refusal {
     EndpointMismatch,
 }
 
-fn bits(lit: Literal) -> Option<u64> {
+fn bits(lit: crate::ir::Literal) -> Option<u64> {
     match lit {
-        Literal::I64(value) => Some(value.cast_unsigned()),
-        Literal::Bool(_) | Literal::F32(_) => None,
+        crate::ir::Literal::I64(value) => Some(value.cast_unsigned()),
+        crate::ir::Literal::Bool(_) | crate::ir::Literal::F32(_) => None,
     }
 }
 
-fn constant_bits(graph: &Graph, node: NodeId) -> Option<u64> {
+fn constant_bits(graph: &crate::ir::Graph, node: crate::ir::NodeId) -> Option<u64> {
     graph
         .nodes
         .get(usize::try_from(node.0).ok()?)
         .and_then(|n| match n.op {
-            Op::Const(lit) => bits(lit),
-            _ => None,
+            crate::ir::Op::Const(lit) => bits(lit),
+            crate::ir::Op::Input(_)
+            | crate::ir::Op::Param(_)
+            | crate::ir::Op::I64Add(_, _)
+            | crate::ir::Op::I64Sub(_, _)
+            | crate::ir::Op::I64Mul(_, _)
+            | crate::ir::Op::I64Eq(_, _)
+            | crate::ir::Op::F32Add(_, _)
+            | crate::ir::Op::F32Sub(_, _)
+            | crate::ir::Op::F32Mul(_, _)
+            | crate::ir::Op::F32Affine { .. }
+            | crate::ir::Op::F32Relu(_)
+            | crate::ir::Op::F32Reglu { .. }
+            | crate::ir::Op::F32Step(_)
+            | crate::ir::Op::F32Select { .. }
+            | crate::ir::Op::F32Index { .. }
+            | crate::ir::Op::Guard { .. } => None,
         })
 }
 
@@ -128,15 +136,15 @@ fn wrapping_add(first: u64, second: u64) -> u64 {
 /// Identity rewrites are recorded but not applied here: replacing `0 + x` by `x`
 /// in place would change the node's identity, which is a separate contract.
 #[must_use]
-pub fn emit(ids: &dyn IdentityScheme, graph: &Graph) -> (Derivation, Graph) {
+pub fn emit(ids: &dyn IdentityScheme, graph: &crate::ir::Graph) -> (Derivation, crate::ir::Graph) {
     let mut result = graph.clone();
-    let mut steps = alloc::vec::Vec::new();
+    let mut steps = alloc::vec::Vec::with_capacity(graph.nodes.len());
     for (index, node) in graph.nodes.iter().enumerate() {
         let Ok(index) = u32::try_from(index) else {
             continue;
         };
         match node.op {
-            Op::I64Add(first, second) => {
+            crate::ir::Op::I64Add(first, second) => {
                 let (Some(first_bits), Some(second_bits)) =
                     (constant_bits(graph, first), constant_bits(graph, second))
                 else {
@@ -144,30 +152,45 @@ pub fn emit(ids: &dyn IdentityScheme, graph: &Graph) -> (Derivation, Graph) {
                 };
                 steps.push(Step {
                     rule: Rule::FoldAddConstants,
-                    node: NodeId(index),
+                    node: crate::ir::NodeId(index),
                     operands: [first, second],
                     first_bits,
                     second_bits,
                     claimed: wrapping_add(first_bits, second_bits),
                 });
                 if let Some(target) = result.nodes.get_mut(usize::try_from(index).unwrap_or(0)) {
-                    target.op = Op::Const(Literal::I64(
+                    target.op = crate::ir::Op::Const(crate::ir::Literal::I64(
                         wrapping_add(first_bits, second_bits).cast_signed(),
                     ));
                 }
             }
-            Op::I64Mul(first, second) if constant_bits(graph, second) == Some(1) => {
+            crate::ir::Op::I64Mul(first, second) if constant_bits(graph, second) == Some(1) => {
                 let one = constant_bits(graph, second).unwrap_or(0);
                 steps.push(Step {
                     rule: Rule::NeutralMulRight,
-                    node: NodeId(index),
+                    node: crate::ir::NodeId(index),
                     operands: [first, second],
                     first_bits: one,
                     second_bits: one,
                     claimed: 0,
                 });
             }
-            _ => {}
+            crate::ir::Op::Input(_)
+            | crate::ir::Op::Param(_)
+            | crate::ir::Op::Const(_)
+            | crate::ir::Op::I64Sub(_, _)
+            | crate::ir::Op::I64Eq(_, _)
+            | crate::ir::Op::F32Add(_, _)
+            | crate::ir::Op::F32Sub(_, _)
+            | crate::ir::Op::F32Mul(_, _)
+            | crate::ir::Op::F32Affine { .. }
+            | crate::ir::Op::F32Relu(_)
+            | crate::ir::Op::F32Reglu { .. }
+            | crate::ir::Op::F32Step(_)
+            | crate::ir::Op::F32Select { .. }
+            | crate::ir::Op::F32Index { .. }
+            | crate::ir::Op::Guard { .. }
+            | crate::ir::Op::I64Mul(_, _) => {}
         }
     }
     let derivation = Derivation {
@@ -196,9 +219,9 @@ pub enum Proposer {
 }
 
 /// The fold step for `index`, if the node is an `I64` addition of two exact constants.
-fn fold_site(graph: &Graph, index: usize) -> Option<Step> {
+fn fold_site(graph: &crate::ir::Graph, index: usize) -> Option<Step> {
     let node = graph.nodes.get(index)?;
-    let Op::I64Add(first, second) = node.op else {
+    let crate::ir::Op::I64Add(first, second) = node.op else {
         return None;
     };
     let (Some(first_bits), Some(second_bits)) =
@@ -208,7 +231,7 @@ fn fold_site(graph: &Graph, index: usize) -> Option<Step> {
     };
     Some(Step {
         rule: Rule::FoldAddConstants,
-        node: NodeId(u32::try_from(index).ok()?),
+        node: crate::ir::NodeId(u32::try_from(index).ok()?),
         operands: [first, second],
         first_bits,
         second_bits,
@@ -217,19 +240,19 @@ fn fold_site(graph: &Graph, index: usize) -> Option<Step> {
 }
 
 /// Replaces the step's node by its folded constant.
-fn apply_fold(graph: &mut Graph, step: &Step) {
+fn apply_fold(graph: &mut crate::ir::Graph, step: &Step) {
     let Ok(index) = usize::try_from(step.node.0) else {
         return;
     };
     if let Some(target) = graph.nodes.get_mut(index) {
-        target.op = Op::Const(Literal::I64(step.claimed.cast_signed()));
+        target.op = crate::ir::Op::Const(crate::ir::Literal::I64(step.claimed.cast_signed()));
     }
 }
 
 /// The number of nodes where `fold-add-constants` still applies: the residual property a quality
 /// target names, counted separately from certificate validity.
 #[must_use]
-pub fn residual_fold_sites(graph: &Graph) -> usize {
+pub fn residual_fold_sites(graph: &crate::ir::Graph) -> usize {
     (0..graph.nodes.len())
         .filter(|index| fold_site(graph, *index).is_some())
         .count()
@@ -240,7 +263,11 @@ pub fn residual_fold_sites(graph: &Graph) -> usize {
 /// Steps stay in strictly increasing node order in every case, so each proposer's certificate is
 /// checked by the same validator; the proposers differ only in how much work they do.
 #[must_use]
-pub fn propose(ids: &dyn IdentityScheme, proposer: Proposer, graph: &Graph) -> (Derivation, Graph) {
+pub fn propose(
+    ids: &dyn IdentityScheme,
+    proposer: Proposer,
+    graph: &crate::ir::Graph,
+) -> (Derivation, crate::ir::Graph) {
     let mut result = graph.clone();
     let mut steps = alloc::vec::Vec::new();
     match proposer {
@@ -281,7 +308,11 @@ pub fn propose(ids: &dyn IdentityScheme, proposer: Proposer, graph: &Graph) -> (
     (derivation, result)
 }
 
-fn checked_bits(graph: &Graph, node: NodeId, declared: u64) -> Result<u64, Refusal> {
+fn checked_bits(
+    graph: &crate::ir::Graph,
+    node: crate::ir::NodeId,
+    declared: u64,
+) -> Result<u64, Refusal> {
     match constant_bits(graph, node) {
         Some(actual) if actual == declared => Ok(actual),
         Some(_) => Err(Refusal::ConstantMismatch),
@@ -294,8 +325,8 @@ fn checked_bits(graph: &Graph, node: NodeId, declared: u64) -> Result<u64, Refus
 /// declared constant is compared against the graph's own bits.
 pub fn check(
     ids: &dyn IdentityScheme,
-    graph: &Graph,
-    result: &Graph,
+    graph: &crate::ir::Graph,
+    result: &crate::ir::Graph,
     derivation: &Derivation,
 ) -> Result<(), Refusal> {
     if derivation.revision != CERT_REVISION {
@@ -319,7 +350,7 @@ pub fn check(
             .ok_or(Refusal::Malformed)?
             .op;
         match (step.rule, op) {
-            (Rule::FoldAddConstants, &Op::I64Add(first, second)) => {
+            (Rule::FoldAddConstants, &crate::ir::Op::I64Add(first, second)) => {
                 if step.operands != [first, second] {
                     return Err(Refusal::Malformed);
                 }
@@ -329,14 +360,14 @@ pub fn check(
                     return Err(Refusal::ClaimMismatch);
                 }
             }
-            (Rule::NeutralAddLeft, &Op::I64Add(first, second)) => {
+            (Rule::NeutralAddLeft, &crate::ir::Op::I64Add(first, second)) => {
                 if step.operands != [first, second]
                     || checked_bits(graph, first, step.first_bits)? != 0
                 {
                     return Err(Refusal::Malformed);
                 }
             }
-            (Rule::NeutralMulRight, &Op::I64Mul(first, second)) => {
+            (Rule::NeutralMulRight, &crate::ir::Op::I64Mul(first, second)) => {
                 if step.operands != [first, second]
                     || checked_bits(graph, second, step.second_bits)? != 1
                 {
@@ -351,19 +382,17 @@ pub fn check(
 
 /// Maps a refusal to the graph-malformed diagnostic form for callers that report it.
 #[must_use]
-pub fn refusal_diagnostic(refusal: &Refusal) -> Diagnostic {
-    diag::Diagnostic::malformed(
-        diag::Malformed::UnknownNode,
-        diag::Site::Graph,
+pub fn refusal_diagnostic(refusal: &Refusal) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::malformed(
+        crate::diag::Malformed::UnknownNode,
+        crate::diag::Site::Graph,
         alloc::format!("ngraph certificate refused: {refusal:?}"),
     )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{check, emit, Refusal, CERT_REVISION, MAX_STEPS};
     use crate::identity::IdentityScheme;
-    use crate::ir::{Digest, GraphBuilder, SubProfile};
 
     /// A deterministic test scheme: digests every part in order under a fixed tag.
     struct TestIds;
@@ -375,7 +404,7 @@ mod tests {
             }
         }
 
-        fn finish(self: alloc::boxed::Box<Self>) -> Digest {
+        fn finish(self: alloc::boxed::Box<Self>) -> crate::ir::Digest {
             let mut digest = [0u8; 32];
             digest[..8].copy_from_slice(&self.0.to_le_bytes());
             digest
@@ -396,8 +425,8 @@ mod tests {
 
     fn sample() -> crate::ir::Graph {
         let scheme = TestIds;
-        let mut builder = GraphBuilder::new(
-            SubProfile::I64,
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
             crate::ir::Subject::authored(&scheme, "cert-sample"),
         );
         let three = builder.i64_const(3);
@@ -413,10 +442,10 @@ mod tests {
     fn emitted_fold_is_checked_and_endpoints_bind() {
         let graph = sample();
         let scheme = TestIds;
-        let (derivation, result) = emit(&scheme, &graph);
-        assert_eq!(derivation.revision, CERT_REVISION);
-        assert!(derivation.steps.len() <= MAX_STEPS);
-        assert!(check(&scheme, &graph, &result, &derivation).is_ok());
+        let (derivation, result) = super::emit(&scheme, &graph);
+        assert_eq!(derivation.revision, super::CERT_REVISION);
+        assert!(derivation.steps.len() <= super::MAX_STEPS);
+        assert!(super::check(&scheme, &graph, &result, &derivation).is_ok());
         assert_ne!(
             derivation.left, derivation.right,
             "the fold changes the graph digest"
@@ -427,7 +456,7 @@ mod tests {
     fn mutated_certificates_are_refused() {
         let graph = sample();
         let scheme = TestIds;
-        let (derivation, result) = emit(&scheme, &graph);
+        let (derivation, result) = super::emit(&scheme, &graph);
         let fold = derivation
             .steps
             .iter()
@@ -438,61 +467,57 @@ mod tests {
         let mut swapped = derivation.clone();
         swapped.steps[0].operands = [fold.operands[1], fold.operands[0]];
         assert_eq!(
-            check(&scheme, &graph, &result, &swapped),
-            Err(Refusal::Malformed)
+            super::check(&scheme, &graph, &result, &swapped),
+            Err(super::Refusal::Malformed)
         );
 
         let mut claimed = derivation.clone();
         claimed.steps[0].claimed = fold.claimed.wrapping_add(1);
         assert_eq!(
-            check(&scheme, &graph, &result, &claimed),
-            Err(Refusal::ClaimMismatch)
+            super::check(&scheme, &graph, &result, &claimed),
+            Err(super::Refusal::ClaimMismatch)
         );
 
         let mut bits = derivation.clone();
         bits.steps[0].first_bits = fold.first_bits.wrapping_add(1);
         assert_eq!(
-            check(&scheme, &graph, &result, &bits),
-            Err(Refusal::ConstantMismatch)
+            super::check(&scheme, &graph, &result, &bits),
+            Err(super::Refusal::ConstantMismatch)
         );
 
         let mut renamed = derivation.clone();
         renamed.steps[0].rule = super::Rule::NeutralAddLeft;
         assert_eq!(
-            check(&scheme, &graph, &result, &renamed),
-            Err(Refusal::Malformed)
+            super::check(&scheme, &graph, &result, &renamed),
+            Err(super::Refusal::Malformed)
         );
 
         let mut stale = derivation.clone();
         stale.revision = alloc::string::String::from("ngraph-cert/1");
         assert_eq!(
-            check(&scheme, &graph, &result, &stale),
-            Err(Refusal::StaleRevision)
+            super::check(&scheme, &graph, &result, &stale),
+            Err(super::Refusal::StaleRevision)
         );
 
         let mut unrelated = derivation.clone();
         unrelated.right = derivation.left;
         assert_eq!(
-            check(&scheme, &graph, &result, &unrelated),
-            Err(Refusal::EndpointMismatch)
+            super::check(&scheme, &graph, &result, &unrelated),
+            Err(super::Refusal::EndpointMismatch)
         );
 
         let mut exhausted = derivation.clone();
-        exhausted.steps = core::iter::repeat_n(fold, MAX_STEPS + 1).collect();
+        exhausted.steps = core::iter::repeat_n(fold, super::MAX_STEPS + 1).collect();
         assert_eq!(
-            check(&scheme, &graph, &result, &exhausted),
-            Err(Refusal::TooManySteps)
+            super::check(&scheme, &graph, &result, &exhausted),
+            Err(super::Refusal::TooManySteps)
         );
 
-        #[expect(
-            tigerstyle::unused_mut,
-            reason = "Owner: noble-maintainers; the clone is mutated below"
-        )]
         let mut reordered = derivation.clone();
         reordered.steps = alloc::vec![fold, fold];
         assert_eq!(
-            check(&scheme, &graph, &result, &reordered),
-            Err(Refusal::Order)
+            super::check(&scheme, &graph, &result, &reordered),
+            Err(super::Refusal::Order)
         );
     }
 }

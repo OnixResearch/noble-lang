@@ -1,5 +1,13 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "test target: the filename identifies the layout-reorder integration scenario"
+)]
+#![expect(
+    tigerstyle::no_panic,
+    reason = "test target: assertion panic reports divergent endpoint observations"
+)]
 #![allow(
     tigerstyle::explicit_defaults,
     tigerstyle::fallible_int_fallback,
@@ -14,7 +22,7 @@ use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
 use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
-use noble_ngraph::layout::{check as layout_check, PackedLayout, Refusal};
+use noble_ngraph::layout::{PackedLayout, Refusal};
 use noble_ngraph::sem::Value;
 
 mod common;
@@ -70,7 +78,11 @@ fn an_interleaved_i64_schedule_with_shared_inputs_and_equality_is_validated() {
     let scheme = common::IDS;
     let graph = reordered_i64();
     let (accepted, layout) = compiled_layout(&graph);
-    assert_eq!(layout_check(&accepted, &layout), Ok(()), "declared layout");
+    assert_eq!(
+        noble_ngraph::layout::check(&accepted, &layout),
+        Ok(()),
+        "declared layout"
+    );
     assert_eq!(
         layout.slot_regs.len(),
         2,
@@ -108,7 +120,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
     let mut short = layout.clone();
     short.reg.pop();
     assert_eq!(
-        layout_check(&accepted, &short),
+        noble_ngraph::layout::check(&accepted, &short),
         Err(Refusal::RegisterMapShape),
         "missing register"
     );
@@ -118,7 +130,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
         entry.1 ^= 1;
     }
     assert_eq!(
-        layout_check(&accepted, &wrong_bits),
+        noble_ngraph::layout::check(&accepted, &wrong_bits),
         Err(Refusal::ConstantTable),
         "wrong constant bits"
     );
@@ -132,7 +144,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
         swapped.slot_regs[1].1 = first;
     }
     assert_eq!(
-        layout_check(&accepted, &swapped),
+        noble_ngraph::layout::check(&accepted, &swapped),
         Err(Refusal::SlotTable),
         "swapped slot ordinals"
     );
@@ -142,7 +154,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
         permuted.slot_regs.swap(0, 1);
     }
     assert_eq!(
-        layout_check(&accepted, &permuted),
+        noble_ngraph::layout::check(&accepted, &permuted),
         Ok(()),
         "a pair permutation is still a valid table"
     );
@@ -151,7 +163,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
     if aliased.reg.len() >= 2 {
         aliased.reg[1] = aliased.reg[0];
     }
-    let aliased_refusal = layout_check(&accepted, &aliased);
+    let aliased_refusal = noble_ngraph::layout::check(&accepted, &aliased);
     assert!(
         matches!(
             aliased_refusal,
@@ -161,7 +173,7 @@ fn a_schedule_that_breaks_the_declaration_is_refused() {
     );
 
     assert_eq!(
-        layout_check(&accepted, &layout),
+        noble_ngraph::layout::check(&accepted, &layout),
         Ok(()),
         "unmutated declaration"
     );

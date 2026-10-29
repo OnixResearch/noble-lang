@@ -23,16 +23,8 @@
     reason = "test crate: imports read as the exercised kernel API surface"
 )]
 #![expect(
-    tigerstyle::function_length,
-    reason = "test crate: one linear step per construction, mutation and comparison rule"
-)]
-#![expect(
     tigerstyle::assertion_density,
     reason = "test crate: scenario assertions are added where the property is checked"
-)]
-#![expect(
-    tigerstyle::ambiguous_params,
-    reason = "test crate: positional fixture parameters are named at each call site"
 )]
 
 //! Bounded live-case generation, an independent admission model, and
@@ -226,7 +218,7 @@ fn model(case: &LiveCase) -> ModelVerdict {
         match usize::try_from(*position).map(|index| case.stack_in.get(index)) {
             Ok(Some(actual)) if actual == *formal => {}
             Ok(Some(_)) => return ModelVerdict::ForwardedMismatch,
-            _ => return ModelVerdict::ForwardedOutOfStack,
+            Ok(None) | Err(_) => return ModelVerdict::ForwardedOutOfStack,
         }
     }
     for (index, &node) in case.sites.iter().enumerate() {
@@ -290,6 +282,10 @@ fn candidate_for(case: &LiveCase) -> Candidate {
 /// position per borrowed-reference formal, and one site per invocation node. A
 /// repeated reborrow uses the same root reference from two invocation nodes, which
 /// the formal signature permits; the sites stay distinct.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; positive_case builds owned Vec-backed live-case fixtures and inserts heap-owned types through runtime allocation APIs, which are not const."
+)]
 fn positive_case(nesting: u32, repeated_reborrow: bool) -> LiveCase {
     let one = Identity {
         module: 71,
@@ -301,10 +297,10 @@ fn positive_case(nesting: u32, repeated_reborrow: bool) -> LiveCase {
         version: 2,
         kind: 42,
     };
-    let nested = nesting > 0;
+    let is_nested = nesting > 0;
     let mut stack_in = vec![nominal_type(one)];
     let mut forwarded = vec![2];
-    if nested {
+    if is_nested {
         // Two forwarded formals plus the nested one: one position per formal.
         stack_in.push(forwarded_type());
         stack_in.push(forwarded_type());
@@ -326,7 +322,7 @@ fn positive_case(nesting: u32, repeated_reborrow: bool) -> LiveCase {
         // not model; the repeated lane therefore reuses the root across program
         // instances instead of forging a two-site program.
         sites: vec![0],
-        nested,
+        nested: is_nested,
         second: two,
         ceilings: vec![TEST_EMIT, LIVE_DISPATCH],
         limits: limits(),
@@ -365,7 +361,11 @@ fn summary(case: &LiveCase) -> String {
 /// The refusal class each mutated premise is measured to produce. `Target` is a
 /// declared-identity failure rather than a provenance one, because the request's
 /// type is decoded against the host registrations before the root is inspected.
-fn expected_constraint(premise: Premise) -> Constraint {
+const fn expected_constraint(premise: Premise) -> Constraint {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; Premise is the closed mutation vocabulary, and every new premise must receive an explicit expected production constraint."
+    )]
     match premise {
         Premise::Root | Premise::ForwardedCount | Premise::ForwardedPosition => {
             Constraint::BorrowProvenance
@@ -394,9 +394,18 @@ struct Coverage {
 impl Coverage {
     fn record(&mut self, case: &LiveCase, verdict: ModelVerdict, admitted: bool) {
         self.cases += 1;
+        #[expect(
+            tigerstyle::fragile_exhaustive_enum_match,
+            reason = "Owner: noble-maintainers; every model refusal verdict is counted explicitly, so a new verdict must update coverage rather than disappear into a wildcard."
+        )]
         match verdict {
             ModelVerdict::Admits => self.admitted += 1,
-            _ => {
+            ModelVerdict::ForeignRoot
+            | ModelVerdict::UnknownTarget
+            | ModelVerdict::ForwardedCount
+            | ModelVerdict::ForwardedOutOfStack
+            | ModelVerdict::ForwardedMismatch
+            | ModelVerdict::SiteIdentity => {
                 self.refused += 1;
                 self.provenance_violations += 1;
             }
@@ -438,8 +447,8 @@ fn positives_agree_with_the_independent_model_and_admit() {
                 assert_eq!(site.forwarded_ref_ordinals, case.forwarded);
                 assert_eq!(site.ref_ordinal, case.root_ordinal);
             }
-            let admitted = true;
-            coverage.record(&case, verdict, admitted);
+            let is_admitted = true;
+            coverage.record(&case, verdict, is_admitted);
             if repeated_reborrow {
                 // The same root reference is issued again, as a second program
                 // instance: two sites inside one straight-line program would need
@@ -470,6 +479,10 @@ fn one_premise_mutations_are_attributed_and_refused() {
         Premise::SiteIdentity,
     ] {
         let mut case = base.clone();
+        #[expect(
+            tigerstyle::fragile_exhaustive_enum_match,
+            reason = "Owner: noble-maintainers; every closed Premise mutation must be updated explicitly when the mutation vocabulary expands."
+        )]
         match premise {
             Premise::Root => case.root_ordinal = 9,
             Premise::Target => {
@@ -501,8 +514,8 @@ fn one_premise_mutations_are_attributed_and_refused() {
             ),
             other => panic!("{premise:?} mutation was not refused: {other:?}"),
         }
-        let admitted = false;
-        coverage.record(&case, verdict, admitted);
+        let is_admitted = false;
+        coverage.record(&case, verdict, is_admitted);
     }
     assert_eq!(coverage.cases, 6);
     assert_eq!(coverage.refused, 6);
@@ -525,27 +538,28 @@ fn boundary_families_stay_distinct_from_agreement() {
 
 #[test]
 fn replay_from_a_seed_is_deterministic_and_bounded() {
-    let mut first = Vec::new();
+    const REPLAY_CASES: usize = 8;
+    let mut first = Vec::with_capacity(REPLAY_CASES);
     let mut state: u64 = 0x5eed_1234;
-    for _ in 0..8 {
+    for _ in 0..REPLAY_CASES {
         state = state
             .wrapping_mul(6364136223846793005)
             .wrapping_add(1442695040888963407);
-        let nesting = u32::try_from(state >> 63).unwrap_or(0);
-        let repeated = (state >> 62) & 1 == 1;
-        let case = positive_case(nesting, repeated);
+        let nesting = u32::from((state >> 63) != 0);
+        let is_repeated = (state >> 62) & 1 == 1;
+        let case = positive_case(nesting, is_repeated);
         assert_eq!(model(&case), ModelVerdict::Admits);
         first.push(summary(&case));
     }
     let mut replay: u64 = 0x5eed_1234;
-    let mut second = Vec::new();
-    for _ in 0..8 {
+    let mut second = Vec::with_capacity(REPLAY_CASES);
+    for _ in 0..REPLAY_CASES {
         replay = replay
             .wrapping_mul(6364136223846793005)
             .wrapping_add(1442695040888963407);
-        let nesting = u32::try_from(replay >> 63).unwrap_or(0);
-        let repeated = (replay >> 62) & 1 == 1;
-        second.push(summary(&positive_case(nesting, repeated)));
+        let nesting = u32::from((replay >> 63) != 0);
+        let is_repeated = (replay >> 62) & 1 == 1;
+        second.push(summary(&positive_case(nesting, is_repeated)));
     }
     assert_eq!(
         first, second,
@@ -555,24 +569,31 @@ fn replay_from_a_seed_is_deterministic_and_bounded() {
 
 /// The declared shrink measure: a strictly decreasing measure makes the shrink
 /// loop terminate, and every accepted step must decrease it.
-fn measure(case: &LiveCase) -> usize {
-    case.stack_in.len() + case.forwarded.len() + case.sites.len()
+const fn measure(case: &LiveCase) -> usize {
+    case.stack_in
+        .len()
+        .saturating_add(case.forwarded.len())
+        .saturating_add(case.sites.len())
 }
 
 /// A shrink candidate is accepted only when the production refusal class and the
 /// model's blamed premise both survive, and the measure strictly decreases. A
 /// shrink that turns a refusal into acceptance, or into a different premise, is a
 /// rejection rather than progress.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; shrink_step invokes the runtime production acceptance checker and compares allocated model outcomes, which are non-const APIs."
+)]
 fn shrink_step(base: &LiveCase, candidate: LiveCase) -> Option<LiveCase> {
     let base_outcome = outcome_of(base);
     let candidate_outcome = outcome_of(&candidate);
-    let same_class = match (&base_outcome, &candidate_outcome) {
+    let is_same_class = match (&base_outcome, &candidate_outcome) {
         (Outcome::Invalid(base_problem), Outcome::Invalid(candidate_problem)) => {
             base_problem.constraint == candidate_problem.constraint
         }
         _ => false,
     };
-    if !same_class {
+    if !is_same_class {
         return None;
     }
     if model(&candidate) != model(base) {

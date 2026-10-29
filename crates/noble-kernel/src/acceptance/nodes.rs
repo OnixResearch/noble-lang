@@ -163,7 +163,6 @@ fn fold_slot(
             crate::untrusted::Constraint::SlotSite,
         ));
     }
-    let logical = &context.request.expected.stack_in;
     let root_index = match usize::try_from(ref_ordinal) {
         Ok(index) => index,
         Err(_) => {
@@ -192,49 +191,10 @@ fn fold_slot(
     let mut refusal: Option<super::Fail> = None;
     while formal_index < stack_in.len() && refusal.is_none() {
         let formal = &stack_in[formal_index];
-        if matches!(formal, crate::types::Ty::LiveRef(_, _, _)) {
-            match forwarded.get(next_forward) {
-                None => {
-                    refusal = Some(super::parts::invalid_without_stacks(
-                        at,
-                        crate::untrusted::Constraint::BorrowProvenance,
-                    ));
-                }
-                Some(position) => match usize::try_from(*position) {
-                    Err(_) => {
-                        refusal = Some(super::parts::invalid_without_stacks(
-                            at,
-                            crate::untrusted::Constraint::BorrowProvenance,
-                        ));
-                    }
-                    Ok(logical_position) => match logical.get(logical_position) {
-                        None => {
-                            refusal = Some(super::parts::invalid_without_stacks(
-                                at,
-                                crate::untrusted::Constraint::BorrowProvenance,
-                            ));
-                        }
-                        Some(actual) if !matches!(actual, crate::types::Ty::LiveRef(_, _, _)) => {
-                            refusal = Some(super::parts::invalid_without_stacks(
-                                at,
-                                crate::untrusted::Constraint::BorrowProvenance,
-                            ));
-                        }
-                        Some(actual) if actual != formal => {
-                            refusal = Some(super::parts::invalid(
-                                context,
-                                at,
-                                alloc::vec![formal.clone()],
-                                alloc::vec![actual.clone()],
-                                crate::untrusted::Constraint::StackJoin,
-                            ));
-                        }
-                        Some(_) => next_forward += 1,
-                    },
-                },
-            }
-        } else {
-            value_in.push(formal.clone());
+        match forwarded_ref_matches(formal, forwarded, next_forward, at, context) {
+            Ok(true) => next_forward += 1,
+            Ok(false) => value_in.push(formal.clone()),
+            Err(failure) => refusal = Some(failure),
         }
         formal_index += 1;
     }
@@ -286,6 +246,78 @@ fn fold_slot(
         allowed_effects: site_ceiling.clone(),
     };
     Ok((cost, joined, interface, Some(site)))
+}
+
+/// Check one formal borrowed reference against the host-owned logical input.
+/// The loop caller records the first refusal; this helper stays loop-free so
+/// its early returns remain extractable.
+fn forwarded_ref_matches(
+    formal: &crate::types::Ty,
+    forwarded: &[u32],
+    next_forward: usize,
+    at: super::parts::Site,
+    context: &super::parts::Ctx,
+) -> Result<bool, super::Fail> {
+    if !matches!(formal, crate::types::Ty::LiveRef(_, _, _)) {
+        return Ok(false);
+    }
+    let logical_position = attempt!(forwarded_position(forwarded, next_forward, at));
+    attempt!(validate_forwarded_ref(
+        formal,
+        logical_position,
+        at,
+        context
+    ));
+    Ok(true)
+}
+
+fn forwarded_position(
+    forwarded: &[u32],
+    next_forward: usize,
+    at: super::parts::Site,
+) -> Result<usize, super::Fail> {
+    let Some(position) = forwarded.get(next_forward) else {
+        return Err(super::parts::invalid_without_stacks(
+            at,
+            crate::untrusted::Constraint::BorrowProvenance,
+        ));
+    };
+    let Ok(logical_position) = usize::try_from(*position) else {
+        return Err(super::parts::invalid_without_stacks(
+            at,
+            crate::untrusted::Constraint::BorrowProvenance,
+        ));
+    };
+    Ok(logical_position)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; exact borrowed type comparison calls non-const Ty::PartialEq and rejection constructs owned stack diagnostics."
+)]
+fn validate_forwarded_ref(
+    formal: &crate::types::Ty,
+    logical_position: usize,
+    at: super::parts::Site,
+    context: &super::parts::Ctx,
+) -> Result<(), super::Fail> {
+    let logical = &context.request.expected.stack_in;
+    let Some(actual @ crate::types::Ty::LiveRef(_, _, _)) = logical.get(logical_position) else {
+        return Err(super::parts::invalid_without_stacks(
+            at,
+            crate::untrusted::Constraint::BorrowProvenance,
+        ));
+    };
+    if actual != formal {
+        return Err(super::parts::invalid(
+            context,
+            at,
+            alloc::vec![formal.clone()],
+            alloc::vec![actual.clone()],
+            crate::untrusted::Constraint::StackJoin,
+        ));
+    }
+    Ok(())
 }
 
 /// Validate one quotation node and build its parent and child frames.

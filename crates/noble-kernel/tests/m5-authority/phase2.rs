@@ -7,7 +7,8 @@
 //! prior reservations being refused rather than read as capacity, and finishing an invocation between
 //! admission and start stopping the start without restoring any authority.
 
-use super::support;
+#[path = "phase2/checkpoint.rs"]
+mod checkpoint;
 
 const UNITS: u64 = 7;
 
@@ -17,7 +18,7 @@ fn quote(facts: &mut noble_kernel::authority::CurrentFacts, available: u64) {
 
 /// Authorize two independent witnesses over the same plan and quota.
 fn two_witnesses(
-    fixture: &mut support::Fixture,
+    fixture: &mut super::support::Fixture,
 ) -> Result<
     (
         noble_kernel::authority::Witness,
@@ -25,14 +26,14 @@ fn two_witnesses(
     ),
     String,
 > {
-    let first = support::authorized(fixture)?;
-    let second = support::authorized(fixture)?;
+    let first = super::support::authorized(fixture)?;
+    let second = super::support::authorized(fixture)?;
     assert_ne!(first.claim(), second.claim(), "two distinct witnesses");
     Ok((first, second))
 }
 
 fn admit_witness(
-    fixture: &mut support::Fixture,
+    fixture: &mut super::support::Fixture,
     witness: noble_kernel::authority::Witness,
 ) -> noble_kernel::authority::Admission {
     let request = noble_kernel::authority::AdmissionRequest {
@@ -46,7 +47,7 @@ fn admit_witness(
 fn both_admission_orders_charge_the_same_quota() -> Result<(), String> {
     // Two witnesses, quota enough for exactly one admission, admitted in both orders. The observable
     // outcome must be the same: one commit and one quota denial either way.
-    let mut forward = support::fixture()?;
+    let mut forward = super::support::fixture()?;
     quote(&mut forward.facts, UNITS);
     let (first, second) = two_witnesses(&mut forward)?;
     let forward_outcomes = [
@@ -60,7 +61,7 @@ fn both_admission_orders_charge_the_same_quota() -> Result<(), String> {
         ),
     ];
 
-    let mut reverse = support::fixture()?;
+    let mut reverse = super::support::fixture()?;
     quote(&mut reverse.facts, UNITS);
     let (first, second) = two_witnesses(&mut reverse)?;
     let reverse_outcomes = [
@@ -84,8 +85,8 @@ fn quota_exhaustion_stops_before_consumption() -> Result<(), String> {
     // Authorization sees enough quota; the checkpoint's available quota is then below one plan's
     // units by the time admission charges it. No quota record exists yet, so this is a plain
     // exhaustion rather than a snapshot mismatch.
-    let mut fixture = support::fixture()?;
-    let witness = support::authorized(&mut fixture)?;
+    let mut fixture = super::support::fixture()?;
+    let witness = super::support::authorized(&mut fixture)?;
     quote(&mut fixture.facts, UNITS.saturating_sub(1));
     let retained = match admit_witness(&mut fixture, witness) {
         noble_kernel::authority::Admission::Denied { witness, rejection } => {
@@ -115,7 +116,7 @@ fn a_fresh_snapshot_without_carry_forward_is_refused() -> Result<(), String> {
     // The host premise: a fresh quota snapshot must account for prior reservations. A snapshot that
     // reports a different available quota at the same checkpoint is refused rather than read as
     // extra capacity, so the kernel never enforces cross-snapshot conservation.
-    let mut fixture = support::fixture()?;
+    let mut fixture = super::support::fixture()?;
     quote(&mut fixture.facts, UNITS);
     let (first, second) = two_witnesses(&mut fixture)?;
     assert!(matches!(
@@ -156,8 +157,8 @@ fn a_fresh_snapshot_without_carry_forward_is_refused() -> Result<(), String> {
 
 #[test]
 fn finishing_the_invocation_between_admission_and_start_stops_the_start() -> Result<(), String> {
-    let mut fixture = support::fixture()?;
-    let witness = support::authorized(&mut fixture)?;
+    let mut fixture = super::support::fixture()?;
+    let witness = super::support::authorized(&mut fixture)?;
     let claim = witness.claim();
     let execution = match admit_witness(&mut fixture, witness) {
         noble_kernel::authority::Admission::Committed(execution) => execution,
@@ -195,8 +196,8 @@ fn finishing_the_invocation_between_admission_and_start_stops_the_start() -> Res
 fn revocation_between_authorization_and_admission_refuses_the_admission() -> Result<(), String> {
     // Authorization saw valid, unrevoked facts. The trusted host then reports revocation before the
     // serialized commit, and admission re-checks the facts rather than trusting the earlier decision.
-    let mut fixture = support::fixture()?;
-    let witness = support::authorized(&mut fixture)?;
+    let mut fixture = super::support::fixture()?;
+    let witness = super::support::authorized(&mut fixture)?;
     fixture.facts.revoked = Some(true);
     let retained = match admit_witness(&mut fixture, witness) {
         noble_kernel::authority::Admission::Denied { witness, rejection } => {
@@ -216,106 +217,5 @@ fn revocation_between_authorization_and_admission_refuses_the_admission() -> Res
     assert_eq!(fixture.table.counters().witness_consumptions, 0);
     assert_eq!(fixture.table.counters().protected_operations, 0);
     assert_eq!(fixture.table.retire_witness(retained), Ok(()));
-    Ok(())
-}
-
-#[test]
-fn advancing_the_checkpoint_invalidates_stale_facts_without_restoring_authority(
-) -> Result<(), String> {
-    // A stale checkpoint is refused as stale facts rather than as capacity, and the refusal neither
-    // resurrects the consumed witness nor adds a protected execution. The fresh snapshot then has to
-    // carry the prior reservation forward: the same quota that admitted once admits nothing more.
-    let mut fixture = support::fixture()?;
-    quote(&mut fixture.facts, UNITS);
-    let (first, second) = two_witnesses(&mut fixture)?;
-    let consumed = first.claim();
-    assert!(matches!(
-        admit_witness(&mut fixture, first),
-        noble_kernel::authority::Admission::Committed(_)
-    ));
-    let stale = fixture.facts.clone();
-    assert_eq!(
-        fixture
-            .table
-            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
-                sequence: 4,
-                now: 51,
-            }),
-        Ok(()),
-        "a monotone checkpoint is accepted"
-    );
-    // Reusing the pre-advance checkpoint is stale facts.
-    let mut backwards = support::fixture()?;
-    assert_eq!(
-        backwards
-            .table
-            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
-                sequence: 3,
-                now: 50,
-            }),
-        Err(noble_kernel::authority::SetupError::StaleCheckpoint),
-        "a repeated sequence is refused by the table"
-    );
-    let denied = match admit_witness(&mut fixture, second) {
-        noble_kernel::authority::Admission::Denied { witness, rejection } => {
-            assert_eq!(
-                rejection.receipt().description().denial,
-                Some(noble_kernel::authority::Denial::StaleFacts),
-                "a pre-advance snapshot is stale facts, not a quota denial"
-            );
-            witness.ok_or("a denial returns the original obligation")?
-        }
-        other => return Err(std::format!("expected a stale-facts denial: {other:?}")),
-    };
-    assert_eq!(
-        fixture.table.witness_snapshot(consumed),
-        Ok(noble_kernel::authority::WitnessSnapshot {
-            claim: consumed,
-            state: noble_kernel::authority::WitnessState::Consumed
-        }),
-        "the stale denial does not resurrect the consumed witness"
-    );
-    assert_eq!(
-        fixture.table.counters().protected_operations,
-        0,
-        "a stale denial adds no protected execution: only an approved observation counts one"
-    );
-    assert_eq!(
-        fixture.table.counters().attempts_admitted,
-        1,
-        "no attempt is admitted by a stale denial"
-    );
-
-    // The fresh facts carry the reservation forward, so the same quota admits nothing more.
-    let mut fresh = stale;
-    fresh.checkpoint = noble_kernel::authority::Checkpoint {
-        sequence: 4,
-        now: 51,
-    };
-    fixture.facts = fresh;
-    quote(&mut fixture.facts, 0);
-    let still_denied = match admit_witness(&mut fixture, denied) {
-        noble_kernel::authority::Admission::Denied { witness, rejection } => {
-            let denial = rejection.receipt().description().denial;
-            assert!(
-                matches!(
-                    denial,
-                    Some(noble_kernel::authority::Denial::QuotaExhausted)
-                        | Some(noble_kernel::authority::Denial::InconsistentQuota)
-                ),
-                "a carried-forward snapshot has no capacity left: {denial:?}"
-            );
-            witness.ok_or("a denial returns the original obligation")?
-        }
-        other => return Err(std::format!("expected a quota denial: {other:?}")),
-    };
-    assert_eq!(
-        fixture.table.witness_snapshot(still_denied.claim()),
-        Ok(noble_kernel::authority::WitnessSnapshot {
-            claim: still_denied.claim(),
-            state: noble_kernel::authority::WitnessState::Live
-        }),
-        "the quota denial spends nothing either"
-    );
     Ok(())
 }

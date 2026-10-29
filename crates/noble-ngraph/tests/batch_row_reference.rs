@@ -1,3 +1,17 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_panic,
+    reason = "Owner: noble-maintainers; malformed frozen-corpus rows and impossible model mismatches must abort this test with diagnostics."
+)]
+#![allow(
+    tigerstyle::ambient_clock,
+    reason = "Owner: noble-maintainers; this reporting-only benchmark observes monotonic elapsed time without making a timing assertion."
+)]
+#![allow(
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; Cargo retains this integration-test target name for the batch-row reference lane."
+)]
 //! Finite comparison of the CPU batch entry point against the kernel-checked Lean reference
 //! (issue #41).
 //!
@@ -11,18 +25,14 @@
 //! The declared cost counters are checked, but elapsed time is only *reported* — no timing assertion
 //! is made, because a timing assertion on one host would be a claim this lane cannot support.
 
-use std::time::Instant;
-
-use noble_ngraph::batch::{declared_row_work, evaluate, evaluate_into, Row, RowOp};
-
 struct Case {
-    row: Row,
+    row: noble_ngraph::batch::Row,
     expected: String,
 }
 
 fn corpus() -> Vec<Case> {
     let text = include_str!("batch_rows/corpus.txt");
-    let mut cases = Vec::new();
+    let mut cases = Vec::with_capacity(text.lines().count());
     for (index, line) in text.lines().enumerate() {
         if line.starts_with('#') || line.trim().is_empty() {
             continue;
@@ -39,13 +49,13 @@ fn corpus() -> Vec<Case> {
                 .unwrap_or_else(|_| panic!("corpus line {index} has a foreign operand: {line}"))
         };
         let op = match fields[2] {
-            "add" => RowOp::Add,
-            "sub" => RowOp::Sub,
-            "mul" => RowOp::Mul,
+            "add" => noble_ngraph::batch::RowOp::Add,
+            "sub" => noble_ngraph::batch::RowOp::Sub,
+            "mul" => noble_ngraph::batch::RowOp::Mul,
             other => panic!("corpus line {index} has a foreign operation {other}"),
         };
         cases.push(Case {
-            row: Row {
+            row: noble_ngraph::batch::Row {
                 op,
                 deeper: parse(fields[0]),
                 top: parse(fields[1]),
@@ -60,14 +70,14 @@ fn corpus() -> Vec<Case> {
 #[test]
 fn the_cpu_batch_agrees_with_the_lean_reference_on_every_boundary_row() {
     let cases = corpus();
-    let rows: Vec<Row> = cases.iter().map(|case| case.row).collect();
-    let results = evaluate(&rows);
+    let rows: Vec<noble_ngraph::batch::Row> = cases.iter().map(|case| case.row).collect();
+    let results = noble_ngraph::batch::evaluate(&rows);
     assert_eq!(
         results.len(),
         rows.len(),
         "the batch is the ordered map over every row"
     );
-    let mut mismatches = Vec::new();
+    let mut mismatches = Vec::with_capacity(rows.len());
     for (case, observed) in cases.iter().zip(results.iter()) {
         let expected = case.expected.parse::<i64>().unwrap_or_else(|_| {
             panic!(
@@ -88,19 +98,23 @@ fn the_cpu_batch_agrees_with_the_lean_reference_on_every_boundary_row() {
 
     // The declared cost counters are exact functions of the row count, so they are checked; the
     // separate staging/output counter exists so a cost claim names both instead of elapsed time.
-    let (node_work, staging) = declared_row_work(rows.len());
+    let (node_work, staging) = noble_ngraph::batch::declared_row_work(rows.len());
     assert_eq!(node_work, rows.len());
     assert_eq!(staging, rows.len());
 
     // A warm buffer keeps its capacity across repeated batches of the same row count.
-    let mut warm = Vec::new();
-    evaluate_into(&rows, &mut warm);
-    let capacity = warm.capacity();
-    evaluate_into(&rows, &mut warm);
+    let mut warm = Vec::with_capacity(rows.len());
+    noble_ngraph::batch::evaluate_into(&rows, &mut warm);
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-maintainers; capacity_rows is retained Vec capacity in rows, not bytes or time; the row suffix states the actual unit."
+    )]
+    let capacity_rows = warm.capacity();
+    noble_ngraph::batch::evaluate_into(&rows, &mut warm);
     assert_eq!(warm, results);
     assert_eq!(
         warm.capacity(),
-        capacity,
+        capacity_rows,
         "a repeated batch must not grow its buffer"
     );
 }
@@ -108,13 +122,18 @@ fn the_cpu_batch_agrees_with_the_lean_reference_on_every_boundary_row() {
 /// Reported, not asserted: the two staging shapes over a repeated workload, so a measured number can
 /// be quoted in the issue without becoming a claim of speed.
 #[test]
-fn repeated_workload_staging_is_reported() {
+fn repeated_workload_staging_is_reported() -> Result<(), &'static str> {
     let cases = corpus();
-    let rows: Vec<Row> = cases.iter().map(|case| case.row).collect();
+    let rows: Vec<noble_ngraph::batch::Row> = cases.iter().map(|case| case.row).collect();
     const REPEATS: usize = 200;
-    let workload: Vec<Row> = rows.iter().copied().cycle().take(rows.len() * 32).collect();
+    let workload_rows = rows
+        .len()
+        .checked_mul(32)
+        .ok_or("the finite corpus is too large for the benchmark workload")?;
+    let workload: Vec<noble_ngraph::batch::Row> =
+        rows.iter().copied().cycle().take(workload_rows).collect();
 
-    let started = Instant::now();
+    let started = std::time::Instant::now();
     let mut sink = 0_i64;
     for _ in 0..REPEATS {
         for row in &workload {
@@ -124,18 +143,18 @@ fn repeated_workload_staging_is_reported() {
     let per_row = started.elapsed();
 
     let mut out = Vec::with_capacity(workload.len());
-    let started = Instant::now();
+    let started = std::time::Instant::now();
     let mut batched = 0_i64;
     for _ in 0..REPEATS {
-        evaluate_into(&workload, &mut out);
+        noble_ngraph::batch::evaluate_into(&workload, &mut out);
         batched = batched.wrapping_add(out.iter().copied().fold(0_i64, i64::wrapping_add));
     }
     let batch_into = started.elapsed();
 
-    let started = Instant::now();
+    let started = std::time::Instant::now();
     let mut allocated = 0_i64;
     for _ in 0..REPEATS {
-        for result in evaluate(&workload) {
+        for result in noble_ngraph::batch::evaluate(&workload) {
             allocated = allocated.wrapping_add(result);
         }
     }
@@ -146,10 +165,14 @@ fn repeated_workload_staging_is_reported() {
         batched, allocated,
         "the allocating staging computes the same rows"
     );
-    let rows_processed = workload.len() * REPEATS;
+    let rows_processed = workload
+        .len()
+        .checked_mul(REPEATS)
+        .ok_or("the finite benchmark workload is too large to report")?;
     println!(
         "batch-staging rows={rows_processed} per-row={per_row:?} batch-into={batch_into:?} \
          batch-allocating={batch_allocating:?} declared_work={:?}",
-        declared_row_work(rows_processed)
+        noble_ngraph::batch::declared_row_work(rows_processed)
     );
+    Ok(())
 }

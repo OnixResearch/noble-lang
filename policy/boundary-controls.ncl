@@ -40,12 +40,12 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     escaped | String = "crates/noble-kernel/src/../tests/support/production_import.rs",
     module | String = "production_import",
   },
-  # Renewed to the complete 96-unit collection of 9c62cafa (expected=96,
-  # observed=96, status=complete): the 88 units reviewed in
-  # verification/main-gates/boundary-roster-20261016.json, noble-ngraph's
-  # retained_bytes test (#31) and the seven integration tests merged on
-  # 2026-10-21. Exact equality remains mandatory; the separate acyclic-shell
-  # fixture still adds two units.
+  # Renewed 2026-10-29 for issue #72 from complete pinned-hook coverage
+  # 901f41665ecd7e97b68dca0372c9876d360d802d388811d9654ec59990645ce4:
+  # expected=109, observed=109; 13 existing test targets added, none removed
+  # from the 96-unit roster of 9c62cafa. Replaying the real clean artifacts
+  # against the old roster returned only compiler-unit-roster. Exact equality
+  # remains mandatory; the separate acyclic-shell fixture still adds two units.
   units | Array String = [
     "noble-cli:bin+test:crates/noble-cli/src/main.rs:composition-root",
     "noble-cli:bin:crates/noble-cli/src/main.rs:composition-root",
@@ -58,15 +58,19 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-cli:test+test:crates/noble-cli/tests/live_slot.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_capture_legacy.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_cas_policy.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/live_slot_coherent_maps.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_direct_quote.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_late_control.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_quota_replay.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/live_slot_relocation_witness.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_resource_ref.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_selected_origin.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/live_slot_selected_retention.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/live_slot_typed_cases.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/named_v2.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/ngraph.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/smoke.rs:test",
+    "noble-cli:test+test:crates/noble-cli/tests/spec_quality_report.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/worker_host_child.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/worker_scalar.rs:test",
     "noble-cli:test+test:crates/noble-cli/tests/worker_typed.rs:test",
@@ -88,10 +92,13 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-kernel:test+test:crates/noble-kernel/tests/docexamples.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/dx01.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/fragment.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/integer.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/live_cases.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/live_slots.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/m5-authority.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/m5-resources.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/m6-async.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/m6-interleaving.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/m7-dataspace.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/property.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/recursion-schema-cycle.rs:test",
@@ -117,11 +124,17 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-ngraph-experiment:test+test:crates/noble-ngraph-experiment/tests/identity_agreement.rs:test",
     "noble-ngraph:lib+test:crates/noble-ngraph/src/lib.rs:domain-core",
     "noble-ngraph:lib:crates/noble-ngraph/src/lib.rs:domain-core",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/batch_row_reference.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/cert_differential.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/extract_b1.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/format_graph.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/format_values.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/ir_check.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/layout_differential.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/layout_reorder.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/retained_bytes.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_cost.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_quality.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/snapshot_file.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/soft_float.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/train_admission.rs:test",
