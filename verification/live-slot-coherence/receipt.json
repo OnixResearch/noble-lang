@@ -2,7 +2,7 @@
   "schema": "noble-live-slot-coherence-receipt/v1",
   "claim": "selected host correspondence for coherent entry maps; not a proof and not a promotion",
   "model": {
-    "what": "kernel-checked model theorems about pinned entry maps and single publications",
+    "what": "kernel-checked model theorems about pinned entry maps, single publications, event relocation under a pin, the broken current-map control and denial truncation",
     "theorems": [
       "NobleFoundation.LiveDispatch.publish_preserves_other_keys",
       "NobleFoundation.LiveDispatch.publish_selects_the_published_generation",
@@ -12,11 +12,17 @@
       "NobleFoundation.LiveDispatch.mixed_map_selects_old_and_new",
       "NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event",
       "NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation",
-      "NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events"
+      "NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events",
+      "NobleFoundation.LiveDispatch.run_extends_the_events",
+      "NobleFoundation.LiveDispatch.denials_only_truncate",
+      "NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once",
+      "NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits",
+      "NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix",
+      "NobleFoundation.LiveDispatch.a_denial_before_the_emitting_hop_keeps_the_prefix"
     ],
     "retained_receipt": {
-      "directory": "verification/foundation/receipts/d2aa7a382",
-      "theorem_count": 261,
+      "directory": "verification/foundation/receipts/1d4113e6c",
+      "theorem_count": 563,
       "clean_source": true
     },
     "does_not_establish": "that the selected runtime behaves this way"
@@ -25,7 +31,7 @@
     "what": "measured counts the host lane asserts, as a behavioral comparison",
     "lane": {
       "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
-      "sha256": "655753e3d7f84003ce06a56e4af03c04c649d4983a697ebb5180ede2ba282539"
+      "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70"
     },
     "runner": {
       "path": "crates/noble-cli/tests/live_slot_coherent_maps.rs",
@@ -45,11 +51,19 @@
         "effects": 1
       },
       "pinnedEpoch": "2",
-      "refusedPublication": "stale-reject",
+      "heldPublicationOutcome": "published",
+      "publishedEpoch": "3",
+      "heldRootCounts": {
+        "dispatches": 1,
+        "effects": 1
+      },
+      "heldRootDefinition": "checked:0:1:2",
       "freshRootCounts": {
         "dispatches": 1,
         "effects": 1
       },
+      "freshRootDefinition": "checked:2:1:5",
+      "withoutCompareAndSetOutcome": "stale-reject",
       "halfPublishedOutcome": "execution-failed",
       "halfPublishedRows": 0,
       "halfPublishedSessionState": "terminated-after-guest-failure",
@@ -74,7 +88,7 @@
     "what": "the exact selected bytes and the sessions the measurements came from",
     "binary": {
       "path": "/var/tmp/noble-target/debug/noble",
-      "sha256": "2bbe9f62681c79e806f33311460a21adc95b23b0787e298cd76ef3cf448fac17"
+      "sha256": "c20baf97c089f45716f5d459bc0133f69261014d19cb4b2822a0b89e4fc8447d"
     },
     "sessions": [
       "coherent-leaf-first",
@@ -111,8 +125,9 @@
     "does_not_establish": "that those lanes were re-run here; only their bytes are bound"
   },
   "non_claims": [
-    "the deliberately broken per-dispatch-current-map duplicate control is not constructible from this authority shape",
-    "republishing a slot twice in one session always stale-rejects, so version pairs come from separate sessions",
+    "the deliberately broken per-dispatch-current-map duplicate control is not constructible from this authority shape; it exists only in the model (current_map_selection_duplicates_and_omits)",
+    "retention is measured for one root held before its only selection while one compare-and-set publication lands; publications between two selections of one root are the nested-roots lane, bound here by digest only",
+    "a publication without the incarnation/generation compare-and-set fields stale-rejects whether or not a root is pinned; that refusal is not retention evidence",
     "no conformance case (LSLOT-*) is promoted by this receipt"
   ]
 }
