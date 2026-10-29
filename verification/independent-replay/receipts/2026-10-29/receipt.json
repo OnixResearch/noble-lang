@@ -1,0 +1,196 @@
+{
+  "schema": "noble-independent-replay-export/v1",
+  "issue": 62,
+  "measured_on": "2026-10-29",
+  "decision": "pilot-accepted",
+  "status_summary": "nanoda_lib accepted both explicitly exported Lean proof closures at Lean 4.31.0 / lean4export format 3.1.0; this remains opt-in evidence and is not a gate",
+  "foundation": {
+    "fresh_build_source_commit": "25276acd370e56a12ed491865f02f0a7ff1704d9",
+    "fresh_build_source_tree": "9de5c8ec76a67824a66616fe7537519a672c84f1",
+    "fresh_check_clean_source": true,
+    "fresh_check_exit_code": 0,
+    "fresh_check_receipt_sha256": "58638e8cf48c495de70ce1e70b8ac6e983b8429cc7ab48f074faf9b47c3e211b",
+    "latest_retained_receipt": {
+      "path": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
+      "sha256": "d046924e730d55aa0d4d76227150583e2d6510cc72a03235a2f46ec781204f8b",
+      "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
+      "source_tree": "c23431e364a3a05fa2bbe43695611edfd268c512",
+      "theorem_count": 563,
+      "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    "target_statements_from_latest_retained_receipt": [
+      {
+        "name": "NobleFoundation.toInt_add",
+        "statement": "NobleFoundation.toInt_add : ∀ (a b : BitVec 64), (a + b).toInt = MathlibI64.wrap (a.toInt + b.toInt)",
+        "axioms": ["propext", "Classical.choice", "Quot.sound"]
+      },
+      {
+        "name": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+        "statement": "@NobleFoundation.LinkBoundary.vertical_simulation_compose : ∀ {A B C : Type} {stepA : A → A → Prop} {stepB : B → B → Prop} {stepC : C → C → Prop} {relatedAB : A → B → Prop} {relatedBC : B → C → Prop}, NobleFoundation.LinkBoundary.ForwardSimulation stepA stepB relatedAB → NobleFoundation.LinkBoundary.ForwardSimulation stepB stepC relatedBC → NobleFoundation.LinkBoundary.ForwardSimulation stepA stepC fun a c => ∃ b, relatedAB a b ∧ relatedBC b c",
+        "axioms": []
+      }
+    ]
+  },
+  "tools": {
+    "lean": {
+      "version": "4.31.0",
+      "revision": "68218e876d2a38b1985b8590fff244a83c321783",
+      "binary": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+      "binary_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a"
+    },
+    "lean4export": {
+      "repository": "https://github.com/leanprover/lean4export",
+      "revision": "8554815c2dc6b7abe99ec1f08849c9759ba77947",
+      "lean_toolchain": "leanprover/lean4:v4.31.0",
+      "format": "3.1.0",
+      "license": "Apache-2.0",
+      "binary": "/var/tmp/noble-issue-62-od8lV1/lean4export/.lake/build/bin/lean4export",
+      "binary_sha256": "9f7b3dbba23cdbc2d978205a24baf05af83e360cf6f49ad7483ecbd7c4f0525b"
+    },
+    "nanoda_lib": {
+      "repository": "https://github.com/ammkrn/nanoda_lib",
+      "revision": "d0a02cc5defadd683f62f9d078f41688314fa31f",
+      "crate_version": "0.4.30",
+      "binary_crate": "nanoda_bin",
+      "license": "Apache-2.0",
+      "binary": "/var/tmp/noble-issue-62-od8lV1/nanoda-target/release/nanoda_bin",
+      "binary_sha256": "27388e46c30d5bc8a7ecb229c697b5e7726f53cf6487bfd20eb926bac20c3295",
+      "cargo": "1.95.0 (f2d3ce0bd 2026-03-21)",
+      "rustc": "1.95.0 (59807616e 2026-04-14)",
+      "parser_format_range": ">=3.1.0,<3.2.0",
+      "parser_evidence": "src/parser.rs check_semver accepts 3.1.0; test_resources/Empty/export carries format 3.1.0"
+    }
+  },
+  "parser_probe": {
+    "input": "nanoda_lib/test_resources/Empty/export",
+    "format": "3.1.0",
+    "status": "accepted",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "command": "nanoda_bin test_resources/Config/valid.json < test_resources/Empty/export"
+  },
+  "exports": {
+    "combined": {
+      "roots": ["NobleFoundation.toInt_add", "NobleFoundation.LinkBoundary.vertical_simulation_compose"],
+      "format": "3.1.0",
+      "lean_version": "4.31.0",
+      "export_exit_code": 0,
+      "sha256": "c62870e716a1255dbbb6ee20bf6e010d868c977dbaf27e17f5711acde3fd29a3",
+      "size_bytes": 7542664,
+      "line_count": 146538,
+      "retained": false,
+      "retention_reason": "larger than the approximately 5 MB retention threshold"
+    },
+    "per_root": {
+      "NobleFoundation.toInt_add": {
+        "export_exit_code": 0,
+        "export_sha256": "b4c50e65f75713e4be77037f67be83ba45acd28b89f02547d4c1f4922ecd2fa0",
+        "export_size_bytes": 7492900,
+        "export_line_count": 145650,
+        "export_retained": false,
+        "nanoda_status": "accepted",
+        "nanoda_exit_code": 0,
+        "nanoda_checked_declarations": 2773,
+        "nanoda_stdout": "Checked 2773 declarations with no errors",
+        "nanoda_stderr": ""
+      },
+      "NobleFoundation.LinkBoundary.vertical_simulation_compose": {
+        "export_exit_code": 0,
+        "export_sha256": "0593c285ee70fa2c2903bfcb8c0b1453a09c85bd190b58642ddfffb3f5a080b0",
+        "export_size_bytes": 56774,
+        "export_line_count": 1161,
+        "export_retained": true,
+        "export_path": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson",
+        "nanoda_status": "accepted",
+        "nanoda_exit_code": 0,
+        "nanoda_checked_declarations": 16,
+        "nanoda_stdout": "Checked 16 declarations with no errors",
+        "nanoda_stderr": ""
+      }
+    },
+    "combined_nanoda": {
+      "status": "accepted",
+      "exit_code": 0,
+      "checked_declarations": 2781,
+      "stdout": "Checked 2781 declarations with no errors",
+      "stderr": ""
+    },
+    "nanoda_configuration": {
+      "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"],
+      "unpermitted_axiom_hard_error": true,
+      "num_threads": 8,
+      "nat_extension": true,
+      "string_extension": true,
+      "print_axioms": false
+    },
+    "diagnostic_note": "With nanoda's default print_axioms=true, each run still exited 0 and typechecked successfully but reported one unrelated pretty-printer diagnostic, Unable to print axioms; the recorded acceptance runs set print_axioms=false and reported no errors."
+  },
+  "controls": {
+    "semantic_mutation": {
+      "classification": "rejected",
+      "input": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson",
+      "recipe": {
+        "target_root_declaration": "{\"thm\":{\"all\":[135],\"levelParams\":[],\"name\":135,\"type\":681,\"value\":990}}",
+        "description": "In the root proof's application expression ie=870, replace the simulationBC argument (expression 334) with the simulationAB argument (expression 302). Both referenced expressions are well-formed existing bvars; the replacement is not the type expected by forward_simulation_steps.",
+        "exact_line_replacement": "{\"app\":{\"arg\":334,\"fn\":869},\"ie\":870} -> {\"app\":{\"arg\":302,\"fn\":869},\"ie\":870}",
+        "replacement_count": 1
+      },
+      "output_sha256": "bc859b01cbc32170ed2ad69016d73bd3d4b3ef9e2238a5da3813d2a9f1486020",
+      "output_size_bytes": 56774,
+      "format_parse": "structurally valid NDJSON",
+      "nanoda_num_threads": 1,
+      "nanoda_status": "rejected",
+      "nanoda_exit_code": 101,
+      "stdout": "",
+      "stderr_excerpt": "thread 'main' panicked at src/tc.rs:984:71: assertion failed: self.def_eq(u, v)",
+      "interpretation": "semantic type-check rejection; not an unsupported-format refusal"
+    },
+    "parse_truncation": {
+      "classification": "parse-refused",
+      "input": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson",
+      "recipe": "truncate the byte-identical export to exactly 12345 bytes, with the cut inside a JSON string",
+      "output_sha256": "8f6f28b3329d7e38c1e9b713fb9df261619980269eadce4f10e464ca7a32f935",
+      "output_size_bytes": 12345,
+      "nanoda_num_threads": 8,
+      "nanoda_status": "unsupported/failed-to-parse",
+      "nanoda_exit_code": 1,
+      "stdout": "",
+      "stderr_excerpt": "Error: EOF while parsing a string at line 1 column 30",
+      "interpretation": "parse refusal only; not a theorem refutation"
+    },
+    "unmutated_after_controls": {
+      "input": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson",
+      "nanoda_status": "accepted",
+      "nanoda_exit_code": 0,
+      "checked_declarations": 16,
+      "stdout": "Checked 16 declarations with no errors",
+      "stderr": ""
+    }
+  },
+  "commands": [
+    {"command": "git -C /var/tmp/noble-issue-62-od8lV1/lean4export checkout --detach 8554815c2dc6b7abe99ec1f08849c9759ba77947", "exit_code": 0},
+    {"command": "cd /var/tmp/noble-issue-62-od8lV1/lean4export && PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH nice -n 10 lake build", "exit_code": 0},
+    {"command": "cd /var/tmp/noble-issue-62-od8lV1/nanoda_lib && PATH=/nix/store/ksynhkxwbvcw2mq1sshj3q6h0zylwnb3-rust-default-1.95.0/bin:$PATH CARGO_TARGET_DIR=/var/tmp/noble-issue-62-od8lV1/nanoda-target CARGO_BUILD_JOBS=8 nice -n 10 cargo build --release", "exit_code": 0},
+    {"command": "cd <worktree> && env -i HOME=/home/brittonr USER=brittonr LOGNAME=brittonr TERM=dumb PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin:/run/current-system/sw/bin:/usr/bin:/bin node verification/foundation/check.mjs --output /var/tmp/noble-issue-62-od8lV1/foundation-check", "exit_code": 0},
+    {"command": "cd <worktree>/proofs/foundation && PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH lake env /var/tmp/noble-issue-62-od8lV1/lean4export/.lake/build/bin/lean4export NobleFoundation -- NobleFoundation.toInt_add NobleFoundation.LinkBoundary.vertical_simulation_compose", "exit_code": 0},
+    {"command": "cd <worktree>/proofs/foundation && PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH lake env /var/tmp/noble-issue-62-od8lV1/lean4export/.lake/build/bin/lean4export NobleFoundation -- NobleFoundation.toInt_add", "exit_code": 0},
+    {"command": "cd <worktree>/proofs/foundation && PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH lake env /var/tmp/noble-issue-62-od8lV1/lean4export/.lake/build/bin/lean4export NobleFoundation -- NobleFoundation.LinkBoundary.vertical_simulation_compose", "exit_code": 0},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-combined-clean.json", "exit_code": 0},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-toInt_add-clean.json", "exit_code": 0},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-vertical_simulation_compose-clean.json", "exit_code": 0},
+    {"command": "node /var/tmp/noble-issue-62-od8lV1/make-root-controls.mjs <retained-export> <semantic-mutated-export> <parse-truncated-export>", "exit_code": 0},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-root-semantic-serial.json", "exit_code": 101},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-root-parse.json", "exit_code": 1},
+    {"command": "nanoda_bin /var/tmp/noble-issue-62-od8lV1/nanoda-retained-vertical.json", "exit_code": 0}
+  ],
+  "non_claims": [
+    "This is a two-root pilot only; acceptance does not cover the rest of NobleFoundation or arbitrary Lean 4.31.0 declarations.",
+    "The result does not prove nanoda_lib's checker implementation correct, complete, or equivalent to the Lean kernel; it records only observed acceptance.",
+    "The result does not establish source authenticity, Mathlib .olean trust, compiler/runtime/Wasm correspondence, or any Rust implementation theorem.",
+    "The retained controls exercise one semantic proof mutation and one mid-line parse refusal; no timeout control or independent claim-binding audit was run here.",
+    "Because the acceptance configuration sets print_axioms=false, nanoda acceptance does not independently report axioms; the axiom audit remains Lean's #print axioms from the retained foundation receipt.",
+    "The combined and toInt_add exports are not retained because they exceed approximately 5 MB; only the 56,774-byte vertical closure is retained.",
+    "This evidence does not change CI, flake checks, policy/tool-selection pins, MC1 admission, or any gate; promotion is an owner decision."
+  ]
+}

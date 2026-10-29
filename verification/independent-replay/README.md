@@ -6,13 +6,26 @@ consumer, changes MC1 admission, or claims compiler/runtime correspondence.
 
 ## Decision
 
-**No genuinely separately implemented checker is available for Noble's pinned
-toolchain, and none was adopted.** The reference workflow changed underneath the
-issue: `lean4checker` is deprecated and merged into Lean itself, distributed as
-`leanchecker` with every toolchain since v4.28.0, and its own documentation states
-that it "is not an external verifier, as it uses the Lean kernel itself". The
-exporter repository's current revision targets Lean `v4.36.0-rc1`, newer than
-Noble's `4.31.0`.
+**A bounded independent-kernel replay is available and was measured as an
+opt-in pilot.** The pinned `leanprover/lean4export` revision
+`8554815c2dc6b7abe99ec1f08849c9759ba77947` builds with Noble's Lean `4.31.0`
+toolchain and emits NDJSON format `3.1.0`. The Rust `nanoda_lib` checker at
+`d0a02cc5defadd683f62f9d078f41688314fa31f` accepts that format (its parser
+range is `>=3.1.0,<3.2.0`). Its `nanoda_bin` CLI accepted the separately
+exported closures of exactly `NobleFoundation.toInt_add` and
+`NobleFoundation.LinkBoundary.vertical_simulation_compose`, with exit status
+zero and no type-checker errors. The complete receipt is
+[`receipts/2026-10-29/receipt.json`](receipts/2026-10-29/receipt.json), and the
+small retained export is
+[`receipts/2026-10-29/vertical_simulation_compose.ndjson`](receipts/2026-10-29/vertical_simulation_compose.ndjson).
+
+This is evidence that a separately implemented checker can consume this
+Lean 4.31.0 export format and accept these two closures; it is not evidence
+that the checker is correct or complete. The earlier reference workflow also
+changed underneath the issue: `lean4checker` is deprecated and merged into
+Lean itself, distributed as `leanchecker` with every toolchain since v4.28.0,
+and its own documentation states that it "is not an external verifier, as it
+uses the Lean kernel itself".
 
 What Noble *can* do today is a **producer-independent replay**: run the pinned
 toolchain's `leanchecker` over the foundation's compiled `.olean` files, which
@@ -25,15 +38,27 @@ independent implementation. It is recorded here as an opt-in lane, not a gate.
 | Item | Value |
 |---|---|
 | `leanprover/lean4checker` revision inspected | `91a7f0e8e9dffe927089f5a6edcfeeb8a0e07709` (README: deprecated, merged into Lean, `lean-toolchain` `v4.29.0-rc8`) |
-| `leanprover/lean4export` revision inspected | `df81913eee5519d5a88ae5b0fd701b5298cc29ab`, `lean-toolchain` `v4.36.0-rc1`, NDJSON export format |
-| Checker actually used | `leanchecker` shipped with Noble's pinned Lean **4.31.0** |
-| Noble source | `b6d2f88b` (the tree whose `.olean` files were replayed) |
-| Corpus | module `NobleFoundation` — the foundation model modules, 314 inventoried theorems |
+| `leanprover/lean4export` revision built | `8554815c2dc6b7abe99ec1f08849c9759ba77947`, `lean-toolchain` `leanprover/lean4:v4.31.0`, NDJSON format `3.1.0`, Apache-2.0 |
+| `ammkrn/nanoda_lib` revision built | `d0a02cc5defadd683f62f9d078f41688314fa31f`, crate `0.4.30`, binary `nanoda_bin`, Apache-2.0 |
+| Independent checker actually used | `/var/tmp/.../nanoda_bin` (release binary SHA-256 is retained in the receipt) |
+| Producer-independent checker also retained | `leanchecker` shipped with Noble's pinned Lean **4.31.0** |
+| Fresh foundation source | `25276acd370e56a12ed491865f02f0a7ff1704d9`, clean build; latest retained foundation receipt is `1d4113e6c` |
+| Pilot roots | exactly `NobleFoundation.toInt_add` and `NobleFoundation.LinkBoundary.vertical_simulation_compose` |
 
 ## Measured
 
 | Lane | Command | Result |
 |---|---|---|
+| Export-format parser probe | `nanoda_bin` on its `3.1.0` empty export fixture | accepted, `status=0`, empty stdout/stderr |
+| Pinned exporter build | `PATH=<Lean 4.31.0>/bin nice -n 10 lake build` at `lean4export@8554815c` | completed, `status=0`; exact binary digest is in the receipt |
+| Pinned nanoda build | `CARGO_BUILD_JOBS=8 nice -n 10 cargo build --release` at `nanoda_lib@d0a02cc` | completed, `status=0`; CLI binary exists and its digest is in the receipt |
+| Two-root export | `lake env lean4export NobleFoundation -- NobleFoundation.toInt_add NobleFoundation.LinkBoundary.vertical_simulation_compose` | `status=0`, format `3.1.0`, 7,542,664 bytes; hash in the receipt |
+| `NobleFoundation.toInt_add` closure | `nanoda_bin` with the permitted foundation axioms | **accepted**, `status=0`, 2,773 declarations, no errors |
+| `NobleFoundation.LinkBoundary.vertical_simulation_compose` closure | `nanoda_bin` with the permitted foundation axioms | **accepted**, `status=0`, 16 declarations, no errors |
+| Combined two-root export | `nanoda_bin` with the permitted foundation axioms | **accepted**, `status=0`, 2,781 declarations, no errors |
+| Semantic negative control | one root-proof reference in expression `ie=870`: `arg 334` (`simulationBC`) → `arg 302` (`simulationAB`) | **rejected**, `status=101`, nanoda assertion `self.def_eq(u, v)` |
+| Parse negative control | retained vertical export truncated at byte 12,345 inside a JSON string | **parse-refused**, `status=1`, `EOF while parsing a string` |
+| Unmutated replay after controls | retained vertical export | **accepted**, `status=0`, 16 declarations, no errors |
 | Producer-independent replay, default order | `leanchecker NobleFoundation` | silent, `status=0` (every declaration replayed and accepted) |
 | Fresh-environment replay | `leanchecker --fresh NobleFoundation` | silent, `status=0` (imported constants replayed too; single-threaded, slower) |
 | Control: random bytes in one `.olean` | `leanchecker NobleFoundation.ReverseAD` first on `LEAN_PATH` | `status=1`, `leanchecker found a problem in NobleFoundation.ReverseAD`, `invalid header` |
@@ -43,6 +68,14 @@ independent implementation. It is recorded here as an opt-in lane, not a gate.
 Logs and statuses are in `receipts/2026-10-26/` (`replay-baseline.out`,
 `replay-fresh-NobleFoundation.log`, `control-random-bytes.out`,
 `control-single-byte-flip.out`, `control-missing-module.out`).
+
+The nanoda runs set `print_axioms=false` so the recorded results contain only
+the checker outcome; nanoda therefore does not independently report axioms in
+these results. The axiom audit remains Lean's `#print axioms` from the latest
+retained foundation receipt. With nanoda's default `print_axioms=true`, the
+same runs still exited zero and typechecked successfully but reported one
+unrelated pretty-printer diagnostic (`Unable to print axioms`); this is
+recorded rather than hidden in the receipt.
 
 **Consequence of the single-byte control.** `.olean` loading in this lane detects
 header/parse failure, not byte integrity, and `leanchecker` does not consult the
@@ -57,6 +90,7 @@ checker to notice corruption.
 | Declarations are kernel-accepted when replayed from the compiled environment | yes, for the corpus above | source authenticity of what was compiled |
 | Environment hacking by metaprogramming is detectable | by construction of a replay in a fresh environment | that the *original* elaboration was honest |
 | Downloaded Mathlib `.olean` files are trustworthy | **no** — the foundation README's trust assumption is untouched | an independent implementation of the kernel |
+| The two named roots and their emitted closures were actually checked | yes, with separate hashes and nanoda exit statuses in the 2026-10-29 receipt | semantic claim binding, completeness of a higher-level dependency closure, or checker correctness |
 | Node/subtree closure matches a specific claim | **no** — replay accepts whatever the environment contains | exact claim binding, per-theorem closure |
 | Emitted artifact, runtime or compiler correspondence | **no** | anything about `wasm`, the engine or the loader |
 
@@ -86,30 +120,37 @@ not bind a claim to a declaration — it binds *bytes* to a replayed environment
 
 ## Requirements before this becomes a gate
 
-1. A checker implemented independently of Lean's kernel (not shipped with the
-   toolchain), with a declaration-export format compatible with the pinned
-   toolchain — `lean4export`'s current revision targets 4.36.0-rc1 and does not
-   match Noble's 4.31.0, so this needs either a pinned compatible revision or a
-   toolchain decision that is not a repository-wide upgrade.
-2. Exact claim binding: independently selected theorem identities and complete
-   dependency closures, so that checking an unrelated valid declaration cannot
-   satisfy the lane.
+1. ~~A checker implemented independently of Lean's kernel with a compatible
+   declaration-export format~~ — satisfied for this bounded pilot by the
+   pinned `nanoda_lib`/`lean4export` pair. A gate would still need to freeze
+   and rebuild both tools rather than relying on these local binaries.
+2. Exact claim binding beyond the two explicit root names: the pilot records
+   the names and closure hashes, but does not independently audit that the
+   exported closure is the complete dependency closure for a higher-level
+   claim.
 3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
    manifest refuses a corrupted, removed or extra artifact before the checker runs.
 4. Explicit refusal classes for unsupported constructs, timeout, export failure
    and rejection — none of which may be reported as success.
+5. Owner review before promotion to CI, a flake check, or a policy/tool-selection
+   change; this pilot intentionally makes none of those changes.
 
 ## Non-claims
 
-- No second kernel implementation was evaluated: none exists for this toolchain.
-- No negative control was constructed at the *declaration* level in **this** lane (substituted valid
-  claim, dropped dependency, corrupted proof body inside a parseable file): the controls here are
-  artifact-level only. The declaration-level equivalents exist in the producer-consumer lane
-  (`verification/mc1/gate.mjs`: duplicate/missing/cyclic dependency, forbidden axiom, free variable,
-  wrong-theorem-type, trusted-name override, erased forbidden axiom) and are not evidence about a
+- Nanoda is a separately implemented checker, but this two-root observation is
+  not an audit of its implementation or a second-kernel correctness result.
+- No complete independent-kernel replay of the foundation corpus was run; only
+  the two named roots and their exported closures were exercised.
+- The semantic and parse controls here are minimal pilot controls, not a complete
+  declaration-level negative-control suite (no dropped-dependency, timeout, or
+  independent claim-binding control). The broader declaration-level equivalents
+  exist in the producer-consumer lane (`verification/mc1/gate.mjs`: duplicate/
+  missing/cyclic dependency, forbidden axiom, free variable, wrong-theorem-type,
+  trusted-name override, erased forbidden axiom) and are not evidence about a
   separately implemented checker.
-- No external checker accepted anything about Noble; the replay is
-  producer-independent, not implementation-independent.
+- Nanoda's acceptance does not establish source authenticity, exact claim
+  semantics, or implementation correspondence; it is an observed checker
+  result for two named closures.
 - A passing replay is not a correctness claim about any Rust, Wasm or engine
   subject, and it says nothing about the retained Mathlib `.olean` trust
   assumption.
