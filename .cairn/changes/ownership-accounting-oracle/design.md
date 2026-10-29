@@ -28,8 +28,18 @@ that no wrapping depth changes that; `resource_operand_blocks_every_word` states
 that a must-use resource as the constrained operand blocks every word, which is
 why `drop_consumes_one` and `dup_duplicates_one` can only ever move data
 obligations; `quote_retains_one` states that quoting retains rather than
-consumes; `segment_conserved` states that the must-use obligations the opaque
-segment carries survive every admitted program.
+consumes. `segment_conserved` is only the narrower extraction lemma that a
+configuration result already carrying the original segment yields the operand
+`run` result; `runConfiguration_segment_preserved` proves the segment equality
+for an arbitrary successful configuration result. The conservation unit then
+proves `step_conserves_obligations`,
+`accounts_conserves_obligations` and `run_conserves_obligations` for the
+filtered resource list, with a concrete data-word/resource-tail fixture.
+
+This is exact but partly vacuous for resource-moving behavior: this grammar has
+no admitted acquire, release or resource-consuming word. A resource in a
+constrained position rejects, while a resource elsewhere can be carried
+through data words; the fixture makes that carry-through case explicit.
 
 ## Correspondence and its open edge
 

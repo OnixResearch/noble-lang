@@ -692,7 +692,8 @@ binary32 theorem, including the fold receipt above.
 ## Ownership accounting oracle (issue #59)
 
 An independent Lean ownership-accounting oracle for the ordered stack / resource
-rules lives in `NobleFoundation/Ownership.lean`. It adapts the
+rules lives in `NobleFoundation/Ownership.lean` and
+`NobleFoundation/OwnershipConservation.lean`. It adapts the
 executable-checker-to-declarative-typing architecture rather than Move's
 ownership policy: an executable checker `run` and an independent declarative
 judgment `Accounts`, with `run_sound` proving that every checker acceptance has
@@ -707,12 +708,26 @@ A payload is duplicable exactly when it contains no resource at any depth
 operand blocks every word (`resource_operand_blocks_every_word`), dropping and
 duplication therefore only move data obligations (`drop_consumes_one`,
 `dup_duplicates_one`), quoting retains rather than consumes
-(`quote_retains_one`), the opaque segment's must-use obligations are conserved
-by every acquired program (`segment_conserved`), a two-arm branch accounts for
-the same obligations on both arms (`branch_accounts_both_arms`), and an ordinary
-error return is acquired only with no outstanding operand
-(`fail_requires_empty_operands`), plus the branch-join theorems below. Twenty-six
-ownership theorems in total, all inventoried.
+(`quote_retains_one`), a two-arm branch accounts for the same obligations on
+both arms (`branch_accounts_both_arms`), and an ordinary error return is
+acquired only with no outstanding operand (`fail_requires_empty_operands`).
+The old `segment_conserved` theorem is deliberately narrower than its former
+wording suggested: it extracts the operand `run` result from a
+`runConfiguration` result whose segment is already syntactically the original
+segment. The new `runConfiguration_segment_preserved` theorem proves that
+successful configurations cannot return a different segment.
+
+The conservation unit proves `step_conserves_obligations` for one accepted
+word, lifts it through the declarative judgment as
+`accounts_conserves_obligations`, and exposes the checker corollary
+`run_conserves_obligations`. This is exact conservation of the filtered
+must-use resources. It is partly vacuous for resource-moving behavior because
+this grammar has no admitted acquire, release or resource-consuming word:
+resources at a constrained position reject, while resources elsewhere can be
+carried through data words. The decided `resource_carry_run` and
+`resource_carry_accounts` fixture demonstrates that non-vacuous carry-through
+case with `dup` followed by `drop` on a data head and a resource tail. Thirty-two
+ownership theorems are inventoried in total.
 
 ### Branch join (issue #59 joins)
 

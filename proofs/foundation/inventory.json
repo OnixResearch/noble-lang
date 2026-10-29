@@ -1585,7 +1585,43 @@
       "name": "NobleFoundation.Ownership.segment_conserved",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "the opaque segment and its must-use obligations are conserved by every acquired program"
+      "claim": "accepting a runConfiguration result with the original segment implies the operand result is accepted by run; segment equality is proved separately"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.step_conserves_obligations",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "an accepted word preserves the ordered multiset of must-use resources"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.accounts_conserves_obligations",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "every declaratively accounted program preserves the ordered multiset of must-use resources"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.run_conserves_obligations",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "checker acceptance preserves the ordered multiset of must-use resources"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.runConfiguration_segment_preserved",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a successful runConfiguration result has exactly the segment supplied to it"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.resource_carry_run",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the concrete dup-then-drop data-word fixture is accepted while carrying a resource tail unchanged"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.resource_carry_accounts",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the concrete resource-carry fixture has a declarative Accounts derivation"
     },
     {
       "name": "NobleFoundation.LiveDispatch.publish_preserves_other_keys",

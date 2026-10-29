@@ -3,6 +3,13 @@
 - [x] [serial] Select the declared fragment: data and must-use resource payloads, recursive wrapping, `dup`/`drop`/`swap`/`quote`, composition, a finite two-arm branch and the ordinary error-return alternative, with an executable checker and an independent declarative judgment. r[VC-OWN-01]
 - [x] [serial] Prove checker soundness, the eligibility equivalence at every wrapping depth, that a resource operand blocks every word, that dropping consumes only a duplicable operand, that duplication preserves both copies, that quoting retains, the opaque-segment conservation, the two-arm accounting rule and the empty-operand requirement for an error return. r[VC-OWN-01]
 - [x] [serial] Inventory the eighteen new theorems and retain the clean-source kernel check: `verification/foundation/receipts/e7cc00993/` records 252 theorems, `clean_source: true` and axiom sets inside the allow-list. r[VC-OWN-03]
+  Note (2026-10-29): the conservation follow-up adds the independently
+  checked `OwnershipConservation` unit, proves whole-program filtered-resource
+  conservation and arbitrary successful-configuration segment preservation,
+  and retains a decided data-word/resource-tail fixture. The statement is
+  exact but partly vacuous for resource movement because this grammar admits no
+  resource acquire, release or consuming word; the Phase 3 correspondence
+  task below remains owner-reserved and unchanged.
 
 ## Phase 2: Independent corpus, production comparison and mutations
 

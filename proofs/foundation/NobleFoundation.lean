@@ -8,6 +8,7 @@ import NobleFoundation.Binary32Mutations
 import NobleFoundation.Binary32
 import NobleFoundation.LiveDispatch
 import NobleFoundation.Ownership
+import NobleFoundation.OwnershipConservation
 import NobleFoundation.ServiceWire
 import NobleFoundation.AuthorityLedger
 import NobleFoundation.SpecQuality
