@@ -1,6 +1,6 @@
 {
   "schema": "noble-nested-session-inventory/v1",
-  "scope": ".cairn/changes/nested-session-protocol WIT-SESSION-01/02: finite grammar with bounded unfolding, duality, and the opaque move-only endpoint resource. Definitions table is handwritten; no lowering/runtime/peer correspondence, no progress statement, delegation excluded.",
+  "scope": ".cairn/changes/nested-session-protocol: finite grammar with bounded unfolding, duality, the opaque move-only endpoint resource and a bounded mailbox. Definitions table is handwritten; no lowering/runtime/peer correspondence; the only progress statement is guest-local; nested recursion is regular (the nested parameter is unused); delegation excluded.",
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",

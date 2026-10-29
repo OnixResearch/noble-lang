@@ -8,9 +8,12 @@
 - [x] [serial] Specify the correspondence route reusing the trace discipline and interleaving infrastructure, keeping model theorems separate. r[WIT-SESSION-06]
 - [x] [serial] Record the explicit comparison with the existing Task and callback ownership showing reused and new capabilities. r[WIT-SESSION-02]
 
-## Phase 2: Model and fixtures (future, not started)
+## Phase 2: Model and fixtures
 
-- [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+- [ ] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+  Un-ticked 2026-10-29: the grammar, bounded unfolding, duality and the endpoint resource exist
+  (`proofs/m6/NestedSession.lean`), but no protocol type-equality algorithm is defined, and `resolve`
+  ignores the nested parameter, so unfolding is regular.
 - [x] [serial] Prove duality/state preservation, no action outside the current protocol and no endpoint duplication. r[WIT-SESSION-05]
   Complete at model level: duality is definitional and involutive; state preservation is proved once from
   the one step helper every stepper delegates to (`advance_preserves_the_endpoint_identity`); copy,
@@ -20,20 +23,28 @@
   (`every_operation_preserves_the_endpoint_inventory`), including the two that carry no transition, with
   `duplicating_operation_breaks_the_bound` showing the bound load-bearing. The scope is the operations
   this model enumerates: a future transition outside `Operation` would need its own case.
-- [x] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
-  Done as a deliberately narrow statement: `guest_local_progress_on_a_declared_action` gives a successor
+- [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
+  Un-ticked 2026-10-29: the theorem below carries none of the queue, peer, scheduler or host premises
+  this task names; it is guest-local only.
+  What exists is a deliberately narrow statement: `guest_local_progress_on_a_declared_action` gives a successor
   at an open owned endpoint whose resolved node declares the requested guest action, under exactly
   those three premises. Peer behaviour, scheduling, queue capacity and delivery are **outside** it, and
   `offer_state_offers_no_guest_action` / `finished_state_declares_no_guest_action` name the two states
   where guest progress ends. Termination, fairness, eventual delivery, network reliability and deadlock
   freedom stay separate and unclaimed.
-- [x] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
-  Complete at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
+- [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
+  Un-ticked 2026-10-29: sequencing, orderly close and bounded buffering have positive traces. External
+  choice cannot be taken (`continuationOf` declares no action at an `offer` node and `Action` has no
+  branch receive), recursive entry is shown only through `resolve` rather than a step, and the
+  "return half" below is send then receive, not a recursive return.
+  What exists at model level: sequencing, recursive entry (unfolding to its declared definition), orderly
   close once, bounded buffering stopping at the limit, the send-then-receive return half, and internal
   choice traces where two branches are two different traces over the event vocabulary (`choiceEvents`,
   the choice-state stepper `stepChoose` and its declared/undeclared-branch controls).
-- [x] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
-  Done at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
+- [ ] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
+  Un-ticked 2026-10-29: the control exists, but the nested fixture is not non-regular. `resolve`
+  ignores the nested parameter, so `exampleProtocol` is the regular loop `(send i64 · recv i64)*`.
+  What exists at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
   `nested_entry_refused_at_depth_zero` measure the control. Recorded explicitly: **every** fixture in
   this model is a model trace — nothing executes emitted Wasm or a native transport.
 - [x] [serial] Add the negative controls for wrong type or order, wrong branch, endpoint copy or discard, stale identity, double close, receive-after-close, full-queue misaccounting, forged peer response and omitted cleanup. r[WIT-SESSION-02] r[WIT-SESSION-03]

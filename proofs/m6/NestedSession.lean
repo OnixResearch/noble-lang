@@ -14,7 +14,13 @@ peer receipt.
 
 Declared premises, kept premises:
 * the grammar is versioned but this model carries no version field yet;
-* no scheduler, queue or peer is modelled, so no progress statement is made;
+* a bounded mailbox is modelled per session, but no scheduler or peer is; the one progress statement
+  (`guest_local_progress_on_a_declared_action`) is guest-local, assumes only an open endpoint whose
+  state resolves and declares the action, and is not deadlock freedom;
+* a named nested constructor resolves to its definition and its parameter is not used, so recursion
+  here is regular: no return stack is modelled and no fixture needs one;
+* no protocol type-equality algorithm is defined: `dual` is definitional and endpoint identity is
+  compared field by field;
 * endpoint delegation (passing an endpoint as a message) is excluded, so ownership obligations stay
   outside this model.
 -/
@@ -806,10 +812,11 @@ theorem branch_one_accepts_the_bool_send :
 
 /-! ## Finite-handshake control beside the nested fixture (WIT-SESSION-05)
 
-The nested fixture is non-regular: node `2` of `exampleProtocol` is a named nested constructor, so it
-has no resolution at unfolding depth zero. The ordinary handshake below declares no nested
-constructor and does resolve there, which is the control that keeps the nested fixture's
-non-representability a measured property rather than a description. -/
+Node `2` of `exampleProtocol` is a named nested constructor, so it has no resolution at unfolding
+depth zero. The ordinary handshake below declares no nested constructor and does resolve there; that
+is what this control measures. It does **not** show non-regularity: `resolve` ignores the nested
+parameter, so `exampleProtocol` is the regular loop `(send i64 · recv i64)*`, and a protocol that
+needs a return stack is not modelled. -/
 
 /-- An ordinary finite handshake: send an `i64`, receive the acknowledgement, finish. -/
 def handshakeProtocol : List Node :=

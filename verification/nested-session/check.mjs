@@ -150,7 +150,10 @@ const claims = {
   implementation_theorems: 0,
   correspondence: 'none',
   liveness: 'none',
-  cancellation: 'unsupported and unmodelled',
+  progress: 'guest-local only: an open endpoint whose resolved node declares the action has a successor; no queue, peer, scheduler or host premise',
+  cancellation: 'an event class that cuts the committed prefix; it carries no endpoint or session transition',
+  nested_recursion: 'regular only: a nested constructor resolves to its definition and its parameter is unused; no return stack',
+  type_equality: 'no algorithm; duality is definitional',
 };
 const receipt = {
   schema: 'noble-nested-session-proof/v1', result: 'passed',
@@ -162,9 +165,9 @@ const receipt = {
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
   theorem_count: names.length, theorems, commands,
   implementation_theorem: false,
-  scope: ['.cairn/changes/nested-session-protocol WIT-SESSION-01/02 model: finite grammar, duality and the endpoint resource.',
-    'The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed,',
-    'no progress statement is made, endpoint delegation is excluded and send is never modelled as receipt.'],
+  scope: ['.cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.',
+    'The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;',
+    'the only progress statement is guest-local; nested recursion is regular; endpoint delegation is excluded and send is never modelled as receipt.'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`NESTED-SESSION: ${names.length} model theorems; strict axioms accepted\n`);
