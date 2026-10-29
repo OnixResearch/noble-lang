@@ -9,9 +9,11 @@ Since the `numeric-graph-v1` change, the graph library is the `no_std` crate [no
 [rewrite-quality-v1.txt](rewrite-quality-v1.txt) is the frozen optimization-quality corpus for the
 certified graph rewrites of `crates/noble-ngraph/src/cert.rs`: its schema is
 `noble-rewrite-quality/v1`, it binds the three rules it exercises and declares, per fixture, the
-residual property its result must reach (`no-foldable-sites`). Its seven fixtures cover independent
-and chained opportunities, ordered outputs, shared operands, an `i64::MAX + 1` wrapping boundary and
-a constant in the right operand. Fixtures are frozen before any tuning, and the lane pins the
+residual property its result must reach (`no-foldable-sites`). Its seven raw-graph fixtures name
+independent and chained opportunities, ordered outputs, shared operands, an `i64::MAX + 1` wrapping
+boundary and a constant in the right operand. Names are not executable-coverage evidence: the v2
+admission diagnostic below found only one output in every fixture and two inadmissible sources.
+Fixtures are frozen before any tuning, and the lane pins the
 reviewed corpus itself (`REVIEWED_FIXTURES`): a fixture that disappears, is renamed, is relabelled
 unsupported or has its declared nodes weakened fails the lane instead of improving coverage.
 
@@ -30,10 +32,10 @@ residual reaches zero under `FixedPoint`) and *uncertified* (the checker refuses
 claim is made about them, and `SinglePass` passing the frozen fixtures is not evidence that a
 one-pass proposer is sufficient in general.
 
-### Cost accounting (issue #64 items 5-7)
+### Historical cost accounting (v1; issue #64 items 5-7)
 
-The quality lane above prices nothing. [rewrite-cost.mjs](rewrite-cost.mjs) runs a second lane
-(`crates/noble-ngraph/tests/rewrite_cost.rs`) and retains
+The quality lane above prices nothing. The original cost lane
+(`crates/noble-ngraph/tests/rewrite_cost.rs`) produced the immutable
 [rewrite-cost-2026-10-27.json](rewrite-cost-2026-10-27.json): schema
 `noble-rewrite-cost-receipt/v1`, source `8ce33f961`, clean source, `rustc 1.96.0-nightly`
 (2026-03-20), host `Linux 6.18.54 x86_64` (shared, load-dependent), 200 warm samples per row, 28
@@ -89,8 +91,53 @@ unmeasured** because this lane never executes a program, so there is no per-run 
 check cost against. "Cold" is not reported separately: the library caches nothing across calls, so a
 cold figure would price page faults rather than work.
 
-Still open in #64: the integrated stages that would make a true end-to-end total possible, and any
-per-run saving measurement.
+Those v1 measurements did not contain an integrated total or a per-run saving.
+
+### Integrated in-memory accounting (v2)
+
+[rewrite-cost-v2.txt](rewrite-cost-v2.txt), committed as `e7ccedcbf` before integrated timings,
+keeps every historical fixture and proposer. The current [runner](rewrite-cost.mjs) measures the
+real library pipeline, not a source compiler, Wasm executable, Lean replay or deployed BLAKE3 path:
+
+- Baseline: exact source admission, packed preparation, actual-layout export/validation, first execution.
+- Certified: the same source admission, proposal/construction, exact endpoint certificate check,
+  exact candidate admission, packed preparation, actual-layout export/validation, first execution.
+- No pruning or repair of certificate endpoints. A refusal stops subsequent stages; skipped durations
+  are `null` with a reason, not zero. The directly timed refusal prefix includes cleanup. Stage medians
+  are never summed into a purported observed total. Proposal and certificate construction share one
+  non-additive measurement.
+- Sixty-four alternating fresh priming pairs precede 200 alternating measured pairs. Fresh means no
+  admitted graph, compiled artifact or workspace reuse, **not** OS-cache cold. Warm execution primes
+  and reuses an admitted compiled object/workspace for 64 unrecorded calls followed by 200 samples.
+  Every baseline/candidate execution call is counted, including priming. Semantic agreement is checked outside
+  the timers; I64 output evidence is encoded as exact decimal strings.
+- Both paths use identical empty fixture inputs and agree with the source reference. All elapsed
+  values are informational debug-build, shared-host observations, including instrumentation overhead.
+  Library graph/code size estimates and scratch leases are separately labeled; allocator/RSS, wire
+  encoding and decoding remain unmeasured. Layout validation does not establish instruction-byte
+  correspondence.
+
+The direct admission diagnostic exposed a boundary hidden by the old certificate-only report:
+`independent-folds` and `ordered-outputs` contain dangling nodes; every non-identity candidate is
+refused by certificate checking or exact candidate admission. The unchanged 28-case corpus yields
+8 source refusals, 1 certificate refusal, 14 candidate refusals and 5 executable identities.
+Every refused candidate has zero execution calls. **No executable optimized candidate reaches a
+quality target, so there is no measured optimization benefit or eligible break-even estimate.**
+The historical 27 accepted certificates and 16 residual targets are not 27 executable optimizations.
+In particular, the old `ordered-outputs` name does not discharge ordered/repeated-output coverage.
+Those corpus and admitted-rewrite obligations keep #64 open; they are not bypassed to improve a score.
+
+Run from a clean committed checkout, using the selected Node executable in `policy/tool-selection.json`:
+
+```text
+node verification/ngraph/rewrite-cost.mjs --output /absolute/outside-checkout/receipt.json
+```
+
+The output and sibling `.evidence` directory must not exist. The runner invokes pinned offline Cargo
+directly with an isolated Cargo home/target and disabled Rust wrappers. It retains exact argv, raw
+stdout/stderr, process status and hashes; checks commit/tree/status and source hashes before/after;
+and validates all 28 rows and both coverage denominators. Dirty source refuses before Cargo runs.
+Failed attempts remain failures in their own evidence directories; historical receipts are unchanged.
 
 ## Files
 

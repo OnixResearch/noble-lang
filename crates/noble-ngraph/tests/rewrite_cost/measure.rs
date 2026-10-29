@@ -1,4 +1,5 @@
 use super::common::rewrite_corpus;
+use super::pipeline;
 use super::report;
 use noble_ngraph::cert::{self, Derivation, Proposer, Refusal, Step};
 use noble_ngraph::ir::Graph;
@@ -49,6 +50,7 @@ pub(super) struct Measured {
     pub(super) check_iqr_us: f64,
     pub(super) refusal: Option<Refusal>,
     pub(super) residual: usize,
+    pub(super) pipeline: pipeline::Measurement,
 }
 
 #[expect(
@@ -89,6 +91,7 @@ fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
         check_iqr_us: to_us(check_iqr),
         refusal: expected_refusal,
         residual: cert::residual_fold_sites(&result),
+        pipeline: pipeline::measure(graph, proposer, samples),
     }
 }
 
@@ -104,6 +107,43 @@ pub(super) struct Run {
     pub(super) accepted: usize,
     pub(super) refused: usize,
     pub(super) reached_target: usize,
+    pub(super) pipeline: PipelineCoverage,
+}
+
+#[derive(Default)]
+pub(super) struct PipelineCoverage {
+    pub(super) input_refused: usize,
+    pub(super) certificate_refused: usize,
+    pub(super) candidate_refused: usize,
+    pub(super) layout_refused: usize,
+    pub(super) execution_refused: usize,
+    pub(super) executed: usize,
+}
+
+impl PipelineCoverage {
+    fn record(mut self, disposition: &str) -> Self {
+        match disposition {
+            "input-refused" => self.input_refused += 1,
+            "certificate-refused" => self.certificate_refused += 1,
+            "candidate-refused" => self.candidate_refused += 1,
+            "layout-refused" => self.layout_refused += 1,
+            "execution-refused" => self.execution_refused += 1,
+            "executed" => self.executed += 1,
+            other => panic!("unknown pipeline disposition: {other}"),
+        }
+        self
+    }
+
+    const fn merge(self, other: Self) -> Self {
+        Self {
+            input_refused: self.input_refused + other.input_refused,
+            certificate_refused: self.certificate_refused + other.certificate_refused,
+            candidate_refused: self.candidate_refused + other.candidate_refused,
+            layout_refused: self.layout_refused + other.layout_refused,
+            execution_refused: self.execution_refused + other.execution_refused,
+            executed: self.executed + other.executed,
+        }
+    }
 }
 
 struct FixtureRun {
@@ -111,6 +151,7 @@ struct FixtureRun {
     accepted: usize,
     refused: usize,
     reached_target: usize,
+    pipeline: PipelineCoverage,
 }
 
 pub(super) struct RecordedRow {
@@ -130,6 +171,7 @@ pub(super) fn collect(
         accepted: 0,
         refused: 0,
         reached_target: 0,
+        pipeline: PipelineCoverage::default(),
     };
     for fixture in &corpus.fixtures {
         let fixture_run = sample_fixture(fixture, threshold, samples)?;
@@ -137,6 +179,7 @@ pub(super) fn collect(
         run.accepted += fixture_run.accepted;
         run.refused += fixture_run.refused;
         run.reached_target += fixture_run.reached_target;
+        run.pipeline = run.pipeline.merge(fixture_run.pipeline);
     }
     Ok(run)
 }
@@ -155,6 +198,7 @@ fn sample_fixture(
         accepted: 0,
         refused: 0,
         reached_target: 0,
+        pipeline: PipelineCoverage::default(),
     };
     for (proposer, label) in PROPOSERS {
         let row = sample(&graph, proposer, samples);
@@ -163,6 +207,7 @@ fn sample_fixture(
         run.accepted += recorded.accepted;
         run.refused += recorded.refused;
         run.reached_target += recorded.reached_target;
+        run.pipeline = run.pipeline.record(row.pipeline.disposition);
     }
     Ok(run)
 }
@@ -195,8 +240,8 @@ pub(super) fn record_row(
     } else {
         (1, 0, 0)
     };
-    // The identity proposer costs nothing to check yet reaches no target: validity and
-    // quality stay separate facts in the same report.
+    // Identity still pays measured checking cost, but reaches no target: validity,
+    // executable admission and quality remain separate facts.
     if proposer == Proposer::Identity {
         assert!(
             row.refusal.is_none(),

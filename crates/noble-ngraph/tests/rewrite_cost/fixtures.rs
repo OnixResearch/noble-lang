@@ -6,7 +6,7 @@ pub(super) fn load(
 ) -> Result<(rewrite_corpus::Manifest, rewrite_corpus::Manifest), Box<dyn std::error::Error>> {
     let manifest = rewrite_corpus::parse(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../verification/ngraph/rewrite-cost-v1.txt"
+        "/../../verification/ngraph/rewrite-cost-v2.txt"
     )))?;
     validate_cost_manifest(&manifest)?;
     let corpus = rewrite_corpus::parse(Path::new(concat!(
@@ -23,7 +23,7 @@ pub(super) fn load(
 fn validate_cost_manifest(
     manifest: &rewrite_corpus::Manifest,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    assert_eq!(manifest.schema, "noble-rewrite-cost/v1");
+    assert_eq!(manifest.schema, "noble-rewrite-cost/v2");
     assert_eq!(manifest.corpus, "rewrite-quality-v1.txt");
     let threshold = manifest.threshold.as_ref().ok_or("threshold")?;
     assert_eq!(threshold.residual, "no-foldable-sites");
