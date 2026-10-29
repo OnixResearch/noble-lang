@@ -105,6 +105,39 @@
         "M5Authority.start_execution_refuses_a_started_attempt",
         "M5Authority.started_attempt_cannot_start_again"
       ]
+    },
+    {
+      "id": "omitted-protected-operation-count",
+      "removes": "the protected-operation increment in start_execution",
+      "edits": [
+        {
+          "find": "        let i ← self.counters.protected_operations + 1#u32\n",
+          "replace": "        let i ← self.counters.protected_operations + 0#u32\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.start_execution_marks_one_unstarted_attempt",
+        "M5Authority.reachable_ledger_consistent"
+      ]
+    },
+    {
+      "id": "retire-consumed-witness",
+      "removes": "the live-state guard in retire_witness, which then retires a consumed witness",
+      "edits": [
+        {
+          "find": "    | authority.permit.WitnessState.Live =>\n      let (wr, index_mut_back) ←\n        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice\n          authority.WitnessRecord) self.witnesses witness.claim.slot\n",
+          "replace": "    | authority.permit.WitnessState.Consumed =>\n      let (wr, index_mut_back) ←\n        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice\n          authority.WitnessRecord) self.witnesses witness.claim.slot\n"
+        },
+        {
+          "find": "    | authority.permit.WitnessState.Consumed =>\n      ok (core.result.Result.Err authority.permit.Denial.ConsumedWitness, self)\n",
+          "replace": "    | authority.permit.WitnessState.Live =>\n      ok (core.result.Result.Err authority.permit.Denial.ConsumedWitness, self)\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.retire_moves_ledger",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.reachable_ledger_consistent"
+      ]
     }
   ]
 }

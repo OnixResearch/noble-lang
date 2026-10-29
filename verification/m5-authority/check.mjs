@@ -93,7 +93,7 @@ function checkDeclarations(inventory) {
     `${codeFile}: forbidden proof or evaluation escape hatch`);
   requireThat(!/@\[\s*extern\b/.test(code), `${codeFile}: external implementation attribute`);
   requireThat(!/^\s*axiom\s/m.test(code), 'authority module declares an axiom');
-  requireThat(inventory.schema === 'noble-m5-authority-theorem-inventory/v1' &&
+  requireThat(inventory.schema === 'noble-m5-authority-theorem-inventory/v2' &&
     inventory.module === codeFile && inventory.namespace === 'M5Authority', 'wrong inventory header');
   const names = inventory.theorems.map(row => row.name);
   requireThat(names.length > 0 && new Set(names).size === names.length, 'empty/duplicate theorem inventory');
@@ -104,8 +104,17 @@ function checkDeclarations(inventory) {
     `declaration/inventory mismatch: declared=${declared.join(',')} inventoried=${names.join(',')}`);
   requireThat(inventory.theorems.every(row => typeof row.role === 'string' && row.role &&
     typeof row.claim === 'string' && row.claim && Array.isArray(row.allowed_standard_axioms) &&
-    row.allowed_standard_axioms.every(name => standardAxioms.has(name))), 'incomplete inventory row');
-  return { names, text };
+    row.allowed_standard_axioms.every(name => standardAxioms.has(name)) &&
+    typeof row.statement === 'string' && Array.isArray(row.subjects)), 'incomplete inventory row');
+  // Every hand-written definition a statement can mention is pinned: a definition that changes
+  // meaning would otherwise leave every theorem statement textually unchanged.
+  const specifications = [...code.matchAll(/^(?:@\[[^\]]*\]\s*)?(?:noncomputable\s+)?(?:def|abbrev|inductive|structure)\s+(\S+)/gm)]
+    .map(match => `M5Authority.${match[1]}`);
+  requireThat(Array.isArray(inventory.specification) &&
+    JSON.stringify(inventory.specification.map(row => row.name)) === JSON.stringify(specifications) &&
+    inventory.specification.every(row => typeof row.printed === 'string'),
+    `specification/inventory mismatch: declared=${specifications.join(',')}`);
+  return { names, specifications, text };
 }
 
 function verifyProfile(profile) {
@@ -190,19 +199,24 @@ function axiomsOf(data, name) {
   return match[1].split(',').map(value => value.trim()).filter(Boolean);
 }
 
-/** Statements, axioms and the reachable generated declarations of the inventoried theorems. */
-function auditTheorems(project, inventory, names) {
+/** Statements, axioms, subject functions and the reachable generated declarations of the
+ *  inventoried theorems, and the printed form of every specification definition. */
+function auditTheorems(project, inventory, names, specifications) {
   const lines = ['import M5Authority', 'open Lean Elab Command', ''];
   const positions = {};
   for (const name of names) {
     positions[lines.length + 1] = { name, kind: 'statement' }; lines.push(`#check @${name}`);
     positions[lines.length + 1] = { name, kind: 'axioms' }; lines.push(`#print axioms ${name}`);
   }
+  for (const name of specifications) {
+    positions[lines.length + 1] = { name, kind: 'printed' }; lines.push(`#print ${name}`);
+  }
+  const roots = `  let roots : Array Name := #[${names.map(name => `\`${name}`).join(', ')}]`;
   const reachLine = lines.length + 1;
   lines.push(
     '#eval show CommandElabM Unit from do',
     '  let env ← getEnv',
-    `  let roots : Array Name := #[${names.map(name => `\`${name}`).join(', ')}]`,
+    roots,
     '  let mut seen : NameSet := {}',
     '  let mut stack := roots',
     '  let mut reached : Array String := #[]',
@@ -222,10 +236,47 @@ function auditTheorems(project, inventory, names) {
     '            stack := stack.push dependency',
     '  logInfo m!"M5-AUTHORITY-REACHABLE {(Json.arr ((reached.qsort (fun a b => decide (a < b))).map Json.str)).compress}"',
   );
+  // Subject functions: the generated functions a statement is about. Follow the statement through
+  // this module's definitions and constructors, but neither into proofs nor into generated bodies.
+  const subjectLine = lines.length + 1;
+  lines.push(
+    '#eval show CommandElabM Unit from do',
+    '  let env ← getEnv',
+    roots,
+    '  let generated : List Name := [`NobleKernel.Funs, `NobleKernel.FunsExternal]',
+    '  let mut rows : Array Json := #[]',
+    '  for root in roots do',
+    '    let some rootInfo := env.find? root | throwError "missing {root}"',
+    '    let mut seen : NameSet := {}',
+    '    let mut stack : Array Name := rootInfo.type.getUsedConstants',
+    '    let mut subjects : Array String := #[]',
+    '    while !stack.isEmpty do',
+    '      let current := stack.back!',
+    '      stack := stack.pop',
+    '      unless seen.contains current do',
+    '        seen := seen.insert current',
+    '        if let some info := env.find? current then',
+    '          let text := current.toString',
+    '          let owner := match env.getModuleIdxFor? current with',
+    '            | some index => env.header.moduleNames[index.toNat]?.getD .anonymous',
+    '            | none => .anonymous',
+    '          if text.startsWith "noble_kernel." then',
+    '            if generated.contains owner && (info matches .defnInfo _) then subjects := subjects.push text',
+    '          else if text.startsWith "M5Authority." && !(info matches .thmInfo _) then',
+    '            let mut used := info.type.getUsedConstants',
+    '            if let some value := info.value? (allowOpaque := true) then used := used ++ value.getUsedConstants',
+    '            if let .inductInfo kind := info then used := used ++ kind.ctors.toArray',
+    '            for dependency in used do',
+    '              unless seen.contains dependency do stack := stack.push dependency',
+    '    rows := rows.push (Json.mkObj [("theorem", Json.str root.toString),',
+    '      ("subjects", Json.arr ((subjects.qsort (fun a b => decide (a < b))).map Json.str))])',
+    '  logInfo m!"M5-AUTHORITY-SUBJECTS {(Json.arr rows).compress}"',
+  );
   const auditFile = join(output, 'Audit.lean');
   writeFileSync(auditFile, lines.join('\n') + '\n');
   const records = {};
   let reachable = null;
+  let subjectRows = null;
   for (const message of messages(run(lake, ['env', 'lean', '--json', auditFile], project))) {
     requireThat(message.severity === 'information', `Lean audit diagnostic: ${JSON.stringify(message)}`);
     if (message.pos.line === reachLine) {
@@ -234,11 +285,21 @@ function auditTheorems(project, inventory, names) {
       reachable = JSON.parse(match[1]);
       continue;
     }
+    if (message.pos.line === subjectLine) {
+      const match = message.data.match(/^M5-AUTHORITY-SUBJECTS (\[.*\])$/s);
+      requireThat(match && subjectRows === null, 'unexpected subject report');
+      subjectRows = JSON.parse(match[1]);
+      continue;
+    }
     const slot = positions[message.pos.line];
     requireThat(slot, `unexpected Lean audit output at ${message.pos.line}`);
     (records[slot.name] ??= {})[slot.kind] = message.data.trim();
   }
   requireThat(Array.isArray(reachable) && reachable.length > 0, 'missing reachability report');
+  requireThat(Array.isArray(subjectRows) &&
+    JSON.stringify(subjectRows.map(row => row.theorem)) === JSON.stringify(names), 'missing subject report');
+  const subjectsOf = Object.fromEntries(subjectRows.map(row => [row.theorem, row.subjects]));
+  const normalize = text => text.replace(/\s+/g, ' ');
   const theorems = names.map(name => {
     const row = records[name];
     const metadata = inventory.theorems.find(entry => entry.name === name);
@@ -246,9 +307,35 @@ function auditTheorems(project, inventory, names) {
     const axioms = axiomsOf(row.axioms, name);
     const allowed = new Set(metadata.allowed_standard_axioms);
     requireThat(axioms.every(axiom => allowed.has(axiom)), `disallowed transitive axiom: ${name}: ${axioms.join(', ')}`);
-    return { ...metadata, status: 'proved', statement: row.statement.replace(/\s+/g, ' '), axioms };
+    return { ...metadata, status: 'proved', statement: normalize(row.statement),
+      subjects: subjectsOf[name], axioms };
   });
-  return { theorems, reachable };
+  const specification = specifications.map(name => {
+    requireThat(records[name]?.printed, `missing printed specification: ${name}`);
+    return { name, printed: normalize(records[name].printed) };
+  });
+  // Pins are reviewed expectations: a changed statement, subject set or specification fails the run
+  // and leaves the observed values for an explicit renewal.
+  const mismatches = [
+    ...theorems.flatMap(theorem => {
+      const pinned = inventory.theorems.find(entry => entry.name === theorem.name);
+      return [
+        ...(pinned.statement === theorem.statement ? [] : [`statement ${theorem.name}`]),
+        ...(JSON.stringify(pinned.subjects) === JSON.stringify(theorem.subjects) ? [] : [`subjects ${theorem.name}`]),
+      ];
+    }),
+    ...specification.flatMap((row, index) =>
+      inventory.specification[index].printed === row.printed ? [] : [`specification ${row.name}`]),
+  ];
+  if (mismatches.length > 0) {
+    writeFileSync(join(output, 'observed-pins.json'), json({
+      specification,
+      theorems: theorems.map(({ name, statement, subjects }) => ({ name, statement, subjects })),
+    }));
+  }
+  requireThat(mismatches.length === 0,
+    `inventory pins differ from the compiled module; renewal is explicit (observed-pins.json): ${mismatches.join('; ')}`);
+  return { theorems, specification, reachable };
 }
 
 /** Elaborator-shared auxiliaries (matchers, side proofs, equation lemmas) are reused across
@@ -397,7 +484,7 @@ try {
   requireThat(allowDirty || initial.status === '', `source worktree dirty: ${initial.status}`);
   const profile = JSON.parse(readFileSync(join(root, profileFile)));
   const inventory = JSON.parse(readFileSync(join(root, inventoryFile)));
-  const { names, text: moduleText } = checkDeclarations(inventory);
+  const { names, specifications, text: moduleText } = checkDeclarations(inventory);
   const historical = verifyProfile(profile);
   const checkedFiles = [codeFile, inventoryFile, profileFile, 'verification/m5-authority/check.mjs',
     'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain', profile.source,
@@ -413,7 +500,7 @@ try {
   const generatedWarnings = build.split('\n').filter(line => line.startsWith('warning:'));
   requireThat(generatedWarnings.every(line => line.startsWith('warning: NobleKernel/Funs.lean:') &&
     line.includes('mathlib naming conventions')), `unexpected Lean build diagnostics: ${build}`);
-  const { theorems, reachable } = auditTheorems(project, inventory, names);
+  const { theorems, specification, reachable } = auditTheorems(project, inventory, names, specifications);
   const binding = bindReachable(generated, reachable, historical, profile);
   const mutations = profile.mutation_controls.map(control =>
     mutationControl(control, generated, moduleText, names, dependencies, profile));
@@ -429,11 +516,14 @@ try {
     dependencies: dependencies.packages, sources_sha256: sources,
     artifacts_sha256: { 'Audit.lean': fileHash(join(output, 'Audit.lean')), ...commandArtifacts },
     generated_source_lint_warnings: generatedWarnings,
-    theorem_count: names.length, theorems, binding, mutation_controls: mutations,
+    theorem_count: names.length, theorems, specification, binding, mutation_controls: mutations,
     claims: {
       universal_implementation_theorems: names.length,
       committed_admission_theorems: roleCount('committed-admission'),
       quota_invariant_theorems: roleCount('quota-invariant'),
+      ledger_invariant_theorems: roleCount('ledger-invariant'),
+      ledger_move_theorems: roleCount('ledger-move'),
+      trace_theorems: roleCount('trace'),
       attempt_start_theorems: roleCount('attempt-start'),
       finite_rust_comparisons: 'none in this lane; the binding and sequencing Rust controls remain crates/noble-kernel/tests/m5-authority',
       correspondence: 'statements name the retained generated functions; Charon/Aeneas translation of the bound sources is trusted, not re-run',
@@ -446,11 +536,12 @@ try {
     ],
     non_claims: [
       'No cross-checkpoint quota conservation: quota records are checkpoint-local.',
+      'Consumed witnesses and registered attempts agree in number; no trace-level pairing of a particular witness with a particular attempt is stated beyond the per-admission theorems.',
+      'No liveness: nothing forces an admitted attempt to start or an invocation to finish.',
       'No concurrency, crash-recovery, remote-revocation atomicity or exactly-once delivery claim.',
-      'No witness/attempt counting invariant over reachable states; consumption and registration are proved per committed admission.',
       'No Rust compiler, Charon or Aeneas correctness claim.',
     ],
-    scope: 'Universal theorems over the retained generated M5 authority transitions: committed-admission guarantees, refusal preservation, attempt start at most once, and the checkpoint-local quota invariant over every finite serialized prefix of public transitions from Authority.new.',
+    scope: 'Universal theorems over the retained generated M5 authority transitions: committed-admission guarantees, refusal preservation, one ledger move per public transition, the checkpoint-local quota invariant and the table/counter agreement over every finite serialized prefix from Authority.new, and over every finite trace a settled witness is never rewritten and a started attempt never starts again.',
     artifact_directory: output, command_count: commandSerial,
   };
   writeFileSync(join(output, 'receipt.json'), json(receipt));
