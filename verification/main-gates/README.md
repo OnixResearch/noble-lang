@@ -1,5 +1,46 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-29 (all fourteen checks pass at `c99b40f`)
+
+The [receipt](receipt-c99b40f.json) binds the #42 certificate result replay and
+its renewed source inventory to clean source
+`c99b40f6f798ddf1e348769f4db0392d30997f1d`: **14 PASS / 0 FAIL / 0 NOT RUN**.
+This is the first complete fourteen-check pass since `91a473c`. Eleven checks
+ran on the local daemon from the clean worktree. `tool-versions`,
+`tool-overrides` and `boundary-controls` ran natively on the verified build
+host from the same archived source.
+
+Rust reports **873 passed, 0 failed and 7 ignored across 98 result groups**,
+including the new `cert::tests::a_redigested_substituted_result_is_refused`.
+Strict Octet's lint and architecture phases are clean with zero findings.
+Native Cairn is valid over 34 changes with no findings. Documents report 109
+Bun tests passing and 230 check-specs self-tests. The boundary matrix accepts
+all 18 comparators: both positive baselines and all 16 negative fixtures.
+`tool-versions` reports every pinned tool with its binary hash.
+`tool-overrides` refuses all 21 environment overrides, the manual override
+argument and the backend `.lake` symlink.
+
+Source coverage and native assurance accept the renewed inventory:
+**15,389 reviewed production paths** (7,984 body/open, 4,240 generated,
+3,165 structural) and 6,263 test paths over 109 units. The renewal is confined
+to `crates/noble-ngraph/src/cert.rs` (11 added and 7 removed subjects) and
+three re-spanned test closures in `cert_differential.rs`. The pre-renewal
+rejection at `720bf95d` is retained. All 7,984 authored bodies remain open
+refinement obligations.
+
+`native-assurance` and `source-inventory-controls` have the same derivations
+at `c99b40f6` as at the pre-rebase renewal commit `2dc1aeee`. The daemon
+reused those outputs, and their builds are cited. Before this receipt was
+written, the host's automatic garbage collection (min-free 100 GiB) collected
+every local check output. The eleven local rows therefore record no output NAR
+hash; their verdicts rest on the native exit statuses and the retained native
+logs. The receipt also keeps three local `boundary-controls` attempts: two hit
+the 3,500 s timeout, and one was interrupted when the build-host run started.
+None failed a case.
+
+This pass binds `c99b40f6` only. No milestone, case, proof obligation or
+Cairn archive is promoted, and #42 stays open.
+
 ## Checking change log — 2026-10-29 (eleven affected checks pass at `0a0592f`; three not run)
 
 The [receipt](receipt-0a0592f.json) binds the #64 integrated rewrite-cost lane

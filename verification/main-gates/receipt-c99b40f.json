@@ -1,0 +1,1587 @@
+{
+ "schema": "noble-main-gates-receipt/v1",
+ "tested_commit": "c99b40f6f798ddf1e348769f4db0392d30997f1d",
+ "base_upstream_commit": "86a10889edad50a9356f814ffe929a2cc97d039d",
+ "issue": "https://github.com/OnixResearch/noble-lang/issues/42",
+ "tests_bind": "All fourteen checks bind the clean committed source c99b40f6f798ddf1e348769f4db0392d30997f1d, archived as /nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source (sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=). Eleven ran on the local daemon from the clean worktree; tool-versions, tool-overrides and boundary-controls ran natively on the verified build host from the same archived source. This receipt and the status declarations are a later documentation commit, not the tested source.",
+ "flake_note": "COMPLETE: 14 of 14 checks pass at c99b40f, including both clean strict Octet phases, source coverage over the renewed inventory and native assurance. Results are not milestone acceptance or Cairn closeout.",
+ "run": {
+  "date": "2026-10-29",
+  "recorded_at_utc": "2026-10-29T23:43:44.683Z",
+  "worktree": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout",
+  "log_root": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures",
+  "clean_source": true,
+  "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+  "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+  "archive_transfer": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/source-flake-archive-c99b40f6.stdout",
+   "bytes": 10893,
+   "sha256": "a8961b72cd29b8ef2c2691547847b2673f703f3ccbed9250e711446734c8433b"
+  },
+  "remote_runner": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/remote-gates.sh",
+   "bytes": 1592,
+   "sha256": "79cd771c60e61fb7ea682d875e2ea877c5f9d9ee179a59aabdcace85a79a93aa"
+  },
+  "host_garbage_collection": "The local daemon runs automatic garbage collection (min-free 100 GiB) while the store has about 52 GB free. It collected every local check output before this receipt was written; native logs survive collection and are retained byte-identically here."
+ },
+ "summary": {
+  "pass": 14,
+  "fail": 0,
+  "interrupted": 0,
+  "not_run": 0
+ },
+ "flake_checks": [
+  {
+   "check": "policy",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 12.162,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.policy"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-policy-c99b40f6.stdout",
+   "stdout_sha256": "38b6da5fef3b7987971e6858927c8edf06b7378d7523deb63a3a22176a00d78c",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-policy-c99b40f6.stderr",
+   "log_sha256": "a6a1ff60189f42db1a1b5cbf5d262747b168d506379d1ec80bffcab008ea0fd7",
+   "output": "/nix/store/9iwnyinbncpw6ba7sd6wjjs2k2w79bax-noble-policy-freshness",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/b13a5avm1i27nrfnkv0lp8l4cs3i3pdy-noble-policy-freshness.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/policy.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/b1/3a5avm1i27nrfnkv0lp8l4cs3i3pdy-noble-policy-freshness.drv.bz2",
+   "observation": "Policy freshness passed.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "tool-selection",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 10.036,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.tool-selection"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-tool-selection-c99b40f6.stdout",
+   "stdout_sha256": "db48414fe459b05b2ceec19922a5907cd22b7862dbbf6e93d8edf945d30afd52",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-tool-selection-c99b40f6.stderr",
+   "log_sha256": "c80f59ca2bbe27db311cd3f5365a0a1da8fddebb4b7242cd54ea531f5c160dae",
+   "output": "/nix/store/6q9q4chiffp5l1kwcz1z6inpr0xgfgl2-noble-tool-selection",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/34sg7gy1h941z85badyp0f6mxillwm7g-noble-tool-selection.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/tool-selection.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/34/sg7gy1h941z85badyp0f6mxillwm7g-noble-tool-selection.drv.bz2",
+   "observation": "Tool-selection policy export matched the committed JSON.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "source-inventory-controls",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 7.249,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.source-inventory-controls"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-inventory-controls-c99b40f6.stdout",
+   "stdout_sha256": "b9c096fa4de319d8d2f38b0cff012f2e612fd4f3b5c0241ae8a101cb9a68e766",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-inventory-controls-c99b40f6.stderr",
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "output": "/nix/store/5xz3rkiw83922krwcddzwwwlclbyi7l3-noble-source-inventory-controls",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/3dh29lqhg58v5hb9jycfd1adf7315mqg-noble-source-inventory-controls.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/source-inventory-controls.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/3d/h29lqhg58v5hb9jycfd1adf7315mqg-noble-source-inventory-controls.drv.bz2",
+   "observation": "Source-inventory controls passed.",
+   "built_at": {
+    "commit": "2dc1aeee9b37d2ae1198e23e2e2cb0d2b0804553",
+    "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-inventory-controls-2dc1aeee.stderr",
+    "log_sha256": "86ac2f1de865aa2ce44725cdf3b1eeabba04515bb84712dd696b670ecec30f0e",
+    "note": "The derivation is identical at c99b40f6 and at the pre-rebase renewal commit 2dc1aeee (same output path). The daemon had built it at 2dc1aeee and reused the valid output, so this run printed no build line for it."
+   },
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "format",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 17.258,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.format"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-format-c99b40f6.stdout",
+   "stdout_sha256": "3a28e69dc3dfb86a0d5ca443371aca30ffc058d7596215c1e38ba448b3950814",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-format-c99b40f6.stderr",
+   "log_sha256": "2c5fce119ec4d2ada9766a9859abaa92d0c86106bed49ae174bdca2ffa5e55e2",
+   "output": "/nix/store/hxv570856nlvbi69scy40xybfys0sy2i-noble-format",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/5nsksfcyxvjlh8bzp2s0b9bniqjwygxy-noble-format.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/format.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/5n/sksfcyxvjlh8bzp2s0b9bniqjwygxy-noble-format.drv.bz2",
+   "observation": "Formatting check passed.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "documents",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 35.04,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.documents"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-documents-c99b40f6.stdout",
+   "stdout_sha256": "744e2342a8c9cbd0cdf535b1d546a4a70f4bf4e412bc05f09435df50fcc4d3f8",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-documents-c99b40f6.stderr",
+   "log_sha256": "e2e3d9b096bc8a90a93ec70a2fb94635d85bac67617d76b35df6f072f589d21c",
+   "output": "/nix/store/r2ik2ryxiqgsabih2qibpwr90qm3rch9-noble-documents",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/1ims9xsqr03zz7h97yh1brn8xpfkkl6n-noble-documents.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/documents.log",
+   "native_log_bytes": 12725,
+   "native_log_sha256": "7ae13fdb3161d6396729e7c96af837a9f04145438e6fc81b3f7eb5bcd86420f9",
+   "native_log_source": "/nix/var/log/nix/drvs/1i/ms9xsqr03zz7h97yh1brn8xpfkkl6n-noble-documents.drv.bz2",
+   "observation": "Bun 109 pass / 0 fail across 3 files; check-specs passed with 230 self-tests over 14 documents and 556 requirements.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "cairn",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 19.855,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.cairn"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-cairn-c99b40f6.stdout",
+   "stdout_sha256": "99c4c840757177f90e2a7b09a78a4a79da749de12c3e2adaaf0845a88491810f",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-cairn-c99b40f6.stderr",
+   "log_sha256": "f45eec68252fc59c83d8092a42bca18500af40118ed071c013354f19bd2ec4e6",
+   "output": "/nix/store/83zlqlcw5jd2fyi3brn11j7241d0k51i-noble-cairn",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/ah62r5cfj3pkph8mb5vgfp0dnl3jnjrm-noble-cairn.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/cairn.log",
+   "native_log_bytes": 122312,
+   "native_log_sha256": "dc3ca149768940dc1b541bfd51b7ca842b9b93d55e14d4957bd78ce77c670216",
+   "native_log_source": "/nix/var/log/nix/drvs/ah/62r5cfj3pkph8mb5vgfp0dnl3jnjrm-noble-cairn.drv.bz2",
+   "observation": "Native Cairn valid over 34 changes with no findings, issues, spec, substance or change issues.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "native-assurance",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 429.764,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.native-assurance"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-native-assurance-c99b40f6.stdout",
+   "stdout_sha256": "5f75bfea7fca19f35893a0f2b4862dbceb9aa06c0b700dd92418cc8e485e828e",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-native-assurance-c99b40f6.stderr",
+   "log_sha256": "c7715dedbb74a38aab7b13a5d7beea2f14505a9d32cd7757c747f35fb3254e3e",
+   "output": "/nix/store/i4vdzg5dvayyvnmwwifgihj840pqrdg4-noble-native-assurance",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/hnkq0yc48m2fhlw2zxd82qqiwj3w71rz-noble-native-assurance.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/native-assurance.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/hn/kq0yc48m2fhlw2zxd82qqiwj3w71rz-noble-native-assurance.drv.bz2",
+   "observation": "Native assurance passed.",
+   "built_at": {
+    "commit": "2dc1aeee9b37d2ae1198e23e2e2cb0d2b0804553",
+    "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-native-assurance-2dc1aeee.stderr",
+    "log_sha256": "f7729b93693fd8cd46afdd40c89675bca3e3cc9624382333eac040c8a610d139",
+    "note": "The derivation is identical at c99b40f6 and at the pre-rebase renewal commit 2dc1aeee (same output path). The daemon had built it at 2dc1aeee and reused the valid output, so this run printed no build line for it."
+   },
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "source-coverage",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 231.4,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.source-coverage"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-coverage-c99b40f6.stdout",
+   "stdout_sha256": "6503a03f754ae174afebe31b43884873fe18c01e419a64fb7837b64fa333a93b",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-coverage-c99b40f6.stderr",
+   "log_sha256": "557f2a371d14dce891a354027397be4687443403fa07882565df6693dfd5f56a",
+   "output": "/nix/store/xzci0l5cd726asp7881xmszzxfdz7zyk-noble-source-coverage",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/4hjhm0ly6nqnix2g168qm4dzjj03axaj-noble-source-coverage.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/source-coverage.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "native_log_source": "/nix/var/log/nix/drvs/4h/jhm0ly6nqnix2g168qm4dzjj03axaj-noble-source-coverage.drv.bz2",
+   "observation": "Source coverage accepted the renewed reviewed inventory (the comparator rejects with diagnostics at evaluation time).",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "clippy",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 46.597,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.clippy"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-clippy-c99b40f6.stdout",
+   "stdout_sha256": "45914d7c6025da17548b4ec61aecbfb2d6e76201a143d7241964c7db237c203d",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-clippy-c99b40f6.stderr",
+   "log_sha256": "fa0c0ffd62cd4c4441ac0a88a2c59dcafec2f28b7e3eaaacd8619856ff13b3bf",
+   "output": "/nix/store/l6y4jzlclig585712kh2hvajwka5ii90-noble-clippy",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/nfhw1n0dlh2yy0g3vljszvqr8sk3rppk-noble-clippy.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/clippy.log",
+   "native_log_bytes": 8092,
+   "native_log_sha256": "a78efa628c4867a4cdbe2475373c0028c308a219957e62fe44e4c7595b7a4ee6",
+   "native_log_source": "/nix/var/log/nix/drvs/nf/hw1n0dlh2yy0g3vljszvqr8sk3rppk-noble-clippy.drv.bz2",
+   "observation": "Workspace Clippy with -D warnings passed; the native log has no Rust lint diagnostic. Its 7 warning lines are wasmtime@40.0.2 build-script C-compiler output (_FORTIFY_SOURCE without optimization).",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "octet",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 414.424,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.octet"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-octet-c99b40f6.stdout",
+   "stdout_sha256": "ce98e718cdfe9c5f0d022fa57cd3f5b9b71ef44046ca23dec4814f0e8e851608",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-octet-c99b40f6.stderr",
+   "log_sha256": "d8d394c677bf817565d6381cb800fdf73f4ed7627d3ce6706335d45a19d7fa33",
+   "output": "/nix/store/m48w71cfrr4h7f3xkyq10fmizxr5kr9c-noble-octet-deny-all",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/qiilcz7sxh3vjkzyicrvxyj7k8kly0wf-noble-octet-deny-all.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/octet.log",
+   "native_log_bytes": 17483,
+   "native_log_sha256": "c446b9d79c54a25ae6d4b2aaf2a71936ae71ee8e418f7665c45d51058a2e6593",
+   "native_log_source": "/nix/var/log/nix/drvs/qi/ilcz7sxh3vjkzyicrvxyj7k8kly0wf-noble-octet-deny-all.drv.bz2",
+   "observation": "Strict Octet clean: 0 findings; lint clean (static_lint); architecture clean (policy-check) with 0 findings.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "rust-tests",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 708.191,
+   "execution_store": "local daemon",
+   "execution_mode": "local-flake-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "--no-link",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "2",
+    "--cores",
+    "4",
+    "--print-out-paths",
+    ".#checks.x86_64-linux.rust-tests"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-rust-tests-c99b40f6.stdout",
+   "stdout_sha256": "a814b0ffb7fffd1667e45eea5b11da25431aa130da42cd4564a74f553a0a8413",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-rust-tests-c99b40f6.stderr",
+   "log_sha256": "a5db187d765b53a63c223bfab13682bfdfaded98e866b18ee93ebbedb48719a2",
+   "output": "/nix/store/316jrp2cssn9a72w53v9rvdyylynrpi7-noble-rust-tests",
+   "output_retained": false,
+   "output_nar_hash": null,
+   "derivation": "/nix/store/p57fmxvmx6qflwj4p9m2jfxlll6baqd1-noble-rust-tests.drv",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/rust-tests.log",
+   "native_log_bytes": 99826,
+   "native_log_sha256": "1198d6204635498ed8729266751bc68f62c67012181d16c1afdbb4abc631c002",
+   "native_log_source": "/nix/var/log/nix/drvs/p5/7fmxvmx6qflwj4p9m2jfxlll6baqd1-noble-rust-tests.drv.bz2",
+   "observation": "873 passed, 0 failed and 7 ignored across 98 result groups, including cert::tests::a_redigested_substituted_result_is_refused.",
+   "output_note": "The output was collected by the host automatic garbage collection before this receipt was written, so no output NAR hash is recorded. The verdict rests on the native exit status and the retained native log."
+  },
+  {
+   "check": "tool-versions",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 2.574,
+   "execution_store": "verified remote x86_64-linux Nix store",
+   "execution_mode": "native-remote-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "6",
+    "--cores",
+    "16",
+    "--out-link",
+    "$HOME/noble-gates/c99b40f6/tool-versions.result",
+    "--print-out-paths",
+    "path:/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source#checks.x86_64-linux.tool-versions"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-versions.stdout",
+   "stdout_sha256": "131a3e1bfc1a94125e203113b6bcba50eacda640229d298d293563b046194ced",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-versions.stderr",
+   "log_sha256": "95238234891383a4a7ae39ee8edc9b62a4be64feadec4d60f3eb5a790797897c",
+   "output": "/nix/store/bpz86wv17ynfagx3nb60g7rnrs9097cl-noble-tool-versions",
+   "output_retained": true,
+   "output_nar_hash": "sha256-dO5hBaQMBnMDsFon5M6e7I36pFXs+RLwhWf9ajNVI8o=",
+   "derivation": "/nix/store/5qjj69k9gxvxf9fdr5qchshdjhw04xh4-noble-tool-versions.drv",
+   "observation": "noble-toolchain-check reported each selected tool and its binary sha256 (rustc 1.96.0-nightly 2026-03-20 and 1.100.0-nightly 2026-08-17 with miri, charon 0.1.254, aeneas 505b6ca, Lean 4.31.0 and Lake 5.0.0, Node v24.13.0, wasm-tools 1.245.1, wasm-opt 125) and ended with \"tool-selection: pinned tools available; compatibility execution still required\".",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-versions.native.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "raw_observation": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-versions.versions.log",
+    "bytes": 2646,
+    "sha256": "e193e91ef9789002c20e353463bce5f5b6e64677c5d26df3a130a3d2557a7cbe"
+   }
+  },
+  {
+   "check": "tool-overrides",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 2.125,
+   "execution_store": "verified remote x86_64-linux Nix store",
+   "execution_mode": "native-remote-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "6",
+    "--cores",
+    "16",
+    "--out-link",
+    "$HOME/noble-gates/c99b40f6/tool-overrides.result",
+    "--print-out-paths",
+    "path:/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source#checks.x86_64-linux.tool-overrides"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-overrides.stdout",
+   "stdout_sha256": "1d1f3511bd697a82ae60c5abe4ebfaa26644cdf3ab4e979441fcfd537ed08cf9",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-overrides.stderr",
+   "log_sha256": "c08ec2a60a342d97e7d97c32de371b43a1ff0cdd445967d645ceaf34d529c5c7",
+   "output": "/nix/store/jb83p4jjyjdmi1cvfzcpraqkfpk4idda-noble-tool-overrides",
+   "output_retained": true,
+   "output_nar_hash": "sha256-5gH9AgdVZRM5b1WxNSdmHlBAtIahN45nP1uUxBjs48I=",
+   "derivation": "/nix/store/bwwyi2jwwnd8nfnijs2iin8njfslskd7-noble-tool-overrides.drv",
+   "observation": "All 21 environment overrides and the --allow-pin-mismatch argument were refused with exit 2 and their exact refusal lines, and the backend .lake directory symlink was rejected (\"21 environment overrides, one manual override argument, and one backend directory symlink rejected\").",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-overrides.native.log",
+   "native_log_bytes": 1265,
+   "native_log_sha256": "2d048d5e1d6d01481a856ec26ce0739e68760817f7e483fbd4866bb95c1093b6",
+   "raw_observation": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/tool-overrides.controls.log",
+    "bytes": 156,
+    "sha256": "2f8a55af9cb969a03fcff5f5f22c16ac2fc872cabcded886d2f61e4aea0d82d7"
+   }
+  },
+  {
+   "check": "boundary-controls",
+   "result": "pass",
+   "exit": 0,
+   "signal": null,
+   "duration_s": 5741.043,
+   "execution_store": "verified remote x86_64-linux Nix store",
+   "execution_mode": "native-remote-evaluation",
+   "source_archive": "/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source",
+   "source_nar_hash": "sha256-YMrXTBAJo2cB0wSIQLbrv+228zu4oEamCCxtIPKbdTY=",
+   "argv": [
+    "nix",
+    "build",
+    "-L",
+    "--offline",
+    "--option",
+    "min-free",
+    "0",
+    "--option",
+    "max-free",
+    "0",
+    "--option",
+    "builders",
+    "",
+    "--max-jobs",
+    "6",
+    "--cores",
+    "16",
+    "--out-link",
+    "$HOME/noble-gates/c99b40f6/boundary-controls.result",
+    "--print-out-paths",
+    "path:/nix/store/ygzj32jlyqsyag9h5sza0g3f49813jc3-source#checks.x86_64-linux.boundary-controls"
+   ],
+   "stdout": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/boundary-controls.stdout",
+   "stdout_sha256": "0eea373823de266f4b9cf2fedbe2814b3100e7129162e390eff6e6537803e188",
+   "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/boundary-controls.stderr",
+   "log_sha256": "cf8a60ced55d0a4af98ab326e8cd5992128b92ea31b23feb815089d3aa064396",
+   "output": "/nix/store/qjvgrz4ngagwgqmxrl8b87vlc5l6x5q5-noble-boundary-controls",
+   "output_retained": true,
+   "output_nar_hash": "sha256-FS5dxt9fq8wYnLE8IBMkPve3GO0dtDrfzxGjg/SQ+II=",
+   "derivation": "/nix/store/xzrj4w1i5jilzylcrsmy7ij7bhwxmaiv-noble-boundary-controls.drv",
+   "observation": "All 18 comparators accepted: 2 clean positive baselines and 16 correctly rejected negative fixtures.",
+   "native_log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/boundary-controls.native.log",
+   "native_log_bytes": 0,
+   "native_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+ ],
+ "rust_tests": {
+  "groups": 98,
+  "passed": 873,
+  "failed": 0,
+  "ignored": 7,
+  "measured": 0,
+  "filtered": 0,
+  "regression_test": "cert::tests::a_redigested_substituted_result_is_refused",
+  "log": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/rust-tests.log",
+  "note": "Counts sum native test result lines; result groups are not a count of integration-test binaries."
+ },
+ "source_inventory": {
+  "counts": {
+   "bodies": 7984,
+   "compiler_production_items": 15968,
+   "configurations": 2,
+   "dependencies": 25,
+   "excepted": 0,
+   "extracted": 0,
+   "future_components": 2,
+   "generated": 4240,
+   "macro_origins": 88,
+   "modeled": 0,
+   "open": 7984,
+   "open_refinement": 7984,
+   "proved": 0,
+   "reviewed_subjects": 15389,
+   "structural": 3165,
+   "test_subjects": 6263,
+   "tools": 13,
+   "units": 109
+  },
+  "by_category": {
+   "structural": 3165,
+   "body": 7984,
+   "generated": 4240
+  },
+  "diagnostics": [],
+  "valid": true,
+  "raw_observation": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/renewal/comparison.json",
+   "bytes": 359,
+   "sha256": "be429b2b69c0b73e9fae27252d0d5b264db54d8d162ce566a1110fbeb7c823ba"
+  },
+  "renewal": {
+   "report": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/renewal/report.json",
+    "bytes": 4569,
+    "sha256": "06cbcad1f4e0881a13478e0175542ee2354024fd404f6de26a79d8781fc4119f"
+   },
+   "label": "2026-10-29 for issue #42 certificate result replay",
+   "counts": {
+    "body": 7984,
+    "generated": 4240,
+    "structural": 3165,
+    "retained": 15378,
+    "added": 11,
+    "removed": 7,
+    "reclassified": 0,
+    "rebound": 0,
+    "test_subjects": 6263,
+    "macro_origins": 88
+   },
+   "generated_by": {
+    "cargo_graph_id": "4aea7e717ad8e7856aed3920efb2533d16d84ffa34f10ab5a5020f62bf5cd368",
+    "coverage_id": "de4b6aab2be75a76b3394a1a126e65370b22bd04d3d80414f34b66b4e95c09f3",
+    "coverage_status": "complete",
+    "ir_id": "8db30f85fd1c441f7f725e31ae50f1f39b1a4adf7ce7d6f8cb6212d9c2791cda",
+    "policy_blake3": "30a4859def38436fdb7b17e8b2c6fe39823de80bfbc17f8881ded227b54abef2",
+    "tool": "cargo-octet",
+    "toolchain": "6c11a409344f8450c621ef835647e188dab7269558a26cc2a8772500a02e5f90"
+   },
+   "pre_renewal_rejection": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/gate-source-coverage.stderr",
+    "bytes": 4166,
+    "sha256": "13a1c5e20f0c2ee1871144151aba7933ab41d5aa774e7d124c00a124e6d4902b",
+    "source_commit": "720bf95d8e4cb2e3075915da5f670a776829e93e",
+    "diagnostics": [
+     "subject-omission",
+     "subject-stale",
+     "test-subject-classification",
+     "reviewed-scope-partition"
+    ]
+   }
+  },
+  "non_claims": [
+   "inventory-classification-is-not-refinement",
+   "open-work-is-not-verified",
+   "extraction-status-is-not-a-proof",
+   "structural-and-generated-subjects-are-accounting-not-noble-bodies",
+   "not-whole-project-verification"
+  ]
+ },
+ "strict_octet": {
+  "status": "clean",
+  "total_findings": 0,
+  "warnings": 0,
+  "errors": 0,
+  "lint": "clean (static_lint)",
+  "architecture": "clean (policy-check)",
+  "architecture_findings": 0,
+  "architecture_receipt_id": "bdf74653eac30d8ed08c1dd3cf107cab8ce1affe672fac608d586823c8114a2c",
+  "tool": "cargo-octet 0.1.0",
+  "toolchain": "nightly-2026-03-21-x86_64-unknown-linux-gnu",
+  "raw_observation": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/octet.log",
+   "bytes": 17483,
+   "sha256": "c446b9d79c54a25ae6d4b2aaf2a71936ae71ee8e418f7665c45d51058a2e6593"
+  }
+ },
+ "cairn": {
+  "valid": true,
+  "changes": 34,
+  "findings": 0,
+  "issues": 0,
+  "spec_issues": 0,
+  "substance_issues": 0,
+  "change_issues": 0,
+  "raw_observation": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/native-c99b40f6/cairn.log",
+   "bytes": 122312,
+   "sha256": "dc3ca149768940dc1b541bfd51b7ca842b9b93d55e14d4957bd78ce77c670216"
+  }
+ },
+ "documents": {
+  "cairn_specs_self_tests": 26,
+  "bun_tests": {
+   "pass": 109,
+   "fail": 0,
+   "ran": 109,
+   "files": 3
+  },
+  "check_specs": {
+   "documents": 14,
+   "requirements": 556,
+   "scenarios": 223,
+   "scenarios_executed": 143,
+   "open_test_design": 196,
+   "proof_obligations": 30,
+   "completed_proofs": 3,
+   "lane": "document-validation-only",
+   "result": "passed",
+   "self_tests_passed": 230
+  }
+ },
+ "boundary_controls": {
+  "positive_baselines": 2,
+  "negative_fixtures": 16,
+  "raw_observation": {
+   "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/captures/remote-c99b40f6/boundary-cases.json",
+   "bytes": 28057,
+   "sha256": "8df2b8e6c92f1b3c64ee735278b17666a992c66024f3765c326b61487118f718"
+  },
+  "cases": [
+   {
+    "id": "acyclic-shell",
+    "kind": "positive-baseline",
+    "deny_exit": 0,
+    "validation": "\"boundary control acyclic-shell: passed (not M1 acceptance)\"",
+    "output": "/nix/store/8v3dsryw09m4s8ignwadzagvj7ifyr3k-noble-boundary-acyclic-shell",
+    "output_nar_hash": "sha256:17ksf8yvvxw6qr0fyavpfr47s4jvkmwqvld4z2s3nc3z9riaiaag",
+    "derivation": "/nix/store/xr5mfsllzxrqagsn5d10bskl19z4cqs1-noble-boundary-acyclic-shell.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/8v3dsryw09m4s8ignwadzagvj7ifyr3k-noble-boundary-acyclic-shell/validated.txt",
+      "sha256": "731691c0d80cfd244ba0ad5599f1c3a8707f18b39da51eee9cf97aa2a2774537",
+      "bytes": 61
+     },
+     {
+      "path": "/nix/store/8v3dsryw09m4s8ignwadzagvj7ifyr3k-noble-boundary-acyclic-shell/deny-exit.json",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/8v3dsryw09m4s8ignwadzagvj7ifyr3k-noble-boundary-acyclic-shell/replay.json",
+      "sha256": "635ac9ed535fcf22d89dff7a6408ec0ef65b7f4f8aedd57dd451b68a4e999e99",
+      "bytes": 4541
+     },
+     {
+      "path": "/nix/store/8v3dsryw09m4s8ignwadzagvj7ifyr3k-noble-boundary-acyclic-shell/deny/status.json",
+      "sha256": "9b0e7e482e85010058a61e31f12322e5f6f816c415867caed9b405c3979443f7",
+      "bytes": 1724
+     }
+    ]
+   },
+   {
+    "id": "reverse-dependency",
+    "kind": "negative-fixture",
+    "deny_exit": 1,
+    "validation": "\"boundary control reverse-dependency: passed (not M1 acceptance)\"",
+    "output": "/nix/store/ks8ajsw3lfpj564c6s7n3icnz32wgqbd-noble-boundary-reverse-dependency",
+    "output_nar_hash": "sha256:0q83rwxv27rlwyc5s4fw42p5w2cikf55jwfwks8h09f0b66v3r0d",
+    "derivation": "/nix/store/1aw23gqqy536iqj0wpg4d4v3pbwawsq4-noble-boundary-reverse-dependency.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/ks8ajsw3lfpj564c6s7n3icnz32wgqbd-noble-boundary-reverse-dependency/validated.txt",
+      "sha256": "bb701691585c7bec27314df0b808a4b4fe204bb7eb56b8bfeb24364b1f14f316",
+      "bytes": 66
+     },
+     {
+      "path": "/nix/store/ks8ajsw3lfpj564c6s7n3icnz32wgqbd-noble-boundary-reverse-dependency/deny-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/ks8ajsw3lfpj564c6s7n3icnz32wgqbd-noble-boundary-reverse-dependency/replay.json",
+      "sha256": "c36fc1fe2fba876ceb74a58a4b14f48d51339e397219887c26907290fa7df611",
+      "bytes": 4546
+     },
+     {
+      "path": "/nix/store/ks8ajsw3lfpj564c6s7n3icnz32wgqbd-noble-boundary-reverse-dependency/deny/status.json",
+      "sha256": "e26db66dc45f8149386874dd56a2b00c354f8330aa8208567dfd427f4dfe6055",
+      "bytes": 1815
+     }
+    ]
+   },
+   {
+    "id": "workspace",
+    "kind": "positive-baseline",
+    "deny_exit": 0,
+    "validation": "\"boundary control workspace: passed (not M1 acceptance)\"",
+    "output": "/nix/store/m1ni75qdm08frjcm79cym61kz8vfyjv5-noble-boundary-workspace",
+    "output_nar_hash": "sha256:044vd0a3g5vr3jdb39212qwrd9wmivfxl7k6166vm468qry6c0nk",
+    "derivation": "/nix/store/y4sj26hb1f9ssh411zjd6bbfbv2a1rwp-noble-boundary-workspace.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/m1ni75qdm08frjcm79cym61kz8vfyjv5-noble-boundary-workspace/validated.txt",
+      "sha256": "3eacce6929005713426edf627805c3285e32d1101170c3dc0713f45adcfb8c60",
+      "bytes": 57
+     },
+     {
+      "path": "/nix/store/m1ni75qdm08frjcm79cym61kz8vfyjv5-noble-boundary-workspace/deny-exit.json",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/m1ni75qdm08frjcm79cym61kz8vfyjv5-noble-boundary-workspace/replay.json",
+      "sha256": "253ca9b1183eecfce53750106fb467b2df08ec8a3c7d29e66acec6fce654bd7c",
+      "bytes": 4537
+     },
+     {
+      "path": "/nix/store/m1ni75qdm08frjcm79cym61kz8vfyjv5-noble-boundary-workspace/deny/status.json",
+      "sha256": "8293f9f1090d291162548a17fee06505e3ebc63540325c6a51da4dd67c9e502f",
+      "bytes": 1724
+     }
+    ]
+   },
+   {
+    "id": "randomness-dependency",
+    "kind": "negative-fixture",
+    "deny_exit": 1,
+    "validation": "\"boundary control randomness-dependency: passed (not M1 acceptance)\"",
+    "output": "/nix/store/kmxj0b4b12asrmy5rpq7afqhsjq5qqqs-noble-boundary-randomness-dependency",
+    "output_nar_hash": "sha256:12y02pnd7m5q1nr28nj69z0ahf7frsyqg2fd3xr8nqi8f8iygpbn",
+    "derivation": "/nix/store/20bpgxgrw2aj6spyjvkjbxksmgmizxyd-noble-boundary-randomness-dependency.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/kmxj0b4b12asrmy5rpq7afqhsjq5qqqs-noble-boundary-randomness-dependency/validated.txt",
+      "sha256": "9958dc04545d1958deced1540c199aebd5aa367c2d6b5cd6d7111a26af57cf22",
+      "bytes": 69
+     },
+     {
+      "path": "/nix/store/kmxj0b4b12asrmy5rpq7afqhsjq5qqqs-noble-boundary-randomness-dependency/deny-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/kmxj0b4b12asrmy5rpq7afqhsjq5qqqs-noble-boundary-randomness-dependency/replay.json",
+      "sha256": "5ae74025521a34e7164dc562079515ef651b25d95608f71060d8be488a76cbe0",
+      "bytes": 4549
+     },
+     {
+      "path": "/nix/store/kmxj0b4b12asrmy5rpq7afqhsjq5qqqs-noble-boundary-randomness-dependency/deny/status.json",
+      "sha256": "640f62482e4a0d5479d73eedc28af96baaaa75ffd9d27a260147cf6b73a2c2ac",
+      "bytes": 1815
+     }
+    ]
+   },
+   {
+    "id": "unsafe-block",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control unsafe-block: passed (not M1 acceptance)\"",
+    "output": "/nix/store/4hapvbz0nzig0f04ma9hb5n8jifdjs45-noble-boundary-unsafe-block",
+    "output_nar_hash": "sha256:1y55r6138z4sg1qkqlmqgf0lh4qdnbb901hb1426lrxikdzrvjd0",
+    "derivation": "/nix/store/4iqlv5sa7xpxwjma8q0zkhznmvm16k1p-noble-boundary-unsafe-block.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/4hapvbz0nzig0f04ma9hb5n8jifdjs45-noble-boundary-unsafe-block/validated.txt",
+      "sha256": "12a94aee6d35ce1cdbf2348ce0d4fde12e810ed367dcbea7dd90998e41cd1182",
+      "bytes": 60
+     },
+     {
+      "path": "/nix/store/4hapvbz0nzig0f04ma9hb5n8jifdjs45-noble-boundary-unsafe-block/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/4hapvbz0nzig0f04ma9hb5n8jifdjs45-noble-boundary-unsafe-block/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     }
+    ]
+   },
+   {
+    "id": "interior-state",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control interior-state: passed (not M1 acceptance)\"",
+    "output": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state",
+    "output_nar_hash": "sha256:1cx7ahqcg4gvh2qxa44v0hspyd0w39b2yyiy6my9klhmbarvr984",
+    "derivation": "/nix/store/4vfcfz4qfx27zh9nd8jlixd34fci0i88-noble-boundary-interior-state.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/validated.txt",
+      "sha256": "5a2ada3e6f6d6b8603986299bce5dd88b3fb8ded7315acd361c67594a6d817b0",
+      "bytes": 62
+     },
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/replay.json",
+      "sha256": "412b8b4658f00cb70c63ea1d586176546993a62f1dbd98fc581885aa932acaef",
+      "bytes": 4549
+     },
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/pvacyaxfdb5ydk4xykcqgygvkn3cg3a6-noble-boundary-interior-state/observation/status.json",
+      "sha256": "ac62d67ddf4ffc6cfd3959c5c1bd31e760c9971f1410e1bcc09b28da5335a0be",
+      "bytes": 2354
+     }
+    ]
+   },
+   {
+    "id": "process",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control process: passed (not M1 acceptance)\"",
+    "output": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process",
+    "output_nar_hash": "sha256:00pdixl48209hc4bw7pyah4pva56z7bidp0m3yb72vq2szvyi8w4",
+    "derivation": "/nix/store/d09cpjj53ns3kikbna12pwyav7p6nds3-noble-boundary-process.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/validated.txt",
+      "sha256": "fdad1b368d1aad4e4b823ab052f0ad1790a099393767e1bc256f821acefc20d5",
+      "bytes": 55
+     },
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/replay.json",
+      "sha256": "fdb0e4e2cd0fab44c7d9bcd5c2f94bb83346f832e3494a338d61c04ed5b9de29",
+      "bytes": 4542
+     },
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/4law2skks6pyvl6274n393iwlwdynnpw-noble-boundary-process/observation/status.json",
+      "sha256": "70fff2de05e1e7319f3b81ebe8ffeaf70f6375f4462cbfb9adea17e91781ba54",
+      "bytes": 1898
+     }
+    ]
+   },
+   {
+    "id": "network",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control network: passed (not M1 acceptance)\"",
+    "output": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network",
+    "output_nar_hash": "sha256:1jvin9gmixdlyl20kn4aml32298s7zby7lk67q3mcrl81qa544wk",
+    "derivation": "/nix/store/ifx87mqs56wwwfasi3520yc2d4dfqbfc-noble-boundary-network.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/validated.txt",
+      "sha256": "229642e31395d25d894787ba60e39bf44a8c116e18367a7f5311dbdf8d8d07b8",
+      "bytes": 55
+     },
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/replay.json",
+      "sha256": "2c45a8264ea740a442ebbd58e798fe05b71b43becab4e54de268bccfa9accfaa",
+      "bytes": 4542
+     },
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/deny/status.json",
+      "sha256": "5e77910581c4acf7b3e36833e5497edc12b14c73ce66d0472aaa450c4c447f0d",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/6d0mk0ghyab3a0xcmzq6g8v5dp7gy4av-noble-boundary-network/observation/status.json",
+      "sha256": "c0fdb33a1a1ea06bd91836c3e269eddc5f898dbac04911c76b59b8f69ae4d2b0",
+      "bytes": 1898
+     }
+    ]
+   },
+   {
+    "id": "unsafe-foreign-declaration",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control unsafe-foreign-declaration: passed (not M1 acceptance)\"",
+    "output": "/nix/store/ids28w9pyxy8p6il4g2aipdvizb52jqy-noble-boundary-unsafe-foreign-declaration",
+    "output_nar_hash": "sha256:045zsim2vp7ylhl568d6b98gq62vw39n86yi1x0fc4ihqzib1b8a",
+    "derivation": "/nix/store/imncbdrl68pvxq4sr9s19lmqj21b6apc-noble-boundary-unsafe-foreign-declaration.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/ids28w9pyxy8p6il4g2aipdvizb52jqy-noble-boundary-unsafe-foreign-declaration/validated.txt",
+      "sha256": "5b894c70b0aca512e5ec631308383ab4de8aeaf4a5505bdcdfaa78ef4b93fa51",
+      "bytes": 74
+     },
+     {
+      "path": "/nix/store/ids28w9pyxy8p6il4g2aipdvizb52jqy-noble-boundary-unsafe-foreign-declaration/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/ids28w9pyxy8p6il4g2aipdvizb52jqy-noble-boundary-unsafe-foreign-declaration/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     }
+    ]
+   },
+   {
+    "id": "randomness",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control randomness: passed (not M1 acceptance)\"",
+    "output": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness",
+    "output_nar_hash": "sha256:1ap20sfff6z2fz1g9vx8zca0cgm6c65rqyabn3zqgs8wx7ph9zip",
+    "derivation": "/nix/store/ixsndgdf54li12lnlj9a1cf4fad0c8n8-noble-boundary-randomness.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/validated.txt",
+      "sha256": "9b7535eeae846114572fc128b342b9482cec5dd7dfbff8c51c59a21b96539906",
+      "bytes": 58
+     },
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/replay.json",
+      "sha256": "d73ca6a51a0f81ef27b525328b9f9dc4213232104739975802ab3807d76e747e",
+      "bytes": 4545
+     },
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/deny/status.json",
+      "sha256": "fc77d90a751dca8fba55cdd46f582fef71b1362d2b2a07ea895a33fde6a5a895",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/x9prcgjh31r8n6ka7h491421psvrrjf6-noble-boundary-randomness/observation/status.json",
+      "sha256": "9146d713cb27671f097533af5f50269e590d79eae73416981a052e29f0731555",
+      "bytes": 1974
+     }
+    ]
+   },
+   {
+    "id": "no-std-test-witness",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control no-std-test-witness: passed (not M1 acceptance)\"",
+    "output": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness",
+    "output_nar_hash": "sha256:010pcp1966kwjnyf70zsij1i9vhg33rl24h9vj0drxs6q654a0ay",
+    "derivation": "/nix/store/lisbzfnjb0174a5gkgd9211qsqdbh18w-noble-boundary-no-std-test-witness.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/validated.txt",
+      "sha256": "9841909f96b03feeac2c73f7146801e22e3b5c7f9d19b5181cd29a4fd21528a7",
+      "bytes": 67
+     },
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/replay.json",
+      "sha256": "b6e0455cdd1fc112b0f3826a5bad3dcf43c755543557b849e03fba026e7f6299",
+      "bytes": 4554
+     },
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/deny/status.json",
+      "sha256": "a4b964cc5be0d880124775a9570ad4155026ffabb7a2953ede8ca4f2959f61f6",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/8li0q1izchb2sbz324b8783nf22zs66v-noble-boundary-no-std-test-witness/observation/status.json",
+      "sha256": "0a88058b54d08e850dc81fbf24bee91335965bf62c63b30ecd233d893c383877",
+      "bytes": 1822
+     }
+    ]
+   },
+   {
+    "id": "global-state",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control global-state: passed (not M1 acceptance)\"",
+    "output": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state",
+    "output_nar_hash": "sha256:11y98sx4rr5n6fkr9fxpbncly431mhs24lxw01ky6s3rzckgail0",
+    "derivation": "/nix/store/lwnsyh62zkwy5nlzwniazaph60hljh99-noble-boundary-global-state.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/validated.txt",
+      "sha256": "19f89bfa13983c6944662ea76967cbed7d836b9854aea5e145ce200f4fbae516",
+      "bytes": 60
+     },
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/replay.json",
+      "sha256": "5524fc1d3c71e031f8e9bee70b36ad0fe0f6c464c7482c7a44fc6395bdcfd881",
+      "bytes": 4547
+     },
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/deny/status.json",
+      "sha256": "af92b48403d9185c6f8eb5ecde074c5a041dda0b3248e0b57f13da470a510084",
+      "bytes": 703
+     },
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/observation-exit.json",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/ycrwz80mhw0avlnvq6jkgpbi5vnc53kq-noble-boundary-global-state/observation/status.json",
+      "sha256": "6fb140aca96269eec379a3cb00c5fe5a66e626599cc54d9ec3c2afde66b7e10a",
+      "bytes": 1741
+     }
+    ]
+   },
+   {
+    "id": "filesystem",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control filesystem: passed (not M1 acceptance)\"",
+    "output": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem",
+    "output_nar_hash": "sha256:185w4j5f5msnyawvr4xkazhxj4aj27l2g9ri5fx7z1s451j9lqwv",
+    "derivation": "/nix/store/nypbx2jfi7b83qgs8cy052s0man5d33a-noble-boundary-filesystem.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/validated.txt",
+      "sha256": "fae1e0be132ac35aa77605127b6f812b28860daca1d4edac515a5ba2e6e84957",
+      "bytes": 58
+     },
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/replay.json",
+      "sha256": "8c658fa288ed75878d98fdc1fe779967035cb0d23d54a2b746fde21f3326be16",
+      "bytes": 4545
+     },
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/deny/status.json",
+      "sha256": "5e77910581c4acf7b3e36833e5497edc12b14c73ce66d0472aaa450c4c447f0d",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/mrc9dirgbijhwspjjkbsssixnnilp5p3-noble-boundary-filesystem/observation/status.json",
+      "sha256": "8149acb84bed3c0ab5951a9478be32fe5f80c01a1a1b0e93c991b088c60185a4",
+      "bytes": 1898
+     }
+    ]
+   },
+   {
+    "id": "environment",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control environment: passed (not M1 acceptance)\"",
+    "output": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment",
+    "output_nar_hash": "sha256:0y9wz5qqrky4yw8yzrh5jvc8ly0dx96wzlb46h34l5c6c3ra7ks9",
+    "derivation": "/nix/store/qbnz9wgqq1dqz90d4cnm3cglxkmx8aya-noble-boundary-environment.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/validated.txt",
+      "sha256": "18131a78f12f305e4c54e12af1e516fb71e076e12fef811b79a6697af736b1ab",
+      "bytes": 59
+     },
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/replay.json",
+      "sha256": "7f7490575f6882b3cb7e5713a5bafb9e878b5953b342248bef728b36239e3074",
+      "bytes": 4546
+     },
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/w86s3a4xv287df5r8a02sbf9jn3iqm3m-noble-boundary-environment/observation/status.json",
+      "sha256": "d64cdfccae3b3ae0818308e6c6fc27e8640b951611c15a1687eafc3c38db1457",
+      "bytes": 1898
+     }
+    ]
+   },
+   {
+    "id": "test-source-import",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control test-source-import: passed (not M1 acceptance)\"",
+    "output": "/nix/store/islrl7lgskx8168qm2fn0g0zw65m6lxb-noble-boundary-test-source-import",
+    "output_nar_hash": "sha256:0zx2mfghvrqqsg0yyqrv05cyw5c6j00abx0vj7k1mvaxmw9liqfg",
+    "derivation": "/nix/store/r037w3ngkydlgh9qp1jmk5bf793qm1q4-noble-boundary-test-source-import.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/islrl7lgskx8168qm2fn0g0zw65m6lxb-noble-boundary-test-source-import/validated.txt",
+      "sha256": "054f5bbd928c3cb48df11644b6ba5f62aa4f005f63cb18401c030bc419b76c69",
+      "bytes": 66
+     },
+     {
+      "path": "/nix/store/islrl7lgskx8168qm2fn0g0zw65m6lxb-noble-boundary-test-source-import/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/islrl7lgskx8168qm2fn0g0zw65m6lxb-noble-boundary-test-source-import/replay.json",
+      "sha256": "adb332584afbdc73d0043d513e6589fade29cc0eb6f290eb4fa626ca6f3f35cc",
+      "bytes": 4546
+     },
+     {
+      "path": "/nix/store/islrl7lgskx8168qm2fn0g0zw65m6lxb-noble-boundary-test-source-import/deny/status.json",
+      "sha256": "98a5239d0002e77af3ab2edf7504919a71613ddcdb0076c188fb7bed16281b07",
+      "bytes": 1910
+     }
+    ]
+   },
+   {
+    "id": "clock",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control clock: passed (not M1 acceptance)\"",
+    "output": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock",
+    "output_nar_hash": "sha256:17iv4jfvmy4c6i2wdv1r2siqp4m27jj3bxi3qnn68czwakw6n8wi",
+    "derivation": "/nix/store/v8cwy4wnbahr2m2075sf72kk3if5ylmy-noble-boundary-clock.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/validated.txt",
+      "sha256": "ee6ea743df727c4775d70801dbac5bc48f91f117a9c07bb1297fbb4c68c1081a",
+      "bytes": 53
+     },
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/replay.json",
+      "sha256": "f2ec48c307415dba7fab71f7170e2faa75ec3df0a163abaa132b6d0a5604ca9b",
+      "bytes": 4540
+     },
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/deny/status.json",
+      "sha256": "caf7c793b598b05ca4daab10401d04398134eb60dae95431f0558834da9e7032",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/observation-exit.json",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/a2j8vj8g3xqzjv1x2932mwlys0nv1s5z-noble-boundary-clock/observation/status.json",
+      "sha256": "587642122dc14460362b87a684345544918acbb93995088d03271ae2329c4db6",
+      "bytes": 1898
+     }
+    ]
+   },
+   {
+    "id": "host-return",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control host-return: passed (not M1 acceptance)\"",
+    "output": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return",
+    "output_nar_hash": "sha256:19al5zhb4nk1zwwhwn9y5005hgqdxpk94m52k7rlzzxla2gvi95v",
+    "derivation": "/nix/store/xd1ax1z3v9xi6ajkk6iv7dmskl8i5sh4-noble-boundary-host-return.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/validated.txt",
+      "sha256": "71c9d494cd299df1a1dd16d1813d429f3cec0c59cb8dbdbddb6eb7297aadd05e",
+      "bytes": 59
+     },
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/replay.json",
+      "sha256": "1b85e0566ae393f007460730891d1c4bc5a65146346f6bd04ee92913b6bb8145",
+      "bytes": 4546
+     },
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/deny/status.json",
+      "sha256": "cd7752f9be801e490dbc488c41342ddef59c3b52dd9bb29d43a86ad3b3d78ef8",
+      "bytes": 701
+     },
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/observation-exit.json",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/80kdbh0axgig6mdkw6d8xndwmjscpwkq-noble-boundary-host-return/observation/status.json",
+      "sha256": "9ab6551e96f9eddaa5f74a26cf9a0241a0d92d4628b7838692b3565c27751928",
+      "bytes": 1738
+     }
+    ]
+   },
+   {
+    "id": "unsafe-function",
+    "kind": "negative-fixture",
+    "deny_exit": 2,
+    "validation": "\"boundary control unsafe-function: passed (not M1 acceptance)\"",
+    "output": "/nix/store/3w73m0g9pfgln7rx8vaqq9s7idz8l67p-noble-boundary-unsafe-function",
+    "output_nar_hash": "sha256:0aglwgs781i8329nsgy4filrjczjfbimi5k1kzaq2l3nszkj27sx",
+    "derivation": "/nix/store/xdlcigv2hfv5yhbcwz9g928ylah3x8bw-noble-boundary-unsafe-function.drv",
+    "raw_files": [
+     {
+      "path": "/nix/store/3w73m0g9pfgln7rx8vaqq9s7idz8l67p-noble-boundary-unsafe-function/validated.txt",
+      "sha256": "f248a66ef65aae04e44952a5ffbd63c88f1bdd9f6adfb916778c763e07a16818",
+      "bytes": 63
+     },
+     {
+      "path": "/nix/store/3w73m0g9pfgln7rx8vaqq9s7idz8l67p-noble-boundary-unsafe-function/deny-exit.json",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2
+     },
+     {
+      "path": "/nix/store/3w73m0g9pfgln7rx8vaqq9s7idz8l67p-noble-boundary-unsafe-function/deny/status.json",
+      "sha256": "5e77910581c4acf7b3e36833e5497edc12b14c73ce66d0472aaa450c4c447f0d",
+      "bytes": 701
+     }
+    ]
+   }
+  ]
+ },
+ "retained_attempts": [
+  {
+   "check": "boundary-controls",
+   "source_commit": "c99b40f6f798ddf1e348769f4db0392d30997f1d",
+   "invocation": 1,
+   "execution_store": "local daemon",
+   "result": "timeout",
+   "exit": 124,
+   "duration_s": 3500.396,
+   "stdout": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-1.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "stderr": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-1.stderr",
+    "bytes": 4864,
+    "sha256": "5aef8df3eef5dec2427323dba771b5ad25911a9e527970b33e3b8757fb9c9601"
+   },
+   "observation": "Local daemon attempt stopped by its 3500 s timeout with --max-jobs 2 --cores 4 on a host at load ~50; completed case outputs were kept, no case failed."
+  },
+  {
+   "check": "boundary-controls",
+   "source_commit": "c99b40f6f798ddf1e348769f4db0392d30997f1d",
+   "invocation": 2,
+   "execution_store": "local daemon",
+   "result": "timeout",
+   "exit": 124,
+   "duration_s": 3500.118,
+   "stdout": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-2.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "stderr": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-2.stderr",
+    "bytes": 1658,
+    "sha256": "c88af83144f5573ac3d52de30e57d6be5738f4bf31e85fc72e7dda1de7f43350"
+   },
+   "observation": "Local daemon attempt stopped by its 3500 s timeout with --max-jobs 2 --cores 4 on a host at load ~50; completed case outputs were kept, no case failed."
+  },
+  {
+   "check": "boundary-controls",
+   "source_commit": "c99b40f6f798ddf1e348769f4db0392d30997f1d",
+   "invocation": 3,
+   "execution_store": "local daemon",
+   "result": "interrupted",
+   "exit": 1,
+   "duration_s": 2204.537,
+   "stdout": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-3.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "stderr": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/cert42-Ui2XHz/checkout/../captures/gate-boundary-controls-c99b40f6-3.stderr",
+    "bytes": 1172,
+    "sha256": "0341a13cf3ad77e942570a1aacac86b3216853837f903dcb045ec14e5466e66c"
+   },
+   "observation": "Local daemon attempt interrupted (SIGTERM) once the build host run was started; no case failed."
+  }
+ ],
+ "prior_receipt": {
+  "path": "verification/main-gates/receipt-0a0592f.json",
+  "sha256": "7c3fe34f9688696ac6f192fd29ee764d5d80b7f9777e992360287fc821a14b57",
+  "preserved": "The 0a0592f affected-gate receipt and the complete fourteen-check pass at 91a473c remain unchanged; each binds its own commit only."
+ },
+ "non_claims": [
+  "All green claims bind the tested source commit c99b40f6 only; the later receipt/documentation commit requires its own scoped checks.",
+  "No Lean theorem relates crates/noble-ngraph/src/cert.rs to Certificate.lean; the model accepted predicate still takes no result graph.",
+  "No multi-step admitted simplification exists, and chained derivations are still refused at the premise check; #42 stays open.",
+  "The cert::check timings in verification/ngraph/README.md predate the replay and were not re-measured.",
+  "No milestone, conformance case, proof obligation or Cairn archive is promoted.",
+  "All 7984 authored body/refinement obligations remain open; inventory classification is not proof."
+ ]
+}

@@ -1776,7 +1776,7 @@
     },
     {
       "file": ".cairn/changes/binary32-lean-reference/design.md",
-      "sha256": "32052d52a6503a41c7688f2a40d29a70ecd317d54530e91ce1237b9bafec5a76"
+      "sha256": "1f28db1520d572e340e366502cdb659dcd913d4ef89c60c45c812166c3aadaab"
     },
     {
       "file": ".cairn/changes/binary32-lean-reference/proposal.md",
@@ -2080,7 +2080,7 @@
     },
     {
       "file": ".cairn/changes/nested-session-protocol/tasks.md",
-      "sha256": "ae97277e375041be90179377101286362b43eb167303833c7e39c79bdad6671e"
+      "sha256": "bc492ef8c2eb52232a6c63e9b470063581636b017b5ed1ce8305c88d741d009a"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
@@ -2124,7 +2124,7 @@
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/design.md",
-      "sha256": "be78601a830f6c29f8a0ad4ce81b20063f1cb243bc892a3c86c6101512217f14"
+      "sha256": "8636dcb3ecf3ec4beb9949da2d50795e7fd525067300b6deae7bc9c176254e49"
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/proposal.md",
@@ -2132,15 +2132,15 @@
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/specs/backend-experiments/spec.md",
-      "sha256": "adba3e5e393696818efd79864b3761386d199ff0748bda2eb5603661c82cd8a2"
+      "sha256": "fb43878d49b58fdad08ae5f3578343366603a47973aefe7e300222a5a7b84924"
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/tasks.md",
-      "sha256": "e1e26fbf0a46bd54943aaaef1d25700653492f2336d20e7d576183d3be9e392d"
+      "sha256": "d412ffe86d18ee70f52ac94c7fd5231070b45085e0d18ea74a6f7f51ab56af14"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/design.md",
-      "sha256": "923f91377b852229ab5d69127e6b4173ec65a9c0720d20406b5b14083ff9251b"
+      "sha256": "7762d437d514762c64bf6f5f70b0dc0448c86688bd9f96b6316de2de97e3c682"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/proposal.md",
@@ -2152,7 +2152,7 @@
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/tasks.md",
-      "sha256": "599da2232f6835ed1e0c26a03e9f2a7199b7e110c2e23142e5d79e34a034b3f5"
+      "sha256": "fb6f8e78a098f05f1434895b034d140547817330c0320c7af60bade5935c899a"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2212,7 +2212,7 @@
     },
     {
       "file": ".cairn/changes/region-trace-relation/tasks.md",
-      "sha256": "6f95beb03e124ac90b09ddd9fd3afbbcfb0507834d655f25012c249000cf93fd"
+      "sha256": "609989af5a27cf93f4c8d8a213cb137e9fc587bb30ded3187eca101af4dc11e3"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -2472,7 +2472,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "e0ab4d45829fb22077d2a6f65ed2faaeec6198ecf32825287721b339fc4a3778"
+      "sha256": "8a311d1a4136c95e2827bc9af77219179deecbac2504d743132d290a868c839c"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2644,7 +2644,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "a6a7783673bf1f84a801a02e46e58cb71ad099d26bbb0c41059a31281a613ab3"
+      "sha256": "9588f6fd125b6efebd5ac687b86806a006792afd0894a56a5f1c6dcccb9c61dd"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2744,11 +2744,11 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "9106c070d80eca130bb7ddfe982c4a5097de41aba7e8d772b115efde072a69a9"
+      "sha256": "245b9cd07c3cc7f2892759a067b29ce8694c2cc272440b03ab65b087371ea4b2"
     },
     {
       "file": "verification/independent-replay/README.md",
-      "sha256": "e314089293f39dd3015bff4fce8fbc3fbf55cb0667be3cd779d4854d81f13561"
+      "sha256": "9c5118781c57a0c73ffd85a64071be0e667e9e0293aec99f0a398342373348f9"
     },
     {
       "file": "verification/linking/README.md",
@@ -2760,7 +2760,7 @@
     },
     {
       "file": "verification/live-slot-coherence/README.md",
-      "sha256": "3b48cd5d96bbce4fdfd817e9ce4e0b4342f446d769201b9b8d6d0fd64dd717ca"
+      "sha256": "8b74fa55cc718335d61b52d2e371a1a61c450b6272664a73b6a15c548ae6e4e8"
     },
     {
       "file": "verification/live-slot-typed-cases/README.md",
@@ -2836,7 +2836,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "edfe60515390a1b3d0c8c2a0894f534a94c28803237cd7e4df63b21a17aa2967"
+      "sha256": "bbacb0c6419a8364f38b69c73545a3eba853107fa448894fb2ccdca23b37719d"
     },
     {
       "file": "verification/native-assurance.md",
@@ -2844,7 +2844,7 @@
     },
     {
       "file": "verification/nested-session/README.md",
-      "sha256": "3c9e02832ea8d810220a0e66ab4ad2b7fe33b04da35f725a80fe1625ebc1ce3e"
+      "sha256": "b314ac115c3d240923caea34f67558e1897eff6d08a29310c18492600fe45c90"
     },
     {
       "file": "verification/ngraph-bytes-issue-31/README.md",
@@ -2852,7 +2852,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "fcdd0d4f808553eab833e4fdf646ff78ac5a6dc338d3e11c9a0b878a010b01c3"
+      "sha256": "3ec333f913fe36997a5234cd8c36e369221e2ee83e07bf825204321e008dd3ae"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
@@ -2892,7 +2892,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "1cc0671e9aaddd5a2bee2b81925a51d7c1b21235debb2dc3164743c752d7b0cc"
+      "sha256": "5ef2a3a6440d33501a9fc2820a76275f775c38eff3f2839cf4a0ae55cd12dbdf"
     },
     {
       "file": "verification/source-inventory.md",
