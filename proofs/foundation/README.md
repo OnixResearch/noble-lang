@@ -1321,8 +1321,17 @@ admissible assignment; one admissible input with two distinct permitted `Bool`
 outputs derives non-determinacy with both outputs named; an uninhabited domain
 derives vacuity while its universal proposition holds; and an intentionally
 relational report is accepted without a determinacy obligation. This last case
-does **not** exercise ordinary program admission; that acceptance criterion
-remains open.
+does **not** itself exercise ordinary program admission.
+
+Criterion 5 separately invokes `noble verify` on ordinary `.noble-contract`
+source: no inputs, one `Bool` output, and `requires true` / `ensures true`.
+Both `[ true ]` and `[ false ]` implementations have
+`ordinary_typing.outcome: accepted`, without a determinacy obligation or a
+specification-quality artifact. Missing implementation evidence remains
+`unknown` (exit `3`) with `independent_recheck: false`; ordinary admission does
+not manufacture a proof. Replacing the Bool implementation with `[ 0 ]` is
+`not-accepted` / `error` (exit `2`): a permissive postcondition cannot bypass
+ordinary typing.
 
 Measured by `crates/noble-cli/tests/spec_quality_report.mjs` (one Rust test
 target launches it against the selected CLI): the refusal classes above,
@@ -1330,9 +1339,10 @@ target launches it against the selected CLI): the refusal classes above,
 the three derived propositions, and the four separated obligations.
 
 Every case also compares the submitted manifest bytes before and after analysis.
-A separate full-syscall trace of all 42 CLI invocations observed only read-only
-file opens and report writes to inherited stdout: no child processes, additional
-executable images or shared writable mappings. A positive control writing a
+At `88a91af8`, a separate full-syscall trace of the 42 `spec-quality` invocations
+observed only read-only file opens and report writes to inherited stdout: no
+child processes, additional executable images or shared writable mappings.
+A positive control writing a
 scratch file and launching another executable was detected by the same trace
 checks. Together with the scalar-only report dispatch, this is finite evidence
 for analysis without guest execution, source mutation or automatic contract
@@ -1348,7 +1358,7 @@ in the filtered list. A mixed `I64`/`Bool` stack differing only in its second ce
 is distinct. A distinct sixteenth output is examined; seventeen permitted outputs
 and a wrong-kind output are refused. All seven accepted regression reports are
 inhabited, realizable and non-vacuous. For the duplicate-first ambiguity, `checked: true` is refused as
-`self-attested-obligation`, while ordinary admission without a determinacy
+`self-attested-obligation`, while report submission without a determinacy
 obligation remains accepted. This is finite production-CLI evidence, not a
 Lean↔Rust correspondence theorem.
 

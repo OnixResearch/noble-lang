@@ -30,11 +30,11 @@ function serialize(document) {
     .replaceAll(`"${I64_MIN}"`, '-9223372036854775808');
 }
 
-function report(name, document) {
-  const file = path.join(workdir, `${name}.json`);
+function report(name, document, command = 'spec-quality') {
+  const file = path.join(workdir, `${name}.${command === 'verify' ? 'noble-contract' : 'json'}`);
   const submitted = Buffer.from(typeof document === 'string' ? document : serialize(document));
   fs.writeFileSync(file, submitted);
-  const child = spawn(binary, ['spec-quality', file], { encoding: 'utf8' });
+  const child = spawn(binary, [command, file], { encoding: 'utf8' });
   let stdout = '';
   let stderr = '';
   child.stdout.on('data', chunk => { stdout += chunk; });
@@ -317,6 +317,33 @@ const relationalReport = await derived('relational-without-determinacy', duplica
 assert.equal(relationalReport.status, 0, 'a relational report needs no determinacy obligation');
 assert.equal(relationalReport.document.specification_quality.derivation.deterministic, false,
   'the report still states what the relation does not establish');
+
+// Criterion 5 uses ordinary contract preparation, not the specification-quality report. Both Bool
+// implementations inhabit the same unconstrained relation. Missing implementation proof remains
+// unknown after ordinary admission; neither uniqueness nor a spec-quality artifact is required.
+const ordinaryContract = program => `(contract 1 relational-bool
+  (input)
+  (output (answer Bool))
+  (program [ ${program} ])
+  (requires true)
+  (ensures true))
+`;
+for (const value of ['true', 'false']) {
+  const ordinary = await report(`ordinary-relational-${value}`, ordinaryContract(value), 'verify');
+  assert.equal(ordinary.status, 3, `${value}: missing implementation proof remains unknown`);
+  assert.equal(ordinary.document.outcome, 'unknown');
+  assert.equal(ordinary.document.ordinary_typing.outcome, 'accepted',
+    `${value}: ordinary admission permits an intentionally relational Bool contract`);
+  assert.equal(ordinary.document.independent_recheck, false,
+    'ordinary admission must not manufacture implementation proof evidence');
+  assert.deepEqual(ordinary.document.diagnostics.map(entry => entry.code), ['evidence-missing']);
+}
+const wrongOrdinaryType = await report('ordinary-relational-wrong-output-type', ordinaryContract('0'), 'verify');
+assert.equal(wrongOrdinaryType.status, 2, 'a permissive postcondition cannot bypass ordinary typing');
+assert.equal(wrongOrdinaryType.document.outcome, 'error');
+assert.equal(wrongOrdinaryType.document.ordinary_typing, 'not-accepted');
+assert.equal(wrongOrdinaryType.document.independent_recheck, false);
+assert.deepEqual(wrongOrdinaryType.document.diagnostics.map(entry => entry.code), ['contract-invalid']);
 
 // A reported submission keeps the four obligations apart and never upgrades an unchecked claim.
 const { status, document } = await report('reported', withBindings({
