@@ -2831,6 +2831,10 @@
       "sha256": "08063222dee141028b4e4d35260283ac7b4c923b1206c0bb24a404a093101cb8"
     },
     {
+      "file": "verification/m5-authority/README.md",
+      "sha256": "441fb4b3529813a2eaca24cb4d427b48811533ead0c2a33d46f22c7dcc3c03b2"
+    },
+    {
       "file": "verification/main-gates/README.md",
       "sha256": "edfe60515390a1b3d0c8c2a0894f534a94c28803237cd7e4df63b21a17aa2967"
     },
