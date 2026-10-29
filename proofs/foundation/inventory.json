@@ -2770,6 +2770,222 @@
       "claim": "a disagreeing sequence has a shortest prefix witness found by the scan, with every shorter prefix recorded as agreeing"
     },
     {
+      "name": "NobleFoundation.TaskInterleaving.bind_ite",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "binding through a guarded result binds each branch"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_symm",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the reduction's independence relation is symmetric"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.left_then_right_commute",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every independent pair with the left-id action first reaches the same result in either order on every table, refusals included"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_actions_commute",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every independent pair of actions commutes on every table: both orders reach the same table or both are refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.independent_is_sound",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the independence relation is sound for the reduction: every related pair commutes on every table"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.outOfOrder_asymm",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a pair pruned by the reduction is never pruned in the other order"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.reaches_insertCanonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "moving an action past related leading actions by adjacent swaps reaches what the unmoved sequence reaches"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.reaches_canonicalize",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "for a sound relation, the canonical representative of a sequence reaches exactly what the sequence reaches from every start table"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.insertCanonical_perm",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "inserting an action into canonical position permutes the sequence"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.canonicalize_perm",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative is a permutation of the sequence"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.insertCanonical_shape",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "insertion either leaves the action in front or moves it past a pruned head"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.canonical_insertCanonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "inserting into a canonical sequence keeps it canonical"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.canonicalize_canonical",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the canonical representative is canonical"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_sequencesOfLength_iff",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the full enumeration of a declared length contains exactly the sequences of that length over the alphabet"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_sequencesUpTo",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the full enumeration up to a depth contains exactly the sequences of at most that length over the alphabet"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_reducedOfLength",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the reduced enumeration of a declared length contains exactly the canonical sequences of that length over the alphabet"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.mem_reducedUpTo",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the reduced enumeration up to a depth contains exactly the canonical sequences of at most that length over the alphabet"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.every_sequence_has_a_reduced_representative",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every full-search sequence has a canonical representative in the reduced search that permutes it and reaches exactly what it reaches from every start"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.reduced_search_agrees",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "for every sound relation, start table, alphabet and depth, the full and reduced searches reach the same set of documented observations"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_starts_are_reachable",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "both declared explorer starts are empty tables after admissions"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_reduction_agrees",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "at the declared starts, alphabet and depth the full and reduced searches reach the same documented observations"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_sequence_counts",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: per start the declared full search enumerates 3616 sequences and the reduced search 2717"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_history_counts",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: reachable histories are 244 full and 243 reduced from baseline, 500 full and 338 reduced from paired"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_declared_observation_counts",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: distinct documented observations are 44 full and 44 reduced from baseline, 87 full and 87 reduced from paired"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_in_the_full_search",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "every coverage witness starts at a declared start and is enumerated by the declared full search"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.contention_is_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the held shared unit refuses the other id's admission and releasing it admits that id"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.cancel_versus_deliver_is_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a cancelled record refuses delivery while a delivered record can still be cancelled"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.late_and_duplicate_callbacks_are_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a second delivery and a delivery or completion after finish are refused, and a repeated successful completion changes nothing"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.stale_handles_are_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "after same-slot reuse the old generation's callback is observation-free and its delivery is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.wakeup_exhaustion_is_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a second wake coalesces, taking a wakeup needs one queued, and a wake after the budget is spent records the sticky failure and marks the record retiring"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.settlement_and_cleanup_ordering_is_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "settlement needs a delivery, cleanup keeps the settlement record and settlement after cleanup is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.once_only_finish_is_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "a second finish of the same record is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.concurrent_distinct_slot_histories_are_covered",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "with both records live the two delivery orders differ while cancelling one record and finishing the other commute"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.different_ids_rule_is_unsound",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the rule that actions on different task ids are independent is refuted as a commuting relation by the delivery pair"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_unsound_reduction_loses_an_observation",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "the reduced search under the unsound different-ids rule loses the right-first delivery observation that the full search and the proved relation keep"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.the_unsound_reduction_is_detected_only_where_ids_interleave",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "kernel-checked: the unsound reduction loses observations from paired but keeps every observation from baseline at the declared bound"
+    },
+    {
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",
