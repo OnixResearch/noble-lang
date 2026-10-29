@@ -1,0 +1,48 @@
+# noble-rewrite-cost/v2
+# Issue #64: frozen before integrated timings. v1 and its receipts remain historical.
+# Keep every v1 fixture and proposer, including source or candidate admission failures.
+# Do not prune/rewrite the submitted endpoint, weaken admission, or execute a refused candidate.
+# Identity scheme: existing test-siphash13x4; these are real library calls, not BLAKE3
+# deployment timings. No Lean, wire-decoder, source compiler or Wasm stage is implied.
+#
+# Per row: 64 unrecorded priming iterations, then 200 samples. Alternate baseline/certified
+# order per sample. Fresh means no admitted graph, compiled artifact or workspace reused;
+# it does NOT mean OS/page/cache cold. Clone the immutable fixture before starting each total.
+# Baseline: input admission -> packed preparation -> actual-layout export/validation -> first run.
+# Certified: input admission -> proposal/construction -> exact certificate check -> candidate
+# admission -> packed preparation -> actual-layout export/validation -> first run.
+# A refused fresh attempt includes all work through refusal and normal cleanup. Never sum
+# independently sampled stage medians and call that a measured end-to-end total.
+# Warm execution reuses the admitted compiled artifact and workspace, still prices preflight
+# and returned outputs, and must agree with the source reference on the same empty input vector.
+#
+# Report both raw-graph certificate-component coverage and full pipeline coverage separately.
+# A stage skipped by a particular refusal is null/not-reached, never zero. Existing certificate
+# wire/decoder and allocator/RSS gaps remain unmeasured, with reasons. Report library graph/code
+# estimates and scratch lease counters with their scopes, not as measured allocator peaks.
+#
+# Retention requires: admitted execution, exact observed output agreement, residual target,
+# the inherited informational 50 us/step check ceiling and a positive measured warm saving.
+# No elapsed-time assertion is a pass/fail gate on this shared host. A linear break-even estimate
+# is permitted only for a quality-eligible executed candidate with positive warm saving:
+# first run + ceil(max(0, certified_fresh_total - baseline_fresh_total) / warm_saving) further runs.
+# The estimate assumes the measured medians persist; it is not an observed crossover.
+
+schema noble-rewrite-cost/v2
+corpus rewrite-quality-v1.txt
+lens crates/noble-ngraph/src/cert.rs
+threshold retention | residual no-foldable-sites | check-per-step-us 50
+
+stage input-admission | status measured | reason check::check on the exact owned source graph
+stage proposal-search | status measured | reason cert::propose after successful source admission
+stage certificate-construction | status measured | reason included in cert::propose; not a second additive stage
+stage certificate-checking | status measured | reason cert::check over the exact proposed endpoints before candidate admission
+stage certificate-wire-bytes | status unmeasured | reason no Rust certificate encoder exists; structural footprint is not wire size
+stage decoding-replay | status unmeasured | reason no Rust decoder is in this in-memory path
+stage candidate-admission | status measured | reason check::check consumes the exact certificate-checked candidate without pruning
+stage backend-preparation | status measured | reason Compiled::new from the independently admitted graph
+stage schedule-validation | status measured | reason packed_layout export plus layout::check on the object that executes; not instruction-byte correspondence
+stage first-execution | status measured | reason Compiled::evaluate with a fresh workspace after all admission stages succeed
+stage warm-execution | status measured | reason Compiled::evaluate_in reuses the accepted compiled object and workspace
+stage full-fresh-attempt | status measured | reason directly timed successful or refused baseline/certified pipeline; no sums of medians
+stage retained-memory | status unmeasured | reason no allocator or RSS accounting; graph/code estimates and scratch lease observations are separately labeled
