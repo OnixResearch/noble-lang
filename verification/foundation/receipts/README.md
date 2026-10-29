@@ -196,3 +196,14 @@ agreement (31 inventoried theorems; that run reported 551 in total). The agreeme
 canonical-form theorems are universal; the history counts and the unsound-rule detection are
 kernel-checked at the declared bound. It is model evidence, not a weak-memory or linearizability
 result, and says nothing about correspondence with the Rust table.
+
+## 9f1288d61 — corrections from the issue audits (issues #38, #43, #45, #48, #56)
+
+`9f1288d61/` records the clean run after the foundation corrections:
+- the PackedLayout register-count rule now uses the highest register, with a real Rust layout
+  accepted;
+- the ServiceWire schema controls are rebuilt on the real record prefix;
+- the binary32 contraction mutant is the fused form;
+- stale docstrings are corrected.
+That run reported 557 theorems. It supersedes nothing: earlier receipts stay as recorded, and
+their statements for the corrected theorems are the ones the corrections replace.

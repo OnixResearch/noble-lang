@@ -636,7 +636,8 @@ multiply-add). Each is caught by a named retained expectation, and
 Detection is kernel-checked model disagreement, not a Rust-side mutation run.
 Until the 2026-10-29 correction, the contraction variant was the reference's own
 product-then-sum rounding rather than a fused one, and `all_declared_mutations_are_caught`
-left it out; it is now the single-rounding form and is included.
+left it out; it is now the single-rounding form and is included (receipt
+[verification/foundation/receipts/9f1288d61/](../../verification/foundation/receipts/9f1288d61/foundation-check.json)).
 
 The packed Rust graph reference and the compiled graph legs replay all 26
 retained expectations (`crates/noble-ngraph-experiment/tests/b2_differential.rs`):
@@ -1045,7 +1046,9 @@ declaration `Compiled::new` emits for the Rust counterpart of
 `PackedSchedule.exampleGraph`, copied from a probe run where `layout::check` accepts it:
 `regs = 5`, registers `[0, 1, 2, 3]`, constants `[(1, 5)]`, slots `[(0, 0)]`, layers
 `[(0, 0), (0, 1), (1, 2)]` and four `u32::MAX` failure-suffix entries. The old rule
-refused that same declaration (checked in a scratch file, not retained).
+refused that same declaration (checked in a scratch file, not retained). Receipt
+[verification/foundation/receipts/9f1288d61/](../../verification/foundation/receipts/9f1288d61/foundation-check.json)
+(557 theorems, `clean_source: true`).
 
 The clean-source kernel check is retained at `verification/foundation/receipts/09a307c64/`
 (393 theorems, `clean_source: true`, every axiom set inside the allow-list).
@@ -1465,7 +1468,9 @@ configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
 substitutions and seeded generated values, with three `control-` cases that a
 counting-only depth scan would decide differently. The lane agrees on every case.
 
-Twenty-eight inventoried theorems after the correction; the earlier receipt
+Twenty-eight inventoried theorems after the correction, receipt
+[verification/foundation/receipts/9f1288d61/](../../verification/foundation/receipts/9f1288d61/foundation-check.json)
+(557 theorems, `clean_source: true`); the earlier receipt
 [verification/foundation/receipts/134b215c5/](../../verification/foundation/receipts/134b215c5/foundation-check.json)
 (454 theorems, `clean_source: true`) predates it.
 
