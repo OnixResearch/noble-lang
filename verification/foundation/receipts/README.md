@@ -177,3 +177,13 @@ and its own lanes.
 theorems; that run reported 428 in total). It is model evidence for `TaskId`/`Lifecycle`/`Slot`/`Table`
 step relations, interleavings and lossy observations; it is not a universal theorem and says
 nothing about compiler correspondence.
+
+## 4e9ca2acb — proved reduction for the task-interleaving model (issue #46)
+
+`4e9ca2acb/` records the clean run at source `4e9ca2acb` that added the wake budget, the retiring
+mark, the proved reduction, the declared-bound counts and the coverage witnesses to
+`NobleFoundation.TaskInterleaving` (36 inventoried theorems; that run reported 520 in total). The
+commutation, canonical-form and agreement theorems are universal over tables, alphabets and depths;
+the counts are kernel-checked by `decide +kernel` at the declared bound only. It is model evidence
+and says nothing about correspondence with the Rust table in
+`crates/noble-kernel/src/async_tasks/table`.

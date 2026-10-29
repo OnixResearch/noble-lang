@@ -146,7 +146,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-13 claim-table rows, 12 proved, 5 tested-bearing and 8 open, 484 inventoried
+14 claim-table rows, 13 proved, 6 tested-bearing and 9 open, 520 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -175,6 +175,7 @@ Status words:
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
+| Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -1503,14 +1504,17 @@ here measures or predicts throughput, first-result latency or allocation.
 `NobleFoundation/TaskInterleaving.lean` is a two-record subject for a
 schedule explorer rather than a scheduler: it names which interleavings are
 reachable and what holds at every reachable prefix, so a full-search baseline
-exists before any reduction is claimed. Records carry a generation, a pin and
-wakeup-reservation units; the table carries a shared admission capacity, a
-sticky first abnormal failure, and ordered delivery and settlement records.
-Actions are `acquire`, `cancel`, `complete`, `deliver`, `staleCallback`,
-`settle`, `cleanup` and `finish`; native stop is not among them because it is
-an input observation, not something cancellation proves. Every refusal is a
-single guard, an action naming a generation must name the live one, and
-same-slot reuse needs a different generation.
+exists before any reduction is claimed. Records carry a generation, a pin,
+queued wakeup units, a lifetime wake budget and a retiring mark; the table
+carries a shared admission capacity, a sticky first abnormal failure, and
+ordered delivery and settlement records. Actions are `acquire`, `cancel`,
+`complete`, `deliver`, `staleCallback`, `settle`, `cleanup`, `finish`, `wake`
+and `takeWake`; native stop is not among them because it is an input
+observation, not something cancellation proves. Every refusal is a single
+guard, an action naming a generation must name the live one, and same-slot
+reuse needs a different generation. (The wake budget, the retiring mark and the
+two wake actions were added with the reduced search below; earlier receipts
+cover the model without them.)
 
 Proved, and the enumeration baseline with it: the empty table satisfies the
 invariants (`empty_table_satisfies_the_invariants`), every acquired step
@@ -1618,6 +1622,91 @@ sequence has a shortest prefix witness with every shorter prefix recorded as
 agreeing (`every_disagreement_has_a_shortest_witness`) — so a shrunk witness is
 replayed from the sequence's own prefix rather than hand-picked.
 
+**Wakeups and the retiring mark.** An acquired record starts with a lifetime
+wake budget of one (`wakeBudget`). `wake` queues one wakeup from the budget,
+coalesces into a wakeup already queued, or, with the budget spent, records the
+sticky failure and marks the record retiring; `takeWake` removes the queued
+wakeup. Cancellation now also marks the record retiring, and a retiring record
+refuses delivery, so cancelling before and after delivery are different
+histories. Both wake actions are refused for a retiring or delivered record, as
+the Rust schema refuses `Wake` and `TakeWake` in the `Retiring` and `Delivered`
+states. The observation keeps both new fields per id. Every earlier statement is
+unchanged and re-checked against the extended model, and the invariant
+preservation proof covers the two new actions.
+
+**Proved reduction.** The reduced search is enabled by a proof rather than by
+finding fewer traces:
+
+- `independent` relates actions on *different* ids that do not conflict on
+  shared state: neither reads the capacity the other moves (admission against
+  admission, finish or cleanup), they do not both write the sticky failure
+  (failing completions and wakes), and they do not both append to one ordered
+  record. Every pair on one id stays dependent, so cancellation/delivery races,
+  generation reuse and a stale callback against its own record are never
+  reordered.
+- `independent_actions_commute` proves that every independent pair reaches the
+  same table in either order **on every table**, both orders refused included
+  (`independent_is_sound`). It is proved for the left-first order
+  (`left_then_right_commute`) and transferred through `independent_symm`.
+- `canonicalize` moves actions past related neighbours by adjacent swaps only,
+  so the representative is a permutation (`canonicalize_perm`), is canonical
+  (`canonicalize_canonical`: no adjacent related pair has the right id first),
+  and reaches exactly what the sequence reaches from every start
+  (`reaches_canonicalize`).
+- `reducedUpTo` enumerates only canonical sequences, pruning while it extends
+  rather than filtering a full enumeration (`mem_reducedUpTo`; the full search
+  is characterised the same way by `mem_sequencesUpTo`).
+- `every_sequence_has_a_reduced_representative` and `reduced_search_agrees`:
+  for **every** sound relation, start table, alphabet and depth, every
+  full-search history has a replayable representative in the reduced search,
+  and the two searches reach the same set of documented observations.
+  `the_declared_reduction_agrees` instantiates it at the declared bound.
+
+The declared bound is fifteen actions (`exploreAlphabet`) to depth three from
+two starts (`declaredStarts`): `baseline`, one live record against one shared
+unit, and `paired`, both records live against two units. Both are empty tables
+after admissions (`the_declared_starts_are_reachable`). Kernel-checked
+deterministic counts (`decide +kernel`; the kernel, not native evaluation, is
+the authority):
+
+| Start | Sequences full / reduced | Reachable histories full / reduced | Distinct observations full / reduced |
+|---|---|---|---|
+| `baseline` | 3616 / 2717 | 244 / 243 | 44 / 44 |
+| `paired` | 3616 / 2717 | 500 / 338 | 87 / 87 |
+
+(`the_declared_sequence_counts`, `the_declared_history_counts`,
+`the_declared_observation_counts`.) From `baseline` the right id is rarely
+enabled, so the reduction saves almost no reachable history; from `paired` it
+saves about a third.
+
+The deliberately unsound rule "different task ids are independent" is the
+control. It is refuted as a commuting relation (`different_ids_rule_is_unsound`),
+and the reduced search it would enable loses the right-first delivery order
+(`the_unsound_reduction_loses_an_observation`). At the declared bound it loses
+observations from `paired` but keeps every observation from `baseline`
+(`the_unsound_reduction_is_detected_only_where_ids_interleave`): agreement
+measured at one start would have accepted it, which is why only the commutation
+proof enables a reduction.
+
+Coverage of the behaviours the baseline must include is stated per behaviour.
+Each history in `coverageWitnesses` starts at a declared start and is in the
+declared full search (`the_coverage_witnesses_are_in_the_full_search`), so its
+canonical representative is in the reduced search:
+
+- contention for the shared unit (`contention_is_covered`);
+- cancellation against delivery in both orders (`cancel_versus_deliver_is_covered`);
+- duplicate and late callbacks (`late_and_duplicate_callbacks_are_covered`);
+- a stale handle after same-slot reuse (`stale_handles_are_covered`);
+- wakeup coalescing and exhaustion (`wakeup_exhaustion_is_covered`);
+- settlement and cleanup ordering (`settlement_and_cleanup_ordering_is_covered`);
+- once-only finish (`once_only_finish_is_covered`);
+- concurrent distinct-slot histories (`concurrent_distinct_slot_histories_are_covered`).
+
+Thirty-six further inventoried theorems. Receipt
+[verification/foundation/receipts/4e9ca2acb/](../../verification/foundation/receipts/4e9ca2acb/foundation-check.json)
+(520 theorems, `clean_source: true`; the new theorems depend on `propext` and
+`Quot.sound` at most).
+
 Open, and deliberately not closed:
 
 - the scan is bounded by one declared sequence and the declared alphabet rather
@@ -1626,12 +1715,16 @@ Open, and deliberately not closed:
 - this is a bounded subject, not a scheduler and not a new source-level async
   model, and no payload/outcome class outside the listed actions is enumerated;
 - no correspondence claim relates the model to the Rust table API in
-  `crates/noble-kernel/src/async_tasks/table`; the invariants are model claims;
-- the universal reduction theorem is not proved and no reduced search exists:
-  the independence fragment above is bounded evidence at the declared bound,
-  with concrete witnesses rather than a theorem over every table and action
-  list, so it never enables a reduction by itself;
-  weak-memory ordering, liveness, fairness, callback-delivery guarantees,
+  `crates/noble-kernel/src/async_tasks/table`; the invariants and the reduction
+  are model claims, and witness histories are not replayed through the Rust
+  table API (the mutation controls in `crates/noble-kernel/tests/m6-interleaving.rs`
+  are rule-level);
+- the independence relation is sound but not complete, canonical forms are not
+  unique, and no optimality is claimed for the reduced search;
+- the counts and the coverage witnesses are for the declared bound only; the
+  wake budget is a model constant of one, and the failure code records which
+  generation failed first, not the failure kind;
+- weak-memory ordering, liveness, fairness, callback-delivery guarantees,
   cleanup after host death and once-only remote effects are outside the model;
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal
   sticky-failure theorem.
