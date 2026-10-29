@@ -123112,62 +123112,6 @@
       "refinement": "not-applicable"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:10515:10522",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:10959:10966",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:11276:11283",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:16281:16789",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:16807:19197",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:3936:3939",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:9783:9790",
-      "refinement": "open"
-    },
-    {
       "category": "generated",
       "disposition": "generated",
       "note": "Renewed 2026-10-29 for issue #72 strict-source repair: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
@@ -123309,6 +123253,94 @@
       "note": "Renewed 2026-10-29 for issue #72 strict-source repair from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::batch::tests::ordered_rows_overwrite_the_reused_output",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:10133:10140",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:10865:10872",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:11309:11316",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:11626:11633",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:17726:18234",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:18252:20642",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:21068:23611",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:4286:4289",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::replay",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::a_redigested_substituted_result_is_refused",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-29 for issue #42 certificate result replay from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::redigested",
       "refinement": "open"
     }
   ],
@@ -127549,9 +127581,9 @@
     "noble-ngraph::closure@crates/noble-ngraph/tests/batch_row_reference.rs:2821:4859",
     "noble-ngraph::closure@crates/noble-ngraph/tests/batch_row_reference.rs:3375:3378",
     "noble-ngraph::closure@crates/noble-ngraph/tests/batch_row_reference.rs:5033:6982",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:1107:4099",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:4109:5388",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:5398:7219",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:1172:4164",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:4174:5453",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/cert_differential.rs:5463:7284",
     "noble-ngraph::closure@crates/noble-ngraph/tests/common/mod.rs:3612:3615",
     "noble-ngraph::closure@crates/noble-ngraph/tests/common/rewrite_corpus.rs:3639:3645",
     "noble-ngraph::closure@crates/noble-ngraph/tests/common/rewrite_corpus.rs:3787:3793",
