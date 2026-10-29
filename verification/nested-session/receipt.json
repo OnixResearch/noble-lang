@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "9f8d51512c688dd24d49d20440045290ed3d2aed",
-  "source_tree": "c229a6aad57d6dffae2cb9b17cce29da74652a94",
+  "source_commit": "246ff5113e331e30938ca10103cfddd57325c02e",
+  "source_tree": "bcc7d3907abae187a4e181d6b3c8dfecb27c158a",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,11 +11,11 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "053882ba7a5c0929dd5e666f79d21eaaf433ce9879159c5bf6d1424ea9aca93d",
-        "proofs/m6/nested-session-inventory.json": "9a0fad8bc239c41a2d730a6d517eb88882958ee038c1816d453632bda81951dd"
+        "proofs/m6/NestedSession.lean": "9924213fdeb70843425523642749d7226403dbb890acd2fefe01fdd119f45f12",
+        "proofs/m6/nested-session-inventory.json": "cf9d33b90214f7e8a617193d1f743460b5564f78d19b6f87c29938e0592b0c13"
       }
     },
-    "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
+    "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol",
     "endpoint_identity_fields": [
       "channel",
       "responder",
@@ -31,21 +31,21 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 68,
+    "model_theorems": 80,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "progress": "guest-local only: an open endpoint whose resolved node declares the action has a successor; no queue, peer, scheduler or host premise",
     "cancellation": "an event class that cuts the committed prefix; it carries no endpoint or session transition",
-    "nested_recursion": "regular only: a nested constructor resolves to its definition and its parameter is unused; no return stack",
+    "nested_recursion": "the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence",
     "type_equality": "no algorithm; duality is definitional"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "053882ba7a5c0929dd5e666f79d21eaaf433ce9879159c5bf6d1424ea9aca93d",
-    "proofs/m6/nested-session-inventory.json": "9a0fad8bc239c41a2d730a6d517eb88882958ee038c1816d453632bda81951dd",
-    "verification/nested-session/check.mjs": "9aa3751f12aa1cfef024f0edff8454af53ea8a835398a07c4067d258309b5af8"
+    "proofs/m6/NestedSession.lean": "9924213fdeb70843425523642749d7226403dbb890acd2fefe01fdd119f45f12",
+    "proofs/m6/nested-session-inventory.json": "cf9d33b90214f7e8a617193d1f743460b5564f78d19b6f87c29938e0592b0c13",
+    "verification/nested-session/check.mjs": "fbdbb2c2296cdc296f90e06aeb76f974140594e6d12600eb7a4407fe290d2589"
   },
-  "theorem_count": 68,
+  "theorem_count": 80,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -970,11 +970,179 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.stackAdvance_keeps_the_stack",
+      "role": "WIT-SESSION-05: a communication continuation preserves the saved return stack and declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stackAdvance_keeps_the_stack : ∀ (state next : NestedSession.StackState) (continuation : Nat), NestedSession.stackAdvance state continuation = some next → next.returnStack = state.returnStack ∧ next.stackLimit = state.stackLimit",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.stackAdvance_respects_the_limit",
+      "role": "WIT-SESSION-05: a successful communication continuation stays within an already valid stack limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stackAdvance_respects_the_limit : ∀ (state next : NestedSession.StackState) (continuation : Nat), state.returnStack.length ≤ state.stackLimit → NestedSession.stackAdvance state continuation = some next → next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.stackState_within_the_limit",
+      "role": "WIT-SESSION-05: a successor carrying a bounded return stack preserves the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stackState_within_the_limit : ∀ (state next : NestedSession.StackState) (endpoint : NestedSession.Endpoint) (stack : List Nat), stack.length ≤ state.stackLimit → { endpoint := endpoint, returnStack := stack, stackLimit := state.stackLimit } = next → next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.stackEnter_respects_the_limit",
+      "role": "WIT-SESSION-03: a successful nested entry adds one frame without exceeding the declared limit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stackEnter_respects_the_limit : ∀ (definitions : List NestedSession.Node) (state next : NestedSession.StackState), (NestedSession.stackEnter definitions state).snd = some next → next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_step_respects_the_limit",
+      "role": "WIT-SESSION-05 invariant: every successful stack step preserves the limit and stays within it from a bounded input stack",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_step_respects_the_limit : ∀ (definitions : List NestedSession.Node) (state : NestedSession.StackState) (action : NestedSession.StackAction) (next : NestedSession.StackState), state.returnStack.length ≤ state.stackLimit → NestedSession.stackStep definitions state action = some next → next.stackLimit = state.stackLimit ∧ next.returnStack.length ≤ next.stackLimit",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_entry_and_return_at_depth_one",
+      "role": "WIT-SESSION-03 positive trace: one bounded nested entry saves and later pops its return continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_entry_and_return_at_depth_one : NestedSession.runStack NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = some { endpoint := { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := false }, returnStack := [], stackLimit := 2 }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_entry_and_return_at_depth_two",
+      "role": "WIT-SESSION-03 positive trace: two nested entries return in last-in-first-out order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_entry_and_return_at_depth_two : NestedSession.runStack NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = some { endpoint := { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := false }, returnStack := [], stackLimit := 2 }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_push_beyond_the_limit_is_refused",
+      "role": "WIT-SESSION-03 negative control: a return-stack push at the declared limit is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_push_beyond_the_limit_is_refused : NestedSession.stackStep NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false }, returnStack := [2], stackLimit := 1 } NestedSession.StackAction.enter = none ∧ (NestedSession.stackEnter NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false }, returnStack := [2], stackLimit := 1 }).fst = NestedSession.Outcome.refusedExhausted",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_two_recv_two_is_accepted",
+      "role": "WIT-SESSION-03 positive trace: the bounded balanced-table fixture accepts send squared followed by receive squared",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.balanced_trace_send_two_recv_two_is_accepted : NestedSession.acceptedStackTrace NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = some { endpoint := { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := false }, returnStack := [], stackLimit := 2 }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_two_recv_three_is_refused",
+      "role": "WIT-SESSION-03 negative control: an extra receive after two sends is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.balanced_trace_send_two_recv_three_is_refused : NestedSession.acceptedStackTrace NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64] = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.balanced_trace_send_three_recv_two_is_refused",
+      "role": "WIT-SESSION-03 negative control: two receives cannot close a three-send trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.balanced_trace_send_three_recv_two_is_refused : NestedSession.acceptedStackTrace NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.dropped_return_continuation_accepts_unbalanced_and_rejects_balanced",
+      "role": "WIT-SESSION-05 load-bearing mutant: dropping the saved continuation accepts an unbalanced trace, refuses the balanced trace, and the real stack refuses that unbalanced trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dropped_return_continuation_accepts_unbalanced_and_rejects_balanced : NestedSession.acceptedStackTraceDroppingReturn NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = some { endpoint := { channel := 5, responder := false, protocol := 9, state := 3, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } ∧ NestedSession.acceptedStackTraceDroppingReturn NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = none ∧ NestedSession.acceptedStackTrace NestedSession.balancedProtocol { endpoint := { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 2 } [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.skipNested, NestedSession.StackAction.recv NestedSession.MessageType.i64, NestedSession.StackAction.finish] = none",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD"
@@ -982,7 +1150,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD^{tree}"
@@ -990,7 +1158,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "status",
         "--porcelain=v1",
@@ -1019,12 +1187,12 @@
         "env",
         "lean",
         "--json",
-        "/var/tmp/ns67-check/Audit.lean"
+        "/tmp/ns-check-246ff511/Audit.lean"
       ],
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD"
@@ -1032,7 +1200,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD^{tree}"
@@ -1040,7 +1208,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "status",
         "--porcelain=v1",
@@ -1053,6 +1221,6 @@
   "scope": [
     ".cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.",
     "The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;",
-    "the only progress statement is guest-local; nested recursion is regular; endpoint delegation is excluded and send is never modelled as receipt."
+    "the only progress statement is guest-local; the balanced table's unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt."
   ]
 }
