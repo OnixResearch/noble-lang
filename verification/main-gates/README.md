@@ -1,5 +1,44 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-29 (eleven affected checks pass at `0a0592f`; three not run)
+
+The [receipt](receipt-0a0592f.json) binds the #64 integrated rewrite-cost lane
+and its renewed test-only accounting to clean source
+`0a0592f1ee6a89a4c0dad7a9a15cfe9c40c53271`: **11 PASS / 0 FAIL / 3 NOT RUN**.
+Policy, tool-selection, source-inventory controls, format, Clippy, documents,
+Cairn, strict Octet, source coverage, native assurance and Rust tests pass.
+Rust reports **872 passed, 0 failed and 7 ignored across 98 result groups**,
+including all seven `rewrite_cost` tests. Strict Octet's lint and architecture
+phases are clean with zero findings; native Cairn is valid over 34 changes
+with no findings.
+
+Source coverage and native assurance return valid with empty diagnostics over
+109 units. Production accounting is unchanged at **15,385 reviewed paths**
+(7,981 body/open, 4,239 generated, 3,165 structural); the reviewed test-only
+array is renewed from 5,985 to 6,263 paths. All 7,981 authored bodies remain
+open refinement obligations.
+
+`tool-versions`, `tool-overrides` and `boundary-controls` were not run at this
+source. The change selects no tool, alters no pin and leaves the 109-unit
+compiler roster unchanged, but that is scope, not a pass: the last complete
+fourteen-check pass remains `91a473c`.
+
+Nine checks ran natively on the verified build host from the archived flake.
+The remote documents attempt failed while realizing its pinned Bun closure: a
+bootstrap source download returned HTTP 404. A sanitized local attempt failed
+during evaluation because SSH could not expand `XDG_RUNTIME_DIR` for a private
+Cargo dependency. Documents then passed on the local daemon, building the
+identical derivation from the same archived source. Cairn also passed on the
+local daemon, matching the `91a473c` placement. A concurrent remote Cairn
+attempt was realizing 1,811 uncached builds; it was interrupted, so its native
+exit is unknown. All three attempts remain in the receipt.
+
+The cost observations are in the
+[source-bound cost receipt](../ngraph/rewrite-cost-2026-10-29.json) and
+[its summary](../ngraph/README.md#integrated-in-memory-accounting-v2). This
+pass binds `0a0592f` only; no milestone, case, proof obligation or Cairn
+archive is promoted.
+
 ## Checking change log — 2026-10-29 (all fourteen checks pass at `91a473c`)
 
 The [receipt](receipt-91a473c.json) records **14 PASS / 0 FAIL** at
@@ -60,7 +99,7 @@ The graph suite passed 77 tests with one ignored test across 15 result groups.
 A deterministic per-step cost regression first returned `0.01` instead of
 `5.01` microseconds: the reporting helper converted microseconds a second
 time. This predates the split: the `8ce33f961` receipt already contains the
-mis-scaled column; [the cost-lane erratum](../ngraph/README.md#cost-accounting-issue-64-items-5-7)
+mis-scaled column; [the cost-lane erratum](../ngraph/README.md#historical-cost-accounting-v1-issue-64-items-5-7)
 derives corrected historical values without rewriting that receipt. The
 corrected helper preserves the unit and the zero-step `None` case.
 All 28 emitted cost rows agree with their reported per-call cost and step

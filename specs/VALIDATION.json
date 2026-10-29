@@ -2644,7 +2644,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "80410a6117eca3e320e29ff9a43e29f68c87a5e7f27fe146648dc1506ca8d990"
+      "sha256": "a6a7783673bf1f84a801a02e46e58cb71ad099d26bbb0c41059a31281a613ab3"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2832,7 +2832,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "2fdce9dca1e733046f704cddd0bcd44adb4f652d875c1f136687024cf965e6e4"
+      "sha256": "edfe60515390a1b3d0c8c2a0894f534a94c28803237cd7e4df63b21a17aa2967"
     },
     {
       "file": "verification/native-assurance.md",
@@ -2848,7 +2848,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "5c58b024b50de4c40558b70e290d78fbecd1be53b27b24aef74d5caa37a342c3"
+      "sha256": "fcdd0d4f808553eab833e4fdf646ff78ac5a6dc338d3e11c9a0b878a010b01c3"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",

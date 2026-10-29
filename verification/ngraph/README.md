@@ -127,6 +127,35 @@ The historical 27 accepted certificates and 16 residual targets are not 27 execu
 In particular, the old `ordered-outputs` name does not discharge ordered/repeated-output coverage.
 Those corpus and admitted-rewrite obligations keep #64 open; they are not bypassed to improve a score.
 
+The [v2 receipt](rewrite-cost-2026-10-29.json) binds clean source `0a0592f1e` and the
+pre-registered plan `e7ccedcbf`. Its sibling
+[raw stdout](rewrite-cost-2026-10-29.json.evidence/raw/stdout),
+[raw stderr](rewrite-cost-2026-10-29.json.evidence/raw/stderr), process record and source snapshots
+are byte-identical retained copies; the receipt preserves their original absolute capture paths
+and hashes. The executable itself is identified by path, SHA-256, byte count and mode, not checked
+into the repository. The real runner completed all seven regression/report tests.
+
+Measured over 200 samples per path after the stated priming, with medians and IQRs in every row:
+
+| Observation | Result |
+|---|---|
+| Certificate-only coverage | 28 attempts, 27 accepted, 1 refused, 16 residual targets reached |
+| Integrated coverage | 8 source refusals, 1 certificate refusal, 14 candidate refusals, 5 executable identities |
+| Direct fresh baseline total, five executable identity rows | 13.405–15.389 µs |
+| Direct fresh certified total, those same identity rows | 45.936–53.229 µs |
+| Warm baseline execution, admitted rows | 0.241–0.271 µs |
+| Warm certified execution, executable identities | 0.250–0.271 µs |
+| Certificate-check cost per step, step-bearing rows | 6.21–13.54 µs; informational, not an execution acceptance criterion |
+| Actual execution calls, including priming | 10,560 baseline; 2,640 certified; zero for refused candidates |
+| Break-even | Unmeasured in all 28 rows; no executable optimized candidate reaches a quality target |
+
+Every observed fresh/warm output agrees exactly with the admitted source reference. The wrapping
+case retains `-9223372036854775808` as a decimal string. Scratch leases balance and retain zero live
+bytes after each observed execution; this is not allocator/RSS accounting. Refused-prefix totals
+remain in the receipt and are not compared as successful execution times. These shared-host debug
+figures do not establish a production speedup or amortization benefit. An overwrite attempt returned
+exit 2 without changing the receipt; a dirty-source attempt refused before Cargo execution.
+
 Run from a clean committed checkout, using the selected Node executable in `policy/tool-selection.json`:
 
 ```text

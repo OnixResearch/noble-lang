@@ -1,0 +1,5 @@
+   Compiling noble-kernel v0.0.0 (/home/brittonr/.cache/noble-issues/wt/rewrite64-HkfCN3/checkout/crates/noble-kernel)
+   Compiling noble-contracts v0.0.0 (/home/brittonr/.cache/noble-issues/wt/rewrite64-HkfCN3/checkout/crates/noble-contracts)
+   Compiling noble-ngraph v0.0.0 (/home/brittonr/.cache/noble-issues/wt/rewrite64-HkfCN3/checkout/crates/noble-ngraph)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.94s
+     Running tests/rewrite_cost.rs (/home/brittonr/.cache/noble-issues/wt/rewrite64-HkfCN3/rewrite-cost-receipt.json.evidence/target/debug/deps/rewrite_cost-de0940107f21480a)

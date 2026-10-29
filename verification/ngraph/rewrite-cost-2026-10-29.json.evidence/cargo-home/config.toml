@@ -1,0 +1,6 @@
+[source.crates-io]
+replace-with = "reviewed-vendor"
+[source.reviewed-vendor]
+directory = "/nix/store/30ikms0n34wqal44lr5sjr9qzaayg385-noble-reviewed-offline-vendor/source-registry-0"
+[net]
+offline = true
