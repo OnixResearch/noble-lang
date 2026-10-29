@@ -1,8 +1,8 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "998d2cf085f3f0593636067bbc27a8ee4900946f",
-  "source_tree": "181b4a47c6da1f102b7de4643020913af74020c5",
+  "source_commit": "2f7b449af149b9b7f053a0ea5e062d3a10fe4deb",
+  "source_tree": "bf7fb1998356e2fd216f10ee5a7aa4c8ab6c5d0c",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "5552291e78c82a3775251a5a0a2ac7baba2eec24e0281a2111708e30ff54077d",
-        "proofs/m5/region-trace-inventory.json": "34631b08dbf857ad8b0171b1978192a0ef61e68be02860721cac059401cdaa96"
+        "proofs/m5/RegionTrace.lean": "b62fcd88783ff23bfbe40f508881ef7bcd47cca0e3b2a453dbf09239d2d447b9",
+        "proofs/m5/region-trace-inventory.json": "d0a0d8f408e14091399140eff2203afea6e4bf7de81ed78ca37adadd580c6e4a"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 39,
+    "model_theorems": 40,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "5552291e78c82a3775251a5a0a2ac7baba2eec24e0281a2111708e30ff54077d",
-    "proofs/m5/region-trace-inventory.json": "34631b08dbf857ad8b0171b1978192a0ef61e68be02860721cac059401cdaa96",
+    "proofs/m5/RegionTrace.lean": "b62fcd88783ff23bfbe40f508881ef7bcd47cca0e3b2a453dbf09239d2d447b9",
+    "proofs/m5/region-trace-inventory.json": "d0a0d8f408e14091399140eff2203afea6e4bf7de81ed78ca37adadd580c6e4a",
     "verification/region-trace/check.mjs": "8ca57112a417381d384937d4cacd94a4f6c34282c6c1dec3a14801c81e7c06ab"
   },
-  "theorem_count": 39,
+  "theorem_count": 40,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -295,6 +295,20 @@
       ]
     },
     {
+      "name": "RegionTrace.related_rejects_release_then_retirement",
+      "role": "WIT-TRACE-03 negative control: a guest release followed by a host retirement of the same region is a second release and is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_release_then_retirement : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.normalReturn, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
       "name": "RegionTrace.related_rejects_missing_protected_commit",
       "role": "WIT-TRACE-03 negative control: a source protected commit missing from the target is refused",
       "allowed_standard_axioms": [
@@ -484,14 +498,14 @@
     },
     {
       "name": "RegionTrace.source_release_is_at_most_once",
-      "role": "WIT-TRACE-03 corollary: at-most-once release inherited by the source alphabet",
+      "role": "WIT-TRACE-03 corollary: a related trace commits at most one release or retirement, inherited by the source alphabet",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "RegionTrace.source_release_is_at_most_once : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → ((List.range 3).all fun member => decide (List.count member (RegionTrace.releaseMembers steps) ≤ 1)) = true",
+      "statement": "RegionTrace.source_release_is_at_most_once : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → (RegionTrace.releaseMembers steps).length ≤ 1",
       "axioms": [
         "propext"
       ]
@@ -628,7 +642,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/rt-f1/Audit.lean"
+        "/var/tmp/region50-check/Audit.lean"
       ],
       "exit": 0
     },

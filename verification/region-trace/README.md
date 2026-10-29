@@ -54,7 +54,7 @@ well-formedness itself is a condition of the relation:
 | `source_commits_are_decided`, `source_release_is_at_most_once` | WIT-TRACE-03 corollaries: exact identity and at-most-once release are inherited by the source alphabet |
 | `fixture_{ordinary_error,host_bounds_refusal,trap_after_protected_copy,cleanup_failure_after_protected_copy,quota_prefix_stops_before_the_copy,quota_prefix_keeps_the_affordable_commit}` | WIT-TRACE-05 fixtures at model level: the design's observable executions relate as designed, and the quota boundary is measured rather than assumed |
 
-`verification/region-trace/receipt.json` is the retained receipt of one clean-source run: **39** model
+`verification/region-trace/receipt.json` is the retained receipt of one clean-source run at `2f7b449a`: **40** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
@@ -63,7 +63,7 @@ The receipt carries a `bindings` block: the model revision (pinned Lean version 
 plus the source and inventory hashes) is bound, and `component`, `helper` and `engine` are recorded as
 **`null` with the reason stated** — no component, lowering helper or engine instance is a subject of
 these theorems, so binding one would imply a correspondence this package does not establish. A
-`claims` block labels the verdict: 39 model theorems, 0 implementation theorems, correspondence none,
+`claims` block labels the verdict: 40 model theorems, 0 implementation theorems, correspondence none,
 liveness none, cancellation unsupported and unmodelled.
 
 ## Non-claims
