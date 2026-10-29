@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { receiptsBindingModel } from '../foundation/model-receipts.mjs';
 
 const args = process.argv.slice(2);
 const rootIndex = args.indexOf('--root');
@@ -29,15 +30,17 @@ const lanes = [
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-ownership-target CARGO_INCREMENTAL=0 ' +
   'cargo test -p noble-kernel --test acceptance ownership -- --nocapture';
 
+// Identity fields and parsed lane output come from stdout alone: inside `nix develop` an automatic
+// store garbage collection prints progress to stderr, and that must never land in a receipt field.
 function run(argv, cwd) {
   const result = spawnSync('nix', ['develop', '--command', ...argv], {
     cwd, encoding: 'utf8', timeout: 1800_000, maxBuffer: 64 * 1024 * 1024,
   });
-  const text = `${result.stdout ?? ''}${result.stderr ?? ''}`;
   if (result.status !== 0) {
+    const text = `${result.stdout ?? ''}${result.stderr ?? ''}`;
     throw new Error(`command failed (${result.status}): ${argv.join(' ')}\n${text.slice(-2000)}`);
   }
-  return text;
+  return result.stdout ?? '';
 }
 
 const sha256 = file =>
@@ -112,7 +115,7 @@ const receipt = {
   },
   correspondence: {
     route: 'handwritten Lean reference compared against the production acceptance machine and a test-local shadow checker by this differential lane',
-    model_theorems: 'the eighteen NobleFoundation.Ownership theorems in proofs/foundation/receipts/e7cc00993/foundation-check.json',
+    model_theorems: receiptsBindingModel(root, [modelFile], 'NobleFoundation.Ownership'),
     production_analogue: 'dup and drop sequences over nameable operand payloads, driven through noble_kernel::acceptance::check',
     open_edge: 'no extraction or refinement proof relates crates/noble-kernel/src/acceptance to the Lean model; the differential is finite evidence on one host and target',
   },

@@ -24,13 +24,17 @@ const lanes = [
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-binary32-shrink-target CARGO_INCREMENTAL=0 ' +
   `cargo test -p noble-ngraph-experiment --test b2_differential shrink -- --nocapture`;
 
+// The toolchain and lane output come from stdout alone: stderr inside `nix develop` can carry
+// store garbage-collection progress, which must never land in a receipt field.
 function run(argv, cwd) {
   const result = spawnSync('nix', ['develop', '--command', ...argv], {
     cwd, encoding: 'utf8', timeout: 1800_000, maxBuffer: 64 * 1024 * 1024,
   });
-  const text = `${result.stdout ?? ''}${result.stderr ?? ''}`;
-  if (result.status !== 0) throw new Error(`command failed (${result.status}): ${argv.join(' ')}\n${text.slice(-2000)}`);
-  return text;
+  if (result.status !== 0) {
+    const text = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+    throw new Error(`command failed (${result.status}): ${argv.join(' ')}\n${text.slice(-2000)}`);
+  }
+  return result.stdout ?? '';
 }
 
 // Host git does not need the devShell, and running it through `nix develop` mixes
