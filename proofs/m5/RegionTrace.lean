@@ -153,11 +153,12 @@ def readCommitsExplained (steps : List AbiStep) : Bool :=
   let crossings := readCrossings steps
   (readCommits steps).all (fun read => crossings.contains read)
 
-/-- At most one release or retirement per trace: `guestRelease`, `destructorRelease` and
-`hostRetire` may each commit at most once. -/
+/-- At most one release or retirement per trace: of `guestRelease`, `destructorRelease` and
+`hostRetire`, a trace commits at most one, so a guest release followed by a host retirement of
+the same region is a second release. (The earlier definition bounded each kind separately and
+accepted that pair.) -/
 def atMostOnce (steps : List AbiStep) : Bool :=
-  let members := releaseMembers steps
-  (List.range 3).all (fun member => members.count member ≤ 1)
+  decide ((releaseMembers steps).length ≤ 1)
 
 /-- Target well-formedness: the relation relates the source trace to a target trace that is
 actually well formed, so a substituted identity, an unexplained read commit or a second
@@ -367,6 +368,14 @@ theorem related_rejects_two_guest_releases :
        .cleanup .guestRelease 5, .cleanup .guestRelease 5] = false := by
   decide
 
+/-- A guest release followed by a host retirement of the same region is a second release of
+one region, and the relation refuses it even though each kind commits only once. -/
+theorem related_rejects_release_then_retirement :
+    related [.req .regionRead 0 8, .commit .guestRelease 7, .commit .hostRetire 7]
+      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .protectedCopy 8,
+       .normalReturn, .cleanup .guestRelease 7, .cleanup .hostRetire 7] = false := by
+  decide
+
 theorem related_rejects_missing_protected_commit :
     related [.req .regionRead 0 8, .commit .guestRelease 7]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .normalReturn] = false := by
@@ -530,15 +539,15 @@ theorem source_commits_are_decided (source : List SourceEvent) (steps : List Abi
   simp only [wellFormed, identitiesDecided, Bool.and_eq_true] at both
   exact both.2.1.1
 
-/-- A related source trace never performs two guest releases: at-most-once release is inherited by
-the source alphabet rather than asserted about it. -/
+/-- A related source trace commits at most one release or retirement: at-most-once release is
+inherited by the source alphabet rather than asserted about it. -/
 theorem source_release_is_at_most_once (source : List SourceEvent) (steps : List AbiStep)
     (relatedTrace : related source steps = true) :
-    (List.range 3).all (fun member => (releaseMembers steps).count member ≤ 1) = true := by
+    (releaseMembers steps).length ≤ 1 := by
   have both := relatedTrace
   rw [related, Bool.and_eq_true] at both
   simp only [wellFormed, atMostOnce, Bool.and_eq_true] at both
-  exact both.2.2
+  exact of_decide_eq_true both.2.2
 
 /-! ## Fixtures (WIT-TRACE-05, model level)
 

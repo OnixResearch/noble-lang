@@ -50,8 +50,11 @@
   `quota-exhausted` with `fuel_remaining: 0`); `adapter-invalid` and a refused cleanup are not
   producible from this interface, so the task stays open rather than being ticked.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
-  Model-level controls done: substituted identity, unexplained read commit, second release, missing
-  protected commit, host cleanup as guest release and a denial traded for a success are refused.
+  Model-level controls done: substituted identity, unexplained read commit, second release, a guest
+  release followed by a host retirement of the same region (refused since `atMostOnce` bounds
+  releases and retirements together; it previously bounded each kind separately and accepted that
+  pair), missing protected commit, host cleanup as guest release and a denial traded for a success
+  are refused.
   Swapped requests and substituted responses at the host/WIT interface still need the instrumentation
   this package does not add, so the task stays open.
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]

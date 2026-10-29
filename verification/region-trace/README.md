@@ -27,7 +27,11 @@ well-formedness itself is a condition of the relation:
 * every commit identity was decided by a `hostDecision` first (a rep number or handle class can never
   stand in for the exact identity);
 * every protected read commit is preceded by the crossing that asked for exactly that region;
-* a release or retirement kind commits at most once.
+* a trace commits at most one release or retirement (`guestRelease`, `destructorRelease` or
+  `hostRetire`), so a guest release followed by a host retirement of the same region is refused.
+  Until 2026-10-29 the condition bounded each kind separately, so that pair was well formed even
+  though the definition's own docstring said "at most one release or retirement per trace";
+  `related_rejects_release_then_retirement` is the control for the corrected condition.
 
 | Theorem | Claim |
 |---|---|
@@ -41,7 +45,7 @@ well-formedness itself is a condition of the relation:
 | `abnormal_exit_class_is_not_in_the_projection`, `abnormal_exit_classes_collapse_in_projection` | the trap/quota/cleanup distinction is a target-side observation |
 | `append_projection` | prefix compatibility: projections compose over concatenation |
 | `take_projection` | a cut trace relates only when its retained prefix is itself well formed |
-| `related_rejects_{substituted_identity,unexplained_read_commit,two_guest_releases,missing_protected_commit,host_cleanup_as_guest_release,denial_erased_into_success}` | the forged target traces are refused, each by the condition that names it |
+| `related_rejects_{substituted_identity,unexplained_read_commit,two_guest_releases,release_then_retirement,missing_protected_commit,host_cleanup_as_guest_release,denial_erased_into_success}` | the forged target traces are refused, each by the condition that names it |
 | `related_accepts_well_formed_success` | the refusals are not vacuous: a well-formed success relates |
 | `retainFrom_prefix`, `retainFrom_cost_bounded` | a trace retained before fuel exhausts is a prefix of the full trace and costs no more than the budget |
 | `filterMap_prefix`, `exhaustion_keeps_committed_prefix`, `exhaustion_keeps_commit_identities` | the retained trace's projected commits and identities are prefixes of the full trace's: exhaustion may cut a trace but cannot invent or drop a commit |
