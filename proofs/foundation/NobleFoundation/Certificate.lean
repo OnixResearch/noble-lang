@@ -12,6 +12,9 @@ file models that *format* and proves what its acceptance does and does not buy:
   the declared ones *and* the claim passes the graph checker, so acceptance of a
   derived certificate implies the rule theorem for its fold step
   (`accepted_fold_step_denotes`);
+* replaying every accepted fold in order, while leaving identity steps untouched,
+  preserves every node denotation (`accepted_endpoint_equivalence`); the step
+  premises in this model are checked against the original graph, as in `cert.rs`;
 * non-increasing node order is refused.
 
 What this is not: no decoding of actual bytes is modelled, so nothing here binds
@@ -92,6 +95,31 @@ def wellFormed (derivation : Derivation) : Bool :=
 def accepted (graph : Graph) (derivation : Derivation) : Bool :=
   wellFormed derivation && derivation.steps.all (stepAccepted graph)
 
+/-! ### Replay -/
+
+/-- Apply the graph-changing part of one certificate step. Fold steps replace
+their target node with the claimed constant; identity steps are recorded but do
+not change the graph. The nonzero branch also leaves unknown rules unchanged,
+but such a step cannot occur in an accepted derivation. -/
+def applyStep (graph : Graph) (step : Step) : Graph :=
+  match step.rule with
+  | 0 =>
+      { graph with
+        node := fun index =>
+          if index = step.index then .constant step.claimed else graph.node index }
+  | _ => graph
+
+/-- Replay a list of steps in its declared order. -/
+def applySteps (graph : Graph) : List Step → Graph
+  | [] => graph
+  | step :: rest => applySteps (applyStep graph step) rest
+
+/-- The result graph denoted by a derivation. This mirrors `cert.rs::replay`:
+only constant-folding steps are applied in place, while identity steps remain
+recorded without changing node identities. -/
+def applyDerivation (graph : Graph) (derivation : Derivation) : Graph :=
+  applySteps graph derivation.steps
+
 /-! ### Refusals -/
 
 /-- A certificate that names another revision is refused. -/
@@ -164,5 +192,155 @@ theorem accepted_fold_step_denotes (graph : Graph) (hwf : WellFormed graph)
   exact checked_sound_const_add graph hwf inputs step.index step.first step.second
     step.claimed
     (accepted_implies_checked graph derivation haccepted step hmem _ hclaimEq)
+
+/-- An accepted derivation preserves every graph denotation when its replayed
+graph is compared with the original. Acceptance checks each step against the
+original graph, exactly as the Rust checker does; the induction therefore uses
+the already-established agreement invariant to show that later fold targets
+still have their original denotations. -/
+theorem accepted_endpoint_equivalence (graph : Graph) (hwf : WellFormed graph)
+    (derivation : Derivation) (haccepted : accepted graph derivation = true)
+    (inputs : Nat → BitVec 64) :
+    ∀ index, value graph inputs index =
+      value (applyDerivation graph derivation) inputs index := by
+  have go : ∀ (steps : List Step) (current : Graph),
+      (∀ step ∈ steps, step ∈ derivation.steps) →
+      WellFormed current →
+      (∀ index, value graph inputs index = value current inputs index) →
+      ∀ index, value graph inputs index = value (applySteps current steps) inputs index := by
+    intro steps
+    induction steps with
+    | nil =>
+        intro current _ _ hagree index
+        simpa [applySteps] using hagree index
+    | cons step rest ih =>
+        intro current hmem hwfCurrent hagree index
+        have hstepmem : step ∈ derivation.steps := hmem step (by simp)
+        have hrestmem : ∀ tailStep ∈ rest, tailStep ∈ derivation.steps := by
+          intro tailStep htail
+          exact hmem tailStep (by simp [htail])
+        by_cases hrule : step.rule = 0
+        · have hdecode : decodeStep step =
+              some (.constAdd step.index step.first step.second step.claimed) := by
+            simp [decodeStep, hrule]
+          have hchecked :
+              Checked graph (.constAdd step.index step.first step.second step.claimed) = true :=
+            accepted_implies_checked graph derivation haccepted step hstepmem _ hdecode
+          have hdenote : value graph inputs step.index = some (.i64 step.claimed) :=
+            checked_sound_const_add graph hwf inputs step.index step.first step.second
+              step.claimed hchecked
+          have hcurrent : value current inputs step.index = some (.i64 step.claimed) := by
+            rw [← hagree step.index]
+            exact hdenote
+          have hnextWf : WellFormed (applyStep current step) := by
+            refine ⟨?_, ?_⟩
+            · simpa [applyStep, hrule] using hwfCurrent.1
+            intro index operand hoperand
+            by_cases hindex : index = step.index
+            · subst index
+              simp [applyStep, hrule, Node.operands] at hoperand
+            · apply hwfCurrent.2 index operand
+              simpa [applyStep, hrule, hindex] using hoperand
+          have hnode : (applyStep current step).node step.index =
+              .constant step.claimed := by
+            simp [applyStep, hrule]
+          have hnext : value (applyStep current step) inputs step.index =
+              some (.i64 step.claimed) :=
+            constant_value (applyStep current step) inputs step.index step.claimed hnode
+          have hlocal : ∀ index, value current inputs index =
+              value (applyStep current step) inputs index := by
+            apply replacement_lift current (applyStep current step) inputs
+              hwfCurrent hnextWf step.index
+            · intro index hlt
+              simp [applyStep, hrule, Nat.ne_of_lt hlt]
+            · intro index hgt
+              have hne : index ≠ step.index := by omega
+              simp [applyStep, hrule, hne]
+            · exact hcurrent.trans hnext.symm
+          have htailAgree : ∀ index, value graph inputs index =
+              value (applyStep current step) inputs index := by
+            intro index
+            exact (hagree index).trans (hlocal index)
+          have htail := ih (applyStep current step) hrestmem hnextWf htailAgree
+          simpa [applySteps] using htail index
+        · have htail := ih current hrestmem hwfCurrent hagree
+          simpa [applySteps, applyStep, hrule] using htail index
+  intro index
+  simpa [applyDerivation] using
+    go derivation.steps graph (by intro step hmem; exact hmem) hwf
+      (by intro index; rfl) index
+
+/-! ### Replay fixture -/
+
+/-- Two independent constant additions in strictly increasing node order. -/
+def multiFoldGraph : Graph where
+  arity := 6
+  output := 5
+  node := fun index =>
+    if index = 0 then .constant 3
+    else if index = 1 then .constant 5
+    else if index = 2 then .add 0 1
+    else if index = 3 then .constant 7
+    else if index = 4 then .constant 9
+    else .add 3 4
+
+/-- The two folds are checked against the original graph, as in `cert.rs`. -/
+def multiFoldDerivation : Derivation where
+  revision := revision
+  steps := [
+    ⟨0, 2, 0, 1, 3, 5, 8⟩,
+     ⟨0, 5, 3, 4, 7, 9, 16⟩]
+
+theorem multiFoldGraph_wellFormed : WellFormed multiFoldGraph := by
+  refine ⟨by decide, ?_⟩
+  intro index operand hmem
+  by_cases h0 : index = 0
+  · subst h0
+    simp [multiFoldGraph, Node.operands] at hmem
+  by_cases h1 : index = 1
+  · subst h1
+    simp [multiFoldGraph, Node.operands] at hmem
+  by_cases h2 : index = 2
+  · subst h2
+    simp [multiFoldGraph, Node.operands] at hmem
+    omega
+  by_cases h3 : index = 3
+  · subst h3
+    simp [multiFoldGraph, Node.operands] at hmem
+  by_cases h4 : index = 4
+  · subst h4
+    simp [multiFoldGraph, Node.operands] at hmem
+  · simp [multiFoldGraph, h0, h1, h2, h3, h4, Node.operands] at hmem
+    omega
+
+theorem multiFold_derivation_accepted :
+    accepted multiFoldGraph multiFoldDerivation = true := by
+  decide
+
+theorem multiFold_reference :
+    value multiFoldGraph (fun _ => 0) 2 = some (.i64 8) ∧
+      value multiFoldGraph (fun _ => 0) 5 = some (.i64 16) := by
+  decide
+
+theorem multiFold_endpoint :
+    ∀ index, value multiFoldGraph (fun _ => 0) index =
+      value (applyDerivation multiFoldGraph multiFoldDerivation) (fun _ => 0) index := by
+  exact accepted_endpoint_equivalence multiFoldGraph multiFoldGraph_wellFormed
+    multiFoldDerivation multiFold_derivation_accepted (fun _ => 0)
+
+/-- A result that substitutes a different constant at the first fold target is
+not the graph produced by replay. -/
+def substitutedMultiFoldGraph : Graph where
+  arity := multiFoldGraph.arity
+  output := multiFoldGraph.output
+  node := fun index =>
+    if index = 2 then .constant 9 else multiFoldGraph.node index
+
+theorem substituted_result_differs :
+    substitutedMultiFoldGraph ≠ applyDerivation multiFoldGraph multiFoldDerivation := by
+  intro heq
+  have hnode := congrArg (fun candidate : Graph => candidate.node 2) heq
+  simp [substitutedMultiFoldGraph, applyDerivation, applySteps, applyStep,
+    multiFoldDerivation, multiFoldGraph] at hnode
 
 end NobleFoundation.Certificate

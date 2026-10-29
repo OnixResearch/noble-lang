@@ -2446,6 +2446,42 @@
       "claim": "An accepted certificate fold step denotes the claimed constant through the model own graph checker."
     },
     {
+      "name": "NobleFoundation.Certificate.accepted_endpoint_equivalence",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "Replaying every fold in an accepted derivation preserves every graph node denotation."
+    },
+    {
+      "name": "NobleFoundation.Certificate.multiFoldGraph_wellFormed",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The two-independent-fold certificate fixture is well formed."
+    },
+    {
+      "name": "NobleFoundation.Certificate.multiFold_derivation_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The two independent folds are accepted against the original graph."
+    },
+    {
+      "name": "NobleFoundation.Certificate.multiFold_reference",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The two independent fold targets denote 8 and 16 in the fixture."
+    },
+    {
+      "name": "NobleFoundation.Certificate.multiFold_endpoint",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The endpoint theorem applies to every node of the two-fold fixture."
+    },
+    {
+      "name": "NobleFoundation.Certificate.substituted_result_differs",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A substituted result graph with a different folded constant differs from replay."
+    },
+    {
       "name": "NobleFoundation.CertificateCodec.decode_encode_step_replays",
       "phase": 2,
       "role": "certificate-codec",

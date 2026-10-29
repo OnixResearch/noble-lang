@@ -176,7 +176,7 @@ Status words:
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
-| Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
+| Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
@@ -1048,6 +1048,11 @@ preserves unaffected shared uses (`replacement_lift`). The checker decodes exact
 node shapes, operand positions and constant bits from the graph — it never asks
 the reference for the answer — and acceptance implies the declared denotation
 (`checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`).
+The format model also proves the replay endpoint theorem
+(`Certificate.accepted_endpoint_equivalence`): for accepted steps whose premises
+are checked against the original graph, applying every fold in order (while
+recording but not applying identity steps) preserves every node denotation. This
+is a theorem about the Lean replay model, not yet about the Rust implementation.
 
 Fixtures and controls: the three-constant fixture denotes `8` at both its addition
 and its multiplication (`foldGraph_reference`); the true constant-folding claim is
@@ -1055,21 +1060,24 @@ accepted (`fold_certificate_accepted`) and a wrong claimed constant
 (`wrong_constant_refused`), swapped operand positions (`swapped_operands_refused`),
 a claim naming a node of another kind (`wrong_rule_identity_refused`) and the
 identity claim at swapped positions (`wrong_bits_refused`) are refused. Eighteen
-inventoried theorems; receipt
+inventoried GraphRewrite theorems. The two-independent-fold certificate fixture
+is accepted and has endpoint agreement (`multiFold_derivation_accepted`,
+`multiFold_reference`, `multiFold_endpoint`), while a substituted result graph
+differs from replay (`substituted_result_differs`). Receipt
 [`verification/foundation/receipts/71c02b9bb/`](../../verification/foundation/receipts/71c02b9bb/foundation-check.json)
 (345 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
-- the Rust derivation lane is implementation evidence, not a consequence of this
-  model: `crates/noble-ngraph/src/cert.rs` emits and checks a versioned
-  `ngraph-cert/0` derivation, but no correspondence theorem binds it to these
-  definitions, and there is no replay budget, Rust byte codec or wire-size
-  measurement. Until the #42 checker fix, `cert::check` bound the resulting graph
-  only by its digest, so a substituted result that the producer re-digested was
-  accepted; it now replays the folds on the original and refuses any other result
-  (`Refusal::ResultMismatch`);
+- **correspondence to `cert.rs` remains open**: the Lean endpoint theorem above
+  is about `Certificate.applyDerivation`, while
+  `crates/noble-ngraph/src/cert.rs` emits and checks a versioned `ngraph-cert/0`
+  derivation. No theorem yet binds the Rust steps, replay or result graph to the
+  Lean structures; there is also no replay budget, Rust byte codec or wire-size
+  measurement. The checker now replays folds on the original and refuses any
+  other result (`Refusal::ResultMismatch`), but that fix is implementation
+  evidence rather than a Lean correspondence result;
 - `crates/noble-ngraph/tests/cert_differential.rs` executes both endpoints of
   single-step folds on the compiled and reference evaluators; no multi-step
   simplification is admitted, and its expectations are computed in Rust rather
@@ -1170,7 +1178,13 @@ refused (`unordered_refused`); acceptance implies the graph checker accepts ever
 decoded claim (`accepted_implies_checked`); and consequently an accepted
 certificate's fold step denotes the claimed constant
 (`accepted_fold_step_denotes`), i.e. the encoder's claim is the checker's
-denotation rather than taken on faith. Seven inventoried theorems; receipt
+denotation rather than taken on faith. The replay model applies fold steps in
+order while leaving identity steps unchanged, and the endpoint theorem
+(`accepted_endpoint_equivalence`) proves agreement of every node denotation
+under an accepted derivation whose premises are checked against the original
+graph. The two-independent-fold fixture and substituted-result control are
+`multiFold_endpoint` and `substituted_result_differs`. Thirteen inventoried
+theorems; receipt
 [`verification/foundation/receipts/d67efd4a2/`](../../verification/foundation/receipts/d67efd4a2/foundation-check.json)
 (374 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
