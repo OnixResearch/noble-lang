@@ -1,0 +1,110 @@
+{
+  "schema": "noble-m5-authority-model-inputs/v1",
+  "source": "verification/m5/discovery.tar.gz",
+  "archive_sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+  "historical_extraction_receipt": "verification/m5/extraction.json",
+  "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+  "historical_source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+  "members": {
+    "./workspace/proofs/m3/NobleKernel.lean": {
+      "sha256": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+      "bytes": 24
+    },
+    "./workspace/proofs/m3/NobleKernel/Types.lean": {
+      "sha256": "1dc658e3196df56a7bd5535fec6e631a5c3bb205f8edb7d60456806457b33bd8",
+      "bytes": 42777
+    },
+    "./workspace/proofs/m3/NobleKernel/TypesExternal.lean": {
+      "sha256": "da81bda2798bdcabaaa2b88d276c929a2db93c56a3d9fc2888177bb73a4b9333",
+      "bytes": 1449
+    },
+    "./workspace/proofs/m3/NobleKernel/Funs.lean": {
+      "sha256": "9a79bac89999e5035da5e68320843d2a5f6965f70aad324e66951e8bbfc81b8a",
+      "bytes": 819809
+    },
+    "./workspace/proofs/m3/NobleKernel/FunsExternal.lean": {
+      "sha256": "4c1db4c216843f5c0c2b1bdd9dbd4231824d6154d6f643b00bf55cde559a7da0",
+      "bytes": 13952
+    }
+  },
+  "lean_version": "4.31.0",
+  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "scope": "Retained M5 Charon/Aeneas translation of the authority ledger, compiled anew for each run. The checker binds every Rust source file with a generated declaration reachable from the inventoried theorems to its extraction-recorded bytes; the translation step itself is not re-run.",
+  "mutation_controls": [
+    {
+      "id": "omitted-quota-charge",
+      "removes": "the checkpoint-local quota charge in charge_quota (both the existing-record and the new-record branch)",
+      "edits": [
+        {
+          "find": "      let v := index_mut_back { qr1 with spent }\n",
+          "replace": "      let v := index_mut_back { qr1 with spent := qr1.spent }\n"
+        },
+        {
+          "find": "           spent := plan.description.constraints.units\n",
+          "replace": "           spent := 0#u64\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.charge_quota_charges_the_plan_units",
+        "M5Authority.committed_admission_charges_within_the_supplied_quota"
+      ]
+    },
+    {
+      "id": "omitted-witness-consumption",
+      "removes": "marking the claimed witness consumed in commit",
+      "edits": [
+        {
+          "find": "        { wr with state := authority.permit.WitnessState.Consumed }\n",
+          "replace": "        { wr with state := wr.state }\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.commit_consumes_the_claimed_witness",
+        "M5Authority.committed_admission_consumes_one_live_witness"
+      ]
+    },
+    {
+      "id": "omitted-exact-plan-comparison",
+      "removes": "the retained-witness exact-plan comparison in validate_entry",
+      "edits": [
+        {
+          "find": "              authority.Plan.Insts.CoreCmpPartialEqPlan value.plan request.plan\n",
+          "replace": "              authority.Plan.Insts.CoreCmpPartialEqPlan request.plan request.plan\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.validate_entry_requires_the_exact_plan",
+        "M5Authority.committed_admission_binds_the_exact_plan"
+      ]
+    },
+    {
+      "id": "omitted-checkpoint-validation",
+      "removes": "the facts checkpoint comparison in validate_facts",
+      "edits": [
+        {
+          "find": "            facts.checkpoint self.profile.checkpoint\n",
+          "replace": "            self.profile.checkpoint self.profile.checkpoint\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.validate_facts_requires_the_current_checkpoint",
+        "M5Authority.committed_admission_requires_the_current_checkpoint"
+      ]
+    },
+    {
+      "id": "omitted-started-refusal",
+      "removes": "the already-started refusal in start_execution",
+      "edits": [
+        {
+          "find": "    if value.started\n    then\n      ok (core.result.Result.Err authority.report.BoundaryError.AlreadyStarted,\n",
+          "replace": "    if false && value.started\n    then\n      ok (core.result.Result.Err authority.report.BoundaryError.AlreadyStarted,\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "M5Authority.start_execution_refuses_a_started_attempt",
+        "M5Authority.started_attempt_cannot_start_again"
+      ]
+    }
+  ]
+}

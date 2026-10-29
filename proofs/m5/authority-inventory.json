@@ -1,0 +1,667 @@
+{
+  "schema": "noble-m5-authority-theorem-inventory/v1",
+  "module": "proofs/m5/M5Authority.lean",
+  "namespace": "M5Authority",
+  "theorems": [
+    {
+      "name": "M5Authority.bind_eq_ok",
+      "role": "result-inversion",
+      "claim": "A bind that returns ok came from an ok computation and an ok continuation.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.owner_eq",
+      "role": "comparison-model",
+      "claim": "The generated OwnerContext equality returns exactly whether the owners are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.checkpoint_eq",
+      "role": "comparison-model",
+      "claim": "The generated Checkpoint equality returns exactly whether the checkpoints are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.bytes_allM",
+      "role": "comparison-model",
+      "claim": "Element-wise byte comparison over equal-length lists decides list equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.bytes_eq",
+      "role": "comparison-model",
+      "claim": "The modeled Vec<u8> equality returns exactly whether the byte vectors are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.constraints_eq",
+      "role": "comparison-model",
+      "claim": "The generated Constraints equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.operation_eq",
+      "role": "comparison-model",
+      "claim": "The generated OperationContract equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.description_eq",
+      "role": "comparison-model",
+      "claim": "The generated PlanDescription equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.plan_eq",
+      "role": "comparison-model",
+      "claim": "The generated Plan equality decides structural equality, so the exact-plan check is exact.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.claim_eq",
+      "role": "comparison-model",
+      "claim": "The generated WitnessClaim equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.clone_bytes",
+      "role": "clone-model",
+      "claim": "Cloning a modeled byte vector returns the same vector.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.plan_clone",
+      "role": "clone-model",
+      "claim": "The generated Plan clone returns the same plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.quota_position_matches",
+      "role": "quota-scan",
+      "claim": "The generated quota scan terminates with ok, and any located record carries the plan quota identity at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.attempt_record_ok",
+      "role": "lookup-model",
+      "claim": "The attempt lookup accepts exactly an owned, present, same-generation attempt key.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_refuses_a_started_attempt",
+      "role": "attempt-start",
+      "claim": "Starting an already-started attempt returns AlreadyStarted and leaves the authority unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_refusal_returns_input",
+      "role": "attempt-start",
+      "claim": "Every start refusal returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_marks_one_unstarted_attempt",
+      "role": "attempt-start",
+      "claim": "A successful start marks exactly the presented unstarted attempt, counts one protected operation and leaves witnesses, quotas and the profile unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.started_attempt_cannot_start_again",
+      "role": "attempt-start",
+      "claim": "Attempts start at most once: replaying the execution permit on the resulting state is refused without change.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.invocation_eq",
+      "role": "comparison-model",
+      "claim": "The generated InvocationOutcome equality decides equality through the discriminant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_owner",
+      "role": "comparison-model",
+      "claim": "The default owner inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_checkpoint",
+      "role": "comparison-model",
+      "claim": "The default checkpoint inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_plan",
+      "role": "comparison-model",
+      "claim": "The default plan inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_claim",
+      "role": "comparison-model",
+      "claim": "The default witness-claim inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_invocation",
+      "role": "comparison-model",
+      "claim": "The default invocation-outcome inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_source",
+      "role": "comparison-model",
+      "claim": "The default source inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_kind",
+      "role": "comparison-model",
+      "claim": "The default resource-kind inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.witness_record_found",
+      "role": "lookup-model",
+      "claim": "An accepted witness lookup is owned by the authority and returns the record at the claimed slot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_the_presented_claim",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a presented witness whose claim equals the requested claim.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_a_live_witness",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a live retained witness at the claimed slot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_the_exact_plan",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a retained witness whose plan equals the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_valid_facts",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only validated facts and returns their supplied quota snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_facts_requires_the_current_checkpoint",
+      "role": "validator-step",
+      "claim": "Fact validation accepts only facts at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_facts_requires_current_authority",
+      "role": "validator-step",
+      "claim": "Fact validation requires a pending invocation, the owner, the authority source, a grant of exactly the plan, valid credentials, no revocation, the plan policy, the validity window and an accepted quota check.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_quota_bounds_the_charge",
+      "role": "validator-step",
+      "claim": "The quota check accepts only a charge within the supplied snapshot; an existing checkpoint-local record must carry that same snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_refusal_returns_input",
+      "role": "refusal-preservation",
+      "claim": "A refused quota charge returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_refusal_returns_input",
+      "role": "refusal-preservation",
+      "claim": "A refused commit returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.refused_admission_preserves_ledger",
+      "role": "refusal-preservation",
+      "claim": "Denial and preflight leave witnesses, attempts and quota records unchanged; only their request counter and requested effect move.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.push_ok",
+      "role": "vector-model",
+      "claim": "A successful modeled Vec push appends exactly the pushed element.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.index_mut_ok",
+      "role": "vector-model",
+      "claim": "A successful modeled mutable index reads the indexed element and writes back by replacement at that index.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_keeps_the_rest",
+      "role": "commit-step",
+      "claim": "A successful quota charge changes no field other than the quota records.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_charges_the_plan_units",
+      "role": "commit-step",
+      "claim": "A successful quota charge adds exactly the plan units to the located record, or opens a record for this checkpoint holding the supplied snapshot and exactly those units.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_consumes_the_claimed_witness",
+      "role": "commit-step",
+      "claim": "A successful commit marks exactly the claimed witness slot consumed.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_registers_one_unstarted_attempt",
+      "role": "commit-step",
+      "claim": "A successful commit appends exactly one unstarted attempt bound to the requested plan and keyed by the returned permit.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_charges_the_plan_quota",
+      "role": "commit-step",
+      "claim": "A successful commit applies exactly the quota charge of the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_path",
+      "role": "structural-path",
+      "claim": "A committed admission validated the entry and committed on the same request-recorded state, whose ledger fields are the caller’s.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_presents_the_claim",
+      "role": "committed-admission",
+      "claim": "A committed admission required a presented witness carrying exactly the requested, authority-owned claim.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_binds_the_exact_plan",
+      "role": "committed-admission",
+      "claim": "Admitted execution stays bound to the independently authorized plan: the retained witness and the current grant both carry exactly the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_requires_the_current_checkpoint",
+      "role": "committed-admission",
+      "claim": "Stale facts cannot mint an execution permit: committed admission requires facts at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_requires_current_authority",
+      "role": "committed-admission",
+      "claim": "Committed admission requires a pending invocation, owner, authority source, valid credentials, no revocation, the plan policy and the validity window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_consumes_one_live_witness",
+      "role": "committed-admission",
+      "claim": "Each consumed witness corresponds to one admitted attempt: committed admission consumes exactly the claimed, previously live witness.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_registers_one_unstarted_attempt",
+      "role": "committed-admission",
+      "claim": "Committed admission registers exactly one unstarted attempt bound to the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_charges_within_the_supplied_quota",
+      "role": "committed-admission",
+      "claim": "Committed admission charges exactly the plan units to this checkpoint record for the plan quota, which carries the supplied snapshot, and the charge stays within it.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.admission_preserves_quota_within",
+      "role": "quota-invariant",
+      "claim": "Every admission outcome preserves the checkpoint-local quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.authorize_keeps_quotas",
+      "role": "frame",
+      "claim": "Authorization never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.advance_keeps_quotas",
+      "role": "frame",
+      "claim": "Checkpoint advancement never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_keeps_quotas",
+      "role": "frame",
+      "claim": "Execution start never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.observe_keeps_quotas",
+      "role": "frame",
+      "claim": "Observation never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_witness_keeps_quotas",
+      "role": "frame",
+      "claim": "Witness retirement never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_live_witnesses_keeps_quotas",
+      "role": "frame",
+      "claim": "The generated live-witness retirement loop terminates and never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.cancel_keeps_quotas",
+      "role": "frame",
+      "claim": "Invocation cancellation never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.fail_keeps_quotas",
+      "role": "frame",
+      "claim": "Invocation failure never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.deliver_keeps_quotas",
+      "role": "frame",
+      "claim": "Success delivery never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.new_opens_no_quota",
+      "role": "quota-invariant",
+      "claim": "A newly constructed authority has no quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.new_starts_within_quota",
+      "role": "quota-invariant",
+      "claim": "Initialization: a new authority satisfies the quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.step_preserves_quota_within",
+      "role": "quota-invariant",
+      "claim": "Preservation: every public state-returning transition preserves the quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.reachable_quota_within",
+      "role": "quota-invariant",
+      "claim": "Over every finite serialized prefix of public transitions from Authority.new, each checkpoint-local quota record stays within its supplied snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ]
+}
