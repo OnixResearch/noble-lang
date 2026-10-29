@@ -1642,6 +1642,42 @@
       "claim": "a finite abnormal prefix keeps the committed guest events"
     },
     {
+      "name": "NobleFoundation.LiveDispatch.run_extends_the_events",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "a dispatch run only appends guest events: the events it starts with stay a prefix"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.denials_only_truncate",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "for every policy, the events a run commits are a prefix of the fully authorised run's events from the same state: a denial stops execution and never rolls back or invents an event"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "coherent all-old and all-new pins emit the relocated event exactly once, for the relocation and its reverse"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "with the callee published between hops, current-map selection duplicates the event under the relocation and omits it under the reverse, while a root pinned before the publication emits it once"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "a root pinned between two single-slot publications selects a mixed pair from its one map, which omits or duplicates the event"
+    },
+    {
+      "name": "NobleFoundation.LiveDispatch.a_denial_before_the_emitting_hop_keeps_the_prefix",
+      "phase": 5,
+      "role": "live-dispatch",
+      "claim": "a denial before the emitting hop emits nothing and keeps the committed dispatch prefix"
+    },
+    {
       "name": "NobleFoundation.AuthorityLedger.chargedFor_cons_same",
       "phase": 1,
       "role": "representation",

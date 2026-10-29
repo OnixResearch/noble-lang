@@ -146,7 +146,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-16 claim-table rows, 15 proved, 8 tested-bearing and 11 open, 557 inventoried
+16 claim-table rows, 15 proved, 8 tested-bearing and 11 open, 563 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -1406,15 +1406,50 @@ Nine theorems, all inventoried; receipt
 [`verification/foundation/receipts/d2aa7a382/`](../../verification/foundation/receipts/d2aa7a382/foundation-check.json)
 (261 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
+Those nine hold by construction. `trace` reads only the pinned map, so
+`root_selections_use_pinned_map`, `frozen_entry_map_reference_agrees` and the denial and prefix
+theorems are `rfl`, and `mixed_map_selects_old_and_new` checks one selection. **Event relocation**
+(VC-LIVE-03, model half) gives the model something a pin could get wrong.
+
+**The run.** `run` executes programs that emit a distinguished event and dispatch to other
+slots. Every dispatch selects from a map *view* chosen per dispatch and asks a per-dispatch
+policy:
+- `pinnedRequest` reads the root's pinned map at every dispatch;
+- `currentMapRequest`, the deliberately broken control, reads the registry as published at each
+  dispatch.
+
+**The fixtures.** The relocation fixture moves the event from caller to callee between versions:
+`A-old` emits and calls `B`, `A-new` only calls `B`, `B-old` is inert, `B-new` emits.
+`reverseRelocation` moves it back.
+
+Proved:
+- coherent all-old and all-new pins emit the event exactly once, for both fixtures
+  (`coherent_pins_emit_exactly_once`);
+- with `B-new` published between the caller's and the callee's dispatch, current-map selection
+  **duplicates** the event under the relocation and **omits** it under the reverse, while a root
+  pinned to the old map before the publication emits it once
+  (`current_map_selection_duplicates_and_omits`);
+- a root pinned between two single-slot publications still selects from one map, but that map
+  is a mixed pair, so it omits or duplicates the event
+  (`a_root_pinned_between_sequential_publications_can_mix`). This is the limit of the coherence
+  premise, not a root-snapshot bug;
+- for **every** policy, program table, view and stack, a run's events are a prefix of the fully
+  authorised run's events from the same state (`denials_only_truncate`, with
+  `run_extends_the_events`). A denial stops execution; it neither rolls back nor invents an event;
+- concretely, a denial before the emitting hop emits nothing and keeps the committed dispatch
+  (`a_denial_before_the_emitting_hop_keeps_the_prefix`).
+
 Open, and deliberately not closed:
 
 - root-snapshot consistency is proved; *coordinated-version coherence* — that a
   pinned map holds a behaviorally compatible set for one refactoring — is a
   separate premise and is not proved here;
-- the interface-compatible two-version fixture and the broken
-  per-dispatch-current-map control that must expose the duplicate/omitted event
-  are Phase 2 work, bound to an existing supported observation rather than a new
-  host API;
+- the broken per-dispatch-current-map control exists **in the model** only. On the implementation
+  side it is not constructible from the runtime's authority shape, so the implementation
+  fixtures measure omission alone. The issue audit also found that
+  `crates/noble-cli/tests/live_slot_coherent_maps.mjs`'s "retention" step republishes without
+  the CAS fields and is refused for that reason, whether or not a root is pinned. It is not yet
+  evidence of retention;
 - no correspondence claim relates the model to
   `crates/noble-cli/src/core/runtime/slot-registry.mjs`;
 - no event-count claim applies when a denied dispatch or effect stopped
