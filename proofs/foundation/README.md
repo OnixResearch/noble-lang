@@ -759,9 +759,9 @@ Not proved, and recorded rather than implied: the admission simulation lifted ov
 a whole word *sequence*, which needs the intermediate stacks to keep agreeing.
 
 The retained receipt is
-[`verification/foundation/receipts/e0ec33f66/`](../../verification/foundation/receipts/e0ec33f66/foundation-check.json):
-405 theorems, twenty-six of them ownership, `clean_source: true`, axiom sets inside
-`propext`/`Classical.choice`/`Quot.sound`.
+[`verification/foundation/receipts/656ec91b4/`](../../verification/foundation/receipts/656ec91b4/foundation-check.json):
+569 theorems, thirty-two of them ownership (six in `OwnershipConservation`), `clean_source: true`,
+axiom sets inside `propext`/`Classical.choice`/`Quot.sound`.
 
 The comparison is finite and deliberately narrow:
 [`verification/ownership/differential.json`](../../verification/ownership/differential.json)

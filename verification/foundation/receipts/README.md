@@ -215,3 +215,10 @@ current-map control to `NobleFoundation.LiveDispatch` (6 inventoried theorems; t
 563 in total). `denials_only_truncate` is universal over policies, programs, views and stacks;
 the emission counts are kernel-checked fixtures. It is model evidence and says nothing about
 correspondence with `slot-registry.mjs`.
+
+## 656ec91b4 — whole-program ownership conservation (issue #59)
+
+`656ec91b4/` records the clean run that added `NobleFoundation.OwnershipConservation` (6 inventoried
+theorems; that run reported 569 in total, all six new theorems on `propext` alone). The
+conservation statement is exact but partly vacuous for resource movement: the ownership grammar
+admits no acquire, release or consuming word. It says nothing about `crates/noble-kernel`.
