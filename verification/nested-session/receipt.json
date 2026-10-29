@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "891f78558b13f17cc4430e655a236de0bfdc3ad1",
-  "source_tree": "97a2edd4f82af958c3704defe9aab671c15f4532",
+  "source_commit": "9f8d51512c688dd24d49d20440045290ed3d2aed",
+  "source_tree": "c229a6aad57d6dffae2cb9b17cce29da74652a94",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "dfcbb72809221e36a4ed96946ee72ab674f45aba3261cb8ddfd4ed728c4be91a",
-        "proofs/m6/nested-session-inventory.json": "8d97744740b334ed7bdb6835bc8d555c3d89fd55d991c1617e8d7e20e5c0517f"
+        "proofs/m6/NestedSession.lean": "053882ba7a5c0929dd5e666f79d21eaaf433ce9879159c5bf6d1424ea9aca93d",
+        "proofs/m6/nested-session-inventory.json": "9a0fad8bc239c41a2d730a6d517eb88882958ee038c1816d453632bda81951dd"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol, choiceProtocol",
@@ -35,12 +35,15 @@
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
-    "cancellation": "unsupported and unmodelled"
+    "progress": "guest-local only: an open endpoint whose resolved node declares the action has a successor; no queue, peer, scheduler or host premise",
+    "cancellation": "an event class that cuts the committed prefix; it carries no endpoint or session transition",
+    "nested_recursion": "regular only: a nested constructor resolves to its definition and its parameter is unused; no return stack",
+    "type_equality": "no algorithm; duality is definitional"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "dfcbb72809221e36a4ed96946ee72ab674f45aba3261cb8ddfd4ed728c4be91a",
-    "proofs/m6/nested-session-inventory.json": "8d97744740b334ed7bdb6835bc8d555c3d89fd55d991c1617e8d7e20e5c0517f",
-    "verification/nested-session/check.mjs": "55d50480beacab2475b55783ee4d31d2c953b64a78319ebd633f5611cf87a531"
+    "proofs/m6/NestedSession.lean": "053882ba7a5c0929dd5e666f79d21eaaf433ce9879159c5bf6d1424ea9aca93d",
+    "proofs/m6/nested-session-inventory.json": "9a0fad8bc239c41a2d730a6d517eb88882958ee038c1816d453632bda81951dd",
+    "verification/nested-session/check.mjs": "9aa3751f12aa1cfef024f0edff8454af53ea8a835398a07c4067d258309b5af8"
   },
   "theorem_count": 68,
   "theorems": [
@@ -1016,7 +1019,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-4/Audit.lean"
+        "/var/tmp/ns67-check/Audit.lean"
       ],
       "exit": 0
     },
@@ -1048,8 +1051,8 @@
   ],
   "implementation_theorem": false,
   "scope": [
-    ".cairn/changes/nested-session-protocol WIT-SESSION-01/02 model: finite grammar, duality and the endpoint resource.",
-    "The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed,",
-    "no progress statement is made, endpoint delegation is excluded and send is never modelled as receipt."
+    ".cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.",
+    "The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;",
+    "the only progress statement is guest-local; nested recursion is regular; endpoint delegation is excluded and send is never modelled as receipt."
   ]
 }
