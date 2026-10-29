@@ -6,15 +6,35 @@
 // kernel evidence, and a witness promoted to evidence must first become a
 // retained expectation that the Lean reference checks.
 import { spawnSync } from 'node:child_process';
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  LANE_FILE,
+  PROPOSAL_FILE,
+  binding,
+  plain,
+  sha256,
+  targetMetadata,
+  verifyCommon,
+} from './receipt-binding.mjs';
 
 const args = process.argv.slice(2);
 const rootIndex = args.indexOf('--root');
 const root = path.resolve(rootIndex >= 0 ? args[rootIndex + 1] : '.');
+const verifyIndex = args.indexOf('--verify');
 const outIndex = args.indexOf('--output');
 const output = outIndex >= 0 ? path.resolve(args[outIndex + 1]) : path.join(root, 'verification/binary32/shrinker.json');
+
+if (verifyIndex >= 0) {
+  const receiptPath = path.resolve(root, args[verifyIndex + 1]);
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+  verifyCommon(root, receipt, 'noble-binary32-shrinker/v2');
+  if (receipt.lanes?.length !== 2 || receipt.expectation_witnesses?.length === 0) {
+    throw new Error('shrinker receipt lacks its recorded lanes or witnesses');
+  }
+  console.log(JSON.stringify({ outcome: 'verified', receipt: receiptPath, cargo_rerun: false }));
+  process.exit(0);
+}
 
 const laneFile = 'crates/noble-ngraph-experiment/tests/b2_differential.rs';
 const lanes = [
@@ -36,17 +56,6 @@ function run(argv, cwd) {
   }
   return result.stdout ?? '';
 }
-
-// Host git does not need the devShell, and running it through `nix develop` mixes
-// store/GC progress into stderr, which would make the clean-tree check fire on noise
-// rather than on a modification. Plain stdout only.
-function plain(argv, cwd) {
-  const result = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8' });
-  if (result.status !== 0) throw new Error(`${argv.join(' ')} failed: ${result.stderr}`);
-  return result.stdout;
-}
-
-const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex');
 
 const head = plain(['git', 'rev-parse', 'HEAD'], root).trim();
 const tree = plain(['git', 'rev-parse', 'HEAD^{tree}'], root).trim();
@@ -152,6 +161,8 @@ if (Number(countFields['expectation-shrink-count']) !== expectationWitnesses.len
   throw new Error(`expectation witness count disagrees with the lane: ${countLine}`);
 }
 
+const proposalBinding = binding(root);
+
 const receipt = {
   schema: 'noble-binary32-shrinker/v2',
   assertion: 'bare operation disagreements and retained-expectation discrepancies shrink, deterministically, inside their documented budget and without changing observation class, to the recorded witnesses on this host and target; not kernel evidence',
@@ -162,8 +173,15 @@ const receipt = {
   toolchain,
   host,
   command,
-  lane_file: laneFile,
-  lane_sha256: sha256(laneFile),
+  target: targetMetadata(toolchain, { ...process.env, CARGO_INCREMENTAL: '0' }),
+  lane_file: LANE_FILE,
+  lane_sha256: sha256(root, LANE_FILE),
+  proposer_file: 'verification/binary32/propose.py',
+  proposer_sha256: proposalBinding.proposer_sha256,
+  proposal_file: PROPOSAL_FILE,
+  proposals_sha256: proposalBinding.proposals_sha256,
+  retained_expectations: proposalBinding.retained_expectations,
+  lean_authority: proposalBinding.lean_authority,
   witnesses,
   expectation_witnesses: expectationWitnesses,
   carried_expectations: Number(countFields.carried),

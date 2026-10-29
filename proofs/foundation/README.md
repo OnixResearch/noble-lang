@@ -645,9 +645,12 @@ the packed lane calls `noble_ngraph::sem::add/sub/mul`, and the compiled lane
 builds a two-input F32 graph per expectation and checks legs agreement plus the
 L2 APFloat, L3 reference and L4 compiled observations. NaN expectations match by
 observation equality and every other class by its exact encoding. The
-receipt `verification/binary32/replay.json` names clean commit `53d7a560d`,
-`rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64` (the first recording, at
-`9845a9e9d`, is in its history). The first replay found
+receipt `verification/binary32/replay.json` binds the lane, `propose.py`,
+`proposals.json`, both Lean model files and the clean foundation-receipt
+membership. It also records the source commit/tree, target triple, full
+`rustc -vV` output and FP-relevant flags/environment. The digest-only command
+`node verification/binary32/replay.mjs --verify verification/binary32/replay.json`
+recomputes these bindings without running Cargo. The first replay found
 that the Rust reference returns `0xFFC00000` where the model produces its own
 canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
 exactly why the lane compares observations rather than payload bytes.
@@ -659,9 +662,12 @@ strictly simpler operand pairs under the documented order, and reports a
 checks determinism, replayability and termination, and
 `verification/binary32/shrinker.json` records the witness
 (`0x00800000 * 0x3f000000` keeps its subnormal product where flush-to-zero
-returns zero), the clean commit, the toolchain and the host. Because a
-simplification outside that list is never invented, the lane claims no
-reachability beyond the list and no global minimality.
+returns zero), the clean commit, the toolchain, target metadata and the same
+proposal/Lean bindings. Its `shrinker.mjs --verify <receipt>` mode performs
+the same digest-only checks without Cargo. Because a simplification outside
+that list is never invented, the lane claims no reachability beyond the list
+and no global minimality. The source commit/tree check allows only the two
+receipt paths to change in the evidence commit that follows receipt generation.
 
 Open, and deliberately not closed by this model:
 
