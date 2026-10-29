@@ -1,10 +1,10 @@
 {
   "schema": "noble-service-ref-differential/v1",
   "assertion": "the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases; not a refinement proof",
-  "source_commit": "0a44292b591288f34efe8ab505e6ba3a4cb461a0",
-  "source_tree": "3483371d485491aa71e870a066984cf91e56beb0",
+  "source_commit": "53d7a560d53aa96e1bd563688c601245acef683e",
+  "source_tree": "831a683f1f307623e34ccdd84b6ceb75a4de03c4",
   "clean_source": true,
-  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0\nrunning auto-GC to free 124466495488 bytes\nwaiting for the big garbage collector lock...\ncopying path '/nix/store/f5ahsycs1fqklslfghh34nfs8zy4m62b-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0ij4m8lll3rwl3vvfq3jbffpql133lf63rg5ajrf17iizpycc67h.nar?hash=f5ahsycs1fqklslfghh34nfs8zy4m62b' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'\nvdollar_percent_expand: env var ${XDG_RUNTIME_DIR} has no value\r\n/home/brittonr/.ssh/config line 52: Invalid environment expansion ${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock.\r\n/home/brittonr/.ssh/config: terminating, 1 bad configuration options\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\nwarning: could not get HEAD ref for repository 'ssh://git@github.com/OnixResearch/bounded-exec.git'; using expired cached ref 'refs/heads/main'\ncopying path '/nix/store/89mi2v982snq2rj19qpsmhmwj6pwsd7f-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/0p8mb7wy1r40sc0k13g361817lk7bzq7a9mj71z2y8y2hvpprfd9.nar?hash=89mi2v982snq2rj19qpsmhmwj6pwsd7f' does not exist in binary cache 'http://100.100.103.95:5000'\ncopying path '/nix/store/fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw-source' from 'http://100.100.103.95:5000'...\nwarning: file 'nar/1c1pjmdv3w41mnhbfd0nmr1qw0qb6jqbk2zg5xgjmkciclclf5b8.nar?hash=fia6wjlqn2n35rpsvfbkzg3xvqjgwzgw' does not exist in binary cache 'http://100.100.103.95:5000'\nvdollar_percent_expand: env var ${XDG_RUNTIME_DIR} has no value\r\n/home/brittonr/.ssh/config line 52: Invalid environment expansion ${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock.\r\n/home/brittonr/.ssh/config: terminating, 1 bad configuration options\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\nwarning: could not get HEAD ref for repository 'ssh://git@github.com/OnixResearch/onix-artifact.git'; using expired cached ref 'refs/heads/main'",
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-service-ref-target CARGO_INCREMENTAL=0 cargo test -p noble-kernel --test m7-dataspace service_ref_differential -- --nocapture",
   "lanes": [
@@ -15,6 +15,8 @@
   "case_file_sha256": "f03229d9dc8556bfa8ae837f6895b683e6f2641854d153fe09381a114749fa0e",
   "reference_file": "verification/service-ref/cases.mjs",
   "reference_file_sha256": "f5ef9166a71605bd11af8ea072031b8fa3cae514eed91ab31cc2c8fe8c04a5aa",
+  "model_file": "proofs/foundation/NobleFoundation/ServiceWire.lean",
+  "model_file_sha256": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b",
   "lane_file": "crates/noble-kernel/tests/m7-dataspace.rs",
   "lane_file_sha256": "708a68c03c5a2361a81da02913ae64a79f5645cb04794dd00d1bd5cc8e8dd54b",
   "coverage": {
@@ -24,7 +26,23 @@
   },
   "correspondence": {
     "route": "handwritten Lean reference compared against the Rust functions by this differential lane",
-    "model_theorems": "proofs/foundation/receipts/134b215c5/foundation-check.json",
+    "model_theorems": {
+      "model_files_sha256": {
+        "proofs/foundation/NobleFoundation/ServiceWire.lean": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b"
+      },
+      "receipts": [
+        {
+          "receipt": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
+          "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/9f1288d61/foundation-check.json",
+          "source_commit": "9f1288d61df2766fe49391e582b56fce11f54e3c",
+          "model_theorems": 28
+        }
+      ]
+    },
     "open_edge": "no extraction or refinement proof relates crates/noble-kernel/src/dataspace/wire.rs to the Lean model; the differential is finite evidence on one host and target"
   },
   "claims": [

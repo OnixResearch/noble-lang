@@ -645,8 +645,9 @@ the packed lane calls `noble_ngraph::sem::add/sub/mul`, and the compiled lane
 builds a two-input F32 graph per expectation and checks legs agreement plus the
 L2 APFloat, L3 reference and L4 compiled observations. NaN expectations match by
 observation equality and every other class by its exact encoding. The
-receipt `verification/binary32/replay.json` names clean commit `9845a9e9d`,
-`rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64`. The first replay found
+receipt `verification/binary32/replay.json` names clean commit `53d7a560d`,
+`rustc 1.96.0-nightly` and host `Linux 6.18.54 x86_64` (the first recording, at
+`9845a9e9d`, is in its history). The first replay found
 that the Rust reference returns `0xFFC00000` where the model produces its own
 canonical `0x7FC00000` for `inf + -inf`; both are one NaN observation, which is
 exactly why the lane compares observations rather than payload bytes.

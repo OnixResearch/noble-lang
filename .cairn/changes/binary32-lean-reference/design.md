@@ -106,7 +106,8 @@ is not reviewed here.
   than the bare semantics.
 - Receipts: `verification/foundation/receipts/aa074e1/index.json` (212
   theorems, sixteen binary32, clean source) and `verification/binary32/replay.json`
-  (clean commit `9845a9e9d`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`).
+  (clean commit `53d7a560d`, `rustc 1.96.0-nightly`, `Linux 6.18.54 x86_64`; first
+  recorded at `9845a9e9d`).
 - Shrinking: a bounded deterministic shrinker walks a documented simplification
   list over an operand pair, accepting only strictly simpler pairs under the
   documented order, so the walk is monotone and terminates inside a documented

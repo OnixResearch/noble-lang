@@ -1,18 +1,35 @@
 {
   "schema": "noble-binary32-replay/v1",
   "assertion": "the packed Rust reference and the compiled graph legs agree with every retained kernel-checked expectation under observation equality on this host and target; not a proof of correspondence",
-  "source_commit": "9845a9e9d9fa9e0340809abc90c377af15c4751a",
-  "source_tree": "d42d6226479d0093d64dabcc6f2f8a5984cb6ba9",
+  "source_commit": "53d7a560d53aa96e1bd563688c601245acef683e",
+  "source_tree": "831a683f1f307623e34ccdd84b6ceb75a4de03c4",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-binary32-replay-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture",
   "lane_file": "crates/noble-ngraph-experiment/tests/b2_differential.rs",
-  "lane_sha256": "6004beccf79ee890cdf29baee1f2860822ad11e7c2a179dbb6cc48476bfe02d4",
+  "lane_sha256": "5a770de737aba87edb2ded5ce1088fe12fe3bd2e3ec1269d2257e78d3d428760",
   "proposals_sha256": "850362e810b321b7620fba51132b25cff1527ac48855e57379adaef72f75bf6e",
   "retained_expectations": 26,
   "observations": "NaN expectations match by observation equality; every other class matches its exact encoding",
-  "lean_authority": "verification/foundation/receipts/aa074e1/index.json",
+  "lean_authority": {
+    "model_files_sha256": {
+      "proofs/foundation/NobleFoundation/Binary32.lean": "5a95176815989e3ff34f18fe62d5b4f4579bc1f946638f111b571e37f093e412",
+      "proofs/foundation/NobleFoundation/Binary32Expectations.lean": "dd50c9e93fa3a1f62d7d12a87764c56fa61a61154c5f74d12a4d1cf2e0f0a0cc"
+    },
+    "receipts": [
+      {
+        "receipt": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
+        "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
+        "model_theorems": 21
+      },
+      {
+        "receipt": "verification/foundation/receipts/9f1288d61/foundation-check.json",
+        "source_commit": "9f1288d61df2766fe49391e582b56fce11f54e3c",
+        "model_theorems": 21
+      }
+    ]
+  },
   "lanes": [
     {
       "name": "packed-reference",
