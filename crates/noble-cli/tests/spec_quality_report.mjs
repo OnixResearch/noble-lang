@@ -483,6 +483,25 @@ assert.deepEqual(
   'the wrapping increment is inhabited, realizable and deterministic');
 assert.equal(wrapping.document.specification_quality.derivation.refutation, null);
 
+// Definition IDs are not expression-arena indices: compound definitions occupy multiple nodes.
+// The Boolean predicate admits -1 and 0, but excludes 1, whose required output is absent. Reversing
+// lt, conflating and/or, or resolving definition IDs as expression IDs changes the derived claims.
+const compoundSource = contractSource({
+  name: 'compound-native-predicates',
+  input: '(input (x I64))', output: '(output (y I64))',
+  definitions: '(define offset I64 (add 1 2)) (define expected I64 (add (def offset) 4))',
+  program: '[ drop 8 ]',
+  requires: '(and (or (lt (in x) 0) (eq (in x) 0)) (not false))',
+  ensures: '(eq (out y) (add (def expected) (in x)))',
+});
+const compound = await derived('compound-native-predicates', compoundSource,
+  [-1, 0, 1].map(value => ({ inputs: [{ i64: value }], params: [] })),
+  [[{ i64: 6 }], [{ i64: 7 }]], incrementClaims());
+assert.equal(compound.status, 0, 'native predicates, not candidate execution, determine the relation');
+assert.equal(compound.document.specification_quality.established, 3);
+assert.equal(compound.document.partial_correctness.reported, false,
+  'a well-typed but unsatisfying implementation acquires no implementation proof');
+
 // Native interface and parameter stacks, rather than manifest-declared types, are authoritative.
 const parameterizedSource = contractSource({
   name: 'parameterized-increment',

@@ -4256,38 +4256,6 @@
       "refinement": "open"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:16233:16243",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19023:19025",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19821:19823",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:20880:20882",
-      "refinement": "open"
-    },
-    {
       "category": "generated",
       "disposition": "generated",
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
@@ -11006,182 +10974,6 @@
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:8:233",
       "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality.rs:5520:5525",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality.rs:6291:6293",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:10636:10642",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:11982:11984",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:12200:12202",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:12420:12422",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:12655:12657",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:13383:13385",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:13627:13629",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:13990:13992",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:14661:14663",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:14835:14837",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:3489:3491",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:5159:5161",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:6491:6493",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:6690:6719",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:6946:6985",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:7229:7268",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:7308:7315",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:7386:7388",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:9366:9389",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:9713:9720",
-      "refinement": "open"
     },
     {
       "category": "body",
@@ -27700,94 +27492,6 @@
       "disposition": "generated",
       "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
       "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::clone::Clone>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::clone::Clone>::clone",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::clone::TrivialClone>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::cmp::Eq>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::cmp::Eq>::assert_fields_are_eq",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::cmp::PartialEq>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::cmp::PartialEq>::eq",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::fmt::Debug>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::fmt::Debug>::fmt",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::marker::Copy>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Kind as std::marker::StructuralPartialEq>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
       "qualified_path": "noble::<core::spec_quality::relation::Scalar as std::clone::Clone>",
       "refinement": "not-applicable"
     },
@@ -27869,22 +27573,6 @@
       "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
       "package": "noble-cli",
       "qualified_path": "noble::<core::spec_quality::relation::Scalar as std::marker::StructuralPartialEq>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Term as std::fmt::Debug>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble::<core::spec_quality::relation::Term as std::fmt::Debug>::fmt",
       "refinement": "not-applicable"
     },
     {
@@ -41104,14 +40792,6 @@
       "refinement": "not-applicable"
     },
     {
-      "category": "structural",
-      "disposition": "structural",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: declaration-only item; accounting only, with no body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::Binding",
-      "refinement": "not-applicable"
-    },
-    {
       "category": "body",
       "disposition": "open",
       "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
@@ -41164,22 +40844,6 @@
       "disposition": "open",
       "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
       "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::Derived::unavailable",
-      "refinement": "open"
-    },
-    {
-      "category": "structural",
-      "disposition": "structural",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: declaration-only item; accounting only, with no body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::Kind",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
       "qualified_path": "noble::core::spec_quality::relation::OUTPUT_LIMIT",
       "refinement": "open"
     },
@@ -41204,31 +40868,7 @@
       "disposition": "structural",
       "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: declaration-only item; accounting only, with no body obligation.",
       "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::Relation",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "structural",
-      "disposition": "structural",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: declaration-only item; accounting only, with no body obligation.",
-      "package": "noble-cli",
       "qualified_path": "noble::core::spec_quality::relation::Scalar",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::TERM_DEPTH_LIMIT",
-      "refinement": "open"
-    },
-    {
-      "category": "structural",
-      "disposition": "structural",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind plain: declaration-only item; accounting only, with no body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::Term",
       "refinement": "not-applicable"
     },
     {
@@ -41244,39 +40884,7 @@
       "disposition": "open",
       "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
       "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::evaluate",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::holds",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::kinds",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
       "qualified_path": "noble::core::spec_quality::relation::refused",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::relation",
       "refinement": "open"
     },
     {
@@ -41293,14 +40901,6 @@
       "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
       "package": "noble-cli",
       "qualified_path": "noble::core::spec_quality::relation::stack",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind plain: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::spec_quality::relation::term",
       "refinement": "open"
     },
     {
@@ -123646,6 +123246,318 @@
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::{use#34}",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:16270:16280",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19060:19062",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19858:19860",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:20917:20919",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality.rs:5530:5535",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality.rs:6301:6303",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:1155:1158",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:1286:1288",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:1477:1480",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:1651:1653",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:1825:1828",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/predicate.rs:4994:4996",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:2695:2697",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:4483:4485",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:5145:5150",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:5447:5449",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:5718:5720",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/spec_quality/relation.rs:5970:5972",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::Binding",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::DEPTH_LIMIT",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::binding_index",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::check",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::definition_body",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::evaluate",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::expression",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::holds",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::refused",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::scalar",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::undefined",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::unsupported",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::validate",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::validate_binary",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::predicate::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::relation::Samples",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::relation::profile",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-28 for native spec-quality binding at e5aab630 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::spec_quality::relation::samples",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
