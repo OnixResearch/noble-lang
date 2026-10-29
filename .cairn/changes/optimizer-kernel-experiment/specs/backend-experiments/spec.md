@@ -27,6 +27,29 @@ MUST remain immutable across every candidate transition.
 - THEN the operation MUST be outside the whitelist and the candidate MUST be
   refused
 
+#### Scenario: the published envelope fixes the candidate shape
+
+- GIVEN an envelope with `format = "ngraph-opt/1"`, `1 <= n <= 64`, inputs
+  `p : F32[n]`, `g : F32[n]`, `eta : F32`, `step : StepDescriptor`, and
+  `state : State0`, with `effects = []`
+- AND the envelope carries budgets `{nodes: 16, state_bytes: 0, work: 128,
+  output_lanes: 64}` and outputs exactly `p' : F32[n]` and `state' : State0`
+- WHEN admission checks the envelope
+- THEN every scalar MUST be an exact 32-bit binary pattern, every vector MUST
+  retain serialized lane order, and the envelope MUST be checked against those
+  fixed values rather than candidate-selected limits
+
+#### Scenario: only the four published opcodes are executable
+
+- GIVEN a topologically ordered node list containing only `constant(bits)`,
+  `broadcast`, `Binary32.mul` and `Binary32.sub`, with no capabilities or
+  foreign handles
+- WHEN admission checks the node list and its effects
+- THEN the candidate MUST have the empty effect set and MUST be eligible for
+  the pure transition check; a `Binary32.add`, branch, load, store or host-call
+  node MUST instead be refused as `unsupported` at `$.nodes[i].op` (or its
+  exact effect location)
+
 ### Requirement: NGRAPH-OPT-02
 r[NGRAPH-OPT-02]
 
@@ -53,6 +76,27 @@ only as its own requirement with its own model, and MUST NOT silently inherit th
 - WHEN the reference update evaluates it
 - THEN the outcome MUST be determined by the declared rounding and nonfinite rules
   rather than by host defaults, and the classification MUST be recorded
+
+#### Scenario: the reference update has two ordered binary32 roundings
+
+- GIVEN finite exact bit patterns `p_i`, `g_i` and `eta` in stored lane order
+- WHEN the reference evaluates lane `i`
+- THEN it MUST compute exactly
+  `p_i' = Binary32.sub p_i (Binary32.mul eta g_i)`
+- AND `Binary32.mul` MUST round before `Binary32.sub`, with no FMA, contraction,
+  reassociation or host-float substitution; signed zero, subnormal, NaN and
+  infinity behavior MUST be the behavior of the #38 `Binary32.mul` and
+  `Binary32.sub` definitions
+
+#### Scenario: the finite-only pilot rule is explicit
+
+- GIVEN `Binary32.classify` reports `infinity` or `notANumber` for an input
+  lane or for `eta`
+- WHEN admission checks the transition
+- THEN it MUST refuse the candidate as `unsupported` at that exact input path;
+  subnormals and signed zeros MUST remain admissible, and an infinity or NaN
+  produced in an output lane MUST be refused at
+  `$.outputs.parameters[i]` rather than propagated
 
 ### Requirement: NGRAPH-OPT-03
 r[NGRAPH-OPT-03]
@@ -81,6 +125,26 @@ MUST be labeled implementation evidence and MUST NOT be reported as proof.
 - WHEN admission checks the state-transition predicate
 - THEN the candidate MUST be refused and the refusal MUST NOT be reported as a
   budget refusal
+
+#### Scenario: concrete budgets produce an exhausted refusal
+
+- GIVEN a candidate with the published limits `nodes = 16`, `state_bytes = 0`,
+  `work = 128` and `output_lanes = 64`
+- WHEN its node count exceeds 16, its measured lane work exceeds 128, its
+  state is nonempty, or its output has more than 64 lanes
+- THEN admission MUST return `exhausted` at exactly `$.nodes`, `$.work`,
+  `$.state` or `$.outputs`, respectively; it MUST not truncate or partially
+  apply the transition, and the parent snapshot MUST remain byte-stable
+
+#### Scenario: every refusal has an envelope location
+
+- GIVEN a malformed field, an unsupported opcode/effect, an exhausted resource,
+  or an internal checker/reference failure
+- WHEN admission records the refusal
+- THEN it MUST use `malformed`, `unsupported`, `exhausted` or `internal` in
+  that order as applicable, with the first three pointing to the exact
+  offending JSON field and `internal` pointing to `$.envelope`; no refusal may
+  publish a snapshot or be relabeled as an admitted candidate
 
 ### Requirement: NGRAPH-OPT-04
 r[NGRAPH-OPT-04]

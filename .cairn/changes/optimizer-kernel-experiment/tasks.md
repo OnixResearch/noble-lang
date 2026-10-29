@@ -3,6 +3,7 @@
 - [x] [serial] Publish the minimal typed candidate IR, shape/state interface, operation whitelist, budgets and explicit unsupported diagnostics. r[NGRAPH-OPT-01]
 - [x] [serial] Resolve the numeric mismatch: select the `F32`-only SGD-like reference update first and record binary64 candidates as a distinct algorithm. r[NGRAPH-OPT-02]
 - [x] [serial] Specify admission outcomes and the refusal classes, keeping Lean model theorems, checker obligations and finite Rust comparisons separate. r[NGRAPH-OPT-03]
+  - Note (2026-10-29): the concrete IR, exact whitelist, budgets and refusal envelope are now published in `design.md` under “Minimal candidate IR” and in the NGRAPH-OPT-01/02/03 scenarios in `specs/backend-experiments/spec.md`.
 - [x] [serial] Specify immutable snapshot publication binding and host-owned whole-trial rollback with fail-closed checkpoints and append-only attempts. r[NGRAPH-OPT-04]
 - [x] [serial] Specify evaluation isolation, tampering controls and the preregistration discipline for any future performance comparison. r[NGRAPH-OPT-05]
 
