@@ -1004,12 +1004,18 @@ inventoried theorems; receipt
 
 Open, and deliberately not closed:
 
-- **no Rust transformation or derivation artifact exists**: the checker validates
-  claims over the model graph, not a versioned derivation emitted by
-  `crates/noble-ngraph`, and there is no replay budget, decoding of the actual
-  original/result graph files, or certificate-size measurement;
-- no independent differential execution of the original and rewritten endpoints,
-  so this is model evidence rather than the issue's implementation test;
+- the Rust derivation lane is implementation evidence, not a consequence of this
+  model: `crates/noble-ngraph/src/cert.rs` emits and checks a versioned
+  `ngraph-cert/0` derivation, but no correspondence theorem binds it to these
+  definitions, and there is no replay budget, Rust byte codec or wire-size
+  measurement. Until the #42 checker fix, `cert::check` bound the resulting graph
+  only by its digest, so a substituted result that the producer re-digested was
+  accepted; it now replays the folds on the original and refuses any other result
+  (`Refusal::ResultMismatch`);
+- `crates/noble-ngraph/tests/cert_differential.rs` executes both endpoints of
+  single-step folds on the compiled and reference evaluators; no multi-step
+  simplification is admitted, and its expectations are computed in Rust rather
+  than kernel-checked;
 - substitution/transitivity closure, a full e-graph, guard/failure-preserving
   rewrites and `F32` laws are outside phase 1; value preservation says nothing
   about fuel, allocation, cancellation behaviour or recipe identity;

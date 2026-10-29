@@ -15,8 +15,9 @@
 //! endpoints — the original graph and the folded one the emitter produced — on the
 //! same concrete inputs through both the compiled scheduler and the reference
 //! interpreter, and asserts identical observations. It measures a real artifact:
-//! the folded endpoint evaluates strictly fewer nodes while producing the same
-//! outputs, including for a sum that wraps.
+//! the fold rewrites in place, so the folded endpoint evaluates the same number of
+//! nodes and retains no more bytes while producing the same outputs, including for a
+//! sum that wraps.
 
 #[path = "cert/differential.rs"]
 mod differential;

@@ -74,6 +74,16 @@ The per-call ranges above also replace stale summary numbers with the actual
 The corrected helper and deterministic unit/zero-step regression preserve the
 documented microsecond field semantics in new reports.
 
+**2026-10-29 checker change (issue #42):** every `cert::check` timing in this
+document, in both cost lanes, was measured before `check` began replaying the
+folds on a copy of the original and comparing the result graph with that replay.
+The earlier `check` bound the result only by its digest and accepted a
+substituted result that the producer re-digested. These timings therefore describe
+the earlier checker and are not re-measured here. The accepted/refused coverage is
+unaffected for the honest proposers: their results equal the replay, and the
+`rewrite_cost` and `rewrite_quality` lanes still pass, with only a `result-mismatch`
+label added to the cost lane's refusal names.
+
 The wrapping-boundary and operand-order fixtures are new in this record: both reach the residual
 target under every step-bearing proposer, and `Identity` still reaches none of it. They raised the
 cost lane's denominator from 20 to 28 attempts, so coverage is reported against the larger corpus.

@@ -3,9 +3,11 @@
 //! The transformation stays untrusted. A certificate names, per rewritten node, the
 //! rule identity, the ordered operand identities, the exact constant bits the rule
 //! consumed and the value it claims. [`check`] validates those premises against the
-//! original graph without calling the emitter, and endpoint digests bind the exact
-//! original and resulting graphs. Refusals are typed rather than folded into one
-//! failure.
+//! original graph without calling the emitter, replays the folds on a copy of the
+//! original and requires the resulting graph to equal that replay, and endpoint digests
+//! bind the exact original and resulting graphs. A digest alone binds the result the
+//! producer named, not the result the steps produce, so the replay is what refuses a
+//! substituted result. Refusals are typed rather than folded into one failure.
 //!
 //! This is the Rust side of the lane modelled in
 //! `proofs/foundation/NobleFoundation/GraphRewrite.lean`; the model's rule,
@@ -93,6 +95,8 @@ pub enum Refusal {
     Order,
     /// The certificate does not name the endpoints it was checked against.
     EndpointMismatch,
+    /// The resulting graph is not the original with the derivation's folds applied.
+    ResultMismatch,
 }
 
 fn bits(lit: crate::ir::Literal) -> Option<u64> {
@@ -320,9 +324,29 @@ fn checked_bits(
     }
 }
 
+/// The graph the steps denote: each fold replaces its node, in place, by the claimed
+/// constant, and identity steps are recorded but not applied, as the proposers record
+/// them. Written beside the checker rather than shared with the proposers, so the checker
+/// never runs producer code.
+fn replay(graph: &crate::ir::Graph, derivation: &Derivation) -> Result<crate::ir::Graph, Refusal> {
+    let mut replayed = graph.clone();
+    for step in &derivation.steps {
+        match step.rule {
+            Rule::FoldAddConstants => {
+                let index = usize::try_from(step.node.0).map_err(|_| Refusal::Malformed)?;
+                let node = replayed.nodes.get_mut(index).ok_or(Refusal::Malformed)?;
+                node.op = crate::ir::Op::Const(crate::ir::Literal::I64(step.claimed.cast_signed()));
+            }
+            Rule::NeutralAddLeft | Rule::NeutralMulRight => {}
+        }
+    }
+    Ok(replayed)
+}
+
 /// Validates a derivation against the original and the resulting graph. The
-/// operand order is compared, never re-derived from the claimed value, and every
-/// declared constant is compared against the graph's own bits.
+/// operand order is compared, never re-derived from the claimed value, every
+/// declared constant is compared against the graph's own bits, and the resulting
+/// graph must equal the original with the folds replayed.
 pub fn check(
     ids: &dyn IdentityScheme,
     graph: &crate::ir::Graph,
@@ -376,6 +400,9 @@ pub fn check(
             }
             (_, _) => return Err(Refusal::Malformed),
         }
+    }
+    if replay(graph, derivation)? != *result {
+        return Err(Refusal::ResultMismatch);
     }
     Ok(())
 }
@@ -518,6 +545,84 @@ mod tests {
         assert_eq!(
             super::check(&scheme, &graph, &result, &reordered),
             Err(super::Refusal::Order)
+        );
+    }
+
+    /// The emitted certificate with its `right` digest renamed to a substituted result, as a
+    /// dishonest producer would re-digest it: the steps stay valid for the original graph.
+    fn redigested(derivation: &super::Derivation, result: &crate::ir::Graph) -> super::Derivation {
+        let mut renamed = derivation.clone();
+        renamed.right = result.logical_id(&TestIds);
+        renamed
+    }
+
+    #[test]
+    fn a_redigested_substituted_result_is_refused() {
+        let graph = sample();
+        let scheme = TestIds;
+        let (derivation, result) = super::emit(&scheme, &graph);
+        let fold = derivation
+            .steps
+            .iter()
+            .copied()
+            .find(|step| step.rule == super::Rule::FoldAddConstants)
+            .expect("the sample folds one addition");
+        let folded = usize::try_from(fold.node.0).expect("node index fits");
+        let consumer = result
+            .nodes
+            .iter()
+            .position(|node| matches!(node.op, crate::ir::Op::I64Mul(_, _)))
+            .expect("the sample scales the sum");
+
+        let mut wrong_constant = result.clone();
+        wrong_constant.nodes[folded].op = crate::ir::Op::Const(crate::ir::Literal::I64(
+            fold.claimed.wrapping_add(1).cast_signed(),
+        ));
+        let mut broken_sharing = result.clone();
+        broken_sharing.nodes[consumer].op =
+            crate::ir::Op::I64Mul(fold.operands[0], crate::ir::NodeId(3));
+        let mut swapped_operands = result.clone();
+        swapped_operands.nodes[consumer].op =
+            crate::ir::Op::I64Mul(crate::ir::NodeId(3), fold.node);
+        let mut changed_output = result.clone();
+        changed_output.outputs = alloc::vec![fold.node];
+        let mut repeated_output = result.clone();
+        repeated_output.outputs.push(result.outputs[0]);
+        let unrelated = {
+            let mut builder = crate::ir::GraphBuilder::new(
+                crate::ir::SubProfile::I64,
+                crate::ir::Subject::authored(&scheme, "cert-sample"),
+            );
+            let eight = builder.i64_const(8);
+            builder.output(eight);
+            builder.finish()
+        };
+
+        for substituted in [
+            &wrong_constant,
+            &broken_sharing,
+            &swapped_operands,
+            &changed_output,
+            &repeated_output,
+            &unrelated,
+        ] {
+            assert_ne!(
+                substituted, &result,
+                "each control substitutes a different result"
+            );
+            assert_eq!(
+                super::check(
+                    &scheme,
+                    &graph,
+                    substituted,
+                    &redigested(&derivation, substituted)
+                ),
+                Err(super::Refusal::ResultMismatch)
+            );
+        }
+        assert_eq!(
+            super::check(&scheme, &graph, &result, &redigested(&derivation, &result)),
+            Ok(())
         );
     }
 }

@@ -11,6 +11,7 @@ pub(super) const fn certificate(value: &cert::Refusal) -> &'static str {
         cert::Refusal::ClaimMismatch => "claim-mismatch",
         cert::Refusal::Order => "order",
         cert::Refusal::EndpointMismatch => "endpoint-mismatch",
+        cert::Refusal::ResultMismatch => "result-mismatch",
     }
 }
 
