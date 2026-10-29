@@ -1,5 +1,40 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-28 (native source binding at `13b5a35`; not all gates pass)
+
+The [receipt](receipt-13b5a35.json) binds the #65 native-contract reporting
+cutover and renewed source inventory to
+`13b5a352e452a9b5f14720d1007289883cde7079`: **10 PASS / 2 FAIL / 1 INTERRUPTED /
+1 NOT RUN**. The checks ran from a clean detached worktree. The Rust gate
+reports 866 passed, 0 failed and 7 ignored across 98 test-result groups;
+Clippy, format, documents, Cairn, policy, tool-selection, source-inventory
+controls, source-coverage and native-assurance pass. The source comparator is
+valid with empty diagnostics over 109 units and 15,416 reviewed production
+paths. All 7,977 authored bodies remain open refinement obligations.
+
+`octet` stops in `noble-kernel` with 58 findings (50 errors, 8 warnings).
+`boundary-controls` fails opening the workspace deny
+`compiler-architecture-ir.json`; the retained log does not establish why it
+is absent. Neither the strict CLI/architecture phase nor the boundary matrix
+is claimed to pass. The original failures are retained without waivers.
+
+The tool-gate group reaches its outer 3,600-second timeout while
+`tool-versions` is realizing dependencies; `tool-overrides` never starts.
+A cache-assisted recovery dry run still requires 135 builds and 2.1 GiB of
+fetched outputs. Twenty-five Rust archives alone expand to 9.37 GiB before
+build scratch, with roughly 14 GiB free, so the larger rebuild was not
+admitted. This is prerequisite evidence, not a gate pass. The remaining
+strict, boundary and tool-gate work is tracked in
+[#72](https://github.com/OnixResearch/noble-lang/issues/72).
+
+The same receipt retains four independent native CLI probes for matching
+source, stale source, a rebound false predicate with a stale positive claim,
+and the matching finite refutation, including calibrated syscall observation
+and exact input/output hashes. These are finite implementation observations,
+not a Lean/Rust correspondence theorem or a universal noninterference proof.
+No milestone, scenario or Cairn archive is promoted; previous green receipts
+remain historical evidence for their own commits.
+
 ## Checking change log — 2026-10-23 (all fourteen checks pass at `e4cfb08`)
 
 The [receipt](receipt-e4cfb08.json) records **14 PASS / 0 FAIL** at

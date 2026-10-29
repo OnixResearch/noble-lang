@@ -1320,6 +1320,12 @@ the trace detector. Both input files stayed byte-identical. This is finite
 effect evidence combined with the scalar-only dispatch; tracing alone does not
 rule out in-process execution or establish universal noninterference.
 
+The [source-bound gate and CLI receipt](../../verification/main-gates/receipt-13b5a35.json)
+records the cutover at `13b5a352`: 10 gates pass, two fail, tool-version
+verification is interrupted and tool-overrides is unrun. The remaining global
+gate work is tracked in [#72](https://github.com/OnixResearch/noble-lang/issues/72);
+the finite native-contract integration does not waive those failures.
+
 The ordinary `noble verify` controls remain separate from this report: a native
 Bool contract with `requires true` / `ensures true` exercises ordinary admission,
 while a wrong-typed implementation remains an ordinary contract error. A
