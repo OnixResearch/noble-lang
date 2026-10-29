@@ -57,8 +57,16 @@ carrying channel identity, side, protocol identity, current state and generation
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
 `verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **68** model
-theorems, with `propext` and `Quot.sound` the only reported axioms (`Quot.sound` for
-`full_mailbox_is_unchanged`), both inside the standard allow-list. Its `bindings` block names the protocol
+theorems, every axiom inside the standard allow-list:
+- 20 theorems use no axiom;
+- 38 use `propext` alone;
+- 8 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged` and
+  `step_acts_only_inside_the_current_protocol`;
+- 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and
+  `steppers_preserve_the_endpoint_identity`.
+
+Earlier versions of this paragraph said `propext` was the only reported axiom; the receipts never
+supported that. Its `bindings` block names the protocol
 definitions, the endpoint identity fields and the ledger-based queue accounting as the model's own
 constants (bound through the source hash), records `helper`, `runtime` and `peer` as explicitly absent
 with the reason, and its `claims` block labels the verdict.
