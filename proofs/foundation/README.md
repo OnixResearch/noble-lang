@@ -1439,6 +1439,10 @@ Proved:
 - concretely, a denial before the emitting hop emits nothing and keeps the committed dispatch
   (`a_denial_before_the_emitting_hop_keeps_the_prefix`).
 
+Six further inventoried theorems; receipt
+[verification/foundation/receipts/1d4113e6c/](../../verification/foundation/receipts/1d4113e6c/foundation-check.json)
+(563 theorems, `clean_source: true`; the LiveDispatch theorems use `propext` at most).
+
 Open, and deliberately not closed:
 
 - root-snapshot consistency is proved; *coordinated-version coherence* — that a

@@ -207,3 +207,11 @@ result, and says nothing about correspondence with the Rust table.
 - stale docstrings are corrected.
 That run reported 557 theorems. It supersedes nothing: earlier receipts stay as recorded, and
 their statements for the corrected theorems are the ones the corrections replace.
+
+## 1d4113e6c — event relocation under root pinning (issue #47)
+
+`1d4113e6c/` records the clean run that added the dispatch run, the relocation fixtures and the
+current-map control to `NobleFoundation.LiveDispatch` (6 inventoried theorems; that run reported
+563 in total). `denials_only_truncate` is universal over policies, programs, views and stacks;
+the emission counts are kernel-checked fixtures. It is model evidence and says nothing about
+correspondence with `slot-registry.mjs`.
