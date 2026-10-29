@@ -18,11 +18,12 @@ Four properties are proved, all over finite input (`List Row`) lists:
 
 * the batch is exactly the ordered map of independent row semantics, so no row's
   stack is shared with another row's (`evalBatch_is_the_ordered_map`,
-  `rows_never_share_a_stack`);
+  `a_rows_run_starts_from_an_empty_stack`);
 * a refused row stays local: it cannot change any other row's result
   (`evalBatch_append`, `a_refused_row_does_not_affect_later_rows`);
 * a validated row's reference result is the wrapping operation on its operands
-  (`validated_row_result_is_the_wrapping_operation`), and an out-of-range literal
+  (`add_row_result_is_the_wrapping_sum`, `sub_row_result_is_the_wrapping_difference`,
+  `mul_row_result_is_the_wrapping_product`), and an out-of-range literal
   row is refused rather than silently coerced
   (`out_of_range_row_is_refused`);
 * each batch row's fragment lowers to MC1 code that executes exactly as that row's

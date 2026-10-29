@@ -99,8 +99,11 @@ def obsEqIgnoringZeroSign (x y : Bits) : Bool :=
 /-- Variant 5: subtraction is treated as commutative. -/
 def subReversed (x y : Bits) : Bits := add y x
 
-/-- Variant 6: implicit contraction, which rounds the product before the sum. -/
-def contractedSum (x y z : Bits) : Bits := add (mul x y) z
+/-- Variant 6: implicit contraction, a fused multiply-add that rounds the exact `x · y + z` once
+instead of rounding the product before the sum as the reference does. -/
+def contractedSum (x y z : Bits) : Bits :=
+  let (exact, s) := exactProductPlusThird x y z
+  roundScaled exact s (exact < 0)
 
 /-- Variant 1 is caught: a halfway tie that the reference keeps at `1.0` moves a
 retained answer under the away-from-zero rule. -/
@@ -138,11 +141,12 @@ theorem commutative_subtraction_is_caught :
     ∧ sub 0x3F800001 0x3F800000 = 0x34000000 := by
   decide
 
-/-- Variant 6 is caught: contracting the product into the sum changes the
-retained three-operand answer, so implicit FMA cannot be substituted silently. -/
+/-- Variant 6 is caught: the reference rounds the product before the sum, and contracting the
+two into one rounding changes the retained three-operand answer, so implicit FMA cannot be
+substituted silently. -/
 theorem implicit_contraction_is_caught :
-    (let (exact, s) := exactProductPlusThird 0x3F800001 0x3F800001 0x33800000
-     contractedSum 0x3F800001 0x3F800001 0x33800000 ≠ roundScaled exact s (exact < 0)) := by
+    contractedSum 0x3F800001 0x3F800001 0x33800000
+      ≠ add (mul 0x3F800001 0x3F800001) 0x33800000 := by
   decide
 
 /-- The mutation lane is closed: every declared variant is caught by a named
@@ -153,7 +157,9 @@ theorem all_declared_mutations_are_caught :
     && (flushSubnormal 0x00000001 != 0x00000001)
     && (obsEqIgnoringZeroSign 0x00000000 0x80000000)
     && (!obsEq 0x00000000 0x80000000)
-    && (subReversed 0x3F800001 0x3F800000 != sub 0x3F800001 0x3F800000) = true := by
+    && (subReversed 0x3F800001 0x3F800000 != sub 0x3F800001 0x3F800000)
+    && (contractedSum 0x3F800001 0x3F800001 0x33800000
+      != add (mul 0x3F800001 0x3F800001) 0x33800000) = true := by
   decide
 
 end NobleFoundation.Binary32.Mutations

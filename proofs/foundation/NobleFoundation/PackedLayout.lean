@@ -8,7 +8,8 @@ key — and validates it against the graph the checker produced. This file model
 tables and the obligations*, not the Rust bytes, and proves:
 
 * an inflated register count is refused (`count_inflated_refused`): the count may sit one
-  above the highest declared register but no further;
+  above the highest declared register but no further (`count_one_above_is_accepted`), and with
+  no declared register it may be at most one;
 * a missing register, an out-of-range register and a shared register are each refused
   (`missing_register_refused`, `out_of_range_refused`, `alias_refused`);
 * the constant table must have one entry per constant node (`constant_count_refused`), and an
@@ -21,6 +22,10 @@ tables and the obligations*, not the Rust bytes, and proves:
   (`accepted_implies_registers`, `accepted_implies_distinct`, `accepted_implies_coverage`);
 * a declared failure-suffix table that differs from the graph's own prefix minima is
   refused (`fail_suffix_mismatch_refused`).
+* the layout `Compiled::new` emits for `PackedSchedule.exampleGraph`'s Rust counterpart,
+  copied from the Rust declaration that `layout::check` accepts, is accepted here too
+  (`exampleLayout_accepted`), so the obligations are satisfiable by a real layout rather than
+  only refusing.
 
 What this is not: no decoding of the Rust declaration's bytes is modelled, so nothing here
 binds `serde`/binary output to these tables; the failure-suffix table is modelled as a
@@ -74,12 +79,21 @@ def distinctRegisters (graph : Graph) (layout : Layout) : Bool :=
         | some left, some right => left != right
         | _, _ => true
 
-/-- The declared count sits at most one above each declared register it names. -/
+/-- The highest register any node declares, if any node declares one. -/
+def highestRegister (graph : Graph) (layout : Layout) : Option Nat :=
+  (List.range graph.arity).foldl (fun highest index =>
+    match layout.reg index, highest with
+    | some register, some best => some (max register best)
+    | some register, none => some register
+    | none, best => best) none
+
+/-- The declared count sits at most one above the highest declared register, which leaves the
+scheduler its one reserved register; with no declared register the count is at most one. This is
+the Rust `layout::check` rule `regs - (highest + 1) ≤ 1`. -/
 def countWithinOne (graph : Graph) (layout : Layout) : Bool :=
-  (List.range graph.arity).all fun index =>
-    match layout.reg index with
-    | some register => decide (layout.regs ≤ register + 2)
-    | none => true
+  match highestRegister graph layout with
+  | some highest => decide (layout.regs ≤ highest + 2)
+  | none => decide (layout.regs ≤ 1)
 
 /-- How many nodes declare the given register. -/
 def registerCount (graph : Graph) (layout : Layout) (register : Nat) : Nat :=
@@ -180,14 +194,19 @@ def accepted (graph : Graph) (layerCount : Nat) (fails : Node → Bool) (layerOf
 
 /-- An inflated declared count is refused: the count may sit one above the highest declared
 register, but a declaration two above it is a wrong declaration rather than headroom. -/
-theorem count_inflated_refused (graph : Graph) (layout : Layout) (index register : Nat)
-    (hinflated : layout.regs = register + 3) (hdeclared : layout.reg index = some register)
-    (hin : index < graph.arity) :
+theorem count_inflated_refused (graph : Graph) (layout : Layout) (highest : Nat)
+    (hhighest : highestRegister graph layout = some highest)
+    (hinflated : layout.regs = highest + 3) :
     countWithinOne graph layout = false := by
-  unfold countWithinOne
-  rw [List.all_eq_false]
-  refine ⟨index, List.mem_range.mpr hin, ?_⟩
-  simp [hdeclared, hinflated]
+  simp [countWithinOne, hhighest, hinflated]
+
+/-- The count one above the highest declared register's count, which keeps the scheduler's
+reserved register, is accepted. -/
+theorem count_one_above_is_accepted (graph : Graph) (layout : Layout) (highest : Nat)
+    (hhighest : highestRegister graph layout = some highest)
+    (hcount : layout.regs = highest + 2) :
+    countWithinOne graph layout = true := by
+  simp [countWithinOne, hhighest, hcount]
 
 /-- A node declared without a register is refused. -/
 theorem missing_register_refused (layout : Layout) (index : Nat)
@@ -368,5 +387,32 @@ theorem accepted_implies_coverage (graph : Graph) (layerCount : Nat) (fails : No
     exact List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_self))))))))))
   have hcoverage := haccepted (coverageOk graph layout) hmem
   simpa only [id_eq] using hcoverage
+
+/-! ### A real layout is accepted -/
+
+/-- The layer of each `exampleGraph` node in the Rust layered schedule: the input and the
+constant at layer 0, the addition at layer 1, the equality at layer 2. -/
+def exampleLayerOf (index : Nat) : Nat :=
+  if index ≤ 1 then 0 else index - 1
+
+/-- The declaration `Compiled::new(..).packed_layout()` emits for the Rust graph with the same
+nodes as `exampleGraph` (one `I64` input, the constant 5, their sum, the sum compared with
+itself): `regs = 5`, registers `[0, 1, 2, 3]`, constants `[(1, 5)]`, slots `[(0, 0)]`, layers
+`[(0, 0), (0, 1), (1, 2)]` and four failure-suffix entries of `u32::MAX`, which the Rust
+`layout::check` accepts. -/
+def exampleLayout : Layout where
+  revision := revision
+  regs := 5
+  reg := fun index => if index < 4 then some index else none
+  consts := [(1, 5)]
+  slotRegs := [(0, 0)]
+  layers := [(0, 0), (0, 1), (1, 2)]
+  failSuffixMin := [maxRegister, maxRegister, maxRegister, maxRegister]
+
+/-- **The real layout is accepted**: every obligation holds for the declaration the Rust
+scheduler emits, so acceptance is not vacuous. -/
+theorem exampleLayout_accepted :
+    accepted exampleGraph 3 (fun _ => false) exampleLayerOf exampleLayout = true := by
+  decide
 
 end NobleFoundation.PackedLayout

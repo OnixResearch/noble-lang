@@ -17,17 +17,23 @@ rather than as three runtime passes:
   `tangent_is_directional_derivative` proves the tangent *is* Mathlib's
   derivative of the denotation along a direction line at `t = 0` (the JVP
   specification);
-* `adjointUpTo` is the reverse traversal, and the account statements show that
-  an accumulated adjoint equals exactly the contributions of the nodes processed
-  after it, with repeated operands and shared fan-out *added* rather than
-  overwritten; a mutation model shows what overwriting would lose.
+* `adjointAfter` is the reverse traversal. Each processed consumer *adds* its
+  contribution to its operands' adjoints (`adjoint_step_adds_contribution`), a
+  repeated operand contributes from both occurrences
+  (`repeated_operand_contributes_twice`), and a node that is not an operand is left
+  unchanged (`adjoint_unchanged_when_operand_absent`). A hand-written vector of
+  overwritten adjoints pairs to `4` where the sweep pairs to `8`
+  (`the_overwriting_update_pairs_to_four`,
+  `the_sweep_pairs_to_eight_on_the_second_slot`); it is a literal control, not a
+  mutation of the sweep.
 
 This is a *real* model. Nothing here says that binary32 gradients equal exact
 derivatives, and nothing here authorises reassociation, FMA contraction or
 parallel reduction. The binary32 operation sequence, the Rust `grad.rs` loop and
 the emitted-artifact correspondence are separate, and still open, obligations.
-The transpose identity — that these adjoints sum to the tangent — is named as an
-open obligation rather than proved here.
+The transpose identity is proved as a one-step pairing invariant
+(`adjointDot_step`) and for the fixture (`exampleGraph_adjointDot`); the identity
+over arbitrary well-formed graphs stays open.
 -/
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic

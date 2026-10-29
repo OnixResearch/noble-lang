@@ -4,13 +4,13 @@
   "owner_decision": "2026-10-26",
   "audit_is_document_check_only": true,
   "tables": {
-    "rows": 14,
-    "proved": 13,
-    "tested": 6,
+    "rows": 16,
+    "proved": 15,
+    "tested": 8,
     "assumed": 0,
-    "open": 9
+    "open": 11
   },
-  "inventoried_theorems": 551,
+  "inventoried_theorems": 557,
   "document_only_names": {
     "acceptLiteral": "Phase-1 literal-acceptance specification function, transcribed and proved through accumulate_eq_acceptLiteral",
     "ArithSpec": "Phase-1 arithmetic specification structure whose fields add_spec/sub_spec/mul_spec are inventoried"

@@ -227,8 +227,9 @@ theorem same_sum_agrees (inputs : Nat → BitVec 64)
     (hmem : inputs ∈ candidates) : agreesOn agreePair inputs :=
   search_none_sound agreePair candidates same_sum_search_none inputs hmem
 
-/-- The subtraction pair is genuinely refuted at one declared candidate:
-`3 + 5 = 8` while `5 - 3 = 2`. -/
+/-- The subtraction pair is genuinely refuted at one declared candidate: the left face
+computes `3 + 5 = 8`, while the right face's `sub 1 0` takes node 0 (`5`) from node 1 (`3`), so
+`3 - 5` wraps to `2^64 - 2`. -/
 theorem subtraction_refuted : ¬ agreesOn differPair (fun _ => 0) := by
   intro hagrees
   have hnot : refuted differPair (fun _ => 0) = false :=

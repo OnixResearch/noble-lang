@@ -322,10 +322,10 @@ theorem depth_scan_precedes_schema :
       = .depthLimit := by
   decide
 
-/-- A readiness tag other than `#t`/`#f` is a schema failure. -/
+/-- A readiness tag other than `#t`/`#f` is a schema failure. The record is the canonical
+prefix and a valid name, so the readiness byte is the only deviation. -/
 theorem altered_readiness_is_schema :
-    decode [60, 115, 101, 114, 118, 105, 99, 101, 34, 99, 108, 111, 99, 107, 34, 32, 35, 120, 62] 4
-      = .schema := by
+    decode (recordPrefix ++ [99, 108, 111, 99, 107] ++ [34, 32, 35, 120, 62]) 4 = .schema := by
   decide
 
 /-- Trailing bytes are rejected, so the decoder is a document decoder and not a
@@ -334,16 +334,48 @@ theorem trailing_bytes_are_schema :
     decode (encode [99, 108, 111, 99, 107] true ++ [98]) 4 = .schema := by
   decide
 
-/-- An empty name is rejected although the rest of the record is well formed. -/
+/-- An empty name is rejected although the rest of the record is well formed: the canonical
+prefix and suffix around no name bytes. -/
 theorem empty_name_is_schema :
-    decode [60, 115, 101, 114, 118, 105, 99, 101, 34, 34, 32, 35, 116, 62] 4 = .schema := by
+    decode (recordPrefix ++ [] ++ recordSuffix true) 4 = .schema := by
   decide
 
 /-- A name byte outside the admitted alphabet is rejected, which is the model's
-form of both the non-ASCII and the wrong-alphabet rejections. -/
+form of both the non-ASCII and the wrong-alphabet rejections. The record is canonical apart
+from that one byte. -/
 theorem foreign_name_byte_is_schema :
-    decode [60, 115, 101, 114, 118, 105, 99, 101, 34, 99, 255, 34, 32, 35, 116, 62] 4 = .schema := by
+    decode (recordPrefix ++ [99, 255] ++ recordSuffix true) 4 = .schema := by
   decide
+
+/-- Each schema control above has an accepted neighbour that differs only in the named part:
+readiness `#t` instead of `#x`, a one-byte name instead of none, and an admitted byte instead
+of the foreign one. So each control is refused for the case it names, not for its framing. -/
+theorem schema_controls_have_accepted_neighbours :
+    decode (recordPrefix ++ [99, 108, 111, 99, 107] ++ [34, 32, 35, 116, 62]) 4
+        = .accepted [99, 108, 111, 99, 107] true ∧
+      decode (recordPrefix ++ [99] ++ recordSuffix true) 4 = .accepted [99] true ∧
+      decode (recordPrefix ++ [99, 100] ++ recordSuffix true) 4 = .accepted [99, 100] true := by
+  decide
+
+/-- A 33-byte name is refused by the decoder itself, not only by the name predicate: the record
+fits the wire budget, so the name bound is what refuses it. -/
+theorem overlong_name_decodes_to_schema :
+    decode (encode (List.replicate 33 97) false) 4 = .schema := by
+  decide
+
+/-- The wire budget is exact: 64 bytes pass the byte limit and reach the schema match, and 65 do
+not. -/
+theorem the_full_wire_budget_is_not_a_byte_limit :
+    decode (List.replicate 64 120) 4 = .schema ∧ decode (List.replicate 65 120) 4 = .byteLimit := by
+  decide
+
+/-- Every accepted name satisfies the name predicate: the decoder never accepts a name it would
+refuse to encode. -/
+theorem accepted_name_is_valid (bytes : List Nat) (depth : Nat) (name : List Nat) (ready : Bool)
+    (h : decode bytes depth = .accepted name ready) : validName name = true := by
+  unfold decode at h
+  repeat' split at h
+  all_goals (cases h; try assumption)
 
 /-- A 33-byte name exceeds the name budget. -/
 theorem overlong_name_is_rejected :

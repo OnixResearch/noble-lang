@@ -1273,7 +1273,7 @@
       "name": "NobleFoundation.Binary32.Mutations.implicit_contraction_is_caught",
       "phase": 5,
       "role": "binary32-mutation-lane",
-      "claim": "contracting the product into the sum changes the retained three-operand answer"
+      "claim": "a fused multiply-add, which rounds the exact three-operand sum once, differs from the reference's product-then-sum rounding on a retained case"
     },
     {
       "name": "NobleFoundation.Binary32.Mutations.all_declared_mutations_are_caught",
@@ -1333,7 +1333,7 @@
       "name": "NobleFoundation.ServiceWire.encode_length",
       "phase": 5,
       "role": "service-ref-codec",
-      "claim": "a canonical encoding is fourteen bytes longer than its name"
+      "claim": "a canonical encoding is fifteen bytes longer than its name"
     },
     {
       "name": "NobleFoundation.ServiceWire.depthExceeds_encode",
@@ -1412,6 +1412,30 @@
       "phase": 5,
       "role": "service-ref-codec",
       "claim": "a name byte outside the acquired alphabet is rejected, which is the model form of the non-ASCII and wrong-alphabet rejections"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.schema_controls_have_accepted_neighbours",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "each schema control has an accepted neighbour differing only in the named part, so it is refused for the case it names"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.overlong_name_decodes_to_schema",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "a record with a 33-byte name fits the wire budget and is refused by the decoder's name bound"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.the_full_wire_budget_is_not_a_byte_limit",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "64 bytes pass the byte limit and 65 bytes do not"
+    },
+    {
+      "name": "NobleFoundation.ServiceWire.accepted_name_is_valid",
+      "phase": 5,
+      "role": "service-ref-codec",
+      "claim": "every name the decoder accepts satisfies the name predicate"
     },
     {
       "name": "NobleFoundation.ServiceWire.overlong_name_is_rejected",
@@ -2395,7 +2419,13 @@
       "name": "NobleFoundation.PackedLayout.count_inflated_refused",
       "phase": 2,
       "role": "packed-layout",
-      "claim": "A declared register count more than one above its registers is refused."
+      "claim": "A declared register count more than one above the highest declared register's count is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.count_one_above_is_accepted",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A declared register count exactly one above the highest declared register's count is accepted."
     },
     {
       "name": "NobleFoundation.PackedLayout.missing_register_refused",
@@ -2462,6 +2492,12 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "An accepted layout's last layer range ends exactly at the instruction count."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.exampleLayout_accepted",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The layout the Rust scheduler emits for the example graph, which layout::check accepts, satisfies every modelled obligation."
     },
     {
       "name": "NobleFoundation.PackedLayout.constant_predicate_iff",

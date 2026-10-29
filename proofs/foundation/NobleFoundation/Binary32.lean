@@ -241,9 +241,10 @@ theorem fold_positive_zero_bias_stays_positive :
 
 /-- **The fold's order is load-bearing**: at `bias = 1.0` the terms `1.0 · 2^24` then
 `-1.0 · 2^24` fold to zero, because the `1.0` is rounded away before the cancellation, while
-re-associating the same three values gives `1.0`. Any reassociation, FMA contraction or parallel
-reduction therefore changes this documented result, which is exactly what the `sem.rs` contract
-forbids. -/
+re-associating the same three values gives `1.0`. Reassociation therefore changes this documented
+result, which is exactly what the `sem.rs` contract forbids. This theorem does not exercise FMA
+contraction; `Expectations.implicit_contraction_is_observable` and
+`Mutations.implicit_contraction_is_caught` cover it on a separate three-operand case. -/
 theorem fold_order_is_load_bearing :
     fold oneBits [(oneBits, twoPow24Bits), (negOneBits, twoPow24Bits)] = zeroOf false
       ∧ add oneBits (add (mul oneBits twoPow24Bits) (mul negOneBits twoPow24Bits))

@@ -17,7 +17,7 @@ file, and so is any binding to the actually emitted Rust artifact.
 
 The schedule relation forbids register aliasing outright in this phase. That is a
 restriction, not a claim that the layered scheduler avoids aliasing: the control
-`aliased_schedule_loses_a_value` shows concretely why aliasing needs its own
+`aliasing_loses_the_constant` shows concretely why aliasing needs its own
 premise rather than being assumed away.
 -/
 namespace NobleFoundation.PackedSchedule

@@ -146,7 +146,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-14 claim-table rows, 13 proved, 6 tested-bearing and 9 open, 551 inventoried
+16 claim-table rows, 15 proved, 8 tested-bearing and 11 open, 557 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -171,7 +171,9 @@ Status words:
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
-| Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved**. Ordered binary32 gradient model, Rust refinement and the transpose identity **open** |
+| Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved** (JVP, per-step accumulation, the one-step pairing invariant and the fixture transpose identity). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
+| Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
+| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
@@ -601,8 +603,11 @@ biases staying distinct in sign (`fold_negative_zero_bias_stays_negative`,
 consequence a reader needs: at `bias = 1.0` the terms `1.0 · 2^24` then
 `-1.0 · 2^24` fold to `+0` because the `1.0` is rounded away before the
 cancellation, while re-associating the same three values gives `1.0` — so
-reassociation, FMA contraction and parallel reduction each change a documented
-result.
+reassociating the fold, including a parallel reduction that groups its terms
+differently, changes a documented result. Both products in that example are exact,
+so it says nothing about FMA contraction; contraction is shown separately on a
+three-operand case (`implicit_contraction_is_observable`, caught by
+`Mutations.implicit_contraction_is_caught`).
 
 The remaining `sem.rs` layers are classified rather than left ambiguous:
 
@@ -625,10 +630,13 @@ Receipt for the fold and the classification:
 The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
 six wrong models that are compiled only in this project: away-from-zero ties,
 collapsing every zero result to `+0`, flush-to-zero, a zero-sign-insensitive
-observation, a commutative subtraction and implicit contraction. Each is caught
-by a named retained expectation, and `all_declared_mutations_are_caught` states
-that none of the declared variants escapes. Detection is kernel-checked model
-disagreement, not a Rust-side mutation run.
+observation, a commutative subtraction and implicit contraction (a fused
+multiply-add). Each is caught by a named retained expectation, and
+`all_declared_mutations_are_caught` states that none of the six escapes.
+Detection is kernel-checked model disagreement, not a Rust-side mutation run.
+Until the 2026-10-29 correction, the contraction variant was the reference's own
+product-then-sum rounding rather than a fused one, and `all_declared_mutations_are_caught`
+left it out; it is now the single-rounding form and is included.
 
 The packed Rust graph reference and the compiled graph legs replay all 26
 retained expectations (`crates/noble-ngraph-experiment/tests/b2_differential.rs`):
@@ -659,21 +667,25 @@ Open, and deliberately not closed by this model:
   is a separate trusted-correspondence claim: the replay shows agreement on 26
   retained expectations on one host and target, not a refinement proof;
 
-- the ordered affine fold's individual rounding steps as graph operations, the
-  extraction, training, snapshot and codec layers, guard/index rules, software
+- the extraction, training, snapshot and codec layers, guard/index rules, software
   helpers and optimizer behavior;
+- the fold is modelled and proved as a recursion over the reference operations, but no
+  Lean model maps the graph operations (`Op::F32Add`/`Sub`/`Mul`/`Affine`) to them;
 - a universal proof of the rounding function: its correctness is checked by
   kernel-reduced examples and boundary reasoning, not by a general theorem;
-- shrinking driven from a retained-expectation discrepancy: the shrinker lane
-  minimizes a bare operation discrepancy, so an expectation failure is not yet
-  minimized automatically;
+- retained-expectation shrinking is exercised only for the flush-to-zero
+  multiplication candidate
+  (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in
+  `crates/noble-ngraph-experiment/tests/b2_differential.rs`); no other candidate or
+  operation is shrunk;
 - the APFloat differential lane stays secondary finite evidence, and its guard
   facts are not independent.
 
-The retained receipt is
+The first retained receipt is
 [`verification/foundation/receipts/4be2a68/`](../../verification/foundation/receipts/4be2a68/index.json):
 205 theorems, nine of them binary32, `clean_source: true`, axiom sets inside
-`propext`/`Classical.choice`/`Quot.sound`.
+`propext`/`Classical.choice`/`Quot.sound`. Later foundation receipts cover every
+binary32 theorem, including the fold receipt above.
 
 ## Ownership accounting oracle (issue #59)
 
@@ -1010,7 +1022,9 @@ a revision, a declared register count, one declared register per node, the const
 and interface-slot tables, one instruction range per layer, the failure-suffix
 prefix minima and the acceptance conjunction of those obligations.
 
-Proved: an inflated register count is refused (`count_inflated_refused`); a missing,
+Proved: an inflated register count is refused (`count_inflated_refused`) while a count
+one above the highest declared register's count is accepted
+(`count_one_above_is_accepted`); a missing,
 out-of-range or shared register is refused (`missing_register_refused`,
 `out_of_range_refused`, `alias_refused`); a constant table with the wrong entry count
 is refused (`constant_count_refused`); the layer table must have one ordered range
@@ -1020,6 +1034,18 @@ table that differs from the graph's own prefix minima is refused
 (`fail_suffix_mismatch_refused`); and acceptance implies a register per node,
 non-aliasing and coverage (`accepted_implies_registers`,
 `accepted_implies_distinct`, `accepted_implies_coverage`).
+
+**Correction (2026-10-29).** `countWithinOne` used to compare the declared count with
+*every* declared register (`regs ≤ register + 2` for each), not with the highest one as the
+Rust rule does (`regs - (highest + 1) ≤ 1`). The scheduler declares
+`regs = non-guard nodes + 1`, so the old rule refused every real layout with two or more
+registers, and no positive fixture existed to show it. The model now uses the highest
+declared register (`highestRegister`). `exampleLayout_accepted` checks the exact
+declaration `Compiled::new` emits for the Rust counterpart of
+`PackedSchedule.exampleGraph`, copied from a probe run where `layout::check` accepts it:
+`regs = 5`, registers `[0, 1, 2, 3]`, constants `[(1, 5)]`, slots `[(0, 0)]`, layers
+`[(0, 0), (0, 1), (1, 2)]` and four `u32::MAX` failure-suffix entries. The old rule
+refused that same declaration (checked in a scratch file, not retained).
 
 The clean-source kernel check is retained at `verification/foundation/receipts/09a307c64/`
 (393 theorems, `clean_source: true`, every axiom set inside the allow-list).
@@ -1394,8 +1420,9 @@ record of the dataspace codec, `<service "NAME" #t>` / `<service "NAME" #f>`,
 with the 64-byte wire budget, the `1..=4` configured depth and the 1..=32-byte
 name alphabet. Bytes are modelled as `List Nat`; the parser matches the record
 shape by literal byte patterns and requires the closing suffix to consume the
-rest of the input, so full-input consumption and canonicality are structural
-rather than checked postconditions.
+rest of the input, so full-input consumption is structural; canonicality is a
+checked condition, because `decode` re-encodes the parsed value and accepts only
+when the encoding equals the input.
 
 Proved: value round trip (`decode_encode`) and accepted-byte canonicality
 (`encode_of_accepted`); the exact name and wire bounds
@@ -1406,6 +1433,18 @@ precedence — byte budget before the configured depth
 (`depth_scan_precedes_schema`) — with the readiness tag, trailing bytes, the
 empty name and foreign name bytes separated as semantic classes rather than as
 diagnostic wording.
+
+**Correction (2026-10-29).** `altered_readiness_is_schema`, `empty_name_is_schema` and
+`foreign_name_byte_is_schema` used inputs that omitted the space byte of the record
+prefix, so each was refused at the prefix and established nothing about the case it
+names. They are now built from `recordPrefix` and `recordSuffix`.
+`schema_controls_have_accepted_neighbours` shows that each control has an accepted
+neighbour that differs only in the named part. The decoder's own bounds are now stated
+too:
+- a record with a 33-byte name fits the wire budget and is refused by the name bound
+  (`overlong_name_decodes_to_schema`);
+- 64 bytes pass the byte limit and 65 do not (`the_full_wire_budget_is_not_a_byte_limit`);
+- every accepted name satisfies the name predicate (`accepted_name_is_valid`).
 
 The depth scan is **balanced**, like the codec's: `depthScanAux` tracks the
 current depth and the largest depth reached, and a closing byte at depth zero
@@ -1420,20 +1459,23 @@ The independent comparison is `verification/service-ref/cases.mjs` — a decoder
 written from this model rather than from the Rust codec — against the real
 `crates/noble-kernel/src/dataspace/wire.rs` functions in the
 `service_ref_differential` lanes of `crates/noble-kernel/tests/m7-dataspace.rs`:
-271 cases over alphabet edges, name lengths 0/1/32/33, wire lengths 64/65,
+271 cases over alphabet edges, name lengths 0/1/32/33, wire length 65 (64 only
+through two generated inputs),
 configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
 substitutions and seeded generated values, with three `control-` cases that a
 counting-only depth scan would decide differently. The lane agrees on every case.
 
-Nineteen inventoried theorems; receipt
+Twenty-eight inventoried theorems after the correction; the earlier receipt
 [verification/foundation/receipts/134b215c5/](../../verification/foundation/receipts/134b215c5/foundation-check.json)
-(454 theorems, `clean_source: true`).
+(454 theorems, `clean_source: true`) predates it.
 
-Open, and deliberately not closed: no extraction or refinement proof relates
-`wire.rs` to the model, so the differential is finite evidence on one host and
-target rather than a correspondence theorem; the canonicality theorems apply to
-this closed schema only, not to JSON documents in general; and no zero-copy,
-whole-parser or whole-compiler claim follows.
+Open, and deliberately not closed: an Aeneas extraction of `decode_service` and
+`encode_service` exists in `proofs/m3/NobleKernel/Funs.lean`, but no refinement
+proof relates it to the model, so the differential is finite evidence on one host
+and target rather than a correspondence theorem. No faulty-decoder control is run
+through the differential. The canonicality theorems apply to this closed schema
+only, not to JSON documents in general, and no zero-copy, whole-parser or
+whole-compiler claim follows.
 
 ## Bounded independent-row batch reference (issue #41)
 
