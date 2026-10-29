@@ -5,8 +5,11 @@
  * which the two publications land before the root does not change that.
  *
  * Every scenario asserts a *count* plus the pinned map epoch of both rows, rather than a shape.
- * An already-pinned root retains its map: a publication that tries to land after the pin is
- * refused, and a fresh root afterwards still reports one coherent pair, never a duplicate.
+ * Retention: a root held before its first selection keeps the map it was pinned on while a
+ * compare-and-set publication of a new emitting version lands, so it dispatches to and emits from
+ * the old version exactly once, and the next root uses the new version exactly once. A
+ * publication that omits the incarnation/generation compare-and-set fields stale-rejects with no
+ * root pinned at all, so such a refusal says nothing about retention.
  */
 import assert from 'node:assert/strict';
 import { cli, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
@@ -21,6 +24,8 @@ const RESPONSE = 'emitted:relocated';
 const sources = {
   defTracedE: emitDefinition('tracedE'),
   tracedE: 'tracedE',
+  defTracedE2: emitDefinition('tracedE2'),
+  tracedE2: 'tracedE2',
   defInert: 'def inertBody [ drop 21 ]',
   inert: 'inertBody',
   caller: 'slot.invoke',
@@ -117,24 +122,71 @@ export const run = async binary => {
     assert.equal(effectRow.response, RESPONSE);
   }
 
-  // Retention: with a root already pinned, the publication that tries to land afterwards is
-  // refused, and a fresh root still sees one coherent pair rather than a duplicate.
-  await expectRow(callerFirstSession.issue({ operation: 'candidate', id: 'tracedE' }),
+  // Retention: hold a root before its first selection, land a compare-and-set publication of a new
+  // emitting version of E, then resume. The held root must dispatch to and emit from the version it
+  // was pinned on exactly once; the next root must use the new version exactly once.
+  const invokeCaller = { operation: 'invoke', id: 'caller', inputs: [{ kind: 'i64', value: '5' }],
+    refs: [{ position: 1, ordinal: 0, slot: 'E' }] };
+  const oldEffect = distinguished(callerFirstRoot.request_trace)[0];
+  const oldDispatch = dispatched(callerFirstRoot.request_trace)[0];
+  const pinnedEpoch = oldEffect.policyInput.rootEpoch;
+  assert.equal(typeof oldDispatch.incarnation, 'string', 'the dispatch row names the selected incarnation');
+  assert.equal(typeof oldDispatch.generation, 'string', 'the dispatch row names the selected generation');
+  await expectRow(callerFirstSession.issue({
+    operation: 'define', id: 'defTracedE2', name: 'tracedE2', source: sources.defTracedE2, inputs: [],
+  }), 'definition-retained');
+  await expectRow(callerFirstSession.issue({
+    operation: 'install', id: 'tracedE2', source: sources.tracedE2, inputs: ['I64'], selected_name: 'tracedE2',
+  }), 'installed');
+  // A publication issued while a root is held needs a candidate staged while idle under E's exact
+  // contract; program 0 is the one published into E above.
+  await expectRow(callerFirstSession.issue({ operation: 'candidate', id: 'tracedE2', program_index: 0 }),
     'candidate-staged');
-  const pinnedEpoch = distinguished(callerFirstRoot.request_trace)[0].policyInput.rootEpoch;
-  const refusedPublication = await callerFirstSession.issue({
-    operation: 'publish', slot: 'E', id: 'tracedE', program_index: 0, expected_epoch: pinnedEpoch,
+  await expectRow(callerFirstSession.issue({
+    operation: 'hold-checkpoint', import: 'live_select', occurrence: 1,
+  }), 'checkpoint-hold-selected');
+  callerFirstSession.send(invokeCaller);
+  const entered = await expectRow(callerFirstSession.next(), 'checkpoint-entered');
+  callerFirstSession.send({
+    operation: 'publish', slot: 'E', id: 'tracedE2', program_index: 0,
+    expected_epoch: pinnedEpoch, expected_incarnation: oldDispatch.incarnation,
+    expected_generation: oldDispatch.generation,
   });
-  assert.notEqual(refusedPublication.outcome, 'published',
-    'a publication must not land into the map of an already-pinned root');
-  const freshRoot = await expectRow(callerFirstSession.issue({
-    operation: 'invoke', id: 'caller', inputs: [{ kind: 'i64', value: '5' }],
-    refs: [{ position: 1, ordinal: 0, slot: 'E' }],
-  }), 'executed');
+  // Queue the resume at once: the checkpoint has a deadline, and the router applies the ordered
+  // publication and acknowledges it before resuming the guest.
+  callerFirstSession.send({ operation: 'resume-checkpoint' });
+  const heldPublication = await expectRow(callerFirstSession.next(), 'published');
+  assert.equal(heldPublication.root, entered.root, 'the publication must land while this root is held');
+  assert.equal(heldPublication.checkpoint, entered.checkpoint);
+  assert.notEqual(heldPublication.epoch, pinnedEpoch, 'the publication must advance the registry epoch');
+  const heldRoot = await expectRow(callerFirstSession.next(), 'executed');
+  assert.deepEqual(counts(heldRoot), { dispatches: 1, effects: 1 },
+    'the held root must dispatch once and emit exactly once across the publication');
+  for (const row of [...dispatched(heldRoot.request_trace), ...distinguished(heldRoot.request_trace)]) {
+    assert.equal(row.policyInput.rootEpoch, pinnedEpoch, 'the held root keeps the map it was pinned on');
+    assert.equal(row.definitionId, oldEffect.definitionId,
+      'the held root must dispatch to and emit from the version it was pinned on');
+  }
+  assert.deepEqual(heldRoot.control_events.map(event =>
+    [event.operation, event.scope, event.epoch, event.outcome]),
+  [['publish', 'E', heldPublication.epoch, 'published']],
+  'the held root records the publication that landed during it');
+  const freshRoot = await expectRow(callerFirstSession.issue(invokeCaller), 'executed');
   assert.deepEqual(counts(freshRoot), { dispatches: 1, effects: 1 },
-    'the refused publication must not duplicate or omit the effect');
-  assert.equal(dispatched(freshRoot.request_trace)[0].policyInput.rootEpoch, pinnedEpoch,
-    'the retained map keeps the epoch the earlier root was pinned on');
+    'the next root must dispatch once and emit exactly once');
+  const newEffect = distinguished(freshRoot.request_trace)[0];
+  for (const row of [...dispatched(freshRoot.request_trace), newEffect]) {
+    assert.equal(row.policyInput.rootEpoch, heldPublication.epoch, 'the next root is pinned on the new map');
+    assert.equal(row.definitionId, newEffect.definitionId);
+  }
+  assert.notEqual(newEffect.definitionId, oldEffect.definitionId, 'the next root must use the new version');
+  // Control: the request shape without the incarnation/generation compare-and-set fields
+  // stale-rejects while no root is pinned, so that refusal cannot witness retention.
+  await expectRow(callerFirstSession.issue({ operation: 'candidate', id: 'tracedE2', program_index: 0 }),
+    'candidate-staged');
+  const withoutCompareAndSet = await expectRow(callerFirstSession.issue({
+    operation: 'publish', slot: 'E', id: 'tracedE2', program_index: 0, expected_epoch: heldPublication.epoch,
+  }), 'stale-reject');
   await callerFirstSession.close();
 
   // Sequential-publication control: a root attempted between the two publications cannot execute
@@ -204,8 +256,13 @@ export const run = async binary => {
     leafFirstCounts: counts(leafFirstRoot),
     callerFirstCounts: counts(callerFirstRoot),
     pinnedEpoch,
-    refusedPublication: refusedPublication.outcome,
+    heldPublicationOutcome: heldPublication.outcome,
+    publishedEpoch: heldPublication.epoch,
+    heldRootCounts: counts(heldRoot),
+    heldRootDefinition: oldEffect.definitionId,
     freshRootCounts: counts(freshRoot),
+    freshRootDefinition: newEffect.definitionId,
+    withoutCompareAndSetOutcome: withoutCompareAndSet.outcome,
     halfPublishedOutcome: halfPublished.outcome,
     halfPublishedRows: (halfPublished.request_trace ?? []).length,
     halfPublishedSessionState: halfPublished.session_state,

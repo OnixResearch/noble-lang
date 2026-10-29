@@ -1451,10 +1451,12 @@ Open, and deliberately not closed:
   separate premise and is not proved here;
 - the broken per-dispatch-current-map control exists **in the model** only. On the implementation
   side it is not constructible from the runtime's authority shape, so the implementation
-  fixtures measure omission alone. The issue audit also found that
-  `crates/noble-cli/tests/live_slot_coherent_maps.mjs`'s "retention" step republishes without
-  the CAS fields and is refused for that reason, whether or not a root is pinned. It is not yet
-  evidence of retention;
+  fixtures measure omission alone. The retention step of
+  `crates/noble-cli/tests/live_slot_coherent_maps.mjs` used to republish without the CAS fields
+  and was refused for that reason, whether or not a root was pinned. It now holds a root before
+  its selection, lands a compare-and-set publication, and checks that the held root dispatches
+  and emits once from its pinned version
+  ([verification/live-slot-coherence/](../../verification/live-slot-coherence/README.md));
 - no correspondence claim relates the model to
   `crates/noble-cli/src/core/runtime/slot-registry.mjs`;
 - no event-count claim applies when a denied dispatch or effect stopped

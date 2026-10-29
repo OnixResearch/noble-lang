@@ -59,13 +59,19 @@ const modelTheorems = [
   'NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event',
   'NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation',
   'NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events',
+  'NobleFoundation.LiveDispatch.run_extends_the_events',
+  'NobleFoundation.LiveDispatch.denials_only_truncate',
+  'NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once',
+  'NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits',
+  'NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix',
+  'NobleFoundation.LiveDispatch.a_denial_before_the_emitting_hop_keeps_the_prefix',
 ];
 const inventory = JSON.parse(fs.readFileSync(path.join(root, 'proofs/foundation/inventory.json'), 'utf8'));
 for (const theorem of modelTheorems) {
   assert.ok(inventory.theorems.some(row => row.name === theorem),
     `model theorem ${theorem} missing from the foundation inventory`);
 }
-const foundationReceipt = path.join('verification/foundation/receipts/d2aa7a382');
+const foundationReceipt = path.join('verification/foundation/receipts/1d4113e6c');
 for (const name of ['foundation-check.json', 'Audit.lean']) {
   assert.ok(fs.existsSync(path.join(root, foundationReceipt, name)),
     `retained foundation receipt ${foundationReceipt}/${name} missing`);
@@ -92,7 +98,12 @@ assert.equal(run.status, 0, `coherent-map lane failed: ${(run.stderr ?? '').slic
 const observed = JSON.parse((run.stdout ?? '').trim().split('\n').filter(Boolean).at(-1));
 assert.deepEqual(observed.leafFirstCounts, { dispatches: 1, effects: 1 });
 assert.deepEqual(observed.callerFirstCounts, { dispatches: 1, effects: 1 });
+assert.equal(observed.heldPublicationOutcome, 'published');
+assert.notEqual(observed.publishedEpoch, observed.pinnedEpoch);
+assert.deepEqual(observed.heldRootCounts, { dispatches: 1, effects: 1 });
 assert.deepEqual(observed.freshRootCounts, { dispatches: 1, effects: 1 });
+assert.notEqual(observed.heldRootDefinition, observed.freshRootDefinition);
+assert.equal(observed.withoutCompareAndSetOutcome, 'stale-reject');
 assert.deepEqual(observed.omissionCounts, { dispatches: 1, effects: 0 });
 assert.equal(observed.halfPublishedRows, 0);
 assert.equal(observed.halfPublishedSessionState, 'terminated-after-guest-failure');
@@ -103,7 +114,7 @@ save('receipt.json', {
   schema: 'noble-live-slot-coherence-receipt/v1',
   claim: 'selected host correspondence for coherent entry maps; not a proof and not a promotion',
   model: {
-    what: 'kernel-checked model theorems about pinned entry maps and single publications',
+    what: 'kernel-checked model theorems about pinned entry maps, single publications, event relocation under a pin, the broken current-map control and denial truncation',
     theorems: modelTheorems,
     retained_receipt: { directory: foundationReceipt,
       theorem_count: foundationCheck.theorem_count,
@@ -130,8 +141,9 @@ save('receipt.json', {
     does_not_establish: 'that those lanes were re-run here; only their bytes are bound',
   },
   non_claims: [
-    'the deliberately broken per-dispatch-current-map duplicate control is not constructible from this authority shape',
-    'republishing a slot twice in one session always stale-rejects, so version pairs come from separate sessions',
+    'the deliberately broken per-dispatch-current-map duplicate control is not constructible from this authority shape; it exists only in the model (current_map_selection_duplicates_and_omits)',
+    'retention is measured for one root held before its only selection while one compare-and-set publication lands; publications between two selections of one root are the nested-roots lane, bound here by digest only',
+    'a publication without the incarnation/generation compare-and-set fields stale-rejects whether or not a root is pinned; that refusal is not retention evidence',
     'no conformance case (LSLOT-*) is promoted by this receipt',
   ],
 });
