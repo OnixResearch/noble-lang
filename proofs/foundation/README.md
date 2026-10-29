@@ -146,7 +146,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-14 claim-table rows, 13 proved, 6 tested-bearing and 9 open, 520 inventoried
+14 claim-table rows, 13 proved, 6 tested-bearing and 9 open, 551 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -175,7 +175,7 @@ Status words:
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
-| Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
+| Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -1707,6 +1707,58 @@ Thirty-six further inventoried theorems. Receipt
 (520 theorems, `clean_source: true`; the new theorems depend on `propext` and
 `Quot.sound` at most).
 
+**Valid client histories (the lane the Relinche comment on #46 asks for).**
+`reaches` ends a history at its first refused step; a client keeps going. Under
+the client semantics (`advance`, `accepts`, `respond`, `afterHistory`) the table
+answers each call accepted or rejected, and a rejected call leaves it unchanged.
+On a history with no rejected call this agrees with `reaches`
+(`afterHistory_of_reaches`).
+
+- **Valid-client predicate.** `ValidClient` holds when every call names only
+  what the client holds: the handles the start table issued and the handles
+  its own accepted admissions returned. A stale handle from an earlier
+  generation stays held, so its call is valid and may be rejected. A forged
+  handle, and one a rejected admission would have named, are not
+  (`valid_client_examples`). Every coverage witness is a valid client history
+  (`the_coverage_witnesses_are_valid_clients`).
+- **Documented projection.** `projectClient` keeps every id's calls paired
+  with their responses, in order: handle identity and refusal outcomes. It
+  also keeps the documented observation of the final table: failure, pin,
+  reservation, wake, cleanup and the ordered records. The order between calls
+  on different ids is observed only through shared state.
+- **Positive histories.** Some pairs end at the same table but differ in a
+  rejected call: a delivery after cancellation, an old-generation delivery
+  after reuse, a settlement after cleanup. `projectClient` distinguishes each
+  pair, and it distinguishes the two cancel/deliver orders
+  (`the_client_projection_discriminates`).
+- **Negative histories.** `lossyClient` drops rejected calls and identifies
+  each of those pairs (`the_lossy_client_projection_hides_rejected_calls`).
+- **Reduction.** An independent call, accepted or rejected, never changes
+  whether the other is accepted (`independent_keeps_acceptance`), and the two
+  orders reach the same table (`independent_advance_commute`;
+  `independent_is_client_sound`). Canonical representatives therefore keep
+  validity and the projection (`client_canonicalize`). For every client-sound
+  relation, start, alphabet and depth, the full and reduced searches reach the
+  same client projections of valid client histories
+  (`reduced_client_search_agrees`, `the_declared_client_reduction_agrees`).
+- **Counts and control at the declared bound**, kernel-checked: valid client
+  histories are 2384 full and 2168 reduced from `baseline`, and 3616 full and
+  2717 reduced from `paired` (`the_declared_client_history_counts`). The
+  unsound rule loses client projections from both starts
+  (`the_unsound_client_reduction_loses_projections`). From `paired` it loses
+  the right-first delivery order. From `baseline` it loses a rejected
+  admission followed by the finish that would have enabled it, which the
+  proved relation keeps.
+
+This is a sequential explorer, not a weak-memory or linearizability result. No
+concurrent wrapper is selected, so weak-memory controls are not applicable
+rather than passed. No source/runtime event correspondence is claimed; that
+belongs to the #50 trace relation. Thirty-one further inventoried theorems.
+Receipt
+[verification/foundation/receipts/477d24b9e/](../../verification/foundation/receipts/477d24b9e/foundation-check.json)
+(551 theorems, `clean_source: true`; the new theorems depend on `propext` and
+`Quot.sound` at most).
+
 Open, and deliberately not closed:
 
 - the scan is bounded by one declared sequence and the declared alphabet rather
@@ -1724,6 +1776,10 @@ Open, and deliberately not closed:
 - the counts and the coverage witnesses are for the declared bound only; the
   wake budget is a model constant of one, and the failure code records which
   generation failed first, not the failure kind;
+- the number of *distinct* client projections is not kernel-checked: with
+  thousands of projections, quadratic deduplication is too expensive for the
+  kernel. Agreement is the universal theorem, and the counts checked are of
+  histories and of named projections;
 - weak-memory ordering, liveness, fairness, callback-delivery guarantees,
   cleanup after host death and once-only remote effects are outside the model;
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal

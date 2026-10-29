@@ -187,3 +187,12 @@ commutation, canonical-form and agreement theorems are universal over tables, al
 the counts are kernel-checked by `decide +kernel` at the declared bound only. It is model evidence
 and says nothing about correspondence with the Rust table in
 `crates/noble-kernel/src/async_tasks/table`.
+
+## 477d24b9e — valid client histories for the task-interleaving model (issue #46)
+
+`477d24b9e/` records the clean run at source `477d24b9e` that added the client semantics, the
+valid-client predicate, the documented and lossy client projections, and the client-level reduction
+agreement (31 inventoried theorems; that run reported 551 in total). The agreement and
+canonical-form theorems are universal; the history counts and the unsound-rule detection are
+kernel-checked at the declared bound. It is model evidence, not a weak-memory or linearizability
+result, and says nothing about correspondence with the Rust table.
