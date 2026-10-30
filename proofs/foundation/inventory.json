@@ -4250,6 +4250,132 @@
       "phase": 1,
       "role": "fixture",
       "claim": "a decimal just above the halfway case rounds to the next encoding in one step"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lookup_some_has_valid_entry",
+      "phase": 1,
+      "role": "cache-lookup",
+      "claim": "a successful lookup comes from an entry with the exact index, manifest and verified content"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq",
+      "phase": 1,
+      "role": "cache-lookup",
+      "claim": "a successful lookup carries the exact requested manifest even when indexes collide"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lookup_hit_cons",
+      "phase": 1,
+      "role": "cache-lookup",
+      "claim": "a hit in a tail remains a hit when an entry is prepended"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lookup_cons_hit_cases",
+      "phase": 1,
+      "role": "cache-lookup",
+      "claim": "a hit in a nonempty store is either the head entry or the tail lookup"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lookup_after_erase_subset",
+      "phase": 1,
+      "role": "cache-lookup",
+      "claim": "erasing entries cannot create a cache hit that was absent before erasure"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.colliding_manifests_distinct",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the collision fixture manifests are distinct"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.colliding_index_equal",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the collision fixture gives equal index keys to distinct manifests"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.colliding_index_wrong_manifest_misses",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a present entry for one colliding manifest misses a request for the other"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.stale_manifest_entry_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a stale stored manifest is refused despite a matching request index"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.corrupt_entry_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "an unverified matching entry is refused"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.erase_hit_disappears",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "erasing the only valid entry leaves no hit"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lengthBytes_length",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "each length prefix occupies eight bytes"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.take_lengthBytes",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "taking eight bytes from an encoded entry yields its complete length prefix"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.drop_lengthBytes",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "dropping eight bytes from an encoded entry exposes its payload"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.lengthBytes_injective_of_lt",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "equal little-endian prefixes determine equal lengths under the 64-bit bound"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.append_prefix_cancel",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "a common fixed byte prefix cancels from equal lists"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.encodeParts_payload_eq",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "equal subject encodings have equal payload encodings after the domain tag"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.encodePayload_injective_of_lt",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "bounded length-prefixed payload encodings are injective"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.encodeParts_injective_of_lt",
+      "phase": 1,
+      "role": "encoding",
+      "claim": "subject encodings are injective when every part is shorter than 2^64"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.changed_field_changes_encoding",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "changing a field changes the length-prefixed subject encoding"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.naive_concat_field_collision",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "naive concatenation collides on two differently segmented field lists"
     }
   ]
 }

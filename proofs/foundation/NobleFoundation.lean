@@ -36,3 +36,4 @@ import NobleFoundation.TaskInterleaving
 import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.Isop
+import NobleFoundation.CacheLookup

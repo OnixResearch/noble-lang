@@ -186,6 +186,7 @@ Status words:
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
 | Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `isop_exact`, `isop_bounds`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
+| Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
 
 Typing premises are stated exactly:
 - Sequences require `depthRun ops k = some k'` (static depth) for typing,
@@ -2196,3 +2197,34 @@ Open, and deliberately not closed:
   are not modelled here;
 - no correspondence claim relates this model to Rust, Wasm, the certificate
   emitter, or any retained runtime artifact.
+## Collision-safe cache lookup and subject key encoding (issue #33, phase 1)
+
+`NobleFoundation/CacheLookup.lean` is a generic model of two parts of the
+cache design. Model A stores an index key, the stored manifest, content and a
+verification bit. Its lookup accepts an entry only when the arbitrary index
+function agrees, the stored manifest is exactly the request, and the entry is
+verified. The collision fixture has two unequal manifests with one index key;
+the stale-manifest and corrupt-entry controls both refuse, and
+`lookup_after_erase_subset` states that removing entries cannot create a hit.
+
+Model B mirrors `Subject::derive`'s fixed `noble.ngraph.subject.v0` domain tag,
+then an eight-byte little-endian length and the bytes for every part. Under an
+explicit shorter-than-`2^64` premise, `encodeParts_injective_of_lt` proves
+injectivity. The changed-field fixture differs under this encoding, while
+`naive_concat_field_collision` records the boundary collision that length
+prefixes prevent.
+
+This unit remains generic over the manifest type and therefore does not settle
+issue #32's manifest contract. It is a model statement only: no runtime, Rust
+or Wasm correspondence is claimed.
+
+Open, and deliberately not closed:
+
+- #32's manifest fields and their canonical representation;
+- the persistence boundary and its failure/recovery behavior;
+- the trust path for verification and artifact provenance;
+- negative caching and its invalidation policy;
+- correspondence between this model and the Rust cache and `Subject::derive`
+  implementation.
+
+The parent attaches the clean foundation receipt at integration.
