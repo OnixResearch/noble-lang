@@ -263,8 +263,8 @@ theorem is `joined_word_admission_agrees`: over the straight-line fragment a dat
 word's admission depends on per-position eligibility, while swap only needs two positions, so a
 stack pair whose positions agree on eligibility is admitted in both arms or in neither.
 
-Remaining work, recorded rather than implied: the same simulation lifted over a whole word
-*sequence*, which needs the intermediate stacks to keep agreeing. The branch constructor is outside
+`OwnershipJudgment.lean` lifts the same simulation over whole straight-line word sequences
+(`joined_sequence_admission_agrees`), where each step keeps the intermediate stacks agreeing. The branch constructor is outside
 this lane because it compares the two arms' actual results, so a join can never be used to skip
 accounting one arm (`branch_accounts_both_arms` and the mutation controls cover that case).
 -/

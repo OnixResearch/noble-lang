@@ -4832,6 +4832,60 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "a subtraction rule with the wrong second-operand sign moves the y gradient to 2 where the derivative is -2"
+    },
+    {
+      "name": "NobleFoundation.Ownership.step_iff_wordRule",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the executable step agrees exactly with one independent rule per word stated from the fragment prose"
+    },
+    {
+      "name": "NobleFoundation.Ownership.judged_iff_accounts",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the judgment built on the independent per-word rules coincides with Accounts"
+    },
+    {
+      "name": "NobleFoundation.Ownership.run_complete",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "every Accounts derivation is a checker acceptance"
+    },
+    {
+      "name": "NobleFoundation.Ownership.run_iff_judged",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the checker decides the independent judgment exactly"
+    },
+    {
+      "name": "NobleFoundation.Ownership.step_preserves_agreement",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "one step preserves eligibility agreement on the stacks it admits in both arms"
+    },
+    {
+      "name": "NobleFoundation.Ownership.joined_sequence_admission_agrees",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "on a straight-line program two eligibility-agreeing stacks are admitted in both arms or neither and leave agreeing stacks"
+    },
+    {
+      "name": "NobleFoundation.Ownership.joined_judgment_transfers",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a straight-line judgment carries over to any eligibility-agreeing start with agreeing results"
+    },
+    {
+      "name": "NobleFoundation.Ownership.equal_length_does_not_lift",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "equal-length stacks that disagree on eligibility separate a straight-line dup"
+    },
+    {
+      "name": "NobleFoundation.Ownership.lift_fixture",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "stacks with different owners but agreeing eligibility run a three-word sequence alike and agree again"
     }
   ]
 }

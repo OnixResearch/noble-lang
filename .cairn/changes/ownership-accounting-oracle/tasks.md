@@ -21,6 +21,14 @@
   87 model-only). The swap mutation now drops an operand; the owner records
   fresh foundation and differential receipts after this one-commit change.
 
+  Note (2026-10-30): `OwnershipJudgment` states one independent rule per word
+  and proves `step` agrees with it exactly (`step_iff_wordRule`); the judgment
+  on those rules coincides with `Accounts`, and `run_complete` makes the
+  checker decide it exactly. The join admission simulation is lifted over
+  whole straight-line word sequences (`joined_sequence_admission_agrees`).
+  Branches and the error return stay outside the lift; the Phase 3
+  correspondence task stays owner-reserved.
+
 ## Phase 2: Independent corpus, production comparison and mutations
 
 - [x] [serial] Write `verification/ownership/cases.mjs` from the model and generate 108 cases over nine programmes and eleven operand shapes plus branch/resource controls, classifying each case as an executable production control or as model-only with a stated reason. r[VC-OWN-02]

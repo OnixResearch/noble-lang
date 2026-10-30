@@ -915,8 +915,24 @@ is what `branch_accounts_both_arms` and the mutation controls establish. The joi
 controls are model-level only; the production acceptance machine has no join
 concept, and a join is never presented as an executable production control.
 
-Not proved, and recorded rather than implied: the admission simulation lifted over
-a whole word *sequence*, which needs the intermediate stacks to keep agreeing.
+`NobleFoundation/OwnershipJudgment.lean` closes two gaps in that structure. First, `Accounts.word`
+takes `step w operands = some out` as its premise, so the judgment's word rules delegated to the
+checker. `WordRule` states one rule per word from the fragment's prose instead (`dup`, `drop`
+and `quote` need an operand with no resource at any depth; `swap` reorders two operands
+unconditionally), and `step_iff_wordRule` proves the executable step agrees with it exactly.
+`Judged`, the judgment built on those rules, coincides with `Accounts` (`judged_iff_accounts`),
+and with the new completeness theorem `run_complete` the checker decides it exactly
+(`run_iff_judged`).
+
+Second, the admission simulation is lifted over whole straight-line word sequences. Each step
+preserves eligibility agreement (`step_preserves_agreement`), so a straight-line program is
+admitted on two agreeing stacks or on neither and leaves stacks that agree again
+(`joined_sequence_admission_agrees`); `joined_judgment_transfers` states the same over `Judged`.
+`equal_length_does_not_lift` is the control that the lift needs eligibility agreement, not a
+count, and `lift_fixture` runs a three-word sequence over stacks with different owners.
+Branches and the error return compare actual results and stay outside the lift.
+
+The parent attaches the clean foundation receipt at integration.
 
 The retained receipt for the corrected swap rule is
 [`verification/foundation/receipts/23462be4b/`](../../verification/foundation/receipts/23462be4b/foundation-check.json):
