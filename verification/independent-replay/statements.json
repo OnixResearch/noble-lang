@@ -1,0 +1,26 @@
+{
+  "schema": "noble-independent-replay-statements/v1",
+  "description": "Roots selected for the issue #62 binding lane and the statements Noble compiled for them. Each statement is printed by verification/independent-replay/statements.lean from the compiled foundation environment through Lean's own Expr, never from a lean4export file.",
+  "canonical_form": "(stmt [level params] type); binder names and mdata dropped, binder kinds kept (d default, i implicit, s strict implicit, c instance), dotted unescaped names, string literals as UTF-8 hex, levels as 0, (s l), (max a b), (imax a b), (u name)",
+  "source": {
+    "foundation_commit": "b95bfb8f",
+    "lean": "4.31.0"
+  },
+  "claims": [
+    {
+      "root": "NobleFoundation.toInt_add",
+      "statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+      "statement": "(stmt [] (pi d (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))) (pi d (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))) (@ (@ (@ (c Eq (s 0)) (c Int)) (@ (@ (c BitVec.toInt) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))) (@ (@ (@ (@ (@ (@ (c HAdd.hAdd 0 0 0) (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64))))) (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64))))) (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64))))) (@ (@ (c instHAdd 0) (@ (c BitVec) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64))))) (@ (c BitVec.instAdd) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))))) #1) #0))) (@ (c MathlibI64.wrap) (@ (@ (@ (@ (@ (@ (c HAdd.hAdd 0 0 0) (c Int)) (c Int)) (c Int)) (@ (@ (c instHAdd 0) (c Int)) (c Int.instAdd))) (@ (@ (c BitVec.toInt) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))) #1)) (@ (@ (c BitVec.toInt) (@ (@ (@ (c OfNat.ofNat 0) (c Nat)) (nat 64)) (@ (c instOfNatNat) (nat 64)))) #0)))))))"
+    },
+    {
+      "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+      "statement": "(stmt [] (pi i (sort (s 0)) (pi i (sort (s 0)) (pi i (sort (s 0)) (pi i (pi d #2 (pi d #3 (sort 0))) (pi i (pi d #2 (pi d #3 (sort 0))) (pi i (pi d #2 (pi d #3 (sort 0))) (pi i (pi d #5 (pi d #5 (sort 0))) (pi i (pi d #5 (pi d #5 (sort 0))) (pi d (@ (@ (@ (@ (@ (c NobleFoundation.LinkBoundary.ForwardSimulation) #7) #6) #4) #3) #1) (pi d (@ (@ (@ (@ (@ (c NobleFoundation.LinkBoundary.ForwardSimulation) #7) #6) #4) #3) #1) (@ (@ (@ (@ (@ (c NobleFoundation.LinkBoundary.ForwardSimulation) #9) #7) #6) #4) (fun d #9 (fun d #8 (@ (@ (c Exists (s 0)) #10) (fun d #10 (@ (@ (c And) (@ (@ #6 #2) #0)) (@ (@ #5 #0) #1))))))))))))))))))"
+    },
+    {
+      "root": "Nat.add_comm",
+      "statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+      "statement": "(stmt [] (pi d (c Nat) (pi d (c Nat) (@ (@ (@ (c Eq (s 0)) (c Nat)) (@ (@ (@ (@ (@ (@ (c HAdd.hAdd 0 0 0) (c Nat)) (c Nat)) (c Nat)) (@ (@ (c instHAdd 0) (c Nat)) (c instAddNat))) #1) #0)) (@ (@ (@ (@ (@ (@ (c HAdd.hAdd 0 0 0) (c Nat)) (c Nat)) (c Nat)) (@ (@ (c instHAdd 0) (c Nat)) (c instAddNat))) #0) #1)))))"
+    }
+  ]
+}
