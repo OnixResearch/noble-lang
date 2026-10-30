@@ -1032,7 +1032,10 @@ The lift is then characterised over the whole fragment. Its two halves separate:
   another: `swap` and `dup; drop` agree on `[data 1, data 1]` but not on `[data 1, data 2]`
   (`branch_admission_does_not_lift`).
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the whole-fragment lift is
+[`verification/foundation/receipts/b6cce7a71/`](../../verification/foundation/receipts/b6cce7a71/foundation-check.json)
+(908 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 The clean-source receipt for the per-word rules and the join lift is
 [`verification/foundation/receipts/0cf855674/`](../../verification/foundation/receipts/0cf855674/foundation-check.json)

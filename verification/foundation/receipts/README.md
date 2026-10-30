@@ -401,3 +401,9 @@ ordered affine fold bound and the cancellation fixture (34 new theorems; that ru
 relative-plus-absolute rule for every finite rounding, one model addition and multiplication, the
 finite fold bound with its absolute term, and the subnormal fixture (14 new theorems; that run
 reported 902 in total).
+
+## b6cce7a71 — ownership join lift over the whole fragment (issue #59)
+
+`b6cce7a71/` records the clean run that characterised the eligibility lift over branches and the
+error return: result agreement for every program, admission agreement for every branch-free
+program, and the branch counterexample (6 new theorems; that run reported 908 in total).
