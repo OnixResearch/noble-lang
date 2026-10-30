@@ -1,8 +1,8 @@
 {
   "schema": "noble-service-ref-differential/v1",
   "assertion": "the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases, and each declared single-rule decoder mutation disagrees with at least one expectation; not a refinement proof",
-  "source_commit": "97b8bdf9d115cc124cbdcf3e6c49755ad9d1a8c1",
-  "source_tree": "ec16bfb79b6ab5974d8faf7a9be22d137b020ed8",
+  "source_commit": "b2231b7772e9784897a44bf9b14a60d729f3695b",
+  "source_tree": "7f740e1213cf7c2b76fab2b8a51ee4086ff0bc2c",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
@@ -13,18 +13,18 @@
     "service_ref_differential::service_ref_corpus_detects_each_declared_decoder_mutation"
   ],
   "case_file": "verification/service-ref/cases.txt",
-  "case_file_sha256": "f03229d9dc8556bfa8ae837f6895b683e6f2641854d153fe09381a114749fa0e",
+  "case_file_sha256": "f01ece15f854ffefe5b098c9a284a8017de05547f765ba96c8050fc7d8f10ce1",
   "reference_file": "verification/service-ref/cases.mjs",
-  "reference_file_sha256": "f5ef9166a71605bd11af8ea072031b8fa3cae514eed91ab31cc2c8fe8c04a5aa",
+  "reference_file_sha256": "b2ba67a0700d1f498f6ec45644efd12026c8359fe3cd58123558f13d51d91d57",
   "model_file": "proofs/foundation/NobleFoundation/ServiceWire.lean",
   "model_file_sha256": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b",
   "lane_file": "crates/noble-kernel/tests/m7-dataspace.rs",
   "lane_file_sha256": "e099110cc89ac19060d0747a128e4abc8f1ce460b29812e7705e775f63594d9f",
   "coverage": {
-    "cases": 271,
+    "cases": 357,
     "depth_scan_controls": 3,
-    "summary": "service-ref-differential cases=271 coverage={\"accepted\": 78, \"byteLimit\": 6, \"depthLimit\": 3, \"schema\": 184} controls=3",
-    "mutations": "service-ref-mutations cases=271 caught=[None=0 CountingOnlyDepthScan=2 DepthLimitTooStrict=3 DepthLimitTooLenient=1 ByteLimitOffByOne=1 TrailingBytesIgnored=5 ForeignTagReadsNotReady=5 ReadinessIgnored=41 EmptyNameAccepted=1 NameLengthOffByOne=1]"
+    "summary": "service-ref-differential cases=357 coverage={\"accepted\": 78, \"byteLimit\": 6, \"depthLimit\": 3, \"schema\": 270} controls=3",
+    "mutations": "service-ref-mutations cases=357 caught=[None=0 CountingOnlyDepthScan=2 DepthLimitTooStrict=3 DepthLimitTooLenient=1 ByteLimitOffByOne=1 TrailingBytesIgnored=9 ForeignTagReadsNotReady=5 ReadinessIgnored=41 EmptyNameAccepted=1 NameLengthOffByOne=1]"
   },
   "correspondence": {
     "route": "handwritten Lean reference compared against the Rust functions by this differential lane",
@@ -33,6 +33,11 @@
         "proofs/foundation/NobleFoundation/ServiceWire.lean": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b"
       },
       "receipts": [
+        {
+          "receipt": "verification/foundation/receipts/0cf855674/foundation-check.json",
+          "source_commit": "0cf855674c8ba59b5766fd55093c520065f82c18",
+          "model_theorems": 28
+        },
         {
           "receipt": "verification/foundation/receipts/14a7793c9/foundation-check.json",
           "source_commit": "14a7793c9a40dc88ae131cb647337290abc049c2",
@@ -46,6 +51,16 @@
         {
           "receipt": "verification/foundation/receipts/23462be4b/foundation-check.json",
           "source_commit": "23462be4b0127876684c10e0d732822ce9ecba7e",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/309f46c02/foundation-check.json",
+          "source_commit": "309f46c028a6428d85e0594cc7f84e79ccdfbd41",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/3b1841f35/foundation-check.json",
+          "source_commit": "3b1841f35a6dd5d42543578e1b872fec93b2d62b",
           "model_theorems": 28
         },
         {
