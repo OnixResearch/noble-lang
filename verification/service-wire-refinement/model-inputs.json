@@ -76,7 +76,9 @@
         "ServiceWireRefinement.decode_service_accepts_iff",
         "ServiceWireRefinement.decode_service_refuses_iff",
         "ServiceWireRefinement.decode_service_of_encode",
-        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
       ]
     },
     {
@@ -92,7 +94,9 @@
         "ServiceWireRefinement.decode_service_refines",
         "ServiceWireRefinement.decode_service_accepts_iff",
         "ServiceWireRefinement.decode_service_of_encode",
-        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
       ]
     },
     {
@@ -110,7 +114,9 @@
         "ServiceWireRefinement.decode_service_accepts_iff",
         "ServiceWireRefinement.decode_service_refuses_iff",
         "ServiceWireRefinement.decode_service_of_encode",
-        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service"
       ]
     },
     {
@@ -127,7 +133,67 @@
         "ServiceWireRefinement.decode_service_accepts_iff",
         "ServiceWireRefinement.decode_service_refuses_iff",
         "ServiceWireRefinement.decode_service_of_encode",
-        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-ready-tag",
+      "removes": "a ready value is encoded with the #t tag",
+      "edits": [
+        {
+          "find": "      then\n        ok (Array.make 5#usize [ 34#u8, 32#u8, 35#u8, 116#u8, 62#u8 ] : Array",
+          "replace": "      then\n        ok (Array.make 5#usize [ 34#u8, 32#u8, 35#u8, 102#u8, 62#u8 ] : Array"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-invalid-name-class",
+      "removes": "an invalid name is refused as InvalidName",
+      "edits": [
+        {
+          "find": "          ok (core.result.Result.Ok { bytes := bytes3, len := total })\n  else ok (core.result.Result.Err dataspace.Error.InvalidName)",
+          "replace": "          ok (core.result.Result.Ok { bytes := bytes3, len := total })\n  else ok (core.result.Result.Err dataspace.Error.ByteLimit)"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines"
+      ]
+    },
+    {
+      "id": "encoder-skips-prefix",
+      "removes": "the name is written after the record prefix",
+      "edits": [
+        {
+          "find": "              (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)) bytes1\n              { start := i4, «end» }",
+          "replace": "              (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)) bytes\n              { start := i4, «end» }"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-budget",
+      "removes": "the record budget is the 64-byte wire budget",
+      "edits": [
+        {
+          "find": "        if total > dataspace.MAX_WIRE_BYTES",
+          "replace": "        if total > dataspace.MAX_NAME_BYTES"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
       ]
     }
   ]

@@ -8,21 +8,24 @@ set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-!
-# The extracted ServiceRef decoder refines the Lean model (issue #48)
+# The extracted ServiceRef codec refines the Lean model (issue #48)
 
-`dataspace.wire.decode_service` is the checked-in Charon/Aeneas translation
-(`proofs/m3/NobleKernel/Funs.lean`) of `decode_service` in `crates/noble-kernel/src/dataspace/wire.rs`.
-`decode_service_refines` states its result for every byte slice and every configured depth: the
-translation returns, and its result read through `observed` is the decision of the model decoder
-`NobleFoundation.ServiceWire.decode`. The last section carries totality, exact acceptance, exact
-refusal classes, decoding of every valid model encoding and canonical-only acceptance over to the
-translation.
+`dataspace.wire.decode_service` and `dataspace.wire.encode_service` are the checked-in Charon/Aeneas
+translations (`proofs/m3/NobleKernel/Funs.lean`) of the codec in
+`crates/noble-kernel/src/dataspace/wire.rs`. `decode_service_refines` states the decoder's result for
+every byte slice and every configured depth: the translation returns, and its result read through
+`observed` is the decision of the model decoder `NobleFoundation.ServiceWire.decode`; consequences
+carry totality, exact acceptance, exact refusal classes, decoding of every valid model encoding and
+canonical-only acceptance over to the translation. `encode_service_refines` states the encoder's
+result for every string and readiness tag: a valid name yields a packet carrying exactly the model
+encoding, any other name `InvalidName`. The two Rust-level round trips compose them through
+`Packet.as_bytes`.
 
 Trusted rather than proved here: the Charon/Aeneas translation itself; the Aeneas library models of
-slices, arrays, range indexing, scalars, checked subtraction and loops; and the handwritten external
-models the decoder reaches in `proofs/m3/NobleKernel/FunsExternal.lean` (`from_utf8`,
-`is_ascii_alphanumeric`, and `str` length, emptiness and byte view). `from_utf8` is modelled as
-returning its input on valid UTF-8. The encoder `encode_service` is not related to the model here.
+slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops;
+and the handwritten external models the codec reaches in `proofs/m3/NobleKernel/FunsExternal.lean`
+(`from_utf8`, `is_ascii_alphanumeric`, and `str` length, emptiness and byte view). `from_utf8` is
+modelled as returning its input on valid UTF-8.
 -/
 
 namespace ServiceWireRefinement
@@ -853,5 +856,240 @@ theorem decode_service_accepted_is_canonical (bytes : Slice U8) (configured : U3
       encode (bytesOf value.«name») value.ready = bytesOf bytes := by
   have hmodel := (decode_service_accepts_iff bytes configured _ _).mp ⟨value, h, rfl, rfl⟩
   exact ⟨accepted_name_is_valid _ _ _ _ hmodel, encode_of_accepted _ _ _ _ hmodel⟩
+
+/-! ## The encoder -/
+
+/-- The bytes a packet carries: the first `len` bytes of its buffer. -/
+def packetBytes (packet : dataspace.wire.Packet) : List Nat :=
+  (packet.bytes.val.take packet.len.val).map (·.val)
+
+theorem setSlice_fit {α : Type} (l s : List α) (i : Nat) (h : i + s.length ≤ l.length) :
+    l.setSlice! i s = l.take i ++ s ++ l.drop (i + s.length) := by
+  unfold List.setSlice!
+  simp only
+  rw [show min s.length (l.length - i) = s.length by omega, List.take_of_length_le (Nat.le_refl _)]
+
+theorem take_setSlice {α : Type} (l s : List α) (i : Nat) (h : i + s.length ≤ l.length) :
+    (l.setSlice! i s).take (i + s.length) = l.take i ++ s := by
+  rw [setSlice_fit l s i h, List.append_assoc, List.take_append]
+  have hi : (l.take i).length = i := by simp; omega
+  rw [hi, List.take_of_length_le (by omega), show i + s.length - i = s.length by omega,
+    List.take_left' rfl]
+
+/-- Writing a ten-byte prefix, a name and a five-byte suffix in turn leaves the record in front. -/
+theorem fill_record {α : Type} (Z P N S : List α) (hP : P.length = 10) (hS : S.length = 5)
+    (fits : 15 + N.length ≤ Z.length) :
+    (((Z.setSlice! 0 P).setSlice! 10 N).setSlice! (10 + N.length) S).take (15 + N.length) =
+      P ++ N ++ S := by
+  have l1 : (Z.setSlice! 0 P).length = Z.length := List.length_setSlice! _ _ _
+  have l2 : ((Z.setSlice! 0 P).setSlice! 10 N).length = Z.length := by
+    rw [List.length_setSlice!, l1]
+  have t3 := take_setSlice ((Z.setSlice! 0 P).setSlice! 10 N) S (10 + N.length)
+    (by rw [l2, hS]; omega)
+  rw [hS, show 10 + N.length + 5 = 15 + N.length by omega] at t3
+  rw [t3]
+  have t2 := take_setSlice (Z.setSlice! 0 P) N 10 (by rw [l1]; omega)
+  rw [t2]
+  have t1 := take_setSlice Z P 0 (by rw [hP]; omega)
+  rw [hP, Nat.zero_add] at t1
+  rw [t1, List.take_zero, List.nil_append]
+
+/-- The generated record prefix as a slice. -/
+def prefixSlice : Slice U8 :=
+  Array.to_slice (Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8,
+    32#u8, 34#u8])
+
+theorem prefix_slice_eq : Array.to_slice (Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8,
+    118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8]) = prefixSlice := rfl
+
+theorem prefixSlice_bytes : bytesOf prefixSlice = recordPrefix := by
+  unfold prefixSlice bytesOf
+  simp [Array.to_slice, Array.make_val]
+  rfl
+
+/-- The generated readiness suffix the encoder selects. -/
+def suffixArray (ready : Bool) : Array U8 5#usize :=
+  if ready then Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8]
+  else Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8]
+
+theorem suffix_choice (ready : Bool) :
+    (if ready = true then (Result.ok (Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8]) :
+        Result (Array U8 5#usize))
+      else Result.ok (Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8])) =
+      Result.ok (suffixArray ready) := by
+  cases ready <;> rfl
+
+theorem suffixArray_bytes (ready : Bool) : bytesOf (suffixArray ready).to_slice = recordSuffix ready := by
+  cases ready <;> simp [suffixArray, bytesOf, Array.to_slice, Array.make_val, recordSuffix]
+
+theorem to_slice_len {n : Usize} (a : Array U8 n) : a.to_slice.len = n := by
+  apply (UScalar.eq_equiv _ _).mpr
+  simp [Array.to_slice]
+
+theorem prefixSlice_len : prefixSlice.len = 10#usize := to_slice_len _
+
+theorem prefixSlice_length : prefixSlice.length = 10 := by
+  have h := congrArg (·.val) prefixSlice_len
+  simp only [Slice.len_val] at h
+  rw [h]
+  rfl
+
+theorem suffixArray_length (ready : Bool) : (suffixArray ready).to_slice.length = 5 := by
+  have h := congrArg (·.val) (to_slice_len (suffixArray ready))
+  simp only [Slice.len_val] at h
+  rw [h]
+  rfl
+
+theorem copy_ok (s src : Slice U8) (h : s.length = src.length) :
+    core.slice.Slice.copy_from_slice core.marker.CopyU8 s src = Result.ok src := by
+  unfold core.slice.Slice.copy_from_slice
+  rw [if_pos ((UScalar.eq_equiv _ _).mpr (by simp [h]))]
+
+theorem encode_service_refines (label : Str) (ready : Bool) :
+    ∃ r, dataspace.wire.encode_service label ready = Result.ok r ∧
+      if validName (bytesOf label) = true then
+        ∃ packet : dataspace.wire.Packet, r = .Ok packet ∧
+          packet.len.val = 15 + (bytesOf label).length ∧
+          packetBytes packet = encode (bytesOf label) ready
+      else r = .Err .InvalidName := by
+  unfold dataspace.wire.encode_service
+  rw [valid_name_eq]
+  simp only [bind_tc_ok]
+  by_cases valid : validName (bytesOf label) = true
+  swap
+  · refine ⟨.Err .InvalidName, by simp [valid], ?_⟩
+    simp [valid]
+  simp only [valid, if_true]
+  have bounds : 1 ≤ label.length ∧ label.length ≤ 32 := by
+    have v := valid
+    unfold validName at v
+    simp only [Bool.and_eq_true, decide_eq_true_eq, maxNameBytes, bytesOf_length] at v
+    exact v.1
+  simp only [suffix_choice, lift, bind_tc_ok, prefix_slice_eq, to_slice_len, core.str.Str.len]
+  obtain ⟨stop, hstop, hstopval⟩ : ∃ e : Usize, Usize.checked_add 10#usize label.len = some e ∧
+      e.val = 10 + label.length := by
+    have hs := Usize.checked_add_bv_spec 10#usize label.len
+    cases hc : Usize.checked_add 10#usize label.len with
+    | none =>
+        rw [hc] at hs
+        scalar_tac
+    | some z =>
+        rw [hc] at hs
+        exact ⟨z, rfl, by scalar_tac⟩
+  rw [prefixSlice_len, hstop]
+  dsimp only
+  obtain ⟨total, htotal, htotalval⟩ : ∃ e : Usize, Usize.checked_add stop 5#usize = some e ∧
+      e.val = 15 + label.length := by
+    have hs := Usize.checked_add_bv_spec stop 5#usize
+    cases hc : Usize.checked_add stop 5#usize with
+    | none =>
+        rw [hc] at hs
+        scalar_tac
+    | some z =>
+        rw [hc] at hs
+        exact ⟨z, rfl, by scalar_tac⟩
+  rw [htotal]
+  dsimp only
+  rw [if_neg (show ¬ total > dataspace.MAX_WIRE_BYTES by simp only [dataspace.MAX_WIRE_BYTES]; scalar_tac)]
+  obtain ⟨⟨s3, back0⟩, h3, hp3⟩ := WP.spec_imp_exists
+    (Array.index_mut_SliceIndexRangeToUsizeSlice (Array.repeat 64#usize 0#u8) { «end» := 10#usize }
+      (by scalar_tac))
+  simp only [WP.uncurry'_pair] at hp3
+  obtain ⟨-, hs3len, hback0⟩ := hp3
+  rw [h3]
+  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair]
+  rw [copy_ok s3 prefixSlice (by rw [hs3len, prefixSlice_length]; scalar_tac)]
+  simp only [bind_tc_ok]
+  obtain ⟨⟨s7, back1⟩, h7, hp7⟩ := WP.spec_imp_exists
+    (Array.index_mut_SliceIndexRangeUsizeSlice.step (back0 prefixSlice)
+      { start := 10#usize, «end» := stop } (by scalar_tac) (by scalar_tac))
+  simp only [WP.uncurry'_pair] at hp7
+  obtain ⟨-, hs7len, hback1⟩ := hp7
+  rw [h7]
+  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair, core.str.Str.as_bytes]
+  rw [copy_ok s7 label (by rw [hs7len]; scalar_tac)]
+  simp only [bind_tc_ok]
+  obtain ⟨⟨s10, back2⟩, h10, hp10⟩ := WP.spec_imp_exists
+    (Array.index_mut_SliceIndexRangeUsizeSlice.step (back1 label)
+      { start := stop, «end» := total } (by scalar_tac) (by scalar_tac))
+  simp only [WP.uncurry'_pair] at hp10
+  obtain ⟨-, hs10len, hback2⟩ := hp10
+  rw [h10]
+  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair]
+  rw [copy_ok s10 (suffixArray ready).to_slice (by rw [hs10len, suffixArray_length]; scalar_tac)]
+  simp only [bind_tc_ok]
+  refine ⟨_, rfl, _, rfl, ?_, ?_⟩
+  · show total.val = 15 + (bytesOf label).length
+    rw [htotalval, bytesOf_length]
+  unfold packetBytes
+  show List.map (fun x => x.val) (List.take total.val (back2 (suffixArray ready).to_slice).val) =
+    encode (bytesOf label) ready
+  have ten : (10#usize).val = 10 := by scalar_tac
+  have whole : (Array.repeat 64#usize 0#u8).val.length = 64 := by
+    rw [Array.length_eq]
+    scalar_tac
+  rw [hback2, hback1, hback0, ten, hstopval, htotalval,
+    fill_record _ _ _ _ prefixSlice_length (suffixArray_length ready) (by rw [whole]; scalar_tac),
+    List.map_append, List.map_append]
+  show bytesOf prefixSlice ++ bytesOf label ++ bytesOf (suffixArray ready).to_slice =
+    encode (bytesOf label) ready
+  rw [prefixSlice_bytes, suffixArray_bytes]
+  rfl
+
+/-- A packet within the wire budget exposes exactly its carried bytes. -/
+theorem as_bytes_eq (packet : dataspace.wire.Packet) (fits : packet.len.val ≤ 64) :
+    ∃ wire : Slice U8, dataspace.wire.Packet.as_bytes packet = Result.ok wire ∧
+      bytesOf wire = packetBytes packet := by
+  unfold dataspace.wire.Packet.as_bytes
+  rw [Array.index_SliceIndexRangeToUsizeSlice]
+  unfold core.slice.index.SliceIndexRangeToUsizeSlice.index
+  have whole : packet.bytes.to_slice.length = 64 := by
+    simp only [Array.to_slice, Slice.length, Slice.from_val, Array.length_eq]
+    scalar_tac
+  rw [if_pos (by rw [whole]; exact fits)]
+  refine ⟨_, rfl, ?_⟩
+  simp [bytesOf, packetBytes, Slice.from_val, Array.to_slice, List.slice, List.map_take]
+
+theorem validName_length (label : List Nat) (valid : validName label = true) :
+    1 ≤ label.length ∧ label.length ≤ 32 := by
+  unfold validName at valid
+  simp only [Bool.and_eq_true, decide_eq_true_eq, maxNameBytes] at valid
+  exact valid.1
+
+/-- **Rust round trip, encode then decode.** For a valid name, the extracted encoder returns a packet
+whose byte view the extracted decoder accepts back as that name and readiness tag under every
+allowed configured depth. -/
+theorem decode_service_encode_service (label : Str) (ready : Bool) (configured : U32)
+    (valid : validName (bytesOf label) = true)
+    (depth : 1 ≤ configured.val ∧ configured.val ≤ maxWireDepth) :
+    ∃ (packet : dataspace.wire.Packet) (wire : Slice U8) (value : dataspace.wire.ServiceRef),
+      dataspace.wire.encode_service label ready = Result.ok (.Ok packet) ∧
+      dataspace.wire.Packet.as_bytes packet = Result.ok wire ∧
+      dataspace.wire.decode_service wire configured = Result.ok (.Ok value) ∧
+      bytesOf value.«name» = bytesOf label ∧ value.ready = ready := by
+  obtain ⟨r, hr, hspec⟩ := encode_service_refines label ready
+  rw [if_pos valid] at hspec
+  obtain ⟨packet, rfl, hlen, hbytes⟩ := hspec
+  have bound := validName_length _ valid
+  obtain ⟨wire, hwire, hwirebytes⟩ := as_bytes_eq packet (by rw [hlen]; omega)
+  obtain ⟨value, hdec, hname, hready⟩ := decode_service_of_encode wire configured (bytesOf label) ready
+    valid depth (by rw [hwirebytes, hbytes])
+  exact ⟨packet, wire, value, hr, hwire, hdec, hname, hready⟩
+
+/-- **Rust round trip, decode then encode.** Re-encoding whatever the extracted decoder accepts, with
+the extracted encoder, gives back exactly the input bytes. -/
+theorem encode_service_decode_service (wire : Slice U8) (configured : U32)
+    (value : dataspace.wire.ServiceRef)
+    (h : dataspace.wire.decode_service wire configured = Result.ok (.Ok value)) :
+    ∃ (packet : dataspace.wire.Packet) (again : Slice U8),
+      dataspace.wire.encode_service value.«name» value.ready = Result.ok (.Ok packet) ∧
+      dataspace.wire.Packet.as_bytes packet = Result.ok again ∧ bytesOf again = bytesOf wire := by
+  obtain ⟨valid, canonical⟩ := decode_service_accepted_is_canonical wire configured value h
+  obtain ⟨r, hr, hspec⟩ := encode_service_refines value.«name» value.ready
+  rw [if_pos valid] at hspec
+  obtain ⟨packet, rfl, hlen, hbytes⟩ := hspec
+  have bound := validName_length _ valid
+  obtain ⟨again, hagain, hagainbytes⟩ := as_bytes_eq packet (by rw [hlen]; omega)
+  exact ⟨packet, again, hr, hagain, by rw [hagainbytes, hbytes, canonical]⟩
 
 end ServiceWireRefinement

@@ -1,5 +1,5 @@
-// Lean-kernel check for issue #48: the checked-in Charon/Aeneas translation of the ServiceRef decoder
-// refines the Lean model decoder. Rebuild the checked-in generated sources and the foundation model
+// Lean-kernel check for issue #48: the checked-in Charon/Aeneas translation of the ServiceRef codec
+// refines the Lean model. Rebuild the checked-in generated sources and the foundation model
 // from source (never retained .olean files), audit every inventoried theorem's compiled statement and
 // transitive axioms, bind each Rust source file whose generated declarations are reachable from those
 // theorems to the bytes the recorded extraction read, and run structure-preserving mutation controls
@@ -508,7 +508,8 @@ try {
     theorem_count: names.length, theorems, specification, binding, mutation_controls: mutations,
     claims: {
       theorems_by_role: Object.fromEntries([...new Set(theorems.map(theorem => theorem.role))].map(role => [role, roleCount(role)])),
-      refinement: `${namespace}.decode_service_refines`,
+      refinements: [`${namespace}.decode_service_refines`, `${namespace}.encode_service_refines`],
+      rust_round_trips: [`${namespace}.decode_service_encode_service`, `${namespace}.encode_service_decode_service`],
       implementation_subjects: [...new Set(theorems.flatMap(theorem => theorem.subjects))].sort(),
       finite_rust_comparisons: 'none in this lane; verification/service-ref/differential.json remains the finite Rust-level comparison',
       correspondence: 'statements name the checked-in generated functions; the recorded Charon/Aeneas translation of the bound Rust sources is trusted, not re-run',
@@ -517,15 +518,15 @@ try {
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The recorded Charon/Aeneas translation (verification/declared-modules-v1/extraction.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
-      'The Aeneas library models of slices, arrays, range indexing, scalars, checked subtraction and loops are trusted.',
+      'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',
     ],
     non_claims: [
-      'No claim about encode_service: the Rust encoder is not related to the model in this lane.',
-      'The returned name is related by its byte values; that it borrows the input slice (zero copy) is not stated.',
-      'No claim about callers of decode_service (dataspace table actions, noble-syndicate) beyond the decoder result.',
+      'The decoded name is related by its byte values; that it borrows the input slice (zero copy) is not stated.',
+      'A packet is related by its first len bytes; the contents of the rest of its 64-byte buffer are not stated.',
+      'No claim about callers of the codec (dataspace table actions, noble-syndicate) beyond its results.',
       'No Rust compiler, Charon or Aeneas correctness claim.',
     ],
-    scope: 'Universal theorems over the checked-in generated ServiceRef decoder: for every byte slice and every configured depth it returns, and the decision it returns, read through observed, equals NobleFoundation.ServiceWire.decode; totality, exact acceptance, exact refusal classes, decoding of every valid model encoding and canonical-only acceptance follow.',
+    scope: 'Universal theorems over the checked-in generated ServiceRef codec: for every byte slice and every configured depth the decoder returns, and the decision it returns, read through observed, equals NobleFoundation.ServiceWire.decode; for every string and readiness tag the encoder returns a packet carrying exactly the model encoding of a valid name, and InvalidName otherwise; totality, exact acceptance, exact refusal classes, canonical-only acceptance and both Rust-level round trips through Packet.as_bytes follow.',
     artifact_directory: output, command_count: commandSerial,
   };
   writeFileSync(join(output, 'receipt.json'), json(receipt));

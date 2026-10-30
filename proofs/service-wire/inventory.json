@@ -18,6 +18,18 @@
     {
       "name": "ServiceWireRefinement.observed",
       "printed": "def ServiceWireRefinement.observed : Aeneas.Std.core.result.Result noble_kernel.dataspace.wire.ServiceRef noble_kernel.dataspace.Error → Option NobleFoundation.ServiceWire.Decision := fun x => match x with | Aeneas.Std.core.result.Result.Ok value => some (NobleFoundation.ServiceWire.Decision.accepted (ServiceWireRefinement.bytesOf value.name) value.ready) | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.ByteLimit => some NobleFoundation.ServiceWire.Decision.byteLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit => some NobleFoundation.ServiceWire.Decision.depthLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.Schema => some NobleFoundation.ServiceWire.Decision.schema | Aeneas.Std.core.result.Result.Err a => none"
+    },
+    {
+      "name": "ServiceWireRefinement.packetBytes",
+      "printed": "def ServiceWireRefinement.packetBytes : noble_kernel.dataspace.wire.Packet → List ℕ := fun packet => List.map (fun x => ↑x) (List.take ↑packet.len ↑packet.bytes)"
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice",
+      "printed": "def ServiceWireRefinement.prefixSlice : Aeneas.Std.Slice Aeneas.Std.U8 := (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ServiceWireRefinement.prefixSlice._proof_11).to_slice"
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray",
+      "printed": "def ServiceWireRefinement.suffixArray : Bool → Aeneas.Std.Array Aeneas.Std.U8 5#usize := fun ready => if ready = true then Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ServiceWireRefinement.suffixArray._proof_5 else Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8] ServiceWireRefinement.suffixArray._proof_7"
     }
   ],
   "theorems": [
@@ -559,6 +571,222 @@
       "statement": "ServiceWireRefinement.decode_service_accepted_is_canonical : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (value : noble_kernel.dataspace.wire.ServiceRef), noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) → NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf value.name) = true ∧ NobleFoundation.ServiceWire.encode (ServiceWireRefinement.bytesOf value.name) value.ready = ServiceWireRefinement.bytesOf bytes",
       "subjects": [
         "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.setSlice_fit",
+      "role": "byte-view",
+      "claim": "A slice write that fits within the list replaces exactly its window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.setSlice_fit : ∀ {α : Type} (l s : List α) (i : ℕ), i + s.length ≤ l.length → l.setSlice! i s = List.take i l ++ s ++ List.drop (i + s.length) l",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.take_setSlice",
+      "role": "byte-view",
+      "claim": "After a fitting slice write, the list through the end of the window is the old prefix followed by the written bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.take_setSlice : ∀ {α : Type} (l s : List α) (i : ℕ), i + s.length ≤ l.length → List.take (i + s.length) (l.setSlice! i s) = List.take i l ++ s",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.fill_record",
+      "role": "model-shape",
+      "claim": "Writing a ten-byte prefix, a name and a five-byte suffix in turn leaves exactly that record in front.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.fill_record : ∀ {α : Type} (Z P N S : List α), P.length = 10 → S.length = 5 → 15 + N.length ≤ Z.length → List.take (15 + N.length) (((Z.setSlice! 0 P).setSlice! 10 N).setSlice! (10 + N.length) S) = P ++ N ++ S",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_slice_eq",
+      "role": "generated-step",
+      "claim": "The generated prefix slice is prefixSlice.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_slice_eq : (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯).to_slice = ServiceWireRefinement.prefixSlice",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_bytes",
+      "role": "generated-step",
+      "claim": "The generated prefix slice carries the model record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_bytes : ServiceWireRefinement.bytesOf ServiceWireRefinement.prefixSlice = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_choice",
+      "role": "generated-step",
+      "claim": "The generated readiness choice selects suffixArray.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_choice : ∀ (ready : Bool), (if ready = true then Aeneas.Std.Result.ok (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ⋯) else Aeneas.Std.Result.ok (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8] ⋯)) = Aeneas.Std.Result.ok (ServiceWireRefinement.suffixArray ready)",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray_bytes",
+      "role": "generated-step",
+      "claim": "The selected generated suffix carries the model readiness suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffixArray_bytes : ∀ (ready : Bool), ServiceWireRefinement.bytesOf (ServiceWireRefinement.suffixArray ready).to_slice = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.to_slice_len",
+      "role": "generated-step",
+      "claim": "The slice view of an array has the array length.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.to_slice_len : ∀ {n : Aeneas.Std.Usize} (a : Aeneas.Std.Array Aeneas.Std.U8 n), a.to_slice.len = n",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_len",
+      "role": "generated-step",
+      "claim": "The generated prefix slice has length ten.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_len : ServiceWireRefinement.prefixSlice.len = 10#usize",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_length",
+      "role": "generated-step",
+      "claim": "The generated prefix slice holds ten bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_length : ServiceWireRefinement.prefixSlice.length = 10",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray_length",
+      "role": "generated-step",
+      "claim": "The selected generated suffix holds five bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffixArray_length : ∀ (ready : Bool), (ServiceWireRefinement.suffixArray ready).to_slice.length = 5",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.copy_ok",
+      "role": "generated-step",
+      "claim": "A slice copy between equal lengths returns the source.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.copy_ok : ∀ (s src : Aeneas.Std.Slice Aeneas.Std.U8), s.length = src.length → Aeneas.Std.core.slice.Slice.copy_from_slice Aeneas.Std.core.marker.CopyU8 s src = Aeneas.Std.Result.ok src",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.encode_service_refines",
+      "role": "refinement",
+      "claim": "For every string and readiness tag the generated encoder returns: for a valid name a packet of fifteen plus the name length bytes carrying exactly the model encoding, and InvalidName otherwise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_service_refines : ∀ (label : Aeneas.Std.Str) (ready : Bool), ∃ r, noble_kernel.dataspace.wire.encode_service label ready = Aeneas.Std.Result.ok r ∧ if NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label) = true then ∃ packet, r = Aeneas.Std.core.result.Result.Ok packet ∧ ↑packet.len = 15 + (ServiceWireRefinement.bytesOf label).length ∧ ServiceWireRefinement.packetBytes packet = NobleFoundation.ServiceWire.encode (ServiceWireRefinement.bytesOf label) ready else r = Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.InvalidName",
+      "subjects": [
+        "noble_kernel.dataspace.wire.encode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.as_bytes_eq",
+      "role": "generated-step",
+      "claim": "A packet within the wire budget exposes exactly its carried bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.as_bytes_eq : ∀ (packet : noble_kernel.dataspace.wire.Packet), ↑packet.len ≤ 64 → ∃ wire, packet.as_bytes = Aeneas.Std.Result.ok wire ∧ ServiceWireRefinement.bytesOf wire = ServiceWireRefinement.packetBytes packet",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.validName_length",
+      "role": "model-shape",
+      "claim": "A valid name has between one and thirty-two bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.validName_length : ∀ (label : List ℕ), NobleFoundation.ServiceWire.validName label = true → 1 ≤ label.length ∧ label.length ≤ 32",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_encode_service",
+      "role": "round-trip",
+      "claim": "For a valid name and every allowed configured depth, the generated encoder packet decodes through the generated decoder to that name and readiness tag.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_encode_service : ∀ (label : Aeneas.Std.Str) (ready : Bool) (configured : Aeneas.Std.U32), NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label) = true → 1 ≤ ↑configured ∧ ↑configured ≤ NobleFoundation.ServiceWire.maxWireDepth → ∃ packet wire value, noble_kernel.dataspace.wire.encode_service label ready = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok packet) ∧ packet.as_bytes = Aeneas.Std.Result.ok wire ∧ noble_kernel.dataspace.wire.decode_service wire configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = ServiceWireRefinement.bytesOf label ∧ value.ready = ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes",
+        "noble_kernel.dataspace.wire.decode_service",
+        "noble_kernel.dataspace.wire.encode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_service_decode_service",
+      "role": "round-trip",
+      "claim": "Re-encoding a value the generated decoder accepts gives back exactly the input bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_service_decode_service : ∀ (wire : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (value : noble_kernel.dataspace.wire.ServiceRef), noble_kernel.dataspace.wire.decode_service wire configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) → ∃ packet again, noble_kernel.dataspace.wire.encode_service value.name value.ready = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok packet) ∧ packet.as_bytes = Aeneas.Std.Result.ok again ∧ ServiceWireRefinement.bytesOf again = ServiceWireRefinement.bytesOf wire",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes",
+        "noble_kernel.dataspace.wire.decode_service",
+        "noble_kernel.dataspace.wire.encode_service"
       ]
     }
   ]
