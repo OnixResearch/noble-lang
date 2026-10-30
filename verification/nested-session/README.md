@@ -68,6 +68,11 @@ declared stack limit, so its accepted bounded subset is finite.
 | `offer_state_declares_only_its_branch_receipt`, `finished_state_declares_no_guest_action` | named states rather than unnamed refusals: at an external choice the guest's only action is receiving the declared branch (whether the peer selects is the peer's premise), and a finished protocol declares no guest action |
 | `environmentStep_of_ready`, `progress_under_explicit_premises` | the scoped progress statement **under explicit queue, peer, scheduler and host premises**: `stepIn` takes the guest step and its environment change together, and it succeeds at an open owned endpoint whose resolved node declares the action when the scheduler grants the step, the host admits it, and the action's queue premise (outbox room for `send`/`choose`) or peer premise (an accounted inbox payload; for `receiveBranch`, the peer's selection of that branch) holds. The premises are assumed for the step, never derived |
 | `progress_fixture_send_then_receive`, `unscheduled_guest_takes_no_step`, `host_refusal_takes_no_step`, `full_outbox_refuses_send`, `silent_peer_leaves_receive_pending`, `branch_receipt_needs_the_peer_selection` | the fixture send-then-receive progresses through one outbox admission and one dequeue, and each premise is load-bearing: without the scheduler grant, with a host refusal, with a full outbox, with an empty inbox or with another selected branch, the same step is refused |
+| `protoStep`, `stackStep_eq_protoStep`, `runStack_eq_runProto`, `mem_enabled_iff` | the configuration step (definition index and return stack) **is** the model's `stackStep` on an open endpoint, and so is the trace run; each configuration lists the at most two actions it takes |
+| `protocolEquality_sound`, `protocolEquality_witness`, `exhaustion_is_refused`, `equal_protocols_run_alike` | **protocol type equality under a declared work bound**: a memoised pair exploration spends one unit per pair; `equal` is proved to be trace equivalence (the same admitted traces and orderly ends), `differ` carries a trace on which the two states are proved to disagree, and a bound that runs out is the refusal `exhausted`, never `equal`. `enter`, `skipNested` and `finish` are guest actions here, so the equality is strong rather than equi-recursive; no bound is proved sufficient for every protocol |
+| `protoStep_dual`, `orderlyEnd_dual`, `observe_dual`, `protocolDuality_sound` | **duality** is equality with the dual table: a `dual` verdict means each trace of one side is admitted exactly when its dual trace is admitted by the other, with the same orderly ends |
+| `renumbered_balanced_is_equal`, `stack_limit_separates_types`, `unfolding_is_equality_within_the_bound`, `order_separates_types`, `client_and_server_are_dual`, `exhausted_duality_is_refused` | fixtures: renumbering is equality; one fewer saved return is a different type, with the separating trace; a one-node cycle equals its two-node unrolling at three units and is refused as exhausted at two; order is part of the type; a client and server are dual and a mistyped server is not; a duality check that exhausts its work is refused |
+| `accepting_exhaustion_accepts_unequal_types`, `memo_is_load_bearing` | load-bearing mutants: reading exhaustion as acceptance accepts two protocols the check proves unequal, and without the memo of assumed pairs a cyclic protocol is never decided |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
@@ -101,11 +106,11 @@ covers every guest action with the finite-handshake control beside the nested fi
 inventory bound is stated over every operation including those that carry no transition, progress is
 stated for the guest's own step under three named premises, and the balanced table's unbounded
 `sendⁿ·recvⁿ` trace language needs a return stack while this model admits it only up to the declared
-limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, and two
-model items remain outside this unit:
-- a protocol type-equality algorithm;
-- a choice node carrying a label set: a node declares one branch, so a two-branch choice is two
-  declared nodes (the external-choice action and both positive branch traces are now modelled).
+limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, a proved work
+bound that suffices for every protocol (a declared bound that is too small is refused as
+exhaustion), and one model item outside this unit: a choice node carrying a label set. A node
+declares one branch, so a two-branch choice is two declared nodes (the external-choice action and
+both positive branch traces are now modelled).
 
 The `claims` block names the progress, cancellation, nested-recursion and type-equality scope. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.

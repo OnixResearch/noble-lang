@@ -910,6 +910,240 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.stackStep_eq_protoStep",
+      "role": "WIT-SESSION-01 the configuration step is the model stack step on an open endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_enabled_iff",
+      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.runProto_snoc",
+      "role": "WIT-SESSION-01 running a trace with one more action takes one more configuration step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.runStack_eq_runProto",
+      "role": "WIT-SESSION-01 the configuration run is the model stack run on an open endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.distinguish_none",
+      "role": "WIT-SESSION-01 no distinguishing action means both sides list the same actions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.distinguish_some",
+      "role": "WIT-SESSION-01 a distinguishing action is listed on exactly one side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.exhaustion_is_refused",
+      "role": "WIT-SESSION-01 a work bound that runs out with a pair pending is refused as exhausted, never equal",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.assumed_pairs_observe_alike",
+      "role": "WIT-SESSION-01 pairs closed under assumption observe every trace alike",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.checkPairs_equal",
+      "role": "WIT-SESSION-01 an equal verdict yields a closed set of consistent pairs containing every visited and pending pair",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_sound",
+      "role": "WIT-SESSION-01 an equal verdict is trace equivalence: the same admitted traces and the same orderly ends",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.checkPairs_differ",
+      "role": "WIT-SESSION-01 a differ verdict from reachable pending pairs carries a trace the two sides observe differently",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_witness",
+      "role": "WIT-SESSION-01 a differ verdict carries a genuine witness trace on which the protocol states observably disagree",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.equal_protocols_run_alike",
+      "role": "WIT-SESSION-01 configurations found equal admit the same traces under the model runStack on open endpoints",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.StackAction.dual_dual",
+      "role": "WIT-SESSION-01 the dual of a guest action is involutive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protoStep_dual",
+      "role": "WIT-SESSION-01 the dual table takes the dual action exactly where the table takes the action",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.orderlyEnd_dual",
+      "role": "WIT-SESSION-01 the dual table ends orderly exactly where the table does",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.observe_dual",
+      "role": "WIT-SESSION-01 the dual table observes the dual trace exactly as the table observes the trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolDuality_sound",
+      "role": "WIT-SESSION-01 a dual verdict means each trace of one side is admitted exactly when its dual is admitted by the other",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.renumbered_balanced_is_equal",
+      "role": "WIT-SESSION-01 fixture: the balanced table and its renumbered copy are equal types",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_limit_separates_types",
+      "role": "WIT-SESSION-01 fixture: one fewer saved return is a different type, with the separating trace named",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unfolding_is_equality_within_the_bound",
+      "role": "WIT-SESSION-01 fixture: a cycle equals its unrolling at three units of work and is refused as exhausted at two",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.order_separates_types",
+      "role": "WIT-SESSION-01 fixture: sending then receiving differs from receiving then sending",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.client_and_server_are_dual",
+      "role": "WIT-SESSION-01 fixture: client and server are dual and a server answering with the wrong type is not",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.exhausted_duality_is_refused",
+      "role": "WIT-SESSION-01 scenario: a duality check that exhausts its work is refused as exhausted and decided with more work",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.accepting_exhaustion_accepts_unequal_types",
+      "role": "WIT-SESSION-01 load-bearing mutant: reading exhaustion as acceptance accepts types the check proves unequal",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.memo_is_load_bearing",
+      "role": "WIT-SESSION-01 load-bearing mutant: without the memo of assumed pairs a cyclic protocol is never decided",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

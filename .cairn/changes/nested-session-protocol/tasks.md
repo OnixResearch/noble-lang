@@ -10,7 +10,15 @@
 
 ## Phase 2: Model and fixtures
 
-- [ ] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+- [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+  Ticked 2026-10-30: `protocolEquality` decides strong equality of guest-visible traces and orderly
+  ends over the stack-aware semantics (`stackStep_eq_protoStep`) by a memoised pair exploration that
+  spends one unit of a declared work bound per pair, so it terminates for every bound. An exhausted
+  bound is the refusal `exhausted` (`exhaustion_is_refused`); `equal` is proved to be trace
+  equivalence (`protocolEquality_sound`) and `differ` carries a proved witness
+  (`protocolEquality_witness`). Duality is equality with the dual table (`protocolDuality_sound`). No
+  bound is proved sufficient for every protocol, so a too-small declared bound is refused rather
+  than decided.
   Un-ticked 2026-10-29: the grammar, bounded unfolding, duality and the endpoint resource exist
   (`proofs/m6/NestedSession.lean`), but no protocol type-equality algorithm is defined. The legacy
   depth-only `resolve` path drops nested returns; the stack-aware operand now saves and pops the

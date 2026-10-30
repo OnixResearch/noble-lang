@@ -154,7 +154,7 @@ const claims = {
   progress: 'one guest step: an open endpoint whose resolved node declares the action has a successor, and the environment-aware step succeeds under explicit queue, peer, scheduler and host premises, each shown load-bearing; termination, fairness, eventual delivery and deadlock freedom are unclaimed',
   cancellation: 'an event class that cuts the committed prefix; it carries no endpoint or session transition',
   nested_recursion: 'the balanced table\'s unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence',
-  type_equality: 'no algorithm; duality is definitional',
+  type_equality: 'strong equality of guest-visible traces and orderly ends over the stack-aware semantics, decided by a memoised pair exploration that spends one unit of a declared work bound per pair; an exhausted bound is refused, an equal verdict is proved to be trace equivalence, a differ verdict carries a proved witness trace, and duality is equality with the dual table; no bound is proved sufficient for every protocol',
 };
 const receipt = {
   schema: 'noble-nested-session-proof/v1', result: 'passed',

@@ -1455,4 +1455,639 @@ theorem branch_receipt_needs_the_peer_selection :
         (.receiveBranch 1)).isSome = true := by
   decide
 
+/-! ## Protocol type equality and duality under a declared work bound (WIT-SESSION-01)
+
+Two protocol states are *equal types* when they admit exactly the same guest-visible traces, ending
+orderly at the same points. In this model `enter`, `skipNested` and `finish` are guest actions, so
+they belong to the observable protocol: the equality is strong, not an equi-recursive equality that
+silently unfolds nested constructors. Cyclic definitions are still identified up to unfolding, so a
+one-node `μX. send. X` equals the same protocol written with two nodes.
+
+`protocolEquality` decides it by exploring pairs of configurations (definition index, return stack)
+with a memo of the pairs already assumed equal. Every step of the exploration spends one unit of the
+declared work bound, so the check terminates for every bound, and a bound that runs out is the
+refusal `exhausted`, never `equal`. Both decided verdicts are proved: `equal` gives trace
+equivalence (`protocolEquality_sound`), and `differ` carries a trace on which the two protocols
+observably disagree (`protocolEquality_witness`). Duality is equality with the dual table
+(`protocolDuality_sound`). No bound is proved sufficient for every protocol: a declared bound that is
+too small is reported as exhaustion, not decided.
+-/
+
+/-- A protocol configuration: the current definition index and the saved return indices. -/
+abbrev Config := Nat × List Nat
+
+/-- One stack-aware protocol step on a configuration. It is `stackStep` without the endpoint's
+identity fields (`stackStep_eq_protoStep`). -/
+def protoStep (definitions : List Node) (limit : Nat) (config : Config) (action : StackAction) :
+    Option Config :=
+  match definitions[config.1]? with
+  | some (.send declared continuation) =>
+      match action with
+      | .send message => if declared = message then some (continuation, config.2) else none
+      | _ => none
+  | some (.recv declared continuation) =>
+      match action with
+      | .recv message => if declared = message then some (continuation, config.2) else none
+      | _ => none
+  | some (.choose declared continuation) =>
+      match action with
+      | .choose branch => if declared = branch then some (continuation, config.2) else none
+      | _ => none
+  | some (.offer declared continuation) =>
+      match action with
+      | .receiveBranch branch => if declared = branch then some (continuation, config.2) else none
+      | _ => none
+  | some (.nested name parameter) =>
+      match action with
+      | .enter => if config.2.length < limit then some (name, parameter :: config.2) else none
+      | .skipNested => some (parameter, config.2)
+      | _ => none
+  | some .finished =>
+      match action with
+      | .finish =>
+          match config.2 with
+          | [] => some config
+          | continuation :: rest => some (continuation, rest)
+      | _ => none
+  | none => none
+
+/-- **The configuration step is the model's stack step**: on an open endpoint, `stackStep` moves
+exactly as `protoStep` does and changes nothing else about the endpoint. -/
+theorem stackStep_eq_protoStep (definitions : List Node) (endpoint : Endpoint) (stack : List Nat)
+    (limit : Nat) (action : StackAction) (openState : endpoint.closed = false) :
+    stackStep definitions ⟨endpoint, stack, limit⟩ action =
+      (protoStep definitions limit (endpoint.state, stack) action).map
+        (fun config => ⟨{ endpoint with state := config.1 }, config.2, limit⟩) := by
+  obtain ⟨channel, responder, protocol, state, generation, closed⟩ := endpoint
+  simp only at openState
+  subst openState
+  unfold stackStep protoStep
+  cases lookup : definitions[state]? with
+  | none => simp
+  | some node =>
+      cases node <;> cases action <;>
+        simp [stackAdvance, advance, stackEnter, lookup] <;>
+        (try split) <;> (try cases stack) <;> simp_all
+
+/-- The actions a configuration admits: at most two, so each exploration step is finite. -/
+def enabled (definitions : List Node) (limit : Nat) (config : Config) : List StackAction :=
+  match definitions[config.1]? with
+  | some (.send declared _) => [.send declared]
+  | some (.recv declared _) => [.recv declared]
+  | some (.choose declared _) => [.choose declared]
+  | some (.offer declared _) => [.receiveBranch declared]
+  | some (.nested _ _) => if config.2.length < limit then [.enter, .skipNested] else [.skipNested]
+  | some .finished => [.finish]
+  | none => []
+
+/-- An action is listed as enabled exactly when the configuration step takes it. -/
+theorem mem_enabled_iff (definitions : List Node) (limit : Nat) (config : Config)
+    (action : StackAction) :
+    action ∈ enabled definitions limit config ↔ (protoStep definitions limit config action).isSome := by
+  unfold enabled protoStep
+  cases definitions[config.1]? with
+  | none => simp
+  | some node =>
+      cases node <;> cases action <;> simp <;> (try split) <;> simp_all [eq_comm]
+
+/-- The orderly end: a finished node with no saved return index, the acceptance condition of
+`acceptedStackTraceWith`. -/
+def orderlyEnd (definitions : List Node) (config : Config) : Bool :=
+  decide (definitions[config.1]? = some .finished) && config.2.isEmpty
+
+/-- Run a trace of configuration steps. -/
+def runProto (definitions : List Node) (limit : Nat) : Config → List StackAction → Option Config
+  | config, [] => some config
+  | config, action :: rest =>
+      (protoStep definitions limit config action).bind fun next => runProto definitions limit next rest
+
+/-- What a trace shows: whether it can be taken, and if so whether it ends orderly. -/
+def observe (definitions : List Node) (limit : Nat) (config : Config) (trace : List StackAction) :
+    Option Bool :=
+  (runProto definitions limit config trace).map (orderlyEnd definitions)
+
+theorem runProto_snoc (definitions : List Node) (limit : Nat) (trace : List StackAction)
+    (action : StackAction) : ∀ config, runProto definitions limit config (trace ++ [action]) =
+      (runProto definitions limit config trace).bind
+        fun last => protoStep definitions limit last action := by
+  induction trace with
+  | nil => intro config; simp [runProto]
+  | cons head rest ih =>
+      intro config
+      simp only [List.cons_append, runProto]
+      cases protoStep definitions limit config head with
+      | none => rfl
+      | some next => simpa using ih next
+
+/-- **The configuration run is the model's stack run** on an open endpoint. -/
+theorem runStack_eq_runProto (definitions : List Node) (limit : Nat) :
+    ∀ (trace : List StackAction) (endpoint : Endpoint) (stack : List Nat),
+      endpoint.closed = false →
+      runStack definitions ⟨endpoint, stack, limit⟩ trace =
+        (runProto definitions limit (endpoint.state, stack) trace).map
+          (fun config => ⟨{ endpoint with state := config.1 }, config.2, limit⟩) := by
+  intro trace
+  induction trace with
+  | nil =>
+      intro endpoint stack _
+      cases endpoint
+      rfl
+  | cons action rest ih =>
+      intro endpoint stack openState
+      unfold runStack at ih ⊢
+      simp only [runStackWith, runProto]
+      rw [stackStep_eq_protoStep definitions endpoint stack limit action openState]
+      cases protoStep definitions limit (endpoint.state, stack) action with
+      | none => rfl
+      | some next =>
+          simp only [Option.map_some, Option.bind_some]
+          exact ih { endpoint with state := next.1 } next.2 openState
+
+/-- The verdict of the equality check. `exhausted` is a refusal: it never reports equality. -/
+inductive Verdict where
+  | equal
+  | differ (witness : List StackAction)
+  | exhausted
+  deriving DecidableEq, Repr
+
+/-- An action listed on exactly one side, if there is one. -/
+def distinguish (left right : List StackAction) : Option StackAction :=
+  match left.find? (fun action => !decide (action ∈ right)) with
+  | some action => some action
+  | none => right.find? (fun action => !decide (action ∈ left))
+
+theorem distinguish_none (left right : List StackAction) (found : distinguish left right = none) :
+    ∀ action, action ∈ left ↔ action ∈ right := by
+  unfold distinguish at found
+  split at found
+  · cases found
+  · rename_i leftNone
+    have onLeft := List.find?_eq_none.mp leftNone
+    have onRight := List.find?_eq_none.mp found
+    intro action
+    constructor
+    · intro member
+      simpa using onLeft action member
+    · intro member
+      simpa using onRight action member
+
+theorem distinguish_some (left right : List StackAction) (action : StackAction)
+    (found : distinguish left right = some action) :
+    (action ∈ left ∧ action ∉ right) ∨ (action ∈ right ∧ action ∉ left) := by
+  unfold distinguish at found
+  split at found
+  · rename_i first leftFound
+    cases found
+    exact Or.inl ⟨List.mem_of_find?_eq_some leftFound, by simpa using List.find?_some leftFound⟩
+  · exact Or.inr ⟨List.mem_of_find?_eq_some found, by simpa using List.find?_some found⟩
+
+/-- A pair still to compare, with the trace that reached it from the start. -/
+abbrev Pending := (Config × Config) × List StackAction
+
+/-- The successor pairs of a pair: one per action enabled on the left that both sides take. -/
+def successorPairs (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat)
+    (pair : Config × Config) (trace : List StackAction) : List Pending :=
+  (enabled left leftLimit pair.1).filterMap fun action =>
+    match protoStep left leftLimit pair.1 action, protoStep right rightLimit pair.2 action with
+    | some next, some other => some ((next, other), trace ++ [action])
+    | _, _ => none
+
+/-- The exploration. Each pending pair spends one unit of `work`; a pair already assumed equal is
+skipped, which is what lets a cyclic protocol be decided. -/
+def checkPairs (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat) :
+    Nat → List (Config × Config) → List Pending → Verdict
+  | _, _, [] => .equal
+  | 0, _, _ :: _ => .exhausted
+  | work + 1, assumed, (pair, trace) :: rest =>
+      if pair ∈ assumed then checkPairs left leftLimit right rightLimit work assumed rest
+      else if orderlyEnd left pair.1 ≠ orderlyEnd right pair.2 then .differ trace
+      else
+        match distinguish (enabled left leftLimit pair.1) (enabled right rightLimit pair.2) with
+        | some action => .differ (trace ++ [action])
+        | none =>
+            checkPairs left leftLimit right rightLimit work (pair :: assumed)
+              (successorPairs left leftLimit right rightLimit pair trace ++ rest)
+
+/-- **Protocol type equality** of `start` in `left` and `other` in `right` under the declared work
+bound `work`. -/
+def protocolEquality (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat)
+    (work : Nat) (start other : Config) : Verdict :=
+  checkPairs left leftLimit right rightLimit work [] [((start, other), [])]
+
+/-- **Exhaustion is refused**: a work bound that runs out with a pair still pending is `exhausted`,
+never `equal`. -/
+theorem exhaustion_is_refused (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (assumed : List (Config × Config)) (entry : Pending) (rest : List Pending) :
+    checkPairs left leftLimit right rightLimit 0 assumed (entry :: rest) = .exhausted := rfl
+
+/-- Every assumed pair agrees on its orderly end and its enabled actions, and both sides' successors
+lie in `closure`. -/
+def Assumed (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat)
+    (assumed : List (Config × Config)) (closure : Config × Config → Prop) : Prop :=
+  ∀ pair ∈ assumed,
+    (orderlyEnd left pair.1 = orderlyEnd right pair.2 ∧
+      ∀ action, action ∈ enabled left leftLimit pair.1 ↔ action ∈ enabled right rightLimit pair.2) ∧
+    ∀ action ∈ enabled left leftLimit pair.1, ∃ next other,
+      protoStep left leftLimit pair.1 action = some next ∧
+      protoStep right rightLimit pair.2 action = some other ∧ closure (next, other)
+
+/-- Pairs closed under assumption observe every trace alike. -/
+theorem assumed_pairs_observe_alike (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (assumed : List (Config × Config))
+    (closed : Assumed left leftLimit right rightLimit assumed (· ∈ assumed)) :
+    ∀ trace pair, pair ∈ assumed →
+      observe left leftLimit pair.1 trace = observe right rightLimit pair.2 trace := by
+  intro trace
+  induction trace with
+  | nil =>
+      intro pair member
+      obtain ⟨⟨same, -⟩, -⟩ := closed pair member
+      simp [observe, runProto, same]
+  | cons action rest ih =>
+      intro pair member
+      obtain ⟨⟨-, sameEnabled⟩, successors⟩ := closed pair member
+      by_cases onLeft : action ∈ enabled left leftLimit pair.1
+      · obtain ⟨next, other, stepLeft, stepRight, kept⟩ := successors action onLeft
+        simpa [observe, runProto, stepLeft, stepRight] using ih (next, other) kept
+      · have offRight : action ∉ enabled right rightLimit pair.2 :=
+          fun onRight => onLeft ((sameEnabled action).2 onRight)
+        rw [mem_enabled_iff] at onLeft offRight
+        have noneLeft : protoStep left leftLimit pair.1 action = none := by
+          simpa using onLeft
+        have noneRight : protoStep right rightLimit pair.2 action = none := by
+          simpa using offRight
+        simp [observe, runProto, noneLeft, noneRight]
+
+theorem checkPairs_equal (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (work : Nat) :
+    ∀ (assumed : List (Config × Config)) (pending : List Pending),
+      Assumed left leftLimit right rightLimit assumed
+        (fun pair => pair ∈ assumed ∨ ∃ trace, (pair, trace) ∈ pending) →
+      checkPairs left leftLimit right rightLimit work assumed pending = .equal →
+      ∃ closure : List (Config × Config),
+        Assumed left leftLimit right rightLimit closure (· ∈ closure) ∧
+          (∀ pair ∈ assumed, pair ∈ closure) ∧ ∀ entry ∈ pending, entry.1 ∈ closure := by
+  induction work with
+  | zero =>
+      intro assumed pending invariant result
+      cases pending with
+      | nil =>
+          refine ⟨assumed, ?_, fun _ member => member, by simp⟩
+          intro pair member
+          obtain ⟨consistent, successors⟩ := invariant pair member
+          refine ⟨consistent, fun action enabledLeft => ?_⟩
+          obtain ⟨next, other, stepLeft, stepRight, kept⟩ := successors action enabledLeft
+          exact ⟨next, other, stepLeft, stepRight, by simpa using kept⟩
+      | cons entry rest => simp [checkPairs] at result
+  | succ work ih =>
+      intro assumed pending invariant result
+      cases pending with
+      | nil =>
+          refine ⟨assumed, ?_, fun _ member => member, by simp⟩
+          intro pair member
+          obtain ⟨consistent, successors⟩ := invariant pair member
+          refine ⟨consistent, fun action enabledLeft => ?_⟩
+          obtain ⟨next, other, stepLeft, stepRight, kept⟩ := successors action enabledLeft
+          exact ⟨next, other, stepLeft, stepRight, by simpa using kept⟩
+      | cons entry rest =>
+          obtain ⟨pair, trace⟩ := entry
+          simp only [checkPairs] at result
+          split at result
+          · rename_i known
+            have next : Assumed left leftLimit right rightLimit assumed
+                (fun candidate => candidate ∈ assumed ∨ ∃ trace, (candidate, trace) ∈ rest) := by
+              intro candidate member
+              obtain ⟨consistent, successors⟩ := invariant candidate member
+              refine ⟨consistent, fun action enabledLeft => ?_⟩
+              obtain ⟨next, other, stepLeft, stepRight, kept⟩ := successors action enabledLeft
+              refine ⟨next, other, stepLeft, stepRight, ?_⟩
+              rcases kept with inAssumed | ⟨found, foundMember⟩
+              · exact Or.inl inAssumed
+              · rcases List.mem_cons.mp foundMember with same | inRest
+                · simp only [Prod.mk.injEq] at same
+                  exact Or.inl (same.1 ▸ known)
+                · exact Or.inr ⟨found, inRest⟩
+            obtain ⟨closure, closed, keep, cover⟩ := ih assumed rest next result
+            refine ⟨closure, closed, keep, ?_⟩
+            intro candidate member
+            rcases List.mem_cons.mp member with same | inRest
+            · rw [same]
+              exact keep pair known
+            · exact cover candidate inRest
+          · split at result
+            · cases result
+            · rename_i known sameEnd
+              split at result
+              · cases result
+              · rename_i none
+                have sameEnabled := distinguish_none _ _ none
+                have next : Assumed left leftLimit right rightLimit (pair :: assumed)
+                    (fun candidate => candidate ∈ pair :: assumed ∨ ∃ reached,
+                      (candidate, reached) ∈
+                        successorPairs left leftLimit right rightLimit pair trace ++ rest) := by
+                  intro candidate member
+                  rcases List.mem_cons.mp member with same | inAssumed
+                  · subst same
+                    refine ⟨⟨by simpa using sameEnd, sameEnabled⟩, fun action enabledLeft => ?_⟩
+                    have enabledRight := (sameEnabled action).1 enabledLeft
+                    rw [mem_enabled_iff, Option.isSome_iff_exists] at enabledLeft enabledRight
+                    obtain ⟨next, stepLeft⟩ := enabledLeft
+                    obtain ⟨other, stepRight⟩ := enabledRight
+                    refine ⟨next, other, stepLeft, stepRight, Or.inr ⟨trace ++ [action], ?_⟩⟩
+                    apply List.mem_append_left
+                    unfold successorPairs
+                    rw [List.mem_filterMap]
+                    refine ⟨action, ?_, by simp [stepLeft, stepRight]⟩
+                    rw [mem_enabled_iff, stepLeft]
+                    rfl
+                  · obtain ⟨consistent, successors⟩ := invariant candidate inAssumed
+                    refine ⟨consistent, fun action enabledLeft => ?_⟩
+                    obtain ⟨next, other, stepLeft, stepRight, kept⟩ := successors action enabledLeft
+                    refine ⟨next, other, stepLeft, stepRight, ?_⟩
+                    rcases kept with inOld | ⟨found, foundMember⟩
+                    · exact Or.inl (List.mem_cons_of_mem _ inOld)
+                    · rcases List.mem_cons.mp foundMember with same | inRest
+                      · simp only [Prod.mk.injEq] at same
+                        exact Or.inl (same.1 ▸ List.mem_cons_self)
+                      · exact Or.inr ⟨found, List.mem_append_right _ inRest⟩
+                obtain ⟨closure, closed, keep, cover⟩ := ih (pair :: assumed) _ next result
+                refine ⟨closure, closed, fun candidate member => keep candidate
+                  (List.mem_cons_of_mem _ member), ?_⟩
+                intro candidate member
+                rcases List.mem_cons.mp member with same | inRest
+                · rw [same]
+                  exact keep pair List.mem_cons_self
+                · exact cover candidate (List.mem_append_right _ inRest)
+
+/-- **An `equal` verdict is trace equivalence**: the two protocol states admit the same traces and
+end orderly on the same ones. -/
+theorem protocolEquality_sound (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (work : Nat) (start other : Config)
+    (result : protocolEquality left leftLimit right rightLimit work start other = .equal) :
+    ∀ trace, observe left leftLimit start trace = observe right rightLimit other trace := by
+  obtain ⟨closure, closed, -, cover⟩ :=
+    checkPairs_equal left leftLimit right rightLimit work [] [((start, other), [])]
+      (by intro pair member; simp at member) result
+  intro trace
+  exact assumed_pairs_observe_alike left leftLimit right rightLimit closure closed trace
+    (start, other) (cover ((start, other), []) (by simp))
+
+theorem checkPairs_differ (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (start other : Config) (work : Nat) :
+    ∀ (assumed : List (Config × Config)) (pending : List Pending) (witness : List StackAction),
+      (∀ entry ∈ pending, runProto left leftLimit start entry.2 = some entry.1.1 ∧
+        runProto right rightLimit other entry.2 = some entry.1.2) →
+      checkPairs left leftLimit right rightLimit work assumed pending = .differ witness →
+      observe left leftLimit start witness ≠ observe right rightLimit other witness := by
+  induction work with
+  | zero =>
+      intro assumed pending witness _ result
+      cases pending <;> simp [checkPairs] at result
+  | succ work ih =>
+      intro assumed pending witness reach result
+      cases pending with
+      | nil => simp [checkPairs] at result
+      | cons entry rest =>
+          obtain ⟨pair, trace⟩ := entry
+          have here := reach (pair, trace) List.mem_cons_self
+          simp only at here
+          simp only [checkPairs] at result
+          split at result
+          · exact ih assumed rest witness
+              (fun entry member => reach entry (List.mem_cons_of_mem _ member)) result
+          · split at result
+            · rename_i differs
+              cases result
+              simp [observe, here.1, here.2, differs]
+            · split at result
+              · rename_i action found
+                cases result
+                rcases distinguish_some _ _ _ found with ⟨onLeft, offRight⟩ | ⟨onRight, offLeft⟩
+                · rw [mem_enabled_iff, Option.isSome_iff_exists] at onLeft
+                  obtain ⟨next, stepLeft⟩ := onLeft
+                  rw [mem_enabled_iff] at offRight
+                  have stepRight : protoStep right rightLimit pair.2 action = none := by
+                    simpa using offRight
+                  simp [observe, runProto_snoc, here.1, here.2, stepLeft, stepRight]
+                · rw [mem_enabled_iff, Option.isSome_iff_exists] at onRight
+                  obtain ⟨next, stepRight⟩ := onRight
+                  rw [mem_enabled_iff] at offLeft
+                  have stepLeft : protoStep left leftLimit pair.1 action = none := by
+                    simpa using offLeft
+                  simp [observe, runProto_snoc, here.1, here.2, stepLeft, stepRight]
+              · refine ih (pair :: assumed) _ witness ?_ result
+                intro entry member
+                rcases List.mem_append.mp member with inSuccessors | inRest
+                · unfold successorPairs at inSuccessors
+                  obtain ⟨action, -, built⟩ := List.mem_filterMap.mp inSuccessors
+                  split at built
+                  · rename_i next other' stepLeft stepRight
+                    cases built
+                    exact ⟨by simp [runProto_snoc, here.1, stepLeft],
+                      by simp [runProto_snoc, here.2, stepRight]⟩
+                  · cases built
+                · exact reach entry (List.mem_cons_of_mem _ inRest)
+
+/-- **A `differ` verdict carries a genuine witness**: on that trace the two protocol states
+observably disagree, either one admits it and the other does not, or only one ends orderly. -/
+theorem protocolEquality_witness (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (work : Nat) (start other : Config) (witness : List StackAction)
+    (result : protocolEquality left leftLimit right rightLimit work start other = .differ witness) :
+    observe left leftLimit start witness ≠ observe right rightLimit other witness :=
+  checkPairs_differ left leftLimit right rightLimit start other work [] _ witness
+    (by
+      intro entry member
+      simp only [List.mem_singleton] at member
+      subst member
+      exact ⟨rfl, rfl⟩)
+    result
+
+/-- **Equal protocols run alike in the model**: on open endpoints, `runStack` admits the same
+traces from two configurations the check found equal. -/
+theorem equal_protocols_run_alike (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (work : Nat) (leftEndpoint rightEndpoint : Endpoint)
+    (leftStack rightStack : List Nat) (leftOpen : leftEndpoint.closed = false)
+    (rightOpen : rightEndpoint.closed = false)
+    (result : protocolEquality left leftLimit right rightLimit work
+      (leftEndpoint.state, leftStack) (rightEndpoint.state, rightStack) = .equal)
+    (trace : List StackAction) :
+    (runStack left ⟨leftEndpoint, leftStack, leftLimit⟩ trace).isSome =
+      (runStack right ⟨rightEndpoint, rightStack, rightLimit⟩ trace).isSome := by
+  have same := congrArg Option.isSome
+    (protocolEquality_sound left leftLimit right rightLimit work _ _ result trace)
+  rw [runStack_eq_runProto left leftLimit trace leftEndpoint leftStack leftOpen,
+    runStack_eq_runProto right rightLimit trace rightEndpoint rightStack rightOpen]
+  simpa [observe] using same
+
+/-! ### Duality as equality with the dual table -/
+
+/-- The dual guest action: send and receive swap, choosing and receiving a branch swap, and the
+nested-call actions are their own duals. -/
+def StackAction.dual : StackAction → StackAction
+  | .send message => .recv message
+  | .recv message => .send message
+  | .choose branch => .receiveBranch branch
+  | .receiveBranch branch => .choose branch
+  | .enter => .enter
+  | .skipNested => .skipNested
+  | .finish => .finish
+
+theorem StackAction.dual_dual (action : StackAction) : action.dual.dual = action := by
+  cases action <;> rfl
+
+/-- The dual table takes the dual action exactly where the table takes the action. -/
+theorem protoStep_dual (definitions : List Node) (limit : Nat) (config : Config)
+    (action : StackAction) :
+    protoStep (definitions.map dual) limit config action.dual =
+      protoStep definitions limit config action := by
+  unfold protoStep
+  rw [List.getElem?_map]
+  cases definitions[config.1]? with
+  | none => rfl
+  | some node => cases node <;> cases action <;> rfl
+
+theorem orderlyEnd_dual (definitions : List Node) :
+    orderlyEnd (definitions.map dual) = orderlyEnd definitions := by
+  funext config
+  unfold orderlyEnd
+  rw [List.getElem?_map]
+  cases definitions[config.1]? with
+  | none => rfl
+  | some node => cases node <;> rfl
+
+theorem observe_dual (definitions : List Node) (limit : Nat) :
+    ∀ (config : Config) (trace : List StackAction),
+      observe (definitions.map dual) limit config (trace.map StackAction.dual) =
+        observe definitions limit config trace := by
+  intro config trace
+  unfold observe
+  rw [orderlyEnd_dual]
+  congr 1
+  induction trace generalizing config with
+  | nil => rfl
+  | cons action rest ih =>
+      simp only [List.map_cons, runProto, protoStep_dual]
+      cases protoStep definitions limit config action with
+      | none => rfl
+      | some next => exact ih next
+
+/-- **Protocol duality**: `start` in `left` is dual to `other` in `right` when it equals `other` in
+the dual table. -/
+def protocolDuality (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat)
+    (work : Nat) (start other : Config) : Verdict :=
+  protocolEquality left leftLimit (right.map dual) rightLimit work start other
+
+/-- **A dual verdict means dual behaviour**: every trace of one side is admitted exactly when its
+dual trace is admitted by the other, with the same orderly ends. -/
+theorem protocolDuality_sound (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (work : Nat) (start other : Config)
+    (result : protocolDuality left leftLimit right rightLimit work start other = .equal) :
+    ∀ trace, observe left leftLimit start trace =
+      observe right rightLimit other (trace.map StackAction.dual) := by
+  intro trace
+  have same := protocolEquality_sound left leftLimit (right.map dual) rightLimit work start other
+    result trace
+  have back := observe_dual right rightLimit other (trace.map StackAction.dual)
+  rw [List.map_map, show StackAction.dual ∘ StackAction.dual = id from
+    funext StackAction.dual_dual, List.map_id] at back
+  exact same.trans back
+
+/-! ### Fixtures and load-bearing controls -/
+
+/-- `balancedProtocol` with every definition index renumbered: node `i` moves to `3 - i`. -/
+def renumberedBalanced : List Node :=
+  [.finished, .recv .i64 0, .nested 3 1, .send .i64 2]
+
+/-- **Renumbering is equality**: the balanced table and its renumbered copy are equal types. -/
+theorem renumbered_balanced_is_equal :
+    protocolEquality balancedProtocol 2 renumberedBalanced 2 64 (0, []) (3, []) = .equal := by
+  decide
+
+/-- **The return-stack limit is part of the type**: with one fewer saved return the balanced
+protocol is a different type, and the check names the trace that tells them apart. -/
+theorem stack_limit_separates_types :
+    protocolEquality balancedProtocol 2 balancedProtocol 1 64 (0, []) (0, []) =
+      .differ [.send .i64, .enter, .send .i64, .enter] := by
+  decide
+
+/-- A one-node protocol that sends forever. -/
+def sendForever : List Node := [.send .i64 0]
+
+/-- The same protocol written with two nodes. -/
+def sendForeverUnrolled : List Node := [.send .i64 1, .send .i64 0]
+
+/-- A one-node protocol that receives forever, the dual of `sendForever`. -/
+def receiveForever : List Node := [.recv .i64 0]
+
+/-- **Cycles are identified up to unfolding**, and the work bound is load-bearing: two units leave
+a pair pending and are refused as exhausted, three decide equality. -/
+theorem unfolding_is_equality_within_the_bound :
+    protocolEquality sendForever 0 sendForeverUnrolled 0 2 (0, []) (0, []) = .exhausted ∧
+      protocolEquality sendForever 0 sendForeverUnrolled 0 3 (0, []) (0, []) = .equal := by
+  decide
+
+/-- **Order is part of the type**: sending then receiving differs from receiving then sending. -/
+theorem order_separates_types :
+    protocolEquality [.send .i64 1, .recv .i64 2, .finished] 0
+        [.recv .i64 1, .send .i64 2, .finished] 0 8 (0, []) (0, []) = .differ [.send .i64] := by
+  decide
+
+/-- A client that sends a number and receives a flag. -/
+def clientProtocol : List Node := [.send .i64 1, .recv .bool 2, .finished]
+
+/-- The matching server. -/
+def serverProtocol : List Node := [.recv .i64 1, .send .bool 2, .finished]
+
+/-- **Client and server are dual**, and a server answering with the wrong type is not. -/
+theorem client_and_server_are_dual :
+    protocolDuality clientProtocol 0 serverProtocol 0 8 (0, []) (0, []) = .equal ∧
+      protocolDuality clientProtocol 0 [.recv .i64 1, .send .i64 2, .finished] 0 8 (0, []) (0, []) =
+        .differ [.send .i64, .recv .bool] := by
+  decide
+
+/-- **A duality check that exhausts its work is refused**, not accepted (the WIT-SESSION-01
+scenario): two units leave the cycle pending, three decide the duality. -/
+theorem exhausted_duality_is_refused :
+    protocolDuality sendForeverUnrolled 0 receiveForever 0 2 (0, []) (0, []) = .exhausted ∧
+      protocolDuality sendForeverUnrolled 0 receiveForever 0 3 (0, []) (0, []) = .equal := by
+  decide
+
+/-- A mutant reading of the verdict that treats exhaustion as acceptance. -/
+def acceptingExhaustion : Verdict → Verdict
+  | .exhausted => .equal
+  | verdict => verdict
+
+/-- **Treating exhaustion as acceptance accepts unequal types**: two sends and three sends differ,
+which the check proves with three units of work (after two sends only one side ends orderly), yet
+the mutant reading accepts them at two. -/
+theorem accepting_exhaustion_accepts_unequal_types :
+    acceptingExhaustion (protocolEquality [.send .i64 1, .send .i64 2, .finished] 0
+        [.send .i64 1, .send .i64 2, .send .i64 3, .finished] 0 2 (0, []) (0, [])) = .equal ∧
+      protocolEquality [.send .i64 1, .send .i64 2, .finished] 0
+        [.send .i64 1, .send .i64 2, .send .i64 3, .finished] 0 3 (0, []) (0, []) =
+        .differ [.send .i64, .send .i64] := by
+  decide
+
+/-- A mutant exploration without the memo of assumed pairs. -/
+def checkPairsWithoutMemo (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) : Nat → List Pending → Verdict
+  | _, [] => .equal
+  | 0, _ :: _ => .exhausted
+  | work + 1, (pair, trace) :: rest =>
+      if orderlyEnd left pair.1 ≠ orderlyEnd right pair.2 then .differ trace
+      else
+        match distinguish (enabled left leftLimit pair.1) (enabled right rightLimit pair.2) with
+        | some action => .differ (trace ++ [action])
+        | none =>
+            checkPairsWithoutMemo left leftLimit right rightLimit work
+              (successorPairs left leftLimit right rightLimit pair trace ++ rest)
+
+/-- **The memo is load-bearing**: without it a cyclic protocol is never decided, so even sixty-four
+units end in exhaustion where the real check decides equality with three. -/
+theorem memo_is_load_bearing :
+    checkPairsWithoutMemo sendForever 0 sendForeverUnrolled 0 64 [(((0, []), (0, [])), [])] =
+        .exhausted ∧
+      protocolEquality sendForever 0 sendForeverUnrolled 0 3 (0, []) (0, []) = .equal := by
+  decide
+
 end NestedSession
