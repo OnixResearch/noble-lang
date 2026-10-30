@@ -2658,7 +2658,10 @@ Open, and deliberately not closed:
 Cancellation is modelled as a stop reason only; EPROTO-CASE-07 stays unsupported until the host
 control exists.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the region protocol model is
+[`verification/foundation/receipts/9afcfada9/`](../../verification/foundation/receipts/9afcfada9/foundation-check.json)
+(999 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 

@@ -420,3 +420,10 @@ finiteness bridges, the total add/multiply certificate checker with `check_sound
 `9864cb89b/` records the clean run that added `NobleFoundation.OperandForwarding`: forwarding
 soundness, the twice-forwarded first-projection residual that is exactly the program, and its
 controls (16 new theorems; that run reported 957 in total).
+
+## 9afcfada9 — RegionProtocol-v1 model, T1–T3 (issue #9)
+
+`9afcfada9/` records the clean run that added `NobleFoundation.RegionProtocol`: the transition table,
+the selected subject's normal-return postconditions, prefix safety P1–P6 through the monitor, and
+sequential composition with its counter and set-union controls (42 new theorems; that run reported
+999 in total).
