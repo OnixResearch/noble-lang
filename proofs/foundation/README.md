@@ -1293,7 +1293,10 @@ Open, and deliberately not closed:
   theorems: nothing transfers them to binary32 or to `grad.rs`;
 - no correspondence claim relates this file to
   `crates/noble-ngraph/src/grad.rs`, so the ordered Rust loop's refinement is
-  open, and its admission, error and quota behaviour is untouched;
+  open, and its admission, error and quota behaviour is untouched. The finite
+  differential in [`verification/grad-ordered`](../../verification/grad-ordered/README.md)
+  compares `grad.rs` with the ordered binary32 reference on 306 Lean-generated
+  cases, which is tested-implementation evidence, not refinement;
 - guards, indexing, Boolean paths, activation corners, surrogate policies,
   dynamic Programs, multi-output seeds and duplicate output-node accumulation
   are outside the selected fragment;

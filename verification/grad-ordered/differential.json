@@ -1,0 +1,66 @@
+{
+  "schema": "noble-grad-ordered-differential/v1",
+  "assertion": "grad::forward and grad::backward for f32 match every forward value and gradient the ordered binary32 Lean reference generates, on this host and target, with NaN encodings one observation class; each declared single-rule reverse-pass fault disagrees with at least one expectation; not a refinement proof",
+  "source_commit": "713e02bd74374433d62947f6fd03b7181fd90bc6",
+  "source_tree": "dfe74b7464de10d4566b92352653917b314ecbd9",
+  "clean_source": true,
+  "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+  "host": "Linux 6.18.54 x86_64",
+  "command": "CARGO_TARGET_DIR=/var/tmp/noble-grad-ordered-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph --test train_admission grad_ordered -- --nocapture",
+  "lanes": [
+    "grad_ordered::ordered_gradients_match_the_lean_reference",
+    "grad_ordered::ordered_gradient_corpus_detects_each_seeded_fault"
+  ],
+  "corpus_file": "crates/noble-ngraph/tests/grad_ordered/corpus.txt",
+  "corpus_file_sha256": "ea1332b1b995b4aa7b61baa844fc2eaadd10f93af619d77b165a17d6911ef3b5",
+  "generator_file": "verification/foundation/grad-ordered/corpus.lean",
+  "generator_file_sha256": "5545d13e1fb9c4ab959fc727b99e1e21d05a0572e4bfaf1ba1506a22e169e3fc",
+  "model_file": "proofs/foundation/NobleFoundation/ReverseADOrdered.lean",
+  "model_file_sha256": "9a4aeaa81122c6b25fda9fab7e0de747d2dccecd658b6983aa2a80bb4d283d81",
+  "binary32_file": "proofs/foundation/NobleFoundation/Binary32.lean",
+  "binary32_file_sha256": "5a95176815989e3ff34f18fe62d5b4f4579bc1f946638f111b571e37f093e412",
+  "lane_file": "crates/noble-ngraph/tests/grad_ordered/differential.rs",
+  "lane_file_sha256": "6496429df1741797e9da8500bd06c764e5f15eb499f8f90ee5efd6b5ff3f2854",
+  "subject_file": "crates/noble-ngraph/src/grad.rs",
+  "subject_file_sha256": "2357538eb8ff831af523c94b8057eec28d87ecefe824c9969e6ef6e2dd4b02e4",
+  "coverage": {
+    "cases": 306,
+    "values": 2270,
+    "gradients": 2270,
+    "nonfinite_cases": 63,
+    "repeated_operand_cases": 196,
+    "faults_detected_by_cases": {
+      "AscendingTraversal": 207,
+      "OverwriteAccumulation": 271,
+      "PresummedRepeatedOperand": 3,
+      "AssignedSeed": 127,
+      "SubtractionSign": 194,
+      "MultiplicationOwnValue": 155,
+      "FusedMultiplyAdd": 1
+    },
+    "summary": "grad-ordered-differential cases=306 values=2270 grads=2270 nonfinite=63 repeated-operand=196",
+    "mutations": "grad-ordered-mutations cases=306 AscendingTraversal=207 OverwriteAccumulation=271 PresummedRepeatedOperand=3 AssignedSeed=127 SubtractionSign=194 MultiplicationOwnValue=155 FusedMultiplyAdd=1"
+  },
+  "correspondence": {
+    "route": "Lean-generated corpus from the ordered binary32 reference compared against the Rust gradient functions by this differential lane",
+    "model_theorems": {
+      "model_files_sha256": {
+        "proofs/foundation/NobleFoundation/ReverseADOrdered.lean": "9a4aeaa81122c6b25fda9fab7e0de747d2dccecd658b6983aa2a80bb4d283d81"
+      },
+      "receipts": [
+        {
+          "receipt": "verification/foundation/receipts/956d8ca07/foundation-check.json",
+          "source_commit": "956d8ca070024ace7998688069df0a06942587b9",
+          "model_theorems": 7
+        }
+      ]
+    },
+    "open_edge": "no extraction or refinement proof relates crates/noble-ngraph/src/grad.rs to the Lean model; the differential is finite evidence on one host and target"
+  },
+  "claims": [
+    "Tested-implementation evidence for grad.rs forward and backward over inputs, parameters, constants, addition, subtraction and multiplication in binary32.",
+    "The model-to-Rust edge stays open: no refinement proof, no cross-platform or cross-compiler claim.",
+    "Each declared fault is the ordered reverse pass with one rule changed, simulated over the corpus reference values; they are seeded faults, not an exhaustive fault model.",
+    "The fused multiply-add fault is detected by one case only and the presummed repeated-operand fault by few cases; detection counts are recorded, not assumed."
+  ]
+}
