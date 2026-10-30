@@ -1224,15 +1224,36 @@ The clean-source receipt for the transpose identity is
 (838 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+`NobleFoundation/ReverseADAdjoint.lean` states what the sweep leaves in each node. On every
+well-formed graph, for every seed vector and every node, the final adjoint is the node's seed
+plus, over every node that consumes it, that consumer's **final** adjoint times its
+partial-derivative coefficient for the node (`final_adjoint_eq_seed_plus_consumers`;
+`final_adjoint_eq` sums over all nodes, since non-consumers contribute nothing). A repeated
+operand counts once per occurrence through `stepCoefficient`. A node no node consumes keeps its
+seed (`unconsumed_final_adjoint_is_seed`).
+
+The proof has two parts:
+- the sweep unrolls to the seed plus every processed step's contribution, with no
+  well-formedness needed (`adjointAfter_unrolled`);
+- on a well-formed graph, a processed node's adjoint never changes again
+  (`adjoint_final_once_processed`), so each consumer contributes with its final adjoint
+  (`processed_adjoint_is_final`).
+
+On `exampleGraph`, with seed `1` on the output and `5` on the interior constant node, the final
+adjoints are `1`, `8`, `13` and `8` from the output down (`exampleGraph_final_adjoints`). Node 1
+is its seed `5` plus the addition's contribution `8`
+(`exampleGraph_node_one_is_seed_plus_consumer`). A sweep that dropped interior seeds would read
+`8` there, and one that counted `mul 2 2` once would read `4` at nodes 2, 1 and 0.
+
+The parent attaches the clean foundation receipt at integration.
+
 Open, and deliberately not closed:
 
 - no ordered **binary32** gradient model: a real-valued theorem does not
   establish that binary32 gradients equal exact derivatives, and no
   reassociation, FMA contraction or parallel reduction is authorisation;
-- the transpose identity is a real-valued theorem: the leaf pairing equals the
-  derivative, but no theorem states each final adjoint as seed plus its
-  consumers node by node, and nothing transfers it to binary32 or to
-  `grad.rs`;
+- the transpose identity and the node-by-node adjoint equation are real-valued
+  theorems: nothing transfers them to binary32 or to `grad.rs`;
 - no correspondence claim relates this file to
   `crates/noble-ngraph/src/grad.rs`, so the ordered Rust loop's refinement is
   open, and its admission, error and quota behaviour is untouched;

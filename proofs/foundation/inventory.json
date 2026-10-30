@@ -5036,6 +5036,60 @@
       "phase": 3,
       "role": "fixture",
       "claim": "non-vacuity: on slotGraph the full sweep with seed one pairs the leaves to the slot-zero tangent 17"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.adjointAfter_unrolled",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "the reverse sweep unrolls to the seed plus every processed step contribution, each made with the processed node adjoint at its own step"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.adjoint_step_frame",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph one reverse step leaves every adjoint at or above the processed node unchanged"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.adjoint_final_once_processed",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph a node adjoint is final once the sweep has processed it"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.processed_adjoint_is_final",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph the adjoint a node contributes with is its final adjoint"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph every final adjoint is its seed plus, over every node, that node final adjoint times its coefficient for this node"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq_seed_plus_consumers",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph every final adjoint is its seed plus its consumers contributions, each with the consumer final adjoint"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.unconsumed_final_adjoint_is_seed",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "on a well-formed graph a node no node consumes keeps its seed as its final adjoint"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.exampleGraph_final_adjoints",
+      "phase": 3,
+      "role": "fixture",
+      "claim": "with seed 1 on the output and 5 on the interior constant node the example graph final adjoints are 1, 8, 13 and 8"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Adjoint.exampleGraph_node_one_is_seed_plus_consumer",
+      "phase": 3,
+      "role": "fixture",
+      "claim": "the example graph interior node adjoint is its seed 5 plus the addition contribution 8"
     }
   ]
 }
