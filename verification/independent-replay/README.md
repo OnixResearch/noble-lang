@@ -137,6 +137,65 @@ The small export is refused at 4 MiB and accepted at 6 MiB, so the 6 MiB refusal
 comes from checking work, not from the process failing to start. Both bounds are chosen from this
 run on one host; they are pilot evidence, not a portable resource contract.
 
+## Refusal-class controls (2026-10-30)
+
+[`refusals.mjs`](refusals.mjs) runs the pinned exporter (`lean4export`, sha256 `9f7b3dbb…`) and
+the pinned checker (`nanoda_bin`, `27388e46…`, one thread) as one pipeline, with the pinned Lean
+(`8d4a77a0…`). It refuses to start if any input digest differs from its pin, and it classifies
+every run into a named class.
+
+A run is `accepted` only when all of these hold:
+- the exporter exits zero without a panic;
+- every requested root is declared in the export, resolved from the export's own name records;
+- the checker exits zero and reports a positive number of checked declarations;
+- every axiom the export declares is `propext`, `Classical.choice` or `Quot.sound`, whatever the
+  checker was configured to permit.
+
+The receipt is [`receipts/2026-10-30/refusals.json`](receipts/2026-10-30/refusals.json),
+`holds: true`. It records the harness digest and every control's export and checker records.
+
+| Control | Change | Exporter | Checker | Verdict |
+|---|---|---|---|---|
+| `baseline-exported` | none: `Init` export of `Nat.add_comm` | exit 0 | accepted, 52 declarations | **accepted** |
+| `baseline-retained` | none: the retained small export | — | accepted, 16 declarations | **accepted** |
+| `baseline-large` | none: the pinned `toInt_add` export | — | accepted, 2,773 declarations | **accepted** |
+| `export-missing-module` | module `NoSuchModule` | exit 1, `unknown module prefix` | not run | `export-failure` |
+| `export-missing-root` | root `Nat.no_such_declaration` | **exit 0**, `PANIC … not found in environment`; the export is only the meta record | not run | `export-failure` |
+| `export-partial-roots` | roots `Nat.add_comm` and `Nat.no_such_declaration` | **exit 0**, the same panic; the export holds `Nat.add_comm`'s closure | not run | `export-failure` |
+| `unsupported-format-above` | meta format version `3.2.0` | — | exit 1, `greater than the maximum supported version` | `unsupported-format` |
+| `unsupported-format-below` | meta format version `3.0.0` | — | exit 1, `less than the minimum supported version` | `unsupported-format` |
+| `unsupported-nat-literal` | `nat_extension: false` on the large export (56 `natVal` records) | — | exit 1, `Nat lit extension disallowed` | `unsupported-extension` |
+| `unsupported-string-literal` | `string_extension: false` on the large export (37 `strVal` records) | — | exit 1, `String lit extension disallowed` | `unsupported-extension` |
+| `checker-forbidden-axiom` | checker allow-list without `propext`, which the large export declares | — | exit 1, `declares unpermitted axiom "propext"` | `forbidden-axiom` |
+| `custom-axiom-checker-refuses` | constructed `axiom NobleReplayControl.customAxiom.{u} : Sort u` appended to the small export | — | exit 1, `declares unpermitted axiom` | `forbidden-axiom` |
+| `custom-axiom-checker-permits` | the same export, with the checker also permitting that axiom | — | **accepted**, 17 declarations | `forbidden-axiom` |
+
+**The exporter reports a missing root only by a panic.** `lean4export` prints `PANIC` for a root
+that is not in the environment, then continues and exits zero; Lean's compiled `panic!` does not
+abort. The receipt also records what a pipeline reading exit statuses alone would have seen:
+- for the missing root, the checker exits zero with `Checked 0 declarations with no errors`;
+- for the partial root list, it exits zero with `Checked 52 declarations with no errors`.
+
+So a run whose second requested theorem does not exist would have been reported as a success. The
+panic check and the root-presence check refuse both runs, and the positive-count rule alone already
+refuses the empty one. `limits.mjs` uses the weaker acceptance pattern, which matches
+`Checked 0 declarations`. Its retained receipt is unaffected, because its two inputs are
+digest-pinned exports of 2,773 and 16 declarations. A gate must use the strict rule.
+
+**The custom axiom.** The checker accepts the custom axiom once it is told to permit it, and the
+lane still refuses it. This meets the issue's requirement that forbidden or custom axioms stay
+rejected even when an external checker accepts them as declared assumptions. The axiom is a
+constructed control typed by the export's own `Sort u` expression, not a Noble declaration.
+
+**Each rule is load-bearing.** Three throwaway copies of the harness each removed one rule and
+reran the same controls. Each run failed (`holds: false`):
+
+| Rule removed | Controls then accepted |
+|---|---|
+| exporter-panic and root-presence checks | `export-partial-roots` (`export-missing-root` became `empty-check`) |
+| the lane's own axiom audit | `custom-axiom-checker-permits` |
+| both of the above, with `Checked 0` also counted as acceptance | `export-missing-root`, `export-partial-roots` |
+
 ## Requirements before this becomes a gate
 
 1. ~~A checker implemented independently of Lean's kernel with a compatible
@@ -146,13 +205,19 @@ run on one host; they are pilot evidence, not a portable resource contract.
 2. Exact claim binding beyond the two explicit root names: the pilot records
    the names and closure hashes, but does not independently audit that the
    exported closure is the complete dependency closure for a higher-level
-   claim.
+   claim. `refusals.mjs` now refuses an export that does not declare every
+   requested root, but it binds names, not statements.
 3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
    manifest refuses a corrupted, removed or extra artifact before the checker runs.
-4. Explicit refusal classes for unsupported constructs, timeout, export failure
-   and rejection — none of which may be reported as success. Timeout and resource
-   exhaustion are now exercised by `limits.mjs`, and rejection and parse refusal
-   by the pilot controls; unsupported constructs and export failure are not.
+4. ~~Explicit refusal classes for unsupported constructs, timeout, export failure
+   and rejection — none of which may be reported as success~~ — all exercised by
+   pilot controls:
+   - timeout and resource exhaustion by `limits.mjs`;
+   - rejection and parse refusal by the 2026-10-29 controls;
+   - unsupported format versions, disabled literal extensions, export failure and
+     forbidden or custom axioms by `refusals.mjs`.
+
+   A gate would run these classes under its own frozen tools.
 5. Owner review before promotion to CI, a flake check, or a policy/tool-selection
    change; this pilot intentionally makes none of those changes.
 
@@ -164,7 +229,8 @@ run on one host; they are pilot evidence, not a portable resource contract.
   the two named roots and their exported closures were exercised.
 - The semantic and parse controls here are minimal pilot controls, not a complete
   declaration-level negative-control suite (no dropped-dependency or
-  independent claim-binding control). The broader declaration-level equivalents
+  statement-level claim-binding control; `refusals.mjs` checks root names only).
+  The broader declaration-level equivalents
   exist in the producer-consumer lane (`verification/mc1/gate.mjs`: duplicate/
   missing/cyclic dependency, forbidden axiom, free variable, wrong-theorem-type,
   trusted-name override, erased forbidden axiom) and are not evidence about a
