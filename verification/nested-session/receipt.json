@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "822a228eda6384c77da60080d61645c7a4bedb85",
-  "source_tree": "3e7c19c7d67903328f58b796d8f58e3cbe6d4b32",
+  "source_commit": "623cb5fad6b3b1030eb8fa41e0566e213b9b0a2b",
+  "source_tree": "03591bfcc09ed2e8be2c3badcba742387f7090c4",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "9547ca0ffd56c771378ea33d3e8db1f28f477b947c5475df7808510ea61232f1",
-        "proofs/m6/nested-session-inventory.json": "c0954d4013fccd819bf7254fff42b972d188a3d7537d8b2ed94a0b64fa9bced6"
+        "proofs/m6/NestedSession.lean": "3120e6b0d3d5300bf9101b2776cc642bf9bdd461e613e3f84f9bd08436c1b2d1",
+        "proofs/m6/nested-session-inventory.json": "f48acb503b30b7f2353eec0b4c7dc908ed1179c23b5f2e268fc4c78559ab7ca3"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol, offerProtocol (external choice)",
@@ -31,21 +31,21 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 93,
+    "model_theorems": 101,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
-    "progress": "guest-local only: an open endpoint whose resolved node declares the action has a successor; no queue, peer, scheduler or host premise",
+    "progress": "one guest step: an open endpoint whose resolved node declares the action has a successor, and the environment-aware step succeeds under explicit queue, peer, scheduler and host premises, each shown load-bearing; termination, fairness, eventual delivery and deadlock freedom are unclaimed",
     "cancellation": "an event class that cuts the committed prefix; it carries no endpoint or session transition",
     "nested_recursion": "the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence",
     "type_equality": "no algorithm; duality is definitional"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "9547ca0ffd56c771378ea33d3e8db1f28f477b947c5475df7808510ea61232f1",
-    "proofs/m6/nested-session-inventory.json": "c0954d4013fccd819bf7254fff42b972d188a3d7537d8b2ed94a0b64fa9bced6",
-    "verification/nested-session/check.mjs": "d4e54ddfc0d58cc290ec26efba69cad9ddb8126f3226e88bb7694348d8cb3fb9"
+    "proofs/m6/NestedSession.lean": "3120e6b0d3d5300bf9101b2776cc642bf9bdd461e613e3f84f9bd08436c1b2d1",
+    "proofs/m6/nested-session-inventory.json": "f48acb503b30b7f2353eec0b4c7dc908ed1179c23b5f2e268fc4c78559ab7ca3",
+    "verification/nested-session/check.mjs": "bda0885c5beda5f703a2a5cea2933c6420a8fa4d52b90b43c859469efeb8a317"
   },
-  "theorem_count": 93,
+  "theorem_count": 101,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -1318,6 +1318,118 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.environmentStep_of_ready",
+      "role": "WIT-SESSION-05 queue/peer premises: a ready environment always admits the action environment change",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.environmentStep_of_ready : ∀ (env : NestedSession.Environment) (action : NestedSession.Action), NestedSession.EnvironmentReady env action → ∃ next, NestedSession.environmentStep env action = some next",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.progress_under_explicit_premises",
+      "role": "WIT-SESSION-05 scoped progress: an open owned endpoint whose resolved node declares the action steps when scheduled, host-admitted and queue/peer ready",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.progress_under_explicit_premises : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (env : NestedSession.Environment) (action : NestedSession.Action) (node : NestedSession.Node) (continuation : Nat), endpoint.closed = false → NestedSession.resolve definitions depth endpoint.state = some node → NestedSession.continuationOf action node = some continuation → env.scheduled = true → env.hostAdmits = true → NestedSession.EnvironmentReady env action → ∃ successor next, NestedSession.stepIn definitions depth endpoint env action = some (successor, next)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.progress_fixture_send_then_receive",
+      "role": "WIT-SESSION-05 fixture: send takes the one outbox admission and receive dequeues the peer payload",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.progress_fixture_send_then_receive : ((NestedSession.stepIn NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } NestedSession.readyEnvironment (NestedSession.Action.send NestedSession.MessageType.i64)).bind fun after => NestedSession.stepIn NestedSession.exampleProtocol 2 after.fst after.snd (NestedSession.Action.recv NestedSession.MessageType.i64)) = some ({ channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false }, { outbox := { enqueued := 1, dequeued := 0 }, outboxLimit := 1, inbox := { enqueued := 1, dequeued := 1 }, peerBranch := none, scheduled := true, hostAdmits := true })",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.unscheduled_guest_takes_no_step",
+      "role": "WIT-SESSION-05 scheduler premise is load-bearing: an unscheduled guest takes no step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.unscheduled_guest_takes_no_step : NestedSession.stepIn NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := __src.outbox, outboxLimit := __src.outboxLimit, inbox := __src.inbox, peerBranch := __src.peerBranch, scheduled := false, hostAdmits := __src.hostAdmits }) (NestedSession.Action.send NestedSession.MessageType.i64) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.host_refusal_takes_no_step",
+      "role": "WIT-SESSION-05 host premise is load-bearing: a host refusal stops the step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.host_refusal_takes_no_step : NestedSession.stepIn NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := __src.outbox, outboxLimit := __src.outboxLimit, inbox := __src.inbox, peerBranch := __src.peerBranch, scheduled := __src.scheduled, hostAdmits := false }) (NestedSession.Action.send NestedSession.MessageType.i64) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.full_outbox_refuses_send",
+      "role": "WIT-SESSION-05 queue premise is load-bearing: a full outbox refuses the send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.full_outbox_refuses_send : NestedSession.stepIn NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := { enqueued := 1, dequeued := 0 }, outboxLimit := __src.outboxLimit, inbox := __src.inbox, peerBranch := __src.peerBranch, scheduled := __src.scheduled, hostAdmits := __src.hostAdmits }) (NestedSession.Action.send NestedSession.MessageType.i64) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.silent_peer_leaves_receive_pending",
+      "role": "WIT-SESSION-05 peer premise is load-bearing: an empty inbox leaves the receive pending",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.silent_peer_leaves_receive_pending : NestedSession.stepIn NestedSession.exampleProtocol 2 { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := __src.outbox, outboxLimit := __src.outboxLimit, inbox := { enqueued := 0, dequeued := 0 }, peerBranch := __src.peerBranch, scheduled := __src.scheduled, hostAdmits := __src.hostAdmits }) (NestedSession.Action.recv NestedSession.MessageType.i64) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_receipt_needs_the_peer_selection",
+      "role": "WIT-SESSION-05 peer premise for external choice: only the branch the peer selected is received",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.branch_receipt_needs_the_peer_selection : NestedSession.stepIn NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := __src.outbox, outboxLimit := __src.outboxLimit, inbox := __src.inbox, peerBranch := some 1, scheduled := __src.scheduled, hostAdmits := __src.hostAdmits }) (NestedSession.Action.receiveBranch 0) = none ∧ (NestedSession.stepIn NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 1, generation := 4, closed := false } (have __src := NestedSession.readyEnvironment; { outbox := __src.outbox, outboxLimit := __src.outboxLimit, inbox := __src.inbox, peerBranch := some 1, scheduled := __src.scheduled, hostAdmits := __src.hostAdmits }) (NestedSession.Action.receiveBranch 1)).isSome = true",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -1367,7 +1479,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-822a228ed/Audit.lean"
+        "/tmp/ns-check-623cb5fad/Audit.lean"
       ],
       "exit": 0
     },
@@ -1401,6 +1513,6 @@
   "scope": [
     ".cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.",
     "The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;",
-    "the only progress statement is guest-local; the balanced table's unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt."
+    "progress is stated for one step under explicit premises, never derived; the balanced table's unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt."
   ]
 }
