@@ -11,7 +11,9 @@ calculus and not a lowering claim. Exhaustion is a refusal rather than an accept
 defined by construction and involutive, and every endpoint operation that would copy, discard,
 capture, use a stale generation or close twice is refused. A stack-aware nested step saves a return
 continuation and pops it at a finished node; the stack limit is the only bound on those returns.
-Send is not receipt: nothing here models peer receipt.
+Send is not receipt: nothing here models peer receipt. At an external choice the guest takes one
+action, `receiveBranch`, which names the branch the peer selected; one node declares one branch, so a
+selection the node does not declare is refused.
 
 Declared premises, kept premises:
 * the grammar is versioned but this model carries no version field yet;
@@ -24,6 +26,8 @@ Declared premises, kept premises:
   this model admits it only up to the declared stack limit, and claims no external runtime stack;
 * no protocol type-equality algorithm is defined: `dual` is definitional and endpoint identity is
   compared field by field;
+* a choice node declares exactly one branch, so a two-branch choice is two declared nodes (one per
+  branch); a single node carrying a label set is not modelled;
 * endpoint delegation (passing an endpoint as a message) is excluded, so ownership obligations stay
   outside this model.
 -/
@@ -409,11 +413,13 @@ against the closed table, takes the continuation that node declares *for that ac
 there is no other successor, and an action the node does not declare (including a mismatched message
 type or an undeclared branch) has no continuation to take. -/
 
-/-- The three communication actions a guest endpoint may take on an owned state. -/
+/-- The four communication actions a guest endpoint may take on an owned state. `receiveBranch` is the
+external-choice action: the guest receives the branch the peer selected, it does not select one. -/
 inductive Action where
   | send (message : MessageType)
   | recv (message : MessageType)
   | choose (branch : Nat)
+  | receiveBranch (branch : Nat)
   deriving DecidableEq, Repr
 
 /-- The continuation one node declares for one action. `none` is a refusal, never a default, and a
@@ -431,8 +437,11 @@ def continuationOf (action : Action) : Node → Option Nat
       match action with
       | .choose branch => if declared = branch then some continuation else none
       | _ => none
+  | .offer declared continuation =>
+      match action with
+      | .receiveBranch branch => if declared = branch then some continuation else none
+      | _ => none
   | .finished => none
-  | .offer _ _ => none
   | .nested _ _ => none
 
 /-- One guest action under the closed table. -/
@@ -473,6 +482,7 @@ inductive StackAction where
   | send (message : MessageType)
   | recv (message : MessageType)
   | choose (branch : Nat)
+  | receiveBranch (branch : Nat)
   | enter
   | skipNested
   | finish
@@ -568,6 +578,11 @@ def stackStep (definitions : List Node) (state : StackState) (action : StackActi
       | .choose branch =>
           if declared = branch then stackAdvance state continuation else none
       | _ => none
+  | some (.offer declared continuation) =>
+      match action with
+      | .receiveBranch branch =>
+          if declared = branch then stackAdvance state continuation else none
+      | _ => none
   | some (.nested _ parameter) =>
       match action with
       | .enter => (stackEnter definitions state).2
@@ -582,7 +597,6 @@ def stackStep (definitions : List Node) (state : StackState) (action : StackActi
             | continuation :: rest =>
                 some ⟨{ state.endpoint with state := continuation }, rest, state.stackLimit⟩
         | _ => none
-  | some (.offer _ _) => none
   | none => none
 
 /-- Every successful stack step preserves the declared limit and cannot exceed it when the input
@@ -793,10 +807,143 @@ theorem trace_wrong_branch_is_refused :
   decide
 
 /-- External choice is not the guest's choice: a `offer` state is not choosable by the guest endpoint,
-and its dual remains an internal choice for the peer. -/
+and its dual remains an internal choice for the peer. The guest's action there is `receiveBranch`. -/
 theorem external_choice_is_not_guest_choice :
     (stepChoose [.offer 0 5] 2 ⟨5, false, 9, 0, 4, false⟩ 0).isNone ∧
       dual (Node.offer 0 5) = Node.choose 0 5 := by
+  decide
+
+/-- The other declared internal branch of `choiceProtocol`: choosing branch `0` at node `1` advances to
+that branch's continuation `5`. -/
+theorem trace_internal_choice_branch_zero :
+    Option.map Endpoint.state
+        (stepChoose choiceProtocol 2 ⟨5, false, 9, 1, 4, false⟩ 0) = some 5 := by
+  decide
+
+/-! ## External choice: receiving the peer's selection (WIT-SESSION-03, WIT-SESSION-04)
+
+At an `offer` node the peer selects and the guest receives that selection. The guest's action is
+`receiveBranch`; it advances only to the continuation of the branch the node declares. -/
+
+/-- External choice: the guest receives the branch the peer selected. -/
+def stepReceiveBranch (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (branch : Nat) :
+    Option Endpoint :=
+  step definitions depth endpoint (.receiveBranch branch)
+
+/-- A closed protocol offering both branches. One node declares one branch, so the two branches are
+two offer nodes: `0` offers branch `0` and continues with an `i64` receive at `2`, `1` offers branch `1`
+and continues with a `bool` receive at `3`, and `4` finishes. -/
+def offerProtocol : List Node :=
+  [.offer 0 2, .offer 1 3, .recv .i64 4, .recv .bool 4, .finished]
+
+/-- Receiving branch `0` reaches branch `0`'s typed continuation, which then completes. -/
+theorem trace_external_choice_branch_zero :
+    (stepReceiveBranch offerProtocol 2 ⟨5, true, 9, 0, 4, false⟩ 0).bind
+        (fun mid => stepRecvTyped offerProtocol 2 mid MessageType.i64) =
+      some ⟨5, true, 9, 4, 4, false⟩ := by
+  decide
+
+/-- Receiving branch `1` reaches branch `1`'s typed continuation, which then completes. -/
+theorem trace_external_choice_branch_one :
+    (stepReceiveBranch offerProtocol 2 ⟨5, true, 9, 1, 4, false⟩ 1).bind
+        (fun mid => stepRecvTyped offerProtocol 2 mid MessageType.bool) =
+      some ⟨5, true, 9, 4, 4, false⟩ := by
+  decide
+
+/-- A selection the offer node does not declare is refused rather than defaulted. -/
+theorem undeclared_branch_receipt_is_refused :
+    stepReceiveBranch offerProtocol 2 ⟨5, true, 9, 0, 4, false⟩ 1 = none := by
+  decide
+
+/-- Each received branch keeps its own typed continuation: after branch `0`, a `bool` receive is
+refused. -/
+theorem external_branch_keeps_its_typed_continuation :
+    (stepReceiveBranch offerProtocol 2 ⟨5, true, 9, 0, 4, false⟩ 0).bind
+        (fun mid => stepRecvTyped offerProtocol 2 mid MessageType.bool) = none := by
+  decide
+
+/-- Receiving a selection is an external-choice action only: at an internal choice it is refused. -/
+theorem branch_receipt_is_refused_at_an_internal_choice :
+    stepReceiveBranch choiceProtocol 2 ⟨5, false, 9, 1, 4, false⟩ 0 = none := by
+  decide
+
+/-- A receipt of any branch other than the one an offer node declares is refused, at every offer node:
+when the peer's dual selection declared branch `declared`, receiving `received ≠ declared` has no
+continuation. -/
+theorem receipt_of_another_branch_is_refused (declared continuation received : Nat)
+    (different : received ≠ declared) :
+    continuationOf (.receiveBranch received) (.offer declared continuation) = none := by
+  simp only [continuationOf]
+  rw [if_neg (Ne.symm different)]
+
+/-! ## Duality of steps (WIT-SESSION-01, WIT-SESSION-05)
+
+The peer follows the dual table. A guest send is the peer's receive, and a guest selection is the
+peer's receipt of that branch, so each step on one side has the matching step on the other. -/
+
+/-- The dual of a guest action: send and receive swap, and selecting a branch swaps with receiving it. -/
+def dualAction : Action → Action
+  | .send message => .recv message
+  | .recv message => .send message
+  | .choose branch => .receiveBranch branch
+  | .receiveBranch branch => .choose branch
+
+/-- The action dual is involutive. -/
+theorem dualAction_is_involutive (action : Action) : dualAction (dualAction action) = action := by
+  cases action <;> rfl
+
+/-- **Duality preserves declared continuations**: for every node and action, the dual action at the dual
+node declares exactly the continuation the action declares at the node. -/
+theorem continuationOf_dual (action : Action) (node : Node) :
+    continuationOf (dualAction action) (dual node) = continuationOf action node := by
+  cases node <;> cases action <;> rfl
+
+/-- Looking a state up in the dual table gives the dual of the lookup, including through bounded
+unfolding of a named nested constructor. -/
+theorem resolve_dual (definitions : List Node) (depth index : Nat) :
+    resolve (definitions.map dual) depth index = (resolve definitions depth index).map dual := by
+  unfold resolve
+  rw [List.getElem?_map]
+  cases definitions[index]? with
+  | none => rfl
+  | some node =>
+      cases node with
+      | nested name parameter =>
+          by_cases exhausted : depth = 0
+          · simp [dual, exhausted]
+          · simp [dual, exhausted, List.getElem?_map]
+      | finished => rfl
+      | send message continuation => rfl
+      | recv message continuation => rfl
+      | choose branch continuation => rfl
+      | offer branch continuation => rfl
+
+/-- **A step on one side has the matching step on the dual**: the dual table under the dual action takes
+exactly the transition the original table takes under the action, for every table, depth, endpoint
+and action. -/
+theorem step_on_the_dual_table (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
+    (action : Action) :
+    step (definitions.map dual) depth endpoint (dualAction action) =
+      step definitions depth endpoint action := by
+  unfold step
+  rw [resolve_dual]
+  cases resolve definitions depth endpoint.state with
+  | none => rfl
+  | some node => simp only [Option.map_some, continuationOf_dual]
+
+/-- The peer's side of `choiceProtocol`: the guest's selection of branch `0` at node `1` is the peer's
+receipt of branch `0` on the dual table, reaching the same continuation. -/
+theorem dual_table_receives_the_selected_branch :
+    stepReceiveBranch (choiceProtocol.map dual) 2 ⟨5, true, 9, 1, 4, false⟩ 0 =
+      some ⟨5, true, 9, 5, 4, false⟩ := by
+  decide
+
+/-- The stack-aware operand takes the same external choice: receiving branch `0` and its `i64` reach the
+finished node with an empty stack, which `acceptedStackTrace` accepts as a complete trace. -/
+theorem stack_external_choice_trace_is_accepted :
+    acceptedStackTrace offerProtocol ⟨⟨5, true, 9, 0, 4, false⟩, [], 1⟩
+        [.receiveBranch 0, .recv .i64] =
+      some ⟨⟨5, true, 9, 4, 4, false⟩, [], 1⟩ := by
   decide
 
 /-! ## Mailbox accounting and the full-queue misaccounting control (WIT-SESSION-03)
@@ -1125,8 +1272,8 @@ Progress is stated **only** for the guest endpoint's own step, and only under th
 the theorem: the endpoint is open, its owned state resolves, and the resolved node declares the
 requested action. Nothing is claimed about the peer, the scheduler, the queue or delivery - a
 receive step here says the guest endpoint may take the step, never that a payload will arrive. A
-refused step is a *named* refusal (closed endpoint, unresolved node, peer-side state, wrong type or
-wrong branch), never an unnamed deadlock.
+refused step is a *named* refusal (closed endpoint, unresolved node, a branch the offer does not
+declare, wrong type or wrong branch), never an unnamed deadlock.
 
 This is deliberately not deadlock freedom: a frozen peer, participant, scheduler or host leaves the
 guest exactly where this statement puts it, and none of those premises is modelled. -/
@@ -1148,12 +1295,23 @@ theorem guest_local_progress_on_a_declared_action (definitions : List Node) (dep
   rw [openState]
   simp
 
-/-- A peer-side state offers the guest no action at all: an `offer` node declares no guest choice, so
-no action progresses here. That is a named state, not a deadlock claim: the peer may offer, and what
-happens next is the peer's premise rather than the guest's progress. -/
-theorem offer_state_offers_no_guest_action (branch continuation : Nat) (action : Action) :
-    continuationOf action (.offer branch continuation) = none := by
-  cases action <;> rfl
+/-- At an external choice the guest's only action is receiving the declared branch: any other action,
+and any other branch, has no continuation. Whether the peer ever selects is the peer's premise, not
+the guest's progress. -/
+theorem offer_state_declares_only_its_branch_receipt (branch continuation : Nat) (action : Action)
+    (next : Nat) (declared : continuationOf action (.offer branch continuation) = some next) :
+    action = .receiveBranch branch ∧ next = continuation := by
+  cases action with
+  | send message => simp [continuationOf] at declared
+  | recv message => simp [continuationOf] at declared
+  | choose chosen => simp [continuationOf] at declared
+  | receiveBranch received =>
+      simp only [continuationOf] at declared
+      split at declared
+      · rename_i same
+        cases declared
+        exact ⟨by rw [same], rfl⟩
+      · exact absurd declared (by simp)
 
 /-- A finished protocol declares no guest action either, so progress ends in a named terminal state
 rather than in an unnamed refusal. -/

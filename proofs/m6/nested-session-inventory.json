@@ -337,7 +337,124 @@
     },
     {
       "name": "NestedSession.external_choice_is_not_guest_choice",
-      "role": "WIT-SESSION-04: external choice is the peer\u2019s, and its dual is an internal choice",
+      "role": "WIT-SESSION-04: external choice is the peer’s, and its dual is an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_internal_choice_branch_zero",
+      "role": "WIT-SESSION-03 positive trace: the other declared internal branch (0) reaches its own continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_external_choice_branch_zero",
+      "role": "WIT-SESSION-03 positive trace: receiving external branch 0 reaches its typed i64 continuation and completes",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_external_choice_branch_one",
+      "role": "WIT-SESSION-03 positive trace: receiving external branch 1 reaches its typed bool continuation and completes",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.undeclared_branch_receipt_is_refused",
+      "role": "WIT-SESSION-03 negative control: a selection the offer node does not declare is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.external_branch_keeps_its_typed_continuation",
+      "role": "WIT-SESSION-03 negative control: a received branch keeps its own typed continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_receipt_is_refused_at_an_internal_choice",
+      "role": "WIT-SESSION-04 negative control: receiving a selection is refused at an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.receipt_of_another_branch_is_refused",
+      "role": "WIT-SESSION-03: at every offer node, receiving a branch other than the declared one has no continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dualAction_is_involutive",
+      "role": "WIT-SESSION-01: the action dual is involutive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.continuationOf_dual",
+      "role": "WIT-SESSION-01/05: for every node and action, the dual action at the dual node declares exactly the same continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_dual",
+      "role": "WIT-SESSION-01: resolving in the dual table is the dual of resolving, including through bounded unfolding",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.step_on_the_dual_table",
+      "role": "WIT-SESSION-05: every step has the matching dual step on the dual table, for every table, depth, endpoint and action",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.dual_table_receives_the_selected_branch",
+      "role": "WIT-SESSION-05 fixture: the guest selection of branch 0 is the peer receipt of branch 0 on the dual table",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_external_choice_trace_is_accepted",
+      "role": "WIT-SESSION-03: the stack-aware operand accepts an external-choice trace that reaches finished with an empty stack",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -597,8 +714,8 @@
       ]
     },
     {
-      "name": "NestedSession.offer_state_offers_no_guest_action",
-      "role": "WIT-SESSION-05 scoped progress: a peer-side offer state declares no guest action, which is a named state rather than a deadlock claim",
+      "name": "NestedSession.offer_state_declares_only_its_branch_receipt",
+      "role": "WIT-SESSION-05 scoped progress: at an external choice the guest’s only action is receiving the declared branch; any other action or branch has no continuation, and whether the peer selects is the peer’s premise",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",

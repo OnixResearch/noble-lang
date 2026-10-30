@@ -30,13 +30,17 @@
   What exists is a deliberately narrow statement: `guest_local_progress_on_a_declared_action` gives a successor
   at an open owned endpoint whose resolved node declares the requested guest action, under exactly
   those three premises. Peer behaviour, scheduling, queue capacity and delivery are **outside** it, and
-  `offer_state_offers_no_guest_action` / `finished_state_declares_no_guest_action` name the two states
-  where guest progress ends. Termination, fairness, eventual delivery, network reliability and deadlock
+  `offer_state_declares_only_its_branch_receipt` / `finished_state_declares_no_guest_action` name the
+  external-choice and terminal states. Termination, fairness, eventual delivery, network reliability and deadlock
   freedom stay separate and unclaimed.
-- [ ] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
-  Un-ticked 2026-10-29: sequencing, orderly close and bounded buffering have positive traces. External
-  choice cannot be taken (`continuationOf` declares no action at an `offer` node and `Action` has no
-  branch receive), so that part remains open. Recursive entry/return is now proved by the bounded
+- [x] [serial] Add the positive traces for send/receive sequencing, both choices, recursive entry/return, orderly close and bounded asynchronous buffering. r[WIT-SESSION-03]
+  Complete at model level (2026-10-29): external choice is now taken by the guest action
+  `receiveBranch`, and both branches of `offerProtocol` reach their own typed continuations
+  (`trace_external_choice_branch_zero`, `trace_external_choice_branch_one`); internal choice has
+  positive traces for both declared branches (`trace_internal_choice_branch_zero`,
+  `trace_internal_choice_branch_one`); `step_on_the_dual_table` proves every step has the matching
+  dual step. A choice node declares one branch, so a two-branch choice is two declared nodes; a
+  label-set node is not modelled. Recursive entry/return is now proved by the bounded
   `stackStep` operand, including depth-one/depth-two traces and balanced/unbalanced controls. The
   "return half" below remains the separate send-then-receive control. The balanced table's unbounded
   trace language `sendⁿ·recvⁿ` is not regular and needs the return stack; this model admits it only up
@@ -44,8 +48,8 @@
   What exists at model level: sequencing, bounded recursive entry/return, orderly close once, bounded
   buffering stopping at the limit, the send-then-receive return half, and internal choice traces where
   two branches are two different traces over the event vocabulary (`choiceEvents`, the choice-state
-  stepper `stepChoose` and its declared/undeclared-branch controls). External-choice action remains
-  outside this change.
+  stepper `stepChoose` and its declared/undeclared-branch controls), and external-choice receipt with
+  its undeclared-branch and typed-continuation controls.
 - [x] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
   Complete at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
   `nested_entry_refused_at_depth_zero` measure the legacy depth-only control beside the nested fixture

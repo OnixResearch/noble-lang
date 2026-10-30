@@ -135,7 +135,7 @@ const bindings = {
   // model's own constants: their bytes are the source hash above, so they are bound through it and
   // named here rather than left implicit.
   protocol_definitions:
-    'proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol',
+    'proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol, offerProtocol (external choice)',
   endpoint_identity_fields: ['channel', 'responder', 'protocol', 'state', 'generation', 'closed'],
   queue_accounting: 'depth derived from the enqueued/dequeued ledger, never stored beside it',
   helper: null,

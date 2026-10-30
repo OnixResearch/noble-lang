@@ -18,7 +18,7 @@ dirty worktree needs the explicit `--allow-dirty` flag (which the receipt then r
 ## What is modelled and proved
 
 The grammar is one finite set of nodes — `finished`, typed `send`, typed `recv`, internal `choose`,
-external `offer`, and a named `nested` constructor with explicit parameters — resolved against a closed
+external `offer` (taken by the guest action `receiveBranch`), and a named `nested` constructor with explicit parameters — resolved against a closed
 definitions table under a **bounded** unfolding depth. The endpoint is an abstract move-only resource
 carrying channel identity, side, protocol identity, current state and generation. The stack-aware
 operand carries a bounded return stack beside the endpoint: `enter` saves a nested parameter, and
@@ -45,7 +45,10 @@ declared stack limit, so its accepted bounded subset is finite.
 | `orderly_close_with_cleanup_is_well_formed`, `close_without_cleanup_is_refused` | an omitted cleanup is refused rather than read as a successful orderly close |
 | `both_choices_are_distinct_at_the_boundary` | internal choice branches stay distinct and a receive state does not step as a send |
 | `typed_send_advances_on_the_declared_type`, `wrong_message_type_is_refused`, `wrong_order_is_refused` | the continuation is typed: the declared message type and order are required, and a mismatch is refused rather than coerced |
-| `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice` | internal choice takes the selected declared branch, a wrong branch is refused, and external choice belongs to the peer (its dual is the internal one) |
+| `trace_internal_choice_branch_one`, `trace_wrong_branch_is_refused`, `external_choice_is_not_guest_choice`, `trace_internal_choice_branch_zero` | internal choice takes either selected declared branch, a wrong branch is refused, and the guest cannot select at an external choice (its dual is the internal one) |
+| `trace_external_choice_branch_zero`, `trace_external_choice_branch_one`, `undeclared_branch_receipt_is_refused`, `external_branch_keeps_its_typed_continuation`, `branch_receipt_is_refused_at_an_internal_choice`, `receipt_of_another_branch_is_refused` | **external choice is taken**: the guest's `receiveBranch` action receives the peer's selection; both branches of `offerProtocol` reach their own typed continuations and complete, an undeclared or other branch is refused at every offer node, and receiving is refused at an internal choice |
+| `dualAction_is_involutive`, `continuationOf_dual`, `resolve_dual`, `step_on_the_dual_table`, `dual_table_receives_the_selected_branch` | **duality of steps**: for every node and action the dual action at the dual node declares the same continuation, so every step has the matching step on the dual table (a guest selection is the peer's receipt) |
+| `stack_external_choice_trace_is_accepted` | the stack-aware operand takes the same external choice and accepts the complete trace |
 | `enqueue_raises_the_depth_by_one`, `dequeue_never_raises_the_depth`, `dequeue_of_empty_mailbox_is_unchanged`, `accounting_tracks_the_operations` | the mailbox depth is **derived from a ledger** of admissions and dequeues, not stored beside them |
 | `full_queue_misaccounting_is_refused` | an observation cannot borrow depth the ledger never recorded |
 | `bounded_admission_is_bounded`, `admission_at_the_limit_is_refused` | the bounded admission is the only operand that may raise the ledger, refuses at or past the declared limit, and never derives a depth past it while the ledger invariant holds |
@@ -62,7 +65,7 @@ declared stack limit, so its accepted bounded subset is finite.
 | `stack_push_beyond_the_limit_is_refused` | a push at the declared return-stack limit is refused |
 | `dropped_return_continuation_accepts_unbalanced_and_rejects_balanced` | mutant control: dropping the saved continuation accepts two sends/one receive, refuses the balanced two-send/two-receive trace, while the real stack refuses the same unbalanced trace |
 | `guest_local_progress_on_a_declared_action` | the **scoped progress statement**: at an open owned endpoint whose resolved node declares the requested guest action, that action has a successor. Its premises are exactly open endpoint + resolved state + declared action; peer behaviour, scheduling, queue capacity and delivery are **outside** it |
-| `offer_state_offers_no_guest_action`, `finished_state_declares_no_guest_action` | the two states where guest progress ends are named states rather than unnamed refusals: a peer-side offer declares no guest choice, and a finished protocol declares no guest action |
+| `offer_state_declares_only_its_branch_receipt`, `finished_state_declares_no_guest_action` | named states rather than unnamed refusals: at an external choice the guest's only action is receiving the declared branch (whether the peer selects is the peer's premise), and a finished protocol declares no guest action |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
@@ -98,7 +101,8 @@ limit. What stays open is the correspondence receipt's lowering/runtime/helper r
 model items remain outside this unit:
 - a protocol type-equality algorithm;
 - progress under queue, peer, scheduler and host premises;
-- an external-choice action and its positive trace (the recursive return traces are now modelled).
+- a choice node carrying a label set: a node declares one branch, so a two-branch choice is two
+  declared nodes (the external-choice action and both positive branch traces are now modelled).
 
 The `claims` block names the progress, cancellation, nested-recursion and type-equality scope. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.
