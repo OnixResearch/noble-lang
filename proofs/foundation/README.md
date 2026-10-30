@@ -2552,7 +2552,10 @@ in place, dead.
 The certificate format still records identity steps without applying them, and no Rust specializer
 forwards operands.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for operand forwarding is
+[`verification/foundation/receipts/9864cb89b/`](../../verification/foundation/receipts/9864cb89b/foundation-check.json)
+(957 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed: identity forwarding in the certificate format and in any Rust
 specializer, a general source language and encoding, the second and third projections, specialization

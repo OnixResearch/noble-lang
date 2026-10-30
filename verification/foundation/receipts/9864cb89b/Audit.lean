@@ -1,0 +1,1916 @@
+import NobleFoundation
+
+#check @NobleFoundation.toZ_ofZ
+#print axioms NobleFoundation.toZ_ofZ
+#check @NobleFoundation.ofZ_toZ
+#print axioms NobleFoundation.ofZ_toZ
+#check @NobleFoundation.toZ_injective
+#print axioms NobleFoundation.toZ_injective
+#check @NobleFoundation.ofZ_injective
+#print axioms NobleFoundation.ofZ_injective
+#check @NobleFoundation.toZ_ofInt
+#print axioms NobleFoundation.toZ_ofInt
+#check @NobleFoundation.ofZ_intCast
+#print axioms NobleFoundation.ofZ_intCast
+#check @NobleFoundation.toZ_add
+#print axioms NobleFoundation.toZ_add
+#check @NobleFoundation.toZ_mul
+#print axioms NobleFoundation.toZ_mul
+#check @NobleFoundation.toZ_sub
+#print axioms NobleFoundation.toZ_sub
+#check @NobleFoundation.toZ_neg
+#print axioms NobleFoundation.toZ_neg
+#check @NobleFoundation.wrap_eq_bmod
+#print axioms NobleFoundation.wrap_eq_bmod
+#check @NobleFoundation.wrap_eq_toInt_ofInt
+#print axioms NobleFoundation.wrap_eq_toInt_ofInt
+#check @NobleFoundation.wrap_eq_knum01
+#print axioms NobleFoundation.wrap_eq_knum01
+#check @NobleFoundation.signed_eq_toInt
+#print axioms NobleFoundation.signed_eq_toInt
+#check @NobleFoundation.signed_toZ
+#print axioms NobleFoundation.signed_toZ
+#check @NobleFoundation.toInt_range
+#print axioms NobleFoundation.toInt_range
+#check @NobleFoundation.signed_range
+#print axioms NobleFoundation.signed_range
+#check @NobleFoundation.intCast_toInt
+#print axioms NobleFoundation.intCast_toInt
+#check @NobleFoundation.intCast_signed
+#print axioms NobleFoundation.intCast_signed
+#check @NobleFoundation.toInt_ofInt_of_range
+#print axioms NobleFoundation.toInt_ofInt_of_range
+#check @NobleFoundation.toInt_ofInt_eq_iff
+#print axioms NobleFoundation.toInt_ofInt_eq_iff
+#check @NobleFoundation.signed_intCast_eq_iff
+#print axioms NobleFoundation.signed_intCast_eq_iff
+#check @NobleFoundation.ofInt_toInt
+#print axioms NobleFoundation.ofInt_toInt
+#check @NobleFoundation.ofInt_wrap
+#print axioms NobleFoundation.ofInt_wrap
+#check @NobleFoundation.ofInt_sub
+#print axioms NobleFoundation.ofInt_sub
+#check @NobleFoundation.toInt_add
+#print axioms NobleFoundation.toInt_add
+#check @NobleFoundation.toInt_sub
+#print axioms NobleFoundation.toInt_sub
+#check @NobleFoundation.toInt_mul
+#print axioms NobleFoundation.toInt_mul
+#check @NobleFoundation.oracle_add
+#print axioms NobleFoundation.oracle_add
+#check @NobleFoundation.oracle_sub
+#print axioms NobleFoundation.oracle_sub
+#check @NobleFoundation.oracle_mul
+#print axioms NobleFoundation.oracle_mul
+#check @NobleFoundation.accumulate_eq_acceptLiteral
+#print axioms NobleFoundation.accumulate_eq_acceptLiteral
+#check @NobleFoundation.accepted_literal_exact
+#print axioms NobleFoundation.accepted_literal_exact
+#check @NobleFoundation.acceptLiteral_eq_none_iff
+#print axioms NobleFoundation.acceptLiteral_eq_none_iff
+#check @NobleFoundation.ofInt_collapses_out_of_range
+#print axioms NobleFoundation.ofInt_collapses_out_of_range
+#check @NobleFoundation.literal_range_iff_no_wrap
+#print axioms NobleFoundation.literal_range_iff_no_wrap
+#check @NobleFoundation.literal_boundary_regressions
+#print axioms NobleFoundation.literal_boundary_regressions
+#check @NobleFoundation.represents_iff
+#print axioms NobleFoundation.represents_iff
+#check @NobleFoundation.represents_functional
+#print axioms NobleFoundation.represents_functional
+#check @NobleFoundation.represents_of_hasType
+#print axioms NobleFoundation.represents_of_hasType
+#check @NobleFoundation.hasType_of_represents
+#print axioms NobleFoundation.hasType_of_represents
+#check @NobleFoundation.represents_wrap
+#print axioms NobleFoundation.represents_wrap
+#check @NobleContracts.StackTyped.append
+#print axioms NobleContracts.StackTyped.append
+#check @NobleFoundation.stackTyped_snoc_i64
+#print axioms NobleFoundation.stackTyped_snoc_i64
+#check @NobleFoundation.internal_of_public
+#print axioms NobleFoundation.internal_of_public
+#check @NobleFoundation.exec_sub_is_internal_step
+#print axioms NobleFoundation.exec_sub_is_internal_step
+#check @NobleFoundation.add_spec
+#print axioms NobleFoundation.add_spec
+#check @NobleFoundation.sub_spec
+#print axioms NobleFoundation.sub_spec
+#check @NobleFoundation.mul_spec
+#print axioms NobleFoundation.mul_spec
+#check @NobleFoundation.exec_arith_toInt
+#print axioms NobleFoundation.exec_arith_toInt
+#check @NobleFoundation.add_needs_i64
+#print axioms NobleFoundation.add_needs_i64
+#check @NobleFoundation.refRun_append
+#print axioms NobleFoundation.refRun_append
+#check @NobleFoundation.depthRun_append
+#print axioms NobleFoundation.depthRun_append
+#check @NobleFoundation.run_lowerAll
+#print axioms NobleFoundation.run_lowerAll
+#check @NobleFoundation.exec_lowerAll
+#print axioms NobleFoundation.exec_lowerAll
+#check @NobleFoundation.refRun_range
+#print axioms NobleFoundation.refRun_range
+#check @NobleFoundation.depthRun_of_refRun
+#print axioms NobleFoundation.depthRun_of_refRun
+#check @NobleFoundation.codeTyped_lowerAll
+#print axioms NobleFoundation.codeTyped_lowerAll
+#check @NobleFoundation.PExpr.body_eq
+#print axioms NobleFoundation.PExpr.body_eq
+#check @NobleFoundation.PExpr.exec_code
+#print axioms NobleFoundation.PExpr.exec_code
+#check @NobleFoundation.PExpr.exec_code_run
+#print axioms NobleFoundation.PExpr.exec_code_run
+#check @NobleFoundation.PExpr.exec_code_reflect
+#print axioms NobleFoundation.PExpr.exec_code_reflect
+#check @NobleFoundation.PExpr.exec_run_ref
+#print axioms NobleFoundation.PExpr.exec_run_ref
+#check @NobleFoundation.PExpr.codeTyped
+#print axioms NobleFoundation.PExpr.codeTyped
+#check @NobleFoundation.PExpr.codeTyped_run
+#print axioms NobleFoundation.PExpr.codeTyped_run
+#check @NobleFoundation.exec_quote_program_run_run
+#print axioms NobleFoundation.exec_quote_program_run_run
+#check @NobleFoundation.oracle_boundaries
+#print axioms NobleFoundation.oracle_boundaries
+#check @NobleFoundation.sub_operand_order
+#print axioms NobleFoundation.sub_operand_order
+#check @NobleFoundation.add_max_wraps_preserving_prefix
+#print axioms NobleFoundation.add_max_wraps_preserving_prefix
+#check @NobleFoundation.out_of_range_push_refused
+#print axioms NobleFoundation.out_of_range_push_refused
+#check @NobleFoundation.quote_compose_run_examples
+#print axioms NobleFoundation.quote_compose_run_examples
+#check @NobleFoundation.compose_order_matters
+#print axioms NobleFoundation.compose_order_matters
+#check @NobleFoundation.wrap_sub_noncommutative
+#print axioms NobleFoundation.wrap_sub_noncommutative
+#check @NobleFoundation.SlotsRel.length_eq
+#print axioms NobleFoundation.SlotsRel.length_eq
+#check @NobleFoundation.helper_refines_step
+#print axioms NobleFoundation.helper_refines_step
+#check @NobleFoundation.helper_fails_when_stuck
+#print axioms NobleFoundation.helper_fails_when_stuck
+#check @NobleFoundation.swapped_helper_refuted
+#print axioms NobleFoundation.swapped_helper_refuted
+#check @NobleFoundation.slice_body_exec
+#print axioms NobleFoundation.slice_body_exec
+#check @NobleFoundation.slice_body_signed
+#print axioms NobleFoundation.slice_body_signed
+#check @NobleFoundation.slice_root_inert
+#print axioms NobleFoundation.slice_root_inert
+#check @NobleFoundation.slice_driver
+#print axioms NobleFoundation.slice_driver
+#check @NobleFoundation.slice_body_typed
+#print axioms NobleFoundation.slice_body_typed
+#check @NobleFoundation.slice_exported_claim
+#print axioms NobleFoundation.slice_exported_claim
+#check @NobleFoundation.slice_examples
+#print axioms NobleFoundation.slice_examples
+#check @NobleFoundation.PExpr.exec_inputs_run
+#print axioms NobleFoundation.PExpr.exec_inputs_run
+#check @NobleFoundation.exec_lowerAll_from_empty
+#print axioms NobleFoundation.exec_lowerAll_from_empty
+#check @NobleFoundation.exec_inputs_nested
+#print axioms NobleFoundation.exec_inputs_nested
+#check @NobleFoundation.exec_branchCode_selected
+#print axioms NobleFoundation.exec_branchCode_selected
+#check @NobleFoundation.exec_branchRef
+#print axioms NobleFoundation.exec_branchRef
+#check @NobleFoundation.selectedOps_untaken
+#print axioms NobleFoundation.selectedOps_untaken
+#check @NobleFoundation.branchRef_untaken
+#print axioms NobleFoundation.branchRef_untaken
+#check @NobleFoundation.exec_branchCode_untaken
+#print axioms NobleFoundation.exec_branchCode_untaken
+#check @NobleFoundation.branchVisits_selected
+#print axioms NobleFoundation.branchVisits_selected
+#check @NobleFoundation.stackTyped_length
+#print axioms NobleFoundation.stackTyped_length
+#check @NobleFoundation.stackTyped_append_inv
+#print axioms NobleFoundation.stackTyped_append_inv
+#check @NobleFoundation.ityped_cons
+#print axioms NobleFoundation.ityped_cons
+#check @NobleFoundation.ityped_cons2
+#print axioms NobleFoundation.ityped_cons2
+#check @NobleFoundation.ityped_cons3
+#print axioms NobleFoundation.ityped_cons3
+#check @NobleFoundation.Run.preserve
+#print axioms NobleFoundation.Run.preserve
+#check @NobleFoundation.Step.preserve
+#print axioms NobleFoundation.Step.preserve
+#check @NobleFoundation.exec_preserves
+#print axioms NobleFoundation.exec_preserves
+#check @NobleFoundation.ityped_snoc_inv
+#print axioms NobleFoundation.ityped_snoc_inv
+#check @NobleFoundation.progress_primitive
+#print axioms NobleFoundation.progress_primitive
+#check @NobleFoundation.host_word_outside_model
+#print axioms NobleFoundation.host_word_outside_model
+#check @NobleFoundation.BehEq.refl
+#print axioms NobleFoundation.BehEq.refl
+#check @NobleFoundation.BehEq.append
+#print axioms NobleFoundation.BehEq.append
+#check @NobleFoundation.BehEq.run
+#print axioms NobleFoundation.BehEq.run
+#check @NobleFoundation.construction_is_pure
+#print axioms NobleFoundation.construction_is_pure
+#check @NobleFoundation.latent_effect_not_performed
+#print axioms NobleFoundation.latent_effect_not_performed
+#check @NobleFoundation.compose_assoc
+#print axioms NobleFoundation.compose_assoc
+#check @NobleFoundation.compose_identity
+#print axioms NobleFoundation.compose_identity
+#check @NobleFoundation.quote_laws
+#print axioms NobleFoundation.quote_laws
+#check @NobleFoundation.reflect_compose
+#print axioms NobleFoundation.reflect_compose
+#check @NobleFoundation.behavior_is_not_recipe
+#print axioms NobleFoundation.behavior_is_not_recipe
+#check @NobleFoundation.compose_requires_exact_middle
+#print axioms NobleFoundation.compose_requires_exact_middle
+#check @NobleFoundation.wrong_subject_evidence
+#print axioms NobleFoundation.wrong_subject_evidence
+#check @NobleFoundation.program_duplicable
+#print axioms NobleFoundation.program_duplicable
+#check @NobleFoundation.Effects.OpT.weaken
+#print axioms NobleFoundation.Effects.OpT.weaken
+#check @NobleFoundation.Effects.CodeT.weaken
+#print axioms NobleFoundation.Effects.CodeT.weaken
+#check @NobleFoundation.Effects.CodeT.append
+#print axioms NobleFoundation.Effects.CodeT.append
+#check @NobleFoundation.Effects.preserve
+#print axioms NobleFoundation.Effects.preserve
+#check @NobleFoundation.Effects.preserve_reach
+#print axioms NobleFoundation.Effects.preserve_reach
+#check @NobleFoundation.Effects.progress
+#print axioms NobleFoundation.Effects.progress
+#check @NobleFoundation.Effects.halted_no_step
+#print axioms NobleFoundation.Effects.halted_no_step
+#check @NobleFoundation.Effects.step_trace
+#print axioms NobleFoundation.Effects.step_trace
+#check @NobleFoundation.Effects.effect_sound
+#print axioms NobleFoundation.Effects.effect_sound
+#check @NobleFoundation.Effects.init_wt
+#print axioms NobleFoundation.Effects.init_wt
+#check @NobleFoundation.Effects.trace_within_bound
+#print axioms NobleFoundation.Effects.trace_within_bound
+#check @NobleFoundation.Effects.bound_does_not_fix_order
+#print axioms NobleFoundation.Effects.bound_does_not_fix_order
+#check @NobleFoundation.Effects.denied_request_recorded_and_halts
+#print axioms NobleFoundation.Effects.denied_request_recorded_and_halts
+#check @NobleFoundation.Effects.topIds_copy
+#print axioms NobleFoundation.Effects.topIds_copy
+#check @NobleFoundation.Effects.own_preserve
+#print axioms NobleFoundation.Effects.own_preserve
+#check @NobleFoundation.Effects.live_change
+#print axioms NobleFoundation.Effects.live_change
+#check @NobleFoundation.Effects.ValT.rfree
+#print axioms NobleFoundation.Effects.ValT.rfree
+#check @NobleFoundation.Effects.OpT.rfree
+#print axioms NobleFoundation.Effects.OpT.rfree
+#check @NobleFoundation.Effects.CodeT.rfree
+#print axioms NobleFoundation.Effects.CodeT.rfree
+#check @NobleFoundation.Effects.StackT.rfree
+#print axioms NobleFoundation.Effects.StackT.rfree
+#check @NobleFoundation.Effects.typed_rfree
+#print axioms NobleFoundation.Effects.typed_rfree
+#check @NobleFoundation.Effects.reachable_sound
+#print axioms NobleFoundation.Effects.reachable_sound
+#check @NobleFoundation.Effects.dup_res_untypable
+#print axioms NobleFoundation.Effects.dup_res_untypable
+#check @NobleFoundation.Effects.drop_res_untypable
+#print axioms NobleFoundation.Effects.drop_res_untypable
+#check @NobleFoundation.Effects.quote_res_untypable
+#print axioms NobleFoundation.Effects.quote_res_untypable
+#check @NobleFoundation.Effects.push_res_untypable
+#print axioms NobleFoundation.Effects.push_res_untypable
+#check @NobleFoundation.Effects.untyped_dup_breaks_ownership
+#print axioms NobleFoundation.Effects.untyped_dup_breaks_ownership
+#check @NobleFoundation.Effects.untyped_drop_breaks_ownership
+#print axioms NobleFoundation.Effects.untyped_drop_breaks_ownership
+#check @NobleFoundation.Effects.untyped_capture_breaks_ownership
+#print axioms NobleFoundation.Effects.untyped_capture_breaks_ownership
+#check @NobleFoundation.Effects.move_then_release
+#print axioms NobleFoundation.Effects.move_then_release
+#check @NobleFoundation.Effects.program_expecting_resource_is_copyable
+#print axioms NobleFoundation.Effects.program_expecting_resource_is_copyable
+#check @NobleFoundation.LinkBoundary.split_entry_lookup
+#print axioms NobleFoundation.LinkBoundary.split_entry_lookup
+#check @NobleFoundation.LinkBoundary.split_entry_matches_use
+#print axioms NobleFoundation.LinkBoundary.split_entry_matches_use
+#check @NobleFoundation.LinkBoundary.split_entry_typed
+#print axioms NobleFoundation.LinkBoundary.split_entry_typed
+#check @NobleFoundation.LinkBoundary.pilot_root_typed
+#print axioms NobleFoundation.LinkBoundary.pilot_root_typed
+#check @NobleFoundation.LinkBoundary.pilot_closure
+#print axioms NobleFoundation.LinkBoundary.pilot_closure
+#check @NobleFoundation.LinkBoundary.scalar_call_entry_return
+#print axioms NobleFoundation.LinkBoundary.scalar_call_entry_return
+#check @NobleFoundation.LinkBoundary.caller_after_named_call
+#print axioms NobleFoundation.LinkBoundary.caller_after_named_call
+#check @NobleFoundation.LinkBoundary.pilot_caller_executes
+#print axioms NobleFoundation.LinkBoundary.pilot_caller_executes
+#check @NobleFoundation.LinkBoundary.pilot_bool_prefix_executes
+#print axioms NobleFoundation.LinkBoundary.pilot_bool_prefix_executes
+#check @NobleFoundation.LinkBoundary.operand_order_distinguished
+#print axioms NobleFoundation.LinkBoundary.operand_order_distinguished
+#check @NobleFoundation.LinkBoundary.result_order_distinguished
+#print axioms NobleFoundation.LinkBoundary.result_order_distinguished
+#check @NobleFoundation.LinkBoundary.horizontal_compose
+#print axioms NobleFoundation.LinkBoundary.horizontal_compose
+#check @NobleFoundation.LinkBoundary.operand_slot_address
+#print axioms NobleFoundation.LinkBoundary.operand_slot_address
+#check @NobleFoundation.LinkBoundary.continuation_slot_address
+#print axioms NobleFoundation.LinkBoundary.continuation_slot_address
+#check @NobleFoundation.LinkBoundary.same_identity_required
+#print axioms NobleFoundation.LinkBoundary.same_identity_required
+#check @NobleFoundation.LinkBoundary.dependency_version_identity_exact
+#print axioms NobleFoundation.LinkBoundary.dependency_version_identity_exact
+#check @NobleFoundation.LinkBoundary.dependency_snapshot_identity_exact
+#print axioms NobleFoundation.LinkBoundary.dependency_snapshot_identity_exact
+#check @NobleFoundation.LinkBoundary.dependency_version_change_refused
+#print axioms NobleFoundation.LinkBoundary.dependency_version_change_refused
+#check @NobleFoundation.LinkBoundary.dependency_snapshot_change_refused
+#print axioms NobleFoundation.LinkBoundary.dependency_snapshot_change_refused
+#check @NobleFoundation.LinkBoundary.same_signature_wrong_body_refused
+#print axioms NobleFoundation.LinkBoundary.same_signature_wrong_body_refused
+#check @NobleFoundation.LinkBoundary.embedded_callee_substitution_refused
+#print axioms NobleFoundation.LinkBoundary.embedded_callee_substitution_refused
+#check @NobleFoundation.LinkBoundary.pilot_bindings_share_artifact
+#print axioms NobleFoundation.LinkBoundary.pilot_bindings_share_artifact
+#check @NobleFoundation.LinkBoundary.pilot_entry_selected_binding
+#print axioms NobleFoundation.LinkBoundary.pilot_entry_selected_binding
+#check @NobleFoundation.LinkBoundary.pilot_caller_root_binding
+#print axioms NobleFoundation.LinkBoundary.pilot_caller_root_binding
+#check @NobleFoundation.LinkBoundary.pilot_caller_binding_closure
+#print axioms NobleFoundation.LinkBoundary.pilot_caller_binding_closure
+#check @NobleFoundation.LinkBoundary.wrong_return_target_refused
+#print axioms NobleFoundation.LinkBoundary.wrong_return_target_refused
+#check @NobleFoundation.LinkBoundary.return_target_exact
+#print axioms NobleFoundation.LinkBoundary.return_target_exact
+#check @NobleFoundation.LinkBoundary.bool_cell_decodes
+#print axioms NobleFoundation.LinkBoundary.bool_cell_decodes
+#check @NobleFoundation.LinkBoundary.i64_cell_decodes
+#print axioms NobleFoundation.LinkBoundary.i64_cell_decodes
+#check @NobleFoundation.LinkBoundary.bool_prefix_typed
+#print axioms NobleFoundation.LinkBoundary.bool_prefix_typed
+#check @NobleFoundation.LinkBoundary.pilot_bool_input_values_typed
+#print axioms NobleFoundation.LinkBoundary.pilot_bool_input_values_typed
+#check @NobleFoundation.LinkBoundary.runtime_run_preserves_control
+#print axioms NobleFoundation.LinkBoundary.runtime_run_preserves_control
+#check @NobleFoundation.LinkBoundary.enqueueOne_preserves_counters
+#print axioms NobleFoundation.LinkBoundary.enqueueOne_preserves_counters
+#check @NobleFoundation.LinkBoundary.return_target_exact_after_run
+#print axioms NobleFoundation.LinkBoundary.return_target_exact_after_run
+#check @NobleFoundation.LinkBoundary.runtime_step_preserves_sp_count
+#print axioms NobleFoundation.LinkBoundary.runtime_step_preserves_sp_count
+#check @NobleFoundation.LinkBoundary.runtime_run_preserves_sp_count
+#print axioms NobleFoundation.LinkBoundary.runtime_run_preserves_sp_count
+#check @NobleFoundation.LinkBoundary.runtime_run_preserves_counters
+#print axioms NobleFoundation.LinkBoundary.runtime_run_preserves_counters
+#check @NobleFoundation.LinkBoundary.runtime_run_preserves_protected_suffix
+#print axioms NobleFoundation.LinkBoundary.runtime_run_preserves_protected_suffix
+#check @NobleFoundation.LinkBoundary.pilot_runtime_entry_boundary
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_entry_boundary
+#check @NobleFoundation.LinkBoundary.pilot_runtime_callee_boundary
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_callee_boundary
+#check @NobleFoundation.LinkBoundary.pilot_runtime_final_boundary
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_final_boundary
+#check @NobleFoundation.LinkBoundary.pilot_runtime_callee_run
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_callee_run
+#check @NobleFoundation.LinkBoundary.pilot_runtime_caller_post_run
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_caller_post_run
+#check @NobleFoundation.LinkBoundary.pilot_runtime_two_results_and_caller_law
+#print axioms NobleFoundation.LinkBoundary.pilot_runtime_two_results_and_caller_law
+#check @NobleFoundation.LinkBoundary.pilot_callee_lowering
+#print axioms NobleFoundation.LinkBoundary.pilot_callee_lowering
+#check @NobleFoundation.LinkBoundary.pilot_caller_post_lowering
+#print axioms NobleFoundation.LinkBoundary.pilot_caller_post_lowering
+#check @NobleFoundation.LinkBoundary.horizontal_runtime_link
+#print axioms NobleFoundation.LinkBoundary.horizontal_runtime_link
+#check @NobleFoundation.LinkBoundary.vertical_simulation_compose
+#print axioms NobleFoundation.LinkBoundary.vertical_simulation_compose
+#check @NobleFoundation.Binary32.Expectations.retained_expectations_checked
+#print axioms NobleFoundation.Binary32.Expectations.retained_expectations_checked
+#check @NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even
+#print axioms NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even
+#check @NobleFoundation.Binary32.Expectations.signed_zero_rules
+#print axioms NobleFoundation.Binary32.Expectations.signed_zero_rules
+#check @NobleFoundation.Binary32.Expectations.nan_class_and_zero_separation
+#print axioms NobleFoundation.Binary32.Expectations.nan_class_and_zero_separation
+#check @NobleFoundation.Binary32.Expectations.encoding_boundaries
+#print axioms NobleFoundation.Binary32.Expectations.encoding_boundaries
+#check @NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result
+#print axioms NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result
+#check @NobleFoundation.Binary32.Expectations.reassociation_is_observable
+#print axioms NobleFoundation.Binary32.Expectations.reassociation_is_observable
+#check @NobleFoundation.Binary32.Expectations.implicit_contraction_is_observable
+#print axioms NobleFoundation.Binary32.Expectations.implicit_contraction_is_observable
+#check @NobleFoundation.Binary32.Expectations.multiplication_rounds_once
+#print axioms NobleFoundation.Binary32.Expectations.multiplication_rounds_once
+#check @NobleFoundation.Binary32.Mutations.ties_away_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.ties_away_is_caught
+#check @NobleFoundation.Binary32.Mutations.positive_zero_collapse_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.positive_zero_collapse_is_caught
+#check @NobleFoundation.Binary32.Mutations.flush_to_zero_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.flush_to_zero_is_caught
+#check @NobleFoundation.Binary32.Mutations.zero_sign_collapse_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.zero_sign_collapse_is_caught
+#check @NobleFoundation.Binary32.Mutations.commutative_subtraction_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.commutative_subtraction_is_caught
+#check @NobleFoundation.Binary32.Mutations.implicit_contraction_is_caught
+#print axioms NobleFoundation.Binary32.Mutations.implicit_contraction_is_caught
+#check @NobleFoundation.Binary32.Mutations.all_declared_mutations_are_caught
+#print axioms NobleFoundation.Binary32.Mutations.all_declared_mutations_are_caught
+#check @NobleFoundation.Binary32.fold_empty
+#print axioms NobleFoundation.Binary32.fold_empty
+#check @NobleFoundation.Binary32.fold_append
+#print axioms NobleFoundation.Binary32.fold_append
+#check @NobleFoundation.Binary32.fold_negative_zero_bias_stays_negative
+#print axioms NobleFoundation.Binary32.fold_negative_zero_bias_stays_negative
+#check @NobleFoundation.Binary32.fold_positive_zero_bias_stays_positive
+#print axioms NobleFoundation.Binary32.fold_positive_zero_bias_stays_positive
+#check @NobleFoundation.Binary32.fold_order_is_load_bearing
+#print axioms NobleFoundation.Binary32.fold_order_is_load_bearing
+#check @NobleFoundation.ServiceWire.nameByte_excludes_structure
+#print axioms NobleFoundation.ServiceWire.nameByte_excludes_structure
+#check @NobleFoundation.ServiceWire.recordPrefix_length
+#print axioms NobleFoundation.ServiceWire.recordPrefix_length
+#check @NobleFoundation.ServiceWire.recordSuffix_length
+#print axioms NobleFoundation.ServiceWire.recordSuffix_length
+#check @NobleFoundation.ServiceWire.encode_length
+#print axioms NobleFoundation.ServiceWire.encode_length
+#check @NobleFoundation.ServiceWire.depthExceeds_encode
+#print axioms NobleFoundation.ServiceWire.depthExceeds_encode
+#check @NobleFoundation.ServiceWire.takeName_encode
+#print axioms NobleFoundation.ServiceWire.takeName_encode
+#check @NobleFoundation.ServiceWire.parseService_encode
+#print axioms NobleFoundation.ServiceWire.parseService_encode
+#check @NobleFoundation.ServiceWire.decode_encode
+#print axioms NobleFoundation.ServiceWire.decode_encode
+#check @NobleFoundation.ServiceWire.encode_of_accepted
+#print axioms NobleFoundation.ServiceWire.encode_of_accepted
+#check @NobleFoundation.ServiceWire.longest_name_fits_wire_budget
+#print axioms NobleFoundation.ServiceWire.longest_name_fits_wire_budget
+#check @NobleFoundation.ServiceWire.byte_limit_precedes_depth_scan
+#print axioms NobleFoundation.ServiceWire.byte_limit_precedes_depth_scan
+#check @NobleFoundation.ServiceWire.depth_configuration_precedes_schema
+#print axioms NobleFoundation.ServiceWire.depth_configuration_precedes_schema
+#check @NobleFoundation.ServiceWire.depth_scan_precedes_schema
+#print axioms NobleFoundation.ServiceWire.depth_scan_precedes_schema
+#check @NobleFoundation.ServiceWire.altered_readiness_is_schema
+#print axioms NobleFoundation.ServiceWire.altered_readiness_is_schema
+#check @NobleFoundation.ServiceWire.trailing_bytes_are_schema
+#print axioms NobleFoundation.ServiceWire.trailing_bytes_are_schema
+#check @NobleFoundation.ServiceWire.empty_name_is_schema
+#print axioms NobleFoundation.ServiceWire.empty_name_is_schema
+#check @NobleFoundation.ServiceWire.foreign_name_byte_is_schema
+#print axioms NobleFoundation.ServiceWire.foreign_name_byte_is_schema
+#check @NobleFoundation.ServiceWire.schema_controls_have_accepted_neighbours
+#print axioms NobleFoundation.ServiceWire.schema_controls_have_accepted_neighbours
+#check @NobleFoundation.ServiceWire.overlong_name_decodes_to_schema
+#print axioms NobleFoundation.ServiceWire.overlong_name_decodes_to_schema
+#check @NobleFoundation.ServiceWire.the_full_wire_budget_is_not_a_byte_limit
+#print axioms NobleFoundation.ServiceWire.the_full_wire_budget_is_not_a_byte_limit
+#check @NobleFoundation.ServiceWire.accepted_name_is_valid
+#print axioms NobleFoundation.ServiceWire.accepted_name_is_valid
+#check @NobleFoundation.ServiceWire.overlong_name_is_rejected
+#print axioms NobleFoundation.ServiceWire.overlong_name_is_rejected
+#check @NobleFoundation.ServiceWire.longest_name_round_trips
+#print axioms NobleFoundation.ServiceWire.longest_name_round_trips
+#check @NobleFoundation.ServiceWire.shortest_name_round_trips
+#print axioms NobleFoundation.ServiceWire.shortest_name_round_trips
+#check @NobleFoundation.ServiceWire.depthScanAux_recordPrefix
+#print axioms NobleFoundation.ServiceWire.depthScanAux_recordPrefix
+#check @NobleFoundation.ServiceWire.depthScanAux_of_plain
+#print axioms NobleFoundation.ServiceWire.depthScanAux_of_plain
+#check @NobleFoundation.ServiceWire.depthScanAux_recordSuffix
+#print axioms NobleFoundation.ServiceWire.depthScanAux_recordSuffix
+#check @NobleFoundation.ServiceWire.unbalanced_closers_do_not_count_toward_the_depth
+#print axioms NobleFoundation.ServiceWire.unbalanced_closers_do_not_count_toward_the_depth
+#check @NobleFoundation.Ownership.duplicable_iff
+#print axioms NobleFoundation.Ownership.duplicable_iff
+#check @NobleFoundation.Ownership.data_duplicable
+#print axioms NobleFoundation.Ownership.data_duplicable
+#check @NobleFoundation.Ownership.resource_not_duplicable
+#print axioms NobleFoundation.Ownership.resource_not_duplicable
+#check @NobleFoundation.Ownership.wrapped_duplicable
+#print axioms NobleFoundation.Ownership.wrapped_duplicable
+#check @NobleFoundation.Ownership.wrapped_data_duplicable
+#print axioms NobleFoundation.Ownership.wrapped_data_duplicable
+#check @NobleFoundation.Ownership.wrapped_resource_not_duplicable
+#print axioms NobleFoundation.Ownership.wrapped_resource_not_duplicable
+#check @NobleFoundation.Ownership.wrapDepth_preserves_eligibility
+#print axioms NobleFoundation.Ownership.wrapDepth_preserves_eligibility
+#check @NobleFoundation.Ownership.wrapDepth_resource_not_duplicable
+#print axioms NobleFoundation.Ownership.wrapDepth_resource_not_duplicable
+#check @NobleFoundation.Ownership.resource_operand_blocks_non_swap_word
+#print axioms NobleFoundation.Ownership.resource_operand_blocks_non_swap_word
+#check @NobleFoundation.Ownership.drop_consumes_one
+#print axioms NobleFoundation.Ownership.drop_consumes_one
+#check @NobleFoundation.Ownership.dup_duplicates_one
+#print axioms NobleFoundation.Ownership.dup_duplicates_one
+#check @NobleFoundation.Ownership.quote_retains_one
+#print axioms NobleFoundation.Ownership.quote_retains_one
+#check @NobleFoundation.Ownership.swap_permutes_two
+#print axioms NobleFoundation.Ownership.swap_permutes_two
+#check @NobleFoundation.Ownership.swap_moves_a_resource
+#print axioms NobleFoundation.Ownership.swap_moves_a_resource
+#check @NobleFoundation.Ownership.run_sound
+#print axioms NobleFoundation.Ownership.run_sound
+#check @NobleFoundation.Ownership.branch_accounts_both_arms
+#print axioms NobleFoundation.Ownership.branch_accounts_both_arms
+#check @NobleFoundation.Ownership.fail_requires_empty_operands
+#print axioms NobleFoundation.Ownership.fail_requires_empty_operands
+#check @NobleFoundation.Ownership.fail_rejects_outstanding_operand
+#print axioms NobleFoundation.Ownership.fail_rejects_outstanding_operand
+#check @NobleFoundation.Ownership.segment_conserved
+#print axioms NobleFoundation.Ownership.segment_conserved
+#check @NobleFoundation.OwnershipConservation.step_conserves_obligations
+#print axioms NobleFoundation.OwnershipConservation.step_conserves_obligations
+#check @NobleFoundation.OwnershipConservation.accounts_conserves_obligations
+#print axioms NobleFoundation.OwnershipConservation.accounts_conserves_obligations
+#check @NobleFoundation.OwnershipConservation.run_conserves_obligations
+#print axioms NobleFoundation.OwnershipConservation.run_conserves_obligations
+#check @NobleFoundation.OwnershipConservation.runConfiguration_segment_preserved
+#print axioms NobleFoundation.OwnershipConservation.runConfiguration_segment_preserved
+#check @NobleFoundation.OwnershipConservation.resource_carry_run
+#print axioms NobleFoundation.OwnershipConservation.resource_carry_run
+#check @NobleFoundation.OwnershipConservation.resource_carry_accounts
+#print axioms NobleFoundation.OwnershipConservation.resource_carry_accounts
+#check @NobleFoundation.OwnershipConservation.swap_moves_resource_conservation
+#print axioms NobleFoundation.OwnershipConservation.swap_moves_resource_conservation
+#check @NobleFoundation.LiveDispatch.publish_preserves_other_keys
+#print axioms NobleFoundation.LiveDispatch.publish_preserves_other_keys
+#check @NobleFoundation.LiveDispatch.publish_selects_the_published_generation
+#print axioms NobleFoundation.LiveDispatch.publish_selects_the_published_generation
+#check @NobleFoundation.LiveDispatch.pin_is_immutable
+#print axioms NobleFoundation.LiveDispatch.pin_is_immutable
+#check @NobleFoundation.LiveDispatch.root_selections_use_pinned_map
+#print axioms NobleFoundation.LiveDispatch.root_selections_use_pinned_map
+#check @NobleFoundation.LiveDispatch.frozen_entry_map_reference_agrees
+#print axioms NobleFoundation.LiveDispatch.frozen_entry_map_reference_agrees
+#check @NobleFoundation.LiveDispatch.mixed_map_selects_old_and_new
+#print axioms NobleFoundation.LiveDispatch.mixed_map_selects_old_and_new
+#check @NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event
+#print axioms NobleFoundation.LiveDispatch.denied_dispatch_produces_no_guest_event
+#check @NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation
+#print axioms NobleFoundation.LiveDispatch.authorized_dispatch_selects_the_pinned_generation
+#check @NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events
+#print axioms NobleFoundation.LiveDispatch.abnormal_prefix_preserves_committed_events
+#check @NobleFoundation.LiveDispatch.run_extends_the_events
+#print axioms NobleFoundation.LiveDispatch.run_extends_the_events
+#check @NobleFoundation.LiveDispatch.denials_only_truncate
+#print axioms NobleFoundation.LiveDispatch.denials_only_truncate
+#check @NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once
+#print axioms NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once
+#check @NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits
+#print axioms NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits
+#check @NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix
+#print axioms NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix
+#check @NobleFoundation.LiveDispatch.a_denial_before_the_emitting_hop_keeps_the_prefix
+#print axioms NobleFoundation.LiveDispatch.a_denial_before_the_emitting_hop_keeps_the_prefix
+#check @NobleFoundation.AuthorityLedger.chargedFor_cons_same
+#print axioms NobleFoundation.AuthorityLedger.chargedFor_cons_same
+#check @NobleFoundation.AuthorityLedger.chargedFor_cons_other
+#print axioms NobleFoundation.AuthorityLedger.chargedFor_cons_other
+#check @NobleFoundation.AuthorityLedger.initial_alignment
+#print axioms NobleFoundation.AuthorityLedger.initial_alignment
+#check @NobleFoundation.AuthorityLedger.initial_uniqueness
+#print axioms NobleFoundation.AuthorityLedger.initial_uniqueness
+#check @NobleFoundation.AuthorityLedger.initial_within_quota
+#print axioms NobleFoundation.AuthorityLedger.initial_within_quota
+#check @NobleFoundation.AuthorityLedger.initial_started_at_most_once
+#print axioms NobleFoundation.AuthorityLedger.initial_started_at_most_once
+#check @NobleFoundation.AuthorityLedger.refused_request_preserves_ledger
+#print axioms NobleFoundation.AuthorityLedger.refused_request_preserves_ledger
+#check @NobleFoundation.AuthorityLedger.denied_admission_preserves_ledger
+#print axioms NobleFoundation.AuthorityLedger.denied_admission_preserves_ledger
+#check @NobleFoundation.AuthorityLedger.admission_consumes_exactly_one_witness
+#print axioms NobleFoundation.AuthorityLedger.admission_consumes_exactly_one_witness
+#check @NobleFoundation.AuthorityLedger.admission_registers_one_attempt
+#print axioms NobleFoundation.AuthorityLedger.admission_registers_one_attempt
+#check @NobleFoundation.AuthorityLedger.altered_plan_cannot_mint
+#print axioms NobleFoundation.AuthorityLedger.altered_plan_cannot_mint
+#check @NobleFoundation.AuthorityLedger.stale_facts_cannot_mint
+#print axioms NobleFoundation.AuthorityLedger.stale_facts_cannot_mint
+#check @NobleFoundation.AuthorityLedger.admission_is_consumption
+#print axioms NobleFoundation.AuthorityLedger.admission_is_consumption
+#check @NobleFoundation.AuthorityLedger.admission_preserves_alignment
+#print axioms NobleFoundation.AuthorityLedger.admission_preserves_alignment
+#check @NobleFoundation.AuthorityLedger.admission_preserves_uniqueness
+#print axioms NobleFoundation.AuthorityLedger.admission_preserves_uniqueness
+#check @NobleFoundation.AuthorityLedger.admission_preserves_quota
+#print axioms NobleFoundation.AuthorityLedger.admission_preserves_quota
+#check @NobleFoundation.AuthorityLedger.started_attempt_cannot_start_again
+#print axioms NobleFoundation.AuthorityLedger.started_attempt_cannot_start_again
+#check @NobleFoundation.AuthorityLedger.initial_attempts_charged
+#print axioms NobleFoundation.AuthorityLedger.initial_attempts_charged
+#check @NobleFoundation.AuthorityLedger.admission_preserves_attempts_charged
+#print axioms NobleFoundation.AuthorityLedger.admission_preserves_attempts_charged
+#check @NobleFoundation.AuthorityLedger.omitted_quota_charge_breaks_accounting
+#print axioms NobleFoundation.AuthorityLedger.omitted_quota_charge_breaks_accounting
+#check @NobleFoundation.AuthorityLedger.unchecked_reuse_breaks_uniqueness
+#print axioms NobleFoundation.AuthorityLedger.unchecked_reuse_breaks_uniqueness
+#check @NobleFoundation.AuthorityLedger.plan_blind_admission_mints_altered_plan
+#print axioms NobleFoundation.AuthorityLedger.plan_blind_admission_mints_altered_plan
+#check @NobleFoundation.AuthorityLedger.checkpoint_blind_admission_mints_stale_checkpoint
+#print axioms NobleFoundation.AuthorityLedger.checkpoint_blind_admission_mints_stale_checkpoint
+#check @NobleFoundation.AuthorityLedger.prefix_preserves_alignment
+#print axioms NobleFoundation.AuthorityLedger.prefix_preserves_alignment
+#check @NobleFoundation.AuthorityLedger.renewed_snapshot_keeps_quota
+#print axioms NobleFoundation.AuthorityLedger.renewed_snapshot_keeps_quota
+#check @NobleFoundation.SpecQuality.realizable_of_uninhabited
+#print axioms NobleFoundation.SpecQuality.realizable_of_uninhabited
+#check @NobleFoundation.SpecQuality.unrealizable_of_contradictory_post
+#print axioms NobleFoundation.SpecQuality.unrealizable_of_contradictory_post
+#check @NobleFoundation.SpecQuality.not_deterministic_of_two_outputs
+#print axioms NobleFoundation.SpecQuality.not_deterministic_of_two_outputs
+#check @NobleFoundation.SpecQuality.deterministic_of_unique_output
+#print axioms NobleFoundation.SpecQuality.deterministic_of_unique_output
+#check @NobleFoundation.SpecQuality.increment_inhabited
+#print axioms NobleFoundation.SpecQuality.increment_inhabited
+#check @NobleFoundation.SpecQuality.increment_realizable
+#print axioms NobleFoundation.SpecQuality.increment_realizable
+#check @NobleFoundation.SpecQuality.increment_deterministic
+#print axioms NobleFoundation.SpecQuality.increment_deterministic
+#check @NobleFoundation.SpecQuality.contradictory_inhabited
+#print axioms NobleFoundation.SpecQuality.contradictory_inhabited
+#check @NobleFoundation.SpecQuality.contradictory_not_realizable
+#print axioms NobleFoundation.SpecQuality.contradictory_not_realizable
+#check @NobleFoundation.SpecQuality.underconstrainedBool_two_outputs
+#print axioms NobleFoundation.SpecQuality.underconstrainedBool_two_outputs
+#check @NobleFoundation.SpecQuality.underconstrainedBool_realizable
+#print axioms NobleFoundation.SpecQuality.underconstrainedBool_realizable
+#check @NobleFoundation.SpecQuality.underconstrainedBool_not_deterministic
+#print axioms NobleFoundation.SpecQuality.underconstrainedBool_not_deterministic
+#check @NobleFoundation.SpecQuality.emptyOutput_deterministic
+#print axioms NobleFoundation.SpecQuality.emptyOutput_deterministic
+#check @NobleFoundation.SpecQuality.emptyOutput_not_realizable
+#print axioms NobleFoundation.SpecQuality.emptyOutput_not_realizable
+#check @NobleFoundation.SpecQuality.determinacy_does_not_imply_realizability
+#print axioms NobleFoundation.SpecQuality.determinacy_does_not_imply_realizability
+#check @NobleFoundation.ReverseAD.evalStep_hasDerivAt
+#print axioms NobleFoundation.ReverseAD.evalStep_hasDerivAt
+#check @NobleFoundation.ReverseAD.valuesUpTo_hasDerivAt
+#print axioms NobleFoundation.ReverseAD.valuesUpTo_hasDerivAt
+#check @NobleFoundation.ReverseAD.tangent_is_directional_derivative
+#print axioms NobleFoundation.ReverseAD.tangent_is_directional_derivative
+#check @NobleFoundation.ReverseAD.repeated_operand_contributes_twice
+#print axioms NobleFoundation.ReverseAD.repeated_operand_contributes_twice
+#check @NobleFoundation.ReverseAD.adjoint_step_adds_contribution
+#print axioms NobleFoundation.ReverseAD.adjoint_step_adds_contribution
+#check @NobleFoundation.ReverseAD.adjoint_unchanged_when_operand_absent
+#print axioms NobleFoundation.ReverseAD.adjoint_unchanged_when_operand_absent
+#check @NobleFoundation.ReverseAD.exampleGraph_wellFormed
+#print axioms NobleFoundation.ReverseAD.exampleGraph_wellFormed
+#check @NobleFoundation.ReverseAD.exampleGraph_value
+#print axioms NobleFoundation.ReverseAD.exampleGraph_value
+#check @NobleFoundation.ReverseAD.exampleGraph_tangent
+#print axioms NobleFoundation.ReverseAD.exampleGraph_tangent
+#check @NobleFoundation.ReverseAD.exampleGraph_derivative
+#print axioms NobleFoundation.ReverseAD.exampleGraph_derivative
+#check @NobleFoundation.ReverseAD.unused_input_slot_tangent
+#print axioms NobleFoundation.ReverseAD.unused_input_slot_tangent
+#check @NobleFoundation.ReverseAD.non_unit_seed_unconsumed
+#print axioms NobleFoundation.ReverseAD.non_unit_seed_unconsumed
+#check @NobleFoundation.ReverseAD.line_zero
+#print axioms NobleFoundation.ReverseAD.line_zero
+#check @NobleFoundation.ReverseAD.adjointDot_step
+#print axioms NobleFoundation.ReverseAD.adjointDot_step
+#check @NobleFoundation.ReverseAD.exampleGraph_adjointDot
+#print axioms NobleFoundation.ReverseAD.exampleGraph_adjointDot
+#check @NobleFoundation.ReverseAD.the_overwriting_update_pairs_to_four
+#print axioms NobleFoundation.ReverseAD.the_overwriting_update_pairs_to_four
+#check @NobleFoundation.ReverseAD.the_sweep_pairs_to_eight_on_the_second_slot
+#print axioms NobleFoundation.ReverseAD.the_sweep_pairs_to_eight_on_the_second_slot
+#check @NobleFoundation.PackedSchedule.run_emitNodes_eq
+#print axioms NobleFoundation.PackedSchedule.run_emitNodes_eq
+#check @NobleFoundation.PackedSchedule.foldl_eq_execSchedule
+#print axioms NobleFoundation.PackedSchedule.foldl_eq_execSchedule
+#check @NobleFoundation.PackedSchedule.valuesUpTo_eq_value
+#print axioms NobleFoundation.PackedSchedule.valuesUpTo_eq_value
+#check @NobleFoundation.PackedSchedule.a_missing_operand_refuses_rather_than_fabricating
+#print axioms NobleFoundation.PackedSchedule.a_missing_operand_refuses_rather_than_fabricating
+#check @NobleFoundation.PackedSchedule.a_missing_second_operand_refuses_rather_than_fabricating
+#print axioms NobleFoundation.PackedSchedule.a_missing_second_operand_refuses_rather_than_fabricating
+#check @NobleFoundation.PackedSchedule.an_unwritten_register_keeps_its_value
+#print axioms NobleFoundation.PackedSchedule.an_unwritten_register_keeps_its_value
+#check @NobleFoundation.PackedSchedule.an_unwritten_register_stays_empty
+#print axioms NobleFoundation.PackedSchedule.an_unwritten_register_stays_empty
+#check @NobleFoundation.PackedSchedule.an_omitted_output_node_yields_no_output
+#print axioms NobleFoundation.PackedSchedule.an_omitted_output_node_yields_no_output
+#check @NobleFoundation.PackedSchedule.step_written
+#print axioms NobleFoundation.PackedSchedule.step_written
+#check @NobleFoundation.PackedSchedule.step_computes
+#print axioms NobleFoundation.PackedSchedule.step_computes
+#check @NobleFoundation.PackedSchedule.execSchedule_sound
+#print axioms NobleFoundation.PackedSchedule.execSchedule_sound
+#check @NobleFoundation.PackedSchedule.schedule_sound
+#print axioms NobleFoundation.PackedSchedule.schedule_sound
+#check @NobleFoundation.PackedSchedule.exampleGraph_wellFormed
+#print axioms NobleFoundation.PackedSchedule.exampleGraph_wellFormed
+#check @NobleFoundation.PackedSchedule.orderOk_cons
+#print axioms NobleFoundation.PackedSchedule.orderOk_cons
+#check @NobleFoundation.PackedSchedule.exampleSchedule_valid
+#print axioms NobleFoundation.PackedSchedule.exampleSchedule_valid
+#check @NobleFoundation.PackedSchedule.exampleGraph_values
+#print axioms NobleFoundation.PackedSchedule.exampleGraph_values
+#check @NobleFoundation.PackedSchedule.exampleGraph_schedule_sound
+#print axioms NobleFoundation.PackedSchedule.exampleGraph_schedule_sound
+#check @NobleFoundation.PackedSchedule.aliasing_loses_the_constant
+#print axioms NobleFoundation.PackedSchedule.aliasing_loses_the_constant
+#check @NobleFoundation.PackedSchedule.bodiesMatch_eq_emitNodes
+#print axioms NobleFoundation.PackedSchedule.bodiesMatch_eq_emitNodes
+#check @NobleFoundation.PackedSchedule.operandsDefined_sound
+#print axioms NobleFoundation.PackedSchedule.operandsDefined_sound
+#check @NobleFoundation.PackedSchedule.registersInjectiveOn_sound
+#print axioms NobleFoundation.PackedSchedule.registersInjectiveOn_sound
+#check @NobleFoundation.PackedSchedule.outputsMatch_runOutputs
+#print axioms NobleFoundation.PackedSchedule.outputsMatch_runOutputs
+#check @NobleFoundation.PackedSchedule.validate_sound
+#print axioms NobleFoundation.PackedSchedule.validate_sound
+#check @NobleFoundation.PackedSchedule.exampleSchedule_validated
+#print axioms NobleFoundation.PackedSchedule.exampleSchedule_validated
+#check @NobleFoundation.PackedSchedule.reordered_order_not_layer_sorted
+#print axioms NobleFoundation.PackedSchedule.reordered_order_not_layer_sorted
+#check @NobleFoundation.PackedSchedule.reordered_stream_validated_with_repeated_output
+#print axioms NobleFoundation.PackedSchedule.reordered_stream_validated_with_repeated_output
+#check @NobleFoundation.PackedSchedule.reorderedGraph_wellFormed
+#print axioms NobleFoundation.PackedSchedule.reorderedGraph_wellFormed
+#check @NobleFoundation.PackedSchedule.reordered_stream_sound
+#print axioms NobleFoundation.PackedSchedule.reordered_stream_sound
+#check @NobleFoundation.PackedSchedule.validate_refuses_operand_before_definition
+#print axioms NobleFoundation.PackedSchedule.validate_refuses_operand_before_definition
+#check @NobleFoundation.PackedSchedule.validate_refuses_live_register_alias
+#print axioms NobleFoundation.PackedSchedule.validate_refuses_live_register_alias
+#check @NobleFoundation.PackedSchedule.validate_refuses_wrong_operation
+#print axioms NobleFoundation.PackedSchedule.validate_refuses_wrong_operation
+#check @NobleFoundation.PackedSchedule.validate_refuses_wrong_output_register
+#print axioms NobleFoundation.PackedSchedule.validate_refuses_wrong_output_register
+#check @NobleFoundation.GraphRewrite.constant_value
+#print axioms NobleFoundation.GraphRewrite.constant_value
+#check @NobleFoundation.GraphRewrite.fold_add_constants
+#print axioms NobleFoundation.GraphRewrite.fold_add_constants
+#check @NobleFoundation.GraphRewrite.neutral_add_left
+#print axioms NobleFoundation.GraphRewrite.neutral_add_left
+#check @NobleFoundation.GraphRewrite.neutral_mul_right
+#print axioms NobleFoundation.GraphRewrite.neutral_mul_right
+#check @NobleFoundation.GraphRewrite.add_wraps_at_the_boundary
+#print axioms NobleFoundation.GraphRewrite.add_wraps_at_the_boundary
+#check @NobleFoundation.GraphRewrite.evalStep_congr
+#print axioms NobleFoundation.GraphRewrite.evalStep_congr
+#check @NobleFoundation.GraphRewrite.congruence
+#print axioms NobleFoundation.GraphRewrite.congruence
+#check @NobleFoundation.GraphRewrite.replacement_lift
+#print axioms NobleFoundation.GraphRewrite.replacement_lift
+#check @NobleFoundation.GraphRewrite.checked_sound_const_add
+#print axioms NobleFoundation.GraphRewrite.checked_sound_const_add
+#check @NobleFoundation.GraphRewrite.checked_sound_zero_left
+#print axioms NobleFoundation.GraphRewrite.checked_sound_zero_left
+#check @NobleFoundation.GraphRewrite.checked_sound_one_right
+#print axioms NobleFoundation.GraphRewrite.checked_sound_one_right
+#check @NobleFoundation.GraphRewrite.foldGraph_wellFormed
+#print axioms NobleFoundation.GraphRewrite.foldGraph_wellFormed
+#check @NobleFoundation.GraphRewrite.foldGraph_reference
+#print axioms NobleFoundation.GraphRewrite.foldGraph_reference
+#check @NobleFoundation.GraphRewrite.fold_certificate_accepted
+#print axioms NobleFoundation.GraphRewrite.fold_certificate_accepted
+#check @NobleFoundation.GraphRewrite.wrong_constant_refused
+#print axioms NobleFoundation.GraphRewrite.wrong_constant_refused
+#check @NobleFoundation.GraphRewrite.swapped_operands_refused
+#print axioms NobleFoundation.GraphRewrite.swapped_operands_refused
+#check @NobleFoundation.GraphRewrite.wrong_rule_identity_refused
+#print axioms NobleFoundation.GraphRewrite.wrong_rule_identity_refused
+#check @NobleFoundation.GraphRewrite.wrong_bits_refused
+#print axioms NobleFoundation.GraphRewrite.wrong_bits_refused
+#check @NobleFoundation.SymbolicPair.lookup_returns_recorded
+#print axioms NobleFoundation.SymbolicPair.lookup_returns_recorded
+#check @NobleFoundation.SymbolicPair.decode_uses_fallback
+#print axioms NobleFoundation.SymbolicPair.decode_uses_fallback
+#check @NobleFoundation.SymbolicPair.decode_replays_recorded
+#print axioms NobleFoundation.SymbolicPair.decode_replays_recorded
+#check @NobleFoundation.SymbolicPair.not_refuted_iff_agrees
+#print axioms NobleFoundation.SymbolicPair.not_refuted_iff_agrees
+#check @NobleFoundation.SymbolicPair.search_none_sound
+#print axioms NobleFoundation.SymbolicPair.search_none_sound
+#check @NobleFoundation.SymbolicPair.search_some_refutes
+#print axioms NobleFoundation.SymbolicPair.search_some_refutes
+#check @NobleFoundation.SymbolicPair.same_sum_search_none
+#print axioms NobleFoundation.SymbolicPair.same_sum_search_none
+#check @NobleFoundation.SymbolicPair.same_sum_agrees
+#print axioms NobleFoundation.SymbolicPair.same_sum_agrees
+#check @NobleFoundation.SymbolicPair.subtraction_refuted
+#print axioms NobleFoundation.SymbolicPair.subtraction_refuted
+#check @NobleFoundation.SymbolicPair.witness_bits_decide
+#print axioms NobleFoundation.SymbolicPair.witness_bits_decide
+#check @NobleFoundation.SymbolicPair.unrecorded_slot_falls_back
+#print axioms NobleFoundation.SymbolicPair.unrecorded_slot_falls_back
+#check @NobleFoundation.SymbolicPair.corrupted_witness_changes_the_verdict
+#print axioms NobleFoundation.SymbolicPair.corrupted_witness_changes_the_verdict
+#check @NobleFoundation.SymbolicSolver.encode_length
+#print axioms NobleFoundation.SymbolicSolver.encode_length
+#check @NobleFoundation.SymbolicSolver.decode_encode_replays
+#print axioms NobleFoundation.SymbolicSolver.decode_encode_replays
+#check @NobleFoundation.SymbolicSolver.corrupted_witness_shifts_bits
+#print axioms NobleFoundation.SymbolicSolver.corrupted_witness_shifts_bits
+#check @NobleFoundation.SymbolicSolver.firstIndex_none_agrees
+#print axioms NobleFoundation.SymbolicSolver.firstIndex_none_agrees
+#check @NobleFoundation.SymbolicSolver.firstIndex_some_decomposes
+#print axioms NobleFoundation.SymbolicSolver.firstIndex_some_decomposes
+#check @NobleFoundation.SymbolicSolver.same_sum_first_none
+#print axioms NobleFoundation.SymbolicSolver.same_sum_first_none
+#check @NobleFoundation.SymbolicSolver.subtraction_first_index_zero
+#print axioms NobleFoundation.SymbolicSolver.subtraction_first_index_zero
+#check @NobleFoundation.SymbolicSolver.input_first_index_zero
+#print axioms NobleFoundation.SymbolicSolver.input_first_index_zero
+#check @NobleFoundation.SymbolicSolver.input_zero_candidate_refutes
+#print axioms NobleFoundation.SymbolicSolver.input_zero_candidate_refutes
+#check @NobleFoundation.SymbolicSolver.encoded_witness_decides
+#print axioms NobleFoundation.SymbolicSolver.encoded_witness_decides
+#check @NobleFoundation.Certificate.stale_revision_refused
+#print axioms NobleFoundation.Certificate.stale_revision_refused
+#check @NobleFoundation.Certificate.over_bound_refused
+#print axioms NobleFoundation.Certificate.over_bound_refused
+#check @NobleFoundation.Certificate.unordered_refused
+#print axioms NobleFoundation.Certificate.unordered_refused
+#check @NobleFoundation.Certificate.unknown_rule_refused
+#print axioms NobleFoundation.Certificate.unknown_rule_refused
+#check @NobleFoundation.Certificate.stale_revision_kills_acceptance
+#print axioms NobleFoundation.Certificate.stale_revision_kills_acceptance
+#check @NobleFoundation.Certificate.accepted_implies_checked
+#print axioms NobleFoundation.Certificate.accepted_implies_checked
+#check @NobleFoundation.Certificate.accepted_fold_step_denotes
+#print axioms NobleFoundation.Certificate.accepted_fold_step_denotes
+#check @NobleFoundation.Certificate.accepted_endpoint_equivalence
+#print axioms NobleFoundation.Certificate.accepted_endpoint_equivalence
+#check @NobleFoundation.Certificate.multiFoldGraph_wellFormed
+#print axioms NobleFoundation.Certificate.multiFoldGraph_wellFormed
+#check @NobleFoundation.Certificate.multiFold_derivation_accepted
+#print axioms NobleFoundation.Certificate.multiFold_derivation_accepted
+#check @NobleFoundation.Certificate.multiFold_reference
+#print axioms NobleFoundation.Certificate.multiFold_reference
+#check @NobleFoundation.Certificate.multiFold_endpoint
+#print axioms NobleFoundation.Certificate.multiFold_endpoint
+#check @NobleFoundation.Certificate.substituted_result_differs
+#print axioms NobleFoundation.Certificate.substituted_result_differs
+#check @NobleFoundation.CertificateCodec.decode_encode_step_replays
+#print axioms NobleFoundation.CertificateCodec.decode_encode_step_replays
+#check @NobleFoundation.CertificateCodec.decode_encode_replays
+#print axioms NobleFoundation.CertificateCodec.decode_encode_replays
+#check @NobleFoundation.CertificateCodec.encodeStep_length
+#print axioms NobleFoundation.CertificateCodec.encodeStep_length
+#check @NobleFoundation.CertificateCodec.truncated_step_refused
+#print axioms NobleFoundation.CertificateCodec.truncated_step_refused
+#check @NobleFoundation.CertificateCodec.unknown_rule_token_refused
+#print axioms NobleFoundation.CertificateCodec.unknown_rule_token_refused
+#check @NobleFoundation.CertificateCodec.stale_revision_token_refused
+#print axioms NobleFoundation.CertificateCodec.stale_revision_token_refused
+#check @NobleFoundation.CertificateCodec.acceptance_preserved_by_codec
+#print axioms NobleFoundation.CertificateCodec.acceptance_preserved_by_codec
+#check @NobleFoundation.PackedLayout.count_inflated_refused
+#print axioms NobleFoundation.PackedLayout.count_inflated_refused
+#check @NobleFoundation.PackedLayout.count_one_above_is_accepted
+#print axioms NobleFoundation.PackedLayout.count_one_above_is_accepted
+#check @NobleFoundation.PackedLayout.missing_register_refused
+#print axioms NobleFoundation.PackedLayout.missing_register_refused
+#check @NobleFoundation.PackedLayout.out_of_range_refused
+#print axioms NobleFoundation.PackedLayout.out_of_range_refused
+#check @NobleFoundation.PackedLayout.alias_refused
+#print axioms NobleFoundation.PackedLayout.alias_refused
+#check @NobleFoundation.PackedLayout.constant_count_refused
+#print axioms NobleFoundation.PackedLayout.constant_count_refused
+#check @NobleFoundation.PackedLayout.layer_shape_refused
+#print axioms NobleFoundation.PackedLayout.layer_shape_refused
+#check @NobleFoundation.PackedLayout.layers_unordered_refused
+#print axioms NobleFoundation.PackedLayout.layers_unordered_refused
+#check @NobleFoundation.PackedLayout.coverage_refused
+#print axioms NobleFoundation.PackedLayout.coverage_refused
+#check @NobleFoundation.PackedLayout.fail_suffix_mismatch_refused
+#print axioms NobleFoundation.PackedLayout.fail_suffix_mismatch_refused
+#check @NobleFoundation.PackedLayout.accepted_implies_registers
+#print axioms NobleFoundation.PackedLayout.accepted_implies_registers
+#check @NobleFoundation.PackedLayout.accepted_implies_distinct
+#print axioms NobleFoundation.PackedLayout.accepted_implies_distinct
+#check @NobleFoundation.PackedLayout.accepted_implies_coverage
+#print axioms NobleFoundation.PackedLayout.accepted_implies_coverage
+#check @NobleFoundation.PackedLayout.exampleLayout_accepted
+#print axioms NobleFoundation.PackedLayout.exampleLayout_accepted
+#check @NobleFoundation.PackedLayout.constant_predicate_iff
+#print axioms NobleFoundation.PackedLayout.constant_predicate_iff
+#check @NobleFoundation.PackedLayout.slot_predicate_iff
+#print axioms NobleFoundation.PackedLayout.slot_predicate_iff
+#check @NobleFoundation.PackedLayout.constant_entry_refused
+#print axioms NobleFoundation.PackedLayout.constant_entry_refused
+#check @NobleFoundation.PackedLayout.slot_entry_refused
+#print axioms NobleFoundation.PackedLayout.slot_entry_refused
+#check @NobleFoundation.Ownership.merge_represents_each_arm
+#print axioms NobleFoundation.Ownership.merge_represents_each_arm
+#check @NobleFoundation.Ownership.distinct_owners_are_not_merged
+#print axioms NobleFoundation.Ownership.distinct_owners_are_not_merged
+#check @NobleFoundation.Ownership.one_armed_join_is_refuted
+#print axioms NobleFoundation.Ownership.one_armed_join_is_refuted
+#check @NobleFoundation.Ownership.same_count_different_identity_is_conflicting
+#print axioms NobleFoundation.Ownership.same_count_different_identity_is_conflicting
+#check @NobleFoundation.Ownership.nested_payload_is_not_merged_with_its_unwrapping
+#print axioms NobleFoundation.Ownership.nested_payload_is_not_merged_with_its_unwrapping
+#check @NobleFoundation.Ownership.nested_resource_is_not_merged
+#print axioms NobleFoundation.Ownership.nested_resource_is_not_merged
+#check @NobleFoundation.Ownership.unequal_arms_cannot_be_joined
+#print axioms NobleFoundation.Ownership.unequal_arms_cannot_be_joined
+#check @NobleFoundation.Ownership.joined_word_admission_agrees
+#print axioms NobleFoundation.Ownership.joined_word_admission_agrees
+#check @NobleFoundation.TaskInterleaving.some_or_none_eq_some
+#print axioms NobleFoundation.TaskInterleaving.some_or_none_eq_some
+#check @NobleFoundation.TaskInterleaving.none_or_some_eq_some
+#print axioms NobleFoundation.TaskInterleaving.none_or_some_eq_some
+#check @NobleFoundation.TaskInterleaving.some_or_some_eq_some
+#print axioms NobleFoundation.TaskInterleaving.some_or_some_eq_some
+#check @NobleFoundation.TaskInterleaving.empty_table_satisfies_the_invariants
+#print axioms NobleFoundation.TaskInterleaving.empty_table_satisfies_the_invariants
+#check @NobleFoundation.TaskInterleaving.step_preserves_invariants
+#print axioms NobleFoundation.TaskInterleaving.step_preserves_invariants
+#check @NobleFoundation.TaskInterleaving.reachable_prefixes_satisfy_the_invariants
+#print axioms NobleFoundation.TaskInterleaving.reachable_prefixes_satisfy_the_invariants
+#check @NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_second_failure
+#print axioms NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_second_failure
+#check @NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_later_success
+#print axioms NobleFoundation.TaskInterleaving.abnormal_failure_survives_a_later_success
+#check @NobleFoundation.TaskInterleaving.abnormal_failure_survives_refused_and_acquired_actions
+#print axioms NobleFoundation.TaskInterleaving.abnormal_failure_survives_refused_and_acquired_actions
+#check @NobleFoundation.TaskInterleaving.first_failure_code_is_kept_as_the_sticky_one
+#print axioms NobleFoundation.TaskInterleaving.first_failure_code_is_kept_as_the_sticky_one
+#check @NobleFoundation.TaskInterleaving.baseline_admission_is_refused
+#print axioms NobleFoundation.TaskInterleaving.baseline_admission_is_refused
+#check @NobleFoundation.TaskInterleaving.finishing_a_slot_releases_the_capacity
+#print axioms NobleFoundation.TaskInterleaving.finishing_a_slot_releases_the_capacity
+#check @NobleFoundation.TaskInterleaving.releasing_a_slot_enables_another_id
+#print axioms NobleFoundation.TaskInterleaving.releasing_a_slot_enables_another_id
+#check @NobleFoundation.TaskInterleaving.different_ids_are_not_independent
+#print axioms NobleFoundation.TaskInterleaving.different_ids_are_not_independent
+#check @NobleFoundation.TaskInterleaving.stale_generation_callback_changes_nothing
+#print axioms NobleFoundation.TaskInterleaving.stale_generation_callback_changes_nothing
+#check @NobleFoundation.TaskInterleaving.late_delivery_after_retirement_is_refused
+#print axioms NobleFoundation.TaskInterleaving.late_delivery_after_retirement_is_refused
+#check @NobleFoundation.TaskInterleaving.double_delivery_is_refused
+#print axioms NobleFoundation.TaskInterleaving.double_delivery_is_refused
+#check @NobleFoundation.TaskInterleaving.settlement_requires_a_delivery
+#print axioms NobleFoundation.TaskInterleaving.settlement_requires_a_delivery
+#check @NobleFoundation.TaskInterleaving.settlement_after_delivery_is_taken
+#print axioms NobleFoundation.TaskInterleaving.settlement_after_delivery_is_taken
+#check @NobleFoundation.TaskInterleaving.finish_keeps_its_delivery_record
+#print axioms NobleFoundation.TaskInterleaving.finish_keeps_its_delivery_record
+#check @NobleFoundation.TaskInterleaving.cancellation_keeps_the_pin
+#print axioms NobleFoundation.TaskInterleaving.cancellation_keeps_the_pin
+#check @NobleFoundation.TaskInterleaving.lossy_observation_hides_the_failure_difference
+#print axioms NobleFoundation.TaskInterleaving.lossy_observation_hides_the_failure_difference
+#check @NobleFoundation.TaskInterleaving.ordered_delivery_prefixes_are_distinguished
+#print axioms NobleFoundation.TaskInterleaving.ordered_delivery_prefixes_are_distinguished
+#check @NobleFoundation.TaskInterleaving.cancel_orders_agree_on_distinct_ids
+#print axioms NobleFoundation.TaskInterleaving.cancel_orders_agree_on_distinct_ids
+#check @NobleFoundation.TaskInterleaving.finish_orders_agree_on_distinct_ids
+#print axioms NobleFoundation.TaskInterleaving.finish_orders_agree_on_distinct_ids
+#check @NobleFoundation.TaskInterleaving.delivery_orders_disagree_on_distinct_ids
+#print axioms NobleFoundation.TaskInterleaving.delivery_orders_disagree_on_distinct_ids
+#check @NobleFoundation.TaskInterleaving.delivery_orders_agree_under_the_lossy_observation
+#print axioms NobleFoundation.TaskInterleaving.delivery_orders_agree_under_the_lossy_observation
+#check @NobleFoundation.TaskInterleaving.admission_depends_on_which_id_holds_the_shared_slot
+#print axioms NobleFoundation.TaskInterleaving.admission_depends_on_which_id_holds_the_shared_slot
+#check @NobleFoundation.TaskInterleaving.composed_admissions_agree_while_the_prefixes_differ
+#print axioms NobleFoundation.TaskInterleaving.composed_admissions_agree_while_the_prefixes_differ
+#check @NobleFoundation.TaskInterleaving.stale_callback_is_observation_free
+#print axioms NobleFoundation.TaskInterleaving.stale_callback_is_observation_free
+#check @NobleFoundation.TaskInterleaving.failure_orders_disagree_on_distinct_ids
+#print axioms NobleFoundation.TaskInterleaving.failure_orders_disagree_on_distinct_ids
+#check @NobleFoundation.TaskInterleaving.mem_sequencesOfLength
+#print axioms NobleFoundation.TaskInterleaving.mem_sequencesOfLength
+#check @NobleFoundation.TaskInterleaving.sequencesUpTo_contains_shorter
+#print axioms NobleFoundation.TaskInterleaving.sequencesUpTo_contains_shorter
+#check @NobleFoundation.TaskInterleaving.the_baseline_enumeration_is_complete
+#print axioms NobleFoundation.TaskInterleaving.the_baseline_enumeration_is_complete
+#check @NobleFoundation.TaskInterleaving.the_independent_pairs_swap_preserves_the_observation
+#print axioms NobleFoundation.TaskInterleaving.the_independent_pairs_swap_preserves_the_observation
+#check @NobleFoundation.TaskInterleaving.the_reduction_must_exclude_the_delivery_pair
+#print axioms NobleFoundation.TaskInterleaving.the_reduction_must_exclude_the_delivery_pair
+#check @NobleFoundation.TaskInterleaving.scanFrom_none_all_agree
+#print axioms NobleFoundation.TaskInterleaving.scanFrom_none_all_agree
+#check @NobleFoundation.TaskInterleaving.scanFrom_some_finds_the_first
+#print axioms NobleFoundation.TaskInterleaving.scanFrom_some_finds_the_first
+#check @NobleFoundation.TaskInterleaving.every_disagreement_has_a_shortest_witness
+#print axioms NobleFoundation.TaskInterleaving.every_disagreement_has_a_shortest_witness
+#check @NobleFoundation.TaskInterleaving.bind_ite
+#print axioms NobleFoundation.TaskInterleaving.bind_ite
+#check @NobleFoundation.TaskInterleaving.independent_symm
+#print axioms NobleFoundation.TaskInterleaving.independent_symm
+#check @NobleFoundation.TaskInterleaving.left_then_right_commute
+#print axioms NobleFoundation.TaskInterleaving.left_then_right_commute
+#check @NobleFoundation.TaskInterleaving.independent_actions_commute
+#print axioms NobleFoundation.TaskInterleaving.independent_actions_commute
+#check @NobleFoundation.TaskInterleaving.independent_is_sound
+#print axioms NobleFoundation.TaskInterleaving.independent_is_sound
+#check @NobleFoundation.TaskInterleaving.outOfOrder_asymm
+#print axioms NobleFoundation.TaskInterleaving.outOfOrder_asymm
+#check @NobleFoundation.TaskInterleaving.reaches_insertCanonical
+#print axioms NobleFoundation.TaskInterleaving.reaches_insertCanonical
+#check @NobleFoundation.TaskInterleaving.reaches_canonicalize
+#print axioms NobleFoundation.TaskInterleaving.reaches_canonicalize
+#check @NobleFoundation.TaskInterleaving.insertCanonical_perm
+#print axioms NobleFoundation.TaskInterleaving.insertCanonical_perm
+#check @NobleFoundation.TaskInterleaving.canonicalize_perm
+#print axioms NobleFoundation.TaskInterleaving.canonicalize_perm
+#check @NobleFoundation.TaskInterleaving.insertCanonical_shape
+#print axioms NobleFoundation.TaskInterleaving.insertCanonical_shape
+#check @NobleFoundation.TaskInterleaving.canonical_insertCanonical
+#print axioms NobleFoundation.TaskInterleaving.canonical_insertCanonical
+#check @NobleFoundation.TaskInterleaving.canonicalize_canonical
+#print axioms NobleFoundation.TaskInterleaving.canonicalize_canonical
+#check @NobleFoundation.TaskInterleaving.mem_sequencesOfLength_iff
+#print axioms NobleFoundation.TaskInterleaving.mem_sequencesOfLength_iff
+#check @NobleFoundation.TaskInterleaving.mem_sequencesUpTo
+#print axioms NobleFoundation.TaskInterleaving.mem_sequencesUpTo
+#check @NobleFoundation.TaskInterleaving.mem_reducedOfLength
+#print axioms NobleFoundation.TaskInterleaving.mem_reducedOfLength
+#check @NobleFoundation.TaskInterleaving.mem_reducedUpTo
+#print axioms NobleFoundation.TaskInterleaving.mem_reducedUpTo
+#check @NobleFoundation.TaskInterleaving.every_sequence_has_a_reduced_representative
+#print axioms NobleFoundation.TaskInterleaving.every_sequence_has_a_reduced_representative
+#check @NobleFoundation.TaskInterleaving.reduced_search_agrees
+#print axioms NobleFoundation.TaskInterleaving.reduced_search_agrees
+#check @NobleFoundation.TaskInterleaving.the_declared_starts_are_reachable
+#print axioms NobleFoundation.TaskInterleaving.the_declared_starts_are_reachable
+#check @NobleFoundation.TaskInterleaving.the_declared_reduction_agrees
+#print axioms NobleFoundation.TaskInterleaving.the_declared_reduction_agrees
+#check @NobleFoundation.TaskInterleaving.the_declared_sequence_counts
+#print axioms NobleFoundation.TaskInterleaving.the_declared_sequence_counts
+#check @NobleFoundation.TaskInterleaving.the_declared_history_counts
+#print axioms NobleFoundation.TaskInterleaving.the_declared_history_counts
+#check @NobleFoundation.TaskInterleaving.the_declared_observation_counts
+#print axioms NobleFoundation.TaskInterleaving.the_declared_observation_counts
+#check @NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_in_the_full_search
+#print axioms NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_in_the_full_search
+#check @NobleFoundation.TaskInterleaving.contention_is_covered
+#print axioms NobleFoundation.TaskInterleaving.contention_is_covered
+#check @NobleFoundation.TaskInterleaving.cancel_versus_deliver_is_covered
+#print axioms NobleFoundation.TaskInterleaving.cancel_versus_deliver_is_covered
+#check @NobleFoundation.TaskInterleaving.late_and_duplicate_callbacks_are_covered
+#print axioms NobleFoundation.TaskInterleaving.late_and_duplicate_callbacks_are_covered
+#check @NobleFoundation.TaskInterleaving.stale_handles_are_covered
+#print axioms NobleFoundation.TaskInterleaving.stale_handles_are_covered
+#check @NobleFoundation.TaskInterleaving.wakeup_exhaustion_is_covered
+#print axioms NobleFoundation.TaskInterleaving.wakeup_exhaustion_is_covered
+#check @NobleFoundation.TaskInterleaving.settlement_and_cleanup_ordering_is_covered
+#print axioms NobleFoundation.TaskInterleaving.settlement_and_cleanup_ordering_is_covered
+#check @NobleFoundation.TaskInterleaving.once_only_finish_is_covered
+#print axioms NobleFoundation.TaskInterleaving.once_only_finish_is_covered
+#check @NobleFoundation.TaskInterleaving.concurrent_distinct_slot_histories_are_covered
+#print axioms NobleFoundation.TaskInterleaving.concurrent_distinct_slot_histories_are_covered
+#check @NobleFoundation.TaskInterleaving.different_ids_rule_is_unsound
+#print axioms NobleFoundation.TaskInterleaving.different_ids_rule_is_unsound
+#check @NobleFoundation.TaskInterleaving.the_unsound_reduction_loses_an_observation
+#print axioms NobleFoundation.TaskInterleaving.the_unsound_reduction_loses_an_observation
+#check @NobleFoundation.TaskInterleaving.the_unsound_reduction_is_detected_only_where_ids_interleave
+#print axioms NobleFoundation.TaskInterleaving.the_unsound_reduction_is_detected_only_where_ids_interleave
+#check @NobleFoundation.TaskInterleaving.isSome_ite
+#print axioms NobleFoundation.TaskInterleaving.isSome_ite
+#check @NobleFoundation.TaskInterleaving.acceptance_kept_left_right
+#print axioms NobleFoundation.TaskInterleaving.acceptance_kept_left_right
+#check @NobleFoundation.TaskInterleaving.acceptance_kept_right_left
+#print axioms NobleFoundation.TaskInterleaving.acceptance_kept_right_left
+#check @NobleFoundation.TaskInterleaving.independent_keeps_acceptance
+#print axioms NobleFoundation.TaskInterleaving.independent_keeps_acceptance
+#check @NobleFoundation.TaskInterleaving.independent_advance_commute
+#print axioms NobleFoundation.TaskInterleaving.independent_advance_commute
+#check @NobleFoundation.TaskInterleaving.independent_is_client_sound
+#print axioms NobleFoundation.TaskInterleaving.independent_is_client_sound
+#check @NobleFoundation.TaskInterleaving.afterHistory_of_reaches
+#print axioms NobleFoundation.TaskInterleaving.afterHistory_of_reaches
+#check @NobleFoundation.TaskInterleaving.issues_names_its_id
+#print axioms NobleFoundation.TaskInterleaving.issues_names_its_id
+#check @NobleFoundation.TaskInterleaving.holds_congr
+#print axioms NobleFoundation.TaskInterleaving.holds_congr
+#check @NobleFoundation.TaskInterleaving.mem_issue_congr
+#print axioms NobleFoundation.TaskInterleaving.mem_issue_congr
+#check @NobleFoundation.TaskInterleaving.validFrom_congr
+#print axioms NobleFoundation.TaskInterleaving.validFrom_congr
+#check @NobleFoundation.TaskInterleaving.holds_after_other_issue
+#print axioms NobleFoundation.TaskInterleaving.holds_after_other_issue
+#check @NobleFoundation.TaskInterleaving.mem_issue_swap
+#print axioms NobleFoundation.TaskInterleaving.mem_issue_swap
+#check @NobleFoundation.TaskInterleaving.validFrom_swap
+#print axioms NobleFoundation.TaskInterleaving.validFrom_swap
+#check @NobleFoundation.TaskInterleaving.callsOf_swap
+#print axioms NobleFoundation.TaskInterleaving.callsOf_swap
+#check @NobleFoundation.TaskInterleaving.afterHistory_swap
+#print axioms NobleFoundation.TaskInterleaving.afterHistory_swap
+#check @NobleFoundation.TaskInterleaving.validFrom_insertCanonical
+#print axioms NobleFoundation.TaskInterleaving.validFrom_insertCanonical
+#check @NobleFoundation.TaskInterleaving.callsOf_insertCanonical
+#print axioms NobleFoundation.TaskInterleaving.callsOf_insertCanonical
+#check @NobleFoundation.TaskInterleaving.afterHistory_insertCanonical
+#print axioms NobleFoundation.TaskInterleaving.afterHistory_insertCanonical
+#check @NobleFoundation.TaskInterleaving.validFrom_canonicalize
+#print axioms NobleFoundation.TaskInterleaving.validFrom_canonicalize
+#check @NobleFoundation.TaskInterleaving.callsOf_canonicalize
+#print axioms NobleFoundation.TaskInterleaving.callsOf_canonicalize
+#check @NobleFoundation.TaskInterleaving.afterHistory_canonicalize
+#print axioms NobleFoundation.TaskInterleaving.afterHistory_canonicalize
+#check @NobleFoundation.TaskInterleaving.client_canonicalize
+#print axioms NobleFoundation.TaskInterleaving.client_canonicalize
+#check @NobleFoundation.TaskInterleaving.reduced_client_search_agrees
+#print axioms NobleFoundation.TaskInterleaving.reduced_client_search_agrees
+#check @NobleFoundation.TaskInterleaving.the_declared_client_reduction_agrees
+#print axioms NobleFoundation.TaskInterleaving.the_declared_client_reduction_agrees
+#check @NobleFoundation.TaskInterleaving.valid_client_examples
+#print axioms NobleFoundation.TaskInterleaving.valid_client_examples
+#check @NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_valid_clients
+#print axioms NobleFoundation.TaskInterleaving.the_coverage_witnesses_are_valid_clients
+#check @NobleFoundation.TaskInterleaving.the_client_projection_discriminates
+#print axioms NobleFoundation.TaskInterleaving.the_client_projection_discriminates
+#check @NobleFoundation.TaskInterleaving.the_lossy_client_projection_hides_rejected_calls
+#print axioms NobleFoundation.TaskInterleaving.the_lossy_client_projection_hides_rejected_calls
+#check @NobleFoundation.TaskInterleaving.the_declared_client_history_counts
+#print axioms NobleFoundation.TaskInterleaving.the_declared_client_history_counts
+#check @NobleFoundation.TaskInterleaving.the_unsound_client_reduction_loses_projections
+#print axioms NobleFoundation.TaskInterleaving.the_unsound_client_reduction_loses_projections
+#check @NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.wrong_op_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.wrong_operand_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.wrong_operand_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.wrong_constant_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.wrong_constant_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.wrong_output_order_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.wrong_output_order_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.shifted_encoding_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.shifted_encoding_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.output_blind_verdict_is_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.output_blind_verdict_is_caught
+#check @NobleFoundation.SymbolicPair.Mutations.all_declared_mutations_are_caught
+#print axioms NobleFoundation.SymbolicPair.Mutations.all_declared_mutations_are_caught
+#check @NobleFoundation.evalBatch_is_the_ordered_map
+#print axioms NobleFoundation.evalBatch_is_the_ordered_map
+#check @NobleFoundation.evalBatch_append
+#print axioms NobleFoundation.evalBatch_append
+#check @NobleFoundation.a_refused_row_does_not_affect_later_rows
+#print axioms NobleFoundation.a_refused_row_does_not_affect_later_rows
+#check @NobleFoundation.a_rows_run_starts_from_an_empty_stack
+#print axioms NobleFoundation.a_rows_run_starts_from_an_empty_stack
+#check @NobleFoundation.add_row_result_is_the_wrapping_sum
+#print axioms NobleFoundation.add_row_result_is_the_wrapping_sum
+#check @NobleFoundation.sub_row_result_is_the_wrapping_difference
+#print axioms NobleFoundation.sub_row_result_is_the_wrapping_difference
+#check @NobleFoundation.mul_row_result_is_the_wrapping_product
+#print axioms NobleFoundation.mul_row_result_is_the_wrapping_product
+#check @NobleFoundation.out_of_range_row_is_refused
+#print axioms NobleFoundation.out_of_range_row_is_refused
+#check @NobleFoundation.batch_row_executes_as_its_reference_run
+#print axioms NobleFoundation.batch_row_executes_as_its_reference_run
+#check @NobleFoundation.row_major_cost_is_exact
+#print axioms NobleFoundation.row_major_cost_is_exact
+#check @NobleFoundation.chunksOfGo_flatten
+#print axioms NobleFoundation.chunksOfGo_flatten
+#check @NobleFoundation.chunking_does_not_change_the_value
+#print axioms NobleFoundation.chunking_does_not_change_the_value
+#check @NobleFoundation.node_work_is_staging_independent
+#print axioms NobleFoundation.node_work_is_staging_independent
+#check @NobleFoundation.chunked_writes_are_one_per_chunk
+#print axioms NobleFoundation.chunked_writes_are_one_per_chunk
+#check @NobleFoundation.every_chunk_is_bounded_by_the_chunk_size
+#print axioms NobleFoundation.every_chunk_is_bounded_by_the_chunk_size
+#check @NobleFoundation.live_row_slots_are_bounded_by_the_chunk
+#print axioms NobleFoundation.live_row_slots_are_bounded_by_the_chunk
+#check @NobleFoundation.a_zero_chunk_drops_no_row
+#print axioms NobleFoundation.a_zero_chunk_drops_no_row
+#check @NobleFoundation.Binary32.Error.pow2Int_rat
+#print axioms NobleFoundation.Binary32.Error.pow2Int_rat
+#check @NobleFoundation.Binary32.Error.quotient_round_error
+#print axioms NobleFoundation.Binary32.Error.quotient_round_error
+#check @NobleFoundation.Binary32.Error.nat_error_to_rat
+#print axioms NobleFoundation.Binary32.Error.nat_error_to_rat
+#check @NobleFoundation.Binary32.Error.roundNearest_error
+#print axioms NobleFoundation.Binary32.Error.roundNearest_error
+#check @NobleFoundation.Binary32.Error.scalePair_den_pos
+#print axioms NobleFoundation.Binary32.Error.scalePair_den_pos
+#check @NobleFoundation.Binary32.Error.scaled_exact_ratio
+#print axioms NobleFoundation.Binary32.Error.scaled_exact_ratio
+#check @NobleFoundation.Binary32.Error.roundNearest_bounds
+#print axioms NobleFoundation.Binary32.Error.roundNearest_bounds
+#check @NobleFoundation.Binary32.Error.roundedQuotient_bounds
+#print axioms NobleFoundation.Binary32.Error.roundedQuotient_bounds
+#check @NobleFoundation.Binary32.Error.carry_value
+#print axioms NobleFoundation.Binary32.Error.carry_value
+#check @NobleFoundation.Binary32.Error.carriedPair_m_bounds
+#print axioms NobleFoundation.Binary32.Error.carriedPair_m_bounds
+#check @NobleFoundation.Binary32.Error.roundPositive_eq_roundedNormalBits
+#print axioms NobleFoundation.Binary32.Error.roundPositive_eq_roundedNormalBits
+#check @NobleFoundation.Binary32.Error.normalEncoding_scaledMagnitude
+#print axioms NobleFoundation.Binary32.Error.normalEncoding_scaledMagnitude
+#check @NobleFoundation.Binary32.Error.normalEncoding_not_negative
+#print axioms NobleFoundation.Binary32.Error.normalEncoding_not_negative
+#check @NobleFoundation.Binary32.Error.roundPositive_normal_absolute_error
+#print axioms NobleFoundation.Binary32.Error.roundPositive_normal_absolute_error
+#check @NobleFoundation.Binary32.Error.roundPositive_normal_relative_error
+#print axioms NobleFoundation.Binary32.Error.roundPositive_normal_relative_error
+#check @NobleFoundation.Binary32.Error.flush_to_zero_violates_absolute_bound
+#print axioms NobleFoundation.Binary32.Error.flush_to_zero_violates_absolute_bound
+#check @NobleFoundation.Binary32.Error.exactValue_of_scaledMagnitude
+#print axioms NobleFoundation.Binary32.Error.exactValue_of_scaledMagnitude
+#check @NobleFoundation.Binary32.Error.exactValue_normalEncoding
+#print axioms NobleFoundation.Binary32.Error.exactValue_normalEncoding
+#check @NobleFoundation.Binary32.Error.normal_error_applies_to_one_third
+#print axioms NobleFoundation.Binary32.Error.normal_error_applies_to_one_third
+#check @NobleFoundation.ReverseAD.slotGraph_wellFormed
+#print axioms NobleFoundation.ReverseAD.slotGraph_wellFormed
+#check @NobleFoundation.ReverseAD.slotGraph_slotNode_map
+#print axioms NobleFoundation.ReverseAD.slotGraph_slotNode_map
+#check @NobleFoundation.ReverseAD.slotGraph_value
+#print axioms NobleFoundation.ReverseAD.slotGraph_value
+#check @NobleFoundation.ReverseAD.slotGraph_tangent_slot_zero
+#print axioms NobleFoundation.ReverseAD.slotGraph_tangent_slot_zero
+#check @NobleFoundation.ReverseAD.slotGraph_tangent_slot_one
+#print axioms NobleFoundation.ReverseAD.slotGraph_tangent_slot_one
+#check @NobleFoundation.ReverseAD.slotGraph_derivative_slot_zero
+#print axioms NobleFoundation.ReverseAD.slotGraph_derivative_slot_zero
+#check @NobleFoundation.ReverseAD.slotGraph_derivative_slot_one
+#print axioms NobleFoundation.ReverseAD.slotGraph_derivative_slot_one
+#check @NobleFoundation.ReverseAD.slotGraph_slotGradient_unit
+#print axioms NobleFoundation.ReverseAD.slotGraph_slotGradient_unit
+#check @NobleFoundation.ReverseAD.slotGraph_slotGradients_match_unit_tangent
+#print axioms NobleFoundation.ReverseAD.slotGraph_slotGradients_match_unit_tangent
+#check @NobleFoundation.ReverseAD.slotGraph_slotGradient_five
+#print axioms NobleFoundation.ReverseAD.slotGraph_slotGradient_five
+#check @NobleFoundation.ReverseAD.slotGraph_slotGradients_match_five_tangent
+#print axioms NobleFoundation.ReverseAD.slotGraph_slotGradients_match_five_tangent
+#check @NobleFoundation.ReverseAD.slotGraph_wrong_slot_control
+#print axioms NobleFoundation.ReverseAD.slotGraph_wrong_slot_control
+#check @NobleFoundation.CheckedI64.checkedAdd_ok_iff
+#print axioms NobleFoundation.CheckedI64.checkedAdd_ok_iff
+#check @NobleFoundation.CheckedI64.checkedSub_ok_iff
+#print axioms NobleFoundation.CheckedI64.checkedSub_ok_iff
+#check @NobleFoundation.CheckedI64.checkedMul_ok_iff
+#print axioms NobleFoundation.CheckedI64.checkedMul_ok_iff
+#check @NobleFoundation.CheckedI64.checkedNeg_ok_iff
+#print axioms NobleFoundation.CheckedI64.checkedNeg_ok_iff
+#check @NobleFoundation.CheckedI64.checkedAbs_ok_iff
+#print axioms NobleFoundation.CheckedI64.checkedAbs_ok_iff
+#check @NobleFoundation.CheckedI64.checkedAdd_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedAdd_overflow_iff
+#check @NobleFoundation.CheckedI64.checkedSub_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedSub_overflow_iff
+#check @NobleFoundation.CheckedI64.checkedMul_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedMul_overflow_iff
+#check @NobleFoundation.CheckedI64.checkedNeg_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedNeg_overflow_iff
+#check @NobleFoundation.CheckedI64.checkedAbs_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedAbs_overflow_iff
+#check @NobleFoundation.CheckedI64.neg_min_overflows
+#print axioms NobleFoundation.CheckedI64.neg_min_overflows
+#check @NobleFoundation.CheckedI64.abs_min_overflows
+#print axioms NobleFoundation.CheckedI64.abs_min_overflows
+#check @NobleFoundation.CheckedI64.div_rem_identity
+#print axioms NobleFoundation.CheckedI64.div_rem_identity
+#check @NobleFoundation.CheckedI64.trem_natAbs_lt
+#print axioms NobleFoundation.CheckedI64.trem_natAbs_lt
+#check @NobleFoundation.CheckedI64.trem_sign
+#print axioms NobleFoundation.CheckedI64.trem_sign
+#check @NobleFoundation.CheckedI64.checkedDivRem_overflow_iff
+#print axioms NobleFoundation.CheckedI64.checkedDivRem_overflow_iff
+#check @NobleFoundation.CheckedI64.checkedDivRem_divisionByZero
+#print axioms NobleFoundation.CheckedI64.checkedDivRem_divisionByZero
+#check @NobleFoundation.CheckedI64.truncating_quotient_control
+#print axioms NobleFoundation.CheckedI64.truncating_quotient_control
+#check @NobleFoundation.CheckedI64.truncating_remainder_control
+#print axioms NobleFoundation.CheckedI64.truncating_remainder_control
+#check @NobleFoundation.CheckedI64.signed_order_control
+#print axioms NobleFoundation.CheckedI64.signed_order_control
+#check @NobleFoundation.CheckedI64.off_by_one_boundary_control
+#print axioms NobleFoundation.CheckedI64.off_by_one_boundary_control
+#check @NobleFoundation.CheckedI64.swapped_sub_control
+#print axioms NobleFoundation.CheckedI64.swapped_sub_control
+#check @NobleFoundation.CheckedI64.swapped_divrem_control
+#print axioms NobleFoundation.CheckedI64.swapped_divrem_control
+#check @NobleFoundation.CheckedI64.min_neg_one_has_no_quotient
+#print axioms NobleFoundation.CheckedI64.min_neg_one_has_no_quotient
+#check @NobleFoundation.InteractionNet.version_ok_sound
+#print axioms NobleFoundation.InteractionNet.version_ok_sound
+#check @NobleFoundation.InteractionNet.reciprocity_ok_sound
+#print axioms NobleFoundation.InteractionNet.reciprocity_ok_sound
+#check @NobleFoundation.InteractionNet.compatibility_ok_sound
+#print axioms NobleFoundation.InteractionNet.compatibility_ok_sound
+#check @NobleFoundation.InteractionNet.boundary_ok_sound
+#print axioms NobleFoundation.InteractionNet.boundary_ok_sound
+#check @NobleFoundation.InteractionNet.validate_sound
+#print axioms NobleFoundation.InteractionNet.validate_sound
+#check @NobleFoundation.InteractionNet.deeper_minus_top_is_accepted
+#print axioms NobleFoundation.InteractionNet.deeper_minus_top_is_accepted
+#check @NobleFoundation.InteractionNet.swapped_sub_operands_are_rejected
+#print axioms NobleFoundation.InteractionNet.swapped_sub_operands_are_rejected
+#check @NobleFoundation.InteractionNet.dangling_wire_is_rejected
+#print axioms NobleFoundation.InteractionNet.dangling_wire_is_rejected
+#check @NobleFoundation.InteractionNet.aliased_incidence_is_rejected
+#print axioms NobleFoundation.InteractionNet.aliased_incidence_is_rejected
+#check @NobleFoundation.InteractionNet.two_output_boundary_is_accepted
+#print axioms NobleFoundation.InteractionNet.two_output_boundary_is_accepted
+#check @NobleFoundation.InteractionNet.wrong_output_order_is_rejected
+#print axioms NobleFoundation.InteractionNet.wrong_output_order_is_rejected
+#check @NobleFoundation.Isop.valuation_mem
+#print axioms NobleFoundation.Isop.valuation_mem
+#check @NobleFoundation.Isop.equivOn_sound
+#print axioms NobleFoundation.Isop.equivOn_sound
+#check @NobleFoundation.Isop.isop_exact
+#print axioms NobleFoundation.Isop.isop_exact
+#check @NobleFoundation.Isop.isop_bounds
+#print axioms NobleFoundation.Isop.isop_bounds
+#check @NobleFoundation.Isop.constant_true_checked
+#print axioms NobleFoundation.Isop.constant_true_checked
+#check @NobleFoundation.Isop.constant_false_checked
+#print axioms NobleFoundation.Isop.constant_false_checked
+#check @NobleFoundation.Isop.contradiction_checked
+#print axioms NobleFoundation.Isop.contradiction_checked
+#check @NobleFoundation.Isop.repeated_atom_checked
+#print axioms NobleFoundation.Isop.repeated_atom_checked
+#check @NobleFoundation.Isop.parity3_checked
+#print axioms NobleFoundation.Isop.parity3_checked
+#check @NobleFoundation.Isop.contradiction_irredundant_fixture
+#print axioms NobleFoundation.Isop.contradiction_irredundant_fixture
+#check @NobleFoundation.Isop.repeated_atom_irredundant_fixture
+#print axioms NobleFoundation.Isop.repeated_atom_irredundant_fixture
+#check @NobleFoundation.Isop.parity3_irredundant_fixture
+#print axioms NobleFoundation.Isop.parity3_irredundant_fixture
+#check @NobleFoundation.Isop.parity3_cover_growth
+#print axioms NobleFoundation.Isop.parity3_cover_growth
+#check @NobleFoundation.Isop.parity3_orders_differ
+#print axioms NobleFoundation.Isop.parity3_orders_differ
+#check @NobleFoundation.Isop.parity3_orders_equivalent
+#print axioms NobleFoundation.Isop.parity3_orders_equivalent
+#check @NobleFoundation.Isop.wrong_cofactor_rejected
+#print axioms NobleFoundation.Isop.wrong_cofactor_rejected
+#check @NobleFoundation.Isop.wrong_complement_rejected
+#print axioms NobleFoundation.Isop.wrong_complement_rejected
+#check @NobleFoundation.Specialize.staticValuesUpTo_eq_staticValue
+#print axioms NobleFoundation.Specialize.staticValuesUpTo_eq_staticValue
+#check @NobleFoundation.Specialize.staticValue_sound
+#print axioms NobleFoundation.Specialize.staticValue_sound
+#check @NobleFoundation.Specialize.specialize_wellFormed
+#print axioms NobleFoundation.Specialize.specialize_wellFormed
+#check @NobleFoundation.Specialize.congruenceWithInputs
+#print axioms NobleFoundation.Specialize.congruenceWithInputs
+#check @NobleFoundation.Specialize.residual_specialize_sound
+#print axioms NobleFoundation.Specialize.residual_specialize_sound
+#check @NobleFoundation.Specialize.specialize_sound
+#print axioms NobleFoundation.Specialize.specialize_sound
+#check @NobleFoundation.Specialize.specializationGraph_wellFormed
+#print axioms NobleFoundation.Specialize.specializationGraph_wellFormed
+#check @NobleFoundation.Specialize.no_static_fixture
+#print axioms NobleFoundation.Specialize.no_static_fixture
+#check @NobleFoundation.Specialize.all_static_fixture
+#print axioms NobleFoundation.Specialize.all_static_fixture
+#check @NobleFoundation.Specialize.mixed_static_fixture
+#print axioms NobleFoundation.Specialize.mixed_static_fixture
+#check @NobleFoundation.Specialize.nonPrefixGraph_wellFormed
+#print axioms NobleFoundation.Specialize.nonPrefixGraph_wellFormed
+#check @NobleFoundation.Specialize.non_prefix_static_fixture
+#print axioms NobleFoundation.Specialize.non_prefix_static_fixture
+#check @NobleFoundation.Specialize.deeper_minus_top_fixture
+#print axioms NobleFoundation.Specialize.deeper_minus_top_fixture
+#check @NobleFoundation.Specialize.wrapGraph_wellFormed
+#print axioms NobleFoundation.Specialize.wrapGraph_wellFormed
+#check @NobleFoundation.Specialize.wrap_boundary_fixture
+#print axioms NobleFoundation.Specialize.wrap_boundary_fixture
+#check @NobleFoundation.Specialize.specialize_wellFormed_fixture
+#print axioms NobleFoundation.Specialize.specialize_wellFormed_fixture
+#check @NobleFoundation.Specialize.specialize_sound_fixture
+#print axioms NobleFoundation.Specialize.specialize_sound_fixture
+#check @NobleFoundation.Specialize.prefix_merge_control
+#print axioms NobleFoundation.Specialize.prefix_merge_control
+#check @NobleFoundation.Binary32.DecimalImport.decimalRatio_den_pos
+#print axioms NobleFoundation.Binary32.DecimalImport.decimalRatio_den_pos
+#check @NobleFoundation.Binary32.DecimalImport.isNegative_eq_msb
+#print axioms NobleFoundation.Binary32.DecimalImport.isNegative_eq_msb
+#check @NobleFoundation.Binary32.DecimalImport.rne_negative_sign
+#print axioms NobleFoundation.Binary32.DecimalImport.rne_negative_sign
+#check @NobleFoundation.Binary32.DecimalImport.zero_spelling
+#print axioms NobleFoundation.Binary32.DecimalImport.zero_spelling
+#check @NobleFoundation.Binary32.DecimalImport.outcomeClass_overflow_iff
+#print axioms NobleFoundation.Binary32.DecimalImport.outcomeClass_overflow_iff
+#check @NobleFoundation.Binary32.DecimalImport.exactImport_some_iff
+#print axioms NobleFoundation.Binary32.DecimalImport.exactImport_some_iff
+#check @NobleFoundation.Binary32.DecimalImport.exactImport_agrees_with_rne
+#print axioms NobleFoundation.Binary32.DecimalImport.exactImport_agrees_with_rne
+#check @NobleFoundation.Binary32.DecimalImport.exactImport_exactValue
+#print axioms NobleFoundation.Binary32.DecimalImport.exactImport_exactValue
+#check @NobleFoundation.Binary32.DecimalImport.negative_zero_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.negative_zero_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_point_one_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_point_one_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_point_five_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_point_five_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_one_e39_overflow_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_one_e39_overflow_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_least_subnormal_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_least_subnormal_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_tie_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_tie_fixture
+#check @NobleFoundation.Binary32.DecimalImport.decimal_just_above_tie_fixture
+#print axioms NobleFoundation.Binary32.DecimalImport.decimal_just_above_tie_fixture
+#check @NobleFoundation.CacheLookup.lookup_some_has_valid_entry
+#print axioms NobleFoundation.CacheLookup.lookup_some_has_valid_entry
+#check @NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq
+#print axioms NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq
+#check @NobleFoundation.CacheLookup.lookup_hit_cons
+#print axioms NobleFoundation.CacheLookup.lookup_hit_cons
+#check @NobleFoundation.CacheLookup.lookup_cons_hit_cases
+#print axioms NobleFoundation.CacheLookup.lookup_cons_hit_cases
+#check @NobleFoundation.CacheLookup.lookup_after_erase_subset
+#print axioms NobleFoundation.CacheLookup.lookup_after_erase_subset
+#check @NobleFoundation.CacheLookup.colliding_manifests_distinct
+#print axioms NobleFoundation.CacheLookup.colliding_manifests_distinct
+#check @NobleFoundation.CacheLookup.colliding_index_equal
+#print axioms NobleFoundation.CacheLookup.colliding_index_equal
+#check @NobleFoundation.CacheLookup.colliding_index_wrong_manifest_misses
+#print axioms NobleFoundation.CacheLookup.colliding_index_wrong_manifest_misses
+#check @NobleFoundation.CacheLookup.stale_manifest_entry_refused
+#print axioms NobleFoundation.CacheLookup.stale_manifest_entry_refused
+#check @NobleFoundation.CacheLookup.corrupt_entry_refused
+#print axioms NobleFoundation.CacheLookup.corrupt_entry_refused
+#check @NobleFoundation.CacheLookup.erase_hit_disappears
+#print axioms NobleFoundation.CacheLookup.erase_hit_disappears
+#check @NobleFoundation.CacheLookup.lengthBytes_length
+#print axioms NobleFoundation.CacheLookup.lengthBytes_length
+#check @NobleFoundation.CacheLookup.take_lengthBytes
+#print axioms NobleFoundation.CacheLookup.take_lengthBytes
+#check @NobleFoundation.CacheLookup.drop_lengthBytes
+#print axioms NobleFoundation.CacheLookup.drop_lengthBytes
+#check @NobleFoundation.CacheLookup.lengthBytes_injective_of_lt
+#print axioms NobleFoundation.CacheLookup.lengthBytes_injective_of_lt
+#check @NobleFoundation.CacheLookup.append_prefix_cancel
+#print axioms NobleFoundation.CacheLookup.append_prefix_cancel
+#check @NobleFoundation.CacheLookup.encodeParts_payload_eq
+#print axioms NobleFoundation.CacheLookup.encodeParts_payload_eq
+#check @NobleFoundation.CacheLookup.encodePayload_injective_of_lt
+#print axioms NobleFoundation.CacheLookup.encodePayload_injective_of_lt
+#check @NobleFoundation.CacheLookup.encodeParts_injective_of_lt
+#print axioms NobleFoundation.CacheLookup.encodeParts_injective_of_lt
+#check @NobleFoundation.CacheLookup.changed_field_changes_encoding
+#print axioms NobleFoundation.CacheLookup.changed_field_changes_encoding
+#check @NobleFoundation.CacheLookup.naive_concat_field_collision
+#print axioms NobleFoundation.CacheLookup.naive_concat_field_collision
+#check @NobleFoundation.ConstructorReuse.makeCell_requested
+#print axioms NobleFoundation.ConstructorReuse.makeCell_requested
+#check @NobleFoundation.ConstructorReuse.reuseStep_success
+#print axioms NobleFoundation.ConstructorReuse.reuseStep_success
+#check @NobleFoundation.ConstructorReuse.reuseStep_refuses_size_mismatch
+#print axioms NobleFoundation.ConstructorReuse.reuseStep_refuses_size_mismatch
+#check @NobleFoundation.ConstructorReuse.reuseStep_replaces_unique_root
+#print axioms NobleFoundation.ConstructorReuse.reuseStep_replaces_unique_root
+#check @NobleFoundation.ConstructorReuse.reuseStep_initializes_requested_cell
+#print axioms NobleFoundation.ConstructorReuse.reuseStep_initializes_requested_cell
+#check @NobleFoundation.ConstructorReuse.eligible_replacement_has_no_resource
+#print axioms NobleFoundation.ConstructorReuse.eligible_replacement_has_no_resource
+#check @NobleFoundation.ConstructorReuse.eligible_replacement_requires_move
+#print axioms NobleFoundation.ConstructorReuse.eligible_replacement_requires_move
+#check @NobleFoundation.ConstructorReuse.wrapped_resource_is_not_reuse_eligible
+#print axioms NobleFoundation.ConstructorReuse.wrapped_resource_is_not_reuse_eligible
+#check @NobleFoundation.ConstructorReuse.shared_alias_control
+#print axioms NobleFoundation.ConstructorReuse.shared_alias_control
+#check @NobleFoundation.Binary32.Sgd.update_preserves_shape
+#print axioms NobleFoundation.Binary32.Sgd.update_preserves_shape
+#check @NobleFoundation.Binary32.Sgd.update_lane
+#print axioms NobleFoundation.Binary32.Sgd.update_lane
+#check @NobleFoundation.Binary32.Sgd.firstNonfinite_eq_none
+#print axioms NobleFoundation.Binary32.Sgd.firstNonfinite_eq_none
+#check @NobleFoundation.Binary32.Sgd.firstNonfinite_reports_a_nonfinite_lane
+#print axioms NobleFoundation.Binary32.Sgd.firstNonfinite_reports_a_nonfinite_lane
+#check @NobleFoundation.Binary32.Sgd.checkStep_accepted
+#print axioms NobleFoundation.Binary32.Sgd.checkStep_accepted
+#check @NobleFoundation.Binary32.Sgd.nonfinite_input_is_never_accepted
+#print axioms NobleFoundation.Binary32.Sgd.nonfinite_input_is_never_accepted
+#check @NobleFoundation.Binary32.Sgd.nonfinite_parameter_is_refused_at_its_lane
+#print axioms NobleFoundation.Binary32.Sgd.nonfinite_parameter_is_refused_at_its_lane
+#check @NobleFoundation.Binary32.Sgd.normal_step_expectation
+#print axioms NobleFoundation.Binary32.Sgd.normal_step_expectation
+#check @NobleFoundation.Binary32.Sgd.signed_zero_expectation
+#print axioms NobleFoundation.Binary32.Sgd.signed_zero_expectation
+#check @NobleFoundation.Binary32.Sgd.subnormal_result_expectation
+#print axioms NobleFoundation.Binary32.Sgd.subnormal_result_expectation
+#check @NobleFoundation.Binary32.Sgd.boundary_tie_expectation
+#print axioms NobleFoundation.Binary32.Sgd.boundary_tie_expectation
+#check @NobleFoundation.Binary32.Sgd.overflow_lane_is_refused
+#print axioms NobleFoundation.Binary32.Sgd.overflow_lane_is_refused
+#check @NobleFoundation.Binary32.Sgd.nonfinite_inputs_are_refused_at_their_paths
+#print axioms NobleFoundation.Binary32.Sgd.nonfinite_inputs_are_refused_at_their_paths
+#check @NobleFoundation.Binary32.Sgd.shape_and_budget_refusals
+#print axioms NobleFoundation.Binary32.Sgd.shape_and_budget_refusals
+#check @NobleFoundation.Binary32.Sgd.fused_update_is_detected
+#print axioms NobleFoundation.Binary32.Sgd.fused_update_is_detected
+#check @NobleFoundation.FirstProjection.ofList_wellFormed
+#print axioms NobleFoundation.FirstProjection.ofList_wellFormed
+#check @NobleFoundation.FirstProjection.ofList_noEq
+#print axioms NobleFoundation.FirstProjection.ofList_noEq
+#check @NobleFoundation.FirstProjection.value_input
+#print axioms NobleFoundation.FirstProjection.value_input
+#check @NobleFoundation.FirstProjection.operand_value
+#print axioms NobleFoundation.FirstProjection.operand_value
+#check @NobleFoundation.FirstProjection.value_add
+#print axioms NobleFoundation.FirstProjection.value_add
+#check @NobleFoundation.FirstProjection.value_sub
+#print axioms NobleFoundation.FirstProjection.value_sub
+#check @NobleFoundation.FirstProjection.value_mul
+#print axioms NobleFoundation.FirstProjection.value_mul
+#check @NobleFoundation.FirstProjection.value_i64_of_noEq
+#print axioms NobleFoundation.FirstProjection.value_i64_of_noEq
+#check @NobleFoundation.FirstProjection.interpreterGraph_wellFormed
+#print axioms NobleFoundation.FirstProjection.interpreterGraph_wellFormed
+#check @NobleFoundation.FirstProjection.interpreterGraph_noEq
+#print axioms NobleFoundation.FirstProjection.interpreterGraph_noEq
+#check @NobleFoundation.FirstProjection.interpreter_value
+#print axioms NobleFoundation.FirstProjection.interpreter_value
+#check @NobleFoundation.FirstProjection.instrValue_coeff
+#print axioms NobleFoundation.FirstProjection.instrValue_coeff
+#check @NobleFoundation.FirstProjection.interpreter_agrees
+#print axioms NobleFoundation.FirstProjection.interpreter_agrees
+#check @NobleFoundation.FirstProjection.merge_staticOf
+#print axioms NobleFoundation.FirstProjection.merge_staticOf
+#check @NobleFoundation.FirstProjection.first_projection
+#print axioms NobleFoundation.FirstProjection.first_projection
+#check @NobleFoundation.FirstProjection.annihilate_wellFormed
+#print axioms NobleFoundation.FirstProjection.annihilate_wellFormed
+#check @NobleFoundation.FirstProjection.annihilate_sound
+#print axioms NobleFoundation.FirstProjection.annihilate_sound
+#check @NobleFoundation.FirstProjection.specialize_noEq
+#print axioms NobleFoundation.FirstProjection.specialize_noEq
+#check @NobleFoundation.FirstProjection.residual_sound
+#print axioms NobleFoundation.FirstProjection.residual_sound
+#check @NobleFoundation.FirstProjection.unselected_branches_are_dead
+#print axioms NobleFoundation.FirstProjection.unselected_branches_are_dead
+#check @NobleFoundation.FirstProjection.remaining_dispatch_overhead
+#print axioms NobleFoundation.FirstProjection.remaining_dispatch_overhead
+#check @NobleFoundation.FirstProjection.wrong_opcode_encoding_disagrees
+#print axioms NobleFoundation.FirstProjection.wrong_opcode_encoding_disagrees
+#check @NobleFoundation.FirstProjection.swapped_operands_disagree
+#print axioms NobleFoundation.FirstProjection.swapped_operands_disagree
+#check @NobleFoundation.OperandForwarding.targetFuel_le
+#print axioms NobleFoundation.OperandForwarding.targetFuel_le
+#check @NobleFoundation.OperandForwarding.target_le
+#print axioms NobleFoundation.OperandForwarding.target_le
+#check @NobleFoundation.OperandForwarding.identity_value
+#print axioms NobleFoundation.OperandForwarding.identity_value
+#check @NobleFoundation.OperandForwarding.targetFuel_value
+#print axioms NobleFoundation.OperandForwarding.targetFuel_value
+#check @NobleFoundation.OperandForwarding.target_value
+#print axioms NobleFoundation.OperandForwarding.target_value
+#check @NobleFoundation.OperandForwarding.forward_wellFormed
+#print axioms NobleFoundation.OperandForwarding.forward_wellFormed
+#check @NobleFoundation.OperandForwarding.forward_noEq
+#print axioms NobleFoundation.OperandForwarding.forward_noEq
+#check @NobleFoundation.OperandForwarding.forward_sound
+#print axioms NobleFoundation.OperandForwarding.forward_sound
+#check @NobleFoundation.OperandForwarding.forward_output_sound
+#print axioms NobleFoundation.OperandForwarding.forward_output_sound
+#check @NobleFoundation.OperandForwarding.annihilate_noEq
+#print axioms NobleFoundation.OperandForwarding.annihilate_noEq
+#check @NobleFoundation.OperandForwarding.forwarded_residual_sound
+#print axioms NobleFoundation.OperandForwarding.forwarded_residual_sound
+#check @NobleFoundation.OperandForwarding.forwarding_removes_the_dispatch_overhead
+#print axioms NobleFoundation.OperandForwarding.forwarding_removes_the_dispatch_overhead
+#check @NobleFoundation.OperandForwarding.forwarded_residual_is_the_program
+#print axioms NobleFoundation.OperandForwarding.forwarded_residual_is_the_program
+#check @NobleFoundation.OperandForwarding.one_pass_leaves_a_zero_sum
+#print axioms NobleFoundation.OperandForwarding.one_pass_leaves_a_zero_sum
+#check @NobleFoundation.OperandForwarding.chain_forwards_to_the_input
+#print axioms NobleFoundation.OperandForwarding.chain_forwards_to_the_input
+#check @NobleFoundation.OperandForwarding.subtraction_from_zero_is_not_forwarded
+#print axioms NobleFoundation.OperandForwarding.subtraction_from_zero_is_not_forwarded
+#check @NobleFoundation.Binary32.Scale.log2_go_eq
+#print axioms NobleFoundation.Binary32.Scale.log2_go_eq
+#check @NobleFoundation.Binary32.Scale.log2_eq
+#print axioms NobleFoundation.Binary32.Scale.log2_eq
+#check @NobleFoundation.Binary32.Scale.log2_bracket
+#print axioms NobleFoundation.Binary32.Scale.log2_bracket
+#check @NobleFoundation.Binary32.Scale.floorLog2Ratio_lower
+#print axioms NobleFoundation.Binary32.Scale.floorLog2Ratio_lower
+#check @NobleFoundation.Binary32.Scale.floorLog2Ratio_upper
+#print axioms NobleFoundation.Binary32.Scale.floorLog2Ratio_upper
+#check @NobleFoundation.Binary32.Scale.floorLog2Ratio_boundary
+#print axioms NobleFoundation.Binary32.Scale.floorLog2Ratio_boundary
+#check @NobleFoundation.Binary32.Scale.scaled_ratio
+#print axioms NobleFoundation.Binary32.Scale.scaled_ratio
+#check @NobleFoundation.Binary32.Scale.scale_powers
+#print axioms NobleFoundation.Binary32.Scale.scale_powers
+#check @NobleFoundation.Binary32.Scale.scale_lower
+#print axioms NobleFoundation.Binary32.Scale.scale_lower
+#check @NobleFoundation.Binary32.Scale.scale_upper
+#print axioms NobleFoundation.Binary32.Scale.scale_upper
+#check @NobleFoundation.Binary32.Scale.scale_at_boundary
+#print axioms NobleFoundation.Binary32.Scale.scale_at_boundary
+#check @NobleFoundation.Binary32.Scale.upper_premise_fails_for_one_half
+#print axioms NobleFoundation.Binary32.Scale.upper_premise_fails_for_one_half
+#check @NobleFoundation.Binary32.Scale.boundary_rounded
+#print axioms NobleFoundation.Binary32.Scale.boundary_rounded
+#check @NobleFoundation.Binary32.Scale.boundary_rounds_exactly
+#print axioms NobleFoundation.Binary32.Scale.boundary_rounds_exactly
+#check @NobleFoundation.Binary32.Scale.roundPositive_absolute_error
+#print axioms NobleFoundation.Binary32.Scale.roundPositive_absolute_error
+#check @NobleFoundation.Binary32.Scale.roundPositive_relative_error
+#print axioms NobleFoundation.Binary32.Scale.roundPositive_relative_error
+#check @NobleFoundation.Binary32.Scale.absolute_error_covers_one_half
+#print axioms NobleFoundation.Binary32.Scale.absolute_error_covers_one_half
+#check @NobleFoundation.ReverseAD.Mutations.adjointAfterWith_stepCoefficient
+#print axioms NobleFoundation.ReverseAD.Mutations.adjointAfterWith_stepCoefficient
+#check @NobleFoundation.ReverseAD.Mutations.slotGradientWith_stepCoefficient
+#print axioms NobleFoundation.ReverseAD.Mutations.slotGradientWith_stepCoefficient
+#check @NobleFoundation.ReverseAD.Mutations.slotGraph_mulOwnValue_caught
+#print axioms NobleFoundation.ReverseAD.Mutations.slotGraph_mulOwnValue_caught
+#check @NobleFoundation.ReverseAD.Mutations.slotGraph_addDropsSecond_caught
+#print axioms NobleFoundation.ReverseAD.Mutations.slotGraph_addDropsSecond_caught
+#check @NobleFoundation.ReverseAD.Mutations.slotGraph_repeatedCountedOnce_caught
+#print axioms NobleFoundation.ReverseAD.Mutations.slotGraph_repeatedCountedOnce_caught
+#check @NobleFoundation.ReverseAD.Mutations.slotGraph_overwrite_caught
+#print axioms NobleFoundation.ReverseAD.Mutations.slotGraph_overwrite_caught
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_wellFormed
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_wellFormed
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_value
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_value
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_tangents
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_tangents
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_derivative_slot_one
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_derivative_slot_one
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_slotGradients_match_tangents
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_slotGradients_match_tangents
+#check @NobleFoundation.ReverseAD.Mutations.subGraph_subSignFlipped_caught
+#print axioms NobleFoundation.ReverseAD.Mutations.subGraph_subSignFlipped_caught
+#check @NobleFoundation.Ownership.step_iff_wordRule
+#print axioms NobleFoundation.Ownership.step_iff_wordRule
+#check @NobleFoundation.Ownership.judged_iff_accounts
+#print axioms NobleFoundation.Ownership.judged_iff_accounts
+#check @NobleFoundation.Ownership.run_complete
+#print axioms NobleFoundation.Ownership.run_complete
+#check @NobleFoundation.Ownership.run_iff_judged
+#print axioms NobleFoundation.Ownership.run_iff_judged
+#check @NobleFoundation.Ownership.step_preserves_agreement
+#print axioms NobleFoundation.Ownership.step_preserves_agreement
+#check @NobleFoundation.Ownership.joined_sequence_admission_agrees
+#print axioms NobleFoundation.Ownership.joined_sequence_admission_agrees
+#check @NobleFoundation.Ownership.joined_judgment_transfers
+#print axioms NobleFoundation.Ownership.joined_judgment_transfers
+#check @NobleFoundation.Ownership.equal_length_does_not_lift
+#print axioms NobleFoundation.Ownership.equal_length_does_not_lift
+#check @NobleFoundation.Ownership.lift_fixture
+#print axioms NobleFoundation.Ownership.lift_fixture
+#check @NobleFoundation.Ownership.agreement_length
+#print axioms NobleFoundation.Ownership.agreement_length
+#check @NobleFoundation.Ownership.accepted_results_agree
+#print axioms NobleFoundation.Ownership.accepted_results_agree
+#check @NobleFoundation.Ownership.branch_free_admission_agrees
+#print axioms NobleFoundation.Ownership.branch_free_admission_agrees
+#check @NobleFoundation.Ownership.branch_admission_does_not_lift
+#print axioms NobleFoundation.Ownership.branch_admission_does_not_lift
+#check @NobleFoundation.Ownership.fail_admission_lifts
+#print axioms NobleFoundation.Ownership.fail_admission_lifts
+#check @NobleFoundation.Ownership.judged_results_agree
+#print axioms NobleFoundation.Ownership.judged_results_agree
+#check @NobleFoundation.Binary32.Subnormal.floorLog2Ratio_le_carried
+#print axioms NobleFoundation.Binary32.Subnormal.floorLog2Ratio_le_carried
+#check @NobleFoundation.Binary32.Subnormal.floorLog2Ratio_upper_le
+#print axioms NobleFoundation.Binary32.Subnormal.floorLog2Ratio_upper_le
+#check @NobleFoundation.Binary32.Subnormal.subnormal_numerator_bound
+#print axioms NobleFoundation.Binary32.Subnormal.subnormal_numerator_bound
+#check @NobleFoundation.Binary32.Subnormal.subnormal_significand_bound
+#print axioms NobleFoundation.Binary32.Subnormal.subnormal_significand_bound
+#check @NobleFoundation.Binary32.Subnormal.roundPositive_subnormal
+#print axioms NobleFoundation.Binary32.Subnormal.roundPositive_subnormal
+#check @NobleFoundation.Binary32.Subnormal.roundPositive_eq_significand
+#print axioms NobleFoundation.Binary32.Subnormal.roundPositive_eq_significand
+#check @NobleFoundation.Binary32.Subnormal.subnormal_scaledMagnitude
+#print axioms NobleFoundation.Binary32.Subnormal.subnormal_scaledMagnitude
+#check @NobleFoundation.Binary32.Subnormal.smallest_normal_scaledMagnitude
+#print axioms NobleFoundation.Binary32.Subnormal.smallest_normal_scaledMagnitude
+#check @NobleFoundation.Binary32.Subnormal.small_encoding_not_negative
+#print axioms NobleFoundation.Binary32.Subnormal.small_encoding_not_negative
+#check @NobleFoundation.Binary32.Subnormal.exactValue_small
+#print axioms NobleFoundation.Binary32.Subnormal.exactValue_small
+#check @NobleFoundation.Binary32.Subnormal.roundPositive_subnormal_absolute_error
+#print axioms NobleFoundation.Binary32.Subnormal.roundPositive_subnormal_absolute_error
+#check @NobleFoundation.Binary32.Subnormal.roundPositive_finite_absolute_error
+#print axioms NobleFoundation.Binary32.Subnormal.roundPositive_finite_absolute_error
+#check @NobleFoundation.Binary32.Subnormal.subnormal_rule_applies_below_the_normal_range
+#print axioms NobleFoundation.Binary32.Subnormal.subnormal_rule_applies_below_the_normal_range
+#check @NobleFoundation.Binary32.Subnormal.rounding_to_the_smallest_normal_attains_the_bound
+#print axioms NobleFoundation.Binary32.Subnormal.rounding_to_the_smallest_normal_attains_the_bound
+#check @NobleFoundation.Binary32.Subnormal.subnormal_results_are_not_relatively_bounded
+#print axioms NobleFoundation.Binary32.Subnormal.subnormal_results_are_not_relatively_bounded
+#check @NobleFoundation.Binary32.Sequence.exactValue_eq_scaledValue
+#print axioms NobleFoundation.Binary32.Sequence.exactValue_eq_scaledValue
+#check @NobleFoundation.Binary32.Sequence.toNat_ofNat_of_lt
+#print axioms NobleFoundation.Binary32.Sequence.toNat_ofNat_of_lt
+#check @NobleFoundation.Binary32.Sequence.exponent_of_toNat
+#print axioms NobleFoundation.Binary32.Sequence.exponent_of_toNat
+#check @NobleFoundation.Binary32.Sequence.fraction_of_toNat
+#print axioms NobleFoundation.Binary32.Sequence.fraction_of_toNat
+#check @NobleFoundation.Binary32.Sequence.isNegative_of_toNat
+#print axioms NobleFoundation.Binary32.Sequence.isNegative_of_toNat
+#check @NobleFoundation.Binary32.Sequence.exactValue_signed
+#print axioms NobleFoundation.Binary32.Sequence.exactValue_signed
+#check @NobleFoundation.Binary32.Sequence.pow2Int_pos
+#print axioms NobleFoundation.Binary32.Sequence.pow2Int_pos
+#check @NobleFoundation.Binary32.Sequence.scaledArgs_pos
+#print axioms NobleFoundation.Binary32.Sequence.scaledArgs_pos
+#check @NobleFoundation.Binary32.Sequence.scaledArgs_ratio
+#print axioms NobleFoundation.Binary32.Sequence.scaledArgs_ratio
+#check @NobleFoundation.Binary32.Sequence.carried_significand_lt
+#print axioms NobleFoundation.Binary32.Sequence.carried_significand_lt
+#check @NobleFoundation.Binary32.Sequence.roundPositive_normal_nat
+#print axioms NobleFoundation.Binary32.Sequence.roundPositive_normal_nat
+#check @NobleFoundation.Binary32.Sequence.roundPositive_lt
+#print axioms NobleFoundation.Binary32.Sequence.roundPositive_lt
+#check @NobleFoundation.Binary32.Sequence.roundScaled_relative_error
+#print axioms NobleFoundation.Binary32.Sequence.roundScaled_relative_error
+#check @NobleFoundation.Binary32.Sequence.exactValue_zeroOf
+#print axioms NobleFoundation.Binary32.Sequence.exactValue_zeroOf
+#check @NobleFoundation.Binary32.Sequence.add_eq
+#print axioms NobleFoundation.Binary32.Sequence.add_eq
+#check @NobleFoundation.Binary32.Sequence.rescale
+#print axioms NobleFoundation.Binary32.Sequence.rescale
+#check @NobleFoundation.Binary32.Sequence.exact_sum
+#print axioms NobleFoundation.Binary32.Sequence.exact_sum
+#check @NobleFoundation.Binary32.Sequence.add_relative_error
+#print axioms NobleFoundation.Binary32.Sequence.add_relative_error
+#check @NobleFoundation.Binary32.Sequence.exact_product
+#print axioms NobleFoundation.Binary32.Sequence.exact_product
+#check @NobleFoundation.Binary32.Sequence.zero_class_magnitude
+#print axioms NobleFoundation.Binary32.Sequence.zero_class_magnitude
+#check @NobleFoundation.Binary32.Sequence.zero_class_value
+#print axioms NobleFoundation.Binary32.Sequence.zero_class_value
+#check @NobleFoundation.Binary32.Sequence.nonzero_class_magnitude
+#print axioms NobleFoundation.Binary32.Sequence.nonzero_class_magnitude
+#check @NobleFoundation.Binary32.Sequence.sign_rule
+#print axioms NobleFoundation.Binary32.Sequence.sign_rule
+#check @NobleFoundation.Binary32.Sequence.product_sign
+#print axioms NobleFoundation.Binary32.Sequence.product_sign
+#check @NobleFoundation.Binary32.Sequence.mul_scaled_eq
+#print axioms NobleFoundation.Binary32.Sequence.mul_scaled_eq
+#check @NobleFoundation.Binary32.Sequence.mul_relative_error
+#print axioms NobleFoundation.Binary32.Sequence.mul_relative_error
+#check @NobleFoundation.Binary32.Sequence.unit_nonneg
+#print axioms NobleFoundation.Binary32.Sequence.unit_nonneg
+#check @NobleFoundation.Binary32.Sequence.growth_nonneg
+#print axioms NobleFoundation.Binary32.Sequence.growth_nonneg
+#check @NobleFoundation.Binary32.Sequence.step_bound
+#print axioms NobleFoundation.Binary32.Sequence.step_bound
+#check @NobleFoundation.Binary32.Sequence.fold_error_from
+#print axioms NobleFoundation.Binary32.Sequence.fold_error_from
+#check @NobleFoundation.Binary32.Sequence.fold_error
+#print axioms NobleFoundation.Binary32.Sequence.fold_error
+#check @NobleFoundation.Binary32.Sequence.cancellation_premises
+#print axioms NobleFoundation.Binary32.Sequence.cancellation_premises
+#check @NobleFoundation.Binary32.Sequence.cancellation_values
+#print axioms NobleFoundation.Binary32.Sequence.cancellation_values
+#check @NobleFoundation.Binary32.Sequence.cancellation_needs_the_term_scale
+#print axioms NobleFoundation.Binary32.Sequence.cancellation_needs_the_term_scale
+#check @NobleFoundation.Binary32.SequenceFinite.eta_pos
+#print axioms NobleFoundation.Binary32.SequenceFinite.eta_pos
+#check @NobleFoundation.Binary32.SequenceFinite.roundPositive_lt_finite
+#print axioms NobleFoundation.Binary32.SequenceFinite.roundPositive_lt_finite
+#check @NobleFoundation.Binary32.SequenceFinite.roundPositive_mixed_error
+#print axioms NobleFoundation.Binary32.SequenceFinite.roundPositive_mixed_error
+#check @NobleFoundation.Binary32.SequenceFinite.roundScaled_mixed_error
+#print axioms NobleFoundation.Binary32.SequenceFinite.roundScaled_mixed_error
+#check @NobleFoundation.Binary32.SequenceFinite.add_mixed_error
+#print axioms NobleFoundation.Binary32.SequenceFinite.add_mixed_error
+#check @NobleFoundation.Binary32.SequenceFinite.mul_mixed_error
+#print axioms NobleFoundation.Binary32.SequenceFinite.mul_mixed_error
+#check @NobleFoundation.Binary32.SequenceFinite.step_bound_mixed
+#print axioms NobleFoundation.Binary32.SequenceFinite.step_bound_mixed
+#check @NobleFoundation.Binary32.SequenceFinite.absolute_growth
+#print axioms NobleFoundation.Binary32.SequenceFinite.absolute_growth
+#check @NobleFoundation.Binary32.SequenceFinite.fold_finite_error_from
+#print axioms NobleFoundation.Binary32.SequenceFinite.fold_finite_error_from
+#check @NobleFoundation.Binary32.SequenceFinite.fold_finite_error
+#print axioms NobleFoundation.Binary32.SequenceFinite.fold_finite_error
+#check @NobleFoundation.Binary32.SequenceFinite.subnormal_premises
+#print axioms NobleFoundation.Binary32.SequenceFinite.subnormal_premises
+#check @NobleFoundation.Binary32.SequenceFinite.subnormal_fold_is_outside_the_normal_premises
+#print axioms NobleFoundation.Binary32.SequenceFinite.subnormal_fold_is_outside_the_normal_premises
+#check @NobleFoundation.Binary32.SequenceFinite.subnormal_fold_values
+#print axioms NobleFoundation.Binary32.SequenceFinite.subnormal_fold_values
+#check @NobleFoundation.Binary32.SequenceFinite.subnormal_needs_the_absolute_term
+#print axioms NobleFoundation.Binary32.SequenceFinite.subnormal_needs_the_absolute_term
+#check @NobleFoundation.Binary32.Checker.carried_le_succ
+#print axioms NobleFoundation.Binary32.Checker.carried_le_succ
+#check @NobleFoundation.Binary32.Checker.noOverflow_of_lt
+#print axioms NobleFoundation.Binary32.Checker.noOverflow_of_lt
+#check @NobleFoundation.Binary32.Checker.noOverflow_scaled
+#print axioms NobleFoundation.Binary32.Checker.noOverflow_scaled
+#check @NobleFoundation.Binary32.Checker.finite_of_exponent
+#print axioms NobleFoundation.Binary32.Checker.finite_of_exponent
+#check @NobleFoundation.Binary32.Checker.finite_of_magnitude
+#print axioms NobleFoundation.Binary32.Checker.finite_of_magnitude
+#check @NobleFoundation.Binary32.Checker.roundPositive_below_infinity
+#print axioms NobleFoundation.Binary32.Checker.roundPositive_below_infinity
+#check @NobleFoundation.Binary32.Checker.roundScaled_finite
+#print axioms NobleFoundation.Binary32.Checker.roundScaled_finite
+#check @NobleFoundation.Binary32.Checker.zeroOf_finite
+#print axioms NobleFoundation.Binary32.Checker.zeroOf_finite
+#check @NobleFoundation.Binary32.Checker.add_finite
+#print axioms NobleFoundation.Binary32.Checker.add_finite
+#check @NobleFoundation.Binary32.Checker.mul_finite
+#print axioms NobleFoundation.Binary32.Checker.mul_finite
+#check @NobleFoundation.Binary32.Checker.addFinite_of_small
+#print axioms NobleFoundation.Binary32.Checker.addFinite_of_small
+#check @NobleFoundation.Binary32.Checker.mulFinite_of_small
+#print axioms NobleFoundation.Binary32.Checker.mulFinite_of_small
+#check @NobleFoundation.Binary32.Checker.abs_le_magnitudeOf
+#print axioms NobleFoundation.Binary32.Checker.abs_le_magnitudeOf
+#check @NobleFoundation.Binary32.Checker.mul_mem_bounds
+#print axioms NobleFoundation.Binary32.Checker.mul_mem_bounds
+#check @NobleFoundation.Binary32.Checker.add_encloses
+#print axioms NobleFoundation.Binary32.Checker.add_encloses
+#check @NobleFoundation.Binary32.Checker.mul_encloses
+#print axioms NobleFoundation.Binary32.Checker.mul_encloses
+#check @NobleFoundation.Binary32.Checker.checkNode_sound
+#print axioms NobleFoundation.Binary32.Checker.checkNode_sound
+#check @NobleFoundation.Binary32.Checker.allEnclose_append
+#print axioms NobleFoundation.Binary32.Checker.allEnclose_append
+#check @NobleFoundation.Binary32.Checker.checkFrom_sound
+#print axioms NobleFoundation.Binary32.Checker.checkFrom_sound
+#check @NobleFoundation.Binary32.Checker.checkFrom_length
+#print axioms NobleFoundation.Binary32.Checker.checkFrom_length
+#check @NobleFoundation.Binary32.Checker.check_sound
+#print axioms NobleFoundation.Binary32.Checker.check_sound
+#check @NobleFoundation.Binary32.Checker.check_output_bound
+#print axioms NobleFoundation.Binary32.Checker.check_output_bound
+#check @NobleFoundation.Binary32.Checker.cancellation_certified
+#print axioms NobleFoundation.Binary32.Checker.cancellation_certified
+#check @NobleFoundation.Binary32.Checker.cancellation_applies
+#print axioms NobleFoundation.Binary32.Checker.cancellation_applies
+#check @NobleFoundation.Binary32.Checker.underestimated_error_is_refused
+#print axioms NobleFoundation.Binary32.Checker.underestimated_error_is_refused
+#check @NobleFoundation.Binary32.Checker.underestimated_range_is_refused
+#print axioms NobleFoundation.Binary32.Checker.underestimated_range_is_refused
+#check @NobleFoundation.Binary32.Checker.missing_input_error_is_refused
+#print axioms NobleFoundation.Binary32.Checker.missing_input_error_is_refused
+#check @NobleFoundation.Binary32.Checker.outside_operation_is_unsupported
+#print axioms NobleFoundation.Binary32.Checker.outside_operation_is_unsupported
+#check @NobleFoundation.Binary32.Checker.later_operand_is_unsupported
+#print axioms NobleFoundation.Binary32.Checker.later_operand_is_unsupported
+#check @NobleFoundation.Binary32.Checker.missing_output_is_unsupported
+#print axioms NobleFoundation.Binary32.Checker.missing_output_is_unsupported
+#check @NobleFoundation.Binary32.Checker.oversized_is_exhausted
+#print axioms NobleFoundation.Binary32.Checker.oversized_is_exhausted
+#check @NobleFoundation.Binary32.Checker.near_overflow_square
+#print axioms NobleFoundation.Binary32.Checker.near_overflow_square
+#check @NobleFoundation.Binary32.Checker.subnormal_needs_eta
+#print axioms NobleFoundation.Binary32.Checker.subnormal_needs_eta
+#check @NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable
+#print axioms NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable
+#check @NobleFoundation.ReverseAD.Transpose.tangentUpTo_stable
+#print axioms NobleFoundation.ReverseAD.Transpose.tangentUpTo_stable
+#check @NobleFoundation.ReverseAD.Transpose.stepCoefficient_of_not_operand
+#print axioms NobleFoundation.ReverseAD.Transpose.stepCoefficient_of_not_operand
+#check @NobleFoundation.ReverseAD.Transpose.coefficients_pair_to_the_tangent
+#print axioms NobleFoundation.ReverseAD.Transpose.coefficients_pair_to_the_tangent
+#check @NobleFoundation.ReverseAD.Transpose.leaf_coefficients_vanish
+#print axioms NobleFoundation.ReverseAD.Transpose.leaf_coefficients_vanish
+#check @NobleFoundation.ReverseAD.Transpose.frontier_succ
+#print axioms NobleFoundation.ReverseAD.Transpose.frontier_succ
+#check @NobleFoundation.ReverseAD.Transpose.frontier_invariant
+#print axioms NobleFoundation.ReverseAD.Transpose.frontier_invariant
+#check @NobleFoundation.ReverseAD.Transpose.transpose_identity
+#print axioms NobleFoundation.ReverseAD.Transpose.transpose_identity
+#check @NobleFoundation.ReverseAD.Transpose.reverse_sweep_is_the_derivative
+#print axioms NobleFoundation.ReverseAD.Transpose.reverse_sweep_is_the_derivative
+#check @NobleFoundation.ReverseAD.Transpose.slotGraph_transpose
+#print axioms NobleFoundation.ReverseAD.Transpose.slotGraph_transpose
+#check @NobleFoundation.ReverseAD.Adjoint.adjointAfter_unrolled
+#print axioms NobleFoundation.ReverseAD.Adjoint.adjointAfter_unrolled
+#check @NobleFoundation.ReverseAD.Adjoint.adjoint_step_frame
+#print axioms NobleFoundation.ReverseAD.Adjoint.adjoint_step_frame
+#check @NobleFoundation.ReverseAD.Adjoint.adjoint_final_once_processed
+#print axioms NobleFoundation.ReverseAD.Adjoint.adjoint_final_once_processed
+#check @NobleFoundation.ReverseAD.Adjoint.processed_adjoint_is_final
+#print axioms NobleFoundation.ReverseAD.Adjoint.processed_adjoint_is_final
+#check @NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq
+#print axioms NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq
+#check @NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq_seed_plus_consumers
+#print axioms NobleFoundation.ReverseAD.Adjoint.final_adjoint_eq_seed_plus_consumers
+#check @NobleFoundation.ReverseAD.Adjoint.unconsumed_final_adjoint_is_seed
+#print axioms NobleFoundation.ReverseAD.Adjoint.unconsumed_final_adjoint_is_seed
+#check @NobleFoundation.ReverseAD.Adjoint.exampleGraph_final_adjoints
+#print axioms NobleFoundation.ReverseAD.Adjoint.exampleGraph_final_adjoints
+#check @NobleFoundation.ReverseAD.Adjoint.exampleGraph_node_one_is_seed_plus_consumer
+#print axioms NobleFoundation.ReverseAD.Adjoint.exampleGraph_node_one_is_seed_plus_consumer
+#check @NobleFoundation.ReverseAD.Ordered.stored_order_changes_the_gradient
+#print axioms NobleFoundation.ReverseAD.Ordered.stored_order_changes_the_gradient
+#check @NobleFoundation.ReverseAD.Ordered.ascending_traversal_is_caught
+#print axioms NobleFoundation.ReverseAD.Ordered.ascending_traversal_is_caught
+#check @NobleFoundation.ReverseAD.Ordered.per_occurrence_accumulation_is_observable
+#print axioms NobleFoundation.ReverseAD.Ordered.per_occurrence_accumulation_is_observable
+#check @NobleFoundation.ReverseAD.Ordered.repeated_output_seeds_accumulate
+#print axioms NobleFoundation.ReverseAD.Ordered.repeated_output_seeds_accumulate
+#check @NobleFoundation.ReverseAD.Ordered.negative_zero_seed_becomes_positive
+#print axioms NobleFoundation.ReverseAD.Ordered.negative_zero_seed_becomes_positive
+#check @NobleFoundation.ReverseAD.Ordered.exact_fixture_gives_the_derivative
+#print axioms NobleFoundation.ReverseAD.Ordered.exact_fixture_gives_the_derivative
+#check @NobleFoundation.ReverseAD.Ordered.exact_gradient_is_one_in_both_orders
+#print axioms NobleFoundation.ReverseAD.Ordered.exact_gradient_is_one_in_both_orders

@@ -414,3 +414,9 @@ program, and the branch counterexample (6 new theorems; that run reported 908 in
 finiteness bridges, the total add/multiply certificate checker with `check_sound` and
 `check_output_bound`, and its decided fixtures and controls (33 new theorems; that run reported
 941 in total).
+
+## 9864cb89b — identity forwarding by operand rewriting (issue #34)
+
+`9864cb89b/` records the clean run that added `NobleFoundation.OperandForwarding`: forwarding
+soundness, the twice-forwarded first-projection residual that is exactly the program, and its
+controls (16 new theorems; that run reported 957 in total).
