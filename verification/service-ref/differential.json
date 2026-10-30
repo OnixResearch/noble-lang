@@ -1,15 +1,16 @@
 {
   "schema": "noble-service-ref-differential/v1",
-  "assertion": "the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases; not a refinement proof",
-  "source_commit": "53d7a560d53aa96e1bd563688c601245acef683e",
-  "source_tree": "831a683f1f307623e34ccdd84b6ceb75a4de03c4",
+  "assertion": "the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases, and each declared single-rule decoder mutation disagrees with at least one expectation; not a refinement proof",
+  "source_commit": "97b8bdf9d115cc124cbdcf3e6c49755ad9d1a8c1",
+  "source_tree": "ec16bfb79b6ab5974d8faf7a9be22d137b020ed8",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-service-ref-target CARGO_INCREMENTAL=0 cargo test -p noble-kernel --test m7-dataspace service_ref_differential -- --nocapture",
   "lanes": [
     "service_ref_differential::service_ref_differential_matches_the_codec",
-    "service_ref_differential::service_ref_round_trip_through_the_rust_encoder_holds"
+    "service_ref_differential::service_ref_round_trip_through_the_rust_encoder_holds",
+    "service_ref_differential::service_ref_corpus_detects_each_declared_decoder_mutation"
   ],
   "case_file": "verification/service-ref/cases.txt",
   "case_file_sha256": "f03229d9dc8556bfa8ae837f6895b683e6f2641854d153fe09381a114749fa0e",
@@ -18,11 +19,12 @@
   "model_file": "proofs/foundation/NobleFoundation/ServiceWire.lean",
   "model_file_sha256": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b",
   "lane_file": "crates/noble-kernel/tests/m7-dataspace.rs",
-  "lane_file_sha256": "708a68c03c5a2361a81da02913ae64a79f5645cb04794dd00d1bd5cc8e8dd54b",
+  "lane_file_sha256": "e099110cc89ac19060d0747a128e4abc8f1ce460b29812e7705e775f63594d9f",
   "coverage": {
     "cases": 271,
     "depth_scan_controls": 3,
-    "summary": "service-ref-differential cases=271 coverage={\"accepted\": 78, \"byteLimit\": 6, \"depthLimit\": 3, \"schema\": 184} controls=3"
+    "summary": "service-ref-differential cases=271 coverage={\"accepted\": 78, \"byteLimit\": 6, \"depthLimit\": 3, \"schema\": 184} controls=3",
+    "mutations": "service-ref-mutations cases=271 caught=[None=0 CountingOnlyDepthScan=2 DepthLimitTooStrict=3 DepthLimitTooLenient=1 ByteLimitOffByOne=1 TrailingBytesIgnored=5 ForeignTagReadsNotReady=5 ReadinessIgnored=41 EmptyNameAccepted=1 NameLengthOffByOne=1]"
   },
   "correspondence": {
     "route": "handwritten Lean reference compared against the Rust functions by this differential lane",
@@ -32,13 +34,88 @@
       },
       "receipts": [
         {
+          "receipt": "verification/foundation/receipts/14a7793c9/foundation-check.json",
+          "source_commit": "14a7793c9a40dc88ae131cb647337290abc049c2",
+          "model_theorems": 28
+        },
+        {
           "receipt": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
           "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
           "model_theorems": 28
         },
         {
+          "receipt": "verification/foundation/receipts/23462be4b/foundation-check.json",
+          "source_commit": "23462be4b0127876684c10e0d732822ce9ecba7e",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/42350bf01/foundation-check.json",
+          "source_commit": "42350bf01bf0366fc9336321f9040f4c42a46e16",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/48a7a4cbd/foundation-check.json",
+          "source_commit": "48a7a4cbde814d7f569042924b22e59d1a193f3e",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/50ec19885/foundation-check.json",
+          "source_commit": "50ec198852f8b050e1675ede4a08b91726bf8b9a",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/58aaefd05/foundation-check.json",
+          "source_commit": "58aaefd052dceb64d4e1fc996e22c40d2a8a3291",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/620b43395/foundation-check.json",
+          "source_commit": "620b43395561f37d630db81bb12f7a9d121f1453",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/656ec91b4/foundation-check.json",
+          "source_commit": "656ec91b45983c4c394263a42bfc13fa7c9d12f3",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/84753c99e/foundation-check.json",
+          "source_commit": "84753c99eddcc6e4c0075d2f1141d5fa16e83548",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/9936fe19c/foundation-check.json",
+          "source_commit": "9936fe19c92d59570c9ecdc665d7a76fde098361",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/9c93d6cc8/foundation-check.json",
+          "source_commit": "9c93d6cc8f55da89c4a58b04506a3c39020c7c4c",
+          "model_theorems": 28
+        },
+        {
           "receipt": "verification/foundation/receipts/9f1288d61/foundation-check.json",
           "source_commit": "9f1288d61df2766fe49391e582b56fce11f54e3c",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/a8877ff78/foundation-check.json",
+          "source_commit": "a8877ff78ef915f099e0faa75dc2bd76289fc3ed",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/d23d0c485/foundation-check.json",
+          "source_commit": "d23d0c48549b0f6ea4b266508a81efe91b75bc92",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/d3f856d50/foundation-check.json",
+          "source_commit": "d3f856d50ed4b3c1b0626864547f09195c96d31f",
+          "model_theorems": 28
+        },
+        {
+          "receipt": "verification/foundation/receipts/e417bf841/foundation-check.json",
+          "source_commit": "e417bf8413875c1cc59665dd590a00b63baa842a",
           "model_theorems": 28
         }
       ]
@@ -48,6 +125,7 @@
   "claims": [
     "Tested-implementation evidence for the Rust ServiceRef codec against a specification written down independently of it.",
     "The model-to-Rust edge stays open: no refinement proof, no cross-platform claim.",
-    "The model depth scan is balanced like the codec, and the control cases record what a counting-only scan would decide instead."
+    "The model depth scan is balanced like the codec, and the control cases record what a counting-only scan would decide instead.",
+    "Each declared mutation is the codec with one rule changed, simulated from its own decisions; they are seeded faults, not an exhaustive fault model."
   ]
 }
