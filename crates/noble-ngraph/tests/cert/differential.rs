@@ -31,12 +31,16 @@ pub(super) struct SumOperands {
     pub(super) second: i64,
 }
 
-pub(super) fn constant_sum(operands: SumOperands) -> noble_ngraph::ir::Graph {
-    let scheme = TestIds;
-    let mut builder = noble_ngraph::ir::GraphBuilder::new(
+/// An empty `I64` graph builder whose subject is authored under the test scheme.
+fn i64_builder(subject: &str) -> noble_ngraph::ir::GraphBuilder {
+    noble_ngraph::ir::GraphBuilder::new(
         noble_ngraph::ir::SubProfile::I64,
-        noble_ngraph::ir::Subject::authored(&scheme, "cert-differential"),
-    );
+        noble_ngraph::ir::Subject::authored(&TestIds, subject),
+    )
+}
+
+pub(super) fn constant_sum(operands: SumOperands) -> noble_ngraph::ir::Graph {
+    let mut builder = i64_builder("cert-differential");
     let input = builder.input(noble_ngraph::ir::ScalarType::I64);
     let a = builder.i64_const(operands.first);
     let b = builder.i64_const(operands.second);
@@ -49,11 +53,7 @@ pub(super) fn constant_sum(operands: SumOperands) -> noble_ngraph::ir::Graph {
 }
 
 pub(super) fn symbolic_sum() -> noble_ngraph::ir::Graph {
-    let scheme = TestIds;
-    let mut builder = noble_ngraph::ir::GraphBuilder::new(
-        noble_ngraph::ir::SubProfile::I64,
-        noble_ngraph::ir::Subject::authored(&scheme, "cert-symbolic"),
-    );
+    let mut builder = i64_builder("cert-symbolic");
     let input = builder.input(noble_ngraph::ir::ScalarType::I64);
     let other = builder.input(noble_ngraph::ir::ScalarType::I64);
     let sum = builder.op(noble_ngraph::ir::Op::I64Add(input, other));
@@ -67,11 +67,7 @@ pub(super) fn symbolic_sum() -> noble_ngraph::ir::Graph {
 /// derivation has three steps over the original graph. The folded-away operand constants stay
 /// outputs, so the folded endpoint has no dangling node and is admitted.
 pub(super) fn independent_folds() -> noble_ngraph::ir::Graph {
-    let scheme = TestIds;
-    let mut builder = noble_ngraph::ir::GraphBuilder::new(
-        noble_ngraph::ir::SubProfile::I64,
-        noble_ngraph::ir::Subject::authored(&scheme, "cert-multi-step"),
-    );
+    let mut builder = i64_builder("cert-multi-step");
     let input = builder.input(noble_ngraph::ir::ScalarType::I64);
     let three = builder.i64_const(3);
     let five = builder.i64_const(5);
