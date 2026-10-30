@@ -37,3 +37,4 @@ import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
+import NobleFoundation.ConstructorReuse

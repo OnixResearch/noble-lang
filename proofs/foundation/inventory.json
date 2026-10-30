@@ -4376,6 +4376,60 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "naive concatenation collides on two differently segmented field lists"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.makeCell_requested",
+      "phase": 1,
+      "role": "reuse-model",
+      "claim": "makeCell records the requested tag, field shape, size and initialized state"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.reuseStep_success",
+      "phase": 1,
+      "role": "reuse-model",
+      "claim": "a present cell can be overwritten by the explicit updated heap when sizes match"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.reuseStep_refuses_size_mismatch",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "reuseStep returns none when the old and requested cell sizes differ"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.reuseStep_replaces_unique_root",
+      "phase": 1,
+      "role": "reuse-model",
+      "claim": "under one root occurrence the replacement is observed at the reused address and every other root is unchanged"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.reuseStep_initializes_requested_cell",
+      "phase": 1,
+      "role": "reuse-model",
+      "claim": "successful unique-root reuse exposes the requested tag, size, fields and initialized replacement"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.eligible_replacement_has_no_resource",
+      "phase": 1,
+      "role": "ownership-control",
+      "claim": "a resource-eligible replacement cell contains no must-use resource in its fields"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.eligible_replacement_requires_move",
+      "phase": 1,
+      "role": "ownership-control",
+      "claim": "replacing a resource-carrying cell with an eligible cell models the resource as moved out of the replacement fields"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.wrapped_resource_is_not_reuse_eligible",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a wrapped must-use resource is detected and is not duplicable or reuse-eligible"
+    },
+    {
+      "name": "NobleFoundation.ConstructorReuse.shared_alias_control",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "two roots at one address observe a changed value after overwrite, so shared aliases fail the reuse control"
     }
   ]
 }

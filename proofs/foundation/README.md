@@ -185,6 +185,7 @@ Status words:
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
 | Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `isop_exact`, `isop_bounds`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
+| Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
 
@@ -925,6 +926,49 @@ Open, and deliberately not closed by this model:
   retention/reclamation and the host-ledger OWN-PO-4..7 obligations;
 - host resource release: no acquired decision in this fragment releases a native
   object, and no runtime claim follows for an unimplemented profile.
+
+## Constructor reuse under a unique root (issue #36, phase 1)
+
+`NobleFoundation/ConstructorReuse.lean` is a finite observation model for the
+ownership-aware direct-lowering reuse candidate. A heap is a lookup
+`Nat → Option Cell`; each `Cell` records a tag, a size and an ordered field
+list, and each field records a target reference plus an ownership payload.
+`reachableFrom` deliberately has depth one: it recognizes a root itself or a
+target named by one of that root's fields, and does not recurse through target
+cells. `unique roots r` means that `r` occurs exactly once in the ordered root
+list.
+
+`reuseStep` overwrites one present cell only when the old and requested sizes
+match. `reuseStep_replaces_unique_root` models consumption of the old value by
+the unique root: that root observes the requested replacement while every
+other root at a different reference observes the same cell as before.
+`reuseStep_initializes_requested_cell` exposes the requested tag, field shape,
+size and initialized state, and `reuseStep_refuses_size_mismatch` is the
+refusal control. The `shared_alias_control` fixture has two roots at one
+address and is checked by `decide`; its second root observes the changed cell,
+which is why uniqueness is required rather than inferred from a last use.
+
+The resource control uses `Ownership.containsResource` recursively and
+`Ownership.duplicable` for every field payload. A wrapped must-use resource is
+therefore detected and is not reuse-eligible
+(`wrapped_resource_is_not_reuse_eligible`). This model has no resource-transfer
+operation: "moved" means only that the resource is absent from the replacement
+fields (`resourceMoved` and `eligible_replacement_requires_move`). Ordinary
+immutable data remains eligible when its payloads are duplicable.
+
+The parent attaches the clean foundation receipt at integration.
+
+Open, and deliberately not closed by this model:
+
+- recording that the post-M3 layout trial is selected remains an owner decision;
+- the frozen experiment configuration and decision thresholds remain an owner
+  decision;
+- any default change remains an owner decision;
+- allocator, lowering, runtime and Wasm correspondence is not modelled;
+- no ADAPT-17 workload has been executed by this model, including quota,
+  cleanup, capture, reflection and ordered-effect controls;
+- no allocation, copy, retained-byte, stack-bound or performance claim follows
+  from the finite overwrite equations.
 
 ## Checkpoint-scoped authority ledger (issue #66)
 
