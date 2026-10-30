@@ -345,3 +345,10 @@ fixtures (23 new theorems; that run reported 775 in total). Identity forwarding 
 bracket, the lower scale premise for every positive input, the upper premise off the power
 boundary, its refutation at `1/2`, the exact carry on the boundary, and the premise-free
 normal-range absolute and relative bounds (17 new theorems; that run reported 792 in total).
+
+## 309f46c02 — reverse-AD mutated-update controls (issue #45)
+
+`309f46c02/` records the clean run that added `Node.sub` to `NobleFoundation.ReverseAD` and the
+`NobleFoundation.ReverseAD.Mutations` controls: the parameterised sweep equal to
+`adjointAfter`, four seeded update-rule faults caught on `slotGraph`, and the subtraction fixture
+with its sign control (12 new theorems; that run reported 804 in total).

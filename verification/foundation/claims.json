@@ -10,7 +10,7 @@
     "assumed": 0,
     "open": 18
   },
-  "inventoried_theorems": 792,
+  "inventoried_theorems": 804,
   "document_only_names": {
     "acceptLiteral": "Phase-1 literal-acceptance specification function, transcribed and proved through accumulate_eq_acceptLiteral",
     "ArithSpec": "Phase-1 arithmetic specification structure whose fields add_spec/sub_spec/mul_spec are inventoried"

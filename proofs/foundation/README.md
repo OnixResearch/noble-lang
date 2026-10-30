@@ -1149,7 +1149,10 @@ the Mathlib derivative), and the model sweep gives exactly those gradients
 `y` gradient to `2` (`subGraph_subSignFlipped_caught`). These are seeded faults, not an
 exhaustive fault model.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the mutation controls is
+[`verification/foundation/receipts/309f46c02/`](../../verification/foundation/receipts/309f46c02/foundation-check.json)
+(804 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
