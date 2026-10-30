@@ -3884,6 +3884,72 @@
       "phase": 1,
       "role": "checked-i64",
       "claim": "signed minimum divided by negative one returns overflow rather than a quotient"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.version_ok_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "the validator revision check implies the selected contract version"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.reciprocity_ok_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "the finite reciprocal check implies a fixed-point-free unique-incidence involution"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.compatibility_ok_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "the finite edge check implies arity-valid and compatible ordered port roles"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.boundary_ok_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "the boundary check implies the exact ordered output ports"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.validate_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "validator acceptance implies reciprocal compatible wiring and the exact ordered boundary"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.deeper_minus_top_is_accepted",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the compiled deeper-minus-top subtraction net is accepted"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.swapped_sub_operands_are_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "swapping subtraction operand ports is rejected"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.dangling_wire_is_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a dangling non-reciprocal wire is rejected"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.aliased_incidence_is_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "duplicate source incidence is rejected"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.two_output_boundary_is_accepted",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the two-output fixture is accepted with declaration order preserved"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.wrong_output_order_is_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a permutation of declared output order is rejected"
     }
   ]
 }

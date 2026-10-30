@@ -32,3 +32,4 @@ import NobleFoundation.Effects
 import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
 import NobleFoundation.BatchRows
+import NobleFoundation.InteractionNet

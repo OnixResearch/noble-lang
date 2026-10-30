@@ -180,6 +180,7 @@ Status words:
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
+| Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -2047,3 +2048,40 @@ receipts are under
 [`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md).
 Receipt [`verification/foundation/receipts/b3655a9cd/`](../../verification/foundation/receipts/b3655a9cd/foundation-check.json)
 (435 theorems, `clean_source: true`).
+
+## Checked interaction-net contract (issue #37, phase 1)
+
+`NobleFoundation/InteractionNet.lean` is a versioned (contract revision `1`),
+structural contract for the bounded checked I64 interaction-net backend.
+`AgentKind` names the typed
+input, constant, add, sub, mul, equality, dup/fanout, era/erase and output
+agents. `Port` uses an explicit natural-number agent and slot; `validPort`
+performs the declared arity check. A net's wiring is a finite association list
+with both directions represented, and its boundary is an ordered list of output
+principal ports.
+
+Proved model claims:
+
+- `version_ok_sound` shows that every accepted declaration selects the pinned
+  contract revision;
+- `reciprocity_ok_sound` turns the finite reciprocal obligation into a
+  fixed-point-free involution with exactly one incidence per declared port;
+- `compatibility_ok_sound` turns each accepted association into valid,
+  principal/auxiliary-compatible and ordered-operand-compatible connected
+  ports, including the source-order deeper/top distinction for binary agents;
+- `boundary_ok_sound` and `validate_sound` preserve the exact declared output
+  order and combine all three obligations into validator soundness;
+- `deeper_minus_top_is_accepted` is the accepted compiled net for the
+  structural `x - y` shape (input 0 is deeper and input 1 is top), while
+  `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`,
+  `aliased_incidence_is_rejected` and `wrong_output_order_is_rejected` are
+  kernel-checked refusal controls. `two_output_boundary_is_accepted` supplies
+  the positive ordered-boundary fixture used by the last control.
+
+The module is a contract and wiring validator only. Open, and deliberately not
+closed: reduction rules, termination, confluence, readback correctness, the
+graph-to-net translation proof, resource/byte/work budgets, and the owner's
+continuation criteria. No Rust or runtime correspondence follows from these
+theorems. The parent integration will attach the clean foundation receipt after
+the unit is rebased with the other issue slices; this worktree does not create
+that receipt or regenerate `verification/foundation/claims.json`.
