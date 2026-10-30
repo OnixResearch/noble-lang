@@ -24,6 +24,7 @@ const laneFile = 'crates/noble-kernel/tests/m7-dataspace.rs';
 const lanes = [
   'service_ref_differential::service_ref_differential_matches_the_codec',
   'service_ref_differential::service_ref_round_trip_through_the_rust_encoder_holds',
+  'service_ref_differential::service_ref_corpus_detects_each_declared_decoder_mutation',
 ];
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-service-ref-target CARGO_INCREMENTAL=0 ' +
   'cargo test -p noble-kernel --test m7-dataspace service_ref_differential -- --nocapture';
@@ -74,10 +75,12 @@ const cases = Number(/cases=(\d+)/u.exec(summary)?.[1]);
 const controls = Number(/controls=(\d+)/u.exec(summary)?.[1]);
 if (!Number.isInteger(cases) || cases === 0) throw new Error(`coverage line lacks a case count: ${summary}`);
 if (!Number.isInteger(controls) || controls === 0) throw new Error(`coverage line lacks a control count: ${summary}`);
+const mutations = laneRun.split('\n').find((line) => line.startsWith('service-ref-mutations '));
+if (!mutations) throw new Error(`differential lane printed no mutation line\n${laneRun.slice(-4000)}`);
 
 const receipt = {
   schema: 'noble-service-ref-differential/v1',
-  assertion: 'the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases; not a refinement proof',
+  assertion: 'the Rust ServiceRef codec matches every independent expectation generated from the Lean model on this host and target, including the balanced depth-scan control cases, and each declared single-rule decoder mutation disagrees with at least one expectation; not a refinement proof',
   source_commit: head,
   source_tree: tree,
   clean_source: true,
@@ -93,7 +96,7 @@ const receipt = {
   model_file_sha256: sha256(modelFile),
   lane_file: laneFile,
   lane_file_sha256: sha256(laneFile),
-  coverage: { cases, depth_scan_controls: controls, summary: summary.trim() },
+  coverage: { cases, depth_scan_controls: controls, summary: summary.trim(), mutations: mutations.trim() },
   correspondence: {
     route: 'handwritten Lean reference compared against the Rust functions by this differential lane',
     model_theorems: receiptsBindingModel(root, [modelFile], 'NobleFoundation.ServiceWire'),
@@ -103,6 +106,7 @@ const receipt = {
     'Tested-implementation evidence for the Rust ServiceRef codec against a specification written down independently of it.',
     'The model-to-Rust edge stays open: no refinement proof, no cross-platform claim.',
     'The model depth scan is balanced like the codec, and the control cases record what a counting-only scan would decide instead.',
+    'Each declared mutation is the codec with one rule changed, simulated from its own decisions; they are seeded faults, not an exhaustive fault model.',
   ],
 };
 fs.mkdirSync(path.dirname(output), { recursive: true });

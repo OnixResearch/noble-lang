@@ -1743,6 +1743,13 @@ through two generated inputs),
 configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
 substitutions and seeded generated values, with three `control-` cases that a
 counting-only depth scan would decide differently. The lane agrees on every case.
+Nine seeded decoder faults run through the same cases in
+`service_ref_corpus_detects_each_declared_decoder_mutation`: a counting-only depth
+scan, a depth limit one level too strict and one too lenient, a byte budget one
+byte too lenient, ignored trailing bytes, a foreign tag read as not ready, ignored
+readiness, an admitted empty name and an admitted 33-byte name. Each is the decoder
+with one rule changed, simulated from its own decisions, and each disagrees with at
+least one expectation; four of them with exactly one case.
 
 Twenty-eight inventoried theorems after the correction, receipt
 [verification/foundation/receipts/9f1288d61/](../../verification/foundation/receipts/9f1288d61/foundation-check.json)
@@ -1753,8 +1760,8 @@ Twenty-eight inventoried theorems after the correction, receipt
 Open, and deliberately not closed: an Aeneas extraction of `decode_service` and
 `encode_service` exists in `proofs/m3/NobleKernel/Funs.lean`, but no refinement
 proof relates it to the model, so the differential is finite evidence on one host
-and target rather than a correspondence theorem. No faulty-decoder control is run
-through the differential. The canonicality theorems apply to this closed schema
+and target rather than a correspondence theorem. No whitespace insertion or
+deletion family exists, and the seeded faults are not an exhaustive fault model. The canonicality theorems apply to this closed schema
 only, not to JSON documents in general, and no zero-copy, whole-parser or
 whole-compiler claim follows.
 
