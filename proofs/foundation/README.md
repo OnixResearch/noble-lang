@@ -1219,7 +1219,10 @@ by cases on addition, subtraction and multiplication). So the frontier pairing n
 (`frontier_invariant`), and at the end only the leaves carry weight. `slotGraph_transpose` instantiates
 the identity on `slotGraph`, where the pairing is `17`.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the transpose identity is
+[`verification/foundation/receipts/6c77ad023/`](../../verification/foundation/receipts/6c77ad023/foundation-check.json)
+(838 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 

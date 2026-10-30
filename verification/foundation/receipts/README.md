@@ -366,3 +366,10 @@ theorems; that run reported 813 in total).
 branch of `roundPositive` within `2^-150`, the finite absolute error rule over every binade, the
 attained bound at the smallest normal, and the relative-error control (15 new theorems; that run
 reported 828 in total).
+
+## 6c77ad023 — reverse-AD transpose identity over every graph (issue #45)
+
+`6c77ad023/` records the clean run that added `NobleFoundation.ReverseAD.Transpose`: prefix
+stability, the coefficient-tangent linearity per node kind, the frontier invariant, the transpose
+identity over every well-formed graph, and the reverse sweep as the Mathlib derivative (10 new
+theorems; that run reported 838 in total).
