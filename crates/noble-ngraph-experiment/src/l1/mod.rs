@@ -587,13 +587,13 @@ fn expectations(submissions: &[String], roles: &[Role]) -> Result<Vec<Expected>,
 
 /// One report line, at most [`MAX_REPORT_BYTES`] long, without its newline.
 fn read_line(reader: &mut impl std::io::BufRead) -> Result<Option<String>, String> {
-    let limit = u64::try_from(MAX_REPORT_BYTES)
+    let limit_bytes = u64::try_from(MAX_REPORT_BYTES)
         .unwrap_or(u64::MAX)
         .saturating_add(1);
     let mut line = Vec::new();
     let read = reader
         .by_ref()
-        .take(limit)
+        .take(limit_bytes)
         .read_until(b'\n', &mut line)
         .map_err(|e| format!("reading reports: {e}"))?;
     if read == 0 {
