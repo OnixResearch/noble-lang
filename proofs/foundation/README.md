@@ -172,7 +172,7 @@ Status words:
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
-| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, and the wrong-slot control). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
+| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, the wrong-slot control, and five seeded update-rule mutations caught, including the subtraction sign). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Subnormal error rule and implementation correspondence **open** |
@@ -1068,10 +1068,11 @@ Open, and deliberately not closed:
 
 `NobleFoundation/ReverseAD.lean` models the bounded smooth slice — a
 well-formed acyclic graph over the reals with explicit input and parameter slots,
-exact finite constants, addition and multiplication, and one selected output.
-Guards, indexing, Boolean paths, activation corners, surrogate rules, and the
-subtraction and ordered affine terms the issue grants only later are outside the
-file, as are dynamic Programs.
+exact finite constants, addition, subtraction and multiplication, and one
+selected output. Guards, indexing, Boolean paths, activation corners, surrogate
+rules, and the ordered affine terms the issue grants only later are outside the
+file, as are dynamic Programs. Subtraction was admitted after the add/multiply
+core was proved; its derivative case is part of `evalStep_hasDerivAt`.
 
 Proved: a node's evaluation is differentiable along a direction line whenever its
 operands are (`evalStep_hasDerivAt`), and by induction on the stored order every
@@ -1126,6 +1127,29 @@ Receipt:
 (606 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`). The phase-1 theorems were first retained at
 `b91f5504c`.
+
+`NobleFoundation/ReverseADMutations.lean` adds mutated-update controls. It reruns the sweep
+with its partial-derivative rule as a parameter; `adjointAfterWith_stepCoefficient` proves
+that under the model's rule this is exactly `adjointAfter`, so each mutant differs from the
+checked sweep in its one rule only. On `slotGraph`, where the tangents are `17` and `26`:
+
+- a multiplication rule that uses each operand's own value instead of its partner's gives
+  `24` and `22` (`slotGraph_mulOwnValue_caught`);
+- an addition rule that drops its second operand gives `0` and `1`
+  (`slotGraph_addDropsSecond_caught`);
+- counting a repeated multiplication operand once gives `17` and `24`: only the slot behind
+  `mul 0 0` moves (`slotGraph_repeatedCountedOnce_caught`);
+- overwriting adjoints instead of accumulating gives `1` and `1` (`slotGraph_overwrite_caught`).
+
+The subtraction-sign control needs a subtraction node, so `subGraph` computes `(x - y)^2` with
+non-index-aligned slots and the operands of `sub 1 0` in reverse node order. Its tangents are
+`2` and `-2` (`subGraph_tangents`, with `subGraph_derivative_slot_one` tying the `y` tangent to
+the Mathlib derivative), and the model sweep gives exactly those gradients
+(`subGraph_slotGradients_match_tangents`). Flipping the sign of the second operand moves the
+`y` gradient to `2` (`subGraph_subSignFlipped_caught`). These are seeded faults, not an
+exhaustive fault model.
+
+The parent attaches the clean foundation receipt at integration.
 
 Open, and deliberately not closed:
 

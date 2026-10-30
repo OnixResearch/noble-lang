@@ -2,11 +2,12 @@
 Reverse-mode AD reference for the bounded smooth graph slice (issue #45, phase 1).
 
 The fragment is a finite, well-formed, acyclic graph over the reals with explicit
-input and parameter slots, exact finite constants, addition and multiplication.
-It has one selected output node. Guards, indexing, Boolean paths, activation
-corners, surrogate rules and dynamic Programs are outside this file, and so are
-subtraction and ordered affine terms, which the issue admits only after this
-core is proved.
+input and parameter slots, exact finite constants, addition, subtraction and
+multiplication. It has one selected output node. Guards, indexing, Boolean paths,
+activation corners, surrogate rules and dynamic Programs are outside this file, and
+so are ordered affine terms. Subtraction was admitted after the add/multiply core was
+proved, so the sign of its second operand has a checked mutation control
+(`ReverseADMutations.lean`).
 
 The two concerns stay separate, following the "differentiate, then
 transpose" decomposition of *You Only Linearize Once* as a proof decomposition
@@ -55,6 +56,8 @@ inductive Node where
   | constant (value : ℝ)
   /-- `a + b`. -/
   | add (a b : Nat)
+  /-- `a - b`. -/
+  | sub (a b : Nat)
   /-- `a * b`. -/
   | mul (a b : Nat)
 
@@ -63,6 +66,7 @@ operand twice, which is exactly the case where accumulation must add rather
 than overwrite. -/
 def Node.operands : Node → List Nat
   | .add a b => [a, b]
+  | .sub a b => [a, b]
   | .mul a b => [a, b]
   | _ => []
 
@@ -84,6 +88,7 @@ def evalStep (values : Nat → ℝ) (node : Node) (is ip : Nat → ℝ) : ℝ :=
   | .param slot => ip slot
   | .constant value => value
   | .add a b => values a + values b
+  | .sub a b => values a - values b
   | .mul a b => values a * values b
 
 /-- The denotation of the first `count` nodes. Node `count - 1` is the newest,
@@ -106,6 +111,7 @@ def tangentStep (values tangents : Nat → ℝ) (node : Node) (ds dp : Nat → �
   | .param slot => dp slot
   | .constant _ => 0
   | .add a b => tangents a + tangents b
+  | .sub a b => tangents a - tangents b
   | .mul a b => tangents a * values b + values a * tangents b
 
 /-- The forward tangent of the first `count` nodes. -/
@@ -158,6 +164,9 @@ theorem evalStep_hasDerivAt (values : ℝ → Nat → ℝ) (tangents : Nat → �
       exact hasDerivAt_const (x := (0 : ℝ)) value
   | add a b =>
       exact HasDerivAt.add (hvalues a (by simp [Node.operands]))
+        (hvalues b (by simp [Node.operands]))
+  | sub a b =>
+      exact HasDerivAt.sub (hvalues a (by simp [Node.operands]))
         (hvalues b (by simp [Node.operands]))
   | mul a b =>
       exact HasDerivAt.mul (hvalues a (by simp [Node.operands]))
@@ -219,6 +228,7 @@ from both occurrences. -/
 def stepCoefficient (values : Nat → ℝ) (node : Node) (operand : Nat) : ℝ :=
   match node with
   | .add a b => (if a = operand then 1 else 0) + (if b = operand then 1 else 0)
+  | .sub a b => (if a = operand then 1 else 0) + (if b = operand then -1 else 0)
   | .mul a b =>
       (if a = operand then values b else 0) + (if b = operand then values a else 0)
   | .input _ => 0

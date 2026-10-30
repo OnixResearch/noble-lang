@@ -4760,6 +4760,78 @@
       "phase": 2,
       "role": "binary32-error",
       "claim": "at 1/2, where the upper premise fails, the result is exact and the absolute bound holds"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.adjointAfterWith_stepCoefficient",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "the reverse sweep parameterised by its update rule is exactly adjointAfter under the model rule"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.slotGradientWith_stepCoefficient",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "slot gradients of the parameterised sweep under the model rule are the model slot gradients"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.slotGraph_mulOwnValue_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a multiplication rule that pairs each operand with its own value moves both slot gradients off the tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.slotGraph_addDropsSecond_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "an addition rule that drops its second operand moves both slot gradients off the tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.slotGraph_repeatedCountedOnce_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "counting a repeated multiplication operand once moves the slot behind it off its tangent while the other slot stays correct"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.slotGraph_overwrite_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "overwriting adjoints instead of accumulating moves both slot gradients off the tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the non-index-aligned subtraction fixture is well formed"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_value",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the subtraction fixture computes (x - y)^2 = 1 at x = 3, y = 2"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_tangents",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the subtraction fixture tangents are 2 along x and -2 along y"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_derivative_slot_one",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the y tangent of the subtraction fixture is the Mathlib derivative"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_slotGradients_match_tangents",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the model sweep gives the subtraction fixture slot gradients 2 and -2, its tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Mutations.subGraph_subSignFlipped_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a subtraction rule with the wrong second-operand sign moves the y gradient to 2 where the derivative is -2"
     }
   ]
 }
