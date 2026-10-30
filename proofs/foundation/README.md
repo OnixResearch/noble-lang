@@ -932,7 +932,10 @@ admitted on two agreeing stacks or on neither and leaves stacks that agree again
 count, and `lift_fixture` runs a three-word sequence over stacks with different owners.
 Branches and the error return compare actual results and stay outside the lift.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the per-word rules and the join lift is
+[`verification/foundation/receipts/0cf855674/`](../../verification/foundation/receipts/0cf855674/foundation-check.json)
+(813 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 The retained receipt for the corrected swap rule is
 [`verification/foundation/receipts/23462be4b/`](../../verification/foundation/receipts/23462be4b/foundation-check.json):

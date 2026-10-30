@@ -352,3 +352,10 @@ normal-range absolute and relative bounds (17 new theorems; that run reported 79
 `NobleFoundation.ReverseAD.Mutations` controls: the parameterised sweep equal to
 `adjointAfter`, four seeded update-rule faults caught on `slotGraph`, and the subtraction fixture
 with its sign control (12 new theorems; that run reported 804 in total).
+
+## 0cf855674 — ownership per-word rules and join lift (issue #59)
+
+`0cf855674/` records the clean run that added `NobleFoundation.OwnershipJudgment`: independent
+per-word rules equivalent to `step`, the judgment on them equal to `Accounts`, checker
+completeness, and the eligibility-agreement lift over straight-line word sequences (9 new
+theorems; that run reported 813 in total).
