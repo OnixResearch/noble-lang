@@ -898,6 +898,258 @@
       "claim": "a program whose input expects a resource is still copyable data"
     },
     {
+      "name": "NobleFoundation.RegionProtocol.step_not_busy",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "one host call never leaves the owner busy at a guest boundary"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exec_not_busy",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "no execution prefix reaches a busy owner from a state that is not busy"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.run_final_owner",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "after any run the owner is neither live nor busy"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_success",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "in bounds under the scope limit with access, completion and lowering, the subject reads R[off..off+len), commits the read and is released once by the guest"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_bounds_reject",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "out of bounds the subject read is refused as bounds-reject with no region-read commit, and the guest still releases once"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_invalid_handle",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "in bounds but past the scope limit or with access refused, the read is refused as invalid-handle and the guest still releases once"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_normal_return",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "every normal return of the subject is the success postcondition or an ordinary error without a region-read commit"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_rejects_exactly_out_of_bounds",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "for the authentic owner under the scope limit with access, the error is bounds-reject exactly when the in-bounds condition fails"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.slice_length",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "an in-bounds slice has exactly the requested length"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.step_release_count",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "one host call commits exactly the releases that move the owner into a released state"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exec_release_count",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "an execution commits exactly the releases that move the owner into a released state"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.retire_release_count",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the host cleanup commits a release exactly when it retires a live owner"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exactly_one_release_commit",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "every run from a live owner commits exactly one release, unless a failed completion lost the owner"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.step_keeps_owner_without_loss",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "when every completion succeeds, one host call never loses the owner"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exactly_one_release_under_completion",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "when every completion succeeds, every run from a live owner commits exactly one release"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.monitor_append",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the monitor over two concatenated traces is the monitor over the first, then the second"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.step_accepted",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the monitor accepts every host call and keeps agreeing with the owner state"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exec_accepted",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the monitor accepts every execution prefix"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.retire_accepted",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the monitor accepts the host cleanup"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.run_is_accepted",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the monitor encoding P2 to P5 accepts every run from a live owner, for every host and program"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.monitor_refuses_ok_after_release",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "once a release is committed the monitor refuses every ok response"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.monitor_commit_needs_its_request",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "a region-read commit passes the monitor only directly after an authentic in-bounds read request with the same arguments"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.monitor_response_answers_a_read",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "a response passes the monitor only as the single answer to a pending read, and an ok only with its commit and the requested length"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exec_append",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "executing two programs in sequence executes the first and, unless it stopped, the second from the state it reached"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.stop_discards_the_rest",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "once an execution stops no later action executes"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.abort_tail",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "a run is its execution prefix followed by at most the host retirement"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.seq",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "sequential composition over identical intermediate states concatenates traces in program order"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.read_triple",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the borrowed read triple from a live owner under the success premises"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.release_triple",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the release triple from a live owner"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_by_seq",
+      "phase": 2,
+      "role": "region-protocol",
+      "claim": "the subject success trace is the read trace followed by the release trace, by seq"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.subject_reads_the_slice",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "on R = 000102 the subject reads 0102 at (1, 2) and the empty slice at (3, 0)"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.out_of_bounds_reads_are_rejected",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "(3, 1), (2, 2), (-1, 1) and (i64::MAX, 1) fail the in-bounds condition, and (-1, 1) is refused as bounds-reject"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.the_sixty_fifth_read_is_refused",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "sixty-four reads pass and the sixty-fifth is refused as invalid-handle with no commit"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.forged_claim_is_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a forged claim is refused as invalid-handle with nothing committed and the owner unchanged"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.trap_after_commit",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "a trap after the protected copy keeps the committed prefix and the host retires the owner once"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.lowering_failure_traps_after_commit",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "a failed lowering traps after the region-read commit and before any response"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.stops_are_classified",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "a trap before any request leaves only the retirement, and a fuel stop is classified apart from a trap"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.omitted_release_is_retired",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "a guest returning without release is retired by the host, not credited with a release"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.double_release_and_use_after_release_trap",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a second release and a read after release both trap with exactly one release commit"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.counters_do_not_commute",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a composition rule that matches only owner states is unsound: the scope counter changes the composite trace"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.no_set_union_rule",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "read then release returns while release then read traps, and the composite traces are not permutations of each other"
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.monitor_rejects_violations",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "the monitor refuses a double release, an ok after release, an unsolicited response, a commit without its request, a forged or out-of-bounds commit, a wrong-length ok, an ok without its commit and a second response"
+    },
+    {
       "name": "NobleFoundation.LinkBoundary.split_entry_lookup",
       "phase": 3,
       "role": "named-linking-fixture",

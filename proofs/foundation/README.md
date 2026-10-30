@@ -179,6 +179,7 @@ Status words:
 | Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
 | Rounding error of whole operation sequences (issue #44) | `exactValue_signed`, `roundScaled_relative_error`, `add_relative_error`, `mul_relative_error`, `step_bound`, `fold_error`, `cancellation_needs_the_term_scale` | exact `Binary32Sequence` model only; each rounding's carried exponent in the normal range is a premise, and no Rust/host correspondence is claimed | model **proved**: one model addition or multiplication is within `2^-24` of its exact result relatively, and the ordered affine fold of `n` terms within `((1 + 2^-24)^(2n) - 1)` times the bias and term magnitudes. Implementation correspondence **open** |
 | Sequence error with subnormal intermediates (issue #44) | `roundPositive_mixed_error`, `add_mixed_error`, `mul_mixed_error`, `step_bound_mixed`, `fold_finite_error`, `subnormal_needs_the_absolute_term` | exact `Binary32SequenceFinite` model only; no overflow is the only premise, and no Rust/host correspondence is claimed | model **proved**: every finite rounding is within `2^-24 · \|x\| + 2^-150`, and the ordered affine fold adds `3n(1 + 2^-24)^n · 2^-150` to the relative bound. Implementation correspondence **open** |
+| `RegionProtocol-v1` normal-return postconditions, prefix safety and composition (issue #9) | `subject_normal_return`, `subject_rejects_exactly_out_of_bounds`, `exactly_one_release_commit`, `run_is_accepted`, `stop_discards_the_rest`, `seq`, `counters_do_not_commute`, `no_set_union_rule` | the `RegionProtocol` model only: its host is an explicit oracle under A1–A6, and no Wasmtime, Canonical ABI, host-Rust or component correspondence is claimed | model **proved** (T1–T3); T4–T6 and every runtime case **open** |
 | Roundoff certificate checker for the add/multiply fragment (issue #44) | `check_sound`, `check_output_bound`, `noOverflow_of_lt`, `add_finite`, `mul_mem_bounds`, `subnormal_needs_eta` | exact `Binary32Checker` model only; a model graph of inputs, constants, `add` and `mul`, no encoded `noble-ngraph` graph, analyzer or Rust/host correspondence | model **proved**: an accepted certificate gives every node a finite machine value within its proposed error bound of the real value, for every input meeting the declared domains. Binding, encoded graphs and analyzer comparison **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
@@ -2573,6 +2574,91 @@ The clean-source receipt for the first-projection model is
 [`verification/foundation/receipts/14a7793c9/`](../../verification/foundation/receipts/14a7793c9/foundation-check.json)
 (775 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## Region protocol model (issue #9, `behavioral-effect-protocol` T1–T3)
+
+`NobleFoundation/RegionProtocol.lean` models `RegionProtocol-v1`, the synchronous bounded-region
+protocol of `.cairn/changes/behavioral-effect-protocol`.
+- **Scope.** One host-injected owner, finitely many borrowed reads, and at most one release.
+- **Traces.** A trace keeps the design's three event classes apart: guest requests, host responses
+  and committed effects.
+- **Transition table.** `step` is the design's table, row by row, with the host checks in its order:
+  identity, bounds, the scope limit with `begin`/`native_access`, `complete`, then the protected copy
+  and lowering into guest memory.
+- **Runs.** `run` adds the host's post-return and abort cleanup, which retires a live owner once.
+- **`busy` is never observed** at a guest boundary (`step_not_busy`, `run_final_owner`).
+
+**The host assumptions are explicit.**
+- A1, A2, A3 and A6 are the shape of `Host` and `Reply`: an immutable region, one owner identity,
+  the result schema (an unmodeled reply is not representable), and nothing else in the environment.
+- A4 enters as the `complete` oracle.
+- A5 enters as `run`'s unconditional cleanup.
+
+**T2, the selected subject** `region.read swap regions.release`:
+- `subject_success` gives the success postcondition: the bytes are `R[off..off+len)`
+  (`slice_length`), and the trace is `[Req read, Commit region-read, Resp ok, Req release,
+  Commit guest-release]`, ending `Released(o, guest)`.
+- `subject_bounds_reject` and `subject_invalid_handle` give the ordinary errors. Each trace has no
+  region-read commit and still one guest release.
+- `subject_normal_return`: every normal return is exactly one of these. A failed completion or
+  lowering aborts instead.
+- `subject_rejects_exactly_out_of_bounds`: for the authentic owner under the scope limit with access,
+  the error is `bounds-reject` exactly when the in-bounds condition fails.
+
+**Prefix safety, for every program and every host:**
+- **P1.** `exactly_one_release_commit` counts exactly one release commit, unless a failed completion
+  lost the owner. `exactly_one_release_under_completion` makes it exactly one under A4, wherever the
+  run stops.
+- **P2–P5.** These are the rules of the design's monitor, which replays a trace incrementally:
+  - no `ok` after a release (`monitor_refuses_ok_after_release`);
+  - a region-read commit directly after an authentic in-bounds read request
+    (`monitor_commit_needs_its_request`);
+  - every response the single answer to a pending read, and an `ok` only with its commit and the
+    requested length (`monitor_response_answers_a_read`).
+
+  `run_is_accepted` proves the monitor accepts every run, including runs that trap, exhaust fuel or
+  memory, or are cancelled. `monitor_rejects_violations` shows it refuses a double release, an `ok`
+  after release, an unsolicited response, a commit without its request, a forged or out-of-bounds
+  commit, an `ok` of the wrong length, an `ok` without its commit and a second response.
+- **P6.** `stop_discards_the_rest`: once a run stops, no later action executes.
+  `abort_tail`: what follows the execution prefix is at most the host's retirement.
+
+**T3, composition.**
+- `seq` is sound over identical intermediate states, counters included. Traces concatenate in program
+  order, and `subject_by_seq` derives the subject's success trace from the read's and the release's
+  triples.
+- `counters_do_not_commute`: matching owner states is not enough. One read returns the owner to
+  `live`, and sixty-four reads from a fresh owner all succeed, yet after the first read the
+  sixty-fourth meets the scope limit.
+- `no_set_union_rule`: the read and the release each run normally, but in the other order the read
+  traps after the release. The two composite traces are not permutations of each other.
+
+**Fixtures (model level).** They follow the design's cases on `R = 000102`:
+- `(1, 2)` reads `0102` and `(3, 0)` the empty slice;
+- `(3, 1)`, `(2, 2)`, `(-1, 1)` and `(i64::MAX, 1)` are rejected;
+- the sixty-fifth read is refused with no commit;
+- a forged claim is refused;
+- a trap after the commit keeps the prefix and retires once;
+- a failed lowering traps between the commit and the response;
+- trap and fuel stops are classified apart;
+- an omitted release is retired by the host;
+- a double release and a read after release both trap.
+
+`proofs/m5/RegionTrace.lean` relates target ABI steps to this protocol's source alphabet. This
+module gives that alphabet its own semantics.
+
+Open, and deliberately not closed:
+- T4: the refinement of `ownership::Table` through the M5 lane, which lives in the separate
+  `proofs/m5` project.
+- T5: the host functions.
+- T6: compilation of the subject.
+- Every runtime observation: EPROTO-CASE-01…11 against real components, the report schema and the
+  interruption control.
+
+Cancellation is modelled as a stop reason only; EPROTO-CASE-07 stays unsupported until the host
+control exists.
+
+The parent attaches the clean foundation receipt at integration.
 
 ## Status by phase
 

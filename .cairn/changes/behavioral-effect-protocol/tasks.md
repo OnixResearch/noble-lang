@@ -10,5 +10,15 @@
 
 - [ ] [serial] Introduce a new bounded-region report schema with separate release kinds, distinct trap/quota/outside-model classes and an ordered event trace; keep `noble-bounded-region/v1` receipts byte-identical. r[EPROTO-OBS-01]
 - [ ] [serial] Build the Lean `RegionProtocol` model, prove T2/T3 for the selected subject, and relate the `ownership::Table` transitions through the existing M5 lane (T4); keep T5/T6 open until separately discharged. r[EPROTO-TRACE-01] r[EPROTO-COMPOSE-01]
+  Progress (2026-10-30): T1–T3 are proved in `proofs/foundation/NobleFoundation/RegionProtocol.lean`.
+  - T1: the transition table as `step`, with host assumptions A1–A6 explicit.
+  - T2: the subject's normal-return postconditions (`subject_normal_return`,
+    `subject_rejects_exactly_out_of_bounds`), and prefix safety for every program and host. P1 is
+    `exactly_one_release_commit`; P2–P5 are the monitor's rules with `run_is_accepted`; P6 is
+    `stop_discards_the_rest`.
+  - T3: `seq` over identical states, with `counters_do_not_commute` and `no_set_union_rule`.
+
+  T4, relating `ownership::Table` through the M5 lane in `proofs/m5`, is not done, so the task stays
+  open; T5/T6 stay open as stated.
 - [ ] [serial] Implement a host interruption control before claiming any cancellation behavior; until then EPROTO-CASE-07 stays unsupported. r[EPROTO-OBS-01]
 - [ ] [serial] Register and execute EPROTO-CASE-01…11 with independently constructed hostile components, retaining trace prefixes, reports and component bytes; record monitor verdicts as finite execution evidence only. r[EPROTO-SCOPE-01] r[EPROTO-OBS-01]
