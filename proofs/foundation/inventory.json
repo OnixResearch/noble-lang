@@ -5182,6 +5182,90 @@
       "claim": "the cancellation error 1 is within the fold bound but a bound relative to the exact result alone would be false"
     },
     {
+      "name": "NobleFoundation.Binary32.SequenceFinite.eta_pos",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "half the smallest subnormal spacing is positive"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.roundPositive_lt_finite",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a rounding that does not overflow leaves the sign bit clear, including subnormal results"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.roundPositive_mixed_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a positive rounding that does not overflow is within 2^-24 of the ratio relatively plus 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.roundScaled_mixed_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a signed rounding that does not overflow is within 2^-24 relatively plus 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.add_mixed_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one finite model addition is within 2^-24 of the exact sum relatively plus 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.mul_mixed_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one finite model multiplication is within 2^-24 of the exact product relatively plus 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.step_bound_mixed",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one fold step keeps the relative growth and maps the absolute part H to (1 + u) H + (2 + u) eta"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.absolute_growth",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the absolute part after k steps stays below 3k (1 + u)^k eta"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.fold_finite_error_from",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the fold from an accumulator within the mixed bound after k steps stays within the grown mixed bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.fold_finite_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the ordered affine fold of n terms with no overflow is within the relative bound plus 3n (1 + 2^-24)^n 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.subnormal_premises",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the finite premises hold on the subnormal fold"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.subnormal_fold_is_outside_the_normal_premises",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "the normal-range premises of the sequence bound fail on the subnormal fold"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.subnormal_fold_values",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the subnormal fold computes 2^-148 for the exact value 3 * 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.SequenceFinite.subnormal_needs_the_absolute_term",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "the subnormal fold error 2^-150 is within the finite bound but the relative part alone would be false"
+    },
+    {
       "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
       "phase": 3,
       "role": "specification-quality",

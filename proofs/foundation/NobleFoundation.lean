@@ -45,6 +45,7 @@ import NobleFoundation.ReverseADMutations
 import NobleFoundation.OwnershipJudgment
 import NobleFoundation.Binary32Subnormal
 import NobleFoundation.Binary32Sequence
+import NobleFoundation.Binary32SequenceFinite
 import NobleFoundation.ReverseADTranspose
 import NobleFoundation.ReverseADAdjoint
 import NobleFoundation.ReverseADOrdered
