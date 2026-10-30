@@ -338,3 +338,10 @@ new theorems; that run reported 752 in total). No candidate checker or Rust corr
 two-instruction interpreter, `interpreter_agrees`, `first_projection` through #32's
 `specialize_sound`, sound zero annihilation, and the measured dead-branch and remaining-overhead
 fixtures (23 new theorems; that run reported 775 in total). Identity forwarding is open.
+
+## 3b1841f35 — binary32 scale premises derived (issue #44)
+
+`3b1841f35/` records the clean run that added `NobleFoundation.Binary32.Scale`: the model `log2`
+bracket, the lower scale premise for every positive input, the upper premise off the power
+boundary, its refutation at `1/2`, the exact carry on the boundary, and the premise-free
+normal-range absolute and relative bounds (17 new theorems; that run reported 792 in total).

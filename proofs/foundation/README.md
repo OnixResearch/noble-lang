@@ -648,7 +648,10 @@ half-ulp and `2^-24` bounds for every positive input whose carried exponent is i
 That exponent range is the only premise left; `absolute_error_covers_one_half` applies the
 absolute rule on the boundary. Subnormal results and any implementation correspondence stay open.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the scale-premise unit is
+[`verification/foundation/receipts/3b1841f35/`](../../verification/foundation/receipts/3b1841f35/foundation-check.json)
+(792 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ### The ordered `affine` fold, and the layer classification
 
