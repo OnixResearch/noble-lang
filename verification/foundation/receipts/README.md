@@ -251,3 +251,11 @@ go/no-go, and implementation correspondence are also open.
 substituted-result control (6 inventoried theorems; that run reported 594 in total, all on
 `propext` or `propext`/`Quot.sound`). It is a theorem about the Lean replay model; no theorem binds
 `crates/noble-ngraph/src/cert.rs` to it.
+
+## 9936fe19c — reverse-AD slot-gradient fixture (issue #45)
+
+`9936fe19c/` records the clean run that added the slot-mapped gradient extraction and the
+non-index-aligned `slotGraph` fixture to `NobleFoundation.ReverseAD` (12 inventoried theorems:
+fan-out, repeated slot, unit and seed-5 gradients against forward tangents and Mathlib
+derivatives, and the wrong-slot control; that run reported 606 in total). It is a real-valued
+model result; no theorem relates it to `crates/noble-ngraph/src/grad.rs`.

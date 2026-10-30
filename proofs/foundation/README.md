@@ -954,12 +954,11 @@ the slot number as a node index is rejected by
 `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`,
 and `non_unit_seed_unconsumed`.
 
-Receipt: the parent integration run must refresh the source-bound foundation
-receipt after this model commit; the prior retained receipt is at
-[`verification/foundation/receipts/b91f5504c/`](../../verification/foundation/receipts/b91f5504c/foundation-check.json)
-and is not evidence for these new source bytes. The checker must retain
-`clean_source: true`, only allow-listed axioms, and `implementation_theorem:
-false`.
+Receipt:
+[`verification/foundation/receipts/9936fe19c/`](../../verification/foundation/receipts/9936fe19c/foundation-check.json)
+(606 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`). The phase-1 theorems were first retained at
+`b91f5504c`.
 
 Open, and deliberately not closed:
 
