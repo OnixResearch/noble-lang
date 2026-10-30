@@ -24,8 +24,8 @@ const binary32File = 'proofs/foundation/NobleFoundation/Binary32.lean';
 const laneFile = 'crates/noble-ngraph/tests/grad_ordered/differential.rs';
 const subjectFile = 'crates/noble-ngraph/src/grad.rs';
 const lanes = [
-  'grad_ordered::ordered_gradients_match_the_lean_reference',
-  'grad_ordered::ordered_gradient_corpus_detects_each_seeded_fault',
+  'grad_ordered::forward_and_backward_match_the_lean_reference',
+  'grad_ordered::corpus_detects_each_seeded_fault',
 ];
 const command = 'CARGO_TARGET_DIR=/var/tmp/noble-grad-ordered-target CARGO_INCREMENTAL=0 ' +
   'cargo test -p noble-ngraph --test train_admission grad_ordered -- --nocapture';

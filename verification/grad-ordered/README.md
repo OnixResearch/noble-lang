@@ -37,11 +37,11 @@ lake env lean --run ../../verification/foundation/grad-ordered/corpus.lean \
 [`grad_ordered/differential.rs`](../../crates/noble-ngraph/tests/grad_ordered/differential.rs) is a
 module of the `train_admission` test target. Its two tests:
 
-- `ordered_gradients_match_the_lean_reference` builds each graph with `GraphBuilder`, checks it, and
+- `forward_and_backward_match_the_lean_reference` builds each graph with `GraphBuilder`, checks it, and
   runs `grad::forward` and `grad::backward` with `DerivOptions::default()`. It compares every node's
   forward value and gradient bit for bit. Every NaN encoding is one observation class, as in the
   binary32 model.
-- `ordered_gradient_corpus_detects_each_seeded_fault` re-implements the ordered reverse pass over
+- `corpus_detects_each_seeded_fault` re-implements the ordered reverse pass over
   the corpus's reference forward values alone. Unmutated, it must reproduce every expected gradient.
   It then applies seven single-rule faults, each of which must disagree with at least one case.
 

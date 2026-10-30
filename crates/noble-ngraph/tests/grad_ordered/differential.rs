@@ -22,14 +22,25 @@ use noble_ngraph::check::CheckedGraph;
 use noble_ngraph::grad::{self, DerivOptions};
 use noble_ngraph::ir::{GraphBuilder, Literal, NodeId, Op, ScalarType, SubProfile, Subject};
 
+/// One corpus node: its tag (`i`, `p`, `c`, `a`, `s` or `m`) and up to two fields, a slot
+/// number, constant bits or two operand node indices.
 #[derive(Clone, Copy, Debug)]
-enum Node {
-    Input(u32),
-    Param(u32),
-    Constant(u32),
-    Add(u32, u32),
-    Sub(u32, u32),
-    Mul(u32, u32),
+struct Node {
+    tag: char,
+    first: u32,
+    second: u32,
+}
+
+impl Node {
+    /// Whether the node is an addition, subtraction or multiplication.
+    fn is_binary(self) -> bool {
+        matches!(self.tag, 'a' | 's' | 'm')
+    }
+}
+
+/// A corpus index as a vector position.
+fn at(index: u32) -> usize {
+    usize::try_from(index).expect("corpus index fits usize")
 }
 
 struct Case {
@@ -60,25 +71,18 @@ fn operands(field: &str, line: usize) -> (u32, u32) {
 }
 
 fn node(field: &str, line: usize) -> Node {
-    let (tag, rest) = field.split_at(1);
-    match tag {
-        "i" => Node::Input(index(rest, line)),
-        "p" => Node::Param(index(rest, line)),
-        "c" => Node::Constant(encoding(rest, line)),
-        "a" => {
-            let (a, b) = operands(rest, line);
-            Node::Add(a, b)
-        }
-        "s" => {
-            let (a, b) = operands(rest, line);
-            Node::Sub(a, b)
-        }
-        "m" => {
-            let (a, b) = operands(rest, line);
-            Node::Mul(a, b)
-        }
+    let mut characters = field.chars();
+    let tag = characters
+        .next()
+        .unwrap_or_else(|| panic!("corpus line {line}: empty node"));
+    let rest = characters.as_str();
+    let (first, second) = match tag {
+        'i' | 'p' => (index(rest, line), 0),
+        'c' => (encoding(rest, line), 0),
+        'a' | 's' | 'm' => operands(rest, line),
         _ => panic!("corpus line {line}: unknown node {field}"),
-    }
+    };
+    Node { tag, first, second }
 }
 
 fn encodings(field: &str, line: usize) -> Vec<u32> {
@@ -134,7 +138,7 @@ fn corpus() -> Vec<Case> {
     }
     assert_eq!(
         cases.len(),
-        declared as usize,
+        at(declared),
         "the corpus header counts its cases"
     );
     cases
@@ -148,24 +152,26 @@ fn build(case: &Case) -> CheckedGraph {
     );
     let mut next_slot = 0;
     for (position, node) in case.nodes.iter().enumerate() {
-        let id = match *node {
-            Node::Input(slot) | Node::Param(slot) => {
+        let (a, b) = (NodeId(node.first), NodeId(node.second));
+        let id = match node.tag {
+            'i' | 'p' => {
                 assert_eq!(
-                    slot, next_slot,
+                    node.first, next_slot,
                     "{}: slot numbers follow node order",
                     case.name
                 );
                 next_slot += 1;
-                if matches!(node, Node::Input(_)) {
+                if node.tag == 'i' {
                     builder.input(ScalarType::F32)
                 } else {
                     builder.param()
                 }
             }
-            Node::Constant(bits) => builder.constant(Literal::F32(bits)),
-            Node::Add(a, b) => builder.op(Op::F32Add(NodeId(a), NodeId(b))),
-            Node::Sub(a, b) => builder.op(Op::F32Sub(NodeId(a), NodeId(b))),
-            Node::Mul(a, b) => builder.op(Op::F32Mul(NodeId(a), NodeId(b))),
+            'c' => builder.constant(Literal::F32(node.first)),
+            'a' => builder.op(Op::F32Add(a, b)),
+            's' => builder.op(Op::F32Sub(a, b)),
+            'm' => builder.op(Op::F32Mul(a, b)),
+            other => panic!("{}: unknown node tag {other}", case.name),
         };
         assert_eq!(
             id.index(),
@@ -198,7 +204,7 @@ fn compare(case: &Case, what: &str, actual: &[f32], expected: &[u32]) {
 }
 
 #[test]
-fn ordered_gradients_match_the_lean_reference() {
+fn forward_and_backward_match_the_lean_reference() {
     let cases = corpus();
     let mut values_compared = 0;
     let mut grads_compared = 0;
@@ -230,9 +236,11 @@ fn ordered_gradients_match_the_lean_reference() {
         {
             nonfinite += 1;
         }
-        if case.nodes.iter().any(
-            |node| matches!(*node, Node::Add(a, b) | Node::Sub(a, b) | Node::Mul(a, b) if a == b),
-        ) {
+        if case
+            .nodes
+            .iter()
+            .any(|node| node.is_binary() && node.first == node.second)
+        {
             repeated_operand += 1;
         }
     }
@@ -264,7 +272,7 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
         .collect();
     let mut gr = vec![0.0_f32; case.nodes.len()];
     for &(output, seed) in &case.seeds {
-        let target = output as usize;
+        let target = at(output);
         let seed = f32::from_bits(seed);
         gr[target] = if fault == Fault::AssignedSeed {
             seed
@@ -278,7 +286,7 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
         (0..case.nodes.len()).rev().collect()
     };
     let accumulate = |gr: &mut Vec<f32>, target: u32, contribution: f32| {
-        let target = target as usize;
+        let target = at(target);
         gr[target] = if fault == Fault::OverwriteAccumulation {
             contribution
         } else {
@@ -287,12 +295,14 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
     };
     for position in order {
         let gn = gr[position];
-        match case.nodes[position] {
-            Node::Add(a, b) => {
+        let node = case.nodes[position];
+        let (a, b) = (node.first, node.second);
+        match node.tag {
+            'a' => {
                 accumulate(&mut gr, a, gn);
                 accumulate(&mut gr, b, gn);
             }
-            Node::Sub(a, b) => {
+            's' => {
                 accumulate(&mut gr, a, gn);
                 let negated = if fault == Fault::SubtractionSign {
                     gn
@@ -301,8 +311,8 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
                 };
                 accumulate(&mut gr, b, negated);
             }
-            Node::Mul(a, b) => {
-                let (va, vb) = (values[a as usize], values[b as usize]);
+            'm' => {
+                let (va, vb) = (values[at(a)], values[at(b)]);
                 match fault {
                     Fault::PresummedRepeatedOperand if a == b => {
                         accumulate(&mut gr, a, gn * vb + gn * va);
@@ -312,8 +322,8 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
                         accumulate(&mut gr, b, gn * vb);
                     }
                     Fault::FusedMultiplyAdd => {
-                        gr[a as usize] = gn.mul_add(vb, gr[a as usize]);
-                        gr[b as usize] = gn.mul_add(va, gr[b as usize]);
+                        gr[at(a)] = gn.mul_add(vb, gr[at(a)]);
+                        gr[at(b)] = gn.mul_add(va, gr[at(b)]);
                     }
                     _ => {
                         accumulate(&mut gr, a, gn * vb);
@@ -321,14 +331,14 @@ fn simulate(case: &Case, fault: Fault) -> Vec<f32> {
                     }
                 }
             }
-            Node::Input(_) | Node::Param(_) | Node::Constant(_) => {}
+            _ => {}
         }
     }
     gr
 }
 
 #[test]
-fn ordered_gradient_corpus_detects_each_seeded_fault() {
+fn corpus_detects_each_seeded_fault() {
     let cases = corpus();
     let faults = [
         Fault::AscendingTraversal,
