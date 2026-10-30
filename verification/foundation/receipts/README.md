@@ -317,3 +317,10 @@ over a possibly colliding index, stale/corrupt refusals, erase-never-creates-a-h
 bounded injectivity of the length-prefixed part encoding with a naive-concatenation collision
 control (21 new theorems; that run reported 728 in total). Manifest fields, persistence
 and trust path remain owner decisions.
+
+## 9c93d6cc8 — constructor reuse under uniqueness (issue #36)
+
+`9c93d6cc8/` records the clean run that added `NobleFoundation.ConstructorReuse`: size-checked
+in-place reuse, the unique-root replacement theorem, the shared-alias control and the
+wrapped-resource eligibility control (9 new theorems; that run reported 737 in total). It
+claims nothing about the allocator, runtime or Wasm.

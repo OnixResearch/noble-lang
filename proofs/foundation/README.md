@@ -956,7 +956,10 @@ operation: "moved" means only that the resource is absent from the replacement
 fields (`resourceMoved` and `eligible_replacement_requires_move`). Ordinary
 immutable data remains eligible when its payloads are duplicable.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the constructor-reuse model is
+[`verification/foundation/receipts/9c93d6cc8/`](../../verification/foundation/receipts/9c93d6cc8/foundation-check.json)
+(737 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed by this model:
 
