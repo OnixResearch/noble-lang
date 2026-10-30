@@ -24,7 +24,13 @@
   (`every_operation_preserves_the_endpoint_inventory`), including the two that carry no transition, with
   `duplicating_operation_breaks_the_bound` showing the bound load-bearing. The scope is the operations
   this model enumerates: a future transition outside `Operation` would need its own case.
-- [ ] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
+- [x] [serial] Prove the scoped progress statement under the explicit queue, peer, scheduler and host premises. r[WIT-SESSION-05]
+  Ticked 2026-10-30: `progress_under_explicit_premises` gives one guest step at an open owned endpoint
+  whose resolved node declares the action, when the scheduler grants the step, the host admits it, and
+  the queue premise (outbox room for `send`/`choose`) or peer premise (an accounted inbox payload, and the
+  selected branch for `receiveBranch`) holds; `stepIn` takes the guest step and the environment change
+  together. One control per premise shows it load-bearing. The premises are assumed per step, so
+  termination, fairness, eventual delivery and deadlock freedom stay unclaimed.
   Un-ticked 2026-10-29: the theorem below carries none of the queue, peer, scheduler or host premises
   this task names; it is guest-local only.
   What exists is a deliberately narrow statement: `guest_local_progress_on_a_declared_action` gives a successor

@@ -66,6 +66,8 @@ declared stack limit, so its accepted bounded subset is finite.
 | `dropped_return_continuation_accepts_unbalanced_and_rejects_balanced` | mutant control: dropping the saved continuation accepts two sends/one receive, refuses the balanced two-send/two-receive trace, while the real stack refuses the same unbalanced trace |
 | `guest_local_progress_on_a_declared_action` | the **scoped progress statement**: at an open owned endpoint whose resolved node declares the requested guest action, that action has a successor. Its premises are exactly open endpoint + resolved state + declared action; peer behaviour, scheduling, queue capacity and delivery are **outside** it |
 | `offer_state_declares_only_its_branch_receipt`, `finished_state_declares_no_guest_action` | named states rather than unnamed refusals: at an external choice the guest's only action is receiving the declared branch (whether the peer selects is the peer's premise), and a finished protocol declares no guest action |
+| `environmentStep_of_ready`, `progress_under_explicit_premises` | the scoped progress statement **under explicit queue, peer, scheduler and host premises**: `stepIn` takes the guest step and its environment change together, and it succeeds at an open owned endpoint whose resolved node declares the action when the scheduler grants the step, the host admits it, and the action's queue premise (outbox room for `send`/`choose`) or peer premise (an accounted inbox payload; for `receiveBranch`, the peer's selection of that branch) holds. The premises are assumed for the step, never derived |
+| `progress_fixture_send_then_receive`, `unscheduled_guest_takes_no_step`, `host_refusal_takes_no_step`, `full_outbox_refuses_send`, `silent_peer_leaves_receive_pending`, `branch_receipt_needs_the_peer_selection` | the fixture send-then-receive progresses through one outbox admission and one dequeue, and each premise is load-bearing: without the scheduler grant, with a host refusal, with a full outbox, with an empty inbox or with another selected branch, the same step is refused |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
@@ -88,8 +90,9 @@ with the reason, and its `claims` block labels the verdict.
 ## Non-claims
 
 The definitions table is handwritten: there is no lowering, runtime, scheduler, queue or peer
-correspondence here, the progress statement is **guest-local only** (termination, fairness, eventual
-delivery, network reliability and deadlock freedom are separate and unclaimed), and endpoint
+correspondence here, progress is stated for **one step** only, guest-locally and under explicit queue, peer, scheduler
+and host premises (termination, fairness, eventual delivery, network reliability and deadlock freedom
+are separate and unclaimed), and endpoint
 delegation (passing an endpoint as a
 message) is excluded, so ownership obligations stay outside this model. Cancellation, trap, quota,
 peer disappearance, mailbox fullness and cleanup facts **are** modelled at the trace level, the
@@ -98,10 +101,9 @@ covers every guest action with the finite-handshake control beside the nested fi
 inventory bound is stated over every operation including those that carry no transition, progress is
 stated for the guest's own step under three named premises, and the balanced table's unbounded
 `sendⁿ·recvⁿ` trace language needs a return stack while this model admits it only up to the declared
-limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, and three
+limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, and two
 model items remain outside this unit:
 - a protocol type-equality algorithm;
-- progress under queue, peer, scheduler and host premises;
 - a choice node carrying a label set: a node declares one branch, so a two-branch choice is two
   declared nodes (the external-choice action and both positive branch traces are now modelled).
 

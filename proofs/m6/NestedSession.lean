@@ -1319,4 +1319,140 @@ theorem finished_state_declares_no_guest_action (action : Action) :
     continuationOf action .finished = none := by
   cases action <;> rfl
 
+/-! ## Progress under explicit environment premises (WIT-SESSION-05)
+
+`guest_local_progress_on_a_declared_action` is guest-local. The statement below adds the four
+environment premises the task names, each as an explicit field of `Environment`:
+
+* **queue**: an outgoing action (`send`, `choose`) needs room in the bounded outbox;
+* **peer**: an incoming action (`recv`, `receiveBranch`) needs an accounted payload in the inbox, and
+  a branch receipt needs the peer's selection to be that branch;
+* **scheduler**: the guest moves only in a step the scheduler grants;
+* **host**: the host has not refused the operation (quota, cancellation or teardown).
+
+Under exactly those premises the step succeeds (`progress_under_explicit_premises`), and one control
+per premise shows it is load-bearing. The premises are assumed for this one step, never derived, so
+this is still not deadlock freedom, fairness, termination or eventual delivery.
+-/
+
+/-- The environment one guest step depends on. -/
+structure Environment where
+  outbox : Mailbox
+  outboxLimit : Nat
+  inbox : Mailbox
+  peerBranch : Option Nat
+  scheduled : Bool
+  hostAdmits : Bool
+  deriving DecidableEq, Repr
+
+/-- The environment change of one action, or a refusal: an outgoing action takes one bounded
+admission into the outbox, and an incoming action dequeues one accounted payload, a branch receipt
+only when the peer selected that branch. -/
+def environmentStep (env : Environment) : Action → Option Environment
+  | .send _ => (boundedAdmit env.outbox env.outboxLimit).map fun outbox => { env with outbox }
+  | .choose _ => (boundedAdmit env.outbox env.outboxLimit).map fun outbox => { env with outbox }
+  | .recv _ =>
+      if 0 < mailboxDepth env.inbox then some { env with inbox := dequeue env.inbox } else none
+  | .receiveBranch branch =>
+      if env.peerBranch = some branch ∧ 0 < mailboxDepth env.inbox then
+        some { env with inbox := dequeue env.inbox, peerBranch := none }
+      else none
+
+/-- One environment-aware guest step. The scheduler and the host gate it, and both the guest's own
+step and the environment change must succeed; neither is taken alone. -/
+def stepIn (definitions : List Node) (depth : Nat) (endpoint : Endpoint) (env : Environment)
+    (action : Action) : Option (Endpoint × Environment) :=
+  if env.scheduled && env.hostAdmits then
+    match step definitions depth endpoint action, environmentStep env action with
+    | some successor, some next => some (successor, next)
+    | _, _ => none
+  else none
+
+/-- The queue and peer premises one action needs. -/
+def EnvironmentReady (env : Environment) : Action → Prop
+  | .send _ => mailboxDepth env.outbox < env.outboxLimit
+  | .choose _ => mailboxDepth env.outbox < env.outboxLimit
+  | .recv _ => 0 < mailboxDepth env.inbox
+  | .receiveBranch branch => env.peerBranch = some branch ∧ 0 < mailboxDepth env.inbox
+
+/-- A ready environment always admits the action's environment change. -/
+theorem environmentStep_of_ready (env : Environment) (action : Action)
+    (ready : EnvironmentReady env action) : ∃ next, environmentStep env action = some next := by
+  cases action with
+  | send message =>
+      simp only [EnvironmentReady] at ready
+      exact ⟨{ env with outbox := enqueue env.outbox }, by simp [environmentStep, boundedAdmit, ready]⟩
+  | choose branch =>
+      simp only [EnvironmentReady] at ready
+      exact ⟨{ env with outbox := enqueue env.outbox }, by simp [environmentStep, boundedAdmit, ready]⟩
+  | recv message =>
+      simp only [EnvironmentReady] at ready
+      exact ⟨{ env with inbox := dequeue env.inbox }, by simp [environmentStep, ready]⟩
+  | receiveBranch branch =>
+      simp only [EnvironmentReady] at ready
+      exact ⟨{ env with inbox := dequeue env.inbox, peerBranch := none },
+        by simp [environmentStep, ready]⟩
+
+/-- **The scoped progress statement under explicit premises**: at an open owned endpoint whose
+resolved node declares the requested action, the step succeeds when the scheduler grants it, the host
+admits it, and the queue or peer premise for that action holds. -/
+theorem progress_under_explicit_premises (definitions : List Node) (depth : Nat)
+    (endpoint : Endpoint) (env : Environment) (action : Action) (node : Node) (continuation : Nat)
+    (openState : endpoint.closed = false)
+    (resolved : resolve definitions depth endpoint.state = some node)
+    (declared : continuationOf action node = some continuation)
+    (scheduled : env.scheduled = true) (host : env.hostAdmits = true)
+    (ready : EnvironmentReady env action) :
+    ∃ successor next, stepIn definitions depth endpoint env action = some (successor, next) := by
+  obtain ⟨successor, guest⟩ := guest_local_progress_on_a_declared_action definitions depth endpoint
+    action node continuation openState resolved declared
+  obtain ⟨next, environment⟩ := environmentStep_of_ready env action ready
+  exact ⟨successor, next, by simp [stepIn, scheduled, host, guest, environment]⟩
+
+/-- A ready environment for the `exampleProtocol` send-then-receive fixture: room for one outgoing
+payload and one accounted incoming payload. -/
+def readyEnvironment : Environment :=
+  ⟨⟨0, 0⟩, 1, ⟨1, 0⟩, none, true, true⟩
+
+/-- **The fixture progresses**: the send takes the outbox's one admission and the receive dequeues
+the peer's one payload, so the endpoint reaches the state after the receive. -/
+theorem progress_fixture_send_then_receive :
+    ((stepIn exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ readyEnvironment (.send .i64)).bind
+        fun after => stepIn exampleProtocol 2 after.1 after.2 (.recv .i64)) =
+      some (⟨5, false, 9, 2, 4, false⟩, ⟨⟨1, 0⟩, 1, ⟨1, 1⟩, none, true, true⟩) := by
+  decide
+
+/-- **Scheduler premise**: an unscheduled guest takes no step, though everything else is ready. -/
+theorem unscheduled_guest_takes_no_step :
+    stepIn exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ { readyEnvironment with scheduled := false }
+      (.send .i64) = none := by
+  decide
+
+/-- **Host premise**: a host refusal stops the step, though everything else is ready. -/
+theorem host_refusal_takes_no_step :
+    stepIn exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ { readyEnvironment with hostAdmits := false }
+      (.send .i64) = none := by
+  decide
+
+/-- **Queue premise**: a full outbox refuses the send, and the guest stays where it was. -/
+theorem full_outbox_refuses_send :
+    stepIn exampleProtocol 2 ⟨5, false, 9, 0, 4, false⟩ { readyEnvironment with outbox := ⟨1, 0⟩ }
+      (.send .i64) = none := by
+  decide
+
+/-- **Peer premise**: with nothing accounted in the inbox the receive stays pending. -/
+theorem silent_peer_leaves_receive_pending :
+    stepIn exampleProtocol 2 ⟨5, false, 9, 1, 4, false⟩ { readyEnvironment with inbox := ⟨0, 0⟩ }
+      (.recv .i64) = none := by
+  decide
+
+/-- **Peer premise for external choice**: a payload is queued, but the peer selected branch `1`,
+so receiving branch `0` is refused; receiving branch `1` at its own offer node is taken. -/
+theorem branch_receipt_needs_the_peer_selection :
+    stepIn offerProtocol 2 ⟨5, true, 9, 0, 4, false⟩ { readyEnvironment with peerBranch := some 1 }
+        (.receiveBranch 0) = none ∧
+      (stepIn offerProtocol 2 ⟨5, true, 9, 1, 4, false⟩ { readyEnvironment with peerBranch := some 1 }
+        (.receiveBranch 1)).isSome = true := by
+  decide
+
 end NestedSession

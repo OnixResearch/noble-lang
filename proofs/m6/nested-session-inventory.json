@@ -838,6 +838,78 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.environmentStep_of_ready",
+      "role": "WIT-SESSION-05 queue/peer premises: a ready environment always admits the action environment change",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.progress_under_explicit_premises",
+      "role": "WIT-SESSION-05 scoped progress: an open owned endpoint whose resolved node declares the action steps when scheduled, host-admitted and queue/peer ready",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.progress_fixture_send_then_receive",
+      "role": "WIT-SESSION-05 fixture: send takes the one outbox admission and receive dequeues the peer payload",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unscheduled_guest_takes_no_step",
+      "role": "WIT-SESSION-05 scheduler premise is load-bearing: an unscheduled guest takes no step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.host_refusal_takes_no_step",
+      "role": "WIT-SESSION-05 host premise is load-bearing: a host refusal stops the step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.full_outbox_refuses_send",
+      "role": "WIT-SESSION-05 queue premise is load-bearing: a full outbox refuses the send",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.silent_peer_leaves_receive_pending",
+      "role": "WIT-SESSION-05 peer premise is load-bearing: an empty inbox leaves the receive pending",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_receipt_needs_the_peer_selection",
+      "role": "WIT-SESSION-05 peer premise for external choice: only the branch the peer selected is received",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
