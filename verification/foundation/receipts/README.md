@@ -331,3 +331,10 @@ claims nothing about the allocator, runtime or Wasm.
 update over the #38 model, the pilot admission rule with lane-indexed refusals, universal shape,
 per-lane and nonfinite-refusal theorems, boundary expectations and the fused-update control (15
 new theorems; that run reported 752 in total). No candidate checker or Rust correspondence exists.
+
+## 14a7793c9 — first Futamura projection, restricted family (issue #34)
+
+`14a7793c9/` records the clean run that added `NobleFoundation.FirstProjection`: the one-hot
+two-instruction interpreter, `interpreter_agrees`, `first_projection` through #32's
+`specialize_sound`, sound zero annihilation, and the measured dead-branch and remaining-overhead
+fixtures (23 new theorems; that run reported 775 in total). Identity forwarding is open.

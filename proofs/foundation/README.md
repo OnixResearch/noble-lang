@@ -2202,7 +2202,10 @@ Open, and deliberately not closed: identity forwarding (an alias node or operand
 general source language and encoding, the second and third projections, specialization and residual
 cost measurements, and any Rust or runtime correspondence; continuation thresholds are the owner's.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the first-projection model is
+[`verification/foundation/receipts/14a7793c9/`](../../verification/foundation/receipts/14a7793c9/foundation-check.json)
+(775 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 
