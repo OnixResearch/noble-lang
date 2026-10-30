@@ -1,8 +1,8 @@
 {
   "schema": "noble-ownership-differential/v1",
   "assertion": "the unary ownership-accounting fragment of the production acceptance machine agrees with every independent expectation generated from the Lean model on this host and target; the shadow checker agrees with every expectation and each declared mutation of it is caught. Not a refinement proof.",
-  "source_commit": "53d7a560d53aa96e1bd563688c601245acef683e",
-  "source_tree": "831a683f1f307623e34ccdd84b6ceb75a4de03c4",
+  "source_commit": "419c0144750a598b6b60b8faa3e8382c3d441a94",
+  "source_tree": "9e46904ce933b44648024a21e153e9f5e40d301e",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
@@ -12,117 +12,37 @@
     "ownership::ownership_corpus_detects_each_declared_checker_mutation"
   ],
   "case_file": "verification/ownership/cases.txt",
-  "case_file_sha256": "2d4ddd791b6123b93f8f290f987b98dc98d34ae3ab3864f44ee29d673c183b2c",
+  "case_file_sha256": "f2f85f3ea9afb39e98f57795ca4a98fcfb85c354a374e59e523797a0a442ed6f",
   "reference_file": "verification/ownership/cases.mjs",
-  "reference_file_sha256": "f05e6304c0be08b544461b056d5fcd4378b53ba0eb757cf279aced8abfc65652",
+  "reference_file_sha256": "a61c3f66cc01ea02c60206884614a9ee4cce9ef6557de045ca0ab696a5d1a8ef",
   "model_file": "proofs/foundation/NobleFoundation/Ownership.lean",
-  "model_file_sha256": "64c91b15175dc1fdf5bb9958590bdd510c15c637b3a03cac42c0fd9d8dee8a9d",
+  "model_file_sha256": "5f713b646feaac8c55b4995231d270b002bac72f815f3245400f806640ba468b",
   "lane_file": "crates/noble-kernel/tests/acceptance/ownership.rs",
-  "lane_file_sha256": "78c23e83a320fda12fa3bfd59a4a32d493ed7f6b3816b417a898842580ef3b6f",
+  "lane_file_sha256": "ba8faf1cca2e8094292d9b16a6a919f2fdd0b6403021649d0fa2fb941e59738e",
   "coverage": {
-    "cases": 104,
+    "cases": 108,
     "accepted": 15,
     "rejected": 6,
-    "model_only": 83,
+    "model_only": 87,
     "rejection_categories": {
       "eligibility": 6,
       "stack_join": 0,
       "other": 0
     },
-    "summary": "ownership-differential cases=104 accepted=15 rejected=6 model-only=83 categories=eligibility:6 stack-join:0 other:0",
-    "mutations": "ownership-mutations cases=104 caught=[None=0 ResourceOperandDuplicated=5 ResourceOperandReleased=4 SwapIgnoresEligibility=3 QuoteConsumesOperand=12 BranchPicksThenArm=1 FailAllowsOutstandingOperand=1]"
+    "summary": "ownership-differential cases=108 accepted=15 rejected=6 model-only=87 categories=eligibility:6 stack-join:0 other:0",
+    "mutations": "ownership-mutations cases=108 caught=[None=0 ResourceOperandDuplicated=9 ResourceOperandReleased=5 SwapDropsOperand=14 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]"
   },
   "correspondence": {
     "route": "handwritten Lean reference compared against the production acceptance machine and a test-local shadow checker by this differential lane",
     "model_theorems": {
       "model_files_sha256": {
-        "proofs/foundation/NobleFoundation/Ownership.lean": "64c91b15175dc1fdf5bb9958590bdd510c15c637b3a03cac42c0fd9d8dee8a9d"
+        "proofs/foundation/NobleFoundation/Ownership.lean": "5f713b646feaac8c55b4995231d270b002bac72f815f3245400f806640ba468b"
       },
       "receipts": [
         {
-          "receipt": "verification/foundation/receipts/134b215c5/foundation-check.json",
-          "source_commit": "134b215c52beffb3c95ee74f7dcbcfbd821978ea",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/1d4113e6c/foundation-check.json",
-          "source_commit": "1d4113e6c745d8ba53726669e1ab5c0717a752a8",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/477d24b9e/foundation-check.json",
-          "source_commit": "477d24b9ecb118e818f4e48dfff731a5c5d2763d",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/4e9ca2acb/foundation-check.json",
-          "source_commit": "4e9ca2acb08c9aaaf7a064af7d9085bdbc93f4a3",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/729e5d199/foundation-check.json",
-          "source_commit": "729e5d1999e152223f2d4ae3c36c73a9f95bd7a2",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/758ef29e5/foundation-check.json",
-          "source_commit": "758ef29e533824b29787ea76364b18bda8236bdb",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/781c2f490/foundation-check.json",
-          "source_commit": "781c2f4909ba368841ec3d7a993975912cf52870",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/8eef09184/foundation-check.json",
-          "source_commit": "8eef0918484ab1d887ba773f99eab13fa31d3ab3",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/9f1288d61/foundation-check.json",
-          "source_commit": "9f1288d61df2766fe49391e582b56fce11f54e3c",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/aa13a54e9/foundation-check.json",
-          "source_commit": "aa13a54e996947942e04f1d4e1a3eaba5182bba9",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/b3655a9cd/foundation-check.json",
-          "source_commit": "b3655a9cd26a7e29bf96eb81feeef636fe25a7ef",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/b91f5504c/foundation-check.json",
-          "source_commit": "b91f5504cd1b05c8d3a4816c636da5f5394cf16a",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/c33885419/foundation-check.json",
-          "source_commit": "c33885419c88afd71b914abdd4259650cf37cd22",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/cc147dd40/foundation-check.json",
-          "source_commit": "cc147dd4070ae6a016c4584844ae551c52e18b75",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/e0ec33f66/foundation-check.json",
-          "source_commit": "e0ec33f666dbe423fd6ae85e2745e024c52ed5fc",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/e95adf748/foundation-check.json",
-          "source_commit": "e95adf7489d34ce6b50d6aa115f3d91434f760df",
-          "model_theorems": 26
-        },
-        {
-          "receipt": "verification/foundation/receipts/f91cc50f7/foundation-check.json",
-          "source_commit": "f91cc50f7430e0d583d3372046bcc0c94c80954c",
-          "model_theorems": 26
+          "receipt": "verification/foundation/receipts/23462be4b/foundation-check.json",
+          "source_commit": "23462be4b0127876684c10e0d732822ce9ecba7e",
+          "model_theorems": 27
         }
       ]
     },
