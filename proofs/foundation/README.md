@@ -179,6 +179,7 @@ Status words:
 | Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
 | Rounding error of whole operation sequences (issue #44) | `exactValue_signed`, `roundScaled_relative_error`, `add_relative_error`, `mul_relative_error`, `step_bound`, `fold_error`, `cancellation_needs_the_term_scale` | exact `Binary32Sequence` model only; each rounding's carried exponent in the normal range is a premise, and no Rust/host correspondence is claimed | model **proved**: one model addition or multiplication is within `2^-24` of its exact result relatively, and the ordered affine fold of `n` terms within `((1 + 2^-24)^(2n) - 1)` times the bias and term magnitudes. Implementation correspondence **open** |
 | Sequence error with subnormal intermediates (issue #44) | `roundPositive_mixed_error`, `add_mixed_error`, `mul_mixed_error`, `step_bound_mixed`, `fold_finite_error`, `subnormal_needs_the_absolute_term` | exact `Binary32SequenceFinite` model only; no overflow is the only premise, and no Rust/host correspondence is claimed | model **proved**: every finite rounding is within `2^-24 · \|x\| + 2^-150`, and the ordered affine fold adds `3n(1 + 2^-24)^n · 2^-150` to the relative bound. Implementation correspondence **open** |
+| Roundoff certificate checker for the add/multiply fragment (issue #44) | `check_sound`, `check_output_bound`, `noOverflow_of_lt`, `add_finite`, `mul_mem_bounds`, `subnormal_needs_eta` | exact `Binary32Checker` model only; a model graph of inputs, constants, `add` and `mul`, no encoded `noble-ngraph` graph, analyzer or Rust/host correspondence | model **proved**: an accepted certificate gives every node a finite machine value within its proposed error bound of the real value, for every input meeting the declared domains. Binding, encoded graphs and analyzer comparison **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
@@ -740,6 +741,57 @@ The clean-source receipt for the finite-sequence unit is
 (902 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+### The roundoff certificate checker
+
+`NobleFoundation/Binary32Checker.lean` implements the checker the numerical-error-certificate design
+names (issue #44): an untrusted analyzer proposes, and a small total Lean checker accepts or refuses.
+
+- **Fragment.** A finite graph of inputs, constant bit patterns, `add` and `mul` in stored order. The
+  real graph keeps that order and reads every constant exactly. An operand that does not name an
+  earlier node, `sub`, the affine fold and the piecewise operations are `unsupported`.
+- **Inputs.** Each input declares a domain for the real input and a bound on the machine input's
+  distance from it; zero says the real input is the exact value of the bits. Meeting the domains is
+  the consumer's obligation (`Applies`).
+- **Certificate.** One proposed bound per node: an enclosure `[lo, hi]` of the real value and an
+  absolute error bound. The machine enclosure is derived as `[lo - error, hi + error]` rather than
+  proposed separately.
+- **Checks.** A sum needs `[lo, hi]` to contain the interval sum and its error to cover the operand
+  errors plus `u · reach + η`, where `reach` bounds every machine sum the operand bounds allow. A
+  product uses the interval product (`mul_mem_bounds`) and the propagated error
+  `Ea · (|b| + Eb) + |a| · Eb`. Both need `reach < 2^127`.
+- **Overflow and finiteness.** That test is what makes the mixed rule applicable. Below `2^127` the
+  lower bracket keeps the carried exponent at most `127` (`noOverflow_of_lt`, `addFinite_of_small`,
+  `mulFinite_of_small`), and then the rounded result is a finite encoding
+  (`roundPositive_below_infinity`, `add_finite`, `mul_finite`). The test is sufficient, not tight:
+  magnitudes between `2^127` and the largest finite value are refused.
+- **Outcomes.** `certified`; `unknown` when a check failed, so the certificate does not establish its
+  bound, which is not a disproof; `unsupported`; and `exhausted` when the graph or a certificate
+  rational exceeds the budget.
+
+**Soundness.** `check_sound` proves that an accepted certificate encloses every node. For every input
+meeting the declared domains, each machine value is finite, each real value lies in its proposed
+enclosure, and the two are within the proposed error bound. `check_output_bound` states the same per
+output. The machine semantics are #38's own `add` and `mul`, so the machine-to-real bridge is the
+theorem itself; subnormals are covered by the mixed rule and never flushed.
+
+**Fixtures and controls**, all decided by the kernel:
+- `cancellation_certified`: `x · x + (-1)` over the exact input `x ∈ [1, 2]` is certified, and
+  `cancellation_applies` shows its premises are satisfiable. Near `x = 1` the result cancels towards
+  zero, where no relative bound holds.
+- `near_overflow_square`: squaring over `[1, 2^63]` (reach `2^126`) is certified; over `[1, 2^64]`
+  (reach `2^128`) it is refused.
+- `subnormal_needs_eta`: `1.5 · 2^-149` rounds to `2^-148`. Its certificate is accepted with the
+  absolute term and refused without it, and the actual error `η` exceeds the bound without it.
+- Refused or classified certificates: an underestimated error (`unknown 3`), an underestimated range
+  (`unknown 1`), a missing input error (`unknown 0`), an operation outside the fragment, an operand
+  that is not an earlier node and an output naming no node (all `unsupported`), and an oversized
+  rational or graph (`exhausted`).
+
+No encoded `noble-ngraph` graph, snapshot or revision is bound, and no analyzer, Rust, Wasm or host
+correspondence is claimed.
+
+The parent attaches the clean foundation receipt at integration.
+
 ### The ordered `affine` fold, and the layer classification
 
 `fold` in the same model is the documented `sem.rs` recursion
@@ -838,8 +890,9 @@ Open, and deliberately not closed by this model:
 - whole-sequence error with overflow: `Binary32Sequence.lean` and
   `Binary32SequenceFinite.lean` bound the ordered affine fold, including subnormal
   intermediates, whenever no rounding overflows. A sequence with an overflowing
-  intermediate has no sequence bound, and graph-level sequences beyond the affine
-  fold are not composed;
+  intermediate has no sequence bound. `Binary32Checker.lean` certifies add/multiply
+  graphs, but the affine fold and the other graph operations are outside its
+  fragment, and no encoded graph is bound to it;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

@@ -5302,6 +5302,204 @@
       "claim": "the subnormal fold error 2^-150 is within the finite bound but the relative part alone would be false"
     },
     {
+      "name": "NobleFoundation.Binary32.Checker.carried_le_succ",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the carried exponent is at most one above the floor logarithm of the ratio"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.noOverflow_of_lt",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a positive ratio below 2^127 does not overflow"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.noOverflow_scaled",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a nonzero m * 2^s of magnitude below 2^127 does not overflow"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.finite_of_exponent",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "an encoding whose exponent field is not all ones is finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.finite_of_magnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a magnitude below the infinity encoding is finite with either sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.roundPositive_below_infinity",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a positive rounding that does not overflow stays below the infinity encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.roundScaled_finite",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a rounding that does not overflow is finite with either sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.zeroOf_finite",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "both signed zeros are finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.add_finite",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a finite addition has a finite result"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.mul_finite",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a finite multiplication has a finite result"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.addFinite_of_small",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "finite operands whose exact sum is below 2^127 in magnitude meet the finite addition premises"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.mulFinite_of_small",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "finite operands whose exact product is below 2^127 in magnitude meet the finite multiplication premises"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.abs_le_magnitudeOf",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "every value in [lo, hi] has magnitude at most max |lo| |hi|"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.mul_mem_bounds",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "the interval product encloses every product of values in the two intervals"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.add_encloses",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "an accepted sum node is finite, enclosed and within its error bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.mul_encloses",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "an accepted product node is finite, enclosed and within its error bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.checkNode_sound",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "one accepted node encloses its machine and real values given enclosed earlier nodes and applicable inputs"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.allEnclose_append",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "appending an enclosed node keeps every node enclosed"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.checkFrom_sound",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "every accepted run of the checker encloses every node it checked"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.checkFrom_length",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "an accepted run checks exactly one bound per node"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.check_sound",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "an accepted certificate encloses every node: finite machine value, real value in its enclosure, error within its bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.check_output_bound",
+      "phase": 2,
+      "role": "certificate-checker",
+      "claim": "for an accepted certificate every output has a finite machine value within its proposed error bound of the real value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.cancellation_certified",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the cancellation certificate for x * x + (-1) over [1, 2] is accepted"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.cancellation_applies",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the cancellation certificate applies to the exact input 1"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.underestimated_error_is_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "dropping the absolute term from the sum bound is refused as unknown at node 3"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.underestimated_range_is_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "an enclosure of the square stopping at 3 is refused as unknown at node 1"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.missing_input_error_is_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a declared input error the input bound omits is refused as unknown at node 0"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.outside_operation_is_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "an operation outside the fragment is unsupported"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.later_operand_is_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "an operand that is not an earlier node is unsupported"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.missing_output_is_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "an output naming no node is unsupported"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.oversized_is_exhausted",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "an oversized rational or graph exhausts the budget instead of being refused"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.near_overflow_square",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "squaring over [1, 2^63] is certified and over [1, 2^64] refused at the overflow test"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.subnormal_needs_eta",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "1.5 * 2^-149 is certified with the absolute term, refused without it, and its actual error eta exceeds the bound without it"
+    },
+    {
       "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
       "phase": 3,
       "role": "specification-quality",
