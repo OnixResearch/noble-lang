@@ -23,6 +23,11 @@
   the carried result is exact, so the absolute and relative bounds now need only
   the carried-exponent range. The subnormal policy, analyzer/checker bridge, and
   implementation correspondence remain open.
+  Progress (2026-10-30): `Binary32Subnormal.lean` proves the subnormal branch:
+  below the normal range the result is within `2^-150` of the exact quotient,
+  which is attained and holds only absolutely, and every finite positive result is
+  within half the spacing of its binade. The analyzer/checker bridge and
+  implementation correspondence remain open.
 - [ ] [serial] Demonstrate a nontrivial bound on an actual encoded graph, including a cancellation case and a near-overflow case. r[NGRAPH-ERR-01]
 - [ ] [serial] Add the negative controls for underestimated error and ranges, missing input error, changed operation order, FMA contraction, wrong snapshot/domain/output, stale model, unproved underflow premise and oversized certificates. r[NGRAPH-ERR-03] r[NGRAPH-ERR-05]
 - [ ] [serial] Add an independent expected-value lane that does not reuse the analyzer's arithmetic as the oracle. r[NGRAPH-ERR-02]

@@ -175,7 +175,8 @@ Status words:
 | Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, the wrong-slot control, and five seeded update-rule mutations caught, including the subtraction sign). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
-| Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Subnormal error rule and implementation correspondence **open** |
+| Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Implementation correspondence **open** |
+| Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
@@ -646,12 +647,38 @@ the encoded result is the exact ratio.
 With that case split, `roundPositive_absolute_error` and `roundPositive_relative_error` state the
 half-ulp and `2^-24` bounds for every positive input whose carried exponent is in `[-126, 127]`.
 That exponent range is the only premise left; `absolute_error_covers_one_half` applies the
-absolute rule on the boundary. Subnormal results and any implementation correspondence stay open.
+absolute rule on the boundary. Subnormal results are covered by the next unit; any implementation
+correspondence stays open.
 
 The clean-source receipt for the scale-premise unit is
 [`verification/foundation/receipts/3b1841f35/`](../../verification/foundation/receipts/3b1841f35/foundation-check.json)
 (792 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+`NobleFoundation/Binary32Subnormal.lean` proves the subnormal branch (issue #44). Below the normal
+range, `roundPositive` rounds `a · 2^149 / b` to nearest, ties to even, and caps the significand at
+`2^23`, the smallest normal. Once the carried exponent is below `-126`, the numerator is at most
+`2^23` denominators (`subnormal_numerator_bound`, from the `floorLog2Ratio` bracket), so the
+rounded significand is at most `2^23` and the cap never changes the value
+(`roundPositive_eq_significand`). Every significand of at most `2^23` encodes exactly `n · 2^-149`,
+including `2^23` as the smallest normal (`exactValue_small`). Hence
+`roundPositive_subnormal_absolute_error`: the encoded result is within `2^-150` of the exact
+quotient.
+
+Combined with the normal-range rule, `roundPositive_finite_absolute_error` gives one bound for every
+positive input whose result is finite: half the spacing of the result's binade,
+`½ · 2^(max e (-126) - 23)` with `e = floorLog2Ratio a b`. The only premise left is that the carried
+exponent is at most `127`, that is, no overflow.
+
+The bound is attained: `(2^24 - 1) / 2^150` is a tie halfway below `2^-126`, ties to the even
+significand `2^23`, and its error is exactly `2^-150`
+(`rounding_to_the_smallest_normal_attains_the_bound`). It is absolute only: `3 / 2^151` rounds to the
+smallest subnormal with an error of a third of its value
+(`subnormal_results_are_not_relatively_bounded`), so no relative rule holds below the normal range.
+`subnormal_rule_applies_below_the_normal_range` applies the rule to `1 / (3 · 2^130)`, which rounds
+to the significand `174763`.
+
+The parent attaches the clean foundation receipt at integration.
 
 ### The ordered `affine` fold, and the layer classification
 
@@ -691,9 +718,10 @@ Receipt for the fold and the classification:
 Receipt for the conditional rounding-error lane:
 [verification/foundation/receipts/a8877ff78/](../../verification/foundation/receipts/a8877ff78/foundation-check.json)
 (588 theorems, `clean_source: true`; the 19 new error theorems use only the
-foundation allow-list). The normal-bin scale inequalities remain explicit
-premises until their universal floor-log derivation is proved; subnormal and
-implementation correspondence remain open.
+foundation allow-list). At that receipt the normal-bin scale inequalities were
+explicit premises; `Binary32Scale.lean` later derives them and
+`Binary32Subnormal.lean` adds the subnormal branch. Implementation correspondence
+remains open.
 
 The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
 six wrong models that are compiled only in this project: away-from-zero ties,
@@ -747,10 +775,10 @@ Open, and deliberately not closed by this model:
   helpers and optimizer behavior;
 - the fold is modelled and proved as a recursion over the reference operations, but no
   Lean model maps the graph operations (`Op::F32Add`/`Sub`/`Mul`/`Affine`) to them;
-- the subnormal branch of the rounding error rule. `Binary32Error.lean` proves
-  the universal quotient-rounding rule, exact normal-output values and the
-  normal-range absolute/relative bounds, and `Binary32Scale.lean` discharges
-  their scale premises, but neither extends them to gradual underflow;
+- a rounding error rule beyond `roundPositive` itself: `Binary32Error.lean`,
+  `Binary32Scale.lean` and `Binary32Subnormal.lean` bound every finite result of
+  that one rounding step, including gradual underflow, but no theorem bounds the
+  error of a whole graph operation sequence;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

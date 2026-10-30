@@ -4886,6 +4886,96 @@
       "phase": 5,
       "role": "ownership-accounting",
       "claim": "stacks with different owners but agreeing eligibility run a three-word sequence alike and agree again"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.floorLog2Ratio_le_carried",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the carried exponent is at least the scale exponent"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.floorLog2Ratio_upper_le",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "for every positive input the numerator is at most 2^(floorLog2Ratio+1) times the denominator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.subnormal_numerator_bound",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "below the normal range the subnormal numerator a * 2^149 is at most 2^23 denominators"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.subnormal_significand_bound",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "below the normal range the rounded subnormal significand is at most 2^23"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.roundPositive_subnormal",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "below the normal range roundPositive is the rounded significand capped at the smallest normal"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.roundPositive_eq_significand",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "below the normal range the cap never changes the rounded significand"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.subnormal_scaledMagnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a significand below 2^23 encodes the subnormal n * 2^-149"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.smallest_normal_scaledMagnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the significand 2^23 encodes the smallest normal with value 2^23 * 2^-149"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.small_encoding_not_negative",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a significand of at most 2^23 encodes a positive sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.exactValue_small",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every significand of at most 2^23 encodes exactly n * 2^-149"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.roundPositive_subnormal_absolute_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "below the normal range the encoded result is within 2^-150 of the exact quotient"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.roundPositive_finite_absolute_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every positive input with a finite result is within half the spacing of its binade, 2^(max e -126 - 23)"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.subnormal_rule_applies_below_the_normal_range",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "non-vacuity: 1/(3*2^130) rounds to the subnormal significand 174763 within the subnormal bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.rounding_to_the_smallest_normal_attains_the_bound",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "a tie halfway below 2^-126 rounds to the smallest normal with error exactly 2^-150"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Subnormal.subnormal_results_are_not_relatively_bounded",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a subnormal result with relative error one third shows the subnormal rule must be absolute"
     }
   ]
 }
