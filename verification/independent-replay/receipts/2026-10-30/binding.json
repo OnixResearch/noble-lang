@@ -1,0 +1,391 @@
+{
+  "schema": "noble-independent-replay-binding/v1",
+  "measured_on": "2026-10-30",
+  "host": "Linux 6.18.54 x86_64",
+  "assertion": "every root is bound to the statement the compiled foundation environment gives it, and to a complete dependency closure, before the checker verdict counts: a valid theorem checked under a root name and an export missing a referenced declaration are both refused, and a manifest that disagrees with the environment is detected",
+  "holds": true,
+  "checks": {
+    "manifest_matches_the_compiled_environment": true,
+    "stale_manifest_is_detected": true,
+    "every_control_in_its_expected_class": true,
+    "baselines_accepted": true,
+    "no_other_control_accepted": true,
+    "substituted_claim_passes_names_and_checker": true,
+    "dropped_declarations_are_exactly_the_missing_names": true
+  },
+  "harness": {
+    "binding": {
+      "path": "verification/independent-replay/binding.mjs",
+      "sha256": "75ad928bcf71c806b02dd887eda75116a677019988f45d1eb85f76f27ea2f236"
+    },
+    "extractor": {
+      "path": "verification/independent-replay/statements.lean",
+      "sha256": "2059eb9aa76aa957262ade493fc29559d8bf9bd943f43bec4b97efa8268e91ee"
+    },
+    "manifest": {
+      "path": "verification/independent-replay/statements.json",
+      "sha256": "58a753f3e8d0b8d0d5c59099aa380e616ac2a316dc5c202175922da99c1be38f"
+    }
+  },
+  "acceptance_rule": [
+    "exporter exit status zero and no exporter panic",
+    "every requested root declared in the export",
+    "every constant the roots reference, transitively, declared in the export",
+    "every root statement rendered from the export equal to its pinned statement digest",
+    "checker exit status zero with a positive number of checked declarations",
+    "every declared axiom in propext, Classical.choice, Quot.sound"
+  ],
+  "statement_source": {
+    "extraction_elapsed_ms": 2289,
+    "manifest_check": [
+      {
+        "root": "NobleFoundation.toInt_add",
+        "environment_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "matches": true
+      },
+      {
+        "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+        "environment_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "matches": true
+      },
+      {
+        "root": "Nat.add_comm",
+        "environment_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "matches": true
+      }
+    ],
+    "stale_manifest_control": [
+      {
+        "root": "NobleFoundation.toInt_add",
+        "environment_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "matches": false
+      },
+      {
+        "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+        "environment_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "matches": false
+      },
+      {
+        "root": "Nat.add_comm",
+        "environment_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "matches": false
+      }
+    ]
+  },
+  "tools": {
+    "nanoda": {
+      "binary_sha256": "27388e46c30d5bc8a7ecb229c697b5e7726f53cf6487bfd20eb926bac20c3295",
+      "num_threads": 1
+    },
+    "lean4export": {
+      "binary_sha256": "9f7b3dbba23cdbc2d978205a24baf05af83e360cf6f49ad7483ecbd7c4f0525b"
+    },
+    "lean": {
+      "binary_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a"
+    }
+  },
+  "inputs": {
+    "large": {
+      "root": "NobleFoundation.toInt_add",
+      "sha256": "b4c50e65f75713e4be77037f67be83ba45acd28b89f02547d4c1f4922ecd2fa0",
+      "retained": false
+    },
+    "small": {
+      "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "sha256": "0593c285ee70fa2c2903bfcb8c0b1453a09c85bd190b58642ddfffb3f5a080b0",
+      "retained": true,
+      "path": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson"
+    }
+  },
+  "controls": [
+    {
+      "id": "bound-large",
+      "changes": "none: the pinned toInt_add export",
+      "expected": "accepted",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "b4c50e65f75713e4be77037f67be83ba45acd28b89f02547d4c1f4922ecd2fa0",
+        "size_bytes": 7492900,
+        "records": 145650,
+        "format_version": "3.1.0",
+        "declared": 2773,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "closure": {
+        "reachable": 2772,
+        "missing": [],
+        "unreferenced_declared": [
+          "Quot.ind"
+        ],
+        "digest": {
+          "declarations": 2772,
+          "sha256": "c3b5a15f318196098c69e465929bcae6a8c4c58cb48d515715c06a9d1e98452a"
+        }
+      },
+      "statements": [
+        {
+          "root": "NobleFoundation.toInt_add",
+          "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+          "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+        }
+      ],
+      "checker": {
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 313,
+        "classification": "accepted",
+        "stdout": "Checked 2773 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "bound-small",
+      "changes": "none: the retained export",
+      "expected": "accepted",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "0593c285ee70fa2c2903bfcb8c0b1453a09c85bd190b58642ddfffb3f5a080b0",
+        "size_bytes": 56774,
+        "records": 1161,
+        "format_version": "3.1.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "closure": {
+        "reachable": 16,
+        "missing": [],
+        "unreferenced_declared": [],
+        "digest": {
+          "declarations": 16,
+          "sha256": "55f9ce860a79669ec9bd91206fec24a205ed4bfeb742dfa20cdfc0024a3609b7"
+        }
+      },
+      "statements": [
+        {
+          "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+          "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+          "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+        }
+      ],
+      "checker": {
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 4,
+        "classification": "accepted",
+        "stdout": "Checked 16 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "bound-exported",
+      "changes": "none: a fresh Init export of Nat.add_comm",
+      "expected": "accepted",
+      "roots": [
+        "Nat.add_comm"
+      ],
+      "export_stage": {
+        "argv": [
+          "Init",
+          "--",
+          "Nat.add_comm"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "export": {
+        "sha256": "7a5e76b8daf3504ff43b3a9cc18a60a86a5e37ddb3eba62fd5ac4b1f337f5acf",
+        "size_bytes": 60697,
+        "records": 1138,
+        "format_version": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "closure": {
+        "reachable": 52,
+        "missing": [],
+        "unreferenced_declared": [],
+        "digest": {
+          "declarations": 52,
+          "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+        }
+      },
+      "statements": [
+        {
+          "root": "Nat.add_comm",
+          "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+          "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+        }
+      ],
+      "checker": {
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 4,
+        "classification": "accepted",
+        "stdout": "Checked 52 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "dropped-theorem",
+      "changes": "the retained export without the declaration of _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps",
+      "expected": "incomplete-closure",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "c60d27c7c7f2f95bfdd8ac687c568555394ee2f09ea0a567e03545b547285e32",
+        "size_bytes": 56701,
+        "records": 1160,
+        "format_version": "3.1.0",
+        "declared": 15,
+        "axioms": []
+      },
+      "closure": {
+        "reachable": 14,
+        "missing": [
+          "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+        ],
+        "unreferenced_declared": [
+          "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.steps_trans"
+        ]
+      },
+      "statements": [
+        {
+          "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+          "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+          "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+        }
+      ],
+      "verdict": "incomplete-closure",
+      "reasons": [
+        "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+      ],
+      "checker_only_view": {
+        "exit_code": 101,
+        "signal": null,
+        "elapsed_ms": 3,
+        "classification": "rejected",
+        "stdout": "",
+        "stderr_excerpt": "thread 'main' (3498967) panicked at src/tc.rs:234:17:\ninfer_const: declaration NobleFoundation.LinkBoundary.vertical_simulation_compose depends on _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps which was not found in the environment\nnote: run with `RUST"
+      },
+      "baseline": false
+    },
+    {
+      "id": "dropped-definition",
+      "changes": "the retained export without the declaration of NobleFoundation.LinkBoundary.ForwardSimulation",
+      "expected": "incomplete-closure",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "82e1e2d3d24f286298df5fd8d968bb11195f290c86331c57e1ace13d5819b725",
+        "size_bytes": 56665,
+        "records": 1160,
+        "format_version": "3.1.0",
+        "declared": 15,
+        "axioms": []
+      },
+      "closure": {
+        "reachable": 15,
+        "missing": [
+          "NobleFoundation.LinkBoundary.ForwardSimulation"
+        ],
+        "unreferenced_declared": []
+      },
+      "statements": [
+        {
+          "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+          "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+          "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+        }
+      ],
+      "verdict": "incomplete-closure",
+      "reasons": [
+        "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+      ],
+      "checker_only_view": {
+        "exit_code": 101,
+        "signal": null,
+        "elapsed_ms": 2,
+        "classification": "rejected",
+        "stdout": "",
+        "stderr_excerpt": "thread 'main' (3498968) panicked at src/tc.rs:234:17:\ninfer_const: declaration _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps depends on NobleFoundation.LinkBoundary.ForwardSimulation which was not found in the environment\nnote: run with `RUST_BACKTRACE"
+      },
+      "baseline": false
+    },
+    {
+      "id": "substituted-valid-claim",
+      "changes": "the fresh Nat.add_comm export with its theorem renamed NobleFoundation.toInt_add",
+      "expected": "claim-mismatch",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "2c52d49507977e3774ce59a6164687eaf106c4f75eb36678c2da7297a9a6535b",
+        "size_bytes": 60795,
+        "records": 1140,
+        "format_version": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "closure": {
+        "reachable": 52,
+        "missing": [],
+        "unreferenced_declared": [],
+        "digest": {
+          "declarations": 52,
+          "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+        }
+      },
+      "statements": [
+        {
+          "root": "NobleFoundation.toInt_add",
+          "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+          "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+        }
+      ],
+      "verdict": "claim-mismatch",
+      "reasons": [
+        "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+      ],
+      "checker_only_view": {
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 3,
+        "classification": "accepted",
+        "stdout": "Checked 52 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "baseline": false
+    }
+  ],
+  "non_claims": [
+    "Pilot evidence on one host with locally built pinned tools; no CI, flake, policy or gate change.",
+    "The expected statements come from Lean reading the compiled foundation environment: they bind the export to what Lean elaborated, not to the source text or its meaning.",
+    "The closure audit follows explicit constant references; declarations the kernel needs only through literal extensions are not required by it.",
+    "No claim about nanoda or lean4export correctness, completeness or equivalence to the Lean kernel.",
+    "A refusal class names why a run did not succeed; it is never a mathematical refutation of the subject."
+  ]
+}

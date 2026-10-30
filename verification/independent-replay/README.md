@@ -91,7 +91,7 @@ checker to notice corruption.
 | Environment hacking by metaprogramming is detectable | by construction of a replay in a fresh environment | that the *original* elaboration was honest |
 | Downloaded Mathlib `.olean` files are trustworthy | **no** — the foundation README's trust assumption is untouched | an independent implementation of the kernel |
 | The two named roots and their emitted closures were actually checked | yes, with separate hashes and nanoda exit statuses in the 2026-10-29 receipt | semantic claim binding, completeness of a higher-level dependency closure, or checker correctness |
-| Node/subtree closure matches a specific claim | **no** — replay accepts whatever the environment contains | exact claim binding, per-theorem closure |
+| Node/subtree closure matches a specific claim | for the three roots in `statements.json`: each root statement equals the one Noble compiled, and every referenced constant is declared (`binding.mjs`, 2026-10-30) | binding for any other root; meaning of the source text |
 | Emitted artifact, runtime or compiler correspondence | **no** | anything about `wasm`, the engine or the loader |
 
 ## Artifact integrity step (2026-10-27)
@@ -196,17 +196,62 @@ reran the same controls. Each run failed (`holds: false`):
 | the lane's own axiom audit | `custom-axiom-checker-permits` |
 | both of the above, with `Checked 0` also counted as acceptance | `export-missing-root`, `export-partial-roots` |
 
+## Statement and closure binding (2026-10-30)
+
+`refusals.mjs` binds roots by name, so a valid but unrelated theorem exported under a root's name
+would pass it. [`binding.mjs`](binding.mjs) binds each root's **statement** and audits its
+**dependency closure** before the checker's verdict can count.
+
+- **Expected statements** come from Noble's compiled foundation environment, not from the export
+  under check. [`statements.lean`](statements.lean) reads each root's type through Lean's own
+  `Expr` (`lake env lean`, roots in `NOBLE_REPLAY_ROOTS`) and prints it in a canonical form:
+  binder names and `mdata` dropped, binder kinds kept.
+  - [`statements.json`](statements.json) commits the three selected roots' statements and digests,
+    taken at `b95bfb8f`.
+  - Every run re-extracts them and refuses a manifest that disagrees with the environment.
+- **Export-side statements.** The lane renders each root's statement from the export's own records
+  in the same canonical form, and requires the digest to match. Lean and the export agree
+  byte-for-byte on all three roots: `toInt_add` (1,232 B), `vertical_simulation_compose` (631 B)
+  and `Nat.add_comm` (312 B).
+- **Closure audit.** The lane walks every constant the roots reference, through types, values and
+  recursor rules, and refuses an export that does not declare one, **before** the checker runs. An
+  accepted run records the closure's size and a Merkle digest over every reachable declaration's
+  type, value and recursor rules.
+
+The receipt is [`receipts/2026-10-30/binding.json`](receipts/2026-10-30/binding.json), `holds: true`:
+
+| Control | Change | Lane | Checker alone | Verdict |
+|---|---|---|---|---|
+| `bound-large` | none: pinned `toInt_add` export | statement bound, closure 2,772 of 2,773 declared | accepted, 2,773 | **accepted** |
+| `bound-small` | none: retained export | statement bound, closure 16 of 16 | accepted, 16 | **accepted** |
+| `bound-exported` | none: fresh `Init` export of `Nat.add_comm` | statement bound, closure 52 of 52 | accepted, 52 | **accepted** |
+| `substituted-valid-claim` | the `Nat.add_comm` export with its theorem renamed `NobleFoundation.toInt_add` | root present, closure complete, **statement differs** | **accepted**, 52 | `claim-mismatch` |
+| `dropped-theorem` | retained export without `forward_simulation_steps` | closure misses exactly that theorem | rejected, exit 101 (`infer_const … depends on …`) | `incomplete-closure` |
+| `dropped-definition` | retained export without `ForwardSimulation` | closure misses exactly that definition | rejected, exit 101 | `incomplete-closure` |
+| stale manifest | each pinned digest replaced by the next root's | all three disagree with the environment | — | detected |
+
+- **The substituted claim is the case a name-based lane misses.** The renamed theorem is declared
+  under the root's name, its closure is complete, and the checker accepts all 52 declarations. Only
+  the statement differs from what Noble compiled for `NobleFoundation.toInt_add`. This meets the
+  issue's requirement that checking an unrelated valid theorem must not satisfy the lane.
+- **Dropped dependencies.** The checker also rejects them, but only as a panic exit. The lane names
+  the missing declaration before running it.
+- **Closure coverage.** The one `toInt_add` declaration outside the reference closure is `Quot.ind`:
+  the exporter emits the quotient builtins together, while the proof references only some of them.
+  The audit follows explicit constant references, so declarations the kernel uses only through
+  literal extensions are not required by it.
+
 ## Requirements before this becomes a gate
 
 1. ~~A checker implemented independently of Lean's kernel with a compatible
    declaration-export format~~ — satisfied for this bounded pilot by the
    pinned `nanoda_lib`/`lean4export` pair. A gate would still need to freeze
    and rebuild both tools rather than relying on these local binaries.
-2. Exact claim binding beyond the two explicit root names: the pilot records
-   the names and closure hashes, but does not independently audit that the
-   exported closure is the complete dependency closure for a higher-level
-   claim. `refusals.mjs` now refuses an export that does not declare every
-   requested root, but it binds names, not statements.
+2. Exact claim binding — **partly met**. `binding.mjs` binds each selected root's statement to the
+   one Noble compiled and audits its complete reference closure, refusing a substituted valid claim
+   and a dropped dependency. It covers only the roots committed in `statements.json`, and it binds
+   what Lean elaborated, not the meaning of the source text. A gate would still need to select its
+   roots from the claims it serves and keep the manifest in step with the foundation.
 3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
    manifest refuses a corrupted, removed or extra artifact before the checker runs.
 4. ~~Explicit refusal classes for unsupported constructs, timeout, export failure
@@ -228,8 +273,8 @@ reran the same controls. Each run failed (`holds: false`):
 - No complete independent-kernel replay of the foundation corpus was run; only
   the two named roots and their exported closures were exercised.
 - The semantic and parse controls here are minimal pilot controls, not a complete
-  declaration-level negative-control suite (no dropped-dependency or
-  statement-level claim-binding control; `refusals.mjs` checks root names only).
+  declaration-level negative-control suite. `binding.mjs` adds statement-level claim binding and
+  dropped-dependency controls for three roots only.
   The broader declaration-level equivalents
   exist in the producer-consumer lane (`verification/mc1/gate.mjs`: duplicate/
   missing/cyclic dependency, forbidden axiom, free variable, wrong-theorem-type,
