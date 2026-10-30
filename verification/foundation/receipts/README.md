@@ -222,3 +222,24 @@ correspondence with `slot-registry.mjs`.
 theorems; that run reported 569 in total, all six new theorems on `propext` alone). The
 conservation statement is exact but partly vacuous for resource movement: the ownership grammar
 admits no acquire, release or consuming word. It says nothing about `crates/noble-kernel`.
+
+## a8877ff78 — Binary32 normal-range rounding error (issue #44)
+
+`a8877ff78/` records clean source commit
+`a8877ff78ef915f099e0faa75dc2bd76289fc3ed`, tree
+`e73bc256c9117f03a7a01fc461a8b4c5a3ad7877`, from
+`verification/foundation/check.mjs --output /var/tmp/fc44-a8877ff78`.
+The run passed with 588 inventoried theorems and `clean_source: true`.
+
+The 19 new `Binary32.Error` theorems prove exact normal-output values,
+universal ties-to-even quotient error, normal-bin rounding bounds, the
+conditional absolute/relative `roundPositive` rules, and the `1/3`
+non-vacuity witness. The scale inequalities remain explicit premises because
+their universal derivation from the custom `floorLog2Ratio` is still open;
+subnormal rounding, add/mul corollaries, the checker, analyzer comparison,
+go/no-go, and implementation correspondence are also open.
+
+| File | Content |
+|---|---|
+| `foundation-check.json` | verbatim clean-source Lean inventory and per-theorem axiom audit |
+| `Audit.lean` | checker-generated theorem audit source |

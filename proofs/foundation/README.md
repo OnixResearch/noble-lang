@@ -653,6 +653,13 @@ Receipt for the fold and the classification:
 [verification/foundation/receipts/c33885419/](../../verification/foundation/receipts/c33885419/foundation-check.json)
 (463 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
+Receipt for the conditional rounding-error lane:
+[verification/foundation/receipts/a8877ff78/](../../verification/foundation/receipts/a8877ff78/foundation-check.json)
+(588 theorems, `clean_source: true`; the 19 new error theorems use only the
+foundation allow-list). The normal-bin scale inequalities remain explicit
+premises until their universal floor-log derivation is proved; subnormal and
+implementation correspondence remain open.
+
 The test-local mutation lane (`NobleFoundation/Binary32Mutations.lean`) declares
 six wrong models that are compiled only in this project: away-from-zero ties,
 collapsing every zero result to `+0`, flush-to-zero, a zero-sign-insensitive
