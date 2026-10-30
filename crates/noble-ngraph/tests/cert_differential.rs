@@ -17,7 +17,9 @@
 //! interpreter, and asserts identical observations. It measures a real artifact:
 //! the fold rewrites in place, so the folded endpoint evaluates the same number of
 //! nodes and retains no more bytes while producing the same outputs, including for a
-//! sum that wraps.
+//! sum that wraps. A three-step certificate (two independent folds and a recorded
+//! identity) is executed the same way, and corrupting any step after the first is
+//! still refused.
 
 #[path = "cert/differential.rs"]
 mod differential;
@@ -174,4 +176,113 @@ fn a_symbolic_sum_is_recorded_as_unfolded_and_still_executes_identically(
         "re-checking after execution still accepts"
     );
     Ok(())
+}
+
+#[test]
+fn a_multi_step_certificate_executes_both_endpoints_identically(
+) -> Result<(), noble_ngraph::Diagnostic> {
+    let before = differential::independent_folds();
+    let (derivation, after) = differential::fold(&before);
+    let scheme = differential::TestIds;
+    assert_eq!(
+        noble_ngraph::cert::check(&scheme, &before, &after, &derivation),
+        Ok(()),
+        "the three-step certificate must be accepted before it is executed"
+    );
+    let rules: Vec<noble_ngraph::cert::Rule> =
+        derivation.steps.iter().map(|step| step.rule).collect();
+    assert_eq!(
+        rules,
+        [
+            noble_ngraph::cert::Rule::FoldAddConstants,
+            noble_ngraph::cert::Rule::FoldAddConstants,
+            noble_ngraph::cert::Rule::NeutralMulRight,
+        ],
+        "two independent folds and one recorded identity"
+    );
+    let claims: Vec<u64> = derivation
+        .steps
+        .iter()
+        .filter(|step| step.rule == noble_ngraph::cert::Rule::FoldAddConstants)
+        .map(|step| step.claimed)
+        .collect();
+    assert_eq!(
+        claims,
+        [8, i64::MIN.cast_unsigned()],
+        "the second fold claims the wrapped sum"
+    );
+    for value in [0, 2, -3, i64::MAX, i64::MIN] {
+        let input = [noble_ngraph::sem::Value::I64(value)];
+        let expected = noble_ngraph::eval::Obs::Normal(vec![
+            noble_ngraph::sem::Value::I64(3),
+            noble_ngraph::sem::Value::I64(5),
+            noble_ngraph::sem::Value::I64(i64::MAX),
+            noble_ngraph::sem::Value::I64(value.wrapping_mul(8).wrapping_add(i64::MIN)),
+            noble_ngraph::sem::Value::I64(value),
+        ]);
+        let (compiled_before, nodes_before, reference_before, ref_nodes_before) =
+            differential::observations(&before, &input)?;
+        let (compiled_after, nodes_after, reference_after, ref_nodes_after) =
+            differential::observations(&after, &input)?;
+        for (observed, endpoint) in [
+            (&compiled_before, "compiled original"),
+            (&reference_before, "reference original"),
+            (&compiled_after, "compiled folded"),
+            (&reference_after, "reference folded"),
+        ] {
+            assert_eq!(observed, &expected, "{endpoint} endpoint on input {value}");
+        }
+        assert_eq!(
+            (nodes_before, ref_nodes_before),
+            (nodes_after, ref_nodes_after),
+            "in-place folds preserve the evaluated node counts on input {value}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn a_corrupted_later_step_of_a_multi_step_certificate_is_refused() {
+    let before = differential::independent_folds();
+    let (derivation, after) = differential::fold(&before);
+    let scheme = differential::TestIds;
+    let refused = |corrupt: &dyn Fn(&mut noble_ngraph::cert::Derivation)| {
+        let mut corrupted = derivation.clone();
+        corrupt(&mut corrupted);
+        noble_ngraph::cert::check(&scheme, &before, &after, &corrupted)
+    };
+    // Each corruption touches a step after the first, so a checker that validated only the
+    // leading step would accept all of them.
+    assert_eq!(
+        refused(&|corrupted| corrupted.steps[1].claimed ^= 1),
+        Err(noble_ngraph::cert::Refusal::ClaimMismatch),
+        "the second fold's claim"
+    );
+    assert_eq!(
+        refused(&|corrupted| corrupted.steps[1].second_bits ^= 1),
+        Err(noble_ngraph::cert::Refusal::ConstantMismatch),
+        "the second fold's declared constant"
+    );
+    assert_eq!(
+        refused(&|corrupted| corrupted.steps[2].operands.swap(0, 1)),
+        Err(noble_ngraph::cert::Refusal::Malformed),
+        "the identity step's operand order"
+    );
+    assert_eq!(
+        refused(&|corrupted| corrupted.steps.swap(1, 2)),
+        Err(noble_ngraph::cert::Refusal::Order),
+        "steps out of node order"
+    );
+    assert_eq!(
+        refused(&|corrupted| {
+            corrupted.steps.remove(1);
+        }),
+        Err(noble_ngraph::cert::Refusal::ResultMismatch),
+        "a fold applied in the result but missing from the derivation"
+    );
+    assert_eq!(
+        refused(&|_| {}),
+        Ok(()),
+        "the uncorrupted certificate is accepted"
+    );
 }

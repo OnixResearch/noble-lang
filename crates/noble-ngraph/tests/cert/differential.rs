@@ -63,6 +63,33 @@ pub(super) fn symbolic_sum() -> noble_ngraph::ir::Graph {
     builder.finish()
 }
 
+/// Two independent folds, one of which wraps, and a recorded `x * 1` identity, so the emitted
+/// derivation has three steps over the original graph. The folded-away operand constants stay
+/// outputs, so the folded endpoint has no dangling node and is admitted.
+pub(super) fn independent_folds() -> noble_ngraph::ir::Graph {
+    let scheme = TestIds;
+    let mut builder = noble_ngraph::ir::GraphBuilder::new(
+        noble_ngraph::ir::SubProfile::I64,
+        noble_ngraph::ir::Subject::authored(&scheme, "cert-multi-step"),
+    );
+    let input = builder.input(noble_ngraph::ir::ScalarType::I64);
+    let three = builder.i64_const(3);
+    let five = builder.i64_const(5);
+    let small = builder.op(noble_ngraph::ir::Op::I64Add(three, five));
+    let max = builder.i64_const(i64::MAX);
+    let one = builder.i64_const(1);
+    let wrapped = builder.op(noble_ngraph::ir::Op::I64Add(max, one));
+    let scaled = builder.op(noble_ngraph::ir::Op::I64Mul(input, small));
+    let kept = builder.op(noble_ngraph::ir::Op::I64Mul(input, one));
+    let shifted = builder.op(noble_ngraph::ir::Op::I64Add(scaled, wrapped));
+    builder.output(three);
+    builder.output(five);
+    builder.output(max);
+    builder.output(shifted);
+    builder.output(kept);
+    builder.finish()
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this helper returns both real evaluator observations for the caller's independent comparison, including deliberate wrong-arity refusals; asserting success here would destroy that negative control."
