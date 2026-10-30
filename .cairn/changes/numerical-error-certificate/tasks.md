@@ -62,6 +62,26 @@
 
   Changed operation order, FMA contraction, wrong snapshot or domain, and a stale model need the
   binding layer and stay open.
-- [ ] [serial] Add an independent expected-value lane that does not reuse the analyzer's arithmetic as the oracle. r[NGRAPH-ERR-02]
+- [x] [serial] Add an independent expected-value lane that does not reuse the analyzer's arithmetic as the oracle. r[NGRAPH-ERR-02]
+  Ticked 2026-10-30: `verification/numerical-certificate/lane.mjs` evaluates every node of every
+  corpus graph on 2,000 sampled inputs per graph, both ways:
+  - with the host's binary32 arithmetic;
+  - with exact dyadic arithmetic over values decoded from their binary64 bits. That path shares
+    neither the analyzer's float32 decoder nor its rational interval arithmetic.
+
+  Across 404,000 node checks, no value leaves its certified enclosure or error bound. The two
+  expected-value paths give identical worst errors on all 24 graphs. Scope: Lean model graphs and the
+  host's binary32, not the Lean model's arithmetic; no adapter from encoded graphs exists, so none is
+  exercised.
 - [ ] [serial] Compare bound quality and checker cost with an untrusted analyzer on a pinned bounded corpus, recording numerical sampling as secondary evidence only. r[NGRAPH-ERR-05]
+  Progress (2026-10-30): on the pinned corpus (seed `44`, `corpus.lean` sha256 `9ec794e5…`), the
+  untrusted JS analyzer proposes the tightest certificates the checker's rules admit. The kernel
+  accepts all 24 and refuses their weakened copies, at about 100 ms per kernel check.
+  - Certified output bounds over the worst sampled output errors: min 1.20, quartiles
+    2.57 / 4.01 / 7.40.
+  - The large outliers come from mixed subnormal and large domains.
+  - Sampling is recorded as secondary evidence only.
+
+  This measures the checker's own rules against observation. No external untrusted analyzer
+  (FPTaylor, Daisy) is compared, so the task stays open.
 - [ ] [serial] Bind exact graph/parameter snapshot, domain, model and checker revisions in a retained receipt and publish a go/no-go before broadening operations. r[NGRAPH-ERR-04]

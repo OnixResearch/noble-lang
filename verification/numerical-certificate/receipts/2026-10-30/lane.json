@@ -1,0 +1,585 @@
+{
+  "schema": "noble-numerical-certificate-lane/v1",
+  "measured_on": "2026-10-30",
+  "host": "Linux 6.18.54 x86_64",
+  "node": "v24.13.0",
+  "assertion": "every analyzer certificate in the pinned corpus is accepted by the Lean kernel and its weakened copy refused; on sampled inputs, host binary32 values and exact rational values stay inside every certified enclosure and error bound",
+  "holds": true,
+  "checks": {
+    "lean_accepts_every_certificate_and_refuses_every_weakened_copy": true,
+    "no_sampled_violation": true
+  },
+  "harness": {
+    "path": "verification/numerical-certificate/lane.mjs",
+    "sha256": "573ccf7bf53dfdd037e87abcc932665a4726216dc4526c173e2cdac085ec0caa"
+  },
+  "corpus": {
+    "path": "verification/numerical-certificate/corpus.lean",
+    "sha256": "9ec794e56aa9c8a507e4029a14697f78e9373c26dd5f94f108ff595b4f3ed798",
+    "seed": "44",
+    "graphs": 24,
+    "discarded_for_overflow_reach": 2,
+    "theorems": 48,
+    "nodes_total": 202,
+    "largest_rational_bits": 775,
+    "budget_bits": 832
+  },
+  "checker_cost": {
+    "warmup_ms": {
+      "baseline": 2390,
+      "corpus": 7533
+    },
+    "runs": [
+      {
+        "baseline": {
+          "exit_code": 0,
+          "elapsed_ms": 2378,
+          "output_excerpt": ""
+        },
+        "corpus": {
+          "exit_code": 0,
+          "elapsed_ms": 7548,
+          "output_excerpt": ""
+        }
+      },
+      {
+        "baseline": {
+          "exit_code": 0,
+          "elapsed_ms": 2474,
+          "output_excerpt": ""
+        },
+        "corpus": {
+          "exit_code": 0,
+          "elapsed_ms": 7197,
+          "output_excerpt": ""
+        }
+      },
+      {
+        "baseline": {
+          "exit_code": 0,
+          "elapsed_ms": 2158,
+          "output_excerpt": ""
+        },
+        "corpus": {
+          "exit_code": 0,
+          "elapsed_ms": 7116,
+          "output_excerpt": ""
+        }
+      }
+    ],
+    "corpus_median_ms": 7197,
+    "import_only_median_ms": 2378,
+    "per_kernel_check_ms": 100.39583333333333,
+    "note": "one discarded warm-up run each, then medians of three runs; per-check cost is (corpus - import only) / theorems, and includes elaboration of the generated definitions"
+  },
+  "sampling": {
+    "role": "secondary evidence only; the proof is the kernel-checked certificate",
+    "machine": "host binary32: binary64 arithmetic, then Math.fround. Products of binary32 values are exact in binary64; sums double-round innocuously because 53 >= 2 * 24 + 1",
+    "expected": "exact dyadic (BigInt mantissa, exponent) arithmetic over values decoded from their binary64 bits; it shares neither the analyzer's float32 decoder nor its rational interval arithmetic, and converts to rationals only to compare with a certified bound",
+    "samples_per_graph": 2000,
+    "first_two_samples": "all inputs at their lower, then upper, endpoints",
+    "node_checks": 404000,
+    "violations": 0,
+    "bound_over_observed": {
+      "graphs_with_nonzero_observed_error": 23,
+      "min": 1.2017603250925004,
+      "lower_quartile": 2.5722602548382794,
+      "median": 4.007594792176632,
+      "upper_quartile": 7.398523858054645,
+      "max": 5.5821215689504425e+135,
+      "graphs_with_bound_at_most_two_eta_per_node": 2
+    },
+    "per_graph": [
+      {
+        "graph": 0,
+        "nodes": 9,
+        "operations": 7,
+        "inputs": [
+          [
+            1,
+            2
+          ]
+        ],
+        "output_bound": 5.3644201081230805e-17,
+        "worst_observed_output_error": 7.250662714675076e-18,
+        "bound_over_observed": 7.398523858054645,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 1,
+        "nodes": 7,
+        "operations": 3,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            1152921504606847000,
+            4611686018427388000
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "output_bound": 65536,
+        "worst_observed_output_error": 5.659799424266695e-73,
+        "bound_over_observed": 1.157920892373162e+77,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 2,
+        "nodes": 8,
+        "operations": 6,
+        "inputs": [
+          [
+            -1,
+            1
+          ]
+        ],
+        "output_bound": 2.562999944721875e-7,
+        "worst_observed_output_error": 1.0036515756452083e-7,
+        "bound_over_observed": 2.5536750072595886,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 3,
+        "nodes": 9,
+        "operations": 6,
+        "inputs": [
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ],
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 0.0000010728837125384454,
+        "worst_observed_output_error": 2.384185791015625e-7,
+        "bound_over_observed": 4.500000447034852,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 4,
+        "nodes": 4,
+        "operations": 3,
+        "inputs": [
+          [
+            -1,
+            1
+          ]
+        ],
+        "output_bound": 2.3841858620698986e-7,
+        "worst_observed_output_error": 5.949168979668684e-8,
+        "bound_over_observed": 4.007594792176632,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 2,
+        "violations": 0
+      },
+      {
+        "graph": 5,
+        "nodes": 10,
+        "operations": 8,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ]
+        ],
+        "output_bound": 5.477676278037963e-44,
+        "worst_observed_output_error": 2.1295186860407132e-44,
+        "bound_over_observed": 2.5722602548382794,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 6,
+        "nodes": 13,
+        "operations": 7,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            1152921504606847000,
+            4611686018427388000
+          ]
+        ],
+        "output_bound": 3.169126783910412e+29,
+        "worst_observed_output_error": 1.8133887294213253e+24,
+        "bound_over_observed": 174762.6822916077,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 7,
+        "nodes": 8,
+        "operations": 6,
+        "inputs": [
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ]
+        ],
+        "output_bound": 0.0000043272977787723164,
+        "worst_observed_output_error": 0.0000010132789611816406,
+        "bound_over_observed": 4.270588795928433,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 31,
+        "violations": 0
+      },
+      {
+        "graph": 8,
+        "nodes": 11,
+        "operations": 7,
+        "inputs": [
+          [
+            -3,
+            5
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 0.000006318092900414762,
+        "worst_observed_output_error": 0.0000018542632460594177,
+        "bound_over_observed": 3.4073332973846293,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 9,
+        "nodes": 8,
+        "operations": 5,
+        "inputs": [
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 1310.7200781250015,
+        "worst_observed_output_error": 450.55999755859375,
+        "bound_over_observed": 2.9090910982494553,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 10,
+        "nodes": 4,
+        "operations": 2,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ]
+        ],
+        "output_bound": 4.624284936448091e-44,
+        "worst_observed_output_error": 5.659799424266695e-73,
+        "bound_over_observed": 8.170404266662207e+28,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 11,
+        "nodes": 11,
+        "operations": 5,
+        "inputs": [
+          [
+            -1,
+            1
+          ],
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "output_bound": 72057594037927940,
+        "worst_observed_output_error": 0,
+        "bound_over_observed": null,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 2000,
+        "violations": 0
+      },
+      {
+        "graph": 12,
+        "nodes": 6,
+        "operations": 4,
+        "inputs": [
+          [
+            -1,
+            1
+          ],
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ]
+        ],
+        "output_bound": 3.4868724441140117e-8,
+        "worst_observed_output_error": 1.6754004354651226e-8,
+        "bound_over_observed": 2.081217343808312,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 13,
+        "nodes": 9,
+        "operations": 7,
+        "inputs": [
+          [
+            -1,
+            1
+          ]
+        ],
+        "output_bound": 0.0000013637544360989392,
+        "worst_observed_output_error": 3.506017886012458e-7,
+        "bound_over_observed": 3.8897532198559164,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 14,
+        "nodes": 4,
+        "operations": 2,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ]
+        ],
+        "output_bound": 5.521115993707445e-44,
+        "worst_observed_output_error": 4.594190603923024e-44,
+        "bound_over_observed": 1.2017603250925004,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 15,
+        "nodes": 7,
+        "operations": 4,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            -1,
+            1
+          ]
+        ],
+        "output_bound": 3.5762788996862625e-7,
+        "worst_observed_output_error": 5.952653481244852e-8,
+        "bound_over_observed": 6.00787348189193,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 16,
+        "nodes": 5,
+        "operations": 4,
+        "inputs": [
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ]
+        ],
+        "output_bound": 6.437302531026082e-8,
+        "worst_observed_output_error": 1.4890716215631983e-8,
+        "bound_over_observed": 4.323030831967859,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 17,
+        "nodes": 12,
+        "operations": 7,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "output_bound": 1.401341270322127e-45,
+        "worst_observed_output_error": 5.147557589468029e-85,
+        "bound_over_observed": 2.7223420932468827e+39,
+        "bound_at_most_two_eta_per_node": true,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 18,
+        "nodes": 8,
+        "operations": 6,
+        "inputs": [
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ]
+        ],
+        "output_bound": 4.888327456620507e-9,
+        "worst_observed_output_error": 1.995489608822761e-9,
+        "bound_over_observed": 2.449688254455194,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 19,
+        "nodes": 11,
+        "operations": 8,
+        "inputs": [
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 0.0001844019049124273,
+        "worst_observed_output_error": 0.000054722455814726345,
+        "bound_over_observed": 3.369766618968203,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 2,
+        "violations": 0
+      },
+      {
+        "graph": 20,
+        "nodes": 5,
+        "operations": 3,
+        "inputs": [
+          [
+            -1,
+            1
+          ],
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 0.0000014901161549119024,
+        "worst_observed_output_error": 4.76837158203125e-7,
+        "bound_over_observed": 3.125000074505806,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 717,
+        "violations": 0
+      },
+      {
+        "graph": 21,
+        "nodes": 14,
+        "operations": 9,
+        "inputs": [
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ],
+          [
+            0.10000000149011612,
+            0.30000001192092896
+          ],
+          [
+            -1,
+            1
+          ]
+        ],
+        "output_bound": 3.218651233538617e-7,
+        "worst_observed_output_error": 1.3439884227750554e-7,
+        "bound_over_observed": 2.3948504161165127,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 22,
+        "nodes": 7,
+        "operations": 5,
+        "inputs": [
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ],
+          [
+            -3,
+            5
+          ]
+        ],
+        "output_bound": 7.006492321624085e-46,
+        "worst_observed_output_error": 2.263919769706678e-72,
+        "bound_over_observed": 3.094850098213451e+26,
+        "bound_at_most_two_eta_per_node": true,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      },
+      {
+        "graph": 23,
+        "nodes": 12,
+        "operations": 9,
+        "inputs": [
+          [
+            -3,
+            5
+          ],
+          [
+            7.346839692639297e-40,
+            7.52316384526264e-37
+          ]
+        ],
+        "output_bound": 8.94069698276212e-8,
+        "worst_observed_output_error": 1.6016664761464807e-143,
+        "bound_over_observed": 5.5821215689504425e+135,
+        "bound_at_most_two_eta_per_node": false,
+        "samples_with_exact_output": 0,
+        "violations": 0
+      }
+    ]
+  },
+  "non_claims": [
+    "Sampling is secondary evidence: a sound certificate is established by the kernel check, not by the absence of sampled violations.",
+    "The machine values sampled here are the host's binary32 arithmetic, not the Lean model; their agreement with the model is not claimed by this lane.",
+    "The corpus is Lean model graphs, not encoded noble-ngraph graphs; no Rust or Wasm evaluator is exercised.",
+    "Bound quality is measured for the checker's own rules on this corpus only; no comparison with an external analyzer such as Daisy or FPTaylor is made."
+  ]
+}

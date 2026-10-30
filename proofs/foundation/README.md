@@ -791,6 +791,13 @@ theorem itself; subnormals are covered by the mixed rule and never flushed.
 No encoded `noble-ngraph` graph, snapshot or revision is bound, and no analyzer, Rust, Wasm or host
 correspondence is claimed.
 
+The corpus lane [`verification/numerical-certificate/`](../../verification/numerical-certificate/README.md)
+generates 24 graphs and has an untrusted analyzer propose their certificates.
+- **Kernel.** The kernel accepts all 24 and refuses their weakened copies, at about 100 ms per check.
+- **Sampling.** On 404,000 sampled node checks, host binary32 values and exact dyadic values stay
+  inside every certified enclosure and bound; this is secondary evidence.
+- **Tightness.** Certified output bounds exceed the worst sampled errors by a median factor of 4.0.
+
 The clean-source receipt for the certificate checker is
 [`verification/foundation/receipts/80ccf5670/`](../../verification/foundation/receipts/80ccf5670/foundation-check.json)
 (941 theorems, `clean_source: true`, axiom sets inside the allow-list,
