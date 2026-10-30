@@ -4888,6 +4888,42 @@
       "claim": "stacks with different owners but agreeing eligibility run a three-word sequence alike and agree again"
     },
     {
+      "name": "NobleFoundation.Ownership.agreement_length",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "stacks that agree on eligibility have the same length"
+    },
+    {
+      "name": "NobleFoundation.Ownership.accepted_results_agree",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "for every program, branches and the error return included, two admitted runs from eligibility-agreeing stacks leave agreeing stacks"
+    },
+    {
+      "name": "NobleFoundation.Ownership.branch_free_admission_agrees",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "on every branch-free program, the error return included, eligibility-agreeing stacks are admitted alike"
+    },
+    {
+      "name": "NobleFoundation.Ownership.branch_admission_does_not_lift",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a branch between swap and dup; drop is admitted on [data 1, data 1] and refused on the eligibility-agreeing [data 1, data 2]"
+    },
+    {
+      "name": "NobleFoundation.Ownership.fail_admission_lifts",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the error return is admitted exactly on the empty stack"
+    },
+    {
+      "name": "NobleFoundation.Ownership.judged_results_agree",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "two derivations of one program from eligibility-agreeing stacks end in agreeing stacks"
+    },
+    {
       "name": "NobleFoundation.Binary32.Subnormal.floorLog2Ratio_le_carried",
       "phase": 2,
       "role": "binary32-error",

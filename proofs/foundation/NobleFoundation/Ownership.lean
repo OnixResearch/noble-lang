@@ -264,9 +264,13 @@ word's admission depends on per-position eligibility, while swap only needs two 
 stack pair whose positions agree on eligibility is admitted in both arms or in neither.
 
 `OwnershipJudgment.lean` lifts the same simulation over whole straight-line word sequences
-(`joined_sequence_admission_agrees`), where each step keeps the intermediate stacks agreeing. The branch constructor is outside
-this lane because it compares the two arms' actual results, so a join can never be used to skip
-accounting one arm (`branch_accounts_both_arms` and the mutation controls cover that case).
+(`joined_sequence_admission_agrees`), where each step keeps the intermediate stacks agreeing, and
+then over the whole fragment: result agreement holds for every program
+(`accepted_results_agree`), and admission agreement for every branch-free one, the error return
+included (`branch_free_admission_agrees`). Branch admission does not lift
+(`branch_admission_does_not_lift`): the branch rule compares the two arms' actual results, so a join
+can never be used to skip accounting one arm (`branch_accounts_both_arms` and the mutation controls
+cover that case).
 -/
 
 /-- One joined position: the same payload in both arms, or two conflicting ones. -/

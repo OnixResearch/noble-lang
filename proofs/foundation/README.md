@@ -1019,7 +1019,20 @@ admitted on two agreeing stacks or on neither and leaves stacks that agree again
 (`joined_sequence_admission_agrees`); `joined_judgment_transfers` states the same over `Judged`.
 `equal_length_does_not_lift` is the control that the lift needs eligibility agreement, not a
 count, and `lift_fixture` runs a three-word sequence over stacks with different owners.
-Branches and the error return compare actual results and stay outside the lift.
+
+The lift is then characterised over the whole fragment. Its two halves separate:
+- **Result agreement holds for every program**, branches and the error return included: whenever a
+  program is admitted on two stacks that agree on eligibility, the stacks it leaves agree again
+  (`accepted_results_agree`, and over `Judged`, `judged_results_agree`).
+- **Admission agreement holds for every branch-free program**, the error return included
+  (`branch_free_admission_agrees`). The error return only checks emptiness, which agreement fixes
+  (`fail_admission_lifts`).
+- **Admission agreement fails for branches.** A branch compares its arms' actual results, and
+  identities that eligibility does not see can make the arms agree on one stack and not on
+  another: `swap` and `dup; drop` agree on `[data 1, data 1]` but not on `[data 1, data 2]`
+  (`branch_admission_does_not_lift`).
+
+The parent attaches the clean foundation receipt at integration.
 
 The clean-source receipt for the per-word rules and the join lift is
 [`verification/foundation/receipts/0cf855674/`](../../verification/foundation/receipts/0cf855674/foundation-check.json)

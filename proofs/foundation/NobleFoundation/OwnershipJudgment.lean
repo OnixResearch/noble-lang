@@ -214,4 +214,138 @@ theorem lift_fixture :
   unfold EligibilityAgrees
   decide
 
+/-! ## The lift over the whole fragment
+
+The lift has two halves. **Result agreement**, that two admitted runs from agreeing stacks leave
+agreeing stacks, holds for every program, branches and the error return included. **Admission
+agreement**, that agreeing stacks are admitted alike, holds for every branch-free program, the
+error return included. It fails for branches, because a branch compares its arms' actual results,
+and identities that eligibility does not see can make two arms agree on one stack and not on the
+other. -/
+
+/-- A branch-free program: words, composition and the error return. -/
+def BranchFree : Program → Prop
+  | .word _ => True
+  | .compose first second => BranchFree first ∧ BranchFree second
+  | .branch _ _ => False
+  | .fail => True
+
+/-- Agreeing stacks have the same length. -/
+theorem agreement_length {left right : List Payload} (agree : EligibilityAgrees left right) :
+    left.length = right.length := by
+  have lengths := congrArg List.length agree
+  simpa [eligibilityClass] using lengths
+
+/-- **Result agreement over the whole fragment**: whenever a program is admitted on two stacks that
+agree on eligibility, the stacks it leaves agree again. -/
+theorem accepted_results_agree (program : Program) :
+    ∀ (left right left' right' : List Payload), EligibilityAgrees left right →
+      run program left = some left' → run program right = some right' →
+        EligibilityAgrees left' right' := by
+  induction program with
+  | word w =>
+      intro left right left' right' agree onLeft onRight
+      exact step_preserves_agreement w agree onLeft onRight
+  | compose first second firstAgrees secondAgrees =>
+      intro left right left' right' agree onLeft onRight
+      simp only [run, Option.bind_eq_bind] at onLeft onRight
+      cases middleLeft : run first left with
+      | none => simp [middleLeft] at onLeft
+      | some middle =>
+          cases middleRight : run first right with
+          | none => simp [middleRight] at onRight
+          | some other =>
+              rw [middleLeft, Option.bind_some] at onLeft
+              rw [middleRight, Option.bind_some] at onRight
+              exact secondAgrees middle other left' right'
+                (firstAgrees left right middle other agree middleLeft middleRight) onLeft onRight
+  | branch thenArm elseArm thenAgrees _ =>
+      intro left right left' right' agree onLeft onRight
+      simp only [run] at onLeft onRight
+      split at onLeft
+      · split at onRight
+        · exact thenAgrees left right left' right' agree onLeft onRight
+        · simp at onRight
+      · simp at onLeft
+  | fail =>
+      intro left right left' right' agree onLeft onRight
+      simp only [run] at onLeft onRight
+      split at onLeft
+      · split at onRight
+        · simp only [Option.some.injEq] at onLeft onRight
+          subst onLeft onRight
+          exact agree
+        · simp at onRight
+      · simp at onLeft
+
+/-- **Admission agreement over the branch-free fragment**: on words, composition and the error
+return, two stacks that agree on eligibility are admitted in both runs or in neither. -/
+theorem branch_free_admission_agrees (program : Program) (branchFree : BranchFree program) :
+    ∀ (left right : List Payload), EligibilityAgrees left right →
+      (run program left).isSome = (run program right).isSome := by
+  induction program with
+  | word w =>
+      intro left right agree
+      exact joined_word_admission_agrees w left right agree
+  | compose first second firstLift secondLift =>
+      intro left right agree
+      obtain ⟨firstFree, secondFree⟩ := branchFree
+      have firstAccepted := firstLift firstFree left right agree
+      cases onLeft : run first left with
+      | none =>
+          cases onRight : run first right with
+          | none => simp [run, onLeft, onRight]
+          | some _ => simp [onLeft, onRight] at firstAccepted
+      | some middleLeft =>
+          cases onRight : run first right with
+          | none => simp [onLeft, onRight] at firstAccepted
+          | some middleRight =>
+              have middleAgree := accepted_results_agree first left right middleLeft middleRight agree
+                onLeft onRight
+              simpa [run, onLeft, onRight] using secondLift secondFree middleLeft middleRight middleAgree
+  | branch _ _ _ _ => exact absurd branchFree id
+  | fail =>
+      intro left right agree
+      have sameLength := agreement_length agree
+      simp only [run]
+      by_cases empty : left = []
+      · subst empty
+        have : right = [] := List.eq_nil_of_length_eq_zero (by simpa using sameLength.symm)
+        subst this
+        rfl
+      · have nonempty : right ≠ [] := by
+          intro rightEmpty
+          subst rightEmpty
+          exact empty (List.eq_nil_of_length_eq_zero (by simpa using sameLength))
+        simp [List.isEmpty_iff, empty, nonempty]
+
+/-- **Branch admission does not lift**: `swap` and `dup; drop` agree on two equal data references
+and not on two different ones, so a branch between them is admitted on one of two stacks that agree
+on eligibility and refused on the other. The branch rule compares identities, which eligibility
+does not see. -/
+theorem branch_admission_does_not_lift :
+    EligibilityAgrees [.data 1, .data 1] [.data 1, .data 2] ∧
+      (run (.branch (.word .swap) (.compose (.word .dup) (.word .drop))) [.data 1, .data 1]).isSome =
+        true ∧
+      (run (.branch (.word .swap) (.compose (.word .dup) (.word .drop))) [.data 1, .data 2]).isSome =
+        false := by
+  refine ⟨?_, by decide, by decide⟩
+  unfold EligibilityAgrees
+  decide
+
+/-- **The error return lifts**: it is admitted on two agreeing stacks alike, so it is not what keeps
+branches outside the admission lift. -/
+theorem fail_admission_lifts :
+    (run .fail ([] : List Payload)).isSome = true ∧
+      (run .fail [.data 1]).isSome = false ∧ (run .fail [.resource 1]).isSome = false := by
+  decide
+
+/-- **Result agreement over the judgment**: two derivations of one program from agreeing stacks end
+in agreeing stacks, for every program. -/
+theorem judged_results_agree (program : Program) {left right left' right' : List Payload}
+    (agree : EligibilityAgrees left right) (onLeft : Judged program left left')
+    (onRight : Judged program right right') : EligibilityAgrees left' right' :=
+  accepted_results_agree program left right left' right' agree
+    ((run_iff_judged program left left').2 onLeft) ((run_iff_judged program right right').2 onRight)
+
 end NobleFoundation.Ownership
