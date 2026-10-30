@@ -708,7 +708,10 @@ the model's arithmetic and then to whole operation sequences (issue #44).
 Overflow and subnormal intermediate results are outside the premises, and the bound is the standard
 worst-case growth, not tight.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the sequence unit is
+[`verification/foundation/receipts/79a394db9/`](../../verification/foundation/receipts/79a394db9/foundation-check.json)
+(888 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ### The ordered `affine` fold, and the layer classification
 

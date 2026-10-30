@@ -387,3 +387,10 @@ that run reported 847 in total).
 operation order over the binary32 reference, the stored-order cancellation fixture, the
 ascending-traversal, presummed-occurrence and seed controls, and the real-valued counterpart
 (7 new theorems; that run reported 854 in total).
+
+## 79a394db9 — binary32 rounding error of whole operation sequences (issue #44)
+
+`79a394db9/` records the clean run that added `NobleFoundation.Binary32.Sequence`: the sign-bit
+negation, one signed rounding, the relative error of one model addition and multiplication, the
+ordered affine fold bound and the cancellation fixture (34 new theorems; that run reported
+888 in total).
