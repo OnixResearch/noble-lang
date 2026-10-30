@@ -22,6 +22,10 @@ use noble_ngraph::prng::SplitMix64;
 use noble_ngraph::sem::{obs_eq_all, Value};
 use noble_ngraph_experiment::b2i64::{random, Lowered, Oracle};
 
+/// The L1 adapter's attribution and completion checks against fixture children (issue #75).
+#[path = "attribution/mod.rs"]
+mod attribution;
+
 fn i64s(v: &[i64]) -> Vec<Value> {
     v.iter().map(|x| Value::I64(*x)).collect()
 }

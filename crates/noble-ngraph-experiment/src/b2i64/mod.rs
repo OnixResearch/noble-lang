@@ -308,9 +308,30 @@ fn legs(
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
             let cli = Cli::new(bin.clone(), opt);
-            let run = cli
-                .run_vectors(&defs, &lowered.root, lowered.outputs(), &inputs)
-                .map_err(|e| format!("{name} L1 {}: {e}", opt.flag()))?;
+            let run = match cli.run_vectors(&defs, &lowered.root, lowered.outputs(), &inputs) {
+                Ok(run) => run,
+                Err(l1::Error::Session(failure)) => {
+                    // A protocol, process or transport failure is its own
+                    // class: never agreement and never a numeric disagreement.
+                    t.check(
+                        || {
+                            format!(
+                                "{name} L1 --opt {}: session {} failure: {}",
+                                opt.flag(),
+                                failure.class,
+                                failure.reason
+                            )
+                        },
+                        false,
+                    );
+                    modes.insert(
+                        opt.flag().to_owned(),
+                        json!({ "vectors": n, "session_failure": failure.record() }),
+                    );
+                    continue;
+                }
+                Err(e) => return Err(format!("{name} L1 {}: {e}", opt.flag())),
+            };
             let mut agree = 0usize;
             let mut quota = Vec::new();
             for (i, r) in run.results.iter().enumerate() {
@@ -540,9 +561,34 @@ fn transition(
         let host: Vec<Vec<l1::Value>> = steps.iter().map(|s| l1_values(&i64s(s))).collect();
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
-            let run = Cli::new(bin.clone(), opt)
-                .run_transition(&[], &lowered.root, 2, &[l1::Value::I64(s0)], &host)
-                .map_err(|e| format!("I4 L1 {}: {e}", opt.flag()))?;
+            let run = match Cli::new(bin.clone(), opt).run_transition(
+                &[],
+                &lowered.root,
+                2,
+                &[l1::Value::I64(s0)],
+                &host,
+            ) {
+                Ok(run) => run,
+                Err(l1::Error::Session(failure)) => {
+                    t.check(
+                        || {
+                            format!(
+                                "I4 L1 --opt {}: session {} failure: {}",
+                                opt.flag(),
+                                failure.class,
+                                failure.reason
+                            )
+                        },
+                        false,
+                    );
+                    modes.insert(
+                        opt.flag().to_owned(),
+                        json!({ "steps": host.len(), "session_failure": failure.record() }),
+                    );
+                    continue;
+                }
+                Err(e) => return Err(format!("I4 L1 {}: {e}", opt.flag())),
+            };
             let mut agree = 0usize;
             for (j, o) in run.results.iter().enumerate() {
                 let ok = *o == l1_values(&l3_steps[j]);
@@ -637,33 +683,12 @@ pub fn b3_receipt(cli: Option<&PathBuf>) -> Result<serde_json::Value, String> {
     Ok(json!(cases))
 }
 
-fn sha256_text(text: &str) -> Result<String, String> {
-    use std::io::Write as _;
-    let mut child = std::process::Command::new("sha256sum")
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("sha256sum: {e}"))?;
-    child
-        .stdin
-        .take()
-        .ok_or("no stdin")?
-        .write_all(text.as_bytes())
-        .map_err(|e| e.to_string())?;
-    let out = child.wait_with_output().map_err(|e| e.to_string())?;
-    String::from_utf8_lossy(&out.stdout)
-        .split_whitespace()
-        .next()
-        .map(str::to_owned)
-        .ok_or_else(|| "sha256sum produced nothing".to_owned())
-}
-
 /// Host authority for the live-slot controls: one pure `I64 -- I64` slot
 /// `inc`, dispatch and publish granted, exact source allowlist.
 fn live_authority(sources: &[(&'static str, String)]) -> Result<serde_json::Value, String> {
     let allow = sources
         .iter()
-        .map(|(id, s)| Ok(json!({ "id": id, "sha256": sha256_text(s)? })))
+        .map(|(id, s)| Ok(json!({ "id": id, "sha256": crate::bench::sha256_text(s)? })))
         .collect::<Result<Vec<_>, String>>()?;
     Ok(json!({
         "owner": "ngraph-b3", "quota": 8, "effects": ["live.dispatch"],

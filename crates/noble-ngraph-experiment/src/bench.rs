@@ -25,6 +25,32 @@ pub fn sha256(path: &Path) -> String {
         .unwrap_or_else(|| "unsupported".to_owned())
 }
 
+/// `sha256sum` of a text, as lowercase hex.
+///
+/// # Errors
+/// When `sha256sum` cannot run or does not print a 64-digit hex digest.
+pub fn sha256_text(text: &str) -> Result<String, String> {
+    use std::io::Write as _;
+    let mut child = Command::new("sha256sum")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("sha256sum: {e}"))?;
+    child
+        .stdin
+        .take()
+        .ok_or("no stdin")?
+        .write_all(text.as_bytes())
+        .map_err(|e| e.to_string())?;
+    let out = child.wait_with_output().map_err(|e| e.to_string())?;
+    String::from_utf8_lossy(&out.stdout)
+        .split_whitespace()
+        .next()
+        .filter(|digest| digest.len() == 64 && digest.bytes().all(|b| b.is_ascii_hexdigit()))
+        .map(str::to_owned)
+        .ok_or_else(|| "sha256sum did not print a digest".to_owned())
+}
+
 /// The first `model name` of `/proc/cpuinfo`.
 #[must_use]
 pub fn cpu_model() -> String {
