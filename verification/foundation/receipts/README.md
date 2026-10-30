@@ -324,3 +324,10 @@ and trust path remain owner decisions.
 in-place reuse, the unique-root replacement theorem, the shared-alias control and the
 wrapped-resource eligibility control (9 new theorems; that run reported 737 in total). It
 claims nothing about the allocator, runtime or Wasm.
+
+## 620b43395 — restricted SGD reference (issue #58)
+
+`620b43395/` records the clean run that added `NobleFoundation.Binary32.Sgd`: the published two-rounding
+update over the #38 model, the pilot admission rule with lane-indexed refusals, universal shape,
+per-lane and nonfinite-refusal theorems, boundary expectations and the fused-update control (15
+new theorems; that run reported 752 in total). No candidate checker or Rust correspondence exists.

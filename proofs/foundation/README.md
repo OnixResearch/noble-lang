@@ -2166,7 +2166,10 @@ Open, and deliberately not closed: the candidate envelope checker and its contro
 `State0` and `StepDescriptor` handling, immutable snapshots, rollback, evaluation isolation, the CPU
 comparison, and any Rust correspondence.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the SGD reference is
+[`verification/foundation/receipts/620b43395/`](../../verification/foundation/receipts/620b43395/foundation-check.json)
+(752 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 
