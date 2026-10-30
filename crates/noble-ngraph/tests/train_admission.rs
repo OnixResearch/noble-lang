@@ -18,6 +18,8 @@
 //! NGRAPH-SNAP-01/02, NGRAPH-CASE-11/13 at the library level).
 
 mod common;
+#[path = "grad_ordered/differential.rs"]
+mod grad_ordered;
 
 use common::{checked, contract, linear, mse, points, IDS};
 use noble_ngraph::check::Budgets;
