@@ -2137,9 +2137,10 @@ slots as a prefix gives a different result on the non-prefix fixture.
 |---|---|---|---|
 | Bounded static-input specialization over packed graphs preserves values under merge | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` | Rust certificate emission, effect-aware program semantics, and runtime correspondence remain open | **proved** |
 
-The source-bound foundation receipt is intentionally produced by the parent
-integration after this model commit is rebased and the complete foundation is
-checked; no receipt is claimed by this isolated unit.
+The clean-source receipt for the specialization model is
+[`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
+(692 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 

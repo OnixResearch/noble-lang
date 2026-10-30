@@ -295,3 +295,10 @@ in total). Reduction, readback and translation remain open.
 cover, `isop_bounds`, the independent `equivOn` checker with its soundness theorem, fixtures and
 wrong-cofactor/complement controls (17 new theorems; that run reported 674 in total).
 Irredundancy is fixture-only; integration remains open.
+
+## 84753c99e — static-input specialization model (issue #32)
+
+`84753c99e/` records the clean run that added `NobleFoundation.Specialize`: index-preserving
+specialization with constant folding, `specialize_wellFormed` and the universal
+`specialize_sound`, fixtures and the prefix-merge control (18 new theorems; that run reported
+692 in total). The binding-time contract and Rust entry point remain owner decisions.
