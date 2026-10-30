@@ -182,6 +182,7 @@ Status words:
 | Roundoff certificate checker for the add/multiply fragment (issue #44) | `check_sound`, `check_output_bound`, `noOverflow_of_lt`, `add_finite`, `mul_mem_bounds`, `subnormal_needs_eta` | exact `Binary32Checker` model only; a model graph of inputs, constants, `add` and `mul`, no encoded `noble-ngraph` graph, analyzer or Rust/host correspondence | model **proved**: an accepted certificate gives every node a finite machine value within its proposed error bound of the real value, for every input meeting the declared domains. Binding, encoded graphs and analyzer comparison **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
+| Identity forwarding by operand rewriting (issue #34) | `forward_sound`, `forward_output_sound`, `forwarded_residual_sound`, `forwarded_residual_is_the_program`, `subtraction_from_zero_is_not_forwarded` | the `PackedSchedule` graph model only; no certificate-format, Rust or runtime correspondence | model **proved**: forwarding keeps every node value, and for every program of the #34 family the twice-forwarded residual is exactly the program. Certificate format and implementation **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
@@ -2523,9 +2524,40 @@ nodes exactly the selected one is live. `remaining_dispatch_overhead` states the
 exactly one live multiplication per instruction still reads a former opcode slot, and that slot is the
 constant `1`. Seeded controls detect a wrong opcode encoding and swapped subtraction operands.
 
-Open, and deliberately not closed: identity forwarding (an alias node or operand forwarding), a
-general source language and encoding, the second and third projections, specialization and residual
-cost measurements, and any Rust or runtime correspondence; continuation thresholds are the owner's.
+**Identity forwarding.** [`NobleFoundation/OperandForwarding.lean`](NobleFoundation/OperandForwarding.lean)
+removes that overhead without an alias node. It rewrites every consumer's operand away from an identity
+node (`1·v`, `v·1`, `v + 0`, `0 + v`, `v − 0`) to the node the identity forwards to, follows chains, and
+forwards the output the same way. Node indices and the arity are unchanged, and the identity nodes stay
+in place, dead.
+
+- **Soundness.** On well-formed graphs without equality nodes, every node keeps its value
+  (`identity_value`, `target_value`, `forward_sound`). The forwarded output keeps the output's value
+  (`forward_output_sound`).
+- **The residual.** Forwarding the residual twice still computes the program, for every program and
+  dynamic input (`forwarded_residual_sound`). One pass is not enough when `mul` is selected
+  (`one_pass_leaves_a_zero_sum`): the sum of a constant `0` and the selected product becomes an
+  identity only after its operands are forwarded.
+- **What remains live.** No live multiplication reads a former opcode slot
+  (`forwarding_removes_the_dispatch_overhead`). For every program, the live part is exactly the program
+  (`forwarded_residual_is_the_program`):
+  - the dynamic inputs `x` (node 6) and `y` (node 7);
+  - the first selected operation over them;
+  - the second selected operation over that result and `y`.
+
+  A third pass changes no live node.
+- **Controls.** A chain of three identities forwards to the input (`chain_forwards_to_the_input`).
+  `0 − x` is a negation, not an identity: it is not forwarded, and forwarding it would change the value
+  (`subtraction_from_zero_is_not_forwarded`).
+
+The certificate format still records identity steps without applying them, and no Rust specializer
+forwards operands.
+
+The parent attaches the clean foundation receipt at integration.
+
+Open, and deliberately not closed: identity forwarding in the certificate format and in any Rust
+specializer, a general source language and encoding, the second and third projections, specialization
+and residual cost measurements, and any Rust or runtime correspondence; continuation thresholds are the
+owner's.
 
 The clean-source receipt for the first-projection model is
 [`verification/foundation/receipts/14a7793c9/`](../../verification/foundation/receipts/14a7793c9/foundation-check.json)

@@ -40,6 +40,7 @@ import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
 import NobleFoundation.FirstProjection
+import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations
 import NobleFoundation.OwnershipJudgment

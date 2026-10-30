@@ -4660,6 +4660,102 @@
       "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
     },
     {
+      "name": "NobleFoundation.OperandForwarding.targetFuel_le",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "following identities for any fuel never reaches a later node"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.target_le",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "a forwarding target is never later than the node"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.identity_value",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "an identity node (1·v, v·1, v + 0, 0 + v, v − 0) has its forwarding operand value on well-formed equality-free graphs"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.targetFuel_value",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "following identities for any fuel keeps the value"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.target_value",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "a forwarding target has the node value"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forward_wellFormed",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "forwarding keeps every operand strictly earlier and the output inside the arity"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forward_noEq",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "forwarding introduces no equality node"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forward_sound",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "forwarding keeps every node value on well-formed graphs without equality nodes"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forward_output_sound",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "the forwarded output has the original output value"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.annihilate_noEq",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "zero annihilation introduces no equality node"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forwarded_residual_sound",
+      "phase": 1,
+      "role": "operand-forwarding",
+      "claim": "the twice-forwarded first-projection residual computes the program for every program and dynamic input"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forwarding_removes_the_dispatch_overhead",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "no live multiplication of the forwarded residual reads a former opcode slot, where the residual keeps two"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.forwarded_residual_is_the_program",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the live part of every forwarded residual is exactly x, y and the two selected operations, and a third pass changes no live node"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.one_pass_leaves_a_zero_sum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "after one pass the (add, mul) residual still has six live nodes, including a sum with the constant 0"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.chain_forwards_to_the_input",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a chain of three identities forwards to the input"
+    },
+    {
+      "name": "NobleFoundation.OperandForwarding.subtraction_from_zero_is_not_forwarded",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "0 − x is not forwarded, and forwarding it to x would change the value at x = 1"
+    },
+    {
       "name": "NobleFoundation.Binary32.Scale.log2_go_eq",
       "phase": 2,
       "role": "binary32-error",
