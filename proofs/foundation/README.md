@@ -2764,7 +2764,10 @@ open choices, which are the owner's:
 - how fanout reaches operands;
 - whether operand order is checked against the source graph rather than input slot numbers.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the orientation analysis is
+[`verification/foundation/receipts/d2a5393c2/`](../../verification/foundation/receipts/d2a5393c2/foundation-check.json)
+(1005 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Static-input specialization model (issue #32, phase 1)
 

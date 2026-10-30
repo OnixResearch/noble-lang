@@ -427,3 +427,9 @@ controls (16 new theorems; that run reported 957 in total).
 the selected subject's normal-return postconditions, prefix safety P1–P6 through the monitor, and
 sequential composition with its counter and set-union controls (42 new theorems; that run reported
 999 in total).
+
+## d2a5393c2 — interaction-net revision-1 orientation analysis (issue #37)
+
+`d2a5393c2/` records the clean run that added `NobleFoundation.InteractionNetOrientation`: the
+active-pair characterisation under the documented orientation and the three validator findings
+(6 new theorems; that run reported 1005 in total).
