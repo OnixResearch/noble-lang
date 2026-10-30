@@ -2082,6 +2082,7 @@ The module is a contract and wiring validator only. Open, and deliberately not
 closed: reduction rules, termination, confluence, readback correctness, the
 graph-to-net translation proof, resource/byte/work budgets, and the owner's
 continuation criteria. No Rust or runtime correspondence follows from these
-theorems. The parent integration will attach the clean foundation receipt after
-the unit is rebased with the other issue slices; this worktree does not create
-that receipt or regenerate `verification/foundation/claims.json`.
+theorems. The clean-source receipt for the net contract is
+[`verification/foundation/receipts/e417bf841/`](../../verification/foundation/receipts/e417bf841/foundation-check.json)
+(657 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).

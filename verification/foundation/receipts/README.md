@@ -281,3 +281,10 @@ or correspondence exists.
 characterisations, truncating divrem laws and the (MIN, -1) overflow, plus controls (24 new
 theorems; that run reported 646 in total). It is a name-neutral reference; API names, error
 representation and overflow policy remain owner decisions.
+
+## e417bf841 — interaction-net contract and wiring validator (issue #37)
+
+`e417bf841/` records the clean run that added `NobleFoundation.InteractionNet`: the version-1 net
+contract, `validate_sound` (reciprocal unique-incidence wiring, compatible ports, exact ordered
+boundary) and accepted/rejected wiring fixtures (11 new theorems; that run reported 657
+in total). Reduction, readback and translation remain open.
