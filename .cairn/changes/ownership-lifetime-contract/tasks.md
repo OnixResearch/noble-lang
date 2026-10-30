@@ -11,4 +11,14 @@
 - [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
 - [ ] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01]
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
+  Progress (2026-10-30): in the small-step model `proofs/foundation/NobleFoundation/Effects.lean`,
+  OWN-PO-1 holds for composition, branches (`ifte`), `dip` with a frame-held value, `run` and
+  dynamic Programs. `owners_step` proves that every typed step permutes the owner multiset
+  (stack plus frames), except a permitted `acquire` (fresh id added) or `release` (released id
+  consumed). `own_preserve` and `reachable_sound` carry this to every finite prefix.
+  OWN-PO-3 is covered in the same model by `ValT.rfree`, `CodeT.rfree` and `typed_rfree`, plus
+  the capture negatives.
+  The task stays open:
+  - the model has no aggregates, named definitions, case forms, borrows or heap;
+  - no lowering, runtime or host-ledger correspondence exists for OWN-PO-4..7.
 - [ ] [serial] Select any scratch-arena promotion form only after measured comparison under the allocation benchmark plan, and verify reset safety with OWN-CASE-08. r[OWN-SCRATCH-01]

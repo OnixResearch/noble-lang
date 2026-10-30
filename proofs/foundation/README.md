@@ -553,11 +553,11 @@ premise.
 
 | Obligation | Checked here (theorems) | Premises | Remains open |
 |---|---|---|---|
-| PO-02 preservation | MC1: `exec_preserves`, `Run.preserve`, `Step.preserve` (all 22 pure words, including `dip`/`run`/`case`/`if`/`list.case`, nested executions and list/sum/pair values). Effects layer: `Effects.preserve`, `Effects.preserve_reach` (every small step, including halting host steps) | MC1: `CodeTyped code ts ts'`, `StackTyped s ts`, normal-return `Exec`. Effects: `WT E c` | the whole language, implementation |
-| PO-03 progress | MC1: `progress_primitive`, `host_word_outside_model`. Effects layer: `Effects.progress` (a typed running configuration with code steps for **every** host response, `run` included, so there are no forbidden stuck states) and `Effects.halted_no_step` | Effects: `WT E c`, `status = running`, `code ≠ []`, total host oracle `H` | termination (not claimed), quota/exhaustion classes, MC1 big-step control words, the whole language |
+| PO-02 preservation | MC1: `exec_preserves`, `Run.preserve`, `Step.preserve` (all 22 pure words, including `dip`/`run`/`case`/`if`/`list.case`, nested executions and list/sum/pair values). Effects layer: `Effects.preserve`, `Effects.preserve_reach` (every small step, including halting host steps, `dip` with its `restore` frame, and both `ifte` steps) | MC1: `CodeTyped code ts ts'`, `StackTyped s ts`, normal-return `Exec`. Effects: `WT E c` (stack typing plus continuation typing `KontT`, frames included) | the whole language, implementation |
+| PO-03 progress | MC1: `progress_primitive`, `host_word_outside_model`. Effects layer: `Effects.progress` (a typed running configuration with code steps for **every** host response, `run`, `dip`, `ifte` and `restore` frames included, so there are no forbidden stuck states) and `Effects.halted_no_step` | Effects: `WT E c`, `status = running`, `code ≠ []`, total host oracle `H` | termination (not claimed), quota/exhaustion classes, MC1 big-step control words, the whole language |
 | PO-04 effect soundness | Effects layer: `Effects.effect_sound` (every finite prefix: `trace' = trace ++ new`, append-only, and every new label is in the bound `E`, **including denied/failed requests**), `step_trace`, `trace_within_bound`. Negative: `bound_does_not_fix_order` (the same bound allows different orders, so a bound does not justify reordering), `denied_request_recorded_and_halts` | `WT E c` (or a typed program from `init`); `Reach H` for any host oracle | effects beyond emit/acquire/release, real host contracts and `test.emit` implementation, ordered-trace *equivalence* laws |
-| PO-05 ownership | Effects layer: `Effects.own_preserve` (stack resources are a permutation of the host live set, no duplicates, fresh ids), `live_change` (the live set changes only by a recorded, permitted `acquire` or `release`; moves are stack permutations), `reachable_sound`, `move_then_release` | `WT E c`, `Own c` | temporaries/heap, borrowing, abnormal-stop cleanup (state is preserved but not cleaned), whole language (#3) |
-| PO-06 recursive eligibility | MC1: `program_duplicable`. Effects layer: `ValT.rfree`/`OpT.rfree`/`CodeT.rfree` (typed programs contain no resource at any nesting depth), `typed_rfree` (continuation and every stack program are resource-free), `program_expecting_resource_is_copyable` | `WT E c` | aggregates (pairs/lists) and named captures (MC1 aggregates carry no resources; this layer has no aggregates), #3/#11 vocabulary |
+| PO-05 ownership | Effects layer: `Effects.owners_step` (OWN-PO-1 for this model: every typed step permutes the owner multiset of stack plus frame-held resources and keeps the live set and fresh counter, except a permitted `acquire`, which adds exactly the fresh id, and a permitted `release`, which consumes exactly the released id; `dip`, `restore`, both branch steps, `run` and `compose` included), `own_preserve` (the owners are a permutation of the host live set, no duplicates, fresh ids), `live_change` (the live set changes only by a recorded, permitted `acquire` or `release`; moves are permutations), `reachable_sound`, `move_then_release`, `dip_holds_resource_in_frame` (the stack-only count fails while a held resource sits in a frame), `branch_carries_resource`, `forged_frame_refused` | `WT E c`, `Own c` | temporaries/heap, borrowing, abnormal-stop cleanup (state is preserved but not cleaned, frames included), aggregates, whole language (#3) |
+| PO-06 recursive eligibility | MC1: `program_duplicable`. Effects layer: `ValT.rfree`/`OpT.rfree`/`CodeT.rfree` (typed programs contain no resource at any nesting depth), `KontT.rfree` and `typed_rfree` (every stack program is resource-free; the continuation is too, except that a `restore` frame may hold a resource token directly), `program_expecting_resource_is_copyable` | `WT E c` | aggregates (pairs/lists) and named captures (MC1 aggregates carry no resources; this layer has no aggregates), #3/#11 vocabulary |
 | PO-07 construction/execution | `construction_is_pure`, `latent_effect_not_performed`, `PExpr.exec_code`, `PExpr.exec_code_run`, `BehEq.append`, `BehEq.run`, `compose_assoc`, `compose_identity` | normal returns; `BehEq` observation | effectful laws (same host responses, ordered traces), allocation/quota (deliberately not promised) |
 | PO-08 recipe/quotation/reflection | `quote_laws`, `reflect_compose`, `PExpr.exec_code_reflect`, `exec_quote_program_run_run` | — | recipe *normalization* (MC1 does not normalize), named-definition reflection |
 | negative: behavior ≠ recipe | `behavior_is_not_recipe` (`1 1 +` vs `2`; `BehEq` is not a congruence under `reflect`) | — | — |
@@ -2684,6 +2684,9 @@ This is a separate small-step model; MC1 is unchanged. It has:
   failed ones;
 - a continuation `code` that serves as the frame stack (`run` prepends the
   body);
+- `dip`, which runs a program below the top value and holds that value in a
+  run-time `restore` frame on the continuation, and an `ifte` branch on an
+  I64 condition;
 - a host-tracked `live` set and a fresh-id counter.
 
 A non-permitted response halts the configuration with status `denied` or
@@ -2698,6 +2701,65 @@ receipts are under
 [`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md).
 Receipt [`verification/foundation/receipts/b3655a9cd/`](../../verification/foundation/receipts/b3655a9cd/foundation-check.json)
 (435 theorems, `clean_source: true`).
+
+#### Frames and branches (OWN-PO-1 in the model)
+
+OWN-PO-1 in `ownership-lifetime-contract` asks normal transitions to preserve
+the whole-configuration owner multiset modulo declared move, consume and
+release, across composition, branches, `dip`, `run` and dynamic Programs. The
+layer had composition, `run` and Program values, but no branch and no `dip`.
+Its invariant counted stack resources only.
+
+The model now has:
+
+- **`dip`.** It moves the value below its body into a `restore` frame.
+- **`restore`.** The frame pushes the value back when reached.
+- **`ifte`.** It runs the deeper of two programs on a nonzero I64 condition
+  and the top one on zero; both arms share one interface.
+- **Frame typing.** `CodeT`, which types source code and every program body,
+  has no frame rule. The continuation is typed by `KontT`, which adds one.
+  Program values on the stack, in code and nested therefore never contain a
+  frame.
+
+Proved model claims:
+
+- `owners_step`: every typed step permutes the owner multiset, which is the
+  stack resources plus the frame-held resources. It also keeps the live set
+  and the fresh-id counter unchanged. The exceptions are a permitted
+  `acquire`, which adds exactly the fresh id, and a permitted `release`, which
+  consumes exactly the released id. `dip`, `restore`, both branch steps,
+  `run`, `compose` and halting host steps are all covered.
+- `own_preserve` now counts frames: the owners are a permutation of the live
+  set. `reachable_sound` carries this to every finite prefix of a typed
+  program.
+- `KontT.rfree` and the restated `typed_rfree`: a continuation holds a
+  resource only directly in a frame.
+- `preserve` and `progress` cover the new steps. `CodeT.appendKont` is the
+  typing of prepending a body.
+
+Controls:
+
+- `dip_holds_resource_in_frame`: while a body runs under a held resource, the
+  resource is on no stack position. `Own` holds, but the stack-only count
+  fails, so frames must be counted. The frame then restores the resource and
+  it is released.
+- `forged_frame_refused`: no program types a frame, and a continuation that
+  starts with a forged frame breaks `Own` at once.
+- `branch_selects_one_arm` and `branch_carries_resource`: a branch runs
+  exactly one arm, and a resource below it survives either arm and is
+  released.
+
+The parent attaches the clean foundation receipt for frames and branches at integration.
+
+Open, and deliberately not closed by this model:
+
+- OWN-PO-1 for the language. This is one small-step model with I64,
+  resources and Programs; it has no aggregates, named definitions,
+  `case`/`list.case`, borrowing or heap.
+- Cleanup after an abnormal stop. A frame-held resource stays held when a
+  request is denied.
+- Any lowering, runtime or host-ledger correspondence (OWN-PO-4..7) and any
+  checker refinement. Task 13 of `ownership-lifetime-contract` stays open.
 
 ## Checked interaction-net contract (issue #37, phase 1)
 

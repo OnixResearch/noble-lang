@@ -799,7 +799,7 @@
       "name": "NobleFoundation.Effects.own_preserve",
       "phase": 2,
       "role": "ownership",
-      "claim": "on typed configurations every step preserves: stack resources ~ live set, no duplicates, freshness"
+      "claim": "on typed configurations every step preserves: owners (stack and frame-held resources) ~ live set, no duplicates, freshness"
     },
     {
       "name": "NobleFoundation.Effects.live_change",
@@ -835,13 +835,13 @@
       "name": "NobleFoundation.Effects.typed_rfree",
       "phase": 2,
       "role": "eligibility",
-      "claim": "typed configurations: continuation and all stack programs are resource-free"
+      "claim": "typed configurations: the continuation is resource-free except restore frames holding a token directly, and all stack programs are resource-free"
     },
     {
       "name": "NobleFoundation.Effects.reachable_sound",
       "phase": 2,
       "role": "effects-ownership",
-      "claim": "typed program: every finite prefix is typed, within bound, ownership-preserving and capture-free"
+      "claim": "typed program: every finite prefix is typed, within bound, ownership-preserving over stack and frames, and capture-free"
     },
     {
       "name": "NobleFoundation.Effects.dup_res_untypable",
@@ -896,6 +896,90 @@
       "phase": 2,
       "role": "eligibility",
       "claim": "a program whose input expects a resource is still copyable data"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.kont",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "source code is a continuation without frames"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.appendKont",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "a typed body prepends to a typed continuation, as run, dip and both branch steps do"
+    },
+    {
+      "name": "NobleFoundation.Effects.topIds_cons",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "the stack top-level resource ids split at the head value"
+    },
+    {
+      "name": "NobleFoundation.Effects.held_restore",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "a restore frame holds exactly its value top-level resource id"
+    },
+    {
+      "name": "NobleFoundation.Effects.frameIds_cons",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "frame ids of a continuation split at its head entry"
+    },
+    {
+      "name": "NobleFoundation.Effects.frameIds_append",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "frame ids distribute over continuation append"
+    },
+    {
+      "name": "NobleFoundation.Effects.OpT.held_nil",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "every typed operation holds no frame"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.frameIds_nil",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "source code and program bodies hold no frame"
+    },
+    {
+      "name": "NobleFoundation.Effects.owners_step",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "OWN-PO-1 (model): every typed step permutes the owner multiset (stack plus frames) and keeps the live set and fresh counter, except a permitted acquire (adds exactly the fresh id) and a permitted release (consumes exactly the released id); dip, restore, both branch steps, run and compose included"
+    },
+    {
+      "name": "NobleFoundation.Effects.KontT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "a typed continuation is resource-free except restore frames holding a token directly"
+    },
+    {
+      "name": "NobleFoundation.Effects.dip_holds_resource_in_frame",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "dip holds a resource in a frame: Own holds while the body runs and the stack-only count fails; the frame restores it and it is released"
+    },
+    {
+      "name": "NobleFoundation.Effects.forged_frame_refused",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "no program types a restore frame, and a forged frame breaks Own at once"
+    },
+    {
+      "name": "NobleFoundation.Effects.branch_selects_one_arm",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "ifte runs the deeper arm on a nonzero condition and the top arm on zero"
+    },
+    {
+      "name": "NobleFoundation.Effects.branch_carries_resource",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "a resource below a branch survives either arm and is released afterwards"
     },
     {
       "name": "NobleFoundation.RegionProtocol.step_not_busy",
