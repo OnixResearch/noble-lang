@@ -4204,6 +4204,42 @@
       "claim": "a permutation of declared output order is rejected"
     },
     {
+      "name": "NobleFoundation.InteractionNet.consuming_principal_of_slot_zero",
+      "phase": 1,
+      "role": "contract-analysis",
+      "claim": "a consuming port at slot 0 is an output, eraser or fanout input"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.oriented_active_pair",
+      "phase": 1,
+      "role": "contract-analysis",
+      "claim": "every active pair of an oriented net has an output, eraser or fanout on one side, so no value meets an arithmetic agent in an active pair"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.deeper_minus_top_has_only_the_output_pair",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the compiled x - y net is oriented and its only active pair is the subtraction meeting the output"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.value_into_result_port_is_accepted",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the revision-1 validator accepts a constant wired into a result port, which the orientation check refuses"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.fanout_cannot_feed_an_operand",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "an oriented net feeding operands from fanout copies is refused, because both ports are auxiliary"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.identity_agents_bypass_the_operand_rule",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the direct y - x net is refused while the same subtraction through additions of 0 is accepted"
+    },
+    {
       "name": "NobleFoundation.Isop.valuation_mem",
       "phase": 1,
       "role": "enumeration",

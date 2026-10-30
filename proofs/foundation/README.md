@@ -193,6 +193,7 @@ Status words:
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
+| What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
 | Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `isop_exact`, `isop_bounds`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
@@ -2735,6 +2736,36 @@ theorems. The clean-source receipt for the net contract is
 [`verification/foundation/receipts/e417bf841/`](../../verification/foundation/receipts/e417bf841/foundation-check.json)
 (657 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+### What revision 1 admits, before any reduction rule (issue #37)
+
+`NobleFoundation/InteractionNetOrientation.lean` measures the revision-1 validator under the
+documented orientation. Port `0` of a binary agent is its result, and ports `1` and `2` are its
+operands. The contract and `validate` are unchanged.
+- **No arithmetic interaction.** `orientedOk` checks the documented orientation: every wire joins a
+  value producer to a value consumer. In an oriented net, every active pair has an output, eraser or
+  fanout on one side (`oriented_active_pair`). A constant or input therefore never meets an
+  arithmetic agent in an active pair, so under revision 1 no numeric rewrite can be an interaction
+  rule. The compiled `x - y` net's only active pair is the subtraction meeting its output
+  (`deeper_minus_top_has_only_the_output_pair`).
+- **The orientation is not enforced.** `validate` accepts a constant wired into a result port
+  (`value_into_result_port_is_accepted`).
+- **Fanout cannot feed arithmetic.** A fanout copy and an operand are both auxiliary ports, and
+  auxiliary-to-auxiliary links are refused (`fanout_cannot_feed_an_operand`). A shared intermediate
+  value cannot feed two operations.
+- **The operand rule constrains wiring shape, not the computed function.** It compares an input's
+  source slot with the operand position. The direct net for `y - x` is refused, yet the same
+  subtraction passes once each input goes through an addition of `0`
+  (`identity_agents_bypass_the_operand_rule`).
+
+Reduction rules, termination, confluence and readback therefore need a contract revision first. The
+open choices, which are the owner's:
+- which port of an arithmetic agent is principal;
+- how fanout reaches operands;
+- whether operand order is checked against the source graph rather than input slot numbers.
+
+The parent attaches the clean foundation receipt at integration.
+
 ## Static-input specialization model (issue #32, phase 1)
 
 `NobleFoundation/Specialize.lean` defines a static map

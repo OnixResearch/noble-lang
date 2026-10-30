@@ -35,6 +35,7 @@ import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
 import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
+import NobleFoundation.InteractionNetOrientation
 import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
