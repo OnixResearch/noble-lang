@@ -4976,6 +4976,66 @@
       "phase": 2,
       "role": "negative-control",
       "claim": "a subnormal result with relative error one third shows the subnormal rule must be absolute"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "a prefix value is final once computed: every later prefix gives the node value"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.tangentUpTo_stable",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "a prefix tangent is final once computed: every later prefix gives the node tangent"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.stepCoefficient_of_not_operand",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "a node assigns no partial-derivative coefficient to an index that is not one of its operands"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.coefficients_pair_to_the_tangent",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "for a node with operands, its coefficients paired with the operand tangents give its own tangent"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.leaf_coefficients_vanish",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "a node without operands assigns every index the coefficient zero"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.frontier_succ",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "one reverse step moves only the processed consumer with operands out of the frontier"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.frontier_invariant",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "after any number of reverse steps the adjoints paired with the frontier weights equal the seed paired with every tangent"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.transpose_identity",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "for every well-formed graph the full sweep leaf adjoints paired with their tangents equal the seed paired with every tangent"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.reverse_sweep_is_the_derivative",
+      "phase": 3,
+      "role": "specification-quality",
+      "claim": "with a unit seed on any output of a well-formed graph the leaf adjoint pairing is the Mathlib derivative of that output"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Transpose.slotGraph_transpose",
+      "phase": 3,
+      "role": "fixture",
+      "claim": "non-vacuity: on slotGraph the full sweep with seed one pairs the leaves to the slot-zero tangent 17"
     }
   ]
 }

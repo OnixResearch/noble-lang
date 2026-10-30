@@ -35,9 +35,9 @@ This is a *real* model. Nothing here says that binary32 gradients equal exact
 derivatives, and nothing here authorises reassociation, FMA contraction or
 parallel reduction. The binary32 operation sequence, the Rust `grad.rs` loop and
 the emitted-artifact correspondence are separate, and still open, obligations.
-The transpose identity is proved as a one-step pairing invariant
-(`adjointDot_step`) and for the fixture (`exampleGraph_adjointDot`); the identity
-over arbitrary well-formed graphs stays open.
+The transpose identity is proved here as a one-step pairing invariant
+(`adjointDot_step`) and for the fixture (`exampleGraph_adjointDot`);
+`ReverseADTranspose.lean` proves it over every well-formed graph.
 -/
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
@@ -218,8 +218,9 @@ invariant* (`adjointDot_step`), which pairs the accumulated adjoints with a
 direction over the graph's slots and adds exactly the processed consumer's
 contributions, and the fixture-level identity (`exampleGraph_adjointDot`), where
 the reverse sweep's accumulated adjoints pair with the declared direction to
-exactly the tangent. What stays open is the identity over *arbitrary* graphs: no
-theorem here says the sweep equals the derivative for every well-formed DAG.
+exactly the tangent. The identity over *arbitrary* well-formed graphs, and with it
+the statement that the sweep computes the derivative, is `transpose_identity` and
+`reverse_sweep_is_the_derivative` in `ReverseADTranspose.lean`.
 -/
 
 /-- The partial-derivative coefficient of one node with respect to one operand,
