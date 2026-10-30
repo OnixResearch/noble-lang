@@ -373,3 +373,10 @@ reported 828 in total).
 stability, the coefficient-tangent linearity per node kind, the frontier invariant, the transpose
 identity over every well-formed graph, and the reverse sweep as the Mathlib derivative (10 new
 theorems; that run reported 838 in total).
+
+## 31caad931 — reverse-AD final adjoints node by node (issue #45)
+
+`31caad931/` records the clean run that added `NobleFoundation.ReverseAD.Adjoint`: the unrolled
+sweep, the final-once-processed frame, each final adjoint as seed plus its consumers'
+contributions over every well-formed graph, and the interior-seed fixture (9 new theorems;
+that run reported 847 in total).

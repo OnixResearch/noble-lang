@@ -1245,7 +1245,10 @@ is its seed `5` plus the addition's contribution `8`
 (`exampleGraph_node_one_is_seed_plus_consumer`). A sweep that dropped interior seeds would read
 `8` there, and one that counted `mul 2 2` once would read `4` at nodes 2, 1 and 0.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the node-by-node adjoint equation is
+[`verification/foundation/receipts/31caad931/`](../../verification/foundation/receipts/31caad931/foundation-check.json)
+(847 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 
