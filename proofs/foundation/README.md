@@ -1033,10 +1033,11 @@ Open, and deliberately not closed:
   unsupported Rust behaviours remain explicit rather than inferred from the
   finite fixtures.
 
-The preceding clean-source receipt
-[`verification/foundation/receipts/8eef09184/`](../../verification/foundation/receipts/8eef09184/foundation-check.json)
-records the earlier schedule theorem set; the validator extension is checked by
-the clean-tree foundation run for its landing revision.
+The clean-source receipt for the instruction-stream validator is
+[`verification/foundation/receipts/48a7a4cbd/`](../../verification/foundation/receipts/48a7a4cbd/foundation-check.json)
+(622 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`). The earlier schedule theorem set was first
+retained at `8eef09184`.
 
 `PackedLayout.lean` remains a separate declaration-table model. Its register,
 constant/slot, layer, count and failure-suffix obligations do not export or

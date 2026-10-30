@@ -267,3 +267,10 @@ match the reviewed design and production (`data_slot` constrains only dup/drop/q
 reported 608 theorems, 34 of them ownership, including `swap_moves_a_resource`,
 `resource_operand_blocks_non_swap_word` and `swap_moves_resource_conservation`. It is model
 evidence only; the production refinement stays open.
+
+## 48a7a4cbd — packed-schedule instruction-stream validator (issue #43)
+
+`48a7a4cbd/` records the clean run that added `validate` over a supplied instruction stream and its
+`validate_sound` theorem to `NobleFoundation.PackedSchedule`, with the reordered-stream and refusal
+fixtures (32 new theorems; that run reported 622 in total). No Rust instruction-body export
+or correspondence exists.
