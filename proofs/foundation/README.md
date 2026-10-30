@@ -790,7 +790,10 @@ theorem itself; subnormals are covered by the mixed rule and never flushed.
 No encoded `noble-ngraph` graph, snapshot or revision is bound, and no analyzer, Rust, Wasm or host
 correspondence is claimed.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the certificate checker is
+[`verification/foundation/receipts/80ccf5670/`](../../verification/foundation/receipts/80ccf5670/foundation-check.json)
+(941 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ### The ordered `affine` fold, and the layer classification
 

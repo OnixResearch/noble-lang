@@ -407,3 +407,10 @@ reported 902 in total).
 `b6cce7a71/` records the clean run that characterised the eligibility lift over branches and the
 error return: result agreement for every program, admission agreement for every branch-free
 program, and the branch counterexample (6 new theorems; that run reported 908 in total).
+
+## 80ccf5670 — binary32 roundoff certificate checker (issue #44)
+
+`80ccf5670/` records the clean run that added `NobleFoundation.Binary32.Checker`: the overflow and
+finiteness bridges, the total add/multiply certificate checker with `check_sound` and
+`check_output_bound`, and its decided fixtures and controls (33 new theorems; that run reported
+941 in total).

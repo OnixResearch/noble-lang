@@ -2504,7 +2504,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "1105ed09b0a900f5930db53c2d85788a0abaafbd94174907fbec70d2484b18a9"
+      "sha256": "40f5a5e76d51513fa9a3906ef9e8e0ba39ccc75a2a1859af1e78ea6c154847eb"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2776,7 +2776,7 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "37b576830565b7db8e5e7f3b09b2c693bd5a815f929951b9b2b68042606f1074"
+      "sha256": "7e8a4230f9d4cd942c404850a2af97fe922874845c05fbad21ae3f064b0e6218"
     },
     {
       "file": "verification/grad-ordered/README.md",
