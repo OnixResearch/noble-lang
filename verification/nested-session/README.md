@@ -69,10 +69,11 @@ declared stack limit, so its accepted bounded subset is finite.
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **80** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **93** model
 theorems, every axiom inside the standard allow-list:
-- 21 theorems use no axiom, including `stackState_within_the_limit`;
-- 47 use `propext` alone, including the bounded return-stack trace/control theorems;
+- 22 theorems use no axiom, including `stackState_within_the_limit` and `dualAction_is_involutive`;
+- 59 use `propext` alone, including the bounded return-stack and external-choice trace/control theorems
+  and the step-duality theorems;
 - 10 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged` and
   `step_acts_only_inside_the_current_protocol`;
 - 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and

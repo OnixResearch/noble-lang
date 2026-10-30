@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "246ff5113e331e30938ca10103cfddd57325c02e",
-  "source_tree": "bcc7d3907abae187a4e181d6b3c8dfecb27c158a",
+  "source_commit": "822a228eda6384c77da60080d61645c7a4bedb85",
+  "source_tree": "3e7c19c7d67903328f58b796d8f58e3cbe6d4b32",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,11 +11,11 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "9924213fdeb70843425523642749d7226403dbb890acd2fefe01fdd119f45f12",
-        "proofs/m6/nested-session-inventory.json": "cf9d33b90214f7e8a617193d1f743460b5564f78d19b6f87c29938e0592b0c13"
+        "proofs/m6/NestedSession.lean": "9547ca0ffd56c771378ea33d3e8db1f28f477b947c5475df7808510ea61232f1",
+        "proofs/m6/nested-session-inventory.json": "c0954d4013fccd819bf7254fff42b972d188a3d7537d8b2ed94a0b64fa9bced6"
       }
     },
-    "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol",
+    "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol, offerProtocol (external choice)",
     "endpoint_identity_fields": [
       "channel",
       "responder",
@@ -31,7 +31,7 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 80,
+    "model_theorems": 93,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
@@ -41,11 +41,11 @@
     "type_equality": "no algorithm; duality is definitional"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "9924213fdeb70843425523642749d7226403dbb890acd2fefe01fdd119f45f12",
-    "proofs/m6/nested-session-inventory.json": "cf9d33b90214f7e8a617193d1f743460b5564f78d19b6f87c29938e0592b0c13",
-    "verification/nested-session/check.mjs": "fbdbb2c2296cdc296f90e06aeb76f974140594e6d12600eb7a4407fe290d2589"
+    "proofs/m6/NestedSession.lean": "9547ca0ffd56c771378ea33d3e8db1f28f477b947c5475df7808510ea61232f1",
+    "proofs/m6/nested-session-inventory.json": "c0954d4013fccd819bf7254fff42b972d188a3d7537d8b2ed94a0b64fa9bced6",
+    "verification/nested-session/check.mjs": "d4e54ddfc0d58cc290ec26efba69cad9ddb8126f3226e88bb7694348d8cb3fb9"
   },
-  "theorem_count": 80,
+  "theorem_count": 93,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -553,6 +553,186 @@
       ]
     },
     {
+      "name": "NestedSession.trace_internal_choice_branch_zero",
+      "role": "WIT-SESSION-03 positive trace: the other declared internal branch (0) reaches its own continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_internal_choice_branch_zero : Option.map NestedSession.Endpoint.state (NestedSession.stepChoose NestedSession.choiceProtocol 2 { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false } 0) = some 5",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_external_choice_branch_zero",
+      "role": "WIT-SESSION-03 positive trace: receiving external branch 0 reaches its typed i64 continuation and completes",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_external_choice_branch_zero : ((NestedSession.stepReceiveBranch NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false } 0).bind fun mid => NestedSession.stepRecvTyped NestedSession.offerProtocol 2 mid NestedSession.MessageType.i64) = some { channel := 5, responder := true, protocol := 9, state := 4, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.trace_external_choice_branch_one",
+      "role": "WIT-SESSION-03 positive trace: receiving external branch 1 reaches its typed bool continuation and completes",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.trace_external_choice_branch_one : ((NestedSession.stepReceiveBranch NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 1, generation := 4, closed := false } 1).bind fun mid => NestedSession.stepRecvTyped NestedSession.offerProtocol 2 mid NestedSession.MessageType.bool) = some { channel := 5, responder := true, protocol := 9, state := 4, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.undeclared_branch_receipt_is_refused",
+      "role": "WIT-SESSION-03 negative control: a selection the offer node does not declare is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.undeclared_branch_receipt_is_refused : NestedSession.stepReceiveBranch NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false } 1 = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.external_branch_keeps_its_typed_continuation",
+      "role": "WIT-SESSION-03 negative control: a received branch keeps its own typed continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.external_branch_keeps_its_typed_continuation : ((NestedSession.stepReceiveBranch NestedSession.offerProtocol 2 { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false } 0).bind fun mid => NestedSession.stepRecvTyped NestedSession.offerProtocol 2 mid NestedSession.MessageType.bool) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.branch_receipt_is_refused_at_an_internal_choice",
+      "role": "WIT-SESSION-04 negative control: receiving a selection is refused at an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.branch_receipt_is_refused_at_an_internal_choice : NestedSession.stepReceiveBranch NestedSession.choiceProtocol 2 { channel := 5, responder := false, protocol := 9, state := 1, generation := 4, closed := false } 0 = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.receipt_of_another_branch_is_refused",
+      "role": "WIT-SESSION-03: at every offer node, receiving a branch other than the declared one has no continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.receipt_of_another_branch_is_refused : ∀ (declared continuation received : Nat), received ≠ declared → NestedSession.continuationOf (NestedSession.Action.receiveBranch received) (NestedSession.Node.offer declared continuation) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.dualAction_is_involutive",
+      "role": "WIT-SESSION-01: the action dual is involutive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dualAction_is_involutive : ∀ (action : NestedSession.Action), NestedSession.dualAction (NestedSession.dualAction action) = action",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.continuationOf_dual",
+      "role": "WIT-SESSION-01/05: for every node and action, the dual action at the dual node declares exactly the same continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.continuationOf_dual : ∀ (action : NestedSession.Action) (node : NestedSession.Node), NestedSession.continuationOf (NestedSession.dualAction action) (NestedSession.dual node) = NestedSession.continuationOf action node",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.resolve_dual",
+      "role": "WIT-SESSION-01: resolving in the dual table is the dual of resolving, including through bounded unfolding",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.resolve_dual : ∀ (definitions : List NestedSession.Node) (depth index : Nat), NestedSession.resolve (List.map NestedSession.dual definitions) depth index = Option.map NestedSession.dual (NestedSession.resolve definitions depth index)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.step_on_the_dual_table",
+      "role": "WIT-SESSION-05: every step has the matching dual step on the dual table, for every table, depth, endpoint and action",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.step_on_the_dual_table : ∀ (definitions : List NestedSession.Node) (depth : Nat) (endpoint : NestedSession.Endpoint) (action : NestedSession.Action), NestedSession.step (List.map NestedSession.dual definitions) depth endpoint (NestedSession.dualAction action) = NestedSession.step definitions depth endpoint action",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.dual_table_receives_the_selected_branch",
+      "role": "WIT-SESSION-05 fixture: the guest selection of branch 0 is the peer receipt of branch 0 on the dual table",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.dual_table_receives_the_selected_branch : NestedSession.stepReceiveBranch (List.map NestedSession.dual NestedSession.choiceProtocol) 2 { channel := 5, responder := true, protocol := 9, state := 1, generation := 4, closed := false } 0 = some { channel := 5, responder := true, protocol := 9, state := 5, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_external_choice_trace_is_accepted",
+      "role": "WIT-SESSION-03: the stack-aware operand accepts an external-choice trace that reaches finished with an empty stack",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_external_choice_trace_is_accepted : NestedSession.acceptedStackTrace NestedSession.offerProtocol { endpoint := { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false }, returnStack := [], stackLimit := 1 } [NestedSession.StackAction.receiveBranch 0, NestedSession.StackAction.recv NestedSession.MessageType.i64] = some { endpoint := { channel := 5, responder := true, protocol := 9, state := 4, generation := 4, closed := false }, returnStack := [], stackLimit := 1 }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
       "name": "NestedSession.enqueue_raises_the_depth_by_one",
       "role": "WIT-SESSION-03: an enqueue raises the derived depth by one under the ledger invariant",
       "allowed_standard_axioms": [
@@ -944,15 +1124,15 @@
       ]
     },
     {
-      "name": "NestedSession.offer_state_offers_no_guest_action",
-      "role": "WIT-SESSION-05 scoped progress: a peer-side offer state declares no guest action, which is a named state rather than a deadlock claim",
+      "name": "NestedSession.offer_state_declares_only_its_branch_receipt",
+      "role": "WIT-SESSION-05 scoped progress: at an external choice the guest’s only action is receiving the declared branch; any other action or branch has no continuation, and whether the peer selects is the peer’s premise",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.offer_state_offers_no_guest_action : ∀ (branch continuation : Nat) (action : NestedSession.Action), NestedSession.continuationOf action (NestedSession.Node.offer branch continuation) = none",
+      "statement": "NestedSession.offer_state_declares_only_its_branch_receipt : ∀ (branch continuation : Nat) (action : NestedSession.Action) (next : Nat), NestedSession.continuationOf action (NestedSession.Node.offer branch continuation) = some next → action = NestedSession.Action.receiveBranch branch ∧ next = continuation",
       "axioms": [
         "propext"
       ]
@@ -1187,7 +1367,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-246ff511/Audit.lean"
+        "/tmp/ns-check-822a228ed/Audit.lean"
       ],
       "exit": 0
     },
