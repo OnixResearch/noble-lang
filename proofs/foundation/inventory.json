@@ -4520,6 +4520,144 @@
       "phase": 2,
       "role": "optimizer-sgd-reference",
       "claim": "the two-rounding reference differs from a fused multiply-add on a chosen lane"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.ofList_wellFormed",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a node list whose operands are checked earlier, with an in-range output, is a well-formed graph"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.ofList_noEq",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a node list without equality nodes gives a graph without equality nodes"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.value_input",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "an input node denotes its input slot"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.operand_value",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "inside an earlier-operand node, an operand prefix lookup is the operand value"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.value_add",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "an addition node denotes the sum of its operand values"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.value_sub",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a subtraction node denotes the deeper-minus-top difference of its operand values"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.value_mul",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a multiplication node denotes the product of its operand values"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.value_i64_of_noEq",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "every node of a well-formed graph without equality nodes has an I64 value"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.interpreterGraph_wellFormed",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "the one-hot two-instruction interpreter graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.interpreterGraph_noEq",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "the interpreter graph has no equality node"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.interpreter_value",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "for every input assignment the interpreter denotes two interpreted instructions, the second over the first"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.instrValue_coeff",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a one-hot interpreted instruction is exactly its opcode meaning"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.interpreter_agrees",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "the interpreter agrees with the independent reference for every program in the family and every dynamic input"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.merge_staticOf",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "under a static program the merged assignment holds its coefficients and renumbers x and y to dynamic slots 0 and 1"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.first_projection",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "specializing the interpreter to a program gives a residual that computes the program on the dynamic inputs"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.annihilate_wellFormed",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "zero annihilation preserves well-formedness"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.annihilate_sound",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "zero annihilation preserves every node value on well-formed graphs without equality nodes"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.specialize_noEq",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "static-input specialization introduces no equality node"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.residual_sound",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "the specialized and annihilated residual still computes the program for every dynamic input"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.unselected_branches_are_dead",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "for every program exactly the selected operation node of each instruction is live in the residual"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.remaining_dispatch_overhead",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "for every program exactly one live multiplication per instruction reads a former opcode slot, and that slot is the constant 1"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.wrong_opcode_encoding_disagrees",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a seeded wrong opcode encoding disagrees with the reference"
+    },
+    {
+      "name": "NobleFoundation.FirstProjection.swapped_operands_disagree",
+      "phase": 1,
+      "role": "first-projection",
+      "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
     }
   ]
 }

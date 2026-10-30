@@ -176,6 +176,7 @@ Status words:
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
+| First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
@@ -2170,6 +2171,38 @@ The clean-source receipt for the SGD reference is
 [`verification/foundation/receipts/620b43395/`](../../verification/foundation/receipts/620b43395/foundation-check.json)
 (752 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## First Futamura projection, restricted family (issue #34, phase 1)
+
+[`NobleFoundation/FirstProjection.lean`](NobleFoundation/FirstProjection.lean) takes one deliberately
+restricted source family: two-instruction programs over an accumulator that start at a dynamic `x`
+and apply `add`, `sub` or `mul` with a second dynamic `y`. Each opcode is encoded one-hot as three
+static I64 coefficients, and the interpreter is one 24-node `PackedSchedule` graph that computes
+`c_add·(a + y) + c_sub·(a − y) + c_mul·(a·y)` per instruction with no branch. It is not a general
+interpreter.
+
+`interpreter_value` gives the interpreter's value for every input assignment, by the operand-value
+lemmas `value_input`/`value_add`/`value_sub`/`value_mul`. `interpreter_agrees` proves agreement with
+the independent reference `refEval` for all nine programs and every `x`, `y`. `first_projection`
+instantiates #32's `specialize_sound`: specializing the interpreter to a program's six static
+coefficients yields a residual over the dynamic inputs (`x` as dynamic slot 0, `y` as slot 1) that
+computes the program, for every program and dynamic input.
+
+Dispatch removal is bounded by the graph IR. There is no alias node, so an identity rewrite
+(`1·v → v`, `v + 0 → v`) cannot be applied in place; the certificate format records identity steps
+without applying them for the same reason. Zero annihilation (`0·v → 0`) can be applied in place:
+`annihilate_sound` proves it preserves every node value on well-formed graphs without equality nodes,
+and `residual_sound` shows the specialized, annihilated residual still computes the program.
+`unselected_branches_are_dead` checks, for every program, that of each instruction's three operation
+nodes exactly the selected one is live. `remaining_dispatch_overhead` states the cost that remains:
+exactly one live multiplication per instruction still reads a former opcode slot, and that slot is the
+constant `1`. Seeded controls detect a wrong opcode encoding and swapped subtraction operands.
+
+Open, and deliberately not closed: identity forwarding (an alias node or operand forwarding), a
+general source language and encoding, the second and third projections, specialization and residual
+cost measurements, and any Rust or runtime correspondence; continuation thresholds are the owner's.
+
+The parent attaches the clean foundation receipt at integration.
 
 ## Status by phase
 
