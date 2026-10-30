@@ -173,6 +173,7 @@ Status words:
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
 | Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved** (JVP, per-step accumulation, the one-step pairing invariant and the fixture transpose identity). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
+| Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting and checker soundness | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting and checker soundness). Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
@@ -592,6 +593,31 @@ Proved here:
 | `implicit_contraction_is_observable` | rounding the product before the sum differs from one rounding of the exact three-operand sum |
 | `multiplication_rounds_once` | multiplication takes the sign exclusive-or and rounds the exact operand product once |
 
+`NobleFoundation/Binary32Error.lean` adds the exact rational interpretation
+`Error.exactValue` for finite encodings. Its integer quotient lemmas are
+universal: `quotient_round_error` and `roundNearest_error` prove the
+ties-to-even half-denominator rule, while `scaled_exact_ratio` proves that the
+model's scale is exactly undone by the rational power. Under explicit premises
+that the positive scaled quotient occupies one normal significand bin and the
+carried exponent is in `[-126, 127]`,
+`roundPositive_normal_absolute_error` proves a half-ulp absolute bound and
+`roundPositive_normal_relative_error` derives the relative `2^-24` bound from
+the bin's lower endpoint. `exactValue_of_scaledMagnitude` and
+`exactValue_normalEncoding` prove the exact-value decoding of every bounded
+normal output, so the error theorems no longer assume that rewrite. The scale
+and bin inequalities remain explicit premises: deriving them from the custom
+`floorLog2Ratio` for every positive input is a separately open proof obligation,
+not an unproved domain assumption. These are model theorems with explicit
+arithmetic premises, not implementation correspondence claims. The
+kernel-checked `flush_to_zero_violates_absolute_bound` control records the
+smallest-normal times one-half witness: the exact product is `2^-127`, while
+flushing it to zero exceeds `2^-150`.
+
+`normal_error_applies_to_one_third` is a kernel-checked non-vacuity witness:
+the remaining normal-bin and finite-carry premises hold for exact input
+`1/3`, and the absolute bound is concluded for that encoded `roundPositive`
+call.
+
 ### The ordered `affine` fold, and the layer classification
 
 `fold` in the same model is the documented `sem.rs` recursion
@@ -620,7 +646,7 @@ The remaining `sem.rs` layers are classified rather than left ambiguous:
 | decimal import / codec (`exact_f32_decimal`) | **not modelled here**: #40 owns exact and RNE conversions and decimal import |
 | snapshot / parameter layout (`snapshot.rs`) | **not modelled**: layout and retention are #33/#43 subjects and have no binary32 obligation |
 | training admission (`grad.rs`) | **not modelled here**: #45 owns the derivative and training admission |
-| software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim |
+| software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim. `Binary32Error` additionally proves quotient rounding and conditional normal-range error bounds |
 | optimizer slice | **not modelled**: no optimization strength or decision is claimed for binary32 |
 
 Receipt for the fold and the classification:
@@ -679,8 +705,11 @@ Open, and deliberately not closed by this model:
   helpers and optimizer behavior;
 - the fold is modelled and proved as a recursion over the reference operations, but no
   Lean model maps the graph operations (`Op::F32Add`/`Sub`/`Mul`/`Affine`) to them;
-- a universal proof of the rounding function: its correctness is checked by
-  kernel-reduced examples and boundary reasoning, not by a general theorem;
+- the subnormal branch of the rounding error rule and a theorem that derives
+  the normal-bin premises directly from `floorLog2Ratio` for every positive
+  input. `Binary32Error.lean` now proves the universal quotient-rounding rule,
+  exact normal-output values, and conditional normal-range absolute/relative
+  bounds, but it does not silently extend them to gradual underflow;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

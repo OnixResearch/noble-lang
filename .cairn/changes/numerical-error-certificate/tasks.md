@@ -10,6 +10,13 @@
 
 - [ ] [serial] Implement a total Lean certificate checker for the fragment and prove that acceptance implies the per-output bound under the checked premises. r[NGRAPH-ERR-02]
 - [ ] [serial] Prove the machine-to-real bridge to #38's binary32 reference for the covered fragment, including the selected subnormal policy. r[NGRAPH-ERR-02] r[NGRAPH-ERR-03]
+  Progress (2026-10-29): `Binary32Error.lean` proves the exact rational value
+  of finite normal encodings, universal ties-to-even quotient error, and
+  conditional normal-range `roundPositive` absolute/relative bounds, with a
+  non-vacuity witness at exact input `1/3`, plus a flush-to-zero negative
+  control. Deriving the normal-bin scale premises from `floorLog2Ratio`, the
+  subnormal policy, analyzer/checker bridge, and implementation correspondence
+  remain open.
 - [ ] [serial] Demonstrate a nontrivial bound on an actual encoded graph, including a cancellation case and a near-overflow case. r[NGRAPH-ERR-01]
 - [ ] [serial] Add the negative controls for underestimated error and ranges, missing input error, changed operation order, FMA contraction, wrong snapshot/domain/output, stale model, unproved underflow premise and oversized certificates. r[NGRAPH-ERR-03] r[NGRAPH-ERR-05]
 - [ ] [serial] Add an independent expected-value lane that does not reuse the analyzer's arithmetic as the oracle. r[NGRAPH-ERR-02]

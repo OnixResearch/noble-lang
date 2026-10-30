@@ -124,6 +124,14 @@ Phase 2 (future, unchecked here) would add:
 
 ## Proof obligations
 
+The #15/#38 trust ledger is reused without widening its boundary: each
+`Binary32Error` theorem is listed in the foundation inventory, the clean-source
+receipt runs a per-theorem `#print axioms` audit against the same allow-list,
+and the receipt is copied only after the model commit so its source tree and
+tool hashes are bound. This records the normal-range rounding result as a
+kernel-checked model claim while leaving the analyzer, checker implementation,
+subnormal policy and Rust/Wasm correspondence as separately open ledger items.
+
 Named here, not discharged by this package:
 
 - a total Lean checker whose acceptance entails the per-output absolute-error

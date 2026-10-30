@@ -115,7 +115,7 @@
       "name": "NobleFoundation.intCast_toInt",
       "phase": 1,
       "role": "round-trip",
-      "claim": "((x.toInt : \u2124) : ZMod (2^64)) = toZ x"
+      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x"
     },
     {
       "name": "NobleFoundation.intCast_signed",
@@ -3422,6 +3422,120 @@
       "phase": 3,
       "role": "independent-row-batch",
       "claim": "a zero chunk size degenerates to one row per chunk and still covers every row"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.pow2Int_rat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a nonnegative model power equals the corresponding exact rational power"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.quotient_round_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "nearest ties-to-even quotient rounding is within one half denominator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.nat_error_to_rat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the integer quotient error rule converts to an exact rational half-denominator bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundNearest_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "roundNearest has an exact rational half-denominator error bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.scalePair_den_pos",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "positive input denominators remain positive after binary scaling"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.scaled_exact_ratio",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "undoing the scale factor recovers the original exact positive rational"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundNearest_bounds",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a scaled quotient in one normal significand bin rounds within that bin"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundedQuotient_bounds",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the model scaled quotient inherits the normal significand bounds"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.carry_value",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the significand carry preserves the represented exact dyadic value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.carriedPair_m_bounds",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the carried significand remains in the normal encoding range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundPositive_eq_roundedNormalBits",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "normal finite roundPositive output agrees with its encoded carried pair"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.normalEncoding_scaledMagnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a bounded normal encoding decodes to its exact significand and exponent"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.normalEncoding_not_negative",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a bounded normal encoding has a positive sign bit"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundPositive_normal_absolute_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "positive normal-range roundPositive has a universal half-ulp absolute bound under explicit scale premises"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.roundPositive_normal_relative_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the normal half-ulp bound becomes relative under the bin lower endpoint premise"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.flush_to_zero_violates_absolute_bound",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the flush-to-zero mutant exceeds the absolute bound on the smallest-normal half product"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.exactValue_of_scaledMagnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "an exact rational value follows from a finite encoding scaled-magnitude and positive-sign facts"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.exactValue_normalEncoding",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every bounded normal encoding has its exact rational dyadic value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Error.normal_error_applies_to_one_third",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the normal-range absolute error rule applies to the exact positive input 1/3"
     }
   ]
 }
