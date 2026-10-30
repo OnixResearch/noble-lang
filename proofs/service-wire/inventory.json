@@ -1,0 +1,565 @@
+{
+  "schema": "noble-service-wire-refinement-inventory/v1",
+  "module": "proofs/service-wire/ServiceWireRefinement.lean",
+  "namespace": "ServiceWireRefinement",
+  "specification": [
+    {
+      "name": "ServiceWireRefinement.bytesOf",
+      "printed": "def ServiceWireRefinement.bytesOf : Aeneas.Std.Slice Aeneas.Std.U8 → List ℕ := fun s => List.map (fun x => ↑x) ↑s"
+    },
+    {
+      "name": "ServiceWireRefinement.scanFails",
+      "printed": "def ServiceWireRefinement.scanFails : ℕ → ℕ → List ℕ → Bool := fun limit x x_1 => List.brecOn (motive := fun x => ℕ → Bool) x_1 (ServiceWireRefinement.scanFails._f limit) x"
+    },
+    {
+      "name": "ServiceWireRefinement.recordMiddle",
+      "printed": "def ServiceWireRefinement.recordMiddle : List ℕ → List ℕ := fun bytes => List.take (bytes.length - 15) (List.drop 10 bytes)"
+    },
+    {
+      "name": "ServiceWireRefinement.observed",
+      "printed": "def ServiceWireRefinement.observed : Aeneas.Std.core.result.Result noble_kernel.dataspace.wire.ServiceRef noble_kernel.dataspace.Error → Option NobleFoundation.ServiceWire.Decision := fun x => match x with | Aeneas.Std.core.result.Result.Ok value => some (NobleFoundation.ServiceWire.Decision.accepted (ServiceWireRefinement.bytesOf value.name) value.ready) | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.ByteLimit => some NobleFoundation.ServiceWire.Decision.byteLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit => some NobleFoundation.ServiceWire.Decision.depthLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.Schema => some NobleFoundation.ServiceWire.Decision.schema | Aeneas.Std.core.result.Result.Err a => none"
+    }
+  ],
+  "theorems": [
+    {
+      "name": "ServiceWireRefinement.bytesOf_length",
+      "role": "byte-view",
+      "claim": "The byte view of a slice has the slice length.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_length : ∀ (s : Aeneas.Std.Slice Aeneas.Std.U8), (ServiceWireRefinement.bytesOf s).length = s.length",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.depthScanAux_ge",
+      "role": "depth-scan",
+      "claim": "The model depth scan never reports less than the depth it has already reached.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.depthScanAux_ge : ∀ (rest : List ℕ) (current reached : ℕ), reached ≤ NobleFoundation.ServiceWire.depthScanAux current reached rest",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.scanFails_eq",
+      "role": "depth-scan",
+      "claim": "The early-exit scan the generated loop performs fails exactly when the model scan exceeds the limit, from any reached depth within the limit.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.scanFails_eq : ∀ (limit : ℕ) (rest : List ℕ) (current reached : ℕ), reached ≤ limit → ServiceWireRefinement.scanFails limit current rest = decide (limit < NobleFoundation.ServiceWire.depthScanAux current reached rest)",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.depthExceeds_eq_scanFails",
+      "role": "depth-scan",
+      "claim": "The model depth check equals the early-exit scan started at depth zero.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.depthExceeds_eq_scanFails : ∀ (limit : ℕ) (bytes : List ℕ), NobleFoundation.ServiceWire.depthExceeds limit bytes = ServiceWireRefinement.scanFails limit 0 bytes",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.utf8EncodeChar_ascii",
+      "role": "utf8",
+      "claim": "Every byte below 128 encodes to itself as one UTF-8 byte.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.utf8EncodeChar_ascii : ∀ n < 128, String.utf8EncodeChar (Char.ofNat n) = [UInt8.ofNat n]",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.flatMap_ascii",
+      "role": "utf8",
+      "claim": "UTF-8 encoding of ASCII characters is the byte list itself.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.flatMap_ascii : ∀ (bytes : List ℕ), (∀ n ∈ bytes, n < 128) → List.flatMap String.utf8EncodeChar (List.map Char.ofNat bytes) = List.map UInt8.ofNat bytes",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.ascii_bytes_are_valid_utf8",
+      "role": "utf8",
+      "claim": "An all-ASCII byte list is valid UTF-8.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.ascii_bytes_are_valid_utf8 : ∀ (bytes : List ℕ), (∀ n ∈ bytes, n < 128) → { data := (List.map UInt8.ofNat bytes).toArray }.IsValidUTF8",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.from_utf8_ascii",
+      "role": "utf8",
+      "claim": "The external from_utf8 model accepts an all-ASCII slice unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.from_utf8_ascii : ∀ (value : Aeneas.Std.Slice Aeneas.Std.U8), (∀ n ∈ ServiceWireRefinement.bytesOf value, n < 128) → noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value)",
+      "subjects": [
+        "noble_kernel.core.str.converts.from_utf8"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_drop",
+      "role": "byte-view",
+      "claim": "Dropping a prefix of the byte view exposes the next slice element.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_drop : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (index : ℕ) (hlt : index < bytes.length), List.drop index (ServiceWireRefinement.bytesOf bytes) = ↑(↑bytes)[index] :: List.drop (index + 1) (ServiceWireRefinement.bytesOf bytes)",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_drop_length",
+      "role": "byte-view",
+      "claim": "Dropping the whole slice leaves no bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_drop_length : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8), List.drop bytes.length (ServiceWireRefinement.bytesOf bytes) = []",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.saturating_sub_one_val",
+      "role": "generated-step",
+      "claim": "Saturating subtraction of one from a u32 is truncated natural subtraction.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.saturating_sub_one_val : ∀ (x : Aeneas.Std.U32), ↑(Aeneas.Std.core.num.U32.saturating_sub x 1#u32) = ↑x - 1",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.check_depth_eq",
+      "role": "generated-step",
+      "claim": "For every configured depth up to four, the generated depth check returns DepthLimit exactly when the model scan exceeds that depth, and Ok otherwise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.check_depth_eq : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (limit : Aeneas.Std.U32), ↑limit ≤ 4 → noble_kernel.dataspace.wire.check_depth bytes limit = Aeneas.Std.Result.ok (if ServiceWireRefinement.scanFails (↑limit) 0 (ServiceWireRefinement.bytesOf bytes) = true then Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit else Aeneas.Std.core.result.Result.Ok ())",
+      "subjects": [
+        "noble_kernel.dataspace.wire.check_depth"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_bytes",
+      "role": "generated-step",
+      "claim": "The generated ten-byte prefix constant is the model record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_bytes : List.map (fun x => ↑x) ↑(Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯) = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.take_succ_of_lt",
+      "role": "byte-view",
+      "claim": "Taking one more element appends the element at that index.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.take_succ_of_lt : ∀ (l : List ℕ) (index : ℕ) (hlt : index < l.length), List.take (index + 1) l = List.take index l ++ [l[index]]",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.has_service_prefix_eq",
+      "role": "generated-step",
+      "claim": "On every slice of at least ten bytes, the generated prefix check returns whether the first ten bytes are the model prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.has_service_prefix_eq : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8), 10 ≤ bytes.length → noble_kernel.dataspace.wire.has_service_prefix bytes = Aeneas.Std.Result.ok (decide (List.take 10 (ServiceWireRefinement.bytesOf bytes) = NobleFoundation.ServiceWire.recordPrefix))",
+      "subjects": [
+        "noble_kernel.dataspace.wire.has_service_prefix"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.take_all",
+      "role": "byte-view",
+      "claim": "Taking at least the whole list returns the list.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.take_all : ∀ (l : List ℕ) (n : ℕ), l.length ≤ n → List.take n l = l",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.valid_name_eq",
+      "role": "generated-step",
+      "claim": "On every string, the generated name check returns the model validName of its bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.valid_name_eq : ∀ (label : Aeneas.Std.Str), noble_kernel.dataspace.wire.valid_name label = Aeneas.Std.Result.ok (NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label))",
+      "subjects": [
+        "noble_kernel.dataspace.wire.valid_name"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_take",
+      "role": "model-shape",
+      "claim": "The first ten bytes of every model encoding are the record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_take : ∀ (label : List ℕ) (ready : Bool), List.take 10 (NobleFoundation.ServiceWire.encode label ready) = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.encode_suffix",
+      "role": "model-shape",
+      "claim": "The last five bytes of every model encoding are the readiness suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_suffix : ∀ (label : List ℕ) (ready : Bool), List.drop ((NobleFoundation.ServiceWire.encode label ready).length - 5) (NobleFoundation.ServiceWire.encode label ready) = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.encode_middle",
+      "role": "model-shape",
+      "claim": "The bytes between the prefix and the suffix of a model encoding are its name.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_middle : ∀ (label : List ℕ) (ready : Bool), ServiceWireRefinement.recordMiddle (NobleFoundation.ServiceWire.encode label ready) = label",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.split_record",
+      "role": "model-shape",
+      "claim": "A list of at least fifteen bytes is its first ten bytes, its middle and its last five bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.split_record : ∀ (bytes : List ℕ), 15 ≤ bytes.length → bytes = List.take 10 bytes ++ ServiceWireRefinement.recordMiddle bytes ++ List.drop (bytes.length - 5) bytes",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.encode_of_shape",
+      "role": "model-shape",
+      "claim": "A list with the record prefix and a readiness suffix is the model encoding of its middle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_of_shape : ∀ (bytes : List ℕ) (ready : Bool), 15 ≤ bytes.length → List.take 10 bytes = NobleFoundation.ServiceWire.recordPrefix → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready → NobleFoundation.ServiceWire.encode (ServiceWireRefinement.recordMiddle bytes) ready = bytes",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_of_encoding",
+      "role": "model-shape",
+      "claim": "Bytes equal to a model encoding end with that encoding suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_of_encoding : ∀ (bytes label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.encode label ready = bytes → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.validName_ascii",
+      "role": "model-shape",
+      "claim": "Every byte of a valid name is ASCII.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.validName_ascii : ∀ (label : List ℕ), NobleFoundation.ServiceWire.validName label = true → ∀ n ∈ label, n < 128",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_slice_drop",
+      "role": "byte-view",
+      "claim": "The byte view commutes with dropping a slice prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_slice_drop : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start : Aeneas.Std.Usize), ServiceWireRefinement.bytesOf (bytes.drop start) = List.drop (↑start) (ServiceWireRefinement.bytesOf bytes)",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.index_from",
+      "role": "generated-step",
+      "claim": "Range-from indexing within the slice length returns the dropped slice.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_from : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start : Aeneas.Std.Usize), ↑start ≤ bytes.length → Aeneas.Std.core.slice.index.Slice.index (Aeneas.Std.core.slice.index.SliceIndexRangeFromUsizeSlice Aeneas.Std.U8) bytes { start := start } = Aeneas.Std.Result.ok (bytes.drop start)",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.index_range",
+      "role": "generated-step",
+      "claim": "Ordered in-bounds range indexing returns a slice whose bytes are the selected window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_range : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start stop : Aeneas.Std.Usize), ↑start ≤ ↑stop → ↑stop ≤ bytes.length → ∃ part, Aeneas.Std.core.slice.index.Slice.index (Aeneas.Std.core.slice.index.SliceIndexRangeUsizeSlice Aeneas.Std.U8) bytes { start := start, «end» := stop } = Aeneas.Std.Result.ok part ∧ ServiceWireRefinement.bytesOf part = List.take (↑stop - ↑start) (List.drop (↑start) (ServiceWireRefinement.bytesOf bytes))",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.index_usize_eq",
+      "role": "generated-step",
+      "claim": "In-bounds element indexing returns the element of the slice list.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_usize_eq : ∀ (v : Aeneas.Std.Slice Aeneas.Std.U8) (k : Aeneas.Std.Usize) (i : ℕ), ↑k = i → ∀ (l : List Aeneas.Std.U8), ↑v = l → ∀ (hk : i < l.length), v.index_usize k = Aeneas.Std.Result.ok l[i]",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.five_cases",
+      "role": "byte-view",
+      "claim": "A list of five bytes is a five-element literal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.five_cases : ∀ (l : List Aeneas.Std.U8), l.length = 5 → ∃ a b c d e, l = [a, b, c, d, e]",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.from_utf8_cases",
+      "role": "utf8",
+      "claim": "The external from_utf8 model returns its input or reports invalid UTF-8.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.from_utf8_cases : ∀ (value : Aeneas.Std.Slice Aeneas.Std.U8), noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∨ noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.core.str.error.Utf8Error.Invalid)",
+      "subjects": [
+        "noble_kernel.core.str.converts.from_utf8"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_len",
+      "role": "generated-step",
+      "claim": "The generated prefix slice has length ten.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_len : (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯).to_slice.len = 10#usize",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_len",
+      "role": "generated-step",
+      "claim": "The generated suffix slice has length five.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_len : (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ⋯).to_slice.len = 5#usize",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.ite_ok_decide",
+      "role": "generated-step",
+      "claim": "A guarded boolean computation is the decision of the conjunction.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.ite_ok_decide : ∀ (p q : Prop) [inst : Decidable p] [inst_1 : Decidable q], (if p then Aeneas.Std.Result.ok (decide q) else Aeneas.Std.Result.ok false) = Aeneas.Std.Result.ok (decide (p ∧ q))",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.decode_after_checks",
+      "role": "model-shape",
+      "claim": "Past the byte budget, the configured depth and the depth scan, the model decides schema or accepts.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_after_checks : ∀ (bytes : List ℕ) (configured : ℕ), bytes.length ≤ NobleFoundation.ServiceWire.maxWireBytes → 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → NobleFoundation.ServiceWire.depthExceeds configured bytes = false → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.schema ∨ ∃ label ready, NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.accepted label ready",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.schema_of_refuted",
+      "role": "model-shape",
+      "claim": "Past those checks, the model decides schema unless the bytes are the encoding of a valid name.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.schema_of_refuted : ∀ (bytes : List ℕ) (configured : ℕ), bytes.length ≤ NobleFoundation.ServiceWire.maxWireBytes → 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → NobleFoundation.ServiceWire.depthExceeds configured bytes = false → (∀ (label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.validName label = true → NobleFoundation.ServiceWire.encode label ready = bytes → False) → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.schema",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.accepted_of_shape",
+      "role": "model-shape",
+      "claim": "Past an allowed configured depth, a record with the prefix, a readiness suffix and a valid middle is accepted with that middle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.accepted_of_shape : ∀ (bytes : List ℕ) (configured : ℕ) (ready : Bool), 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → 15 ≤ bytes.length → List.take 10 bytes = NobleFoundation.ServiceWire.recordPrefix → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready → NobleFoundation.ServiceWire.validName (ServiceWireRefinement.recordMiddle bytes) = true → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.accepted (ServiceWireRefinement.recordMiddle bytes) ready",
+      "subjects": []
+    },
+    {
+      "name": "ServiceWireRefinement.min_service_bytes",
+      "role": "generated-step",
+      "claim": "The generated minimum record length is fifteen bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.min_service_bytes : ↑noble_kernel.dataspace.wire.decode_service.MIN_SERVICE_BYTES = 15",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service.MIN_SERVICE_BYTES"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_refines",
+      "role": "refinement",
+      "claim": "For every byte slice and every configured depth, the generated decoder returns, and its result read through observed is the model decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_refines : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), ∃ r, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok r ∧ ServiceWireRefinement.observed r = some (NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured)",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_total",
+      "role": "consequence",
+      "claim": "The generated decoder returns on every input: no panic, failed bound check or divergence.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_total : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), ∃ r, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok r",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_accepts_iff",
+      "role": "consequence",
+      "claim": "The generated decoder returns a value with given name bytes and readiness exactly when the model accepts them.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_accepts_iff : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (label : List ℕ) (ready : Bool), (∃ value, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = label ∧ value.ready = ready) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.accepted label ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_refuses_iff",
+      "role": "consequence",
+      "claim": "The generated decoder returns ByteLimit, DepthLimit or Schema exactly when the model decides that class.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_refuses_iff : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.ByteLimit) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.byteLimit) ∧ (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.depthLimit) ∧ (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.Schema) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.schema)",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_of_encode",
+      "role": "consequence",
+      "claim": "Every model encoding of a valid name decodes through the generated decoder to that name and readiness under every allowed configured depth.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_of_encode : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.validName label = true → 1 ≤ ↑configured ∧ ↑configured ≤ NobleFoundation.ServiceWire.maxWireDepth → ServiceWireRefinement.bytesOf bytes = NobleFoundation.ServiceWire.encode label ready → ∃ value, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = label ∧ value.ready = ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_accepted_is_canonical",
+      "role": "consequence",
+      "claim": "Every value the generated decoder accepts has a valid name and the input bytes are exactly its model encoding.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_accepted_is_canonical : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (value : noble_kernel.dataspace.wire.ServiceRef), noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) → NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf value.name) = true ∧ NobleFoundation.ServiceWire.encode (ServiceWireRefinement.bytesOf value.name) value.ready = ServiceWireRefinement.bytesOf bytes",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ]
+    }
+  ]
+}

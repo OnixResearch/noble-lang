@@ -1,0 +1,134 @@
+{
+  "schema": "noble-service-wire-refinement-inputs/v1",
+  "extraction_receipt": "verification/declared-modules-v1/extraction.json",
+  "extraction_receipt_sha256": "2849724f8eb8c2527e6ee83ef9a7f15ca954e961965edd61a1aca8e33aff365c",
+  "extraction_lock": "verification/m4/extraction-lock.json",
+  "extraction_lock_sha256": "1942596d2aa448ad36914b570bd6740c8c981f351d4d3ea3e73c1523695e6ed9",
+  "generated_inputs": {
+    "proofs/m3/NobleKernel.lean": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+    "proofs/m3/NobleKernel/Types.lean": "af81688c0aad67e10274f19d70abbfd75bd8402d1fd0f9761138e1ad9dfd5dab",
+    "proofs/m3/NobleKernel/TypesExternal.lean": "286ff4005d18e83aaf99bc405162e2ce8c7b5dc399e69f2daa338a189e327f9c",
+    "proofs/m3/NobleKernel/Funs.lean": "0ca1f67fa86c0237616d16a75affb34881343f990e2b3c74b7862f2591ed0e71",
+    "proofs/m3/NobleKernel/FunsExternal.lean": "d2907d53341cdd929463e2361ec75854874d3e707e9405021e8cdd51726bfd84"
+  },
+  "model": {
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b"
+  },
+  "toolchain_reference": "proofs/m7",
+  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "mutation_controls": [
+    {
+      "id": "byte-budget-boundary",
+      "removes": "a record of exactly 64 bytes is no longer within the wire budget",
+      "edits": [
+        {
+          "find": "  let i := Slice.len bytes\n  if i > dataspace.MAX_WIRE_BYTES\n  then ok (core.result.Result.Err dataspace.Error.ByteLimit)\n  else\n    if max_depth = 0#u32",
+          "replace": "  let i := Slice.len bytes\n  if i >= dataspace.MAX_WIRE_BYTES\n  then ok (core.result.Result.Err dataspace.Error.ByteLimit)\n  else\n    if max_depth = 0#u32"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "zero-depth-class",
+      "removes": "a zero configured depth is refused as a depth error",
+      "edits": [
+        {
+          "find": "    if max_depth = 0#u32\n    then ok (core.result.Result.Err dataspace.Error.DepthLimit)",
+          "replace": "    if max_depth = 0#u32\n    then ok (core.result.Result.Err dataspace.Error.Schema)"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "depth-scan-closer",
+      "removes": "a closing angle bracket lowers the scanned depth",
+      "edits": [
+        {
+          "find": "        if byte = 62#u8\n        then ok (core.num.U32.saturating_sub depth 1#u32)",
+          "replace": "        if byte = 63#u8\n        then ok (core.num.U32.saturating_sub depth 1#u32)"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.check_depth_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "prefix-byte",
+      "removes": "the record prefix spells service in lower case",
+      "edits": [
+        {
+          "find": "  dataspace.wire.has_service_prefix_loop bytes\n    (Array.make 10#usize [\n      60#u8, 115#u8,",
+          "replace": "  dataspace.wire.has_service_prefix_loop bytes\n    (Array.make 10#usize [\n      60#u8, 83#u8,"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.has_service_prefix_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+      ]
+    },
+    {
+      "id": "ready-tag-swap",
+      "removes": "the #t tag decodes as ready",
+      "edits": [
+        {
+          "find": "{ «name» := name1, ready := true }",
+          "replace": "{ «name» := name1, ready := false }"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+      ]
+    },
+    {
+      "id": "name-alphabet-underscore",
+      "removes": "an underscore is a name byte",
+      "edits": [
+        {
+          "find": "      if byte != 95#u8\n      then\n        if byte != 45#u8",
+          "replace": "      if byte != 96#u8\n      then\n        if byte != 45#u8"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.valid_name_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+      ]
+    },
+    {
+      "id": "suffix-quote",
+      "removes": "the closing quote of the name is a double quote",
+      "edits": [
+        {
+          "find": "                    if i3 = 34#u8\n",
+          "replace": "                    if i3 = 39#u8\n"
+        }
+      ],
+      "must_lose_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical"
+      ]
+    }
+  ]
+}
