@@ -12,8 +12,9 @@ defined by construction and involutive, and every endpoint operation that would 
 capture, use a stale generation or close twice is refused. A stack-aware nested step saves a return
 continuation and pops it at a finished node; the stack limit is the only bound on those returns.
 Send is not receipt: nothing here models peer receipt. At an external choice the guest takes one
-action, `receiveBranch`, which names the branch the peer selected; one node declares one branch, so a
-selection the node does not declare is refused.
+action, `receiveBranch`, which names the branch the peer selected, and a selection the node does not
+declare is refused. A `choose` or `offer` node declares one branch; a `select` or `branch` node
+declares a whole label set at one state.
 
 Declared premises, kept premises:
 * the grammar is versioned but this model carries no version field yet;
@@ -26,8 +27,8 @@ Declared premises, kept premises:
   this model admits it only up to the declared stack limit, and claims no external runtime stack;
 * no protocol type-equality algorithm is defined: `dual` is definitional and endpoint identity is
   compared field by field;
-* a choice node declares exactly one branch, so a two-branch choice is two declared nodes (one per
-  branch); a single node carrying a label set is not modelled;
+* a `select`/`branch` node carries a label set, and the first pair naming a label is the one taken;
+  the exploration's work bound scales with the table's `width`, the largest label set and at least two;
 * endpoint delegation (passing an endpoint as a message) is excluded, so ownership obligations stay
   outside this model.
 -/
@@ -49,6 +50,11 @@ inductive Node where
   | choose (branch : Nat) (continuation : Nat)
   | offer (branch : Nat) (continuation : Nat)
   | nested (name : Nat) (parameter : Nat)
+  /-- Internal choice over a label set: each `(label, continuation)` pair declares one branch, and
+  the first pair naming a label is the one taken. -/
+  | select (branches : List (Nat × Nat))
+  /-- External choice over a label set, the dual of `select`. -/
+  | branch (branches : List (Nat × Nat))
   deriving DecidableEq, Repr
 
 /-- Resolve one definition index under the bounded unfolding. An index the closed table does not
@@ -69,6 +75,8 @@ def dual : Node → Node
   | .choose branch continuation => .offer branch continuation
   | .offer branch continuation => .choose branch continuation
   | .nested name parameter => .nested name parameter
+  | .select branches => .branch branches
+  | .branch branches => .select branches
 
 /-- Duality is involutive on every node: two duals never change a protocol's shape. -/
 theorem dual_is_involutive (node : Node) : dual (dual node) = node := by
@@ -441,6 +449,14 @@ def continuationOf (action : Action) : Node → Option Nat
       match action with
       | .receiveBranch branch => if declared = branch then some continuation else none
       | _ => none
+  | .select branches =>
+      match action with
+      | .choose label => branches.lookup label
+      | _ => none
+  | .branch branches =>
+      match action with
+      | .receiveBranch label => branches.lookup label
+      | _ => none
   | .finished => none
   | .nested _ _ => none
 
@@ -582,6 +598,20 @@ def stackStep (definitions : List Node) (state : StackState) (action : StackActi
       match action with
       | .receiveBranch branch =>
           if declared = branch then stackAdvance state continuation else none
+      | _ => none
+  | some (.select branches) =>
+      match action with
+      | .choose label =>
+          match branches.lookup label with
+          | some continuation => stackAdvance state continuation
+          | none => none
+      | _ => none
+  | some (.branch branches) =>
+      match action with
+      | .receiveBranch label =>
+          match branches.lookup label with
+          | some continuation => stackAdvance state continuation
+          | none => none
       | _ => none
   | some (.nested _ parameter) =>
       match action with
@@ -917,6 +947,8 @@ theorem resolve_dual (definitions : List Node) (depth index : Nat) :
       | recv message continuation => rfl
       | choose branch continuation => rfl
       | offer branch continuation => rfl
+      | select branches => rfl
+      | branch branches => rfl
 
 /-- **A step on one side has the matching step on the dual**: the dual table under the dual action takes
 exactly the transition the original table takes under the action, for every table, depth, endpoint
@@ -1497,6 +1529,20 @@ def protoStep (definitions : List Node) (limit : Nat) (config : Config) (action 
       match action with
       | .receiveBranch branch => if declared = branch then some (continuation, config.2) else none
       | _ => none
+  | some (.select branches) =>
+      match action with
+      | .choose label =>
+          match branches.lookup label with
+          | some continuation => some (continuation, config.2)
+          | none => none
+      | _ => none
+  | some (.branch branches) =>
+      match action with
+      | .receiveBranch label =>
+          match branches.lookup label with
+          | some continuation => some (continuation, config.2)
+          | none => none
+      | _ => none
   | some (.nested name parameter) =>
       match action with
       | .enter => if config.2.length < limit then some (name, parameter :: config.2) else none
@@ -1529,16 +1575,75 @@ theorem stackStep_eq_protoStep (definitions : List Node) (endpoint : Endpoint) (
         simp [stackAdvance, advance, stackEnter, lookup] <;>
         (try split) <;> (try cases stack) <;> simp_all
 
-/-- The actions a configuration admits: at most two, so each exploration step is finite. -/
+/-- The actions a configuration admits: one per declared label at a label-set node, and at most two
+anywhere else, so each exploration step is finite. -/
 def enabled (definitions : List Node) (limit : Nat) (config : Config) : List StackAction :=
   match definitions[config.1]? with
   | some (.send declared _) => [.send declared]
   | some (.recv declared _) => [.recv declared]
   | some (.choose declared _) => [.choose declared]
   | some (.offer declared _) => [.receiveBranch declared]
+  | some (.select branches) => branches.map fun entry => .choose entry.1
+  | some (.branch branches) => branches.map fun entry => .receiveBranch entry.1
   | some (.nested _ _) => if config.2.length < limit then [.enter, .skipNested] else [.skipNested]
   | some .finished => [.finish]
   | none => []
+
+/-- A label-set lookup succeeds exactly for a declared label. -/
+theorem lookup_isSome_iff (branches : List (Nat × Nat)) (label : Nat) :
+    (branches.lookup label).isSome = true ↔ ∃ entry ∈ branches, entry.1 = label := by
+  induction branches with
+  | nil =>
+      constructor
+      · intro found
+        exact absurd found Bool.false_ne_true
+      · intro ⟨_, member, _⟩
+        cases member
+  | cons head rest ih =>
+      obtain ⟨key, continuation⟩ := head
+      cases same : label == key with
+      | true =>
+          have equal : label = key := of_decide_eq_true same
+          have unfolded : List.lookup label ((key, continuation) :: rest) = some continuation := by
+            rw [List.lookup, same]
+          rw [unfolded]
+          exact ⟨fun _ => ⟨(key, continuation), List.Mem.head _, equal.symm⟩, fun _ => rfl⟩
+      | false =>
+          have unfolded : List.lookup label ((key, continuation) :: rest) = List.lookup label rest := by
+            rw [List.lookup, same]
+          rw [unfolded, ih]
+          constructor
+          · intro ⟨entry, member, named⟩
+            exact ⟨entry, List.Mem.tail _ member, named⟩
+          · intro ⟨entry, member, named⟩
+            cases member with
+            | head =>
+                have equalBeq : (label == key) = true := by
+                  rw [← named]
+                  exact decide_eq_true rfl
+                rw [same] at equalBeq
+                exact absurd equalBeq Bool.false_ne_true
+            | tail _ member => exact ⟨entry, member, named⟩
+
+/-- A label-set lookup returns one of the declared continuations. -/
+theorem lookup_mem (branches : List (Nat × Nat)) (label continuation : Nat)
+    (found : branches.lookup label = some continuation) : continuation ∈ branches.map Prod.snd := by
+  induction branches with
+  | nil => cases found
+  | cons head rest ih =>
+      obtain ⟨key, value⟩ := head
+      cases same : label == key with
+      | true =>
+          have unfolded : List.lookup label ((key, value) :: rest) = some value := by
+            rw [List.lookup, same]
+          rw [unfolded] at found
+          cases found
+          exact List.Mem.head _
+      | false =>
+          have unfolded : List.lookup label ((key, value) :: rest) = List.lookup label rest := by
+            rw [List.lookup, same]
+          rw [unfolded] at found
+          exact List.Mem.tail _ (ih found)
 
 /-- An action is listed as enabled exactly when the configuration step takes it. -/
 theorem mem_enabled_iff (definitions : List Node) (limit : Nat) (config : Config)
@@ -1548,7 +1653,46 @@ theorem mem_enabled_iff (definitions : List Node) (limit : Nat) (config : Config
   cases definitions[config.1]? with
   | none => simp
   | some node =>
-      cases node <;> cases action <;> simp <;> (try split) <;> simp_all [eq_comm]
+      cases node
+      case select branches =>
+        cases action with
+        | choose label =>
+            dsimp only
+            split
+            · rename_i continuation found
+              have present : ∃ entry ∈ branches, entry.1 = label :=
+                (lookup_isSome_iff branches label).mp (by rw [found]; rfl)
+              simp only [Option.isSome_some, iff_true, List.mem_map, StackAction.choose.injEq]
+              exact present
+            · rename_i found
+              have absent : ¬ ∃ entry ∈ branches, entry.1 = label := fun present => by
+                have declared := (lookup_isSome_iff branches label).mpr present
+                rw [found] at declared
+                exact Bool.false_ne_true declared
+              simp only [Option.isSome_none, Bool.false_eq_true, iff_false, List.mem_map,
+                StackAction.choose.injEq]
+              exact absent
+        | _ => simp
+      case branch branches =>
+        cases action with
+        | receiveBranch label =>
+            dsimp only
+            split
+            · rename_i continuation found
+              have present : ∃ entry ∈ branches, entry.1 = label :=
+                (lookup_isSome_iff branches label).mp (by rw [found]; rfl)
+              simp only [Option.isSome_some, iff_true, List.mem_map, StackAction.receiveBranch.injEq]
+              exact present
+            · rename_i found
+              have absent : ¬ ∃ entry ∈ branches, entry.1 = label := fun present => by
+                have declared := (lookup_isSome_iff branches label).mpr present
+                rw [found] at declared
+                exact Bool.false_ne_true declared
+              simp only [Option.isSome_none, Bool.false_eq_true, iff_false, List.mem_map,
+                StackAction.receiveBranch.injEq]
+              exact absent
+        | _ => simp
+      all_goals (cases action <;> simp <;> (try split) <;> simp_all [eq_comm])
 
 /-- The orderly end: a finished node with no saved return index, the acceptance condition of
 `acceptedStackTraceWith`. -/
@@ -1994,24 +2138,66 @@ theorem protocolDuality_sound (left : List Node) (leftLimit : Nat) (right : List
 
 /-! ### A sufficient work bound
 
-`checkPairs` spends one unit per pending pair. A pair not yet assumed adds at most two successors and
-is then assumed for good; an assumed pair is dropped. So the pending count plus twice the pairs of a
-successor-closed set not yet assumed falls by at least one per unit, and a bound at least that large
+`checkPairs` spends one unit per pending pair. A pair not yet assumed adds at most the left table's
+`width` of successors (two without label sets) and is then assumed for good; an assumed pair is dropped.
+So the pending count plus `width` times the pairs of a successor-closed set not yet assumed falls by at
+least one per unit, and a bound at least that large
 never runs out (`checkPairs_not_exhausted`). Every configuration reachable from an empty return stack
 lies in an explicit finite set (`configs`), which gives a work bound computed from the two tables
 alone (`workBound`). Under it the check decides equality and duality exactly. -/
 
-/-- A configuration lists at most two enabled actions. -/
-theorem enabled_length_le_two (definitions : List Node) (limit : Nat) (config : Config) :
-    (enabled definitions limit config).length ≤ 2 := by
-  unfold enabled
-  split <;> (try split) <;> simp
+/-- The widest choice a node declares: its label count at a label-set node, and two elsewhere. -/
+def nodeWidth : Node → Nat
+  | .select branches => branches.length
+  | .branch branches => branches.length
+  | _ => 2
 
-/-- A pair adds at most two successor pairs. -/
-theorem successorPairs_length_le_two (left : List Node) (leftLimit : Nat) (right : List Node)
+/-- The widest choice a table declares, and at least two. -/
+def width (definitions : List Node) : Nat :=
+  definitions.foldr (fun node widest => max (nodeWidth node) widest) 2
+
+theorem two_le_width (definitions : List Node) : 2 ≤ width definitions := by
+  induction definitions with
+  | nil => simp [width]
+  | cons node rest ih =>
+      simp only [width, List.foldr_cons] at ih ⊢
+      exact Nat.le_trans ih (Nat.le_max_right _ _)
+
+theorem nodeWidth_le_width (definitions : List Node) (node : Node) (present : node ∈ definitions) :
+    nodeWidth node ≤ width definitions := by
+  induction definitions with
+  | nil => simp at present
+  | cons head rest ih =>
+      simp only [width, List.foldr_cons] at ih ⊢
+      rcases List.mem_cons.mp present with same | later
+      · subst same
+        exact Nat.le_max_left _ _
+      · exact Nat.le_trans (ih later) (Nat.le_max_right _ _)
+
+/-- A configuration lists at most the table's width of enabled actions. -/
+theorem enabled_length_le_width (definitions : List Node) (limit : Nat) (config : Config) :
+    (enabled definitions limit config).length ≤ width definitions := by
+  have two := two_le_width definitions
+  unfold enabled
+  cases found : definitions[config.1]? with
+  | none => simp
+  | some node =>
+      have bounded := nodeWidth_le_width definitions node (List.mem_of_getElem? found)
+      cases node with
+      | select branches => simpa [nodeWidth] using bounded
+      | branch branches => simpa [nodeWidth] using bounded
+      | nested name parameter =>
+          simp only
+          split <;> simp <;> omega
+      | _ =>
+          simp only [List.length_singleton]
+          omega
+
+/-- A pair adds at most the left table's width of successor pairs. -/
+theorem successorPairs_length_le_width (left : List Node) (leftLimit : Nat) (right : List Node)
     (rightLimit : Nat) (pair : Config × Config) (trace : List StackAction) :
-    (successorPairs left leftLimit right rightLimit pair trace).length ≤ 2 :=
-  Nat.le_trans (List.length_filterMap_le _ _) (enabled_length_le_two left leftLimit pair.1)
+    (successorPairs left leftLimit right rightLimit pair trace).length ≤ width left :=
+  Nat.le_trans (List.length_filterMap_le _ _) (enabled_length_le_width left leftLimit pair.1)
 
 /-- A set of configuration pairs is closed when both sides stepping on the same action from a member
 reach a member. -/
@@ -2067,14 +2253,14 @@ theorem unassumed_assume (pairs assumed : List (Config × Config)) (pair : Confi
   omega
 
 /-- **Enough work never runs out**: when every pending pair lies in a closed set and the work is at
-least the pending count plus twice the set's pairs not yet assumed, the exploration ends in `equal`
-or `differ`. -/
+least the pending count plus the left table's width times the set's pairs not yet assumed, the
+exploration ends in `equal` or `differ`. -/
 theorem checkPairs_not_exhausted (left : List Node) (leftLimit : Nat) (right : List Node)
     (rightLimit : Nat) (pairs : List (Config × Config))
     (closed : ClosedPairs left leftLimit right rightLimit pairs) :
     ∀ (work : Nat) (assumed : List (Config × Config)) (pending : List Pending),
       (∀ entry ∈ pending, entry.1 ∈ pairs) →
-      pending.length + 2 * unassumed pairs assumed ≤ work →
+      pending.length + width left * unassumed pairs assumed ≤ work →
       checkPairs left leftLimit right rightLimit work assumed pending ≠ .exhausted := by
   intro work
   induction work with
@@ -2108,8 +2294,13 @@ theorem checkPairs_not_exhausted (left : List Node) (leftLimit : Nat) (right : L
                       pairIn trace entry fromPair
                   · exact restIn entry fromRest
                 · have successors :=
-                    successorPairs_length_le_two left leftLimit right rightLimit pair trace
+                    successorPairs_length_le_width left leftLimit right rightLimit pair trace
                   have assumedOne := unassumed_assume pairs assumed pair pairIn fresh
+                  have scaled : width left * unassumed pairs (pair :: assumed) + width left ≤
+                      width left * unassumed pairs assumed := by
+                    have grown := Nat.mul_le_mul_left (width left) assumedOne
+                    rw [Nat.mul_add, Nat.mul_one] at grown
+                    exact grown
                   simp only [List.length_append]
                   omega
 
@@ -2123,6 +2314,8 @@ def indices (definitions : List Node) : List Nat :=
     | .choose _ continuation => [continuation]
     | .offer _ continuation => [continuation]
     | .nested name parameter => [name, parameter]
+    | .select branches => branches.map Prod.snd
+    | .branch branches => branches.map Prod.snd
 
 /-- Every return continuation a nested call can save. -/
 def parameters (definitions : List Node) : List Nat :=
@@ -2181,7 +2374,9 @@ theorem mem_indices (definitions : List Node) (node : Node) (present : node ∈ 
       | .recv _ continuation => [continuation]
       | .choose _ continuation => [continuation]
       | .offer _ continuation => [continuation]
-      | .nested name parameter => [name, parameter])) :
+      | .nested name parameter => [name, parameter]
+      | .select branches => branches.map Prod.snd
+      | .branch branches => branches.map Prod.snd)) :
     index ∈ indices definitions :=
   List.mem_flatMap.mpr ⟨node, present, named⟩
 
@@ -2234,6 +2429,28 @@ theorem configs_closed (definitions : List Node) (limit start : Nat) (config : C
           obtain ⟨_, rfl⟩ := step
           exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
             savedOk⟩
+      | select branches =>
+          cases action with
+          | choose label =>
+              cases found : branches.lookup label with
+              | none => simp [found] at step
+              | some continuation =>
+                  simp only [found, Option.some.injEq] at step
+                  subst step
+                  exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _
+                    (by simpa using lookup_mem branches label continuation found)), bounded, savedOk⟩
+          | _ => simp at step
+      | branch branches =>
+          cases action with
+          | receiveBranch label =>
+              cases found : branches.lookup label with
+              | none => simp [found] at step
+              | some continuation =>
+                  simp only [found, Option.some.injEq] at step
+                  subst step
+                  exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _
+                    (by simpa using lookup_mem branches label continuation found)), bounded, savedOk⟩
+          | _ => simp at step
       | choose declared continuation =>
           cases action <;> simp at step
           obtain ⟨_, rfl⟩ := step
@@ -2284,11 +2501,11 @@ theorem pairsOf_closed (left : List Node) (leftLimit start : Nat) (right : List 
   exact ⟨configs_closed left leftLimit start pair.1 member.1 action next stepLeft,
     configs_closed right rightLimit other pair.2 member.2 action following stepRight⟩
 
-/-- **A work bound computed from the two tables alone**: one plus twice the number of pairs of
-reachable configurations. -/
+/-- **A work bound computed from the two tables alone**: one plus the left table's width times the
+number of pairs of reachable configurations. The width is two for a table without label sets. -/
 def workBound (left : List Node) (leftLimit start : Nat) (right : List Node)
     (rightLimit other : Nat) : Nat :=
-  1 + 2 * (pairsOf left leftLimit start right rightLimit other).length
+  1 + width left * (pairsOf left leftLimit start right rightLimit other).length
 
 /-- **The bound is sufficient**: with at least `workBound` units the check never refuses as
 exhausted, for every pair of tables, limits and start states. -/
@@ -2307,6 +2524,7 @@ theorem protocolEquality_not_exhausted (left : List Node) (leftLimit start : Nat
   · have counted : unassumed (pairsOf left leftLimit start right rightLimit other) [] ≤
         (pairsOf left leftLimit start right rightLimit other).length :=
       List.length_filter_le _ _
+    have scaled := Nat.mul_le_mul_left (width left) counted
     unfold workBound at enough
     simp only [List.length_singleton]
     omega
@@ -2462,6 +2680,91 @@ theorem workBound_decides_the_fixtures :
       workBound balancedProtocol 2 0 balancedProtocol 1 0 = 301 ∧
       protocolEquality balancedProtocol 2 balancedProtocol 1 301 (0, []) (0, []) =
         .differ [.send .i64, .enter, .send .i64, .enter] := by
+  decide
+
+
+/-! ## Choice over a label set
+
+A `select` node declares every branch of an internal choice at one state, and `branch` is its dual
+external choice. Each label offers its own continuation, and the first pair naming a label is the one
+taken. One state can therefore admit more than two actions, which is why the exploration's work bound
+scales with the table's `width`. -/
+
+/-- Internal choice between sending an `i64` (label `0`) and receiving a `bool` (label `1`), both
+ending the session. -/
+def labelSetProtocol : List Node :=
+  [.select [(0, 1), (1, 2)], .send .i64 3, .recv .bool 3, .finished]
+
+/-- The same choice with its labels declared in the other order. -/
+def labelSetReordered : List Node :=
+  [.select [(1, 2), (0, 1)], .send .i64 3, .recv .bool 3, .finished]
+
+/-- A one-branch choice where the label set declares two. -/
+def singleBranchProtocol : List Node := [.choose 0 1, .send .i64 2, .finished]
+
+/-- Three labels at one state. -/
+def threeLabels : List Node := [.select [(0, 1), (1, 1), (2, 1)], .finished]
+
+/-- **A label-set node enables every declared label at one state.** -/
+theorem label_set_enables_every_label :
+    enabled labelSetProtocol 0 (0, []) = [.choose 0, .choose 1] := by
+  decide
+
+/-- **Each label reaches its own typed continuation**: label `0` sends an `i64`, label `1` receives a
+`bool`, and both end orderly. -/
+theorem label_set_takes_each_branch :
+    runProto labelSetProtocol 0 (0, []) [.choose 0, .send .i64, .finish] = some (3, []) ∧
+      runProto labelSetProtocol 0 (0, []) [.choose 1, .recv .bool, .finish] = some (3, []) := by
+  decide
+
+/-- **An undeclared label is refused**, and so is receiving a branch at an internal choice. -/
+theorem undeclared_label_is_refused :
+    protoStep labelSetProtocol 0 (0, []) (.choose 2) = none ∧
+      protoStep labelSetProtocol 0 (0, []) (.receiveBranch 0) = none := by
+  decide
+
+/-- **The guest selects a label, and the peer receives it on the dual table**, reaching the same
+continuation. -/
+theorem selection_and_receipt_meet_at_the_continuation :
+    step labelSetProtocol 1 ⟨5, false, 9, 0, 4, false⟩ (.choose 1) = some ⟨5, false, 9, 2, 4, false⟩ ∧
+      step (labelSetProtocol.map dual) 1 ⟨5, true, 9, 0, 4, false⟩ (.receiveBranch 1) =
+        some ⟨5, true, 9, 2, 4, false⟩ := by
+  decide
+
+/-- **Label order is not observable**: the reordered declaration is equal under the work bound. -/
+theorem label_order_is_not_observable :
+    protocolEquality labelSetProtocol 0 labelSetReordered 0
+      (workBound labelSetProtocol 0 0 labelSetReordered 0 0) (0, []) (0, []) = .equal := by
+  decide
+
+/-- **A missing label is observable**: a one-branch choice differs from the label set, and the witness
+is the label it lacks. -/
+theorem a_missing_label_is_distinguished :
+    protocolEquality labelSetProtocol 0 singleBranchProtocol 0
+      (workBound labelSetProtocol 0 0 singleBranchProtocol 0 0) (0, []) (0, []) = .differ [.choose 1] := by
+  decide
+
+/-- **The dual of a label set is the external choice over the same labels**, with dual continuations,
+and the duality check accepts the pair. -/
+theorem label_set_duality :
+    labelSetProtocol.map dual = [.branch [(0, 1), (1, 2)], .recv .i64 3, .send .bool 3, .finished] ∧
+      protocolDuality labelSetProtocol 0 (labelSetProtocol.map dual) 0
+        (workBound labelSetProtocol 0 0 ((labelSetProtocol.map dual).map dual) 0 0) (0, []) (0, []) =
+        .equal := by
+  decide
+
+/-- **A wide choice needs its width**: three labels enable three actions at one state, more than the
+two every other node admits, while tables without label sets keep width two. -/
+theorem a_wide_choice_needs_its_width :
+    (enabled threeLabels 0 (0, [])).length = 3 ∧ width threeLabels = 3 ∧
+      width labelSetProtocol = 2 ∧ width balancedProtocol = 2 ∧
+      protocolEquality threeLabels 0 threeLabels 0 (workBound threeLabels 0 0 threeLabels 0 0)
+        (0, []) (0, []) = .equal := by
+  decide
+
+/-- **With a repeated label, the first declared pair is the one taken.** -/
+theorem first_declared_label_wins :
+    protoStep [.select [(0, 1), (0, 2)], .finished, .finished] 0 (0, []) (.choose 0) = some (1, []) := by
   decide
 
 end NestedSession

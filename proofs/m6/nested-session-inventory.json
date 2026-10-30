@@ -921,8 +921,26 @@
       ]
     },
     {
+      "name": "NestedSession.lookup_isSome_iff",
+      "role": "WIT-SESSION-01 a label-set lookup succeeds exactly for a declared label",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.lookup_mem",
+      "role": "WIT-SESSION-01 a label-set lookup returns one of the declared continuations",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "NestedSession.mem_enabled_iff",
-      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it",
+      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it, one per declared label at a label-set node",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1146,8 +1164,8 @@
       ]
     },
     {
-      "name": "NestedSession.enabled_length_le_two",
-      "role": "WIT-SESSION-01 a configuration lists at most two enabled actions",
+      "name": "NestedSession.two_le_width",
+      "role": "WIT-SESSION-01 a table's width is at least two",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1155,8 +1173,26 @@
       ]
     },
     {
-      "name": "NestedSession.successorPairs_length_le_two",
-      "role": "WIT-SESSION-01 a pair adds at most two successor pairs",
+      "name": "NestedSession.nodeWidth_le_width",
+      "role": "WIT-SESSION-01 every node's width is at most its table's width",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.enabled_length_le_width",
+      "role": "WIT-SESSION-01 a configuration lists at most its table's width of enabled actions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.successorPairs_length_le_width",
+      "role": "WIT-SESSION-01 a pair adds at most the left table's width of successor pairs",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1183,7 +1219,7 @@
     },
     {
       "name": "NestedSession.checkPairs_not_exhausted",
-      "role": "WIT-SESSION-01 with work at least the pending count plus twice the unassumed pairs of a closed set the exploration is never exhausted",
+      "role": "WIT-SESSION-01 with work at least the pending count plus the left table's width times the unassumed pairs of a closed set the exploration is never exhausted",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1292,6 +1328,87 @@
     {
       "name": "NestedSession.workBound_decides_the_fixtures",
       "role": "WIT-SESSION-01 fixtures: the computed bounds 13, 19 and 301 decide the cycle unrolling, client and server duality and the balanced stack limits",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.label_set_enables_every_label",
+      "role": "WIT-SESSION-01 fixture: a label-set node enables every declared label at one state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.label_set_takes_each_branch",
+      "role": "WIT-SESSION-01 fixture: each label reaches its own typed continuation and both end orderly",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.undeclared_label_is_refused",
+      "role": "WIT-SESSION-01 control: an undeclared label is refused, and so is receiving a branch at an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.selection_and_receipt_meet_at_the_continuation",
+      "role": "WIT-SESSION-01 fixture: the guest selects a label and the peer receives it on the dual table, reaching the same continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.label_order_is_not_observable",
+      "role": "WIT-SESSION-01 fixture: a reordered label set is equal under the work bound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.a_missing_label_is_distinguished",
+      "role": "WIT-SESSION-01 control: a one-branch choice differs from the label set, with the missing label as witness",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.label_set_duality",
+      "role": "WIT-SESSION-01 fixture: the dual of a label set is the external choice over the same labels, and duality is accepted",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.a_wide_choice_needs_its_width",
+      "role": "WIT-SESSION-01 control: three labels enable three actions at one state, tables without label sets keep width two, and the wide table is decided",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.first_declared_label_wins",
+      "role": "WIT-SESSION-01 fixture: with a repeated label the first declared pair is taken",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
