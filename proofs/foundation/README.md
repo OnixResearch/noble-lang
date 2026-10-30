@@ -1279,7 +1279,10 @@ The fixtures are kernel-checked by `decide`:
 These are seeded order and initialization controls on fixtures, not a binary32 error bound, and
 no theorem relates the model to `grad.rs`.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the ordered binary32 reference is
+[`verification/foundation/receipts/956d8ca07/`](../../verification/foundation/receipts/956d8ca07/foundation-check.json)
+(854 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed:
 

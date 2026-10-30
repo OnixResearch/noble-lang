@@ -380,3 +380,10 @@ theorems; that run reported 838 in total).
 sweep, the final-once-processed frame, each final adjoint as seed plus its consumers'
 contributions over every well-formed graph, and the interior-seed fixture (9 new theorems;
 that run reported 847 in total).
+
+## 956d8ca07 — reverse-AD ordered binary32 reference (issue #45)
+
+`956d8ca07/` records the clean run that added `NobleFoundation.ReverseAD.Ordered`: the `grad.rs`
+operation order over the binary32 reference, the stored-order cancellation fixture, the
+ascending-traversal, presummed-occurrence and seed controls, and the real-valued counterpart
+(7 new theorems; that run reported 854 in total).
