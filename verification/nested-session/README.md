@@ -76,13 +76,16 @@ declared stack limit, so its accepted bounded subset is finite.
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **101** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **127** model
 theorems, every axiom inside the standard allow-list:
-- 22 theorems use no axiom, including `stackState_within_the_limit` and `dualAction_is_involutive`;
-- 67 use `propext` alone, including the bounded return-stack and external-choice trace/control theorems,
-  the step-duality theorems and the eight explicit-premise progress theorems and controls;
-- 10 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged` and
-  `step_acts_only_inside_the_current_protocol`;
+- 23 theorems use no axiom, including `stackState_within_the_limit`, `dualAction_is_involutive` and
+  `StackAction.dual_dual`;
+- 74 use `propext` alone, including the bounded return-stack and external-choice trace/control theorems,
+  the step-duality theorems, the eight explicit-premise progress theorems and controls, and seven of
+  the type-equality theorems;
+- 28 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged`,
+  `step_acts_only_inside_the_current_protocol`, the type-equality soundness and witness theorems and
+  `exhaustion_is_refused`;
 - 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and
   `steppers_preserve_the_endpoint_identity`.
 

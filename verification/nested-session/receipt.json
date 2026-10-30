@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "623cb5fad6b3b1030eb8fa41e0566e213b9b0a2b",
-  "source_tree": "03591bfcc09ed2e8be2c3badcba742387f7090c4",
+  "source_commit": "86b00c2ecc8f33f329b9cf7bac8b937ca588fda1",
+  "source_tree": "38a91ed25b4ddc8a240dcbcf2533a215de23bf9e",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "3120e6b0d3d5300bf9101b2776cc642bf9bdd461e613e3f84f9bd08436c1b2d1",
-        "proofs/m6/nested-session-inventory.json": "f48acb503b30b7f2353eec0b4c7dc908ed1179c23b5f2e268fc4c78559ab7ca3"
+        "proofs/m6/NestedSession.lean": "6ce457b0be4c8de3dab9fa119fff106a5a87f621510b7cbef8b09b0fb304d699",
+        "proofs/m6/nested-session-inventory.json": "dafa57b6576e0747aa6c58a5d83bedaad19f6ffc8f773517a1f960a24aabe09a"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol, offerProtocol (external choice)",
@@ -31,21 +31,21 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 101,
+    "model_theorems": 127,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "progress": "one guest step: an open endpoint whose resolved node declares the action has a successor, and the environment-aware step succeeds under explicit queue, peer, scheduler and host premises, each shown load-bearing; termination, fairness, eventual delivery and deadlock freedom are unclaimed",
     "cancellation": "an event class that cuts the committed prefix; it carries no endpoint or session transition",
     "nested_recursion": "the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence",
-    "type_equality": "no algorithm; duality is definitional"
+    "type_equality": "strong equality of guest-visible traces and orderly ends over the stack-aware semantics, decided by a memoised pair exploration that spends one unit of a declared work bound per pair; an exhausted bound is refused, an equal verdict is proved to be trace equivalence, a differ verdict carries a proved witness trace, and duality is equality with the dual table; no bound is proved sufficient for every protocol"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "3120e6b0d3d5300bf9101b2776cc642bf9bdd461e613e3f84f9bd08436c1b2d1",
-    "proofs/m6/nested-session-inventory.json": "f48acb503b30b7f2353eec0b4c7dc908ed1179c23b5f2e268fc4c78559ab7ca3",
-    "verification/nested-session/check.mjs": "bda0885c5beda5f703a2a5cea2933c6420a8fa4d52b90b43c859469efeb8a317"
+    "proofs/m6/NestedSession.lean": "6ce457b0be4c8de3dab9fa119fff106a5a87f621510b7cbef8b09b0fb304d699",
+    "proofs/m6/nested-session-inventory.json": "dafa57b6576e0747aa6c58a5d83bedaad19f6ffc8f773517a1f960a24aabe09a",
+    "verification/nested-session/check.mjs": "1cab32d5204803a8dc80d27d7e25abfe98863d2034cbba0770afb3521ad8f912"
   },
-  "theorem_count": 101,
+  "theorem_count": 127,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -1430,6 +1430,386 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "NestedSession.stackStep_eq_protoStep",
+      "role": "WIT-SESSION-01 the configuration step is the model stack step on an open endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stackStep_eq_protoStep : ∀ (definitions : List NestedSession.Node) (endpoint : NestedSession.Endpoint) (stack : List Nat) (limit : Nat) (action : NestedSession.StackAction), endpoint.closed = false → NestedSession.stackStep definitions { endpoint := endpoint, returnStack := stack, stackLimit := limit } action = Option.map (fun config => { endpoint := { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := config.fst, generation := endpoint.generation, closed := endpoint.closed }, returnStack := config.snd, stackLimit := limit }) (NestedSession.protoStep definitions limit (endpoint.state, stack) action)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_enabled_iff",
+      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.mem_enabled_iff : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config) (action : NestedSession.StackAction), action ∈ NestedSession.enabled definitions limit config ↔ (NestedSession.protoStep definitions limit config action).isSome = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.runProto_snoc",
+      "role": "WIT-SESSION-01 running a trace with one more action takes one more configuration step",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.runProto_snoc : ∀ (definitions : List NestedSession.Node) (limit : Nat) (trace : List NestedSession.StackAction) (action : NestedSession.StackAction) (config : NestedSession.Config), NestedSession.runProto definitions limit config (trace ++ [action]) = (NestedSession.runProto definitions limit config trace).bind fun last => NestedSession.protoStep definitions limit last action",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.runStack_eq_runProto",
+      "role": "WIT-SESSION-01 the configuration run is the model stack run on an open endpoint",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.runStack_eq_runProto : ∀ (definitions : List NestedSession.Node) (limit : Nat) (trace : List NestedSession.StackAction) (endpoint : NestedSession.Endpoint) (stack : List Nat), endpoint.closed = false → NestedSession.runStack definitions { endpoint := endpoint, returnStack := stack, stackLimit := limit } trace = Option.map (fun config => { endpoint := { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := config.fst, generation := endpoint.generation, closed := endpoint.closed }, returnStack := config.snd, stackLimit := limit }) (NestedSession.runProto definitions limit (endpoint.state, stack) trace)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.distinguish_none",
+      "role": "WIT-SESSION-01 no distinguishing action means both sides list the same actions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.distinguish_none : ∀ (left right : List NestedSession.StackAction), NestedSession.distinguish left right = none → ∀ (action : NestedSession.StackAction), action ∈ left ↔ action ∈ right",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.distinguish_some",
+      "role": "WIT-SESSION-01 a distinguishing action is listed on exactly one side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.distinguish_some : ∀ (left right : List NestedSession.StackAction) (action : NestedSession.StackAction), NestedSession.distinguish left right = some action → action ∈ left ∧ ¬action ∈ right ∨ action ∈ right ∧ ¬action ∈ left",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.exhaustion_is_refused",
+      "role": "WIT-SESSION-01 a work bound that runs out with a pair pending is refused as exhausted, never equal",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.exhaustion_is_refused : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)) (entry : NestedSession.Pending) (rest : List NestedSession.Pending), NestedSession.checkPairs left leftLimit right rightLimit 0 assumed (entry :: rest) = NestedSession.Verdict.exhausted",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.assumed_pairs_observe_alike",
+      "role": "WIT-SESSION-01 pairs closed under assumption observe every trace alike",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.assumed_pairs_observe_alike : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)), (NestedSession.Assumed left leftLimit right rightLimit assumed fun x => x ∈ assumed) → ∀ (trace : List NestedSession.StackAction) (pair : NestedSession.Config × NestedSession.Config), pair ∈ assumed → NestedSession.observe left leftLimit pair.fst trace = NestedSession.observe right rightLimit pair.snd trace",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.checkPairs_equal",
+      "role": "WIT-SESSION-01 an equal verdict yields a closed set of consistent pairs containing every visited and pending pair",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.checkPairs_equal : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit work : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)) (pending : List NestedSession.Pending), (NestedSession.Assumed left leftLimit right rightLimit assumed fun pair => pair ∈ assumed ∨ ∃ trace, (pair, trace) ∈ pending) → NestedSession.checkPairs left leftLimit right rightLimit work assumed pending = NestedSession.Verdict.equal → ∃ closure, (NestedSession.Assumed left leftLimit right rightLimit closure fun x => x ∈ closure) ∧ (∀ (pair : NestedSession.Config × NestedSession.Config), pair ∈ assumed → pair ∈ closure) ∧ ∀ (entry : NestedSession.Pending), entry ∈ pending → entry.fst ∈ closure",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_sound",
+      "role": "WIT-SESSION-01 an equal verdict is trace equivalence: the same admitted traces and the same orderly ends",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.protocolEquality_sound : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit work : Nat) (start other : NestedSession.Config), NestedSession.protocolEquality left leftLimit right rightLimit work start other = NestedSession.Verdict.equal → ∀ (trace : List NestedSession.StackAction), NestedSession.observe left leftLimit start trace = NestedSession.observe right rightLimit other trace",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.checkPairs_differ",
+      "role": "WIT-SESSION-01 a differ verdict from reachable pending pairs carries a trace the two sides observe differently",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.checkPairs_differ : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (start other : NestedSession.Config) (work : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)) (pending : List NestedSession.Pending) (witness : List NestedSession.StackAction), (∀ (entry : NestedSession.Pending), entry ∈ pending → NestedSession.runProto left leftLimit start entry.snd = some entry.fst.fst ∧ NestedSession.runProto right rightLimit other entry.snd = some entry.fst.snd) → NestedSession.checkPairs left leftLimit right rightLimit work assumed pending = NestedSession.Verdict.differ witness → NestedSession.observe left leftLimit start witness ≠ NestedSession.observe right rightLimit other witness",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_witness",
+      "role": "WIT-SESSION-01 a differ verdict carries a genuine witness trace on which the protocol states observably disagree",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.protocolEquality_witness : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit work : Nat) (start other : NestedSession.Config) (witness : List NestedSession.StackAction), NestedSession.protocolEquality left leftLimit right rightLimit work start other = NestedSession.Verdict.differ witness → NestedSession.observe left leftLimit start witness ≠ NestedSession.observe right rightLimit other witness",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.equal_protocols_run_alike",
+      "role": "WIT-SESSION-01 configurations found equal admit the same traces under the model runStack on open endpoints",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.equal_protocols_run_alike : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit work : Nat) (leftEndpoint rightEndpoint : NestedSession.Endpoint) (leftStack rightStack : List Nat), leftEndpoint.closed = false → rightEndpoint.closed = false → NestedSession.protocolEquality left leftLimit right rightLimit work (leftEndpoint.state, leftStack) (rightEndpoint.state, rightStack) = NestedSession.Verdict.equal → ∀ (trace : List NestedSession.StackAction), (NestedSession.runStack left { endpoint := leftEndpoint, returnStack := leftStack, stackLimit := leftLimit } trace).isSome = (NestedSession.runStack right { endpoint := rightEndpoint, returnStack := rightStack, stackLimit := rightLimit } trace).isSome",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.StackAction.dual_dual",
+      "role": "WIT-SESSION-01 the dual of a guest action is involutive",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.StackAction.dual_dual : ∀ (action : NestedSession.StackAction), action.dual.dual = action",
+      "axioms": []
+    },
+    {
+      "name": "NestedSession.protoStep_dual",
+      "role": "WIT-SESSION-01 the dual table takes the dual action exactly where the table takes the action",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.protoStep_dual : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config) (action : NestedSession.StackAction), NestedSession.protoStep (List.map NestedSession.dual definitions) limit config action.dual = NestedSession.protoStep definitions limit config action",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.orderlyEnd_dual",
+      "role": "WIT-SESSION-01 the dual table ends orderly exactly where the table does",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.orderlyEnd_dual : ∀ (definitions : List NestedSession.Node), NestedSession.orderlyEnd (List.map NestedSession.dual definitions) = NestedSession.orderlyEnd definitions",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.observe_dual",
+      "role": "WIT-SESSION-01 the dual table observes the dual trace exactly as the table observes the trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.observe_dual : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config) (trace : List NestedSession.StackAction), NestedSession.observe (List.map NestedSession.dual definitions) limit config (List.map NestedSession.StackAction.dual trace) = NestedSession.observe definitions limit config trace",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolDuality_sound",
+      "role": "WIT-SESSION-01 a dual verdict means each trace of one side is admitted exactly when its dual is admitted by the other",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.protocolDuality_sound : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit work : Nat) (start other : NestedSession.Config), NestedSession.protocolDuality left leftLimit right rightLimit work start other = NestedSession.Verdict.equal → ∀ (trace : List NestedSession.StackAction), NestedSession.observe left leftLimit start trace = NestedSession.observe right rightLimit other (List.map NestedSession.StackAction.dual trace)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.renumbered_balanced_is_equal",
+      "role": "WIT-SESSION-01 fixture: the balanced table and its renumbered copy are equal types",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.renumbered_balanced_is_equal : NestedSession.protocolEquality NestedSession.balancedProtocol 2 NestedSession.renumberedBalanced 2 64 (0, []) (3, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.stack_limit_separates_types",
+      "role": "WIT-SESSION-01 fixture: one fewer saved return is a different type, with the separating trace named",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.stack_limit_separates_types : NestedSession.protocolEquality NestedSession.balancedProtocol 2 NestedSession.balancedProtocol 1 64 (0, []) (0, []) = NestedSession.Verdict.differ [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.enter]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unfolding_is_equality_within_the_bound",
+      "role": "WIT-SESSION-01 fixture: a cycle equals its unrolling at three units of work and is refused as exhausted at two",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.unfolding_is_equality_within_the_bound : NestedSession.protocolEquality NestedSession.sendForever 0 NestedSession.sendForeverUnrolled 0 2 (0, []) (0, []) = NestedSession.Verdict.exhausted ∧ NestedSession.protocolEquality NestedSession.sendForever 0 NestedSession.sendForeverUnrolled 0 3 (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.order_separates_types",
+      "role": "WIT-SESSION-01 fixture: sending then receiving differs from receiving then sending",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.order_separates_types : NestedSession.protocolEquality [NestedSession.Node.send NestedSession.MessageType.i64 1, NestedSession.Node.recv NestedSession.MessageType.i64 2, NestedSession.Node.finished] 0 [NestedSession.Node.recv NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.finished] 0 8 (0, []) (0, []) = NestedSession.Verdict.differ [NestedSession.StackAction.send NestedSession.MessageType.i64]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.client_and_server_are_dual",
+      "role": "WIT-SESSION-01 fixture: client and server are dual and a server answering with the wrong type is not",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.client_and_server_are_dual : NestedSession.protocolDuality NestedSession.clientProtocol 0 NestedSession.serverProtocol 0 8 (0, []) (0, []) = NestedSession.Verdict.equal ∧ NestedSession.protocolDuality NestedSession.clientProtocol 0 [NestedSession.Node.recv NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.finished] 0 8 (0, []) (0, []) = NestedSession.Verdict.differ [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.recv NestedSession.MessageType.bool]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.exhausted_duality_is_refused",
+      "role": "WIT-SESSION-01 scenario: a duality check that exhausts its work is refused as exhausted and decided with more work",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.exhausted_duality_is_refused : NestedSession.protocolDuality NestedSession.sendForeverUnrolled 0 NestedSession.receiveForever 0 2 (0, []) (0, []) = NestedSession.Verdict.exhausted ∧ NestedSession.protocolDuality NestedSession.sendForeverUnrolled 0 NestedSession.receiveForever 0 3 (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.accepting_exhaustion_accepts_unequal_types",
+      "role": "WIT-SESSION-01 load-bearing mutant: reading exhaustion as acceptance accepts types the check proves unequal",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.accepting_exhaustion_accepts_unequal_types : NestedSession.acceptingExhaustion (NestedSession.protocolEquality [NestedSession.Node.send NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.finished] 0 [NestedSession.Node.send NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.send NestedSession.MessageType.i64 3, NestedSession.Node.finished] 0 2 (0, []) (0, [])) = NestedSession.Verdict.equal ∧ NestedSession.protocolEquality [NestedSession.Node.send NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.finished] 0 [NestedSession.Node.send NestedSession.MessageType.i64 1, NestedSession.Node.send NestedSession.MessageType.i64 2, NestedSession.Node.send NestedSession.MessageType.i64 3, NestedSession.Node.finished] 0 3 (0, []) (0, []) = NestedSession.Verdict.differ [NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.send NestedSession.MessageType.i64]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.memo_is_load_bearing",
+      "role": "WIT-SESSION-01 load-bearing mutant: without the memo of assumed pairs a cyclic protocol is never decided",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.memo_is_load_bearing : NestedSession.checkPairsWithoutMemo NestedSession.sendForever 0 NestedSession.sendForeverUnrolled 0 64 [(((0, []), 0, []), [])] = NestedSession.Verdict.exhausted ∧ NestedSession.protocolEquality NestedSession.sendForever 0 NestedSession.sendForeverUnrolled 0 3 (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
     }
   ],
   "commands": [
@@ -1479,7 +1859,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-623cb5fad/Audit.lean"
+        "/tmp/ns-check-86b00c2ec/Audit.lean"
       ],
       "exit": 0
     },
