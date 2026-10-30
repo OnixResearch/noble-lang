@@ -1,8 +1,8 @@
 {
   "schema": "noble-nested-session-proof/v1",
   "result": "passed",
-  "source_commit": "916e69950b5d4c41ce7f6e26c0fed47594ad357a",
-  "source_tree": "5987f6798bfebf955b901f9899debc8f3d6b8930",
+  "source_commit": "fea76dad2d0c5136d794655907d401fc7016bd3f",
+  "source_tree": "697cc92f156eb5ae4b744e06951d7a5587de72ec",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m6/NestedSession.lean": "77ec7bcd500c9a6490fdc9c6b65d25822fca98a69b952823a27f894d6032424b",
-        "proofs/m6/nested-session-inventory.json": "5fa549f18a1a335cca474e52fa26c41c3e02cdd86fde753a8558f7bf0591bb45"
+        "proofs/m6/NestedSession.lean": "624c871a31d483626bb15ad62eb7a3e49af92b7fdbe616e05b7d9be3f42ef666",
+        "proofs/m6/nested-session-inventory.json": "f95cbf9940eef500c0c87e9a6de860759fc368214906f34f3e9d6a5cf72bfdd3"
       }
     },
     "protocol_definitions": "proofs/m6/NestedSession.lean: exampleProtocol (legacy depth-only control), balancedProtocol (bounded return stack), choiceProtocol, offerProtocol (external choice)",
@@ -31,7 +31,7 @@
     "absent_bindings_reason": "This model proves grammar, duality and endpoint-resource theorems over a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open."
   },
   "claims": {
-    "model_theorems": 144,
+    "model_theorems": 157,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
@@ -41,11 +41,11 @@
     "type_equality": "strong equality of guest-visible traces and orderly ends over the stack-aware semantics, decided by a memoised pair exploration that spends one unit of a declared work bound per pair; an exhausted bound is refused, an equal verdict is proved to be trace equivalence, a differ verdict carries a proved witness trace, and duality is equality with the dual table; no bound is proved sufficient for every protocol"
   },
   "sources_sha256": {
-    "proofs/m6/NestedSession.lean": "77ec7bcd500c9a6490fdc9c6b65d25822fca98a69b952823a27f894d6032424b",
-    "proofs/m6/nested-session-inventory.json": "5fa549f18a1a335cca474e52fa26c41c3e02cdd86fde753a8558f7bf0591bb45",
+    "proofs/m6/NestedSession.lean": "624c871a31d483626bb15ad62eb7a3e49af92b7fdbe616e05b7d9be3f42ef666",
+    "proofs/m6/nested-session-inventory.json": "f95cbf9940eef500c0c87e9a6de860759fc368214906f34f3e9d6a5cf72bfdd3",
     "verification/nested-session/check.mjs": "1cab32d5204803a8dc80d27d7e25abfe98863d2034cbba0770afb3521ad8f912"
   },
-  "theorem_count": 144,
+  "theorem_count": 157,
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -1442,12 +1442,39 @@
       "status": "proved",
       "statement": "NestedSession.stackStep_eq_protoStep : ∀ (definitions : List NestedSession.Node) (endpoint : NestedSession.Endpoint) (stack : List Nat) (limit : Nat) (action : NestedSession.StackAction), endpoint.closed = false → NestedSession.stackStep definitions { endpoint := endpoint, returnStack := stack, stackLimit := limit } action = Option.map (fun config => { endpoint := { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := config.fst, generation := endpoint.generation, closed := endpoint.closed }, returnStack := config.snd, stackLimit := limit }) (NestedSession.protoStep definitions limit (endpoint.state, stack) action)",
       "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.lookup_isSome_iff",
+      "role": "WIT-SESSION-01 a label-set lookup succeeds exactly for a declared label",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.lookup_isSome_iff : ∀ (branches : List (Nat × Nat)) (label : Nat), (List.lookup label branches).isSome = true ↔ ∃ entry, entry ∈ branches ∧ entry.fst = label",
+      "axioms": [
         "propext"
       ]
     },
     {
+      "name": "NestedSession.lookup_mem",
+      "role": "WIT-SESSION-01 a label-set lookup returns one of the declared continuations",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.lookup_mem : ∀ (branches : List (Nat × Nat)) (label continuation : Nat), List.lookup label branches = some continuation → continuation ∈ List.map Prod.snd branches",
+      "axioms": []
+    },
+    {
       "name": "NestedSession.mem_enabled_iff",
-      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it",
+      "role": "WIT-SESSION-01 an action is listed as enabled exactly when the configuration step takes it, one per declared label at a label-set node",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1456,7 +1483,8 @@
       "status": "proved",
       "statement": "NestedSession.mem_enabled_iff : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config) (action : NestedSession.StackAction), action ∈ NestedSession.enabled definitions limit config ↔ (NestedSession.protoStep definitions limit config action).isSome = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Quot.sound"
       ]
     },
     {
@@ -1484,7 +1512,8 @@
       "status": "proved",
       "statement": "NestedSession.runStack_eq_runProto : ∀ (definitions : List NestedSession.Node) (limit : Nat) (trace : List NestedSession.StackAction) (endpoint : NestedSession.Endpoint) (stack : List Nat), endpoint.closed = false → NestedSession.runStack definitions { endpoint := endpoint, returnStack := stack, stackLimit := limit } trace = Option.map (fun config => { endpoint := { channel := endpoint.channel, responder := endpoint.responder, protocol := endpoint.protocol, state := config.fst, generation := endpoint.generation, closed := endpoint.closed }, returnStack := config.snd, stackLimit := limit }) (NestedSession.runProto definitions limit (endpoint.state, stack) trace)",
       "axioms": [
-        "propext"
+        "propext",
+        "Quot.sound"
       ]
     },
     {
@@ -1542,7 +1571,8 @@
       "status": "proved",
       "statement": "NestedSession.assumed_pairs_observe_alike : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)), (NestedSession.Assumed left leftLimit right rightLimit assumed fun x => x ∈ assumed) → ∀ (trace : List NestedSession.StackAction) (pair : NestedSession.Config × NestedSession.Config), pair ∈ assumed → NestedSession.observe left leftLimit pair.fst trace = NestedSession.observe right rightLimit pair.snd trace",
       "axioms": [
-        "propext"
+        "propext",
+        "Quot.sound"
       ]
     },
     {
@@ -1812,30 +1842,59 @@
       ]
     },
     {
-      "name": "NestedSession.enabled_length_le_two",
-      "role": "WIT-SESSION-01 a configuration lists at most two enabled actions",
+      "name": "NestedSession.two_le_width",
+      "role": "WIT-SESSION-01 a table's width is at least two",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.enabled_length_le_two : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config), (NestedSession.enabled definitions limit config).length ≤ 2",
+      "statement": "NestedSession.two_le_width : ∀ (definitions : List NestedSession.Node), 2 ≤ NestedSession.width definitions",
       "axioms": [
         "propext",
         "Quot.sound"
       ]
     },
     {
-      "name": "NestedSession.successorPairs_length_le_two",
-      "role": "WIT-SESSION-01 a pair adds at most two successor pairs",
+      "name": "NestedSession.nodeWidth_le_width",
+      "role": "WIT-SESSION-01 every node's width is at most its table's width",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.successorPairs_length_le_two : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (pair : NestedSession.Config × NestedSession.Config) (trace : List NestedSession.StackAction), (NestedSession.successorPairs left leftLimit right rightLimit pair trace).length ≤ 2",
+      "statement": "NestedSession.nodeWidth_le_width : ∀ (definitions : List NestedSession.Node) (node : NestedSession.Node), node ∈ definitions → NestedSession.nodeWidth node ≤ NestedSession.width definitions",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.enabled_length_le_width",
+      "role": "WIT-SESSION-01 a configuration lists at most its table's width of enabled actions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.enabled_length_le_width : ∀ (definitions : List NestedSession.Node) (limit : Nat) (config : NestedSession.Config), (NestedSession.enabled definitions limit config).length ≤ NestedSession.width definitions",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.successorPairs_length_le_width",
+      "role": "WIT-SESSION-01 a pair adds at most the left table's width of successor pairs",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.successorPairs_length_le_width : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (pair : NestedSession.Config × NestedSession.Config) (trace : List NestedSession.StackAction), (NestedSession.successorPairs left leftLimit right rightLimit pair trace).length ≤ NestedSession.width left",
       "axioms": [
         "propext",
         "Quot.sound"
@@ -1873,14 +1932,14 @@
     },
     {
       "name": "NestedSession.checkPairs_not_exhausted",
-      "role": "WIT-SESSION-01 with work at least the pending count plus twice the unassumed pairs of a closed set the exploration is never exhausted",
+      "role": "WIT-SESSION-01 with work at least the pending count plus the left table's width times the unassumed pairs of a closed set the exploration is never exhausted",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.checkPairs_not_exhausted : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (pairs : List (NestedSession.Config × NestedSession.Config)), NestedSession.ClosedPairs left leftLimit right rightLimit pairs → ∀ (work : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)) (pending : List NestedSession.Pending), (∀ (entry : NestedSession.Pending), entry ∈ pending → entry.fst ∈ pairs) → pending.length + 2 * NestedSession.unassumed pairs assumed ≤ work → NestedSession.checkPairs left leftLimit right rightLimit work assumed pending ≠ NestedSession.Verdict.exhausted",
+      "statement": "NestedSession.checkPairs_not_exhausted : ∀ (left : List NestedSession.Node) (leftLimit : Nat) (right : List NestedSession.Node) (rightLimit : Nat) (pairs : List (NestedSession.Config × NestedSession.Config)), NestedSession.ClosedPairs left leftLimit right rightLimit pairs → ∀ (work : Nat) (assumed : List (NestedSession.Config × NestedSession.Config)) (pending : List NestedSession.Pending), (∀ (entry : NestedSession.Pending), entry ∈ pending → entry.fst ∈ pairs) → pending.length + NestedSession.width left * NestedSession.unassumed pairs assumed ≤ work → NestedSession.checkPairs left leftLimit right rightLimit work assumed pending ≠ NestedSession.Verdict.exhausted",
       "axioms": [
         "propext",
         "Quot.sound"
@@ -1925,7 +1984,7 @@
         "Quot.sound"
       ],
       "status": "proved",
-      "statement": "NestedSession.mem_indices : ∀ (definitions : List NestedSession.Node) (node : NestedSession.Node), node ∈ definitions → ∀ (index : Nat), (index ∈ match node with | NestedSession.Node.finished => [] | NestedSession.Node.send message continuation => [continuation] | NestedSession.Node.recv message continuation => [continuation] | NestedSession.Node.choose branch continuation => [continuation] | NestedSession.Node.offer branch continuation => [continuation] | NestedSession.Node.nested name parameter => [name, parameter]) → index ∈ NestedSession.indices definitions",
+      "statement": "NestedSession.mem_indices : ∀ (definitions : List NestedSession.Node) (node : NestedSession.Node), node ∈ definitions → ∀ (index : Nat), (index ∈ match node with | NestedSession.Node.finished => [] | NestedSession.Node.send message continuation => [continuation] | NestedSession.Node.recv message continuation => [continuation] | NestedSession.Node.choose branch continuation => [continuation] | NestedSession.Node.offer branch continuation => [continuation] | NestedSession.Node.nested name parameter => [name, parameter] | NestedSession.Node.select branches => List.map Prod.snd branches | NestedSession.Node.branch branches => List.map Prod.snd branches) → index ∈ NestedSession.indices definitions",
       "axioms": [
         "propext",
         "Quot.sound"
@@ -2065,6 +2124,136 @@
         "propext",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.label_set_enables_every_label",
+      "role": "WIT-SESSION-01 fixture: a label-set node enables every declared label at one state",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.label_set_enables_every_label : NestedSession.enabled NestedSession.labelSetProtocol 0 (0, []) = [NestedSession.StackAction.choose 0, NestedSession.StackAction.choose 1]",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.label_set_takes_each_branch",
+      "role": "WIT-SESSION-01 fixture: each label reaches its own typed continuation and both end orderly",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.label_set_takes_each_branch : NestedSession.runProto NestedSession.labelSetProtocol 0 (0, []) [NestedSession.StackAction.choose 0, NestedSession.StackAction.send NestedSession.MessageType.i64, NestedSession.StackAction.finish] = some (3, []) ∧ NestedSession.runProto NestedSession.labelSetProtocol 0 (0, []) [NestedSession.StackAction.choose 1, NestedSession.StackAction.recv NestedSession.MessageType.bool, NestedSession.StackAction.finish] = some (3, [])",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.undeclared_label_is_refused",
+      "role": "WIT-SESSION-01 control: an undeclared label is refused, and so is receiving a branch at an internal choice",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.undeclared_label_is_refused : NestedSession.protoStep NestedSession.labelSetProtocol 0 (0, []) (NestedSession.StackAction.choose 2) = none ∧ NestedSession.protoStep NestedSession.labelSetProtocol 0 (0, []) (NestedSession.StackAction.receiveBranch 0) = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.selection_and_receipt_meet_at_the_continuation",
+      "role": "WIT-SESSION-01 fixture: the guest selects a label and the peer receives it on the dual table, reaching the same continuation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.selection_and_receipt_meet_at_the_continuation : NestedSession.step NestedSession.labelSetProtocol 1 { channel := 5, responder := false, protocol := 9, state := 0, generation := 4, closed := false } (NestedSession.Action.choose 1) = some { channel := 5, responder := false, protocol := 9, state := 2, generation := 4, closed := false } ∧ NestedSession.step (List.map NestedSession.dual NestedSession.labelSetProtocol) 1 { channel := 5, responder := true, protocol := 9, state := 0, generation := 4, closed := false } (NestedSession.Action.receiveBranch 1) = some { channel := 5, responder := true, protocol := 9, state := 2, generation := 4, closed := false }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NestedSession.label_order_is_not_observable",
+      "role": "WIT-SESSION-01 fixture: a reordered label set is equal under the work bound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.label_order_is_not_observable : NestedSession.protocolEquality NestedSession.labelSetProtocol 0 NestedSession.labelSetReordered 0 (NestedSession.workBound NestedSession.labelSetProtocol 0 0 NestedSession.labelSetReordered 0 0) (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.a_missing_label_is_distinguished",
+      "role": "WIT-SESSION-01 control: a one-branch choice differs from the label set, with the missing label as witness",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.a_missing_label_is_distinguished : NestedSession.protocolEquality NestedSession.labelSetProtocol 0 NestedSession.singleBranchProtocol 0 (NestedSession.workBound NestedSession.labelSetProtocol 0 0 NestedSession.singleBranchProtocol 0 0) (0, []) (0, []) = NestedSession.Verdict.differ [NestedSession.StackAction.choose 1]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.label_set_duality",
+      "role": "WIT-SESSION-01 fixture: the dual of a label set is the external choice over the same labels, and duality is accepted",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.label_set_duality : List.map NestedSession.dual NestedSession.labelSetProtocol = [NestedSession.Node.branch [(0, 1), (1, 2)], NestedSession.Node.recv NestedSession.MessageType.i64 3, NestedSession.Node.send NestedSession.MessageType.bool 3, NestedSession.Node.finished] ∧ NestedSession.protocolDuality NestedSession.labelSetProtocol 0 (List.map NestedSession.dual NestedSession.labelSetProtocol) 0 (NestedSession.workBound NestedSession.labelSetProtocol 0 0 (List.map NestedSession.dual (List.map NestedSession.dual NestedSession.labelSetProtocol)) 0 0) (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.a_wide_choice_needs_its_width",
+      "role": "WIT-SESSION-01 control: three labels enable three actions at one state, tables without label sets keep width two, and the wide table is decided",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.a_wide_choice_needs_its_width : (NestedSession.enabled NestedSession.threeLabels 0 (0, [])).length = 3 ∧ NestedSession.width NestedSession.threeLabels = 3 ∧ NestedSession.width NestedSession.labelSetProtocol = 2 ∧ NestedSession.width NestedSession.balancedProtocol = 2 ∧ NestedSession.protocolEquality NestedSession.threeLabels 0 NestedSession.threeLabels 0 (NestedSession.workBound NestedSession.threeLabels 0 0 NestedSession.threeLabels 0 0) (0, []) (0, []) = NestedSession.Verdict.equal",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.first_declared_label_wins",
+      "role": "WIT-SESSION-01 fixture: with a repeated label the first declared pair is taken",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "NestedSession.first_declared_label_wins : NestedSession.protoStep [NestedSession.Node.select [(0, 1), (0, 2)], NestedSession.Node.finished, NestedSession.Node.finished] 0 (0, []) (NestedSession.StackAction.choose 0) = some (1, [])",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
@@ -2114,7 +2303,7 @@
         "env",
         "lean",
         "--json",
-        "/tmp/ns-check-916e6995/Audit.lean"
+        "/tmp/ns-check-fea76dad2/Audit.lean"
       ],
       "exit": 0
     },

@@ -2080,7 +2080,7 @@
     },
     {
       "file": ".cairn/changes/nested-session-protocol/tasks.md",
-      "sha256": "7211a403417f19c69afd2dd806ff53baea94f3c9b79d474ce9af9e0c3febb13e"
+      "sha256": "e79c4bd831f0f7439e19df51601e82a0a194cb46ea41aa490af4dbcc7243d0e4"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
@@ -2880,7 +2880,7 @@
     },
     {
       "file": "verification/nested-session/README.md",
-      "sha256": "5513c97d02b263840b90c2ba3ecbccd27bed2b413f6cc00987b1edb48594ec1d"
+      "sha256": "23560f6c15fe715f43d4b5fc731dc78c136c242c420618e10b9f17df7e305856"
     },
     {
       "file": "verification/ngraph-bytes-issue-31/README.md",

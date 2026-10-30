@@ -70,6 +70,17 @@
   two branches are two different traces over the event vocabulary (`choiceEvents`, the choice-state
   stepper `stepChoose` and its declared/undeclared-branch controls), and external-choice receipt with
   its undeclared-branch and typed-continuation controls.
+  Update (2026-10-30): choice over a label set is now modelled. A `select` (internal) or `branch`
+  (external, its dual) node declares a list of `(label, continuation)` pairs at one state, and the first
+  pair naming a label is taken.
+  - Fixtures: every label is enabled at one state and reaches its own typed continuation
+    (`label_set_enables_every_label`, `label_set_takes_each_branch`); an undeclared label is refused
+    (`undeclared_label_is_refused`).
+  - Equality and duality decide label sets: `label_order_is_not_observable`,
+    `a_missing_label_is_distinguished`, `label_set_duality`.
+  - The work bound now scales with the table width, the largest label set and at least two
+    (`enabled_length_le_width`). The two-successor bound was false for a three-label state
+    (`a_wide_choice_needs_its_width`).
 - [x] [serial] Add one ordinary finite-handshake control beside the non-regular nested fixture and record whether the nested fixture executes or is only a model trace. r[WIT-SESSION-05]
   Complete at model level: `handshake_resolves_without_unfolding`, `handshake_trace_advances` and
   `nested_entry_refused_at_depth_zero` measure the legacy depth-only control beside the nested fixture

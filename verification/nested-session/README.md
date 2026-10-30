@@ -68,25 +68,37 @@ declared stack limit, so its accepted bounded subset is finite.
 | `offer_state_declares_only_its_branch_receipt`, `finished_state_declares_no_guest_action` | named states rather than unnamed refusals: at an external choice the guest's only action is receiving the declared branch (whether the peer selects is the peer's premise), and a finished protocol declares no guest action |
 | `environmentStep_of_ready`, `progress_under_explicit_premises` | the scoped progress statement **under explicit queue, peer, scheduler and host premises**: `stepIn` takes the guest step and its environment change together, and it succeeds at an open owned endpoint whose resolved node declares the action when the scheduler grants the step, the host admits it, and the action's queue premise (outbox room for `send`/`choose`) or peer premise (an accounted inbox payload; for `receiveBranch`, the peer's selection of that branch) holds. The premises are assumed for the step, never derived |
 | `progress_fixture_send_then_receive`, `unscheduled_guest_takes_no_step`, `host_refusal_takes_no_step`, `full_outbox_refuses_send`, `silent_peer_leaves_receive_pending`, `branch_receipt_needs_the_peer_selection` | the fixture send-then-receive progresses through one outbox admission and one dequeue, and each premise is load-bearing: without the scheduler grant, with a host refusal, with a full outbox, with an empty inbox or with another selected branch, the same step is refused |
-| `protoStep`, `stackStep_eq_protoStep`, `runStack_eq_runProto`, `mem_enabled_iff` | the configuration step (definition index and return stack) **is** the model's `stackStep` on an open endpoint, and so is the trace run; each configuration lists the at most two actions it takes |
+| `protoStep`, `stackStep_eq_protoStep`, `runStack_eq_runProto`, `mem_enabled_iff` | the configuration step (definition index and return stack) **is** the model's `stackStep` on an open endpoint, and so is the trace run; each configuration lists the actions it takes: one per declared label at a label-set node, and at most two elsewhere |
 | `protocolEquality_sound`, `protocolEquality_witness`, `exhaustion_is_refused`, `equal_protocols_run_alike` | **protocol type equality under a declared work bound**: a memoised pair exploration spends one unit per pair; `equal` is proved to be trace equivalence (the same admitted traces and orderly ends), `differ` carries a trace on which the two states are proved to disagree, and a bound that runs out is the refusal `exhausted`, never `equal`. `enter`, `skipNested` and `finish` are guest actions here, so the equality is strong rather than equi-recursive; no bound is proved sufficient for every protocol |
 | `protoStep_dual`, `orderlyEnd_dual`, `observe_dual`, `protocolDuality_sound` | **duality** is equality with the dual table: a `dual` verdict means each trace of one side is admitted exactly when its dual trace is admitted by the other, with the same orderly ends |
 | `renumbered_balanced_is_equal`, `stack_limit_separates_types`, `unfolding_is_equality_within_the_bound`, `order_separates_types`, `client_and_server_are_dual`, `exhausted_duality_is_refused` | fixtures: renumbering is equality; one fewer saved return is a different type, with the separating trace; a one-node cycle equals its two-node unrolling at three units and is refused as exhausted at two; order is part of the type; a client and server are dual and a mistyped server is not; a duality check that exhausts its work is refused |
 | `accepting_exhaustion_accepts_unequal_types`, `memo_is_load_bearing` | load-bearing mutants: reading exhaustion as acceptance accepts two protocols the check proves unequal, and without the memo of assumed pairs a cyclic protocol is never decided |
-| `checkPairs_not_exhausted`, `configs_closed`, `pairsOf_closed`, `protocolEquality_not_exhausted`, `protocolEquality_decides`, `protocolDuality_decides`, `workBound_decides_the_fixtures` and ten supporting lemmas | **a proved sufficient work bound**. The pending count plus twice the pairs of a closed set not yet assumed falls by at least one per unit of work, so a bound at least that large is never exhausted. Every configuration reachable from an empty return stack lies in an explicit list: the start state or an index the table names, with a return stack of at most the limit over the table's saved returns. That list is closed under every step, so `workBound`, one plus twice the number of reachable pairs, is computed from the two tables alone. Under it the check returns `equal` **exactly** when the two states show the same traces and orderly ends, and likewise for duality with the dual table. On the fixtures the bound is 13 for the cycle and its unrolling, 19 for client and server, and 301 for the balanced table at stack limits 2 and 1, and each decides. The bound grows with the number of stacks, exponentially in the limit; it is a sufficient bound, not a tight one |
+| `checkPairs_not_exhausted`, `configs_closed`, `pairsOf_closed`, `protocolEquality_not_exhausted`, `protocolEquality_decides`, `protocolDuality_decides`, `workBound_decides_the_fixtures` and twelve supporting lemmas | **a proved sufficient work bound**. The pending count plus the left table's `width` (its largest label set, and at least two) times the pairs of a closed set not yet assumed falls by at least one per unit of work, so a bound at least that large is never exhausted. Every configuration reachable from an empty return stack lies in an explicit list: the start state or an index the table names, with a return stack of at most the limit over the table's saved returns. That list is closed under every step, so `workBound`, one plus that width times the number of reachable pairs, is computed from the two tables alone. Under it the check returns `equal` **exactly** when the two states show the same traces and orderly ends, and likewise for duality with the dual table. On the fixtures the bound is 13 for the cycle and its unrolling, 19 for client and server, and 301 for the balanced table at stack limits 2 and 1, and each decides. The bound grows with the number of stacks, exponentially in the limit; it is a sufficient bound, not a tight one |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
+| `lookup_isSome_iff`, `lookup_mem`, `two_le_width`, `nodeWidth_le_width`, `enabled_length_le_width`, `successorPairs_length_le_width` | **choice over a label set**: a `select` node (internal) or `branch` node (external, its dual) declares a list of `(label, continuation)` pairs at one state, and the first pair naming a label is taken. A lookup succeeds exactly for a declared label and returns a declared continuation. Such a state can enable more than two actions, so the two-successor bound is replaced by the table's `width` throughout the work bound; tables without label sets keep width two and their bounds |
+| `label_set_enables_every_label`, `label_set_takes_each_branch`, `undeclared_label_is_refused`, `selection_and_receipt_meet_at_the_continuation`, `label_order_is_not_observable`, `a_missing_label_is_distinguished`, `label_set_duality`, `a_wide_choice_needs_its_width`, `first_declared_label_wins` | fixtures and controls: every label is enabled at one state and reaches its own typed continuation; an undeclared label and a branch receipt at an internal choice are refused; the guest's selection and the peer's receipt on the dual table meet at the same continuation; label order is not observable, a missing label is (witness `[choose 1]`), and duality is accepted; three labels enable three actions at a state of width three; a repeated label takes its first pair |
 
-`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **144** model
+`verification/nested-session/receipt.json` is the retained receipt of one clean-source run: **157** model
 theorems, every axiom inside the standard allow-list:
-- 23 theorems use no axiom, including `stackState_within_the_limit`, `dualAction_is_involutive` and
-  `StackAction.dual_dual`;
-- 74 use `propext` alone, including the bounded return-stack and external-choice trace/control theorems,
-  the step-duality theorems, the eight explicit-premise progress theorems and controls, and seven of
-  the type-equality theorems;
-- 45 use `propext` and `Quot.sound`, among them `full_mailbox_is_unchanged`,
-  `step_acts_only_inside_the_current_protocol`, the type-equality soundness and witness theorems,
-  `exhaustion_is_refused` and all seventeen work-bound theorems;
+- 24 theorems use no axiom, including `stackState_within_the_limit`, `dualAction_is_involutive`,
+  `StackAction.dual_dual` and `lookup_mem`;
+- 77 use `propext` alone. They include:
+  - the bounded return-stack and external-choice trace/control theorems;
+  - the step-duality theorems;
+  - the eight explicit-premise progress theorems and controls;
+  - three of the type-equality theorems and `lookup_isSome_iff`;
+  - `nodeWidth_le_width`;
+  - the label-set traces.
+- 54 use `propext` and `Quot.sound`. Among them:
+  - `full_mailbox_is_unchanged` and `step_acts_only_inside_the_current_protocol`;
+  - the configuration-step bridges, and the type-equality soundness and witness theorems;
+  - `exhaustion_is_refused`;
+  - 18 of the 19 work-bound theorems;
+  - the label-set equality and duality fixtures.
+
+  The label-set cases moved four theorems here from `propext` alone: `stackStep_eq_protoStep`,
+  `mem_enabled_iff`, `runStack_eq_runProto` and `assumed_pairs_observe_alike`.
 - 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and
   `steppers_preserve_the_endpoint_identity`.
 
@@ -112,10 +124,9 @@ stated for the guest's own step under three named premises, and the balanced tab
 `sendⁿ·recvⁿ` trace language needs a return stack while this model admits it only up to the declared
 limit. The work bound is proved sufficient for every pair of tables (`protocolEquality_decides`), so a
 declared bound below it can still be refused as exhaustion but a bound at or above it decides. What stays
-open is the correspondence receipt's lowering/runtime/helper revisions, and one model item outside
-this unit: a choice node carrying a label set. A node
-declares one branch, so a two-branch choice is two declared nodes (the external-choice action and
-both positive branch traces are now modelled).
+open is the correspondence receipt's lowering/runtime/helper revisions. Choice over a label set is
+modelled (`select`/`branch`), with repeated labels resolved to the first declared pair rather than
+refused.
 
 The `claims` block names the progress, cancellation, nested-recursion and type-equality scope. The
 fixtures are **model traces only**: nothing here executes emitted Wasm or a native transport.
