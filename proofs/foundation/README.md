@@ -177,6 +177,7 @@ Status words:
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Implementation correspondence **open** |
 | Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
+| Rounding error of whole operation sequences (issue #44) | `exactValue_signed`, `roundScaled_relative_error`, `add_relative_error`, `mul_relative_error`, `step_bound`, `fold_error`, `cancellation_needs_the_term_scale` | exact `Binary32Sequence` model only; each rounding's carried exponent in the normal range is a premise, and no Rust/host correspondence is claimed | model **proved**: one model addition or multiplication is within `2^-24` of its exact result relatively, and the ordered affine fold of `n` terms within `((1 + 2^-24)^(2n) - 1)` times the bias and term magnitudes. Implementation correspondence **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
@@ -683,6 +684,32 @@ The clean-source receipt for the subnormal unit is
 (828 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+`NobleFoundation/Binary32Sequence.lean` carries the rounding rule from one `roundPositive` call to
+the model's arithmetic and then to whole operation sequences (issue #44).
+
+- **Signs.** Setting the sign bit of a magnitude below `2^31` negates its exact value
+  (`exactValue_signed`), and a normal-range `roundPositive` stays below `2^31`
+  (`roundPositive_lt`). So rounding a signed scaled integer `m · 2^s` with the sign of `m` is within
+  `u · |m · 2^s|` of it, with `u = 2^-24` (`roundScaled_relative_error`).
+- **One operation.** On finite operands, `add` rounds the aligned exact sum once or returns a signed
+  zero (`add_eq`, `exact_sum`), and `mul` returns a signed zero for a zero operand or rounds the
+  exact product with the XOR sign (`mul_scaled_eq`, `exact_product`). Hence `add_relative_error` and
+  `mul_relative_error`: one model addition or multiplication is within `u` of its exact result,
+  relatively, whenever the exact result is zero or its carried exponent is in the normal range.
+- **Whole sequences.** `fold_error` bounds the ordered affine fold `vᵢ = rn(vᵢ₋₁ + rn(cᵢ × xᵢ))` of
+  `n` terms: it is within `((1 + u)^(2n) - 1) · (|bias| + Σ|cᵢ · xᵢ|)` of `bias + Σ cᵢ · xᵢ`, given
+  those per-operation premises at every step on the actual intermediate accumulator (`FoldOk`). The
+  induction step is `step_bound`, a rational inequality over the accumulated error.
+- **Cancellation.** On the documented fold `1 + 1·2^24 + (-1)·2^24`, which computes `+0`, every
+  premise holds (`cancellation_premises`), the error is `1`, and the bound covers it. A bound
+  relative to the exact result `1` alone would be false (`cancellation_needs_the_term_scale`), so
+  the term magnitudes are needed.
+
+Overflow and subnormal intermediate results are outside the premises, and the bound is the standard
+worst-case growth, not tight.
+
+The parent attaches the clean foundation receipt at integration.
+
 ### The ordered `affine` fold, and the layer classification
 
 `fold` in the same model is the documented `sem.rs` recursion
@@ -778,10 +805,11 @@ Open, and deliberately not closed by this model:
   helpers and optimizer behavior;
 - the fold is modelled and proved as a recursion over the reference operations, but no
   Lean model maps the graph operations (`Op::F32Add`/`Sub`/`Mul`/`Affine`) to them;
-- a rounding error rule beyond `roundPositive` itself: `Binary32Error.lean`,
-  `Binary32Scale.lean` and `Binary32Subnormal.lean` bound every finite result of
-  that one rounding step, including gradual underflow, but no theorem bounds the
-  error of a whole graph operation sequence;
+- whole-sequence error outside the normal range: `Binary32Sequence.lean` bounds
+  the ordered affine fold when every rounding's carried exponent is in the normal
+  range, but a sequence with an overflowing or subnormal intermediate result has
+  no sequence bound, and graph-level sequences beyond the affine fold are not
+  composed;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

@@ -4978,6 +4978,210 @@
       "claim": "a subnormal result with relative error one third shows the subnormal rule must be absolute"
     },
     {
+      "name": "NobleFoundation.Binary32.Sequence.exactValue_eq_scaledValue",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the exact value is the signed scaled integer times its power of two"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.toNat_ofNat_of_lt",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a 32-bit encoding of a value below 2^32 keeps the value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.exponent_of_toNat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the exponent field is bits 23 to 30"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.fraction_of_toNat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the fraction field is the low 23 bits"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.isNegative_of_toNat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the sign is bit 31"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.exactValue_signed",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "setting the sign bit of a magnitude below 2^31 negates its exact value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.pow2Int_pos",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every model power of two is positive"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.scaledArgs_pos",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a nonzero scaled integer hands roundPositive a positive ratio"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.scaledArgs_ratio",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the ratio handed to roundPositive is the magnitude of m times 2^s"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.carried_significand_lt",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the carried significand stays below 2^24, also on the power boundary"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.roundPositive_normal_nat",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "in the normal range roundPositive is the normal encoding of the carried pair"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.roundPositive_lt",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a normal-range rounding leaves the sign bit clear"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.roundScaled_relative_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "rounding a signed scaled integer with its own sign is within 2^-24 of it relatively in the normal range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.exactValue_zeroOf",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every signed zero has exact value zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.add_eq",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on finite operands add rounds the aligned exact sum once or returns a signed zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.rescale",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "moving m times 2^k to a lower scale multiplies the integer by 2^(k - s)"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.exact_sum",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the aligned integer sum is the exact sum of the two encodings"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.add_relative_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one model addition of finite encodings is within 2^-24 of the exact sum relatively when the sum is zero or normal-range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.exact_product",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the scaled integer product is the exact product of the two encodings"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.zero_class_magnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a signed zero has magnitude zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.zero_class_value",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a signed zero has exact value zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.nonzero_class_magnitude",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a subnormal or normal encoding has a positive magnitude"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.sign_rule",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a product of two signed positive magnitudes is nonzero and negative exactly when one sign is set"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.product_sign",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the model product of nonzero encodings is nonzero with the XOR sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.mul_scaled_eq",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on two nonzero finite operands mul rounds the exact product once"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.mul_relative_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one model multiplication of finite encodings is within 2^-24 of the exact product relatively when the product is zero or normal-range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.unit_nonneg",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the unit roundoff is nonnegative"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.growth_nonneg",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the error growth factor (1 + u)^(2k) - 1 is nonnegative"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.step_bound",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "one fold step keeps the accumulated error within ((1 + u)^2 (1 + r) - 1) times the grown absolute scale"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.fold_error_from",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the fold from an accumulator within ((1 + u)^(2k) - 1) A of its exact value stays within the grown bound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.fold_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the ordered affine fold of n terms is within ((1 + 2^-24)^(2n) - 1) times the bias and term magnitudes of its exact value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.cancellation_premises",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "every premise of the fold bound holds on the documented cancellation fold"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.cancellation_values",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the documented cancellation fold computes +0 for the exact value 1 with absolute scale 1 + 2^25"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sequence.cancellation_needs_the_term_scale",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "the cancellation error 1 is within the fold bound but a bound relative to the exact result alone would be false"
+    },
+    {
       "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
       "phase": 3,
       "role": "specification-quality",
