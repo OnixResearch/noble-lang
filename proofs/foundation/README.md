@@ -177,6 +177,9 @@ Status words:
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
+| Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
+| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification…
+| Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
@@ -646,7 +649,7 @@ The remaining `sem.rs` layers are classified rather than left ambiguous:
 | ordered `affine` fold | **modelled and proved** (`fold`, `fold_append`, `fold_order_is_load_bearing`) |
 | activations `relu`, `reglu`, `step` | **not modelled**: they are activation corners and surrogate policies, which the Numeric-Graph-v1 selection excludes; no theorem here says anything about them |
 | guard/index rules (`is_bit`, `select`, `index_position`) | **not modelled**: index refusal is a `crates/noble-ngraph` admission rule, not a binary32 operation, and no Lean model exists |
-| decimal import / codec (`exact_f32_decimal`) | **not modelled here**: #40 owns exact and RNE conversions and decimal import |
+| decimal import / codec (`exact_f32_decimal`) | `DecimalImport.rne`, `DecimalImport.exactImport`, `DecimalImport.exactImport_some_iff`, `DecimalImport.exactImport_agrees_with_rne`, `DecimalImport.exactImport_exactValue`, and the retained decimal fixtures | `crates/noble-ngraph/src/sem.rs` exact-import implementation, syntax/resource bounds, overflow response and executable correspondence | model **proved**. Implementation correspondence and owner policy decisions remain **open** |
 | snapshot / parameter layout (`snapshot.rs`) | **not modelled**: layout and retention are #33/#43 subjects and have no binary32 obligation |
 | training admission (`grad.rs`) | **not modelled here**: #45 owns the derivative and training admission |
 | software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim. `Binary32Error` additionally proves quotient rounding and conditional normal-range error bounds |
@@ -774,6 +777,44 @@ Open, and deliberately not closed:
 - no library division operation is selected by this reference, and no
   compiler or generated-artifact theorem follows from these model laws;
 - the signed order definition is a mathematical `BitVec.toInt` relation only.
+## Exact and RNE decimal import (issue #40, phase 1)
+
+`NobleFoundation/DecimalImport.lean` is the name-neutral model for an explicit
+decimal import boundary. A `Decimal` stores a sign bit, a
+most-significant-digit-first list of decimal digits, and an integer power of
+ten. `decimalRatio` interprets that spelling as a natural numerator and
+denominator, while `exactDecimalValue` gives the corresponding signed rational
+for the optional value bridge. `rne` applies `roundPositive` exactly once to
+the natural ratio and ORs the explicit sign onto the resulting binary32
+magnitude; it does not introduce an intermediate binary format. Zero-valued
+spellings retain either zero sign.
+
+`exactImport` is intentionally narrower than `rne`: it returns the RNE bits
+only when they are finite and their scaled magnitude cross-multiplies exactly
+with the decimal ratio. `outcomeClass` reports an infinity-magnitude result
+as `overflow` but does not choose an infinity-versus-error response. The
+universal model claims are `decimalRatio_den_pos`, `isNegative_eq_msb`,
+`rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`,
+`exactImport_some_iff`, `exactImport_agrees_with_rne`,
+and `exactImport_exactValue` (with its explicit sign premise).
+
+The kernel-checked fixtures retain the exact/RNE split for `0.1` and `0.5`,
+negative zero, `10^39` overflow classification, `10^-45` least-subnormal
+rounding, an exact halfway case, and a decimal just above that tie. The last
+fixture states only the single RNE result (`0x3F800001`); it makes no claim
+about a binary64 route. A foundation receipt for the integrated commit is
+written by the integration owner after this local unit is rebased.
+
+Open, and deliberately not closed by this model:
+
+- syntax validation, significant-digit and exponent/resource bounds, and the
+  exact-import implementation correspondence in `sem.rs`;
+- whether overflow returns infinity or a checked error, and the versioned
+  public mode/signature/error table;
+- finite-decimal provenance, serialization, graph identity, and executable
+  import/export replay;
+- I64/F32 adapters, which belong to the separate #39 model and are not defined
+  here.
 
 ## Ownership accounting oracle (issue #59)
 

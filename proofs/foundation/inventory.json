@@ -4160,6 +4160,96 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "prefix-based dynamic renumbering disagrees on a non-prefix static fixture"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_den_pos",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "every decimal spelling has a positive natural denominator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.isNegative_eq_msb",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the binary32 sign predicate equals the encoding's most-significant bit"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_negative_sign",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "RNE preserves the sign spelling of every negative decimal"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.zero_spelling",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "zero-valued decimal spellings retain their explicit sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.outcomeClass_overflow_iff",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the outcome classifier marks exactly infinity-magnitude RNE results as overflow"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactImport_some_iff",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "exact import accepts exactly finite RNE output passing the natural cross-product check"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactImport_agrees_with_rne",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "an accepted exact import returns the spelling's single RNE result"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactImport_exactValue",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "accepted finite exact imports have the decimal's exact rational value when the explicit sign premise holds"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.negative_zero_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the negative zero spelling produces binary32 negative zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_point_one_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "decimal 0.1 has the selected RNE bits and is rejected by exact import"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_point_five_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "decimal 0.5 is accepted with its exact binary32 encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_one_e39_overflow_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "decimal 10^39 is classified as an overflow-magnitude RNE result"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_least_subnormal_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "decimal 10^-45 rounds to the least positive binary32 subnormal"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_tie_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "an exact halfway decimal rounds to the even lower encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimal_just_above_tie_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a decimal just above the halfway case rounds to the next encoding in one step"
     }
   ]
 }
