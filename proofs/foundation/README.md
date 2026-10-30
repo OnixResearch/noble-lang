@@ -2039,9 +2039,10 @@ computations only; no universal irredundancy or minimization theorem is stated.
 The module is deliberately a Boolean core, not source integration. A checked
 Boolean DAG representation, lowering to `Program`, branching extensions, care
 sets and adoption criteria are open. No theorem here claims correspondence to
-the Rust frontend, compiler, runtime or any source-level optimizer. A receipt
-for the integrated foundation tree is produced by the parent closeout rather
-than this model commit.
+the Rust frontend, compiler, runtime or any source-level optimizer. The clean-source receipt for the ISOP core is
+[`verification/foundation/receipts/42350bf01/`](../../verification/foundation/receipts/42350bf01/foundation-check.json)
+(674 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 

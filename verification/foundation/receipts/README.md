@@ -288,3 +288,10 @@ representation and overflow policy remain owner decisions.
 contract, `validate_sound` (reciprocal unique-incidence wiring, compatible ports, exact ordered
 boundary) and accepted/rejected wiring fixtures (11 new theorems; that run reported 657
 in total). Reduction, readback and translation remain open.
+
+## 42350bf01 — bounded ISOP Boolean core (issue #35)
+
+`42350bf01/` records the clean run that added `NobleFoundation.Isop`: the exact Minato–Morreale
+cover, `isop_bounds`, the independent `equivOn` checker with its soundness theorem, fixtures and
+wrong-cofactor/complement controls (17 new theorems; that run reported 674 in total).
+Irredundancy is fixture-only; integration remains open.
