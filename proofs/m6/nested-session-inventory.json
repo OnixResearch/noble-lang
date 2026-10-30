@@ -1144,6 +1144,159 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "NestedSession.enabled_length_le_two",
+      "role": "WIT-SESSION-01 a configuration lists at most two enabled actions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.successorPairs_length_le_two",
+      "role": "WIT-SESSION-01 a pair adds at most two successor pairs",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.successorPairs_closed",
+      "role": "WIT-SESSION-01 the successor pairs of a member of a closed set are members",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.unassumed_assume",
+      "role": "WIT-SESSION-01 assuming a member not yet assumed lowers the unassumed count by at least one",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.checkPairs_not_exhausted",
+      "role": "WIT-SESSION-01 with work at least the pending count plus twice the unassumed pairs of a closed set the exploration is never exhausted",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_stacksUpTo",
+      "role": "WIT-SESSION-01 the stack list holds exactly the stacks of at most the bound over the alphabet",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_configs",
+      "role": "WIT-SESSION-01 the configuration list holds exactly the start or named states with bounded stacks of saved returns",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_indices",
+      "role": "WIT-SESSION-01 every index a table node names is listed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_parameters",
+      "role": "WIT-SESSION-01 every saved return of a nested node is listed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.parameters_subset_indices",
+      "role": "WIT-SESSION-01 saved returns are named indices",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.configs_closed",
+      "role": "WIT-SESSION-01 every step from a listed configuration reaches a listed configuration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.mem_pairsOf",
+      "role": "WIT-SESSION-01 the pair list holds exactly the pairs of listed configurations",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pairsOf_closed",
+      "role": "WIT-SESSION-01 the pair list is closed under joint steps",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_not_exhausted",
+      "role": "WIT-SESSION-01 a work bound computed from the two tables alone is sufficient: at or above it the check is never exhausted",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolEquality_decides",
+      "role": "WIT-SESSION-01 under the computed bound the check returns equal exactly when the two states admit the same traces and orderly ends",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.protocolDuality_decides",
+      "role": "WIT-SESSION-01 under the computed bound of the dual table the check returns equal exactly when every trace matches its dual trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.workBound_decides_the_fixtures",
+      "role": "WIT-SESSION-01 fixtures: the computed bounds 13, 19 and 301 decide the cycle unrolling, client and server duality and the balanced stack limits",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

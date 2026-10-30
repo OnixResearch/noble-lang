@@ -73,6 +73,7 @@ declared stack limit, so its accepted bounded subset is finite.
 | `protoStep_dual`, `orderlyEnd_dual`, `observe_dual`, `protocolDuality_sound` | **duality** is equality with the dual table: a `dual` verdict means each trace of one side is admitted exactly when its dual trace is admitted by the other, with the same orderly ends |
 | `renumbered_balanced_is_equal`, `stack_limit_separates_types`, `unfolding_is_equality_within_the_bound`, `order_separates_types`, `client_and_server_are_dual`, `exhausted_duality_is_refused` | fixtures: renumbering is equality; one fewer saved return is a different type, with the separating trace; a one-node cycle equals its two-node unrolling at three units and is refused as exhausted at two; order is part of the type; a client and server are dual and a mistyped server is not; a duality check that exhausts its work is refused |
 | `accepting_exhaustion_accepts_unequal_types`, `memo_is_load_bearing` | load-bearing mutants: reading exhaustion as acceptance accepts two protocols the check proves unequal, and without the memo of assumed pairs a cyclic protocol is never decided |
+| `checkPairs_not_exhausted`, `configs_closed`, `pairsOf_closed`, `protocolEquality_not_exhausted`, `protocolEquality_decides`, `protocolDuality_decides`, `workBound_decides_the_fixtures` and ten supporting lemmas | **a proved sufficient work bound**. The pending count plus twice the pairs of a closed set not yet assumed falls by at least one per unit of work, so a bound at least that large is never exhausted. Every configuration reachable from an empty return stack lies in an explicit list: the start state or an index the table names, with a return stack of at most the limit over the table's saved returns. That list is closed under every step, so `workBound`, one plus twice the number of reachable pairs, is computed from the two tables alone. Under it the check returns `equal` **exactly** when the two states show the same traces and orderly ends, and likewise for duality with the dual table. On the fixtures the bound is 13 for the cycle and its unrolling, 19 for client and server, and 301 for the balanced table at stack limits 2 and 1, and each decides. The bound grows with the number of stacks, exponentially in the limit; it is a sufficient bound, not a tight one |
 | `handshake_resolves_without_unfolding`, `handshake_trace_advances`, `nested_entry_refused_at_depth_zero` | the ordinary finite-handshake **control** beside the legacy depth-only nested operand: the handshake resolves at unfolding depth zero and its two actions advance, while the legacy nested entry is refused there and resolves only under unfolding; the balanced table's unbounded `sendⁿ·recvⁿ` language needs the stack, and this model admits it only up to the declared limit |
 | `different_branches_are_different_traces`, `branch_one_reaches_its_own_continuation`, `branch_zero_refuses_a_bool_send`, `branch_one_accepts_the_bool_send` | an internal choice carries its branch, so two branches are two traces; a node declares one branch and an undeclared branch is refused |
 
@@ -109,9 +110,10 @@ covers every guest action with the finite-handshake control beside the nested fi
 inventory bound is stated over every operation including those that carry no transition, progress is
 stated for the guest's own step under three named premises, and the balanced table's unbounded
 `sendⁿ·recvⁿ` trace language needs a return stack while this model admits it only up to the declared
-limit. What stays open is the correspondence receipt's lowering/runtime/helper revisions, a proved work
-bound that suffices for every protocol (a declared bound that is too small is refused as
-exhaustion), and one model item outside this unit: a choice node carrying a label set. A node
+limit. The work bound is proved sufficient for every pair of tables (`protocolEquality_decides`), so a
+declared bound below it can still be refused as exhaustion but a bound at or above it decides. What stays
+open is the correspondence receipt's lowering/runtime/helper revisions, and one model item outside
+this unit: a choice node carrying a label set. A node
 declares one branch, so a two-branch choice is two declared nodes (the external-choice action and
 both positive branch traces are now modelled).
 

@@ -11,6 +11,12 @@
 ## Phase 2: Model and fixtures
 
 - [x] [serial] Implement the grammar, the terminating equality/unfolding/duality algorithm and the endpoint resource in Lean for the selected closed model. r[WIT-SESSION-01] r[WIT-SESSION-02]
+  Work bound 2026-10-30: a bound computed from the two tables alone, `workBound` (one plus twice
+  the number of reachable configuration pairs), is proved sufficient for every pair of tables
+  (`protocolEquality_not_exhausted`). Under it the check returns `equal` exactly when the two states
+  show the same traces and orderly ends (`protocolEquality_decides`), and likewise for duality
+  (`protocolDuality_decides`). The bound is sufficient, not tight: it grows exponentially in the
+  return-stack limit. A declared bound below it can still be refused as exhaustion.
   Ticked 2026-10-30: `protocolEquality` decides strong equality of guest-visible traces and orderly
   ends over the stack-aware semantics (`stackStep_eq_protoStep`) by a memoised pair exploration that
   spends one unit of a declared work bound per pair, so it terminates for every bound. An exhausted

@@ -1992,6 +1992,367 @@ theorem protocolDuality_sound (left : List Node) (leftLimit : Nat) (right : List
     funext StackAction.dual_dual, List.map_id] at back
   exact same.trans back
 
+/-! ### A sufficient work bound
+
+`checkPairs` spends one unit per pending pair. A pair not yet assumed adds at most two successors and
+is then assumed for good; an assumed pair is dropped. So the pending count plus twice the pairs of a
+successor-closed set not yet assumed falls by at least one per unit, and a bound at least that large
+never runs out (`checkPairs_not_exhausted`). Every configuration reachable from an empty return stack
+lies in an explicit finite set (`configs`), which gives a work bound computed from the two tables
+alone (`workBound`). Under it the check decides equality and duality exactly. -/
+
+/-- A configuration lists at most two enabled actions. -/
+theorem enabled_length_le_two (definitions : List Node) (limit : Nat) (config : Config) :
+    (enabled definitions limit config).length ≤ 2 := by
+  unfold enabled
+  split <;> (try split) <;> simp
+
+/-- A pair adds at most two successor pairs. -/
+theorem successorPairs_length_le_two (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (pair : Config × Config) (trace : List StackAction) :
+    (successorPairs left leftLimit right rightLimit pair trace).length ≤ 2 :=
+  Nat.le_trans (List.length_filterMap_le _ _) (enabled_length_le_two left leftLimit pair.1)
+
+/-- A set of configuration pairs is closed when both sides stepping on the same action from a member
+reach a member. -/
+def ClosedPairs (left : List Node) (leftLimit : Nat) (right : List Node) (rightLimit : Nat)
+    (pairs : List (Config × Config)) : Prop :=
+  ∀ pair ∈ pairs, ∀ action next other,
+    protoStep left leftLimit pair.1 action = some next →
+    protoStep right rightLimit pair.2 action = some other → (next, other) ∈ pairs
+
+theorem successorPairs_closed (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (pairs : List (Config × Config))
+    (closed : ClosedPairs left leftLimit right rightLimit pairs) (pair : Config × Config)
+    (inPairs : pair ∈ pairs) (trace : List StackAction) :
+    ∀ entry ∈ successorPairs left leftLimit right rightLimit pair trace, entry.1 ∈ pairs := by
+  intro entry member
+  unfold successorPairs at member
+  obtain ⟨action, _, produced⟩ := List.mem_filterMap.mp member
+  cases stepLeft : protoStep left leftLimit pair.1 action with
+  | none => simp [stepLeft] at produced
+  | some next =>
+      cases stepRight : protoStep right rightLimit pair.2 action with
+      | none => simp [stepLeft, stepRight] at produced
+      | some other =>
+          simp only [stepLeft, stepRight, Option.some.injEq] at produced
+          subst produced
+          exact closed pair inPairs action next other stepLeft stepRight
+
+/-- The members of `pairs` not yet assumed, counted with multiplicity. -/
+def unassumed (pairs assumed : List (Config × Config)) : Nat :=
+  (pairs.filter fun pair => !decide (pair ∈ assumed)).length
+
+/-- Assuming a member of `pairs` that was not yet assumed lowers the count by at least one. -/
+theorem unassumed_assume (pairs assumed : List (Config × Config)) (pair : Config × Config)
+    (inPairs : pair ∈ pairs) (fresh : pair ∉ assumed) :
+    unassumed pairs (pair :: assumed) + 1 ≤ unassumed pairs assumed := by
+  unfold unassumed
+  have split : (pairs.filter fun candidate => !decide (candidate ∈ pair :: assumed)) =
+      (pairs.filter fun candidate => !decide (candidate ∈ assumed)).filter
+        fun candidate => !decide (candidate = pair) := by
+    rw [List.filter_filter]
+    apply List.filter_congr
+    intro candidate _
+    by_cases same : candidate = pair
+    · subst same
+      simp
+    · by_cases old : candidate ∈ assumed <;> simp [same, old]
+  rw [split]
+  have smaller : ((pairs.filter fun candidate => !decide (candidate ∈ assumed)).filter
+      fun candidate => !decide (candidate = pair)).length <
+      (pairs.filter fun candidate => !decide (candidate ∈ assumed)).length := by
+    rw [List.length_filter_lt_length_iff_exists]
+    exact ⟨pair, List.mem_filter.mpr ⟨inPairs, by simpa using fresh⟩, by simp⟩
+  omega
+
+/-- **Enough work never runs out**: when every pending pair lies in a closed set and the work is at
+least the pending count plus twice the set's pairs not yet assumed, the exploration ends in `equal`
+or `differ`. -/
+theorem checkPairs_not_exhausted (left : List Node) (leftLimit : Nat) (right : List Node)
+    (rightLimit : Nat) (pairs : List (Config × Config))
+    (closed : ClosedPairs left leftLimit right rightLimit pairs) :
+    ∀ (work : Nat) (assumed : List (Config × Config)) (pending : List Pending),
+      (∀ entry ∈ pending, entry.1 ∈ pairs) →
+      pending.length + 2 * unassumed pairs assumed ≤ work →
+      checkPairs left leftLimit right rightLimit work assumed pending ≠ .exhausted := by
+  intro work
+  induction work with
+  | zero =>
+      intro assumed pending _ enough
+      cases pending with
+      | nil => simp [checkPairs]
+      | cons entry rest => simp at enough
+  | succ work ih =>
+      intro assumed pending inPairs enough
+      cases pending with
+      | nil => simp [checkPairs]
+      | cons entry rest =>
+          obtain ⟨pair, trace⟩ := entry
+          have pairIn : pair ∈ pairs := inPairs _ List.mem_cons_self
+          have restIn : ∀ entry ∈ rest, entry.1 ∈ pairs :=
+            fun entry member => inPairs entry (List.mem_cons_of_mem _ member)
+          simp only [List.length_cons] at enough
+          simp only [checkPairs]
+          split
+          · exact ih assumed rest restIn (by omega)
+          · rename_i fresh
+            split
+            · simp
+            · split
+              · simp
+              · apply ih (pair :: assumed)
+                · intro entry member
+                  rcases List.mem_append.mp member with fromPair | fromRest
+                  · exact successorPairs_closed left leftLimit right rightLimit pairs closed pair
+                      pairIn trace entry fromPair
+                  · exact restIn entry fromRest
+                · have successors :=
+                    successorPairs_length_le_two left leftLimit right rightLimit pair trace
+                  have assumedOne := unassumed_assume pairs assumed pair pairIn fresh
+                  simp only [List.length_append]
+                  omega
+
+/-- Every definition index a table names: continuations, nested names and saved returns. -/
+def indices (definitions : List Node) : List Nat :=
+  definitions.flatMap fun node =>
+    match node with
+    | .finished => []
+    | .send _ continuation => [continuation]
+    | .recv _ continuation => [continuation]
+    | .choose _ continuation => [continuation]
+    | .offer _ continuation => [continuation]
+    | .nested name parameter => [name, parameter]
+
+/-- Every return continuation a nested call can save. -/
+def parameters (definitions : List Node) : List Nat :=
+  definitions.flatMap fun node =>
+    match node with
+    | .nested _ parameter => [parameter]
+    | _ => []
+
+/-- Every return stack of at most `bound` entries drawn from `alphabet`. -/
+def stacksUpTo (alphabet : List Nat) : Nat → List (List Nat)
+  | 0 => [[]]
+  | bound + 1 => [] :: alphabet.flatMap fun entry => (stacksUpTo alphabet bound).map (entry :: ·)
+
+theorem mem_stacksUpTo (alphabet : List Nat) :
+    ∀ (bound : Nat) (stack : List Nat), stack ∈ stacksUpTo alphabet bound ↔
+      stack.length ≤ bound ∧ ∀ entry ∈ stack, entry ∈ alphabet := by
+  intro bound
+  induction bound with
+  | zero => intro stack; cases stack <;> simp [stacksUpTo]
+  | succ bound ih =>
+      intro stack
+      cases stack with
+      | nil => simp [stacksUpTo]
+      | cons head tail =>
+          simp only [stacksUpTo, List.mem_cons, reduceCtorEq, false_or, List.mem_flatMap,
+            List.mem_map, List.cons.injEq, List.length_cons, forall_eq_or_imp]
+          constructor
+          · rintro ⟨entry, inAlphabet, rest, inStacks, same, rfl⟩
+            subst same
+            have := (ih rest).mp inStacks
+            exact ⟨by omega, inAlphabet, this.2⟩
+          · rintro ⟨short, inAlphabet, rest⟩
+            exact ⟨head, inAlphabet, tail, (ih tail).mpr ⟨by omega, rest⟩, rfl, rfl⟩
+
+/-- Every configuration reachable from `start` with an empty return stack lies in this list. -/
+def configs (definitions : List Node) (limit start : Nat) : List Config :=
+  (start :: indices definitions).flatMap fun state =>
+    (stacksUpTo (parameters definitions) limit).map fun stack => (state, stack)
+
+theorem mem_configs (definitions : List Node) (limit start : Nat) (config : Config) :
+    config ∈ configs definitions limit start ↔
+      config.1 ∈ start :: indices definitions ∧ config.2.length ≤ limit ∧
+        ∀ entry ∈ config.2, entry ∈ parameters definitions := by
+  obtain ⟨state, stack⟩ := config
+  simp only [configs, List.mem_flatMap, List.mem_map, Prod.mk.injEq]
+  constructor
+  · rintro ⟨chosen, inStates, saved, inStacks, rfl, rfl⟩
+    exact ⟨inStates, (mem_stacksUpTo _ limit saved).mp inStacks⟩
+  · rintro ⟨inStates, bounded⟩
+    exact ⟨state, inStates, stack, (mem_stacksUpTo _ limit stack).mpr bounded, rfl, rfl⟩
+
+theorem mem_indices (definitions : List Node) (node : Node) (present : node ∈ definitions)
+    (index : Nat) (named : index ∈ (match node with
+      | .finished => []
+      | .send _ continuation => [continuation]
+      | .recv _ continuation => [continuation]
+      | .choose _ continuation => [continuation]
+      | .offer _ continuation => [continuation]
+      | .nested name parameter => [name, parameter])) :
+    index ∈ indices definitions :=
+  List.mem_flatMap.mpr ⟨node, present, named⟩
+
+theorem mem_parameters (definitions : List Node) (name parameter : Nat)
+    (present : Node.nested name parameter ∈ definitions) : parameter ∈ parameters definitions :=
+  List.mem_flatMap.mpr ⟨.nested name parameter, present, by simp⟩
+
+theorem parameters_subset_indices (definitions : List Node) (index : Nat)
+    (saved : index ∈ parameters definitions) : index ∈ indices definitions := by
+  obtain ⟨node, present, named⟩ := List.mem_flatMap.mp saved
+  cases node <;> simp at named
+  subst named
+  exact mem_indices definitions _ present _ (by simp)
+
+/-- **The configuration list is closed under every step.** -/
+theorem configs_closed (definitions : List Node) (limit start : Nat) (config : Config)
+    (member : config ∈ configs definitions limit start) (action : StackAction) (next : Config)
+    (step : protoStep definitions limit config action = some next) :
+    next ∈ configs definitions limit start := by
+  obtain ⟨state, stack⟩ := config
+  rw [mem_configs] at member ⊢
+  obtain ⟨_, bounded, savedOk⟩ := member
+  unfold protoStep at step
+  cases lookup : definitions[state]? with
+  | none => simp [lookup] at step
+  | some node =>
+      have present : node ∈ definitions := List.mem_of_getElem? lookup
+      simp only [lookup] at step
+      cases node with
+      | finished =>
+          cases action <;> simp at step
+          cases stack with
+          | nil =>
+              simp only [Option.some.injEq] at step
+              subst step
+              exact ⟨by assumption, bounded, savedOk⟩
+          | cons top rest =>
+              simp only [Option.some.injEq] at step
+              subst step
+              refine ⟨List.mem_cons_of_mem _ (parameters_subset_indices definitions top
+                (savedOk top List.mem_cons_self)), by simp at bounded ⊢; omega,
+                fun entry inRest => savedOk entry (List.mem_cons_of_mem _ inRest)⟩
+      | send declared continuation =>
+          cases action <;> simp at step
+          obtain ⟨_, rfl⟩ := step
+          exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
+            savedOk⟩
+      | recv declared continuation =>
+          cases action <;> simp at step
+          obtain ⟨_, rfl⟩ := step
+          exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
+            savedOk⟩
+      | choose declared continuation =>
+          cases action <;> simp at step
+          obtain ⟨_, rfl⟩ := step
+          exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
+            savedOk⟩
+      | offer declared continuation =>
+          cases action <;> simp at step
+          obtain ⟨_, rfl⟩ := step
+          exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
+            savedOk⟩
+      | nested name parameter =>
+          cases action <;> simp at step
+          · obtain ⟨room, rfl⟩ := step
+            refine ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)),
+              by simp; omega, ?_⟩
+            intro entry member
+            rcases List.mem_cons.mp member with same | old
+            · subst same
+              exact mem_parameters definitions name entry present
+            · exact savedOk entry old
+          · subst step
+            exact ⟨List.mem_cons_of_mem _ (mem_indices definitions _ present _ (by simp)), bounded,
+              savedOk⟩
+
+/-- Every pair of reachable configurations of the two tables. -/
+def pairsOf (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other : Nat) : List (Config × Config) :=
+  (configs left leftLimit start).flatMap fun first =>
+    (configs right rightLimit other).map fun second => (first, second)
+
+theorem mem_pairsOf (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other : Nat) (pair : Config × Config) :
+    pair ∈ pairsOf left leftLimit start right rightLimit other ↔
+      pair.1 ∈ configs left leftLimit start ∧ pair.2 ∈ configs right rightLimit other := by
+  obtain ⟨first, second⟩ := pair
+  simp only [pairsOf, List.mem_flatMap, List.mem_map, Prod.mk.injEq]
+  constructor
+  · rintro ⟨chosen, inLeft, paired, inRight, rfl, rfl⟩
+    exact ⟨inLeft, inRight⟩
+  · rintro ⟨inLeft, inRight⟩
+    exact ⟨first, inLeft, second, inRight, rfl, rfl⟩
+
+theorem pairsOf_closed (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other : Nat) :
+    ClosedPairs left leftLimit right rightLimit (pairsOf left leftLimit start right rightLimit other) := by
+  intro pair member action next following stepLeft stepRight
+  rw [mem_pairsOf] at member ⊢
+  exact ⟨configs_closed left leftLimit start pair.1 member.1 action next stepLeft,
+    configs_closed right rightLimit other pair.2 member.2 action following stepRight⟩
+
+/-- **A work bound computed from the two tables alone**: one plus twice the number of pairs of
+reachable configurations. -/
+def workBound (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other : Nat) : Nat :=
+  1 + 2 * (pairsOf left leftLimit start right rightLimit other).length
+
+/-- **The bound is sufficient**: with at least `workBound` units the check never refuses as
+exhausted, for every pair of tables, limits and start states. -/
+theorem protocolEquality_not_exhausted (left : List Node) (leftLimit start : Nat)
+    (right : List Node) (rightLimit other work : Nat)
+    (enough : workBound left leftLimit start right rightLimit other ≤ work) :
+    protocolEquality left leftLimit right rightLimit work (start, []) (other, []) ≠ .exhausted := by
+  apply checkPairs_not_exhausted left leftLimit right rightLimit
+    (pairsOf left leftLimit start right rightLimit other)
+    (pairsOf_closed left leftLimit start right rightLimit other)
+  · intro entry member
+    simp only [List.mem_singleton] at member
+    subst member
+    rw [mem_pairsOf, mem_configs, mem_configs]
+    simp
+  · have counted : unassumed (pairsOf left leftLimit start right rightLimit other) [] ≤
+        (pairsOf left leftLimit start right rightLimit other).length :=
+      List.length_filter_le _ _
+    unfold workBound at enough
+    simp only [List.length_singleton]
+    omega
+
+/-- **Protocol type equality is decided**: under `workBound` the check returns `equal` exactly when
+the two protocol states admit the same traces with the same orderly ends. -/
+theorem protocolEquality_decides (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other work : Nat)
+    (enough : workBound left leftLimit start right rightLimit other ≤ work) :
+    protocolEquality left leftLimit right rightLimit work (start, []) (other, []) = .equal ↔
+      ∀ trace, observe left leftLimit (start, []) trace = observe right rightLimit (other, []) trace := by
+  constructor
+  · exact protocolEquality_sound left leftLimit right rightLimit work _ _
+  · intro alike
+    cases verdict : protocolEquality left leftLimit right rightLimit work (start, []) (other, []) with
+    | equal => rfl
+    | differ witness =>
+        exact absurd (alike witness) (protocolEquality_witness left leftLimit right rightLimit work _
+          _ witness verdict)
+    | exhausted =>
+        exact absurd verdict (protocolEquality_not_exhausted left leftLimit start right rightLimit
+          other work enough)
+
+/-- **Protocol duality is decided** under the bound of the dual table: the check returns `equal`
+exactly when every trace of one side is admitted with the same orderly end as its dual trace on the
+other. -/
+theorem protocolDuality_decides (left : List Node) (leftLimit start : Nat) (right : List Node)
+    (rightLimit other work : Nat)
+    (enough : workBound left leftLimit start (right.map dual) rightLimit other ≤ work) :
+    protocolDuality left leftLimit right rightLimit work (start, []) (other, []) = .equal ↔
+      ∀ trace, observe left leftLimit (start, []) trace =
+        observe right rightLimit (other, []) (trace.map StackAction.dual) := by
+  unfold protocolDuality
+  rw [protocolEquality_decides left leftLimit start (right.map dual) rightLimit other work enough]
+  constructor
+  · intro alike trace
+    have back := observe_dual right rightLimit (other, []) (trace.map StackAction.dual)
+    rw [List.map_map, show StackAction.dual ∘ StackAction.dual = id from
+      funext StackAction.dual_dual, List.map_id] at back
+    exact (alike trace).trans back
+  · intro dualAlike trace
+    have back := observe_dual right rightLimit (other, []) (trace.map StackAction.dual)
+    rw [List.map_map, show StackAction.dual ∘ StackAction.dual = id from
+      funext StackAction.dual_dual, List.map_id] at back
+    rw [dualAlike trace, back]
+
 /-! ### Fixtures and load-bearing controls -/
 
 /-- `balancedProtocol` with every definition index renumbered: node `i` moves to `3 - i`. -/
@@ -2088,6 +2449,19 @@ theorem memo_is_load_bearing :
     checkPairsWithoutMemo sendForever 0 sendForeverUnrolled 0 64 [(((0, []), (0, [])), [])] =
         .exhausted ∧
       protocolEquality sendForever 0 sendForeverUnrolled 0 3 (0, []) (0, []) = .equal := by
+  decide
+
+set_option maxRecDepth 100000 in
+/-- On the fixtures the bound is small, and the check under it decides: the cycle and its unrolling
+are equal, client and server are dual, and the two stack limits of the balanced table differ. -/
+theorem workBound_decides_the_fixtures :
+    workBound sendForever 0 0 sendForeverUnrolled 0 0 = 13 ∧
+      protocolEquality sendForever 0 sendForeverUnrolled 0 13 (0, []) (0, []) = .equal ∧
+      workBound clientProtocol 0 0 (serverProtocol.map dual) 0 0 = 19 ∧
+      protocolDuality clientProtocol 0 serverProtocol 0 19 (0, []) (0, []) = .equal ∧
+      workBound balancedProtocol 2 0 balancedProtocol 1 0 = 301 ∧
+      protocolEquality balancedProtocol 2 balancedProtocol 1 301 (0, []) (0, []) =
+        .differ [.send .i64, .enter, .send .i64, .enter] := by
   decide
 
 end NestedSession
