@@ -746,13 +746,16 @@ payloads, recursive `wrapped` payloads, the words `dup`/`drop`/`swap`/`quote`,
 composition, a finite two-arm branch and the ordinary error-return alternative.
 A payload is duplicable exactly when it contains no resource at any depth
 (`duplicable_iff`), wrapping never changes that
-(`wrapDepth_preserves_eligibility`), a must-use resource as the constrained
-operand blocks every word (`resource_operand_blocks_every_word`), dropping and
-duplication therefore only move data obligations (`drop_consumes_one`,
-`dup_duplicates_one`), quoting retains rather than consumes
-(`quote_retains_one`), a two-arm branch accounts for the same obligations on
-both arms (`branch_accounts_both_arms`), and an ordinary error return is
-acquired only with no outstanding operand (`fail_requires_empty_operands`).
+(`wrapDepth_preserves_eligibility`), and a must-use resource as the
+constrained operand blocks each data-constraining word
+(`resource_operand_blocks_non_swap_word`). Dropping and duplication therefore
+only move data obligations (`drop_consumes_one`, `dup_duplicates_one`), while
+`swap` reorders either data or resource operands without an eligibility check
+(`swap_permutes_two`, `swap_moves_a_resource`). Quoting retains rather than
+consumes (`quote_retains_one`), a two-arm branch accounts for the same
+obligations on both arms (`branch_accounts_both_arms`), and an ordinary error
+return is acquired only with no outstanding operand
+(`fail_requires_empty_operands`).
 The old `segment_conserved` theorem is deliberately narrower than its former
 wording suggested: it extracts the operand `run` result from a
 `runConfiguration` result whose segment is already syntactically the original
@@ -763,13 +766,13 @@ The conservation unit proves `step_conserves_obligations` for one accepted
 word, lifts it through the declarative judgment as
 `accounts_conserves_obligations`, and exposes the checker corollary
 `run_conserves_obligations`. This is exact conservation of the filtered
-must-use resources. It is partly vacuous for resource-moving behavior because
-this grammar has no admitted acquire, release or resource-consuming word:
-resources at a constrained position reject, while resources elsewhere can be
-carried through data words. The decided `resource_carry_run` and
-`resource_carry_accounts` fixture demonstrates that non-vacuous carry-through
-case with `dup` followed by `drop` on a data head and a resource tail. Thirty-two
-ownership theorems are inventoried in total.
+must-use resources. The grammar has no admitted acquire, release or
+resource-consuming word; `swap` can move a resource, while `dup`, `drop` and
+`quote` reject one in their constrained position. The decided
+`resource_carry_run` and `resource_carry_accounts` fixture demonstrates
+carry-through with `dup` followed by `drop` on a data head and a resource tail,
+and `swap_moves_resource_conservation` demonstrates a resource changing
+position. Thirty-four ownership theorems are inventoried in total.
 
 ### Branch join (issue #59 joins)
 
@@ -800,21 +803,25 @@ concept, and a join is never presented as an executable production control.
 Not proved, and recorded rather than implied: the admission simulation lifted over
 a whole word *sequence*, which needs the intermediate stacks to keep agreeing.
 
-The retained receipt is
-[`verification/foundation/receipts/656ec91b4/`](../../verification/foundation/receipts/656ec91b4/foundation-check.json):
-569 theorems, thirty-two of them ownership (six in `OwnershipConservation`), `clean_source: true`,
-axiom sets inside `propext`/`Classical.choice`/`Quot.sound`.
+The retained receipt at
+[`verification/foundation/receipts/656ec91b4/`](../../verification/foundation/receipts/656ec91b4/foundation-check.json)
+belongs to the preceding conservation-only source revision and is not
+evidence for the corrected swap rule. A fresh clean-source receipt for this
+revision is recorded by the issue owner after the one-commit source change;
+the theorem count is expected to increase by two ownership fixtures.
 
 The comparison is finite and deliberately narrow:
 [`verification/ownership/differential.json`](../../verification/ownership/differential.json)
-records 104 independent cases generated from the model, of which 15 accepted and
+records 108 independent cases generated from the model, of which 15 accepted and
 6 rejected cases are driven through the actual acceptance machine
-(`noble_kernel::acceptance::check`) over the unary `dup`/`drop` fragment, and 83
+(`noble_kernel::acceptance::check`) over the unary `dup`/`drop` fragment, and 87
 are model-only. A test-local shadow checker agrees with every expectation and
 each of seven declared mutations (duplicating or releasing a must-use resource,
-ignoring swap eligibility, consuming a quoted operand, ignoring branch
+drops one operand during `swap`, consuming a quoted operand, ignoring branch
 accounting, permitting an error return with an outstanding operand) is caught by
-at least one retained expectation.
+at least one retained expectation. The model-only controls include a branch
+that attempts to lose a resource, a branch that attempts to duplicate one,
+equal-count branches with different resource identities, and a resource move.
 
 Open, and deliberately not closed by this model:
 

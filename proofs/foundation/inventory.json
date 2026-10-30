@@ -1528,10 +1528,10 @@
       "claim": "no wrapping depth makes a resource payload duplicable"
     },
     {
-      "name": "NobleFoundation.Ownership.resource_operand_blocks_every_word",
+      "name": "NobleFoundation.Ownership.resource_operand_blocks_non_swap_word",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "a must-use resource as the constrained operand blocks every word of the fragment"
+      "claim": "a must-use resource as the constrained operand blocks every non-swap word of the fragment"
     },
     {
       "name": "NobleFoundation.Ownership.drop_consumes_one",
@@ -1555,7 +1555,13 @@
       "name": "NobleFoundation.Ownership.swap_permutes_two",
       "phase": 5,
       "role": "ownership-accounting",
-      "claim": "swapping permutes two duplicable operands and consumes neither"
+      "claim": "swapping permutes two operands, including resources, and consumes neither"
+    },
+    {
+      "name": "NobleFoundation.Ownership.swap_moves_a_resource",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the decided swap fixture moves a resource past a data operand without an eligibility check"
     },
     {
       "name": "NobleFoundation.Ownership.run_sound",
@@ -1622,6 +1628,12 @@
       "phase": 5,
       "role": "ownership-accounting",
       "claim": "the concrete resource-carry fixture has a declarative Accounts derivation"
+    },
+    {
+      "name": "NobleFoundation.OwnershipConservation.swap_moves_resource_conservation",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the decided swap fixture moves a resource while preserving the filtered obligation permutation"
     },
     {
       "name": "NobleFoundation.LiveDispatch.publish_preserves_other_keys",

@@ -7,8 +7,9 @@
   * an ordered *operand stack* that `dup`, `drop`, `swap` and `quote` touch.
 
   A payload is either a data reference or a must-use resource, and `wrapped`
-  nests payloads so eligibility is recursive. Every word that constrains a data
-  operand requires that operand to be duplicable, and a payload is duplicable
+  nests payloads so eligibility is recursive. The data-constraining words
+  `dup`, `drop` and `quote` require a duplicable operand; `swap` only reorders
+  its two operands and has no eligibility check. A payload is duplicable
   exactly when it contains no resource at any depth. Dropping a data reference
   is therefore not releasing a host resource, and no word in this fragment can
   release a must-use obligation.
@@ -54,7 +55,7 @@ def step : Word → List Payload → Option (List Payload)
   | .drop, payload :: rest =>
       if duplicable payload then some rest else none
   | .swap, left :: right :: rest =>
-      if duplicable left && duplicable right then some (right :: left :: rest) else none
+      some (right :: left :: rest)
   | .quote, payload :: rest =>
       if duplicable payload then some (payload :: rest) else none
   | _, _ => none
@@ -135,10 +136,15 @@ theorem wrapDepth_resource_not_duplicable (depth : Nat) (tag : Nat) :
     duplicable (wrapDepth depth (.resource tag)) = false := by
   rw [wrapDepth_preserves_eligibility, resource_not_duplicable]
 
-/-- A must-use resource as the constrained operand blocks every word. -/
-theorem resource_operand_blocks_every_word (word : Word) (tag : Nat)
-    (rest : List Payload) : step word (.resource tag :: rest) = none := by
-  cases word <;> cases rest <;> simp [step, resource_not_duplicable]
+/-- A must-use resource as the constrained operand blocks every data-constraining word. -/
+theorem resource_operand_blocks_non_swap_word (word : Word) (tag : Nat)
+    (rest : List Payload) (notSwap : word ≠ .swap) :
+    step word (.resource tag :: rest) = none := by
+  cases word with
+  | dup => simp [step, resource_not_duplicable]
+  | drop => simp [step, resource_not_duplicable]
+  | swap => exact (notSwap rfl).elim
+  | quote => simp [step, resource_not_duplicable]
 
 /-- Dropping consumes exactly the duplicable operand it inspected. -/
 theorem drop_consumes_one (payload : Payload) (rest : List Payload)
@@ -156,11 +162,15 @@ theorem quote_retains_one (payload : Payload) (rest : List Payload)
     (eligible : duplicable payload = true) : step .quote (payload :: rest) = some (payload :: rest) := by
   simp [step, eligible]
 
-/-- Swapping permutes two duplicable operands and consumes neither. -/
+/-- Swapping permutes two operands and consumes neither, including resources. -/
 theorem swap_permutes_two (left right : Payload) (rest : List Payload)
-    (leftEligible : duplicable left = true) (rightEligible : duplicable right = true) :
-    step .swap (left :: right :: rest) = some (right :: left :: rest) := by
-  simp [step, leftEligible, rightEligible]
+    : step .swap (left :: right :: rest) = some (right :: left :: rest) := by
+  simp [step]
+
+/-- A decided fixture shows that swap moves a resource without an eligibility check. -/
+theorem swap_moves_a_resource :
+    run (.word .swap) [.resource 1, .data 2] = some [.data 2, .resource 1] := by
+  decide
 
 /-- The checker is sound for the declarative judgment. -/
 theorem run_sound (program : Program) :
@@ -249,9 +259,9 @@ payload is never forgotten because it is eligible or because the counts agree.
 
 The joined stack is built from both arms, so it represents each of them by construction; `mergePosition`
 is the per-position merge, and the controls show it never loses an arm's identity. The substantive
-theorem is `joined_word_admission_agrees`: over the straight-line fragment a word's admission depends
-only on per-position eligibility, so a stack pair whose positions agree on eligibility is admitted
-in both arms or in neither.
+theorem is `joined_word_admission_agrees`: over the straight-line fragment a data-constraining
+word's admission depends on per-position eligibility, while swap only needs two positions, so a
+stack pair whose positions agree on eligibility is admitted in both arms or in neither.
 
 Remaining work, recorded rather than implied: the same simulation lifted over a whole word
 *sequence*, which needs the intermediate stacks to keep agreeing. The branch constructor is outside
@@ -337,9 +347,10 @@ def eligibilityClass (operands : List Payload) : List Bool := operands.map dupli
 def EligibilityAgrees (left right : List Payload) : Prop :=
   eligibilityClass left = eligibilityClass right
 
-/-- **Word admission is decided by eligibility**: two stacks whose positions agree on eligibility are
-admitted by one word in both arms or in neither, so the joined abstract stack preserves this
-fragment's accounting decision rather than inventing one. -/
+/-- **Word admission is decided by arity and eligibility**: two stacks whose positions agree on
+eligibility are admitted by one data-constraining word in both arms or in neither, while swap only
+needs its two operands. Thus the joined abstract stack preserves this fragment's accounting decision
+rather than inventing one. -/
 theorem joined_word_admission_agrees (word : Word) (left right : List Payload)
     (agree : EligibilityAgrees left right) :
     (step word left).isSome = (step word right).isSome := by
@@ -396,9 +407,6 @@ theorem joined_word_admission_agrees (word : Word) (left right : List Payload)
                   cases remaining with
                   | nil => simp_all [EligibilityAgrees, eligibilityClass]
                   | cons otherSecond otherTail =>
-                      simp only [EligibilityAgrees, eligibilityClass, List.map_cons, List.cons.injEq] at agree
-                      simp only [step]
-                      rw [agree.1, agree.2.1]
-                      split <;> rfl
+                      simp only [step, Option.isSome_some]
 
 end NobleFoundation.Ownership

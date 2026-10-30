@@ -37,8 +37,9 @@ function duplicable(payload) {
 
 // `step` mirrors `NobleFoundation.Ownership.step`. A rejection is classified:
 // `missing` when the word has no operand to inspect (a production arity
-// mismatch, not an eligibility decision) and `ineligible` when the operand it
-// inspected is not duplicable, which is the production eligibility rejection.
+// mismatch, not an eligibility decision) and `ineligible` when a
+// data-constraining word inspected a non-duplicable operand, which is the
+// production eligibility rejection. Swap only reorders its operands.
 function step(word, operands) {
   const [first, second, ...rest] = operands;
   const tail = [second, ...rest].filter(item => item !== undefined);
@@ -53,7 +54,6 @@ function step(word, operands) {
       return { kind: 'ok', stack: tail };
     case 'swap':
       if (first === undefined || second === undefined) return { kind: 'missing' };
-      if (!duplicable(first) || !duplicable(second)) return { kind: 'ineligible' };
       return { kind: 'ok', stack: [second, first, ...rest] };
     case 'quote':
       if (first === undefined) return { kind: 'missing' };
@@ -77,12 +77,12 @@ function run(words, operands) {
 }
 
 function kind(payload) {
-  if (payload.kind === 'wrapped') return `w:${payload.inner.kind === 'data' ? payload.inner.tag : 'r'}`;
-  return payload.kind === 'data' ? `d:${payload.tag}` : 'r';
+  if (payload.kind === 'wrapped') return `w:${kind(payload.inner)}`;
+  return payload.kind === 'data' ? `d:${payload.tag}` : `r:${payload.tag}`;
 }
 
 // Operand-stack shapes: empty, one data operand of each data type, two data
-// operands (the `swap` pair), a must-use resource at each eligible position,
+// operands (the `swap` pair), a must-use resource at each relevant position,
 // and wrapped payloads at both eligible and ineligible depths.
 const shapes = [
   ['empty', []],
@@ -196,6 +196,38 @@ const structured = [
     operands: [resource(1)],
   },
   {
+    name: 'branch-loses-resource',
+    program: {
+      kind: 'branch',
+      thenArm: { kind: 'words', words: ['swap'] },
+      elseArm: { kind: 'words', words: ['drop'] },
+    },
+    operands: [resource(1), data('i')],
+  },
+  {
+    name: 'branch-doubles-resource',
+    program: {
+      kind: 'branch',
+      thenArm: { kind: 'words', words: ['swap'] },
+      elseArm: { kind: 'words', words: ['dup'] },
+    },
+    operands: [resource(1), data('i')],
+  },
+  {
+    name: 'branch-wrong-owner-identity',
+    program: {
+      kind: 'branch',
+      thenArm: { kind: 'words', words: ['swap'] },
+      elseArm: { kind: 'words', words: ['swap', 'swap'] },
+    },
+    operands: [resource(1), resource(2)],
+  },
+  {
+    name: 'swap-resource-move',
+    program: { kind: 'words', words: ['swap'] },
+    operands: [resource(1), data('i')],
+  },
+  {
     name: 'fail-outstanding-operand',
     program: { kind: 'fail' },
     operands: [data('i')],
@@ -234,7 +266,7 @@ const lines = cases.map(entry => {
 const header = [
   '# Ownership accounting corpus, generated from the Lean model (issue #59).',
   '# Fields: name ops=<program> in=<kind[,kind]> out=<kind[,kind]|-|empty> decision=<accepted|rejected|model-only>',
-  '# kinds: d:<tag> a data payload, r a must-use resource payload, w:<tag|r> a wrapped payload.',
+  '# kinds: d:<tag> a data payload, r:<tag> a tagged must-use resource payload, w:<kind> a recursively wrapped payload.',
   '# programs: w+w a word sequence, branch(then|else) a two-arm branch, fail a normal error return.',
 ].join('\n');
 

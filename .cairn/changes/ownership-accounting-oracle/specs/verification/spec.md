@@ -5,7 +5,7 @@ r[VC-OWN-01]
 
 A kernel-checked ownership-accounting reference MUST select one declared small grammar with an executable checker and an independent declarative judgment, and MUST prove checker acceptance implies the judgment.
 
-The reference MUST state that eligibility is recursive over wrapping depth, that a data reference and a must-use resource are distinct accounting classes, that dropping a data reference is not releasing a host resource, and that the opaque segment's must-use obligations are conserved. It MUST state the two-arm accounting rule and the ordinary error-return rule as separate obligations.
+The reference MUST state that eligibility is recursive over wrapping depth, that a data reference and a must-use resource are distinct accounting classes, that `dup`, `drop` and `quote` constrain only duplicable operands, that `swap` has no eligibility check and only reorders operands, that dropping a data reference is not releasing a host resource, and that the opaque segment's must-use obligations are conserved. It MUST state the two-arm accounting rule and the ordinary error-return rule as separate obligations.
 
 #### Scenario: VC-OWN-CASE-01 accounting and conservation
 
@@ -22,7 +22,7 @@ Every declared checker mutation MUST be caught by at least one retained expectat
 
 #### Scenario: VC-OWN-CASE-02 mutation detection
 
-- GIVEN the declared mutations that duplicate or release a must-use resource, ignore swap eligibility, consume a quoted operand, ignore branch accounting or admit an error return with an outstanding operand
+- GIVEN the declared mutations that duplicate or release a must-use resource, drop a swap operand, consume a quoted operand, ignore branch accounting or admit an error return with an outstanding operand
 - WHEN each mutation is run over the retained corpus
 - THEN each mutation produces at least one mismatch and the unmutated checker produces none
 

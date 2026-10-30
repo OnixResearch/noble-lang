@@ -19,7 +19,8 @@ rather than Move's ownership policy. It is not a new source borrow feature.
   the ordinary error-return alternative. It states an executable checker and an
   independent declarative judgment, proves checker soundness, that a payload is
   duplicable exactly when it contains no resource at any depth, that no
-  wrapping depth makes a resource eligible, that the opaque segment and its
+  wrapping depth makes a resource eligible, that `swap` moves either data or a
+  resource without an eligibility check, that the opaque segment and its
   must-use obligations are conserved, that a branch accounts for the same
   obligations on both arms, and that an error return is admitted only with no
   outstanding operand. r[VC-OWN-01]
@@ -28,11 +29,13 @@ rather than Move's ownership policy. It is not a new source borrow feature.
   drives the unary fragment through the actual acceptance machine, compares a
   test-local shadow checker against every expectation, and declares seven
   checker mutations each of which the retained corpus catches. r[VC-OWN-02]
-- The receipts `verification/foundation/receipts/e7cc00993/` (252 theorems, 18
-  of them ownership) and `verification/ownership/differential.json`
-  (104 cases, 15 accepted and 6 rejected through the production machine, 83
-  model-only, seven mutations caught) bind the model, the toolchain, the case
-  file and the tested implementation. r[VC-OWN-03]
+- The previous receipt `verification/foundation/receipts/e7cc00993/` records
+  the pre-correction model and is retained as historical evidence; the issue
+  owner records a fresh clean-source receipt for this correction. The updated
+  corpus has 108 cases (15 accepted and 6 rejected through the production
+  machine, 87 model-only, seven mutations caught), and the differential receipt
+  binds the corrected model, toolchain, case file and tested implementation.
+  r[VC-OWN-03]
 
 ## Impact
 

@@ -2,12 +2,11 @@
   Whole-program ownership accounting for the ordered stack fragment (issue #59).
 
   `Ownership` has no word that acquires, releases or consumes a must-use
-  resource.  Consequently the conservation theorem below is exact, but its
-  resource-moving content is partly vacuous: an admitted word can only act on
-  duplicable data, while a resource can remain untouched elsewhere in the
-  stack.  The concrete `resourceCarry` fixture keeps a resource in that
-  untouched position while accepted data words run, so the resource case is
-  represented rather than omitted.
+  resource.  Consequently the conservation theorem below is exact: `swap`
+  may move a resource, while `dup`, `drop` and `quote` act only on duplicable
+  data.  The concrete `resourceCarry` fixture keeps a resource in an
+  untouched position while accepted data words run, and the swap fixture
+  demonstrates conservation when a resource itself changes position.
 -/
 import NobleFoundation.Ownership
 
@@ -18,8 +17,9 @@ open NobleFoundation.Ownership
 /-- One accepted word preserves the ordered multiset of must-use resources.
 
     An admitted `dup`, `drop` or `quote` step inspects only a duplicable
-    payload, and an admitted `swap` permutes two such payloads.  Thus every
-    resource in the input remains in the output, while data may be duplicated,
+    payload, and an admitted `swap` permutes its two operands without an
+    eligibility check.  Thus every resource in the input remains in the
+    output, possibly at a different position, while data may be duplicated,
     dropped or retained.
 -/
 theorem step_conserves_obligations (word : Word) (operands out : List Payload)
@@ -66,17 +66,15 @@ theorem step_conserves_obligations (word : Word) (operands out : List Payload)
           cases rest with
           | nil => simp [step] at accepted
           | cons right rest =>
-              by_cases leftEligible : duplicable left = true
-              · by_cases rightEligible : duplicable right = true
-                · have leftNoResource : containsResource left = false :=
-                    (duplicable_iff left).mp leftEligible
-                  have rightNoResource : containsResource right = false :=
-                    (duplicable_iff right).mp rightEligible
-                  simp [step, leftEligible, rightEligible] at accepted
-                  subst out
-                  simp [leftNoResource, rightNoResource]
-                · simp [step, leftEligible, rightEligible] at accepted
-              · simp [step, leftEligible] at accepted
+              simp [step] at accepted
+              subst out
+              by_cases leftResource : containsResource left = true
+              · by_cases rightResource : containsResource right = true
+                · simp [leftResource, rightResource, List.Perm.swap]
+                · simp [leftResource, rightResource]
+              · by_cases rightResource : containsResource right = true
+                · simp [leftResource, rightResource]
+                · simp [leftResource, rightResource]
 
 /-- Every declaratively accounted program preserves the resource obligations. -/
 theorem accounts_conserves_obligations {program : Program} {operands out : List Payload}
@@ -127,5 +125,18 @@ theorem resource_carry_run :
 theorem resource_carry_accounts :
     Accounts resourceCarryProgram resourceCarryInput resourceCarryOutput := by
   exact run_sound _ _ _ resource_carry_run
+
+/-- A decided swap fixture moves a resource while preserving its filtered obligation. -/
+def swapResourceInput : List Payload :=
+  [.resource 1, .data 2]
+
+def swapResourceOutput : List Payload :=
+  [.data 2, .resource 1]
+
+theorem swap_moves_resource_conservation :
+    run (.word .swap) swapResourceInput = some swapResourceOutput ∧
+      (swapResourceOutput.filter containsResource).Perm
+        (swapResourceInput.filter containsResource) := by
+  decide
 
 end NobleFoundation.OwnershipConservation

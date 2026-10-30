@@ -30,8 +30,9 @@
 //!    caught by at least one retained expectation.
 //!
 //! Cases with no production analogue (wrapped payloads, two-arm accounting, the
-//! ordinary error return) are counted and named as model-only; they are never
-//! reported as executable production controls.
+//! ordinary error return and the scheme-level swap ordering) are counted and
+//! named as model-only; they are never reported as executable production
+//! controls.
 
 use std::fs;
 use std::path::PathBuf;
@@ -51,7 +52,7 @@ enum Word {
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Payload {
     Data { tag: char },
-    Resource,
+    Resource { tag: u32 },
     Wrapped { inner: Box<Payload> },
 }
 
@@ -60,7 +61,7 @@ impl Payload {
         match self {
             Payload::Wrapped { inner } => inner.contains_resource(),
             Payload::Data { .. } => false,
-            Payload::Resource => true,
+            Payload::Resource { .. } => true,
         }
     }
 
@@ -100,7 +101,7 @@ enum Mutation {
     None,
     ResourceOperandDuplicated,
     ResourceOperandReleased,
-    SwapIgnoresEligibility,
+    SwapDropsOperand,
     QuoteConsumesOperand,
     BranchPicksThenArm,
     FailAllowsOutstandingOperand,
@@ -110,7 +111,7 @@ const MUTATIONS: [Mutation; 7] = [
     Mutation::None,
     Mutation::ResourceOperandDuplicated,
     Mutation::ResourceOperandReleased,
-    Mutation::SwapIgnoresEligibility,
+    Mutation::SwapDropsOperand,
     Mutation::QuoteConsumesOperand,
     Mutation::BranchPicksThenArm,
     Mutation::FailAllowsOutstandingOperand,
@@ -127,18 +128,16 @@ fn parse_payload(text: &str) -> Payload {
         };
     }
     if text == "r" {
-        return Payload::Resource;
+        return Payload::Resource { tag: 0 };
+    }
+    if let Some(tag) = text.strip_prefix("r:") {
+        return Payload::Resource {
+            tag: tag.parse().unwrap_or(0),
+        };
     }
     if let Some(inner) = text.strip_prefix("w:") {
-        let payload = if inner == "r" {
-            Payload::Resource
-        } else {
-            Payload::Data {
-                tag: inner.chars().next().unwrap_or('?'),
-            }
-        };
         return Payload::Wrapped {
-            inner: Box::new(payload),
+            inner: Box::new(parse_payload(inner)),
         };
     }
     panic!("unknown payload kind {text}");
@@ -258,13 +257,11 @@ fn shadow_step(mutation: Mutation, word: Word, operands: &[Payload]) -> Option<V
             Some(stack)
         }
         Word::Swap => {
-            let (left, right) = (first?, second?);
-            let eligible = mutation == Mutation::SwapIgnoresEligibility
-                || (left.duplicable() && right.duplicable());
-            if !eligible {
-                return None;
-            }
+            let _ = (first?, second?);
             stack.swap(0, 1);
+            if mutation == Mutation::SwapDropsOperand {
+                stack.remove(1);
+            }
             Some(stack)
         }
         Word::Quote => {
@@ -318,7 +315,7 @@ fn kernel_type(payload: &Payload) -> noble_kernel::types::Ty {
                 support::i64_ty()
             }
         }
-        Payload::Resource | Payload::Wrapped { .. } => {
+        Payload::Resource { .. } | Payload::Wrapped { .. } => {
             noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE)
         }
     }
@@ -353,7 +350,7 @@ fn push_node(
                 support::lit_node(noble_kernel::untrusted::Lit::I64(0), vec![])
             }
         }
-        Payload::Resource | Payload::Wrapped { .. } => {
+        Payload::Resource { .. } | Payload::Wrapped { .. } => {
             support::invocation(maker, vec![support::segment(vec![])])
         }
     }
