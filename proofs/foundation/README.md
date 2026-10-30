@@ -2227,4 +2227,7 @@ Open, and deliberately not closed:
 - correspondence between this model and the Rust cache and `Subject::derive`
   implementation.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the cache-lookup model is
+[`verification/foundation/receipts/d23d0c485/`](../../verification/foundation/receipts/d23d0c485/foundation-check.json)
+(728 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).

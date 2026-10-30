@@ -309,3 +309,11 @@ specialization with constant folding, `specialize_wellFormed` and the universal
 decimal ratios, single-rounding RNE, the exact-import characterisation and its agreement with RNE,
 and the 0.1/0.5/-0/1e39/subnormal/tie fixtures (15 new theorems; that run reported 707 in
 total). The overflow policy and syntax remain owner decisions.
+
+## d23d0c485 — collision-safe cache lookup and key encoding (issue #33)
+
+`d23d0c485/` records the clean run that added `NobleFoundation.CacheLookup`: manifest-exact lookup
+over a possibly colliding index, stale/corrupt refusals, erase-never-creates-a-hit, and the
+bounded injectivity of the length-prefixed part encoding with a naive-concatenation collision
+control (21 new theorems; that run reported 728 in total). Manifest fields, persistence
+and trust path remain owner decisions.
