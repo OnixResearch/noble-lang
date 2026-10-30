@@ -4052,6 +4052,114 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "the wrong-complement recurrence is rejected on the repeated-atom fixture"
+    },
+    {
+      "name": "NobleFoundation.Specialize.staticValuesUpTo_eq_staticValue",
+      "phase": 1,
+      "role": "static-prefix",
+      "claim": "a strict-prefix static evaluator agrees with the node static value"
+    },
+    {
+      "name": "NobleFoundation.Specialize.staticValue_sound",
+      "phase": 1,
+      "role": "static-evaluator",
+      "claim": "a statically known I64 node denotes that value under the merged inputs"
+    },
+    {
+      "name": "NobleFoundation.Specialize.specialize_wellFormed",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "static-input specialization preserves earlier-operand well-formedness"
+    },
+    {
+      "name": "NobleFoundation.Specialize.congruenceWithInputs",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "same residual nodes agree under equal operand values and compatible inputs"
+    },
+    {
+      "name": "NobleFoundation.Specialize.residual_specialize_sound",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "residual arithmetic and equality nodes preserve denotation across specialization"
+    },
+    {
+      "name": "NobleFoundation.Specialize.specialize_sound",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "specialized graph values equal original graph values under merged inputs"
+    },
+    {
+      "name": "NobleFoundation.Specialize.specializationGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the arithmetic specialization fixture is well formed"
+    },
+    {
+      "name": "NobleFoundation.Specialize.no_static_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "without static inputs specialization leaves input and arithmetic nodes residual"
+    },
+    {
+      "name": "NobleFoundation.Specialize.all_static_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "all static inputs fold the arithmetic fixture to constants"
+    },
+    {
+      "name": "NobleFoundation.Specialize.mixed_static_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "mixed static inputs substitute constants while retaining mixed residual arithmetic"
+    },
+    {
+      "name": "NobleFoundation.Specialize.nonPrefixGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the non-prefix static-slot fixture is well formed"
+    },
+    {
+      "name": "NobleFoundation.Specialize.non_prefix_static_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a non-prefix static slot preserves dynamic input order under rank"
+    },
+    {
+      "name": "NobleFoundation.Specialize.deeper_minus_top_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "subtraction evaluates the deeper input minus the top input"
+    },
+    {
+      "name": "NobleFoundation.Specialize.wrapGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the wrapping addition fixture is well formed"
+    },
+    {
+      "name": "NobleFoundation.Specialize.wrap_boundary_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "maximum I64 residue plus one folds and wraps to zero"
+    },
+    {
+      "name": "NobleFoundation.Specialize.specialize_wellFormed_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the mixed specialization fixture retains well-formedness"
+    },
+    {
+      "name": "NobleFoundation.Specialize.specialize_sound_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the mixed specialization fixture agrees with its merged original"
+    },
+    {
+      "name": "NobleFoundation.Specialize.prefix_merge_control",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "prefix-based dynamic renumbering disagrees on a non-prefix static fixture"
     }
   ]
 }

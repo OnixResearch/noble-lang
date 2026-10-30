@@ -2116,3 +2116,39 @@ theorems. The clean-source receipt for the net contract is
 [`verification/foundation/receipts/e417bf841/`](../../verification/foundation/receipts/e417bf841/foundation-check.json)
 (657 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+## Static-input specialization model (issue #32, phase 1)
+
+`NobleFoundation/Specialize.lean` defines a static map
+`Nat → Option (BitVec 64)`, the dynamic-slot rank, and a merge operation. The
+specializer keeps graph node indices fixed, replaces static input nodes by
+constants, renumbers dynamic inputs by their original order, and folds only
+add/sub/mul nodes whose two operands are statically known. Mixed nodes remain
+residual nodes with their original operand positions.
+
+The kernel-checked model claims are `staticValuesUpTo_eq_staticValue`,
+`staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`,
+`residual_specialize_sound`, and `specialize_sound`. The fixtures cover no
+static inputs, all static inputs, mixed static inputs, a non-prefix static
+slot, deeper-minus-top subtraction order, and the `2^64 - 1 + 1` wrapping
+boundary. `prefix_merge_control` is a negative control: treating static
+slots as a prefix gives a different result on the non-prefix fixture.
+
+| Claim | Model / theorem(s) | Implementation boundary | Status |
+|---|---|---|---|
+| Bounded static-input specialization over packed graphs preserves values under merge | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` | Rust certificate emission, effect-aware program semantics, and runtime correspondence remain open | **proved** |
+
+The source-bound foundation receipt is intentionally produced by the parent
+integration after this model commit is rebased and the complete foundation is
+checked; no receipt is claimed by this isolated unit.
+
+Open, and deliberately not closed:
+
+- pairs and `Unit` values, and `quote`/`compose`/`run`, are outside this graph
+  model;
+- preservation of an arbitrary stack tail is not represented;
+- budgets, thresholds, refusal/adoption criteria and other owner-reserved
+  contracts are not specified;
+- effects, host calls, resource ownership and effect-aware partial execution
+  are not modelled here;
+- no correspondence claim relates this model to Rust, Wasm, the certificate
+  emitter, or any retained runtime artifact.
