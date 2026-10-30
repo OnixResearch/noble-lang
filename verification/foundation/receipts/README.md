@@ -259,3 +259,11 @@ non-index-aligned `slotGraph` fixture to `NobleFoundation.ReverseAD` (12 invento
 fan-out, repeated slot, unit and seed-5 gradients against forward tangents and Mathlib
 derivatives, and the wrong-slot control; that run reported 606 in total). It is a real-valued
 model result; no theorem relates it to `crates/noble-ngraph/src/grad.rs`.
+
+## 23462be4b — swap moves resources (issue #59)
+
+`23462be4b/` records the clean run after `Ownership.step .swap` dropped its eligibility check to
+match the reviewed design and production (`data_slot` constrains only dup/drop/quote). That run
+reported 608 theorems, 34 of them ownership, including `swap_moves_a_resource`,
+`resource_operand_blocks_non_swap_word` and `swap_moves_resource_conservation`. It is model
+evidence only; the production refinement stays open.

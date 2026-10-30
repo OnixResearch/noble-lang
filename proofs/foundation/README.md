@@ -803,12 +803,11 @@ concept, and a join is never presented as an executable production control.
 Not proved, and recorded rather than implied: the admission simulation lifted over
 a whole word *sequence*, which needs the intermediate stacks to keep agreeing.
 
-The retained receipt at
-[`verification/foundation/receipts/656ec91b4/`](../../verification/foundation/receipts/656ec91b4/foundation-check.json)
-belongs to the preceding conservation-only source revision and is not
-evidence for the corrected swap rule. A fresh clean-source receipt for this
-revision is recorded by the issue owner after the one-commit source change;
-the theorem count is expected to increase by two ownership fixtures.
+The retained receipt for the corrected swap rule is
+[`verification/foundation/receipts/23462be4b/`](../../verification/foundation/receipts/23462be4b/foundation-check.json):
+608 theorems, thirty-four of them ownership (26 `Ownership`, 8 `OwnershipConservation`),
+`clean_source: true`, axiom sets inside the allow-list. The conservation-only revision before
+the swap correction is retained at `656ec91b4`.
 
 The comparison is finite and deliberately narrow:
 [`verification/ownership/differential.json`](../../verification/ownership/differential.json)
