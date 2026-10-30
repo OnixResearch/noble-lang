@@ -115,7 +115,7 @@
       "name": "NobleFoundation.intCast_toInt",
       "phase": 1,
       "role": "round-trip",
-      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x"
+      "claim": "((x.toInt : \u2124) : ZMod (2^64)) = toZ x"
     },
     {
       "name": "NobleFoundation.intCast_signed",
@@ -3740,6 +3740,150 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "reading a slot number as a node index gives gradients different from the mapped extraction on the fixture"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedAdd_ok_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked addition returns the exact sum exactly when it is in the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedSub_ok_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked subtraction returns the exact difference exactly when it is in the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedMul_ok_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked multiplication returns the exact product exactly when it is in the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedNeg_ok_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked negation returns the exact negative exactly when it is in the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedAbs_ok_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked absolute value returns the exact absolute value exactly when it is in the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedAdd_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked addition reports overflow exactly when the exact sum is outside the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedSub_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked subtraction reports overflow exactly when the exact difference is outside the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedMul_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked multiplication reports overflow exactly when the exact product is outside the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedNeg_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked negation reports overflow exactly when the exact negative is outside the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedAbs_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "checked absolute value reports overflow exactly when the exact absolute value is outside the signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.neg_min_overflows",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "negating the signed minimum reports overflow"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.abs_min_overflows",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "taking the absolute value of the signed minimum reports overflow"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.div_rem_identity",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "nonzero-divisor truncating quotient and remainder reconstruct the dividend"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.trem_natAbs_lt",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "a nonzero-divisor truncating remainder has strictly smaller magnitude than the divisor"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.trem_sign",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "a nonzero truncating remainder has the dividend sign"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedDivRem_overflow_iff",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "for in-range operands and a nonzero divisor, division overflow occurs exactly at signed minimum divided by negative one"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.checkedDivRem_divisionByZero",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "a zero divisor produces the division-by-zero error"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.truncating_quotient_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "the explicit quotient model truncates negative seven divided by two while ediv and fdiv floor it"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.truncating_remainder_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "the explicit remainder model gives negative one for negative seven modulo two while emod gives one"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.signed_order_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "signed BitVec order places negative one below zero while unsigned ult does not"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.off_by_one_boundary_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "the strict upper boundary rejects two to the sixty-third while an inclusive boundary accepts it"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.swapped_sub_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "swapping subtraction operands changes the checked result"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.swapped_divrem_control",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "swapping division operands changes the checked quotient and remainder result"
+    },
+    {
+      "name": "NobleFoundation.CheckedI64.min_neg_one_has_no_quotient",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "signed minimum divided by negative one returns overflow rather than a quotient"
     }
   ]
 }

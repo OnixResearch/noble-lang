@@ -1,4 +1,5 @@
 import NobleFoundation.Repr
+import NobleFoundation.CheckedI64
 import NobleFoundation.Literal
 import NobleFoundation.Instr
 import NobleFoundation.Sequence

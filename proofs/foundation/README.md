@@ -165,6 +165,7 @@ Status words:
 |---|---|---|---|
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add/sub/mul/neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
 | MC1 BitVec add/sub/mul decode to the comparator oracle | `toInt_add/sub/mul`, `oracle_add/sub/mul` | none | **proved** |
+| Checked I64 scalar arithmetic and explicit truncating division/remainder | `NobleFoundation.CheckedI64.checkedAdd_ok_iff`, `checkedSub_ok_iff`, `checkedMul_ok_iff`, `checkedNeg_ok_iff`, `checkedAbs_ok_iff`, `checkedAdd_overflow_iff`, `checkedSub_overflow_iff`, `checkedMul_overflow_iff`, `checkedNeg_overflow_iff`, `checkedAbs_overflow_iff`, `div_rem_identity`, `trem_natAbs_lt`, `trem_sign`, `checkedDivRem_overflow_iff`, `checkedDivRem_divisionByZero` | none (name-neutral mathematical model; no Rust/API correspondence) | **proved** |
 | Literal acceptance is exact range rejection, not wrapping | `acceptLiteral` (spec); `accumulate_eq_acceptLiteral` over a *transcription* of `Accumulator::digit`; `accepted_literal_exact`; `ofInt_collapses_out_of_range`; `literal_boundary_regressions` | `crates/noble-contracts/src/syntax/integer.rs`, token classification in `source/lexer/tokens.rs` | transcription **proved**. Rust ↔ transcription **open** (the Aeneas extraction exists in `proofs/mc1/NobleContractImpl/Funs.lean`, but there is no refinement theorem). CLI rejection **tested**: `verification/m4/acceptance.json` and the Phase 4 comparator |
 | Universal instruction semantics with a preserved typed prefix | `add_spec`, `sub_spec`, `mul_spec` (`ArithSpec`); `exec_arith_toInt`; `add_needs_i64` | `crates/noble-wasm/src/operations.rs:21-23` (word → helper), `runtime/operations.wat:14-25`, `runtime/stack.wat` (`$pop_kind`, `$take`, `$push_i64`) | model **proved**. Lowering/helpers **open** (PO-17), finite Wasm **tested** |
 | Public/internal orientation, deeper-minus-top subtraction | `internal_of_public`, `exec_sub_is_internal_step`, `sub_operand_order`, `wrap_sub_noncommutative` | `$op_sub` pop order | model **proved**. Helper **tested** (comparator `sub-order`) |
@@ -730,6 +731,42 @@ The first retained receipt is
 205 theorems, nine of them binary32, `clean_source: true`, axiom sets inside
 `propext`/`Classical.choice`/`Quot.sound`. Later foundation receipts cover every
 binary32 theorem, including the fold receipt above.
+
+## Checked I64 reference (issue #39, phase 1)
+
+`NobleFoundation/CheckedI64.lean` is a name-neutral reference for checked
+signed-I64 scalar arithmetic. It uses `I64Range` from `Repr.lean` and returns
+the exact mathematical result on success, or `ArithError.overflow` when the
+result is outside that range. Addition, subtraction, multiplication,
+negation, and absolute value have universal success and overflow
+characterisations (`checkedAdd_ok_iff` through `checkedAbs_overflow_iff`),
+including the two signed-minimum controls `neg_min_overflows` and
+`abs_min_overflows`.
+
+Division and remainder are defined independently of the library integer
+division policies. `tquot` and `trem` use `Int.sign`, `natAbs`, and Nat
+`/`/`%`; `div_rem_identity` proves reconstruction, while `trem_natAbs_lt`
+and `trem_sign` prove the magnitude and sign laws for a nonzero divisor.
+`checkedDivRem` reports division by zero before quotient evaluation and
+`checkedDivRem_overflow_iff` isolates the only in-range nonzero-divisor
+overflow, signed minimum divided by negative one. The zero-divisor theorem
+is `checkedDivRem_divisionByZero`.
+
+The kernel-checked controls are `truncating_quotient_control`,
+`truncating_remainder_control`, `signed_order_control`,
+`off_by_one_boundary_control`, `swapped_sub_control`,
+`swapped_divrem_control`, and `min_neg_one_has_no_quotient`. They distinguish
+truncation from floor division, signed from unsigned `BitVec` order, the
+strict upper boundary, operand order, and the absent quotient at the
+minimum/negative-one pair.
+
+Open, and deliberately not closed:
+
+- no Rust implementation, frontend, runtime helper, API name, error
+  representation, or overflow-policy correspondence is claimed;
+- no library division operation is selected by this reference, and no
+  compiler or generated-artifact theorem follows from these model laws;
+- the signed order definition is a mathematical `BitVec.toInt` relation only.
 
 ## Ownership accounting oracle (issue #59)
 
