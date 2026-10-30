@@ -8,7 +8,7 @@ corners, surrogate rules and dynamic Programs are outside this file, and so are
 subtraction and ordered affine terms, which the issue admits only after this
 core is proved.
 
-Two zero-argument concerns stay separate, following the "differentiate, then
+The two concerns stay separate, following the "differentiate, then
 transpose" decomposition of *You Only Linearize Once* as a proof decomposition
 rather than as three runtime passes:
 
@@ -26,6 +26,9 @@ rather than as three runtime passes:
   (`the_overwriting_update_pairs_to_four`,
   `the_sweep_pairs_to_eight_on_the_second_slot`); it is a literal control, not a
   mutation of the sweep.
+
+The slot-facing extraction is modelled separately by `slotNode` and
+`slotGradient`, with a non-index-aligned fan-out/repeated-slot fixture.
 
 This is a *real* model. Nothing here says that binary32 gradients equal exact
 derivatives, and nothing here authorises reassociation, FMA contraction or
@@ -241,6 +244,36 @@ def adjointAfter (graph : Graph) (values seed : Nat → ℝ) : Nat → (Nat → 
       fun operand =>
         previous operand + contribution values (previous consumer) (graph.node consumer) operand
 
+/-- Find the node implementing an interface slot by scanning the stored node order.
+
+The result is total for the same reason that `Graph.node` is total: an absent
+slot falls back to node `0`.  The checked fixture below only asks for declared,
+unique slots, so that fallback is never used there.  Scanning from the newest
+node makes the convention deterministic if a malformed graph repeats a slot.
+-/
+def slotNodeUpTo (graph : Graph) (slot : Nat) : Nat → Nat
+  | 0 => 0
+  | count + 1 =>
+      match graph.node count with
+      | .input declared =>
+          if declared = slot then count else slotNodeUpTo graph slot count
+      | .param declared =>
+          if declared = slot then count else slotNodeUpTo graph slot count
+      | _ => slotNodeUpTo graph slot count
+
+/-- Node index corresponding to an interface slot, in the same shape as the
+`CheckedGraph::slot_node` lookup used by the Rust gradient extraction. -/
+def slotNode (graph : Graph) (slot : Nat) : Nat := slotNodeUpTo graph slot graph.arity
+
+/-- Read one interface-slot gradient from the completed reverse accumulation. -/
+def slotGradient (graph : Graph) (values seed : Nat → ℝ) (slot : Nat) : ℝ :=
+  adjointAfter graph values seed graph.arity (slotNode graph slot)
+
+/-- A test-local wrong-slot extraction: it treats the slot number as a node
+index instead of looking up the node that implements that slot. -/
+def wrongSlotGradient (graph : Graph) (values seed : Nat → ℝ) (slot : Nat) : ℝ :=
+  adjointAfter graph values seed graph.arity slot
+
 /-- The contribution of a repeated operand is counted twice, which is accumulation
 rather than overwriting. -/
 theorem repeated_operand_contributes_twice (values : Nat → ℝ) (consumerAdjoint : ℝ) (a : Nat) :
@@ -397,6 +430,164 @@ theorem the_sweep_pairs_to_eight_on_the_second_slot :
         (fun slot => if slot = 2 then 1 else 0) = 8 := by
   simp [adjointDot, adjointAfter, contribution, stepCoefficient, exampleGraph, exampleGraphValues,
     value, valuesUpTo, evalStep]
+  try norm_num
+
+/-! ### Slot extraction and fan-out fixture
+
+The second fixture deliberately separates slot and node indices: node `0`
+implements slot `1`, while node `1` implements slot `0`.  Node `2` fans out to
+the distinct consumers `5` and `6`; node `4` is `mul 0 0`, so the slot node at
+node `0` is consumed twice; and node `3` is a multiplication of the distinct
+operands `0` and `1`.  At `slot 0 = 3` and `slot 1 = 2`, the output is `39`
+with derivatives `17` and `26` respectively. -/
+
+def slotGraph : Graph where
+  arity := 8
+  node := fun index =>
+    if index = 0 then .input 1
+    else if index = 1 then .input 0
+    else if index = 2 then .add 0 1
+    else if index = 3 then .mul 0 1
+    else if index = 4 then .mul 0 0
+    else if index = 5 then .add 2 4
+    else if index = 6 then .mul 2 3
+    else .add 5 6
+
+def slotGraphInputs : Nat → ℝ := fun slot =>
+  if slot = 0 then 3 else if slot = 1 then 2 else 0
+
+def slotGraphValues : Nat → ℝ := fun index =>
+  value slotGraph slotGraphInputs (fun _ => 0) index
+
+def slotGraphSeed (seed : ℝ) : Nat → ℝ := fun index =>
+  if index = 7 then seed else 0
+
+def slotGraphDirection (slot : Nat) : Nat → ℝ := fun candidate =>
+  if candidate = slot then 1 else 0
+
+theorem slotGraph_wellFormed : WellFormed slotGraph := by
+  intro index
+  by_cases h0 : index = 0
+  · subst h0
+    simp [slotGraph, Node.operands]
+  by_cases h1 : index = 1
+  · subst h1
+    simp [slotGraph, Node.operands]
+  by_cases h2 : index = 2
+  · subst h2
+    simp [slotGraph, Node.operands]
+  by_cases h3 : index = 3
+  · subst h3
+    simp [slotGraph, Node.operands]
+  by_cases h4 : index = 4
+  · subst h4
+    simp [slotGraph, Node.operands]
+  by_cases h5 : index = 5
+  · subst h5
+    simp [slotGraph, Node.operands]
+  by_cases h6 : index = 6
+  · subst h6
+    simp [slotGraph, Node.operands]
+  · simp [slotGraph, h0, h1, h2, h3, h4, h5, h6, Node.operands]
+    omega
+
+theorem slotGraph_slotNode_map :
+    slotNode slotGraph 0 = 1 ∧ slotNode slotGraph 1 = 0 := by
+  simp [slotNode, slotNodeUpTo, slotGraph]
+
+theorem slotGraph_value :
+    value slotGraph slotGraphInputs (fun _ => 0) 7 = 39 := by
+  simp [value, valuesUpTo, evalStep, slotGraph, slotGraphInputs]
+  try norm_num
+
+theorem slotGraph_tangent_slot_zero :
+    tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 = 17 := by
+  simp [tangent, tangentUpTo, valuesUpTo, evalStep, tangentStep, slotGraph, slotGraphInputs,
+    slotGraphDirection]
+  try norm_num
+
+theorem slotGraph_tangent_slot_one :
+    tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7 = 26 := by
+  simp [tangent, tangentUpTo, valuesUpTo, evalStep, tangentStep, slotGraph, slotGraphInputs,
+    slotGraphDirection]
+  try norm_num
+
+theorem slotGraph_derivative_slot_zero :
+    HasDerivAt
+      (fun t : ℝ => value slotGraph
+        (line slotGraphInputs (slotGraphDirection 0) t)
+        (line (fun _ => 0) (fun _ => 0) t) 7) 17 (0 : ℝ) := by
+  have h := tangent_is_directional_derivative slotGraph slotGraph_wellFormed slotGraphInputs
+    (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7
+  simpa [slotGraph_tangent_slot_zero] using h
+
+theorem slotGraph_derivative_slot_one :
+    HasDerivAt
+      (fun t : ℝ => value slotGraph
+        (line slotGraphInputs (slotGraphDirection 1) t)
+        (line (fun _ => 0) (fun _ => 0) t) 7) 26 (0 : ℝ) := by
+  have h := tangent_is_directional_derivative slotGraph slotGraph_wellFormed slotGraphInputs
+    (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7
+  simpa [slotGraph_tangent_slot_one] using h
+
+theorem slotGraph_slotGradient_unit :
+    slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 0 = 17 ∧
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 1 = 26 := by
+  simp [slotGradient, slotNode, slotNodeUpTo, slotGraph, slotGraphValues, slotGraphSeed,
+    value, valuesUpTo, evalStep, slotGraphInputs, adjointAfter, contribution, stepCoefficient]
+  try norm_num
+
+theorem slotGraph_slotGradients_match_unit_tangent :
+    slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 0 =
+        tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 ∧
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 1 =
+        tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7 := by
+  constructor
+  · calc
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 0 = 17 :=
+        slotGraph_slotGradient_unit.1
+      _ = tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 :=
+        slotGraph_tangent_slot_zero.symm
+  · calc
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 1 = 26 :=
+        slotGraph_slotGradient_unit.2
+      _ = tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7 :=
+        slotGraph_tangent_slot_one.symm
+
+theorem slotGraph_slotGradient_five :
+    slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 0 = 85 ∧
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 1 = 130 := by
+  simp [slotGradient, slotNode, slotNodeUpTo, slotGraph, slotGraphValues, slotGraphSeed,
+    value, valuesUpTo, evalStep, slotGraphInputs, adjointAfter, contribution, stepCoefficient]
+  try norm_num
+
+theorem slotGraph_slotGradients_match_five_tangent :
+    slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 0 =
+        5 * tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 ∧
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 1 =
+        5 * tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7 := by
+  constructor
+  · calc
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 0 = 85 :=
+        slotGraph_slotGradient_five.1
+      _ = 5 * tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 := by
+        rw [slotGraph_tangent_slot_zero]
+        norm_num
+  · calc
+      slotGradient slotGraph slotGraphValues (slotGraphSeed 5) 1 = 130 :=
+        slotGraph_slotGradient_five.2
+      _ = 5 * tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 1) (fun _ => 0) 7 := by
+        rw [slotGraph_tangent_slot_one]
+        norm_num
+
+theorem slotGraph_wrong_slot_control :
+    wrongSlotGradient slotGraph slotGraphValues (slotGraphSeed 1) 0 ≠
+        slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 0 ∧
+      wrongSlotGradient slotGraph slotGraphValues (slotGraphSeed 1) 1 ≠
+        slotGradient slotGraph slotGraphValues (slotGraphSeed 1) 1 := by
+  simp [wrongSlotGradient, slotGradient, slotNode, slotNodeUpTo, slotGraph, slotGraphValues,
+    slotGraphSeed, value, valuesUpTo, evalStep, slotGraphInputs, adjointAfter, contribution,
+    stepCoefficient]
   try norm_num
 
 end NobleFoundation.ReverseAD

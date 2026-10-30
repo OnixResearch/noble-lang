@@ -3572,6 +3572,78 @@
       "phase": 2,
       "role": "binary32-error",
       "claim": "the normal-range absolute error rule applies to the exact positive input 1/3"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the slot-gradient fixture has strictly earlier operands and is a well-formed acyclic graph"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_slotNode_map",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixture's slot lookup maps slot 0 to node 1 and slot 1 to node 0 rather than using slot indices as node indices"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_value",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fan-out and repeated-slot fixture evaluates to 39 at its declared input assignment"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_tangent_slot_zero",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixture's unit forward tangent for slot 0 is 17"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_tangent_slot_one",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixture's unit forward tangent for slot 1 is 26"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_derivative_slot_zero",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixture's slot-0 tangent is the corresponding Mathlib directional derivative"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_derivative_slot_one",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixture's slot-1 tangent is the corresponding Mathlib directional derivative"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_slotGradient_unit",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "unit-seed reverse slot gradients are 17 for slot 0 and 26 for slot 1"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_slotGradients_match_unit_tangent",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "unit-seed reverse slot gradients equal the corresponding forward-mode tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_slotGradient_five",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a seed of 5 scales the reverse slot gradients to 85 for slot 0 and 130 for slot 1"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_slotGradients_match_five_tangent",
+      "phase": 1,
+      "role": "specification-quality",
+      "claim": "the seed-5 reverse slot gradients equal 5 times the corresponding forward-mode tangents"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.slotGraph_wrong_slot_control",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "reading a slot number as a node index gives gradients different from the mapped extraction on the fixture"
     }
   ]
 }

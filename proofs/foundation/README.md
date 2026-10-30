@@ -171,7 +171,7 @@ Status words:
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
-| Reverse-mode AD reference over the bounded smooth fragment | `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed` | `crates/noble-ngraph/src/grad.rs` reverse loop and the binary32 operation sequence | model **proved** (JVP, per-step accumulation, the one-step pairing invariant and the fixture transpose identity). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
+| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, and the wrong-slot control). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
@@ -897,7 +897,7 @@ Open, and deliberately not closed:
   claim, and no cross-checkpoint conservation claim without the carry-forward
   premise.
 
-## Reverse-mode AD reference (issue #45)
+## Reverse-mode AD reference (issue #45, phase 1)
 
 `NobleFoundation/ReverseAD.lean` models the bounded smooth slice — a
 well-formed acyclic graph over the reals with explicit input and parameter slots,
@@ -911,9 +911,10 @@ operands are (`evalStep_hasDerivAt`), and by induction on the stored order every
 node's denotation is (`valuesUpTo_hasDerivAt`), so the forward tangent recursion
 *is* Mathlib's derivative of the intended-real denotation at the declared
 assignment — the JVP specification (`tangent_is_directional_derivative`). The
-reverse traversal adds one processed consumer's contribution to an operand's
-adjoint (`adjoint_step_adds_contribution`), a repeated operand contributes twice
-so accumulation adds rather than overwrites (`repeated_operand_contributes_twice`),
+direction line starts at the declared assignment (`line_zero`). The reverse
+traversal adds one processed consumer's contribution to an operand's adjoint
+(`adjoint_step_adds_contribution`), a repeated operand contributes twice so
+accumulation adds rather than overwrites (`repeated_operand_contributes_twice`),
 and a node that is not an operand of the processed consumer is left unchanged,
 which is what makes the descending order finalize an adjoint before its own step
 (`adjoint_unchanged_when_operand_absent`). A contribution multiplies the
@@ -930,13 +931,35 @@ declared direction to exactly the tangent `8`. The overwrite control
 sweep pairs to `8` (`the_sweep_pairs_to_eight_on_the_second_slot`), so the fixture
 discriminates the update rule rather than agreeing with anything.
 
-Fixtures exercise the model: the example graph's well-formedness, denotation
-`16`, tangent `8` and its Mathlib derivative statement; a direction on an unused
-input slot contributing nothing; a non-unit seed surviving until a consumer
-contributes; and the pairing identity with its overwrite control. Receipt
+The slot extraction mirrors the implementation boundary: `slotNode` scans the
+finite node order for the node implementing a declared input/parameter slot,
+and `slotGradient` reads that node's final reverse adjoint, matching the
+`slot_grads`/`slot_node` shape in `crates/noble-ngraph/src/grad.rs`. The second
+fixture is intentionally non-index-aligned (`slotGraph_slotNode_map`): node `0`
+implements slot `1` and node `1` implements slot `0`; node `2` fans out to two
+distinct consumers; node `4` repeats the slot node in `mul 0 0`; and node `3`
+multiplies distinct operands. Its output is `39`, with unit forward tangents
+`17` and `26` (`slotGraph_tangent_slot_zero`,
+`slotGraph_tangent_slot_one`) and corresponding Mathlib derivative statements
+(`slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`). The mapped
+reverse extraction gives those same values for a unit output seed
+(`slotGraph_slotGradient_unit`,
+`slotGraph_slotGradients_match_unit_tangent`) and gives `85` and `130` for a
+seed of `5` (`slotGraph_slotGradient_five`,
+`slotGraph_slotGradients_match_five_tangent`). The mutant extraction that reads
+the slot number as a node index is rejected by
+`slotGraph_wrong_slot_control`. The two fixture well-formedness/value claims are
+`exampleGraph_wellFormed`, `exampleGraph_value`, and `slotGraph_wellFormed`,
+`slotGraph_value`; the remaining concrete controls are
+`exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`,
+and `non_unit_seed_unconsumed`.
+
+Receipt: the parent integration run must refresh the source-bound foundation
+receipt after this model commit; the prior retained receipt is at
 [`verification/foundation/receipts/b91f5504c/`](../../verification/foundation/receipts/b91f5504c/foundation-check.json)
-(458 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
+and is not evidence for these new source bytes. The checker must retain
+`clean_source: true`, only allow-listed axioms, and `implementation_theorem:
+false`.
 
 Open, and deliberately not closed:
 
