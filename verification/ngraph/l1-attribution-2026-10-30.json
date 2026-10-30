@@ -1,0 +1,2028 @@
+{
+  "schema": "noble-ngraph-l1-attribution-evidence/v1",
+  "issue": 75,
+  "scope": "L1 report attribution and session completion in noble-ngraph-experiment: the hardened adapter against real CLIs in both --opt legs, compared with the retained extraction receipt, plus the rule-mutation check of the fixture-child tests.",
+  "baseline": {
+    "path": "verification/ngraph/phase-b-extract.json",
+    "sha256": "e036ba3fad733f2e76d9b607c4b8ff03fd40e8cc61607bd1e6e5ca8d873fcdf2",
+    "source_revision": "f5806a0f2dec22c59ad53d5b446a8c4db800e32c",
+    "cli_source_revision": "eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb",
+    "cli_sha256": "f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec"
+  },
+  "runs": [
+    {
+      "label": "cli-eccbc02",
+      "cli_source_revision": "eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb",
+      "cli_sha256": "aa280cde25f1741796a9133150b89cdf335c0e513ea306024a379f71e210198f",
+      "adapter_source_revision": "15a873a4",
+      "harness": {
+        "result": "passed",
+        "optimization_mode": "debug",
+        "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+        "workload": "B1 I1-I4; B2 10 named graphs + 64 random Core programs x 200 vectors (L2-L4), L1 on named design vectors + 24 vectors per named graph and 16 random programs x 24 vectors, I4 1000 host steps; B3 source controls",
+        "node": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "wall_seconds": 190.402703135,
+        "l1_totals": {
+          "off": {
+            "agree": 538,
+            "graphs": 26,
+            "ordinary_quota_outcomes": 24,
+            "session_restarts_after_ordinary_quota": 24,
+            "vectors": 562
+          },
+          "on": {
+            "agree": 538,
+            "graphs": 26,
+            "ordinary_quota_outcomes": 24,
+            "session_restarts_after_ordinary_quota": 24,
+            "vectors": 562
+          }
+        }
+      },
+      "session_failures": 0,
+      "compared": 69,
+      "identical": 69,
+      "records": [
+        {
+          "record": "named[0] I1 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[0] I1 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[1] I2 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[1] I2 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[2] I3 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[2] I3 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[3] I4 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[3] I4 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[4] operand-order-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[4] operand-order-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[5] operand-order --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[5] operand-order --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[6] overflow-add-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[6] overflow-add-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[7] overflow-add --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[7] overflow-add --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[8] overflow-mul-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[8] overflow-mul-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[9] overflow-mul --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[9] overflow-mul --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[0] random-0 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[0] random-0 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[1] random-1 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 0,
+            "ordinary_quota_outcomes": [
+              "0:exhausted",
+              "1:exhausted",
+              "2:exhausted",
+              "3:exhausted",
+              "4:exhausted",
+              "5:exhausted",
+              "6:exhausted",
+              "7:exhausted",
+              "8:exhausted",
+              "9:exhausted",
+              "10:exhausted",
+              "11:exhausted",
+              "12:exhausted",
+              "13:exhausted",
+              "14:exhausted",
+              "15:exhausted",
+              "16:exhausted",
+              "17:exhausted",
+              "18:exhausted",
+              "19:exhausted",
+              "20:exhausted",
+              "21:exhausted",
+              "22:exhausted",
+              "23:exhausted"
+            ],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[1] random-1 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 0,
+            "ordinary_quota_outcomes": [
+              "0:exhausted",
+              "1:exhausted",
+              "2:exhausted",
+              "3:exhausted",
+              "4:exhausted",
+              "5:exhausted",
+              "6:exhausted",
+              "7:exhausted",
+              "8:exhausted",
+              "9:exhausted",
+              "10:exhausted",
+              "11:exhausted",
+              "12:exhausted",
+              "13:exhausted",
+              "14:exhausted",
+              "15:exhausted",
+              "16:exhausted",
+              "17:exhausted",
+              "18:exhausted",
+              "19:exhausted",
+              "20:exhausted",
+              "21:exhausted",
+              "22:exhausted",
+              "23:exhausted"
+            ],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[2] random-2 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[2] random-2 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[3] random-3 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[3] random-3 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[4] random-4 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[4] random-4 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[5] random-5 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[5] random-5 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[6] random-6 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[6] random-6 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[7] random-7 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[7] random-7 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[8] random-8 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[8] random-8 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[9] random-9 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[9] random-9 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[10] random-10 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[10] random-10 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[11] random-11 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 23,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[11] random-11 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 23,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[12] random-12 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[12] random-12 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[13] random-13 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[13] random-13 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[14] random-14 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[14] random-14 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[15] random-15 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[15] random-15 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "i4_transition --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": null,
+            "steps": 1000,
+            "agree": 1000,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "i4_transition --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": null,
+            "steps": 1000,
+            "agree": 1000,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "B3 test.emit",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 test.emit-in-run",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 liveref-input",
+          "identical": true,
+          "fresh": {
+            "reports": null,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": null,
+            "last_stack": [
+              {
+                "kind": 1,
+                "value": "6"
+              }
+            ],
+            "live_slot_outcomes": [
+              "configured",
+              "installed",
+              "definition-retained",
+              "installed",
+              "published",
+              "executed"
+            ]
+          }
+        },
+        {
+          "record": "B3 live-slot-dispatch",
+          "identical": true,
+          "fresh": {
+            "reports": null,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": null,
+            "last_stack": [
+              {
+                "kind": 1,
+                "value": "6"
+              }
+            ],
+            "live_slot_outcomes": [
+              "configured",
+              "installed",
+              "definition-retained",
+              "installed",
+              "published",
+              "executed"
+            ]
+          }
+        },
+        {
+          "record": "B3 run-of-program-input",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(6)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 self-recursion",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unsupported",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 self-recursion-kernel",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unsupported",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 mutual-recursion",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unbound-word",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 mutual-recursion-kernel",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unbound-word",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 reflect",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 if",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(1)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 case",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(6)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 list.case",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(1)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 program-output",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[Other(\"Program\")]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 expansion-chain-k20",
+          "identical": true,
+          "fresh": {
+            "reports": 22,
+            "first_non_normal": 10,
+            "first_non_normal_outcome": "exhausted",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        }
+      ],
+      "differing": []
+    },
+    {
+      "label": "cli-head",
+      "cli_source_revision": "15a873a4d76cf6bfde95c795e13569180cf9a96a",
+      "cli_sha256": "01d70cfc34c59cd30148477ad5ece97a5d6303806f96002be72428cc258c0016",
+      "adapter_source_revision": "15a873a4",
+      "harness": {
+        "result": "passed",
+        "optimization_mode": "debug",
+        "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+        "workload": "B1 I1-I4; B2 10 named graphs + 64 random Core programs x 200 vectors (L2-L4), L1 on named design vectors + 24 vectors per named graph and 16 random programs x 24 vectors, I4 1000 host steps; B3 source controls",
+        "node": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "wall_seconds": 159.197552309,
+        "l1_totals": {
+          "off": {
+            "agree": 562,
+            "graphs": 26,
+            "ordinary_quota_outcomes": 0,
+            "session_restarts_after_ordinary_quota": 3,
+            "vectors": 562
+          },
+          "on": {
+            "agree": 562,
+            "graphs": 26,
+            "ordinary_quota_outcomes": 0,
+            "session_restarts_after_ordinary_quota": 3,
+            "vectors": 562
+          }
+        }
+      },
+      "session_failures": 0,
+      "compared": 69,
+      "identical": 65,
+      "records": [
+        {
+          "record": "named[0] I1 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[0] I1 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[1] I2 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[1] I2 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[2] I3 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[2] I3 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[3] I4 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[3] I4 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[4] operand-order-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[4] operand-order-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[5] operand-order --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[5] operand-order --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[6] overflow-add-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[6] overflow-add-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[7] overflow-add --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[7] overflow-add --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[8] overflow-mul-literals --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[8] overflow-mul-literals --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 1,
+            "steps": null,
+            "agree": 1,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[9] overflow-mul --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "named[9] overflow-mul --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 25,
+            "steps": null,
+            "agree": 25,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[0] random-0 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[0] random-0 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[1] random-1 --opt off",
+          "identical": false,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          },
+          "baseline": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 0,
+            "ordinary_quota_outcomes": [
+              "0:exhausted",
+              "1:exhausted",
+              "2:exhausted",
+              "3:exhausted",
+              "4:exhausted",
+              "5:exhausted",
+              "6:exhausted",
+              "7:exhausted",
+              "8:exhausted",
+              "9:exhausted",
+              "10:exhausted",
+              "11:exhausted",
+              "12:exhausted",
+              "13:exhausted",
+              "14:exhausted",
+              "15:exhausted",
+              "16:exhausted",
+              "17:exhausted",
+              "18:exhausted",
+              "19:exhausted",
+              "20:exhausted",
+              "21:exhausted",
+              "22:exhausted",
+              "23:exhausted"
+            ],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[1] random-1 --opt on",
+          "identical": false,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          },
+          "baseline": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 0,
+            "ordinary_quota_outcomes": [
+              "0:exhausted",
+              "1:exhausted",
+              "2:exhausted",
+              "3:exhausted",
+              "4:exhausted",
+              "5:exhausted",
+              "6:exhausted",
+              "7:exhausted",
+              "8:exhausted",
+              "9:exhausted",
+              "10:exhausted",
+              "11:exhausted",
+              "12:exhausted",
+              "13:exhausted",
+              "14:exhausted",
+              "15:exhausted",
+              "16:exhausted",
+              "17:exhausted",
+              "18:exhausted",
+              "19:exhausted",
+              "20:exhausted",
+              "21:exhausted",
+              "22:exhausted",
+              "23:exhausted"
+            ],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[2] random-2 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[2] random-2 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[3] random-3 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[3] random-3 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[4] random-4 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[4] random-4 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[5] random-5 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[5] random-5 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[6] random-6 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[6] random-6 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[7] random-7 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[7] random-7 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[8] random-8 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[8] random-8 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[9] random-9 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[9] random-9 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[10] random-10 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[10] random-10 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[11] random-11 --opt off",
+          "identical": false,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          },
+          "baseline": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 23,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[11] random-11 --opt on",
+          "identical": false,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 1,
+            "session_failure": null
+          },
+          "baseline": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 23,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[12] random-12 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[12] random-12 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[13] random-13 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[13] random-13 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[14] random-14 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[14] random-14 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[15] random-15 --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "random[15] random-15 --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": 24,
+            "steps": null,
+            "agree": 24,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "i4_transition --opt off",
+          "identical": true,
+          "fresh": {
+            "vectors": null,
+            "steps": 1000,
+            "agree": 1000,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "i4_transition --opt on",
+          "identical": true,
+          "fresh": {
+            "vectors": null,
+            "steps": 1000,
+            "agree": 1000,
+            "ordinary_quota_outcomes": [],
+            "session_restarts_after_ordinary_quota": 0,
+            "session_failure": null
+          }
+        },
+        {
+          "record": "B3 test.emit",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 test.emit-in-run",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 liveref-input",
+          "identical": true,
+          "fresh": {
+            "reports": null,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": null,
+            "last_stack": [
+              {
+                "kind": 1,
+                "value": "6"
+              }
+            ],
+            "live_slot_outcomes": [
+              "configured",
+              "installed",
+              "definition-retained",
+              "installed",
+              "published",
+              "executed"
+            ]
+          }
+        },
+        {
+          "record": "B3 live-slot-dispatch",
+          "identical": true,
+          "fresh": {
+            "reports": null,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": null,
+            "last_stack": [
+              {
+                "kind": 1,
+                "value": "6"
+              }
+            ],
+            "live_slot_outcomes": [
+              "configured",
+              "installed",
+              "definition-retained",
+              "installed",
+              "published",
+              "executed"
+            ]
+          }
+        },
+        {
+          "record": "B3 run-of-program-input",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(6)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 self-recursion",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unsupported",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 self-recursion-kernel",
+          "identical": true,
+          "fresh": {
+            "reports": 2,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unsupported",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 mutual-recursion",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unbound-word",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 mutual-recursion-kernel",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": 0,
+            "first_non_normal_outcome": "unbound-word",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 reflect",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(5)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 if",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(1)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 case",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(6)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 list.case",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[I64(1)]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 program-output",
+          "identical": true,
+          "fresh": {
+            "reports": 1,
+            "first_non_normal": null,
+            "first_non_normal_outcome": null,
+            "last_outcome": "normal",
+            "last_stack": "[Other(\"Program\")]",
+            "live_slot_outcomes": null
+          }
+        },
+        {
+          "record": "B3 expansion-chain-k20",
+          "identical": true,
+          "fresh": {
+            "reports": 22,
+            "first_non_normal": 10,
+            "first_non_normal_outcome": "exhausted",
+            "last_outcome": "unbound-word",
+            "last_stack": "[]",
+            "live_slot_outcomes": null
+          }
+        }
+      ],
+      "differing": [
+        {
+          "record": "random[1] random-1 --opt off",
+          "attributed_to_cli_version": true
+        },
+        {
+          "record": "random[1] random-1 --opt on",
+          "attributed_to_cli_version": true
+        },
+        {
+          "record": "random[11] random-11 --opt off",
+          "attributed_to_cli_version": true
+        },
+        {
+          "record": "random[11] random-11 --opt on",
+          "attributed_to_cli_version": true
+        }
+      ]
+    }
+  ],
+  "mutations": {
+    "path_sha256": "3f2ecb34b93bb47c5528c8fbf5c7bf8bec59774e8ed917b59cac721894551020",
+    "source_revision": "15a873a4d76cf6bfde95c795e13569180cf9a96a",
+    "file_sha256": "70e66b7964306efca2d1f4d92accc62d2655d3d88ed5ccc8e9ce84330c9d206b",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "unmutated_passed": 15,
+    "result": "passed",
+    "silent": [],
+    "rules": [
+      {
+        "rule": "ordinal",
+        "failed": [
+          "duplicated_reordered_extra_and_missing_lines_fail_as_protocol",
+          "a_root_cannot_be_answered_by_another_submissions_report",
+          "wrong_or_missing_identity_fields_fail_as_protocol"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "source digest",
+        "failed": [
+          "mutated_module_identity_fails_as_protocol",
+          "a_root_cannot_be_answered_by_another_submissions_report"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "opt leg",
+        "failed": [
+          "mutated_module_identity_fails_as_protocol"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "definition role",
+        "failed": [
+          "a_root_cannot_be_answered_by_another_submissions_report"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "input/root role",
+        "failed": [
+          "a_root_cannot_be_answered_by_another_submissions_report"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "truncation",
+        "failed": [
+          "duplicated_reordered_extra_and_missing_lines_fail_as_protocol"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "after terminal",
+        "failed": [
+          "a_line_after_a_terminal_outcome_or_past_the_bound_fails_as_protocol"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "exit status",
+        "failed": [
+          "an_unexplained_exit_or_signal_fails_as_process"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "delivery",
+        "failed": [
+          "undelivered_input_fails_as_transport"
+        ],
+        "timed_out": false
+      },
+      {
+        "rule": "kill on violation",
+        "failed": [],
+        "timed_out": true
+      }
+    ]
+  },
+  "unattributed_differences": [],
+  "non_claims": [
+    "The checks bind reports to the submitted sequence and to the self-reported module identity; they do not attest a malicious child or prove the semantics of the pinned CLI or engine.",
+    "The fixture children and mutations are finite negative controls, not a proof of execution correctness.",
+    "A CLI-version difference is attributed by exact reproduction with a CLI built from the baseline revision; it is not explained beyond that."
+  ],
+  "result": "passed"
+}

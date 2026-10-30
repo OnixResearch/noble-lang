@@ -184,6 +184,7 @@ Failed attempts remain failures in their own evidence directories; historical re
 |---|---|
 | [phase-b-core.json](phase-b-core.json) | Core receipt (schema `noble-ngraph-phase-b-core-evidence/v1`): BE-CONFIG-01 run fields and one EV-STATE-01 record per item, each with `implementation`, `execution`, `proof`, `trust`, open obligations, trusted boundaries and its result. |
 | [phase-b-extract.json](phase-b-extract.json) | `I64` extraction-leg receipt (schema `noble-ngraph-phase-b-extract-evidence/v1`): BE-CONFIG-01 run fields (including the pinned CLI and Node with their SHA-256) and the EV-STATE-01 records `B1-I64-lowering`, `B2-I64-differential` and `B3-I64-source-controls`. |
+| [l1-attribution-2026-10-30.json](l1-attribution-2026-10-30.json) | L1 attribution re-check for issue #75 (schema `noble-ngraph-l1-attribution-evidence/v1`), produced by [l1-attribution.mjs](l1-attribution.mjs). The hardened adapter ran against two real CLIs, in both `--opt` legs; their 69 L1 and B3 ordinary-path records are compared with `phase-b-extract.json`. The receipt also holds the rule-mutation result of [l1-attribution-mutations.mjs](l1-attribution-mutations.mjs). |
 | [test-log.txt](test-log.txt) | `cargo test -p noble-ngraph-experiment` output (default suite, debug) at the receipt's source revision. Historical: it predates the `numeric-graph-v1` split. |
 
 The `I64` extraction leg covers `I1`–`I4` extracted from Core source by D7, L1 (the ordinary Noble Wasm/V8 path through the real CLI), the L2 BigInt oracle and the source-level B3 controls. The core receipt covers the `F32` legs and the authored-IR controls.
@@ -206,6 +207,23 @@ cargo run --release -p noble-ngraph-experiment --bin ngraph-phase-b-extract -- \
 Core defaults: 8 random graphs × 20,000 input vectors (48 operations each), 10^6 operand pairs per operation, 2,000 gradient samples, 500 training steps. The whole run took 0.66 s of wall time; the default test suite runs in about 1 s in debug.
 
 Extraction-leg defaults: seed `0x1404b201`, 64 random Core programs × 10,000 vectors, L1 on 16 of them × 24 vectors, `I4` for 1,000 host steps. `--cli` is a release `noble` built from `origin/main` (the receipt used `noble-integration-eccbc02-release`, whose SHA-256 it records). The run took 232 s. The L2 test `extract_b2.rs` that needs `NOBLE_NODE` is `#[ignore]` in the default suite.
+
+Set `TMPDIR` to a directory that no other principal can write, and whose ancestors no other principal can write either. The B3 live-slot controls write their authority file there, and `noble live slot` refuses an authority file or ancestor that another principal can write. With the world-writable `/tmp`, both live-slot controls record `refused`.
+
+The L1 attribution re-check (issue #75) reruns the extraction leg with `--vectors 200`. That option sizes only the L2–L4 campaign: L1 still sees the same 16 programs × 24 vectors and the same 1,000 transition steps.
+
+Run the leg once per CLI. The receipt used a release CLI built from `eccbc02` (the baseline's CLI revision) and a CLI built from the adapter's own revision. Then build the receipt from a clean tree:
+
+```text
+node verification/ngraph/l1-attribution-mutations.mjs --cargo "$(command -v cargo)" --out /abs/mutations.json
+node verification/ngraph/l1-attribution.mjs \
+  --baseline verification/ngraph/phase-b-extract.json --baseline-cli-revision "$(git rev-parse eccbc02)" \
+  --run cli-eccbc02 /abs/extract-eccbc02.json "$(git rev-parse eccbc02)" \
+  --run cli-head /abs/extract-head.json "$(git rev-parse HEAD)" \
+  --mutations /abs/mutations.json --out verification/ngraph/l1-attribution-YYYY-MM-DD.json
+```
+
+The mutation runner edits `crates/noble-ngraph-experiment/src/l1/mod.rs` in place, one rule at a time. It restores the file and verifies the restore by SHA-256, including on a signal.
 
 ## Run (from the receipt)
 
@@ -245,6 +263,20 @@ These are differences between the design text and what the extraction leg execut
 - **Recursion is unreachable from Core source.** The Core frontend refuses recursive definitions ("recursive definitions require a signature and are outside Core-Bootstrap"), so the recursion controls are minimally forged, kernel-accepted submissions. `E-RECURSION` comes from admission stage 1(b), from a depth-first search over definition identities, rather than from the named-call expansion stack. When the forged subject's `Env::deps` also records the cycle, the kernel's own acceptance refuses the body first, and admission reports `E-SUBJECT`. Both variants are recorded.
 - **The `k = 20` chain is hand-assembled.** The Core frontend stops the chain at `d10` with an `exhausted` "frontend node limit exceeded". The `k = 20` subject is therefore assembled from the frontend's `d0` submission, with one shared row per level, and accepted by the kernel. The ordinary path's own outcome on the same source is recorded next to it.
 - **L1 runs in chunked sessions.** A Core session retains every prepared module, so long runs use fresh session processes of at most 240 submissions, re-committing the definitions in each. A transition carries its state across sessions on the host side. A quota outcome caused by accumulated session state restarts the vector in a fresh session and is counted (`session_restarts_after_ordinary_quota`); it is not an observation of the root.
+- **L1 reports are attributed before they count (issue #75).** The adapter now validates each line from `noble session --framed` before it counts:
+  - The schema, profile and backend must be the expected ones.
+  - The session-local `submission` ordinal must equal the line's position. A fresh process, after a quota restart or at a chunk boundary, starts again at 1.
+  - A runtime report must carry its status, stack, session state and module record. The record must name the same ordinal, the SHA-256 of the exact submitted text, and the `--opt` leg.
+  - A definition never reports `normal`, and an input or root never reports `defined`. So a replayed root report, or an input report in a root position, is rejected even when its value is equal.
+  - The exit status must equal the maximum of the CLI's per-outcome statuses.
+  - Fewer reports than submissions, or undelivered input, is legitimate only after a terminal outcome.
+  - Extra lines, lines after a terminal outcome, and lines over 1 MiB are rejected.
+
+  Any violation kills and reaps the child. B2 then records the failure as its own class, `session_failure`, with its class (protocol, process or transport), its reason, the validated count, the last 32 reports, and the child's exit code or signal. It is a failed check, never agreement and never a numeric disagreement. A fresh, correctly attributed report with a wrong value is still accepted, so the numeric comparison stays separate.
+
+  `phase-b-extract.json` predates these checks. The 2026-10-30 re-check reproduces all 69 of its L1 and B3 ordinary-path records with a CLI built from `eccbc02`, with no session failure. With a CLI built from the adapter's own revision, 65 of 69 records are identical. The 4 that differ are random programs 1 and 11 in both legs: 24/24 agreement instead of 24 static `exhausted` outcomes, and 1 restart instead of 23. These are CLI-version changes, because the `eccbc02` run reproduces them exactly.
+
+  The checks bind reports to the submitted sequence and to the self-reported module identity. They do not attest a malicious child or the semantics of the pinned CLI or engine.
 - **Codes for unspecified cases.** Where the design names no code, the leg chose one and states the reason in the diagnostic detail. D7 1(c) requires `P` scalars in the root interface but names no code: a Program-typed root input gives `E-DYNAMIC-RUN` and a Program-typed root output gives `E-PROGRAM-OUTPUT`. D5 says raising a `/0` budget needs a new profile policy revision but names no code: the request is refused with `E-PROFILE`.
 - **Subject identity is a producer digest.** The subject digest in `GraphLogicalId` is BLAKE3 over the kernel's `Debug` rendering of the subject. It identifies bytes; it is not independent validation.
 - **Only L1 checks extraction against source.** L2 (BigInt), L3 and L4 all evaluate the *extracted* graph. L1 is the only leg that observes the source independently of extraction, and it covers a recorded sample (562 vectors per mode and the 1,000-step `I4` transition), not every vector.
