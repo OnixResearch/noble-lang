@@ -1250,11 +1250,42 @@ The clean-source receipt for the node-by-node adjoint equation is
 (847 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+`NobleFoundation/ReverseADOrdered.lean` adds an **ordered binary32** reverse-AD reference over the
+kernel-reducible operations of `Binary32.lean` (issue #38). It fixes the order of `backward` in
+`crates/noble-ngraph/src/grad.rs` for `R = f32`:
+- forward values in stored node order, one rounding per operation;
+- every adjoint starts at `+0`, and each `(output, seed)` pair is accumulated as `rn(gr[o] + s)`;
+- nodes in descending stored order, each node's adjoint read once before its contributions;
+- `add a b` accumulates into `a` then `b`, `sub a b` accumulates `gn` then `rn(+0 − gn)`, and
+  `mul a b` accumulates `rn(gn·v_b)` into `a` then `rn(gn·v_a)` into `b`. Each accumulation is one
+  rounded addition, so a repeated operand accumulates once per occurrence.
+
+The fixtures are kernel-checked by `decide`:
+- **Stored order:** `x·1 + x·2^24 + x·(−2^24)` stored in two valid orders gives gradients `1` and
+  `+0` at `x = 1`, because `rn(1 + 2^24) = 2^24` absorbs the `1` in the second order
+  (`stored_order_changes_the_gradient`). The real-valued sweep of `ReverseAD.lean` gives `1` for
+  both (`exact_gradient_is_one_in_both_orders`), so the difference is rounding, not a different
+  function.
+- **Traversal:** ascending traversal gives `+0` on the first order (`ascending_traversal_is_caught`).
+- **Per occurrence:** `x·x + x·2^24` gives `2^24`, while accumulating the two partials of
+  `mul 0 0` presummed gives `2^24 + 2`, the exact derivative
+  (`per_occurrence_accumulation_is_observable`).
+- **Seeds:** two seeds on one output accumulate to `3` where assignment keeps `2`
+  (`repeated_output_seeds_accumulate`), and a `−0` seed becomes `+0`
+  (`negative_zero_seed_becomes_positive`).
+- **Exact case:** on an exactly representable fixture the sweep returns the exact derivative `8`
+  (`exact_fixture_gives_the_derivative`).
+
+These are seeded order and initialization controls on fixtures, not a binary32 error bound, and
+no theorem relates the model to `grad.rs`.
+
+The parent attaches the clean foundation receipt at integration.
+
 Open, and deliberately not closed:
 
-- no ordered **binary32** gradient model: a real-valued theorem does not
-  establish that binary32 gradients equal exact derivatives, and no
-  reassociation, FMA contraction or parallel reduction is authorisation;
+- no binary32 **error bound** for gradients: the ordered model fixes the operation order, but no
+  theorem bounds its distance from the exact derivative, and no reassociation, FMA contraction or
+  parallel reduction is authorisation;
 - the transpose identity and the node-by-node adjoint equation are real-valued
   theorems: nothing transfers them to binary32 or to `grad.rs`;
 - no correspondence claim relates this file to

@@ -5090,6 +5090,48 @@
       "phase": 3,
       "role": "fixture",
       "claim": "the example graph interior node adjoint is its seed 5 plus the addition contribution 8"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.stored_order_changes_the_gradient",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "the same function stored in two valid orders has ordered binary32 gradient 1 and +0, because rn(1 + 2^24) absorbs the 1"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.ascending_traversal_is_caught",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "ascending traversal reads consumer adjoints before they accumulate and gives +0 where the reference gives 1"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.per_occurrence_accumulation_is_observable",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "a repeated multiplication operand accumulated once per occurrence gives 2^24, while presumming its two partials gives 2^24 + 2"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.repeated_output_seeds_accumulate",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "two seeds on one output accumulate to 3 while assigning them keeps 2"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.negative_zero_seed_becomes_positive",
+      "phase": 3,
+      "role": "negative-control",
+      "claim": "a negative-zero seed accumulated from +0 gives +0 while assigning it keeps -0"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.exact_fixture_gives_the_derivative",
+      "phase": 3,
+      "role": "fixture",
+      "claim": "on an exactly representable fixture the ordered binary32 sweep returns the exact derivative 8"
+    },
+    {
+      "name": "NobleFoundation.ReverseAD.Ordered.exact_gradient_is_one_in_both_orders",
+      "phase": 3,
+      "role": "fixture",
+      "claim": "the real-valued reverse sweep gives gradient 1 for both stored orders of the cancellation fixture"
     }
   ]
 }
