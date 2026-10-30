@@ -24,6 +24,15 @@
 //! the model's literal-range refusals: those cannot occur in `i64`, which is why `evaluate` is total.
 //! The declared cost counters are checked, but elapsed time is only *reported* — no timing assertion
 //! is made, because a timing assertion on one host would be a claim this lane cannot support.
+//!
+//! The `graph` and `budgets` modules run the graph-backed batch (`batch::Prepared`) and compare
+//! every row with independent single-row runs of the same checked graph.
+
+#[path = "batch_rows/budgets.rs"]
+mod budgets;
+mod common;
+#[path = "batch_rows/graph.rs"]
+mod graph;
 
 struct Case {
     row: noble_ngraph::batch::Row,

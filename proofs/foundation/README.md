@@ -1822,6 +1822,11 @@ Receipt for the cost model:
 [verification/foundation/receipts/f91cc50f7/](../../verification/foundation/receipts/f91cc50f7/foundation-check.json)
 (471 theorems, `clean_source: true`, axiom sets inside the allow-list).
 
+The graph-backed Rust batch, `batch::Prepared` in `crates/noble-ngraph/src/batch.rs`,
+runs one checked I64 graph over ordered rows and is compared row by row with
+independent single-row runs in `crates/noble-ngraph/tests/batch_rows/`. That is
+tested-implementation evidence; no theorem here relates it to `evalBatch`.
+
 Open, and deliberately not closed by this model: no byte budget beyond the
 literal-range rule, no validation rule beyond the literal range is
 modelled, no parameter snapshot or output ownership is modelled, and no
