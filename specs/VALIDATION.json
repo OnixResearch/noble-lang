@@ -2780,7 +2780,7 @@
     },
     {
       "file": "verification/grad-ordered/README.md",
-      "sha256": "c1f9a9e7f0f904a2801881d085fac2b7f3b78ef819f9668af15578fb7991b6f0"
+      "sha256": "31a161b71fba45c6a17e8701f387864fccca2829d54f01d6e13ea64246cbcaed"
     },
     {
       "file": "verification/independent-replay/README.md",

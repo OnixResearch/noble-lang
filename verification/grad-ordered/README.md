@@ -51,7 +51,12 @@ and binds the corpus, generator, model, binary32, lane and `grad.rs` digests.
 
 ## Retained run
 
-### `713e02bd`: [differential.json](differential.json)
+### `964e6966`: [differential.json](differential.json)
+
+The first record, at `713e02bd`, was replaced: the Octet deny-all gate then found 13 findings in the
+lane module (platform-dependent casts, exhaustive matches on a local enum, and test names repeating
+`ordered`). They were cleared in code at `7b4e3245` without allows, and the lane was re-recorded with
+the same counts.
 
 The run used `rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)` on `Linux 6.18.54 x86_64`, from a clean
 source. All 306 cases agree: 2,270 forward values and 2,270 gradients. 63 cases involve non-finite

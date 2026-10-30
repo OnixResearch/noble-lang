@@ -1,15 +1,15 @@
 {
   "schema": "noble-grad-ordered-differential/v1",
   "assertion": "grad::forward and grad::backward for f32 match every forward value and gradient the ordered binary32 Lean reference generates, on this host and target, with NaN encodings one observation class; each declared single-rule reverse-pass fault disagrees with at least one expectation; not a refinement proof",
-  "source_commit": "713e02bd74374433d62947f6fd03b7181fd90bc6",
-  "source_tree": "dfe74b7464de10d4566b92352653917b314ecbd9",
+  "source_commit": "964e6966edd9345ba78abd176bec3c78622ea15b",
+  "source_tree": "8b43ef1cc70a8026950519cec5cb9e1a052904c1",
   "clean_source": true,
   "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
   "host": "Linux 6.18.54 x86_64",
   "command": "CARGO_TARGET_DIR=/var/tmp/noble-grad-ordered-target CARGO_INCREMENTAL=0 cargo test -p noble-ngraph --test train_admission grad_ordered -- --nocapture",
   "lanes": [
-    "grad_ordered::ordered_gradients_match_the_lean_reference",
-    "grad_ordered::ordered_gradient_corpus_detects_each_seeded_fault"
+    "grad_ordered::forward_and_backward_match_the_lean_reference",
+    "grad_ordered::corpus_detects_each_seeded_fault"
   ],
   "corpus_file": "crates/noble-ngraph/tests/grad_ordered/corpus.txt",
   "corpus_file_sha256": "ea1332b1b995b4aa7b61baa844fc2eaadd10f93af619d77b165a17d6911ef3b5",
@@ -20,7 +20,7 @@
   "binary32_file": "proofs/foundation/NobleFoundation/Binary32.lean",
   "binary32_file_sha256": "5a95176815989e3ff34f18fe62d5b4f4579bc1f946638f111b571e37f093e412",
   "lane_file": "crates/noble-ngraph/tests/grad_ordered/differential.rs",
-  "lane_file_sha256": "6496429df1741797e9da8500bd06c764e5f15eb499f8f90ee5efd6b5ff3f2854",
+  "lane_file_sha256": "60cd077692db9eb72530a8a01619eac2c809ef03ee42dd341cb631561a553608",
   "subject_file": "crates/noble-ngraph/src/grad.rs",
   "subject_file_sha256": "2357538eb8ff831af523c94b8057eec28d87ecefe824c9969e6ef6e2dd4b02e4",
   "coverage": {
