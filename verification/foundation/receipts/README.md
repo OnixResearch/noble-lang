@@ -359,3 +359,10 @@ with its sign control (12 new theorems; that run reported 804 in total).
 per-word rules equivalent to `step`, the judgment on them equal to `Accounts`, checker
 completeness, and the eligibility-agreement lift over straight-line word sequences (9 new
 theorems; that run reported 813 in total).
+
+## e1eca8b19 — binary32 subnormal rounding error (issue #44)
+
+`e1eca8b19/` records the clean run that added `NobleFoundation.Binary32.Subnormal`: the subnormal
+branch of `roundPositive` within `2^-150`, the finite absolute error rule over every binade, the
+attained bound at the smallest normal, and the relative-error control (15 new theorems; that run
+reported 828 in total).

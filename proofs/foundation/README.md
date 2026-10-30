@@ -678,7 +678,10 @@ smallest subnormal with an error of a third of its value
 `subnormal_rule_applies_below_the_normal_range` applies the rule to `1 / (3 · 2^130)`, which rounds
 to the significand `174763`.
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the subnormal unit is
+[`verification/foundation/receipts/e1eca8b19/`](../../verification/foundation/receipts/e1eca8b19/foundation-check.json)
+(828 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ### The ordered `affine` fold, and the layer classification
 
