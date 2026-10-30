@@ -175,6 +175,7 @@ Status words:
 | Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, and the wrong-slot control). Ordered binary32 gradient model, Rust refinement and the transpose identity over arbitrary graphs **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
+| Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Subnormal error rule and implementation correspondence **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
@@ -615,9 +616,8 @@ carried exponent is in `[-126, 127]`,
 the bin's lower endpoint. `exactValue_of_scaledMagnitude` and
 `exactValue_normalEncoding` prove the exact-value decoding of every bounded
 normal output, so the error theorems no longer assume that rewrite. The scale
-and bin inequalities remain explicit premises: deriving them from the custom
-`floorLog2Ratio` for every positive input is a separately open proof obligation,
-not an unproved domain assumption. These are model theorems with explicit
+and bin inequalities are explicit premises of these two theorems;
+`Binary32Scale.lean`, below, derives them. These are model theorems with explicit
 arithmetic premises, not implementation correspondence claims. The
 kernel-checked `flush_to_zero_violates_absolute_bound` control records the
 smallest-normal times one-half witness: the exact product is `2^-127`, while
@@ -627,6 +627,28 @@ flushing it to zero exceeds `2^-150`.
 the remaining normal-bin and finite-carry premises hold for exact input
 `1/3`, and the absolute bound is concluded for that encoded `roundPositive`
 call.
+
+`NobleFoundation/Binary32Scale.lean` derives those scale premises (issue #44). It first proves
+that the model's fuel-bounded `log2` is the core floor logarithm (`log2_eq`), which brackets
+`floorLog2Ratio`: `2^e · b ≤ a` for every positive input (`floorLog2Ratio_lower`), and
+`a < 2^(e+1) · b` off one family of inputs (`floorLog2Ratio_upper`). `scale_lower` then
+discharges the lower premise for every positive input and `scale_upper` the upper premise off
+that family.
+
+The family is the power boundary: ratios below one that are exact powers of two (`1/2`, `1/4`,
+…). There `floorLog2Ratio` is one below the true floor logarithm, the scaled quotient is exactly
+`2^24` (`scale_at_boundary`), and the upper premise is false; `upper_premise_fails_for_one_half`
+checks this at `1/2`. So the obligation as first stated, deriving both premises for every
+positive input, cannot be met. The model is still correct there: the rounded significand is
+`2^24`, the carry moves it to `2^23` in the next exponent, and `boundary_rounds_exactly` proves
+the encoded result is the exact ratio.
+
+With that case split, `roundPositive_absolute_error` and `roundPositive_relative_error` state the
+half-ulp and `2^-24` bounds for every positive input whose carried exponent is in `[-126, 127]`.
+That exponent range is the only premise left; `absolute_error_covers_one_half` applies the
+absolute rule on the boundary. Subnormal results and any implementation correspondence stay open.
+
+The parent attaches the clean foundation receipt at integration.
 
 ### The ordered `affine` fold, and the layer classification
 
@@ -722,11 +744,10 @@ Open, and deliberately not closed by this model:
   helpers and optimizer behavior;
 - the fold is modelled and proved as a recursion over the reference operations, but no
   Lean model maps the graph operations (`Op::F32Add`/`Sub`/`Mul`/`Affine`) to them;
-- the subnormal branch of the rounding error rule and a theorem that derives
-  the normal-bin premises directly from `floorLog2Ratio` for every positive
-  input. `Binary32Error.lean` now proves the universal quotient-rounding rule,
-  exact normal-output values, and conditional normal-range absolute/relative
-  bounds, but it does not silently extend them to gradual underflow;
+- the subnormal branch of the rounding error rule. `Binary32Error.lean` proves
+  the universal quotient-rounding rule, exact normal-output values and the
+  normal-range absolute/relative bounds, and `Binary32Scale.lean` discharges
+  their scale premises, but neither extends them to gradual underflow;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

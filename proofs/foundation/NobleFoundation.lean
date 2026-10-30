@@ -40,3 +40,4 @@ import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
 import NobleFoundation.FirstProjection
+import NobleFoundation.Binary32Scale

@@ -4658,6 +4658,108 @@
       "phase": 1,
       "role": "first-projection",
       "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.log2_go_eq",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the fuel-bounded logarithm equals the core floor logarithm whenever the fuel covers the input"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.log2_eq",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the model log2 is the core floor logarithm"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.log2_bracket",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the model log2 of a positive input brackets it between consecutive powers of two"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.floorLog2Ratio_lower",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "for every positive input 2^floorLog2Ratio times the denominator is at most the numerator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.floorLog2Ratio_upper",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "off the power boundary the numerator is strictly below 2^(floorLog2Ratio+1) times the denominator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.floorLog2Ratio_boundary",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on the power boundary the ratio is exactly 2^(floorLog2Ratio+1)"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.scaled_ratio",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the scaled quotient is the exact ratio times 2^(23 - floorLog2Ratio)"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.scale_powers",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the scale exponents combine to 2^23 at the lower and 2^24 at the upper bin edge"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.scale_lower",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the lower normal-bin scale premise holds for every positive input"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.scale_upper",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the upper normal-bin scale premise holds for every positive input off the power boundary"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.scale_at_boundary",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on the power boundary the scaled quotient is exactly 2^24 times its denominator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.upper_premise_fails_for_one_half",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the upper scale premise is not universal: 1/2 is on the power boundary and fails it"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.boundary_rounded",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on the power boundary the rounded significand is exactly 2^24"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.boundary_rounds_exactly",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "on the power boundary the carried normal result is the exact ratio"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.roundPositive_absolute_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every positive input with a normal-range carried exponent has the half-ulp absolute bound, with no scale premise"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.roundPositive_relative_error",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "every positive input with a normal-range carried exponent has the 2^-24 relative bound, with no scale or bin premise"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.absolute_error_covers_one_half",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "at 1/2, where the upper premise fails, the result is exact and the absolute bound holds"
     }
   ]
 }
