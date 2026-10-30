@@ -3950,6 +3950,108 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "a permutation of declared output order is rejected"
+    },
+    {
+      "name": "NobleFoundation.Isop.valuation_mem",
+      "phase": 1,
+      "role": "enumeration",
+      "claim": "every indexed truth-table row occurs in the bounded valuation enumeration"
+    },
+    {
+      "name": "NobleFoundation.Isop.equivOn_sound",
+      "phase": 1,
+      "role": "independent-checker",
+      "claim": "the exhaustive Boolean equivalence checker implies equality on every model valuation"
+    },
+    {
+      "name": "NobleFoundation.Isop.isop_exact",
+      "phase": 1,
+      "role": "isop",
+      "claim": "the exact cofactor recurrence evaluates to its input Boolean function on every valuation"
+    },
+    {
+      "name": "NobleFoundation.Isop.isop_bounds",
+      "phase": 1,
+      "role": "isop-bounds",
+      "claim": "an exact-mode cover lies pointwise inside every support interval lower bound through upper bound"
+    },
+    {
+      "name": "NobleFoundation.Isop.constant_true_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the true constant is accepted by the independent checker"
+    },
+    {
+      "name": "NobleFoundation.Isop.constant_false_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the false constant is accepted by the independent checker"
+    },
+    {
+      "name": "NobleFoundation.Isop.contradiction_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "x and not x is accepted as an empty Boolean cover"
+    },
+    {
+      "name": "NobleFoundation.Isop.repeated_atom_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a repeated atom is accepted by the independent checker"
+    },
+    {
+      "name": "NobleFoundation.Isop.parity3_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the three-variable parity fixture is accepted by the independent checker"
+    },
+    {
+      "name": "NobleFoundation.Isop.contradiction_irredundant_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the contradiction fixture's exact cover is irredundant"
+    },
+    {
+      "name": "NobleFoundation.Isop.repeated_atom_irredundant_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the repeated-atom fixture's exact cover is irredundant"
+    },
+    {
+      "name": "NobleFoundation.Isop.parity3_irredundant_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the parity fixture's exact cover is irredundant"
+    },
+    {
+      "name": "NobleFoundation.Isop.parity3_cover_growth",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the three-variable parity cover has four cubes"
+    },
+    {
+      "name": "NobleFoundation.Isop.parity3_orders_differ",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the two declared variable orders produce different parity cover lists"
+    },
+    {
+      "name": "NobleFoundation.Isop.parity3_orders_equivalent",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the reverse-order parity cover is equivalent under the independent checker"
+    },
+    {
+      "name": "NobleFoundation.Isop.wrong_cofactor_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the wrong-cofactor recurrence is rejected on the repeated-atom fixture"
+    },
+    {
+      "name": "NobleFoundation.Isop.wrong_complement_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the wrong-complement recurrence is rejected on the repeated-atom fixture"
     }
   ]
 }

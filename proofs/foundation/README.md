@@ -181,6 +181,7 @@ Status words:
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
+| Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `isop_exact`, `isop_bounds`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 
 Typing premises are stated exactly:
@@ -2013,6 +2014,34 @@ Open, and deliberately not closed:
   cleanup after host death and once-only remote effects are outside the model;
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal
   sticky-failure theorem.
+
+## Bounded ISOP Boolean core (issue #35, phase 1)
+
+[`NobleFoundation/Isop.lean`](NobleFoundation/Isop.lean) is a standalone
+truth-table model. `Valuation n` is the finite row type for `n` Boolean
+variables, `BFun n` is a function on those rows, `Formula` supplies
+`const`/`var`/`and`/`or`/`not` syntax, and `Cube`/`Cover` supply optional
+literals and their disjunction. The exact mode has `L = U = F`: `isop` splits
+on the fixed head-first variable order, recursively covers both cofactors and
+attaches the complementary literals. `isop_exact` proves the generated cover
+has the input function, and `isop_bounds` proves the support interval
+`L ≤ cover ≤ U` pointwise whenever `L ≤ F ≤ U`.
+
+`equivOn` is an independent exhaustive checker over `valuations`; its
+soundness theorem does not call `isop` or any recurrence. The checked fixtures
+include true and false constants, `x ∧ ¬x`, a repeated atom, three-variable
+parity (including its four-cube growth and fixture-only irredundancy), and two
+orders whose parity covers differ as lists but are checker-equivalent. The
+wrong-cofactor and wrong-complement seeded recurrences are rejected by that
+checker on the repeated-atom fixture. These irredundancy results are fixture
+computations only; no universal irredundancy or minimization theorem is stated.
+
+The module is deliberately a Boolean core, not source integration. A checked
+Boolean DAG representation, lowering to `Program`, branching extensions, care
+sets and adoption criteria are open. No theorem here claims correspondence to
+the Rust frontend, compiler, runtime or any source-level optimizer. A receipt
+for the integrated foundation tree is produced by the parent closeout rather
+than this model commit.
 
 ## Status by phase
 
