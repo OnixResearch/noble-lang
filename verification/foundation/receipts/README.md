@@ -274,3 +274,10 @@ evidence only; the production refinement stays open.
 `validate_sound` theorem to `NobleFoundation.PackedSchedule`, with the reordered-stream and refusal
 fixtures (32 new theorems; that run reported 622 in total). No Rust instruction-body export
 or correspondence exists.
+
+## d3f856d50 — checked I64 reference (issue #39)
+
+`d3f856d50/` records the clean run that added `NobleFoundation.CheckedI64`: exact success and overflow
+characterisations, truncating divrem laws and the (MIN, -1) overflow, plus controls (24 new
+theorems; that run reported 646 in total). It is a name-neutral reference; API names, error
+representation and overflow policy remain owner decisions.

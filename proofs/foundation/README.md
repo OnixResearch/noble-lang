@@ -760,6 +760,11 @@ truncation from floor division, signed from unsigned `BitVec` order, the
 strict upper boundary, operand order, and the absent quotient at the
 minimum/negative-one pair.
 
+The clean-source receipt for the checked I64 reference is
+[`verification/foundation/receipts/d3f856d50/`](../../verification/foundation/receipts/d3f856d50/foundation-check.json)
+(646 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
+
 Open, and deliberately not closed:
 
 - no Rust implementation, frontend, runtime helper, API name, error
