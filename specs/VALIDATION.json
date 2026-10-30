@@ -1776,7 +1776,7 @@
     },
     {
       "file": ".cairn/changes/binary32-lean-reference/design.md",
-      "sha256": "1f28db1520d572e340e366502cdb659dcd913d4ef89c60c45c812166c3aadaab"
+      "sha256": "97ff2b9ffa0a0657df1af39006831cf501bdb948e4f328e7ae9ba3978b4aeb5d"
     },
     {
       "file": ".cairn/changes/binary32-lean-reference/proposal.md",
@@ -2080,7 +2080,7 @@
     },
     {
       "file": ".cairn/changes/nested-session-protocol/tasks.md",
-      "sha256": "bc492ef8c2eb52232a6c63e9b470063581636b017b5ed1ce8305c88d741d009a"
+      "sha256": "1a4315ffc4dabf666741650e3cd825ff4b15f6d8d60b437d5d02b3c1973eb0d4"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
@@ -2108,7 +2108,7 @@
     },
     {
       "file": ".cairn/changes/numerical-error-certificate/design.md",
-      "sha256": "8dc056d5c6c2d8ed4eb228801c667262df1ab001d76272478d77a76dd09eda9e"
+      "sha256": "f6310c2a3acf248af9f16f8cb03b64c55662924452b8778ca2f29fdc1d3a2c25"
     },
     {
       "file": ".cairn/changes/numerical-error-certificate/proposal.md",
@@ -2120,7 +2120,7 @@
     },
     {
       "file": ".cairn/changes/numerical-error-certificate/tasks.md",
-      "sha256": "bd114027136f2daa8d2d8b3f36c55b0219bf7de0f966e14eca942fb211041831"
+      "sha256": "9dbe060fceea2777939da145a2e51096bbf8e03122b886c43a61dd5ea3062c09"
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/design.md",
@@ -2136,23 +2136,23 @@
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/tasks.md",
-      "sha256": "d412ffe86d18ee70f52ac94c7fd5231070b45085e0d18ea74a6f7f51ab56af14"
+      "sha256": "a9dda4fc5a79aec3b6c5f3490deaa31ab8e485ceca5fe689e91658129409eca9"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/design.md",
-      "sha256": "7762d437d514762c64bf6f5f70b0dc0448c86688bd9f96b6316de2de97e3c682"
+      "sha256": "d15623c529818425b169dd8062101398ebaeeb00359a76914383a69bb25fa1ee"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/proposal.md",
-      "sha256": "1635b674f530721803c86fe67a41ad9fd7606cd4da2f4fbe68abbeab12bde467"
+      "sha256": "b467229721ef238b872caf8323de710f9f8d74505a35b3dcb07f759639ffb4d6"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/specs/verification/spec.md",
-      "sha256": "d1da074d236dccf73725b866e40efa04413e9fdeb7d55b48d37c3d42835de176"
+      "sha256": "a6a3da9cfc4704658fb4c219639a373019adb421076805c9d67a4110dc3a6d70"
     },
     {
       "file": ".cairn/changes/ownership-accounting-oracle/tasks.md",
-      "sha256": "fb6f8e78a098f05f1434895b034d140547817330c0320c7af60bade5935c899a"
+      "sha256": "10711c1278e5018a3d9f492109e1f2be1db30a70d90f69c5efbbd4ae2e3e2d11"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2380,7 +2380,39 @@
     },
     {
       "file": ".cairn/changes/service-ref-codec-reference/tasks.md",
-      "sha256": "cc28e5c1ffa859641c912cbb305b2ba1f614e72406f408a3465dd7ec05926cec"
+      "sha256": "7ded0f2ef94b750a4b13dea50edb5e179b0d94d02b7221e1a32bad68667f3156"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-completion/design.md",
+      "sha256": "55fbbd890a04dd67804dcd34e0ddd7875b573aa1ccb9de630c9a80cb81186097"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-completion/proposal.md",
+      "sha256": "3c579f30d294b7e034383176336aa6246b386047b8eb9bda4856257e2d3e9dd5"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-completion/specs/typed-chunk-completion/spec.md",
+      "sha256": "328981c3a85e1306fe5bbc41b326395241747c0b2c3dc34ffa882268264164c1"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-completion/tasks.md",
+      "sha256": "ea9ff57079a06f70d7b616f902e33e12dd55b1ef8b9e4e233ca22b5f9b1a9a6c"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-ranking-experiment/design.md",
+      "sha256": "0b3f2cf4ce116382d51a50a82235feba55d0978316d3232e11c4855385ab04fa"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-ranking-experiment/proposal.md",
+      "sha256": "c5604ba0cf575b2f3a4a52cf9961ad2d81004339903933a6561259b91f5cac3d"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-ranking-experiment/specs/typed-chunk-ranking/spec.md",
+      "sha256": "6ebe721033f817b14331f6fce7ffb85bc6733a1dd308387c0410d1043e6facc6"
+    },
+    {
+      "file": ".cairn/changes/typed-chunk-ranking-experiment/tasks.md",
+      "sha256": "cee6f43dd812915a57f43f3caed068db78e5981f4ca859bb083d024fffcb57aa"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -2472,7 +2504,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "8a311d1a4136c95e2827bc9af77219179deecbac2504d743132d290a868c839c"
+      "sha256": "7b164f54d8d49c10624a66b7b0da69c077421ece3ff14cbfd0942537e15e6b02"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2744,11 +2776,11 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "245b9cd07c3cc7f2892759a067b29ce8694c2cc272440b03ab65b087371ea4b2"
+      "sha256": "0aa30eac670f20ce580d8470343191db6b7bc9feda46c4c31ab25bea878facd6"
     },
     {
       "file": "verification/independent-replay/README.md",
-      "sha256": "9c5118781c57a0c73ffd85a64071be0e667e9e0293aec99f0a398342373348f9"
+      "sha256": "ce276407ebbf24863cebfc7498f154203c1a2358704e600f3a52ca2039e29665"
     },
     {
       "file": "verification/linking/README.md",
@@ -2844,7 +2876,7 @@
     },
     {
       "file": "verification/nested-session/README.md",
-      "sha256": "b314ac115c3d240923caea34f67558e1897eff6d08a29310c18492600fe45c90"
+      "sha256": "3a76b55aac7779829473dd516456dbdfc409e8a297a968de02255cc3f8016fa0"
     },
     {
       "file": "verification/ngraph-bytes-issue-31/README.md",
@@ -2893,6 +2925,10 @@
     {
       "file": "verification/region-trace/README.md",
       "sha256": "5ef2a3a6440d33501a9fc2820a76275f775c38eff3f2839cf4a0ae55cd12dbdf"
+    },
+    {
+      "file": "verification/service-wire-refinement/README.md",
+      "sha256": "ad6703a09d1f78ef514a947d93803e20098955c3e9b7b1510d0acc2f558d0c47"
     },
     {
       "file": "verification/source-inventory.md",
