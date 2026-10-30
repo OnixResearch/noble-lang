@@ -735,7 +735,10 @@ every rounding whose result does not overflow satisfies the mixed rule
   - The relative part of the bound alone would be false, and the absolute term covers the error
     (`subnormal_needs_the_absolute_term`).
 
-The parent attaches the clean foundation receipt at integration.
+The clean-source receipt for the finite-sequence unit is
+[`verification/foundation/receipts/7445a3696/`](../../verification/foundation/receipts/7445a3696/foundation-check.json)
+(902 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ### The ordered `affine` fold, and the layer classification
 
