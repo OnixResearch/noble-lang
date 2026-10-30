@@ -175,7 +175,7 @@ Status words:
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
-| Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
+| Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict` | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Encoder correspondence, solver, compiled-endpoint replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
@@ -986,74 +986,62 @@ Open, and deliberately not closed:
 
 ## Packed schedule validator model (issue #43, phase 1)
 
-`NobleFoundation/PackedSchedule.lean` names the model side of a validator lane for
-the packed `I64`/`Bool` schedule. `crates/noble-ngraph/src/compiled.rs` states that
-agreement between the packed evaluator and the graph reference is *tested, not
-proved*, so NG-PO-C stays open; the POPL 2008 translation-validation shape keeps
-scheduling untrusted and proves a smaller validator correct instead.
+`NobleFoundation/PackedSchedule.lean` now contains an independent validator for a
+*given* instruction stream. The producer supplies a node `order`, the `Instr`
+list, a node-to-register function `regOf`, and parallel output-node/output-register
+lists. `validate` does not call the model scheduler or regenerate the stream.
+It checks, in order: a bounded, duplicate-free node order; exact instruction
+operation, ordered operands, destination register and constant bits for every
+node; definition-before-use for every operand; injectivity of `regOf` restricted
+to scheduled nodes; and positional output mapping. Output lists are not sets, so
+an output repeated twice must be paired with the same register twice.
 
-The graph fragment is a finite acyclic graph over interface input slots, exact
-`I64` constants, addition, subtraction, multiplication and equality, with one
-selected output. The instruction set mirrors the packed `I` enum — destination
-register first, then ordered source registers — and constants and interface slots
-occupy their own registers, so bits and slots are validated rather than assumed.
+`validate_sound` is proved for the fragment model under the explicit premise
+`WellFormed graph`: an accepted supplied stream returns the graph reference value
+at every requested output, including repeated outputs. The proof reconstructs the
+supplied stream from the checked bodies and then reuses the reference-machine
+induction with injectivity restricted to the scheduled nodes. The body bridge is
+`bodiesMatch_eq_emitNodes`; dependency and register obligations are connected by
+`operandsDefined_sound` and `registersInjectiveOn_sound`; output-list equality
+is handled by `outputsMatch_runOutputs`.
 
-Proved: the packed fold executes exactly the scheduled order's emitted
-instructions (`run_emitNodes_eq`, `foldl_eq_execSchedule`), a step writes only its
-own node's register (`step_written`) and computes that node's reference value when
-its ordered operands' registers already hold theirs (`step_computes`), reference
-values are stable once later nodes are added (`valuesUpTo_eq_value`), and by
-induction on the untrusted order every already-processed node's register holds its
-reference value (`execSchedule_sound`). The closure is **validator soundness**:
-for every acquired input the packed machine's selected output register equals the
-graph reference (`schedule_sound`) — acceptance implies complete ordered result
-equivalence, with refusal allowed for unsupported valid schedules.
-
-Five fixtures and one control: the four-node example graph (input, exact constant,
-addition, equality) with values `3`, `8` and `true` (`exampleGraph_values`); one
-register per node in dependency order accepted without aliasing
-(`exampleSchedule_valid`) and agreeing with the reference
-(`exampleGraph_schedule_sound`); order correspondence decomposing at the head
-(`orderOk_cons`); and the control showing that **aliasing two live nodes onto one
-register changes the machine's value** (`aliasing_loses_the_constant`), which is
-why injectivity is a premise of the relation rather than a fresh-register
-assumption. The original thirteen-theorem set is retained in receipt
-[`verification/foundation/receipts/0ade1e4e9/`](../../verification/foundation/receipts/0ade1e4e9/foundation-check.json)
-(327 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
-
-Five further theorems concern **missing operands and unwritten registers in the
-handwritten `Option Val` machine**. An empty first or second operand makes
-`add`/`sub`/`mul`/`eq` write `none` to the destination, including over an earlier
-value (`a_missing_operand_refuses_rather_than_fabricating`,
-`a_missing_second_operand_refuses_rather_than_fabricating`). A register with no
-executed writer preserves its initial contents
-(`an_unwritten_register_keeps_its_value`); it stays empty when the machine starts
-empty (`an_unwritten_register_stays_empty`). The selected output is `none` only
-when **every** executed node avoids writing its register
-(`an_omitted_output_node_yields_no_output`): omitting the output node is not enough
-if another node aliases that register. These are model properties, not graph
-guard semantics, Rust runtime checks or validation of emitted instruction bodies.
-
-The complete eighteen-theorem `PackedSchedule` set is audited in
-[`verification/foundation/receipts/8eef09184/`](../../verification/foundation/receipts/8eef09184/foundation-check.json):
-484 total foundation theorems at source `8eef0918484ab1d887ba773f99eab13fa31d3ab3`,
-`clean_source: true`, `implementation_theorem: false`. The five additions use
-only `propext` and, for the second-operand theorem, `Quot.sound`.
+Fixtures and controls are all kernel-checked with `decide`: the model's own
+`exampleSchedule` is accepted (`exampleSchedule_validated`); a creation-order
+stream that executes an independent layer-0 input after a layer-1 addition is
+accepted even though it is not layer-sorted
+(`reordered_order_not_layer_sorted`), with output 4 repeated twice
+(`reordered_stream_validated_with_repeated_output`); and the validator refuses
+an operand used before definition, an alias between two scheduled live nodes, a
+wrong operation, and a wrong output register
+(`validate_refuses_operand_before_definition`,
+`validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`,
+`validate_refuses_wrong_output_register`). The repeated-output execution
+fixture is `reordered_stream_sound`.
 
 Open, and deliberately not closed:
 
-- **no binding to the actually emitted artifact**: the file models a schedule and
-  its instruction stream, not the `Compiled` layout key, layer ranges, register
-  count or constant/slot tables that `Compiled::new` produces, so a sound abstract
-  checker plus an unproved Rust transcription is not an end-to-end proof;
-- graph guards, `fail_suffix_min` canonical-first-failure behaviour, ordered affine
-  and `F32` instructions are outside the fragment (`F32` only after #38), as are
-  effects, resources, aliasing *after* last use and any multi-output reconstruction;
-- refusal classes, bounded checking work, versioned encoding and fail-closed
-  preflight are named obligations rather than implemented behaviour here;
-- this is not #10's MC2 trusted-build envelope and not a whole-Wasm validation
-  path, and finite fixtures are not a universal theorem about the Rust scheduler.
+- **No Rust instruction-body export yet.** `Compiled::new`'s Rust `I` stream
+  remains private; this Lean validator has no decoder or byte-level instruction
+  input to consume.
+- **No Lean↔Rust correspondence theorem.** The result is a proof about the
+  definitions in this file, not a theorem that the Rust evaluator's private
+  instruction bodies equal these `Instr` values or that its graph matches this
+  `Graph`.
+- The selected fragment excludes guards, failure-suffix ordering, F32/affine
+  instructions, effects, resources, register reuse after last use, and dynamic
+  multi-output reconstruction. The graph well-formedness premise and all
+  unsupported Rust behaviours remain explicit rather than inferred from the
+  finite fixtures.
+
+The preceding clean-source receipt
+[`verification/foundation/receipts/8eef09184/`](../../verification/foundation/receipts/8eef09184/foundation-check.json)
+records the earlier schedule theorem set; the validator extension is checked by
+the clean-tree foundation run for its landing revision.
+
+`PackedLayout.lean` remains a separate declaration-table model. Its register,
+constant/slot, layer, count and failure-suffix obligations do not export or
+validate instruction bodies, and no correspondence theorem joins that layout
+model to Rust bytes or to this validator.
 
 ## Graph rewrite certificates model (issue #42, phase 1)
 

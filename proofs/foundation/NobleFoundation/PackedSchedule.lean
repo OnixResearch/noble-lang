@@ -101,6 +101,7 @@ inductive Instr where
   | sub (dst src1 src2 : Nat)
   | mul (dst src1 src2 : Nat)
   | eq (dst src1 src2 : Nat)
+deriving DecidableEq
 
 /-- One machine step. A register not written by the instruction keeps its value. -/
 def step (inputs : Nat → BitVec 64) (regs : Nat → Option Val) : Instr → (Nat → Option Val)
@@ -336,8 +337,10 @@ remaining order, which is what keeps every remaining instruction away from their
 registers under the schedule's injectivity. -/
 theorem execSchedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : Schedule)
     (inputs : Nat → BitVec 64)
-    (hinjective : ∀ a b : Nat, schedule.regOf a = schedule.regOf b → a = b) :
+    (hinjective : ∀ a ∈ schedule.order, ∀ b ∈ schedule.order,
+      schedule.regOf a = schedule.regOf b → a = b) :
     ∀ (processed order : List Nat) (regs : Nat → Option Val),
+      (∀ index ∈ order ++ processed, index ∈ schedule.order) →
       (∀ index ∈ processed, index ∉ order) →
       OrderOk graph processed order →
       order.Nodup →
@@ -348,10 +351,10 @@ theorem execSchedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : 
   intro processed order
   induction order generalizing processed with
   | nil =>
-      intro regs _ _ _ hregs index hmem
+      intro regs _ _ _ _ hregs index hmem
       simpa [execSchedule] using hregs index hmem
   | cons head rest ih =>
-      intro regs hdisjoint horder hnodup hregs index hmem
+      intro regs hscheduled hdisjoint horder hnodup hregs index hmem
       obtain ⟨hoperands, horder'⟩ := horder
       -- the head's operands are all processed here
       have hreads : ∀ operand ∈ (graph.node head).operands,
@@ -360,6 +363,11 @@ theorem execSchedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : 
       have hhead : head ∉ processed := by
         intro hmem
         exact hdisjoint head hmem (by simp)
+      have hhead_scheduled : head ∈ schedule.order :=
+        hscheduled head (by simp)
+      have hprocessed_scheduled : ∀ node ∈ processed, node ∈ schedule.order := by
+        intro node hmem
+        exact hscheduled node (by simp [hmem])
       have hnodup' : head ∉ rest := (List.nodup_cons.mp hnodup).1
       have hnodup_rest : rest.Nodup := (List.nodup_cons.mp hnodup).2
       -- registers of processed nodes are untouched by this step
@@ -375,7 +383,8 @@ theorem execSchedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : 
             exact hhead (heq ▸ hmem)
           have hreg_ne : schedule.regOf index ≠ schedule.regOf head := by
             intro heq
-            exact hne (hinjective index head heq)
+            exact hne (hinjective index (hprocessed_scheduled index hmem) head
+              hhead_scheduled heq)
           rw [step_written graph schedule inputs regs head _ hreg_ne]
           exact hregs index hmem
       have hdisjoint' : ∀ index ∈ head :: processed, index ∉ rest := by
@@ -390,15 +399,23 @@ theorem execSchedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : 
         · rcases List.mem_append.mp hnode with hin | hin
           · exact List.mem_append.mpr (Or.inl hin)
           · exact List.mem_append.mpr (Or.inr (List.mem_cons.mpr (Or.inr hin)))
+      have hscheduled' : ∀ node ∈ rest ++ head :: processed, node ∈ schedule.order := by
+        intro node hmem
+        rcases List.mem_append.mp hmem with hrest | hprocessed
+        · exact hscheduled node (by simp [hrest])
+        · rcases List.mem_cons.mp hprocessed with rfl | hprocessed
+          · exact hhead_scheduled
+          · exact hprocessed_scheduled node hprocessed
       simpa only [execSchedule] using
         ih (head :: processed) (step inputs regs (emitNode graph schedule head))
-          hdisjoint' horder' hnodup_rest hregs' index hmem'
+          hscheduled' hdisjoint' horder' hnodup_rest hregs' index hmem'
 
 /-- Complete ordered result equivalence for the validated schedule: the selected
 output's register holds the graph's value for every admitted input. -/
 theorem schedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : Schedule)
     (inputs : Nat → BitVec 64)
-    (hinjective : ∀ a b : Nat, schedule.regOf a = schedule.regOf b → a = b)
+    (hinjective : ∀ a ∈ schedule.order, ∀ b ∈ schedule.order,
+      schedule.regOf a = schedule.regOf b → a = b)
     (horder : OrderOk graph [] schedule.order)
     (hnodup : schedule.order.Nodup)
     (houtput : graph.output ∈ schedule.order)
@@ -410,6 +427,7 @@ theorem schedule_sound (graph : Graph) (hwf : WellFormed graph) (schedule : Sche
   rw [hbridge₁, hbridge₂, hout]
   exact execSchedule_sound graph hwf schedule inputs hinjective [] schedule.order
     (fun _ => none)
+    (fun index hmem => by simpa using hmem)
     (fun x (hx : x ∈ ([] : List Nat)) => by simp at hx)
     horder
     hnodup
@@ -474,7 +492,7 @@ theorem exampleGraph_schedule_sound :
     run (fun _ => 3) (emitNodes exampleGraph exampleSchedule exampleSchedule.order)
       exampleSchedule.outReg = value exampleGraph (fun _ => 3) 3 :=
   schedule_sound exampleGraph exampleGraph_wellFormed exampleSchedule (fun _ => 3)
-    (fun _ _ h => h) exampleSchedule_valid.1 exampleSchedule_valid.2
+    (fun _ _ _ _ h => h) exampleSchedule_valid.1 exampleSchedule_valid.2
     (by decide) rfl
 
 /-- The same graph's equality node reading its own register twice is fine, but
@@ -493,6 +511,294 @@ def addOutputGraph : Graph :=
 theorem aliasing_loses_the_constant :
     run (fun _ => 3) (emitNodes addOutputGraph aliasedSchedule aliasedSchedule.order) 2 ≠
       value addOutputGraph (fun _ => 3) 2 := by
+  decide
+
+/-! ### Independent instruction-stream validation (issue #43)
+
+`validate` takes the node order and instruction bodies supplied by an untrusted
+producer. It does not call `schedule`, regenerate an order, or compare a stream
+with a stream that the model generated elsewhere. The order is needed to name
+the graph node whose body each instruction claims to implement; the body check
+then compares every destination, operand and constant against that node.
+
+The validator also checks definition-before-use, node bounds, order uniqueness,
+register injectivity only over the scheduled nodes, and a positional output map.
+The output map is a pair of node and register lists, so a repeated output is
+checked twice rather than collapsed into a set. `validate_sound` assumes the
+graph is `WellFormed`; under that graph premise, accepted streams return every
+requested reference value, including repeated outputs. -/
+
+/-- An instruction emitted for a node using only the supplied register map. -/
+def emitNodeWith (graph : Graph) (regOf : Nat → Nat) (index : Nat) : Instr :=
+  emitNode graph { order := [], regOf := regOf, outReg := 0 } index
+
+/-- Every instruction is paired with its claimed graph node and has the expected body. -/
+def bodiesMatch : Graph → (Nat → Nat) → List Nat → List Instr → Bool
+  | _, _, [], [] => true
+  | graph, regOf, index :: rest, instr :: instrs =>
+      decide (instr = emitNodeWith graph regOf index) && bodiesMatch graph regOf rest instrs
+  | _, _, _, _ => false
+
+/-- Operands of each node have been defined by an earlier instruction. -/
+def operandsDefined : Graph → List Nat → List Nat → Bool
+  | _, _, [] => true
+  | graph, processed, index :: rest =>
+      (graph.node index).operands.all (fun operand => decide (operand ∈ processed)) &&
+        operandsDefined graph (index :: processed) rest
+
+/-- Register equality is injective on the nodes in the supplied schedule only. -/
+def registersInjectiveOn (regOf : Nat → Nat) (order : List Nat) : Bool :=
+  order.all fun first =>
+    order.all fun second => decide (first = second ∨ regOf first ≠ regOf second)
+
+/-- Each output node is scheduled and is paired positionally with its register. -/
+def outputsMatch : (Nat → Nat) → List Nat → List Nat → List Nat → Bool
+  | _, _, [], [] => true
+  | regOf, order, output :: outputs, outReg :: outRegs =>
+      decide (output ∈ order) && decide (regOf output = outReg) &&
+        outputsMatch regOf order outputs outRegs
+  | _, _, _, _ => false
+
+/-- The independent Boolean obligations checked by `validate`. -/
+def validateObligations (graph : Graph) (regOf : Nat → Nat) (order : List Nat)
+    (instrs : List Instr) (outputs outRegs : List Nat) : List Bool :=
+  [decide order.Nodup,
+    order.all (fun index => decide (index < graph.arity)),
+    bodiesMatch graph regOf order instrs,
+    operandsDefined graph [] order,
+    registersInjectiveOn regOf order,
+    outputsMatch regOf order outputs outRegs]
+
+/-- Validate a supplied packed instruction stream against a graph and register map. -/
+def validate (graph : Graph) (regOf : Nat → Nat) (order : List Nat)
+    (instrs : List Instr) (outputs outRegs : List Nat) : Bool :=
+  (validateObligations graph regOf order instrs outputs outRegs).all id
+
+/-- Values returned at a list of output registers. -/
+def runOutputs (inputs : Nat → BitVec 64) (instrs : List Instr) (outRegs : List Nat) :
+    List (Option Val) :=
+  outRegs.map (run inputs instrs)
+
+/-- Reference values at a list of graph output nodes. -/
+def referenceOutputs (graph : Graph) (inputs : Nat → BitVec 64) (outputs : List Nat) :
+    List (Option Val) :=
+  outputs.map (value graph inputs)
+
+/-- A true body check reconstructs exactly the supplied node order's emitted stream. -/
+theorem bodiesMatch_eq_emitNodes (graph : Graph) (regOf : Nat → Nat)
+    (order : List Nat) (instrs : List Instr)
+    (hmatch : bodiesMatch graph regOf order instrs = true) :
+    instrs = emitNodes graph { order := order, regOf := regOf, outReg := 0 } order := by
+  induction order generalizing instrs with
+  | nil =>
+      cases instrs with
+      | nil => rfl
+      | cons instr instrs => simp [bodiesMatch] at hmatch
+  | cons index rest ih =>
+      cases instrs with
+      | nil => simp [bodiesMatch] at hmatch
+      | cons instr instrs =>
+          have hparts : decide (instr = emitNodeWith graph regOf index) = true ∧
+              bodiesMatch graph regOf rest instrs = true := by
+            simpa only [bodiesMatch, Bool.and_eq_true] using hmatch
+          have hinstr : instr = emitNodeWith graph regOf index :=
+            of_decide_eq_true hparts.1
+          have hrest := ih instrs hparts.2
+          simp only [emitNodes, List.map_cons]
+          rw [hinstr, hrest]
+          rfl
+
+/-- A true dependency check is the graph's definition-before-use relation. -/
+theorem operandsDefined_sound (graph : Graph) :
+    ∀ (processed order : List Nat),
+      operandsDefined graph processed order = true → OrderOk graph processed order := by
+  intro processed order
+  induction order generalizing processed with
+  | nil => intro _; trivial
+  | cons index rest ih =>
+      intro hdefined
+      have hparts :
+          (graph.node index).operands.all (fun operand => decide (operand ∈ processed)) = true ∧
+            operandsDefined graph (index :: processed) rest = true := by
+        simpa only [operandsDefined, Bool.and_eq_true] using hdefined
+      have hoperands : ∀ operand ∈ (graph.node index).operands, operand ∈ processed := by
+        intro operand hmem
+        exact of_decide_eq_true ((List.all_eq_true.mp hparts.1) operand hmem)
+      exact ⟨hoperands, ih (index :: processed) hparts.2⟩
+
+/-- A true injectivity check yields injectivity on exactly the scheduled nodes. -/
+theorem registersInjectiveOn_sound (regOf : Nat → Nat) (order : List Nat) :
+    registersInjectiveOn regOf order = true →
+      ∀ first ∈ order, ∀ second ∈ order,
+        regOf first = regOf second → first = second := by
+  intro hinjective first hfirst second hsecond hreg
+  have hfirst' := (List.all_eq_true.mp hinjective) first hfirst
+  have hsecond' := (List.all_eq_true.mp hfirst') second hsecond
+  have hcases : first = second ∨ regOf first ≠ regOf second :=
+    of_decide_eq_true hsecond'
+  exact hcases.resolve_right (fun hne => hne hreg)
+
+/-- A true positional output check preserves the output map's reference list. -/
+theorem outputsMatch_runOutputs (graph : Graph) (regOf : Nat → Nat) (order : List Nat)
+    (inputs : Nat → BitVec 64) (instrs : List Instr) (outputs outRegs : List Nat)
+    (houtputs : outputsMatch regOf order outputs outRegs = true)
+    (hvalue : ∀ index ∈ order,
+      run inputs instrs (regOf index) = value graph inputs index) :
+    runOutputs inputs instrs outRegs = referenceOutputs graph inputs outputs := by
+  induction outputs generalizing outRegs with
+  | nil =>
+      cases outRegs with
+      | nil => rfl
+      | cons outReg outRegs => simp [outputsMatch] at houtputs
+  | cons output rest ih =>
+      cases outRegs with
+      | nil => simp [outputsMatch] at houtputs
+      | cons outReg outRegs =>
+          have hparts :
+              (decide (output ∈ order) = true ∧
+                decide (regOf output = outReg) = true) ∧
+                outputsMatch regOf order rest outRegs = true := by
+            simpa only [outputsMatch, Bool.and_eq_true] using houtputs
+          have hmember : output ∈ order := of_decide_eq_true hparts.1.1
+          have hreg : regOf output = outReg := of_decide_eq_true hparts.1.2
+          have hrest := ih outRegs hparts.2
+          simp only [runOutputs, referenceOutputs, List.map_cons]
+          rw [← hreg, hvalue output hmember]
+          simpa [runOutputs, referenceOutputs] using hrest
+
+/-- Accepted instruction streams return the graph reference value at every output. -/
+theorem validate_sound (graph : Graph) (hwf : WellFormed graph)
+    (regOf : Nat → Nat) (order : List Nat) (instrs : List Instr)
+    (outputs outRegs : List Nat)
+    (hvalid : validate graph regOf order instrs outputs outRegs = true) :
+    ∀ inputs, runOutputs inputs instrs outRegs = referenceOutputs graph inputs outputs := by
+  intro inputs
+  change (validateObligations graph regOf order instrs outputs outRegs).all id = true at hvalid
+  have hall := List.all_eq_true.mp hvalid
+  have hnodup : order.Nodup :=
+    of_decide_eq_true (hall (decide order.Nodup) (by simp [validateObligations]))
+  have hbody : bodiesMatch graph regOf order instrs = true :=
+    hall (bodiesMatch graph regOf order instrs) (by simp [validateObligations])
+  have hdefined : operandsDefined graph [] order = true :=
+    hall (operandsDefined graph [] order) (by simp [validateObligations])
+  have hinjective : registersInjectiveOn regOf order = true :=
+    hall (registersInjectiveOn regOf order) (by simp [validateObligations])
+  have horder := operandsDefined_sound graph [] order hdefined
+  have hreg := registersInjectiveOn_sound regOf order hinjective
+  have hbody' := bodiesMatch_eq_emitNodes graph regOf order instrs hbody
+  let schedule : Schedule := { order := order, regOf := regOf, outReg := 0 }
+  have hnode : ∀ index ∈ order,
+      run inputs (emitNodes graph schedule order) (regOf index) = value graph inputs index := by
+    intro index hmem
+    have hexec := execSchedule_sound graph hwf schedule inputs hreg [] order
+      (fun _ => none)
+      (fun node hnode => by simpa using hnode)
+      (fun _ => by simp)
+      horder hnodup
+      (fun _ hnode => by simp at hnode)
+      index (by simpa using hmem)
+    have hbridge₁ := run_emitNodes_eq graph schedule inputs order
+    have hbridge₂ := foldl_eq_execSchedule graph schedule inputs order (fun _ => none)
+    calc
+      run inputs (emitNodes graph schedule order) (regOf index) =
+          execSchedule graph schedule inputs order (fun _ => none) (regOf index) := by
+            rw [hbridge₁, hbridge₂]
+      _ = value graph inputs index := hexec
+  rw [hbody']
+  exact outputsMatch_runOutputs graph regOf order inputs
+    (emitNodes graph schedule order) outputs outRegs
+    (hall (outputsMatch regOf order outputs outRegs) (by simp [validateObligations])) hnode
+
+/-! ### Validator fixtures -/
+
+theorem exampleSchedule_validated :
+    validate exampleGraph exampleSchedule.regOf exampleSchedule.order
+      (emitNodes exampleGraph exampleSchedule exampleSchedule.order) [3] [3] = true := by
+  decide
+
+/-- Node 3 is created after the addition but is independent of it. The stream keeps
+the creation order, therefore it executes a layer-0 input after a layer-1 addition. -/
+def reorderedGraph : Graph where
+  arity := 5
+  output := 4
+  node := fun index =>
+    if index = 0 then .input 0
+    else if index = 1 then .constant 5
+    else if index = 2 then .add 0 1
+    else if index = 3 then .input 1
+    else .eq 2 3
+
+def reorderedOrder : List Nat := [0, 1, 2, 3, 4]
+
+def reorderedLayer (index : Nat) : Nat :=
+  if index = 2 then 1 else if index = 4 then 2 else 0
+
+theorem reordered_order_not_layer_sorted :
+    ¬ List.Pairwise (fun first second => reorderedLayer first ≤ reorderedLayer second)
+      reorderedOrder := by
+  decide
+
+def reorderedSchedule : Schedule where
+  order := reorderedOrder
+  regOf := fun index => index
+  outReg := 4
+
+theorem reordered_stream_validated_with_repeated_output :
+    validate reorderedGraph reorderedSchedule.regOf reorderedOrder
+      (emitNodes reorderedGraph reorderedSchedule reorderedOrder) [4, 4] [4, 4] = true := by
+  decide
+
+theorem reorderedGraph_wellFormed : WellFormed reorderedGraph := by
+  refine ⟨by decide, ?_⟩
+  intro index operand hmem
+  by_cases h0 : index = 0
+  · subst h0
+    simp [reorderedGraph, Node.operands] at hmem
+  by_cases h1 : index = 1
+  · subst h1
+    simp [reorderedGraph, Node.operands] at hmem
+  by_cases h2 : index = 2
+  · subst h2
+    simp [reorderedGraph, Node.operands] at hmem
+    omega
+  by_cases h3 : index = 3
+  · subst h3
+    simp [reorderedGraph, Node.operands] at hmem
+  · simp [reorderedGraph, h0, h1, h2, h3, Node.operands] at hmem
+    omega
+
+theorem reordered_stream_sound :
+    runOutputs (fun _ => 3)
+        (emitNodes reorderedGraph reorderedSchedule reorderedOrder) [4, 4] =
+      referenceOutputs reorderedGraph (fun _ => 3) [4, 4] := by
+  exact validate_sound reorderedGraph reorderedGraph_wellFormed reorderedSchedule.regOf
+    reorderedOrder (emitNodes reorderedGraph reorderedSchedule reorderedOrder) [4, 4] [4, 4]
+    reordered_stream_validated_with_repeated_output (fun _ => 3)
+
+theorem validate_refuses_operand_before_definition :
+    validate reorderedGraph reorderedSchedule.regOf [0, 1, 4, 2, 3]
+      (emitNodes reorderedGraph reorderedSchedule [0, 1, 4, 2, 3]) [4] [4] = false := by
+  decide
+
+def aliasedRegOf (index : Nat) : Nat :=
+  if index = 2 then 1 else index
+
+theorem validate_refuses_live_register_alias :
+    validate reorderedGraph aliasedRegOf reorderedOrder
+      (emitNodes reorderedGraph { reorderedSchedule with regOf := aliasedRegOf } reorderedOrder)
+      [4] [4] = false := by
+  decide
+
+def wrongOperationInstrs : List Instr :=
+  [.setInput 0 0, .setConst 1 5, .sub 2 0 1, .setInput 3 1, .eq 4 2 3]
+
+theorem validate_refuses_wrong_operation :
+    validate reorderedGraph reorderedSchedule.regOf reorderedOrder wrongOperationInstrs [4] [4] = false := by
+  decide
+
+theorem validate_refuses_wrong_output_register :
+    validate reorderedGraph reorderedSchedule.regOf reorderedOrder
+      (emitNodes reorderedGraph reorderedSchedule reorderedOrder) [4] [3] = false := by
   decide
 
 end NobleFoundation.PackedSchedule

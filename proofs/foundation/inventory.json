@@ -2176,6 +2176,90 @@
       "claim": "Aliasing two live nodes onto one register gives the packed machine a different value from the graph reference, so injectivity is a necessary premise rather than an assumption."
     },
     {
+      "name": "NobleFoundation.PackedSchedule.bodiesMatch_eq_emitNodes",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A true instruction-body check reconstructs exactly the supplied node order's emitted stream."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.operandsDefined_sound",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A true dependency check implies definition-before-use for every supplied instruction node."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.registersInjectiveOn_sound",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A true register check implies injectivity restricted to the scheduled nodes."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.outputsMatch_runOutputs",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A true positional output map preserves the reference value list, including repeated outputs."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.validate_sound",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "An accepted instruction stream returns every requested graph reference value under a well-formed graph."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.exampleSchedule_validated",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "The model schedule for exampleGraph is accepted by the independent instruction validator."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.reordered_order_not_layer_sorted",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "The accepted reordered fixture order is not pairwise nondecreasing in its declared layer assignment."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.reordered_stream_validated_with_repeated_output",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "A valid creation-order stream that is not layer-sorted is accepted with a repeated output mapped twice."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.reorderedGraph_wellFormed",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "The reordered validator fixture graph is well formed."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.reordered_stream_sound",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "The accepted reordered stream returns the repeated output reference values."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.validate_refuses_operand_before_definition",
+      "phase": 1,
+      "role": "packed-validator-negative-control",
+      "claim": "The validator refuses a stream that reads an addition operand before its definition."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.validate_refuses_live_register_alias",
+      "phase": 1,
+      "role": "packed-validator-negative-control",
+      "claim": "The validator refuses aliased registers for two scheduled live nodes."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.validate_refuses_wrong_operation",
+      "phase": 1,
+      "role": "packed-validator-negative-control",
+      "claim": "The validator refuses an instruction whose operation differs from its graph node."
+    },
+    {
+      "name": "NobleFoundation.PackedSchedule.validate_refuses_wrong_output_register",
+      "phase": 1,
+      "role": "packed-validator-negative-control",
+      "claim": "The validator refuses an output map that names the wrong destination register."
+    },
+    {
       "name": "NobleFoundation.GraphRewrite.constant_value",
       "phase": 1,
       "role": "helper-model",
