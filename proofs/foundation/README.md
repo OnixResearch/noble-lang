@@ -1808,10 +1808,11 @@ The independent comparison is `verification/service-ref/cases.mjs` — a decoder
 written from this model rather than from the Rust codec — against the real
 `crates/noble-kernel/src/dataspace/wire.rs` functions in the
 `service_ref_differential` lanes of `crates/noble-kernel/tests/m7-dataspace.rs`:
-271 cases over alphabet edges, name lengths 0/1/32/33, wire length 65 (64 only
+357 cases over alphabet edges, name lengths 0/1/32/33, wire length 65 (64 only
 through two generated inputs),
 configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte
-substitutions and seeded generated values, with three `control-` cases that a
+substitutions, whitespace inserted at every offset or deleted at either space, and seeded
+generated values, with three `control-` cases that a
 counting-only depth scan would decide differently. The lane agrees on every case.
 Nine seeded decoder faults run through the same cases in
 `service_ref_corpus_detects_each_declared_decoder_mutation`: a counting-only depth
@@ -1830,8 +1831,8 @@ Twenty-eight inventoried theorems after the correction, receipt
 Open, and deliberately not closed: an Aeneas extraction of `decode_service` and
 `encode_service` exists in `proofs/m3/NobleKernel/Funs.lean`, but no refinement
 proof relates it to the model, so the differential is finite evidence on one host
-and target rather than a correspondence theorem. No whitespace insertion or
-deletion family exists, and the seeded faults are not an exhaustive fault model. The canonicality theorems apply to this closed schema
+and target rather than a correspondence theorem. The seeded faults are not an
+exhaustive fault model. The canonicality theorems apply to this closed schema
 only, not to JSON documents in general, and no zero-copy, whole-parser or
 whole-compiler claim follows.
 

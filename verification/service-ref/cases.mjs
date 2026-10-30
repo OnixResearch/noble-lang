@@ -150,6 +150,28 @@ for (const trailer of [[0x00], [0x20], [0x3e], [0x00, 0x00]]) {
   }
 }
 
+// Whitespace insertion and deletion: the record has exactly two spaces, so inserting a
+// space, tab, line feed or carriage return at any offset, or deleting either space, must be
+// refused rather than tolerated as a second spelling of the value.
+{
+  const canonical = encode([0x63, 0x6c, 0x6f, 0x63, 0x6b], true);
+  for (let offset = 0; offset <= canonical.length; offset += 1) {
+    for (const whitespace of [0x20, 0x09, 0x0a, 0x0d]) {
+      const bytes = [...canonical.slice(0, offset), whitespace, ...canonical.slice(offset)];
+      const expect = decode(bytes, 4);
+      if (expect.kind === 'accepted') throw new Error(`whitespace insertion ${offset}/${whitespace} accepted`);
+      add(`whitespace-insert-${offset}-${whitespace.toString(16).padStart(2, '0')}`, bytes, 4, expect);
+    }
+  }
+  canonical.forEach((byte, offset) => {
+    if (byte !== 0x20) return;
+    const bytes = [...canonical.slice(0, offset), ...canonical.slice(offset + 1)];
+    const expect = decode(bytes, 4);
+    if (expect.kind === 'accepted') throw new Error(`whitespace deletion ${offset} accepted`);
+    add(`whitespace-delete-${offset}`, bytes, 4, expect);
+  });
+}
+
 // Seeded deterministic generated values and bytes.
 function splitMix64(state) {
   let seed = BigInt(state);

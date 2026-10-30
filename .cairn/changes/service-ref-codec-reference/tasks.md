@@ -14,6 +14,8 @@
 
 - [x] [serial] Run nine seeded single-rule decoder faults through the same 271 cases in \`service_ref_corpus_detects_each_declared_decoder_mutation\`, each simulated from the codec's own decisions; every fault disagrees with at least one expectation (four with exactly one), and eight applied as real \`wire.rs\` edits reproduce the simulated counts. Receipt \`verification/service-ref/differential.json\` at \`97b8bdf9\` records the counts under \`coverage.mutations\`. r[VC-REF-02]
 
+- [x] [serial] Add a whitespace family to \`verification/service-ref/cases.mjs\`: a space, tab, line feed or carriage return inserted at every offset of the canonical record and each of its two spaces deleted, 86 cases, every one refused by the model decoder and by \`wire.rs\` (357 cases in total). r[VC-REF-02]
+
 ## Phase 3: Promotion (not selected)
 
 - [ ] [serial] Relate \`crates/noble-kernel/src/dataspace/wire.rs\` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-REF-03]
