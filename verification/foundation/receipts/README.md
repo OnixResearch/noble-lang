@@ -302,3 +302,10 @@ Irredundancy is fixture-only; integration remains open.
 specialization with constant folding, `specialize_wellFormed` and the universal
 `specialize_sound`, fixtures and the prefix-merge control (18 new theorems; that run reported
 692 in total). The binding-time contract and Rust entry point remain owner decisions.
+
+## 58aaefd05 — exact and RNE decimal import model (issue #40)
+
+`58aaefd05/` records the clean run that added `NobleFoundation.Binary32.DecimalImport`: exact
+decimal ratios, single-rounding RNE, the exact-import characterisation and its agreement with RNE,
+and the 0.1/0.5/-0/1e39/subnormal/tie fixtures (15 new theorems; that run reported 707 in
+total). The overflow policy and syntax remain owner decisions.

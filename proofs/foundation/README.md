@@ -802,8 +802,10 @@ The kernel-checked fixtures retain the exact/RNE split for `0.1` and `0.5`,
 negative zero, `10^39` overflow classification, `10^-45` least-subnormal
 rounding, an exact halfway case, and a decimal just above that tie. The last
 fixture states only the single RNE result (`0x3F800001`); it makes no claim
-about a binary64 route. A foundation receipt for the integrated commit is
-written by the integration owner after this local unit is rebased.
+about a binary64 route. The clean-source receipt for the decimal-import model is
+[`verification/foundation/receipts/58aaefd05/`](../../verification/foundation/receipts/58aaefd05/foundation-check.json)
+(707 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed by this model:
 
