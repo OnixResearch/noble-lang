@@ -115,7 +115,7 @@
       "name": "NobleFoundation.intCast_toInt",
       "phase": 1,
       "role": "round-trip",
-      "claim": "((x.toInt : \u2124) : ZMod (2^64)) = toZ x"
+      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x"
     },
     {
       "name": "NobleFoundation.intCast_signed",
@@ -4430,6 +4430,96 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "two roots at one address observe a changed value after overwrite, so shared aliases fail the reuse control"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.update_preserves_shape",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "the reference update keeps the lane count when the parameter and gradient vectors have the same length"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.update_lane",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "output lane i is sub p_i (mul eta g_i) and depends only on p_i, g_i and eta"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.firstNonfinite_eq_none",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "the nonfinite scan finds nothing exactly when every value is finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.firstNonfinite_reports_a_nonfinite_lane",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "a reported refusal lane really holds a nonfinite value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.checkStep_accepted",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "an accepted step outputs exactly the reference update, keeps the lane count, and has only finite inputs and outputs"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.nonfinite_input_is_never_accepted",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "a step with a nonfinite eta, parameter or gradient is never accepted"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.nonfinite_parameter_is_refused_at_its_lane",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "in a well-shaped step the first nonfinite parameter is refused as unsupported at its own lane"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.normal_step_expectation",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "eta 0.5, p [1, 2], g [1, -2] gives [0.5, 3]"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.signed_zero_expectation",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "signed-zero results follow the #38 model and are accepted as finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.subnormal_result_expectation",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "a subnormal result 2^-127 is kept, not flushed"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.boundary_tie_expectation",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "the halfway point 1 + 2^-24 ties to even and stays 1.0"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.overflow_lane_is_refused",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "an overflowing output lane is refused at its output location"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.nonfinite_inputs_are_refused_at_their_paths",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "NaN parameter, infinite gradient and infinite eta are refused at their own locations"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.shape_and_budget_refusals",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "an empty vector, a gradient-length mismatch and 65 lanes are refused with their published classes"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.fused_update_is_detected",
+      "phase": 2,
+      "role": "optimizer-sgd-reference",
+      "claim": "the two-rounding reference differs from a fused multiply-add on a chosen lane"
     }
   ]
 }

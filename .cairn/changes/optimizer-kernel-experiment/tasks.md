@@ -10,7 +10,13 @@
 ## Phase 2: Reference experiment (future, not started)
 
 - [ ] [serial] Implement the bounded candidate envelope and admission that refuses malformed, effectful, over-budget, shape-mismatched, aliasing, nonfinite and invalid-state-transition candidates. r[NGRAPH-OPT-01] r[NGRAPH-OPT-03]
-- [ ] [serial] Provide Lean kernel-checked semantics for the selected `F32` reference update, reusing #38, with a named theorem inventory and a version-aware per-theorem axiom audit. r[NGRAPH-OPT-02]
+- [x] [serial] Provide Lean kernel-checked semantics for the selected `F32` reference update, reusing #38, with a named theorem inventory and a version-aware per-theorem axiom audit. r[NGRAPH-OPT-02]
+  Complete at model level (2026-10-29): `proofs/foundation/NobleFoundation/SgdReference.lean` defines
+  the two-rounding update over the #38 `Binary32` model and the published admission rule, with
+  universal shape, per-lane and nonfinite-refusal theorems, kernel-checked boundary expectations and
+  a fused-multiply-add control. Its theorems are in the foundation inventory, and the clean-source
+  foundation receipt (Lean 4.31.0, per-theorem `#print axioms`) is retained with it. The class
+  precedence among refusals is the model's reading, not a published contract.
 - [ ] [serial] Add the fixed simple reference update plus the boundary/nonfinite and state-transition controls as finite Rust comparisons labeled implementation evidence. r[NGRAPH-OPT-02] r[NGRAPH-OPT-03]
 - [ ] [serial] Publish fresh immutable parameter and optimizer-state snapshots and prove the parent snapshot byte-stability, binding optimizer code, parent identities, graph/loss/derivative identities, seed, data order, numeric semantics and tool revisions. r[NGRAPH-OPT-04]
 - [ ] [serial] Implement host-owned whole-trial rollback with early and later fault injection, an unavailable-checkpoint refusal and append-only attempt records. r[NGRAPH-OPT-04]

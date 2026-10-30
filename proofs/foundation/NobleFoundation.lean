@@ -38,3 +38,4 @@ import NobleFoundation.InteractionNet
 import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
+import NobleFoundation.SgdReference
