@@ -21,7 +21,7 @@
 use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
-use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
+use noble_ngraph::ir::{Fact, Graph, GraphBuilder, NodeId, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::layout::{PackedLayout, Refusal};
 use noble_ngraph::sem::Value;
 
@@ -49,6 +49,33 @@ fn reordered_i64() -> Graph {
     builder.output(equal);
     builder.output(sum);
     builder.finish()
+}
+
+/// A creation order that is not sorted by layer: the second input, its constant and their sum
+/// are created after the cube chain and its guard. The guard on the cube comes first in
+/// canonical order but sits in a later layer than the guard on the sum, so when both fail the
+/// layer order and the canonical order disagree on which failure comes first. The difference is
+/// output twice.
+fn non_layer_sorted_i64() -> (Graph, NodeId, NodeId) {
+    let scheme = common::IDS;
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&scheme, "layout-differential-i64-unsorted"),
+    );
+    let x = builder.input(ScalarType::I64);
+    let square = builder.op(Op::I64Mul(x, x));
+    let cube = builder.op(Op::I64Mul(square, x));
+    let cube_is_bit = builder.guard(Fact::Bit, cube);
+    let y = builder.input(ScalarType::I64);
+    let five = builder.i64_const(5);
+    let sum = builder.op(Op::I64Add(y, five));
+    let sum_is_bit = builder.guard(Fact::Bit, sum);
+    let difference = builder.op(Op::I64Sub(cube, sum));
+    builder.output(difference);
+    builder.output(sum);
+    builder.output(difference);
+    builder.output(cube);
+    (builder.finish(), cube_is_bit, sum_is_bit)
 }
 
 fn checked(graph: &Graph) -> CheckedGraph {
@@ -109,6 +136,67 @@ fn an_interleaved_i64_schedule_with_shared_inputs_and_equality_is_validated() {
         let packed = compiled.evaluate(&inputs, None, &mut control_a).obs;
         let reference = eval::reference(&accepted, &inputs, None, &mut control_b).obs;
         assert_agree(&packed, &reference, "interleaved i64 graph");
+    }
+}
+
+#[test]
+fn a_non_layer_sorted_order_with_a_repeated_output_executes_identically() {
+    let scheme = common::IDS;
+    let (graph, cube_guard, sum_guard) = non_layer_sorted_i64();
+    let (accepted, layout) = compiled_layout(&graph);
+    let layers: Vec<u32> = (0u32..)
+        .zip(&graph.nodes)
+        .map(|(index, _)| accepted.layer(NodeId(index)))
+        .collect();
+    assert!(
+        layers.windows(2).any(|pair| pair[1] < pair[0]),
+        "the creation order is not layer-sorted: {layers:?}"
+    );
+    assert!(
+        accepted.layer(cube_guard) > accepted.layer(sum_guard),
+        "the canonically first guard sits in a later layer: {layers:?}"
+    );
+    assert_eq!(
+        noble_ngraph::layout::check(&accepted, &layout),
+        Ok(()),
+        "declared layout"
+    );
+
+    let normal = |x: i64, y: i64| {
+        let cube = x.wrapping_mul(x).wrapping_mul(x);
+        let sum = y.wrapping_add(5);
+        let difference = cube.wrapping_sub(sum);
+        Obs::Normal(vec![
+            Value::I64(difference),
+            Value::I64(sum),
+            Value::I64(difference),
+            Value::I64(cube),
+        ])
+    };
+    let failed = |node: NodeId| Obs::GuardFailed {
+        node,
+        fact: Fact::Bit,
+    };
+    let cases = [
+        (0, -5, normal(0, -5)),
+        (1, -5, normal(1, -5)),
+        (0, -4, normal(0, -4)),
+        (2, -5, failed(cube_guard)),
+        (0, 0, failed(sum_guard)),
+        // Both guards fail: the sum guard fails in the earlier layer, and the cube guard, first
+        // in canonical order, is the one both evaluators must report.
+        (2, 0, failed(cube_guard)),
+        (i64::MAX, -4, failed(cube_guard)),
+    ];
+    let compiled = Compiled::new(&scheme, &accepted);
+    for (x, y, expected) in cases {
+        let inputs = [Value::I64(x), Value::I64(y)];
+        let mut control_a = Control::default();
+        let mut control_b = Control::default();
+        let packed = compiled.evaluate(&inputs, None, &mut control_a).obs;
+        let reference = eval::reference(&accepted, &inputs, None, &mut control_b).obs;
+        assert_eq!(packed, expected, "compiled at x={x}, y={y}");
+        assert_eq!(reference, expected, "reference at x={x}, y={y}");
     }
 }
 
