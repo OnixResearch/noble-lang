@@ -1,0 +1,133 @@
+{
+  "schema": "noble-independent-replay-limits/v1",
+  "measured_on": "2026-10-30",
+  "host": "Linux 6.18.54 x86_64",
+  "assertion": "under a wall-clock bound and an address-space bound the pinned nanoda checker run on the pinned large export ends in a refusal class, never acceptance, while the small retained export is accepted under the same bounds",
+  "holds": true,
+  "checks": {
+    "large_unbounded_accepted": true,
+    "small_unbounded_accepted": true,
+    "large_time_bound_refused": true,
+    "small_time_bound_accepted": true,
+    "address_space_bound_found": true,
+    "large_address_space_bound_refused": true,
+    "no_bounded_large_run_accepted": true
+  },
+  "tools": {
+    "nanoda": {
+      "binary_sha256": "27388e46c30d5bc8a7ecb229c697b5e7726f53cf6487bfd20eb926bac20c3295",
+      "num_threads": 1
+    }
+  },
+  "exports": {
+    "large": {
+      "root": "NobleFoundation.toInt_add",
+      "sha256": "b4c50e65f75713e4be77037f67be83ba45acd28b89f02547d4c1f4922ecd2fa0",
+      "size_bytes": 7492900,
+      "retained": false
+    },
+    "small": {
+      "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "sha256": "0593c285ee70fa2c2903bfcb8c0b1453a09c85bd190b58642ddfffb3f5a080b0",
+      "size_bytes": 56774,
+      "retained": true,
+      "path": "verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson"
+    }
+  },
+  "bounds": {
+    "timeout_ms": 33,
+    "address_space_bytes": 6291456,
+    "address_space_search": [
+      {
+        "address_space_bytes": 4194304,
+        "classification": "resource-exhausted",
+        "exit_code": null
+      },
+      {
+        "address_space_bytes": 6291456,
+        "classification": "accepted",
+        "exit_code": 0
+      }
+    ]
+  },
+  "runs": [
+    {
+      "name": "unbounded",
+      "subject": "large",
+      "timeout_ms": null,
+      "address_space_bytes": null,
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 338,
+      "classification": "accepted",
+      "stdout": "Checked 2773 declarations with no errors",
+      "stderr_excerpt": ""
+    },
+    {
+      "name": "unbounded",
+      "subject": "small",
+      "timeout_ms": null,
+      "address_space_bytes": null,
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 2,
+      "classification": "accepted",
+      "stdout": "Checked 16 declarations with no errors",
+      "stderr_excerpt": ""
+    },
+    {
+      "name": "time-bound",
+      "subject": "large",
+      "timeout_ms": 33,
+      "address_space_bytes": null,
+      "exit_code": null,
+      "signal": "SIGKILL",
+      "elapsed_ms": 33,
+      "classification": "timeout",
+      "stdout": "",
+      "stderr_excerpt": ""
+    },
+    {
+      "name": "time-bound",
+      "subject": "small",
+      "timeout_ms": 33,
+      "address_space_bytes": null,
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 2,
+      "classification": "accepted",
+      "stdout": "Checked 16 declarations with no errors",
+      "stderr_excerpt": ""
+    },
+    {
+      "name": "address-space-bound",
+      "subject": "small",
+      "timeout_ms": null,
+      "address_space_bytes": 6291456,
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 3,
+      "classification": "accepted",
+      "stdout": "Checked 16 declarations with no errors",
+      "stderr_excerpt": ""
+    },
+    {
+      "name": "address-space-bound",
+      "subject": "large",
+      "timeout_ms": null,
+      "address_space_bytes": 6291456,
+      "exit_code": null,
+      "signal": "SIGABRT",
+      "elapsed_ms": 108,
+      "classification": "resource-exhausted",
+      "stdout": "",
+      "stderr_excerpt": "memory allocation of 589840 bytes failed\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    }
+  ],
+  "non_claims": [
+    "Pilot evidence on one host; the bounds are chosen from this run, not a portable resource contract.",
+    "A refusal under a bound says nothing about nanoda correctness, completeness or equivalence to the Lean kernel.",
+    "Unsupported-construct and export-failure refusal classes are not exercised here.",
+    "No CI, flake, policy or gate change; promotion is an owner decision."
+  ]
+}

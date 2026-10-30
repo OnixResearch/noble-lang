@@ -118,6 +118,25 @@ So the previously silent corruption is now a named refusal class rather than an 
 does **not** do: it does not make the checker independent (it still uses the Lean kernel), and it does
 not bind a claim to a declaration — it binds *bytes* to a replayed environment.
 
+## Limit controls (2026-10-30)
+
+`limits.mjs` runs the pinned `nanoda_bin` (sha256 `27388e46…`, one thread) on the pinned
+`NobleFoundation.toInt_add` export (sha256 `b4c50e65…`, 7,492,900 B, not retained) and on the
+retained 16-declaration `vertical_simulation_compose` export. It refuses before running anything
+if a digest differs from its pin, classifies each run from its exit status, signal and output
+alone, and fails the control if a bound does not bind or a bounded run is accepted. The receipt
+is [`receipts/2026-10-30/limits.json`](receipts/2026-10-30/limits.json), `holds: true`:
+
+| Run | `toInt_add` | small export |
+|---|---|---|
+| unbounded | **accepted**, 2,773 declarations, 338 ms | **accepted**, 2 ms |
+| wall-clock bound 33 ms (a tenth of the unbounded time) | **timeout**, killed at 33 ms | **accepted**, 2 ms |
+| address-space bound 6 MiB (the smallest searched bound admitting the small export) | **resource-exhausted**: `SIGABRT`, `memory allocation of 589840 bytes failed`, after 108 ms of checking | **accepted** |
+
+The small export is refused at 4 MiB and accepted at 6 MiB, so the 6 MiB refusal of `toInt_add`
+comes from checking work, not from the process failing to start. Both bounds are chosen from this
+run on one host; they are pilot evidence, not a portable resource contract.
+
 ## Requirements before this becomes a gate
 
 1. ~~A checker implemented independently of Lean's kernel with a compatible
@@ -131,7 +150,9 @@ not bind a claim to a declaration — it binds *bytes* to a replayed environment
 3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
    manifest refuses a corrupted, removed or extra artifact before the checker runs.
 4. Explicit refusal classes for unsupported constructs, timeout, export failure
-   and rejection — none of which may be reported as success.
+   and rejection — none of which may be reported as success. Timeout and resource
+   exhaustion are now exercised by `limits.mjs`, and rejection and parse refusal
+   by the pilot controls; unsupported constructs and export failure are not.
 5. Owner review before promotion to CI, a flake check, or a policy/tool-selection
    change; this pilot intentionally makes none of those changes.
 
@@ -142,7 +163,7 @@ not bind a claim to a declaration — it binds *bytes* to a replayed environment
 - No complete independent-kernel replay of the foundation corpus was run; only
   the two named roots and their exported closures were exercised.
 - The semantic and parse controls here are minimal pilot controls, not a complete
-  declaration-level negative-control suite (no dropped-dependency, timeout, or
+  declaration-level negative-control suite (no dropped-dependency or
   independent claim-binding control). The broader declaration-level equivalents
   exist in the producer-consumer lane (`verification/mc1/gate.mjs`: duplicate/
   missing/cyclic dependency, forbidden axiom, free variable, wrong-theorem-type,
