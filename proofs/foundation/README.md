@@ -1063,10 +1063,12 @@ identity claim at swapped positions (`wrong_bits_refused`) are refused. Eighteen
 inventoried GraphRewrite theorems. The two-independent-fold certificate fixture
 is accepted and has endpoint agreement (`multiFold_derivation_accepted`,
 `multiFold_reference`, `multiFold_endpoint`), while a substituted result graph
-differs from replay (`substituted_result_differs`). Receipt
+differs from replay (`substituted_result_differs`). The GraphRewrite theorems are
+retained at
 [`verification/foundation/receipts/71c02b9bb/`](../../verification/foundation/receipts/71c02b9bb/foundation-check.json)
 (345 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
+`implementation_theorem: false`); the endpoint theorem and the two-fold fixture are
+retained at [`verification/foundation/receipts/50ec19885/`](../../verification/foundation/receipts/50ec19885/foundation-check.json) (594 theorems).
 
 Open, and deliberately not closed:
 
@@ -1185,9 +1187,10 @@ under an accepted derivation whose premises are checked against the original
 graph. The two-independent-fold fixture and substituted-result control are
 `multiFold_endpoint` and `substituted_result_differs`. Thirteen inventoried
 theorems; receipt
-[`verification/foundation/receipts/d67efd4a2/`](../../verification/foundation/receipts/d67efd4a2/foundation-check.json)
-(374 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
+[`verification/foundation/receipts/50ec19885/`](../../verification/foundation/receipts/50ec19885/foundation-check.json)
+(594 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`). The first seven were first retained at
+`d67efd4a2` (374 theorems).
 
 Open, and deliberately not closed:
 

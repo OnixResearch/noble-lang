@@ -243,3 +243,11 @@ go/no-go, and implementation correspondence are also open.
 |---|---|
 | `foundation-check.json` | verbatim clean-source Lean inventory and per-theorem axiom audit |
 | `Audit.lean` | checker-generated theorem audit source |
+
+## 50ec19885 — certificate replay endpoint equivalence (issue #42)
+
+`50ec19885/` records the clean run that added `applyDerivation` and
+`accepted_endpoint_equivalence` to `NobleFoundation.Certificate`, with the two-fold fixture and the
+substituted-result control (6 inventoried theorems; that run reported 594 in total, all on
+`propext` or `propext`/`Quot.sound`). It is a theorem about the Lean replay model; no theorem binds
+`crates/noble-ngraph/src/cert.rs` to it.
