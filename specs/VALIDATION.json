@@ -2176,7 +2176,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "b5cda9ec07d06664be68e4682bf7456e13d43baad152ca60ffd3ffeeeac971e5"
+      "sha256": "a528d09ea0313a95231934bc3e31bbc316c1c28b44657fe37418416e1b8d86a5"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -2504,7 +2504,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "e057b66720e22877b1f8284e9b32d8cbb928458180f86272bcbfd83042f63675"
+      "sha256": "72868cabd1031cc46579de7f9f6716ca5c1863e873fd0dcbd6bd8edb108acd6b"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2776,7 +2776,7 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "0997fa05664c82264e2c2b49c039930b14f444f171c5c29bc72acbe488b7ecac"
+      "sha256": "cc3d5fd7cf8db3b60d3bf58ea14152a20c87d93225a7509326801e370a6932df"
     },
     {
       "file": "verification/grad-ordered/README.md",
@@ -2888,7 +2888,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "3ec333f913fe36997a5234cd8c36e369221e2ee83e07bf825204321e008dd3ae"
+      "sha256": "daec19890a3615edb84d172fd9b13a5fa31ae3f5139c38dae8eb943979d9a3f2"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",

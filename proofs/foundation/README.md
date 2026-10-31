@@ -2749,7 +2749,10 @@ Controls:
   exactly one arm, and a resource below it survives either arm and is
   released.
 
-The parent attaches the clean foundation receipt for frames and branches at integration.
+The clean-source receipt for frames and branches is
+[`verification/foundation/receipts/0d59c4105/`](../../verification/foundation/receipts/0d59c4105/foundation-check.json)
+(1019 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed by this model:
 

@@ -433,3 +433,9 @@ sequential composition with its counter and set-union controls (42 new theorems;
 `d2a5393c2/` records the clean run that added `NobleFoundation.InteractionNetOrientation`: the
 active-pair characterisation under the documented orientation and the three validator findings
 (6 new theorems; that run reported 1005 in total).
+
+## 0d59c4105 — effects-model frames, dip and branches (OWN-PO-1, issue #3)
+
+`0d59c4105/` records the clean run that added `dip` frames and `ifte` branches to the effects
+model and proved OWN-PO-1 there over stack and frame-held resources (14 new theorems; that
+run reported 1019 in total).
