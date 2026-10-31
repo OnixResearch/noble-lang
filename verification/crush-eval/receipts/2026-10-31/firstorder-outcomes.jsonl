@@ -1,0 +1,6 @@
+{"goal":"add_zero","exit":0,"elapsed_ms":907,"axioms":"depends on axioms: [propext, Classical.choice, Quot.sound]","errors":""}
+{"goal":"mul_one","exit":0,"elapsed_ms":816,"axioms":"depends on axioms: [propext, Classical.choice, Quot.sound]","errors":""}
+{"goal":"sub_add_cancel","exit":0,"elapsed_ms":867,"axioms":"depends on axioms: [propext, Classical.choice, Quot.sound]","errors":""}
+{"goal":"wrap_boundary","exit":0,"elapsed_ms":952,"axioms":"depends on axioms: [propext, Classical.choice, Quot.sound]","errors":""}
+{"goal":"add_comm","exit":0,"elapsed_ms":857,"axioms":"depends on axioms: [propext, Classical.choice, Quot.sound]","errors":""}
+{"goal":"monotonic_countermodel","exit":1,"elapsed_ms":836,"axioms":"depends on axioms: [sorryAx]","errors":": error: crush: could not prove the goal — the solver found a model:"}

@@ -1,0 +1,13 @@
+✖ [95/108] Building Crush.Solver.Alethe.ReplayRules (1.5s)
+trace: .> LEAN_PATH=/tmp/crush/.lake/build/lib/lean /nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean /tmp/crush/Crush/Solver/Alethe/ReplayRules.lean -o /tmp/crush/.lake/build/lib/lean/Crush/Solver/Alethe/ReplayRules.olean -i /tmp/crush/.lake/build/lib/lean/Crush/Solver/Alethe/ReplayRules.ilean -c /tmp/crush/.lake/build/ir/Crush/Solver/Alethe/ReplayRules.c --setup /tmp/crush/.lake/build/ir/Crush/Solver/Alethe/ReplayRules.setup.json --json
+error: Crush/Solver/Alethe/ReplayRules.lean:114:6: Unknown identifier `ite_eq_right`
+error: Crush/Solver/Alethe/ReplayRules.lean:110:93: unsolved goals
+left right : String
+nonnegative : ¬Int.ofNat left.length < 0
+⊢ (if Int.ofNat left.length < 0 then ""
+    else (((left ++ right).drop (Int.ofNat left.length).toNat).take (Int.ofNat right.length).toNat).copy) =
+    right
+error: Lean exited with code 1
+Some required targets logged failures:
+- Crush.Solver.Alethe.ReplayRules
+error: build failed

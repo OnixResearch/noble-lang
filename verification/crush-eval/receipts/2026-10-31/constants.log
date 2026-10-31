@@ -1,0 +1,11 @@
+checked_mode: 4 external constants
+  Int
+  Eq
+  OfNat.ofNat
+  instOfNat
+checked_wrap: 5 external constants
+  BitVec
+  OfNat.ofNat
+  Nat
+  instOfNatNat
+  Eq

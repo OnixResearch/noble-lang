@@ -1,0 +1,42 @@
+{
+  "issue": 83,
+  "date": "2026-10-31",
+  "subject": "Evaluate lean-crush as a reconstruction-only MC1 proof producer",
+  "noble_source": "2238cb51",
+  "upstream": {
+    "url": "https://github.com/AD1024/lean-crush",
+    "commit": "16d19d729fdaa3bf6fc527f9734700b0d149d0c4",
+    "commit_is_upstream_head": true,
+    "license": "MIT",
+    "license_sha256": "b5e21de6ae1800ac244009d75eaf15bcae395c0c5027a5bd4763abe94cbb7faf",
+    "declared_toolchain": "leanprover/lean4:v4.34.0",
+    "lean_toolchain_sha256": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
+    "lakefile_sha256": "c5d4482268c5de6acae5bbded909951724a1f7af5cb0b4502a13874ab80dfaf0",
+    "lake_manifest_sha256": "53c05cb1bab1bedea869106a601d83bc273082d25e6b1b1b58b8d9bd2f47bf3c",
+    "lake_manifest_packages": [],
+    "note": "The manifest declares no dependencies, so the adapter has no Mathlib, solver-library or vendored Lean closure to reconcile."
+  },
+  "noble_pin": {
+    "lean": "leanprover/lean4:v4.31.0",
+    "commit": "68218e876d2a38b1985b8590fff244a83c321783",
+    "store_path": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0"
+  },
+  "adapter": {
+    "kind": "one-line source patch of an upstream module, built with Noble's pinned Lean release",
+    "patch": "adapter-431.patch",
+    "patch_sha256": "16becdf9d4e0ef5e880b1eccc2eafdd44d2910e4487f40d04af1d75a3fda6dad",
+    "file": "Crush/Solver/Alethe/ReplayRules.lean",
+    "change": "rw [ite_eq_right nonnegative] becomes rw [if_neg nonnegative]",
+    "rationale": "Lean 4.31 has no `ite_eq_right`; `if_neg` states the same step for a propositional condition.",
+    "untouched": "No axiom, no toolchain file, no lakefile option, no solver default and no trust default is changed.",
+    "upstream_worktree_status": ["M Crush/Solver/Alethe/ReplayRules.lean"]
+  },
+  "solver": {
+    "z3": "5.1.0",
+    "z3_store_path": "/nix/store/c1vmvbqyqzzpndnb46v6b9h09jbbyrva-z3-5.1.0"
+  },
+  "sandbox": {
+    "bubblewrap": "/nix/store/mvj6y8k3xs35cj7kq937xi44q4hl3r93-bubblewrap-0.12.0/bin/bwrap",
+    "note": "Used only for the consumer runs; the producer-side probes ran unsandboxed as untrusted producers do."
+  }
+}

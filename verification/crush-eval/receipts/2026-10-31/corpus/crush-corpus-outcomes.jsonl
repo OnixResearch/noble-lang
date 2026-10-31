@@ -1,0 +1,7 @@
+{"contract":"increment","exit":1,"elapsed_ms":588765,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"wrap","exit":1,"elapsed_ms":564225,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"composed","exit":1,"elapsed_ms":569805,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"syntax","exit":1,"elapsed_ms":574994,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"family","exit":1,"elapsed_ms":566390,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"structural","exit":1,"elapsed_ms":577941,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}
+{"contract":"monotonic","exit":1,"elapsed_ms":576197,"errors":": error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.|","axioms":""}

@@ -1,0 +1,1 @@
+/tmp/prod/corpus/syntax/Candidate.lean:12:2: error: crush: solver returned `unknown` (no reason given). Try increasing `crush.timeout` or adding hypotheses.

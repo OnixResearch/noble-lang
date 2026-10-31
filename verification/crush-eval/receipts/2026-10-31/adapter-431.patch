@@ -1,0 +1,13 @@
+diff --git a/Crush/Solver/Alethe/ReplayRules.lean b/Crush/Solver/Alethe/ReplayRules.lean
+index e0f3a5a..562e131 100644
+--- a/Crush/Solver/Alethe/ReplayRules.lean
++++ b/Crush/Solver/Alethe/ReplayRules.lean
+@@ -111,7 +111,7 @@ private theorem stringSubstrAppendSuffix (left right : String) :
+   have nonnegative : ¬Int.ofNat left.length < 0 :=
+     Int.not_lt.mpr (Int.natCast_nonneg _)
+   unfold stringSubstr
+-  rw [ite_eq_right nonnegative]
++  rw [if_neg nonnegative]
+   apply String.ext
+   simp [String.Slice.toList_copy_take, String.toList_copy_drop,
+     String.toList_append, ← String.length_toList]

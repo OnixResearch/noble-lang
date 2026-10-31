@@ -1,0 +1,13 @@
+AdapterCheck.lean:7:34: warning: Variable name `hxy` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+AdapterCheck.lean:7:48: warning: Variable name `hy` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+'trusted_mode' depends on axioms: [Crush.crushSorry]
+'checked_mode' depends on axioms: [propext, Classical.choice, Quot.sound]
+'checked_wrap' depends on axioms: [propext, Classical.choice, Quot.sound]
