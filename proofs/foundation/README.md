@@ -2774,7 +2774,10 @@ Open, and deliberately not closed by this model:
 - **Rust elaborator refinement and translation** stay as they were: no elaborator
   exists, and source-to-Lean translation remains V-INTRINSIC-01.
 
-The parent attaches the clean foundation receipt for implicit-argument scope at integration.
+The clean-source receipt for implicit-argument scope is
+[`verification/foundation/receipts/d7e3e4b69/`](../../verification/foundation/receipts/d7e3e4b69/foundation-check.json)
+(1096 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 

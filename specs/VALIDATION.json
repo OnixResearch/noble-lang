@@ -1944,7 +1944,7 @@
     },
     {
       "file": ".cairn/changes/implicit-proof-arguments/tasks.md",
-      "sha256": "88824507f3a5358b545184ca5bc378c227856e390c6bcc4d5c9e00df8d2715fa"
+      "sha256": "36205885bd469e5f344d7efd5ef65a335868dd5a2f0a7540bf16ca4366b1af35"
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/design.md",
@@ -2504,7 +2504,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "a00e8aea832e8076cda1a80da5b0c75fb662c1036319616fc872420280679d49"
+      "sha256": "d5e3cc079a30e95284a67109d9e30b02a06889f8c67dddc9b3602d6305ee1492"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2776,7 +2776,7 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "e4cea7ccdb6fffef514215529ed84b24ab693794095410e8083ade675ddeda13"
+      "sha256": "7988006056123480849d7fe131596e5b353c744b20a64fdbda3f4751f3125ae7"
     },
     {
       "file": "verification/grad-ordered/README.md",

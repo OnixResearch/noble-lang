@@ -445,3 +445,10 @@ run reported 1019 in total).
 `588403e92/` records the clean run that proved the implicit-argument unification model: most
 general answers, sound refusals, fragment completeness, budget determinism and uniqueness
 exactly at ground answers (59 new theorems; that run reported 1078 in total).
+
+## d7e3e4b69 — scope and code discipline for implicit proof arguments (issue #12)
+
+`d7e3e4b69/` records the clean run that proved the implicit-argument scope model: rigid levels,
+composing scoping, an ill-scoped binding that no later substitution repairs, the value-meta
+exact-code rule, and source-bound premise arguments (18 new theorems; that run reported
+1096 in total).
