@@ -184,6 +184,7 @@ Status words:
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Identity forwarding by operand rewriting (issue #34) | `forward_sound`, `forward_output_sound`, `forwarded_residual_sound`, `forwarded_residual_is_the_program`, `subtraction_from_zero_is_not_forwarded` | the `PackedSchedule` graph model only; no certificate-format, Rust or runtime correspondence | model **proved**: forwarding keeps every node value, and for every program of the #34 family the twice-forwarded residual is exactly the program. Certificate format and implementation **open** |
+| First-order unification for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `solved_mgu`, `refused_no_unifier`, `solvable_iff`, `solve_complete`, `answers_agree`, `unique_iff_ground`, `Code.enc_injective`, `Val.enc_injective`, `case09_clash`, `case08_underconstrained` | a Lean model of the design's solver over C's codes and values; no Rust elaborator exists, and scope (rule 7), premise positions and source-to-Lean translation are not modelled | model **proved**: an answer is a most general unifier, refusals hide no solution, every solvable problem is answered under some budget, and a solution is unique exactly when it is ground. Rust elaborator refinement **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
@@ -2663,6 +2664,61 @@ The clean-source receipt for the region protocol model is
 [`verification/foundation/receipts/9afcfada9/`](../../verification/foundation/receipts/9afcfada9/foundation-check.json)
 (999 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## First-order unification for implicit proof arguments (issue #12)
+
+`NobleFoundation/ImplicitUnification.lean` models the solver of the
+`implicit-args/v1` design (`implicit-proof-arguments`, Decision: Inference
+fragment). It works over a minimal tree algebra: metas, symbols and binary
+application. C's codes and values encode into it injectively
+(`Code.enc_injective`, `Val.enc_injective`), with code metas and value metas in
+disjoint ranges.
+
+The solver is Robinson unification in Martelli–Montanari form, one equation per
+step under a step budget, with structural identity as the only equality. It
+answers `solved σ`, `clash`, `cycle` or `exhausted`.
+
+Proved model claims, for a fresh problem `U`:
+
+- **Soundness and most generality** (`solved_mgu`): an answer `solved σ`
+  unifies every constraint, and every unifier `θ` factors through `σ`.
+- **Sound refusals** (`refused_no_unifier`): after `clash` or `cycle` no
+  unifier exists, so `invalid-constraint` never hides a solution.
+- **Fragment completeness** (`solvable_iff`): `U` has a unifier exactly when
+  some budget answers `solved`. `solve_complete` is the well-founded argument:
+  each step decreases (remaining metas, size) lexicographically.
+- **Budget determinism** (`answers_agree`): two budgets that both answer give
+  the same answer, so the budget only decides between an answer and
+  `exhausted`.
+- **Uniqueness** (`unique_iff_ground`): all unifiers agree at a meta exactly
+  when the answer is ground there. Otherwise two concrete solutions differ at
+  that meta. This is the design's criterion: a reported unique solution is the
+  unique ground mgu, and `underconstrained` is never a silent choice.
+
+Fixtures, all decided:
+
+- `pairGoal_solved`: `Pair ?α I64 ≐ Pair (List Unit) I64` is solved with the
+  ground answer `?α := List Unit`.
+- `pairGoal_exhausted`: the same problem under a one-step budget is
+  `exhausted`.
+- `case09_clash`: IMPL-CASE-09, `Pair (List ?α) I64 ≐ Bool`, clashes.
+- `occurs_refused`: `?α ≐ List ?α` fails the occurs check.
+- `case08_underconstrained`: IMPL-CASE-08, a meta bound only to another meta,
+  is not unique.
+
+The parent attaches the clean foundation receipt for implicit-argument unification at integration.
+
+Open, and deliberately not closed by this model:
+
+- **Rust refinement.** No elaborator exists yet (task 10). Relating one to this
+  model under the VT-ROLE-01 Charon → Aeneas → Lean policy is the rest of task
+  13.
+- **Scope and positions.** Rule 7 (no capture, value metas solved by a level of
+  their own code) and the premise-position condition are separate checks on the
+  answer; they are not modelled here. Propositions and sorts of C are trees of
+  the same symbols, but their encoding is not modelled.
+- **Translation.** Source-to-Lean translation correctness stays the existing
+  V-INTRINSIC-01 obligation.
 
 ## Status by phase
 

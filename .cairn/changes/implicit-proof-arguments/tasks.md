@@ -11,4 +11,17 @@
 - [ ] [serial] Emit `noble-elaboration/v1` records, copy-expanded output and source maps. Feed the goal view's inserted-arguments row. r[IMPL-EXPOSE-01]
 - [ ] [serial] Execute IMPL-CASE-01 to IMPL-CASE-20 with source-bound receipts, checking explicit expansions through the source checker and the pinned Lean consumer. r[IMPL-ELAB-01] r[IMPL-TRUST-01] r[IMPL-EXPOSE-01]
 - [ ] [serial] Prove first-order unification uniqueness and fragment completeness for the constraint algebra in reviewed Lean. Pursue Rust elaborator refinement under the existing Charon/Aeneas policy. Keep source-to-Lean translation correctness as its separate open obligation. r[IMPL-ELAB-01]
+  Progress (2026-10-31): the Lean half is proved at model level in
+  `proofs/foundation/NobleFoundation/ImplicitUnification.lean`.
+  - An answer `solved σ` is a most general unifier (`solved_mgu`).
+  - Clash and occurs refusals hide no solution (`refused_no_unifier`).
+  - Every problem with a unifier is answered under some budget (`solvable_iff`), and two budgets
+    that both answer agree (`answers_agree`).
+  - All unifiers agree at a meta exactly when the answer is ground there; otherwise two solutions
+    differ (`unique_iff_ground`).
+  - C's codes and values encode injectively into the tree algebra.
+
+  The task stays open: no Rust elaborator exists to refine against the model. Rule 7 scope and
+  premise positions are separate checks that are not modelled, and source-to-Lean translation
+  stays V-INTRINSIC-01.
 - [ ] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]

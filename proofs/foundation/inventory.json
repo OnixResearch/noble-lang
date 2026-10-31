@@ -6122,6 +6122,360 @@
       "phase": 3,
       "role": "fixture",
       "claim": "the real-valued reverse sweep gives gradient 1 for both stored orders of the cancellation fixture"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.size_pos",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "every term has positive size"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.subst_comp",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "applying σ then θ is applying the composed substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.subst_id",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the identity substitution fixes every term"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.subst_congr",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "substitutions that agree on the metas of a term agree on the term"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.subst_ground",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "a ground term is fixed by every substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.mem_vars_subst",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the metas of an instance are the metas of the terms substituted for its metas"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.size_le_of_mem",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the instance of a meta is no larger than the instance of a term containing it"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Tm.size_lt_of_mem",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "and strictly smaller when the term is not that meta (the occurs-check argument)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.subst_single_agree",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "binding x := t then applying θ is applying θ whenever θ x is the θ-instance of t"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.vars_subst_single",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "binding x := t removes x and adds at most the metas of t"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.head_skip",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a skipped head equation has identical sides"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.head_split",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a split head equation equates two applications"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.head_bind",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a bound meta passes the occurs check and is one side of the head equation"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.head_cycle",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "an occurs failure has no unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.head_clash",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a clash (different symbols or rigid shapes) has no unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.unifies_cons",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a unifier of a list unifies its head and its tail"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.satisfies_cons",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a solution of a solved form satisfies its head binding and its tail"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.mem_eqnVars",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "the metas of an equation list are the metas of its equations"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.unifies_substEqns_iff",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "binding keeps exactly the unifiers of the remaining equations that agree with it"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.satisfies_substSolved_iff",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "binding keeps exactly the solutions of the earlier bindings that agree with it"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.bind_iff",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a binding step preserves the set of unifiers exactly"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.bind_head_iff",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "a bound head equation holds exactly when θ sends the meta to its instance of the other side"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.unifies_split",
+      "phase": 1,
+      "role": "unification-solver",
+      "claim": "decomposing two applications preserves the set of unifiers exactly"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.find_eq_none",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "a meta bound by no binding has no lookup"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.find_of_mem",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "with distinct bound metas a binding is what lookup returns"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.find_some",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "a lookup result is a binding of the solved form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.toSubst_satisfies",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "with no equation left the denoted substitution satisfies the solved form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.toSubst_most_general",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "every solution of a solved form factors through the denoted substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.eqnVars_cons_subset",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "the metas of a tail are metas of the list"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.SolvedForm.tail",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "dropping a head equation keeps the solved-form invariant"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.eqnVars_split",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "decomposition keeps the metas of the equations"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.SolvedForm.split",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "decomposition keeps the solved-form invariant"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.eqnVars_substEqns",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "binding x := t leaves at most the other metas plus the metas of t"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.SolvedForm.bind",
+      "phase": 1,
+      "role": "unification-solved-form",
+      "claim": "a binding step keeps the solved-form invariant"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solve_solved",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "an answer solved σ unifies the equations and solved form, and every common unifier factors through σ"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solve_refused",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "a clash or occurs answer means the equations and solved form have no common unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.lex_of",
+      "phase": 1,
+      "role": "unification-termination",
+      "claim": "a lexicographic decrease on (metas, size)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.measure_tail",
+      "phase": 1,
+      "role": "unification-termination",
+      "claim": "dropping a head equation decreases (metas, size)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.measure_split",
+      "phase": 1,
+      "role": "unification-termination",
+      "claim": "decomposing two applications decreases (metas, size)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.measure_split_of",
+      "phase": 1,
+      "role": "unification-termination",
+      "claim": "a split head decision decreases (metas, size)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.measure_bind",
+      "phase": 1,
+      "role": "unification-termination",
+      "claim": "a binding step strictly decreases the number of metas"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solve_complete",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "if the equations and solved form have a common unifier some budget answers solved"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solve_succ",
+      "phase": 1,
+      "role": "unification-budget",
+      "claim": "an answer does not change with one more step of budget"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solve_add",
+      "phase": 1,
+      "role": "unification-budget",
+      "claim": "an answer does not change with any larger budget"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.answers_agree",
+      "phase": 1,
+      "role": "unification-budget",
+      "claim": "two budgets that both answer give the same answer"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solvedForm_nil",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "a fresh problem is in solved form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.satisfies_nil",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "every substitution satisfies the empty solved form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solved_mgu",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "for a fresh problem an answer solved σ is a most general unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.refused_no_unifier",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "for a fresh problem a clash or occurs answer means no unifier exists (invalid-constraint is sound)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.solvable_iff",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "the constraints have a unifier exactly when some budget answers solved (fragment completeness)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.subst_single_sym_ne",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "instantiating a meta of a term with two different symbols gives different terms"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.unique_iff_ground",
+      "phase": 1,
+      "role": "unification-meaning",
+      "claim": "all unifiers agree at a meta exactly when the answer is ground there; otherwise two solutions differ (underconstrained is never a silent choice)"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Code.enc_injective",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "structural identity of codes is equality of their trees"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.Val.enc_injective",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "structural identity of values is equality of their trees"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.pairGoal_solved",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "Pair ?α I64 against Pair (List Unit) I64 is solved with the ground answer ?α := List Unit"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.pairGoal_exhausted",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the same problem under a one-step budget is exhausted"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.case09_clash",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "IMPL-CASE-09: Pair (List ?α) I64 against Bool clashes and has no unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.occurs_refused",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "?α against List ?α fails the occurs check and has no unifier"
+    },
+    {
+      "name": "NobleFoundation.ImplicitUnification.case08_underconstrained",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "IMPL-CASE-08: a meta bound only to another meta is not unique, so the answer is underconstrained"
     }
   ]
 }
