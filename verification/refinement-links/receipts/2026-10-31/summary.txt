@@ -1,0 +1,6 @@
+closure-mc1=0
+links-mc1=0
+drift-mc1=0
+closure-m3=1
+links-m3=0
+closure-m3=unavailable

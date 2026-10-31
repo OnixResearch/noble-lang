@@ -1,0 +1,10 @@
+{
+  "schema": "noble-refinement-links-subject-status/v1",
+  "subject": "proofs/m3/NobleKernel/Funs.lean",
+  "generatedFunctions": 922,
+  "coverage": { "inTreeClosureUnavailable": 303, "rustMissingInTree": 619 },
+  "closure": "unavailable",
+  "closureError": "object file '.../proofs/m3/.lake/build/lib/lean/NobleM2/Refinement.olean' of module NobleM2.Refinement does not exist",
+  "upstreamCause": "lake build NobleM2.Embed fails: NobleM2/Embed.lean:304:2: Fields missing: nominals, resource_kinds, caller_module, declared_modules, definition_owners, bound_adapters",
+  "meaning": "no theorem's mention set could be read for M3, so no M3 link may be reported unlinked or covered; the manifest records closure-unavailable for every in-tree function. Repairing NobleM2/Embed.lean against the current NobleKernel is a separate unit."
+}

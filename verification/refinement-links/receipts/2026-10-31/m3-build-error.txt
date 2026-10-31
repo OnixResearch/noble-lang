@@ -1,0 +1,11 @@
+✖ [1680/1680] Building NobleM2.Embed (13s)
+trace: .> LEAN_PATH=/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/Cli/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/batteries/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/Qq/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/aesop/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/importGraph/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/plausible/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/mathlib/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean:/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/lib/lean /nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean /home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/NobleM2/Embed.lean -o /home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/lib/lean/NobleM2/Embed.olean -i /home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/lib/lean/NobleM2/Embed.ilean -c /home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/ir/NobleM2/Embed.c --setup /home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/ir/NobleM2/Embed.setup.json --json
+error: NobleM2/Embed.lean:304:2: Fields missing: `nominals`, `resource_kinds`, `caller_module`, `declared_modules`, `definition_owners`, `bound_adapters`
+
+Hint: Add missing fields:
+  
+  ̲ ̲ ̲ ̲ ̲n̲o̲m̲i̲n̲a̲l̲s̲ ̲:̲=̲ ̲_̲
+  ̲ ̲ ̲ ̲ ̲r̲e̲s̲o̲u̲r̲c̲e̲_̲k̲i̲n̲d̲s̲ ̲:̲=̲ ̲_̲
+  ̲ ̲ ̲ ̲ ̲c̲a̲l̲l̲e̲r̲_̲m̲o̲d̲u̲l̲e̲ ̲:̲=̲ ̲_̲
+  ̲ ̲ ̲ ̲ ̲d̲e̲c̲l̲a̲r̲e̲d̲_̲m̲o̲d̲u̲l̲e̲s̲ ̲:̲=̲ ̲_̲
+  ̲ ̲ ̲ ̲ ̲d̲e̲f̲i̲n̲i̲t̲i̲o̲n̲_̲o̲w̲n̲e̲r̲s̲ ̲:̲=̲ ̲_̲

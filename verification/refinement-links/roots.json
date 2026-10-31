@@ -1,0 +1,5 @@
+{
+  "schema": "noble-refinement-links-roots/v1",
+  "modules": ["NobleContractImpl.Projection", "NobleContractImpl.Statement"],
+  "rationale": "Every theorem these two handwritten modules declare is a root. The theorem names themselves are read from the compiled environment by closure.lean, never listed here, so adding a theorem does not need an edit to this file and no root can be silently forgotten. Changing which modules count is a deliberate, reviewed change."
+}

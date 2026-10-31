@@ -1,0 +1,43 @@
+{
+  "schema": "noble-refinement-links-controls/v1",
+  "measured": "2026-10-31",
+  "harness": "control.sh on a hardlinked scratch tree under NOBLE_REFINEMENT_REPO; writes refuse absolute Charon paths, and links.mjs --rust-root maps the recorded checkout prefix into the scratch tree",
+  "controls": [
+    {
+      "control": "formatting-and-comment-only",
+      "target": "noble_contracts.companion.Budget.charge, crates/noble-contracts/src/companion/mod.rs lines 183-191",
+      "expected": "nothing changes: the Rust digest is token-based",
+      "measured": { "unchanged": 1023, "failing": 0 }
+    },
+    {
+      "control": "one-identifier-token-changed",
+      "target": "same body, middle line identifier renamed",
+      "expected": "rust-changed for exactly that link",
+      "measured": { "unchanged": 1022, "rust-changed": 1, "failing": 1 }
+    },
+    {
+      "control": "generated-declaration-text-edited",
+      "target": "same link's generated declaration, Rust untouched",
+      "expected": "generated-changed for exactly that link",
+      "measured": { "unchanged": 1022, "generated-changed": 1, "failing": 1 }
+    },
+    {
+      "control": "declaration-made-unparsable-then-absent",
+      "target": "comment inserted before the generated declaration, so the parser drops the entry",
+      "expected": "the vanished reviewed link must fail rather than shrink the manifest silently",
+      "measured": { "unchanged": 1022, "removed": 1, "failing": 1 }
+    },
+    {
+      "control": "root-renamed-in-closure",
+      "target": "NobleContractImpl.Projection.lower_body_spec -> ..._renamed",
+      "expected": "unreviewed-root fails",
+      "measured": { "unchanged": 1023, "unreviewed-root": 1, "failing": 1 }
+    },
+    {
+      "control": "unreviewed-change-then-bump",
+      "target": "same body, identifier renamed, then that one link's reviewed digest recorded",
+      "expected": "rust-changed first; after the bump only unchanged, with exactly one reviewed digest differing",
+      "measured": { "beforeBump": { "rust-changed": 1, "failing": 1 }, "afterBump": { "unchanged": 1023, "failing": 0, "reviewedDigestsDiffering": 1 } }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+/home/brittonr/.cache/noble-issues/wt/crush81/verification/refinement-links/closure.lean:181:0: error: object file '/home/brittonr/.cache/noble-issues/wt/crush81/proofs/m3/.lake/build/lib/lean/NobleM2/Refinement.olean' of module NobleM2.Refinement does not exist
