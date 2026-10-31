@@ -6584,6 +6584,48 @@
       "phase": 1,
       "role": "unification-algebra",
       "claim": "the Prop-level grounding predicate agrees with its decidable form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.SortT.enc_injective",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "structural identity of a sort is equality of its encoded tree"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.enc_injective",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "structural identity of a proposition is equality of its encoded tree, the checker's only definitional equality"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.enc_ne_mvar",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "an encoded proposition is never a metavariable, so no code or value meta can be solved by one"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.head_enc",
+      "phase": 1,
+      "role": "unification-encoding",
+      "claim": "every encoded proposition is headed by its own tag symbol, so its range is disjoint from code and value encodings"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.shift_comp",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "two rebasings compose: shifting by f then g is shifting by g after f"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.shift_id",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasal by the identity changes no proposition"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.PropT.levels_shift",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasal acts on exactly the level occurrences of a proposition and on nothing else"
     }
   ]
 }

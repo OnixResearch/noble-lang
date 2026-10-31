@@ -185,7 +185,8 @@ Status words:
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
 | Identity forwarding by operand rewriting (issue #34) | `forward_sound`, `forward_output_sound`, `forwarded_residual_sound`, `forwarded_residual_is_the_program`, `subtraction_from_zero_is_not_forwarded` | the `PackedSchedule` graph model only; no certificate-format, Rust or runtime correspondence | model **proved**: forwarding keeps every node value, and for every program of the #34 family the twice-forwarded residual is exactly the program. Certificate format and implementation **open** |
 | First-order unification for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `solved_mgu`, `refused_no_unifier`, `solvable_iff`, `solve_complete`, `answers_agree`, `unique_iff_ground`, `Code.enc_injective`, `Val.enc_injective`, `case09_clash`, `case08_underconstrained` | a Lean model of the design's solver over C's codes and values; no Rust elaborator exists, and source-to-Lean translation is not modelled | model **proved**: an answer is a most general unifier, refusals hide no solution, every solvable problem is answered under some budget, and a solution is unique exactly when it is ground. Rust elaborator refinement **open** |
-| Scope and code discipline for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `mem_levels_subst`, `scoped_subst`, `scoped_of_subst`, `ill_scoped_persists`, `ill_scoped_has_no_repair`, `coded_level_stable`, `wrong_code_persists`, `Arg.source_bound_stable` | rule 7's level restriction and the value-meta exact-code rule over a level-bearing tree algebra; which premise positions may infer is not modelled, only that an accepted premise argument is a ground explicit term | model **proved**: a ground binding that captures a binder keeps every instantiation ill-scoped and wrong-coded, so refusing it at solution time is the only sound point. Rust elaborator refinement **open** |
+| Scope and code discipline for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `mem_levels_subst`, `scoped_subst`, `scoped_of_subst`, `ill_scoped_persists`, `ill_scoped_has_no_repair`, `coded_level_stable`, `wrong_code_persists`, `Arg.source_bound_stable` | rule 7's level restriction and the value-meta exact-code rule over a level-bearing tree algebra; which premise positions may infer is not modelled, only that an accepted premise argument is a ground explicit term; propositions and sorts are encoded separately below | model **proved**: a ground binding that captures a binder keeps every instantiation ill-scoped and wrong-coded, so refusing it at solution time is the only sound point. Rust elaborator refinement **open** |
+| Propositions and sorts of implicit proof arguments: encoding and rebasing (issue #12, `implicit-proof-arguments` task 13) | `PropT.enc_injective`, `SortT.enc_injective`, `PropT.enc_ne_mvar`, `PropT.head_enc`, `PropT.shift_comp`, `PropT.shift_id`, `PropT.levels_shift` | the encoding of the design's `Pi`/`Eq` propositions and `Type0`/`Value` sorts into the solver's tree algebra, and rebasal of their levels; no Rust representation of these trees exists | model **proved**: structural identity is exactly tree equality, encoded propositions never collide with a code or value meta, and rebasal acts on exactly the level occurrences and composes. Rust elaborator refinement **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. Rust instruction-body export and Lean↔Rust correspondence **open** |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
@@ -2718,10 +2719,9 @@ Open, and deliberately not closed by this model:
   model under the VT-ROLE-01 Charon → Aeneas → Lean policy is the rest of task
   13.
 - **Scope and positions.** See the scope and code-discipline model below for
-  rule 7's level restriction and the value-meta exact-code rule. Which premise
-  positions the surface grammar may infer is a policy decision and is not
-  modelled. Propositions and sorts of C are trees of the same symbols, but their
-  encoding is not modelled.
+  rule 7's level restriction and the value-meta exact-code rule, and the
+  propositions-and-sorts model for the encoding. Which premise positions the
+  surface grammar may infer is a policy decision and is not modelled.
 - **Translation.** Source-to-Lean translation correctness stays the existing
   V-INTRINSIC-01 obligation.
 
@@ -2778,6 +2778,50 @@ The clean-source receipt for implicit-argument scope is
 [`verification/foundation/receipts/d7e3e4b69/`](../../verification/foundation/receipts/d7e3e4b69/foundation-check.json)
 (1096 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+### Propositions and sorts of C: encoding and rebasal
+
+`NobleFoundation/ImplicitPropositions.lean` encodes the design's props and
+sorts into the solver's tree algebra, so a constraint over them is
+representable as a tree and structural identity, the checker's only
+definitional equality, is exactly tree equality. `PropT` is
+`Pi(level, sort, body)`, `piPremise` carrying the premise proposition of a
+`Premise` sort, and `Eq c lo hi`; `SortT` is `Type0`, `Value c` and the
+premise marker. Tags stay below 16 and levels are `16 + ℓ`, exactly as the
+code and value encodings already do, so no tag can collide with a level.
+
+Proved model claims:
+
+- **Structural identity is tree equality** (`PropT.enc_injective`,
+  `SortT.enc_injective`): two propositions or sorts are identical exactly
+  when their encoded trees are equal.
+- **Disjoint ranges** (`PropT.enc_ne_mvar`, `PropT.head_enc`): an encoded
+  proposition is never a metavariable and is always headed by one of its own
+  tag symbols, so no code meta or value meta can be solved by a proposition.
+- **Rebasal acts on levels only** (`PropT.levels_shift`): the level
+  occurrences of a rebased proposition are the image of its own under the
+  rebasal. Nothing else moves.
+- **Rebasal composes** (`PropT.shift_comp`, `PropT.shift_id`): shifting by
+  `f` and then `g` is shifting by `g` after `f`, and the identity rebasal
+  changes nothing. IMPL-CASE-13 exists because substituting metas before
+  removing binders rebases twice; this is the law that makes the correct
+  order expressible.
+
+Fixtures from the design, decided by evaluation: P2's head telescope
+`Pi 1 Type0 (Pi 2 (Value (Var 1)) (Eq (Var 1) 2 2))` has exactly the level
+occurrences 1 and 2, and rebasing it by predecessor gives exactly 0 and 1; a
+premise proposition is never a metavariable.
+
+Open, and deliberately not closed by this model:
+
+- **No Rust representation of these trees exists.** The encoding is model
+  only, so nothing here relates it to a Rust elaborator's data.
+- **Sorts of a premise are not nested.** The premise proposition is a field of
+  its binder rather than a sort argument; the design's grammar fixes the
+  same propositions either way, but the presentation differs.
+- **Translation** stays V-INTRINSIC-01.
+
+The parent attaches the clean foundation receipt for implicit-argument propositions at integration.
 
 ## Status by phase
 

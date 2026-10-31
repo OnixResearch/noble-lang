@@ -30,8 +30,16 @@
     substitution (`wrong_code_persists`);
   - an accepted premise argument is a ground explicit term, so no substitution retargets its
     witness identity (`Arg.source_bound_stable`).
+  The design's propositions and sorts are encoded in
+  `proofs/foundation/NobleFoundation/ImplicitPropositions.lean`:
+  - structural identity of a proposition or sort is exactly equality of its encoded tree
+    (`PropT.enc_injective`, `SortT.enc_injective`);
+  - an encoded proposition is never a metavariable, so it cannot collide with a code or value
+    meta (`PropT.enc_ne_mvar`, `PropT.head_enc`);
+  - rebasal acts on exactly the level occurrences and composes (`PropT.levels_shift`,
+    `PropT.shift_comp`, `PropT.shift_id`), which is the law IMPL-CASE-13's wrong order violates.
 
-  The task stays open: no Rust elaborator exists to refine against the model. Which premise
-  positions the surface grammar may infer stays a policy decision, the encoding of C's
-  propositions and sorts stays unmodelled, and source-to-Lean translation stays V-INTRINSIC-01.
+  The task stays open: no Rust elaborator exists to refine against the model, and no Rust
+  representation of the encoded propositions exists either. Which premise positions the surface
+  grammar may infer stays a policy decision, and source-to-Lean translation stays V-INTRINSIC-01.
 - [ ] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]

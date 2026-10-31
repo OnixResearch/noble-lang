@@ -55,3 +55,4 @@ import NobleFoundation.ReverseADOrdered
 import NobleFoundation.RegionProtocol
 import NobleFoundation.ImplicitUnification
 import NobleFoundation.ImplicitScope
+import NobleFoundation.ImplicitPropositions
