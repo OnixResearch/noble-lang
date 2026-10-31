@@ -6476,6 +6476,114 @@
       "phase": 1,
       "role": "fixture",
       "claim": "IMPL-CASE-08: a meta bound only to another meta is not unique, so the answer is underconstrained"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.subst_comp",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "applying one substitution then another is applying the composed substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.subst_id",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the identity substitution fixes every term"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.subst_congr",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "substitutions that agree on the metavariables of a term agree on the term"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.subst_ground",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "a ground term is fixed by every substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.mem_vars_subst",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the metavariables of an instantiation come from the term and its bindings"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.exists_over_vars",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "a witness of either side of an application is a witness of the union and conversely"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.mem_levels_subst",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "level occurrences of an instantiation come from the term itself and the bindings it uses; substitution adds no level"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.scoped_iff",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "the Prop-level scoping predicate agrees with its decidable form"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.scoped_subst",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "any substitution with scoped bindings yields a scoped instantiation"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.scoped_of_subst",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "a scoped instantiation has scoped bindings at every metavariable the term uses"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.not_scoped_iff",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "ill-scoping is exactly the presence of a level at or beyond the meta depth"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.ill_scoped_persists",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "a ground binding at or beyond the meta depth keeps every instantiation ill-scoped"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.ill_scoped_has_no_repair",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "no later substitution repairs an ill-scoped binding, so the level restriction belongs at solution time"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.coded_level_stable",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "a value meta solved by a level of its own code stays so under every later substitution"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.wrong_code_persists",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "a value meta solved by a level of the wrong code keeps every instantiation wrong-coded"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.Arg.source_bound_stable",
+      "phase": 1,
+      "role": "unification-premise",
+      "claim": "an accepted premise argument is a ground explicit term"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.Arg.source_bound_unchanged",
+      "phase": 1,
+      "role": "unification-premise",
+      "claim": "no substitution retargets an accepted premise argument witness"
+    },
+    {
+      "name": "NobleFoundation.ImplicitScope.T.ground_iff",
+      "phase": 1,
+      "role": "unification-algebra",
+      "claim": "the Prop-level grounding predicate agrees with its decidable form"
     }
   ]
 }

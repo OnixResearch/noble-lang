@@ -21,7 +21,17 @@
     differ (`unique_iff_ground`).
   - C's codes and values encode injectively into the tree algebra.
 
-  The task stays open: no Rust elaborator exists to refine against the model. Rule 7 scope and
-  premise positions are separate checks that are not modelled, and source-to-Lean translation
-  stays V-INTRINSIC-01.
+  Rule 7's level restriction and the value-meta exact-code rule are proved at model level in
+  `proofs/foundation/NobleFoundation/ImplicitScope.lean`:
+  - a ground binding that mentions a level at or beyond its meta's depth keeps every
+    instantiation ill-scoped (`ill_scoped_persists`, `ill_scoped_has_no_repair`), so refusing it
+    when the solver produces it is the only sound point;
+  - a value meta solved by a level of the wrong code stays wrong-coded under every later
+    substitution (`wrong_code_persists`);
+  - an accepted premise argument is a ground explicit term, so no substitution retargets its
+    witness identity (`Arg.source_bound_stable`).
+
+  The task stays open: no Rust elaborator exists to refine against the model. Which premise
+  positions the surface grammar may infer stays a policy decision, the encoding of C's
+  propositions and sorts stays unmodelled, and source-to-Lean translation stays V-INTRINSIC-01.
 - [ ] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]
