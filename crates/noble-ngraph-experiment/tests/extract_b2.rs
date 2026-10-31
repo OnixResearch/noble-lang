@@ -23,6 +23,9 @@ use noble_ngraph::sem::{obs_eq_all, Value};
 use noble_ngraph_experiment::b2i64::{random, Lowered, Oracle};
 
 /// The L1 adapter's attribution and completion checks against fixture children (issue #75).
+/// The module is test-only; `cfg(test)` states that scope, as Octet's test-context
+/// rules read it from the attribute rather than from the harness-expanded `#[test]`.
+#[cfg(test)]
 #[path = "attribution/mod.rs"]
 mod attribution;
 

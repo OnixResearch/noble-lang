@@ -19,6 +19,25 @@ static SPAWN: Mutex<()> = Mutex::new(());
 const DEFINITION: &str = "def sq [ dup * ]";
 const ROOT: &str = "sq +";
 
+/// A report outcome, typed apart from source and stage text so the two cannot
+/// be swapped at a call site.
+#[derive(Clone, Copy)]
+struct Outcome(&'static str);
+
+const NORMAL: Outcome = Outcome("normal");
+const DEFINED: Outcome = Outcome("defined");
+const TRAP: Outcome = Outcome("trap");
+const RUNTIME_EXHAUSTED: Outcome = Outcome("runtime-exhausted");
+const UNBOUND_WORD: Outcome = Outcome("unbound-word");
+
+/// An expected failure class, typed apart from the reason phrase.
+#[derive(Clone, Copy)]
+struct Class(&'static str);
+
+const PROTOCOL: Class = Class(l1::PROTOCOL);
+const PROCESS: Class = Class(l1::PROCESS);
+const TRANSPORT: Class = Class(l1::TRANSPORT);
+
 /// A fixture `noble` in its own directory, removed afterwards.
 struct Script {
     dir: PathBuf,
@@ -26,7 +45,7 @@ struct Script {
 }
 
 impl Script {
-    fn new(name: &str, body: &str) -> Self {
+    fn new(name: &str, body: String) -> Self {
         let dir = std::env::temp_dir().join(format!("ngraph-l1-{}-{name}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("fixture directory");
         let path = dir.join("noble");
@@ -74,25 +93,35 @@ fn body(lines: &[String], consume: bool, ending: &str) -> String {
     format!("{read}{print}{ending}")
 }
 
-/// A body that answers its first invocation with `first` and every later one
-/// with `later`, as a fresh process after a restart or a chunk boundary.
-fn two_processes(first: &str, later: &str) -> String {
-    format!("if [ -e \"$0.later\" ]; then\n{later}\nelse\n: > \"$0.later\"\n{first}\nfi")
+/// A fixture that answers its first invocation with `first` and every later
+/// one with `later`, as a fresh process after a restart or a chunk boundary.
+struct Restarting {
+    first: String,
+    later: String,
+}
+
+impl Restarting {
+    fn script(&self) -> String {
+        format!(
+            "if [ -e \"$0.later\" ]; then\n{}\nelse\n: > \"$0.later\"\n{}\nfi",
+            self.later, self.first
+        )
+    }
 }
 
 fn digest(text: &str) -> String {
     noble_ngraph_experiment::bench::sha256_text(text).expect("sha256sum")
 }
 
-fn runtime_line(ordinal: u64, source: &str, opt: Opt, outcome: &str, stack: &[i64]) -> String {
-    let is_normal = outcome == "normal";
+fn runtime_line(ordinal: u64, source: &str, opt: Opt, outcome: Outcome, stack: &[i64]) -> String {
+    let is_normal = outcome.0 == NORMAL.0;
     json!({
         "schema": l1::SCHEMA,
         "profile": l1::PROFILE,
         "backend": l1::BACKEND,
         "submission": ordinal,
         "stage": "wasm",
-        "outcome": outcome,
+        "outcome": outcome.0,
         "status": if is_normal { 0 } else { 5 },
         "stack": stack
             .iter()
@@ -105,14 +134,14 @@ fn runtime_line(ordinal: u64, source: &str, opt: Opt, outcome: &str, stack: &[i6
     .to_string()
 }
 
-fn static_line(ordinal: u64, stage: &str, outcome: &str) -> String {
+fn static_line(ordinal: u64, stage: &str, outcome: Outcome) -> String {
     json!({
         "schema": l1::SCHEMA,
         "profile": l1::PROFILE,
         "backend": l1::BACKEND,
         "submission": ordinal,
         "stage": stage,
-        "outcome": outcome,
+        "outcome": outcome.0,
         "diagnostic": "fixture",
     })
     .to_string()
@@ -125,11 +154,11 @@ fn vectors(count: usize) -> Vec<Vec<l1::Value>> {
 /// The exact reports for `sq` and `sq +` over two `5 4` vectors.
 fn good_lines(opt: Opt) -> Vec<String> {
     vec![
-        static_line(1, "check", "defined"),
-        runtime_line(2, "5 4", opt, "normal", &[5, 4]),
-        runtime_line(3, ROOT, opt, "normal", &[21]),
-        runtime_line(4, "drop 5 4", opt, "normal", &[5, 4]),
-        runtime_line(5, ROOT, opt, "normal", &[21]),
+        static_line(1, "check", DEFINED),
+        runtime_line(2, "5 4", opt, NORMAL, &[5, 4]),
+        runtime_line(3, ROOT, opt, NORMAL, &[21]),
+        runtime_line(4, "drop 5 4", opt, NORMAL, &[5, 4]),
+        runtime_line(5, ROOT, opt, NORMAL, &[21]),
     ]
 }
 
@@ -147,16 +176,16 @@ fn expect_failure<T>(result: Result<T, Error>) -> SessionFailure {
     }
 }
 
-fn run_with(name: &str, lines: &[String], ending: &str) -> Result<l1::Run<l1::Report>, Error> {
+fn run_with(name: &str, script_body: String) -> Result<l1::Run<l1::Report>, Error> {
     let _guard = SPAWN.lock().unwrap_or_else(PoisonError::into_inner);
-    let script = Script::new(name, &body(lines, true, ending));
+    let script = Script::new(name, script_body);
     script
         .cli(Opt::Off)
         .run_vectors(&[DEFINITION], ROOT, 1, &vectors(2))
 }
 
-fn assert_class(failure: &SessionFailure, class: &str, phrase: &str) {
-    assert_eq!(failure.class, class, "{failure:?}");
+fn assert_class(failure: &SessionFailure, class: Class, phrase: &str) {
+    assert_eq!(failure.class, class.0, "{failure:?}");
     assert!(
         failure.reason.contains(phrase),
         "{phrase:?} not in {:?}",

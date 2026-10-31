@@ -2,7 +2,7 @@
 
 use super::{
     assert_class, body, edit, expect_failure, good_lines, run_with, runtime_line, static_line,
-    Script, DEFINITION, ROOT, SPAWN,
+    Script, DEFINED, DEFINITION, NORMAL, PROTOCOL, ROOT, SPAWN, TRAP,
 };
 use noble_ngraph_experiment::l1::{self, Opt};
 use serde_json::json;
@@ -41,8 +41,8 @@ fn wrong_or_missing_identity_fields_fail_as_protocol() {
         let mut changed = lines.clone();
         changed[2] = replaced;
         assert_class(
-            &expect_failure(run_with(name, &changed, "exit 0")),
-            l1::PROTOCOL,
+            &expect_failure(run_with(name, body(&changed, true, "exit 0"))),
+            PROTOCOL,
             phrase,
         );
     }
@@ -57,30 +57,30 @@ fn duplicated_reordered_extra_and_missing_lines_fail_as_protocol() {
         r["module"]["submission"] = json!(3);
     });
     assert_class(
-        &expect_failure(run_with("duplicate", &duplicated, "exit 0")),
-        l1::PROTOCOL,
+        &expect_failure(run_with("duplicate", body(&duplicated, true, "exit 0"))),
+        PROTOCOL,
         "names submission Some(3)",
     );
 
     let mut reordered = lines.clone();
     reordered.swap(3, 4);
     assert_class(
-        &expect_failure(run_with("reordered", &reordered, "exit 0")),
-        l1::PROTOCOL,
+        &expect_failure(run_with("reordered", body(&reordered, true, "exit 0"))),
+        PROTOCOL,
         "names submission Some(5)",
     );
 
     let mut extra = lines.clone();
-    extra.push(runtime_line(6, ROOT, Opt::Off, "normal", &[21]));
+    extra.push(runtime_line(6, ROOT, Opt::Off, NORMAL, &[21]));
     assert_class(
-        &expect_failure(run_with("extra", &extra, "exit 0")),
-        l1::PROTOCOL,
+        &expect_failure(run_with("extra", body(&extra, true, "exit 0"))),
+        PROTOCOL,
         "extra report",
     );
 
     let truncated = &lines[..4];
-    let failure = expect_failure(run_with("truncated", truncated, "exit 0"));
-    assert_class(&failure, l1::PROTOCOL, "4 reports for 5 submissions");
+    let failure = expect_failure(run_with("truncated", body(truncated, true, "exit 0")));
+    assert_class(&failure, PROTOCOL, "4 reports for 5 submissions");
     assert_eq!(failure.validated, 4, "the validated prefix is kept");
 }
 
@@ -110,8 +110,8 @@ fn malformed_runtime_reports_fail_as_protocol() {
         let mut changed = lines.clone();
         changed[2] = replaced;
         assert_class(
-            &expect_failure(run_with(name, &changed, "exit 0")),
-            l1::PROTOCOL,
+            &expect_failure(run_with(name, body(&changed, true, "exit 0"))),
+            PROTOCOL,
             phrase,
         );
     }
@@ -124,7 +124,7 @@ fn a_root_cannot_be_answered_by_another_submissions_report() {
         (
             "definition-as-root",
             2,
-            static_line(3, "check", "defined"),
+            static_line(3, "check", DEFINED),
             "reported defined",
         ),
         (
@@ -136,7 +136,7 @@ fn a_root_cannot_be_answered_by_another_submissions_report() {
         (
             "input-renumbered-as-root",
             2,
-            runtime_line(3, "5 4", Opt::Off, "normal", &[21]),
+            runtime_line(3, "5 4", Opt::Off, NORMAL, &[21]),
             "source digest",
         ),
         (
@@ -148,7 +148,7 @@ fn a_root_cannot_be_answered_by_another_submissions_report() {
         (
             "normal-definition",
             0,
-            runtime_line(1, DEFINITION, Opt::Off, "normal", &[]),
+            runtime_line(1, DEFINITION, Opt::Off, NORMAL, &[]),
             "definition submission reported normal",
         ),
     ];
@@ -156,8 +156,8 @@ fn a_root_cannot_be_answered_by_another_submissions_report() {
         let mut changed = lines.clone();
         changed[at] = replaced;
         assert_class(
-            &expect_failure(run_with(name, &changed, "exit 0")),
-            l1::PROTOCOL,
+            &expect_failure(run_with(name, body(&changed, true, "exit 0"))),
+            PROTOCOL,
             phrase,
         );
     }
@@ -171,16 +171,16 @@ fn mutated_module_identity_fails_as_protocol() {
         r["module"]["source_sha256"] = json!("0".repeat(64))
     });
     assert_class(
-        &expect_failure(run_with("digest", &digest_changed, "exit 0")),
-        l1::PROTOCOL,
+        &expect_failure(run_with("digest", body(&digest_changed, true, "exit 0"))),
+        PROTOCOL,
         "source digest",
     );
 
     let mut leg_changed = lines.clone();
     leg_changed[2] = edit(&lines[2], |r| r["module"]["optimized"] = json!(true));
     assert_class(
-        &expect_failure(run_with("leg", &leg_changed, "exit 0")),
-        l1::PROTOCOL,
+        &expect_failure(run_with("leg", body(&leg_changed, true, "exit 0"))),
+        PROTOCOL,
         "optimization",
     );
 }
@@ -189,15 +189,15 @@ fn mutated_module_identity_fails_as_protocol() {
 fn a_line_after_a_terminal_outcome_or_past_the_bound_fails_as_protocol() {
     let _guard = SPAWN.lock().unwrap_or_else(PoisonError::into_inner);
     let lines = [
-        runtime_line(1, "1 0", Opt::Off, "normal", &[1, 0]),
-        runtime_line(2, "/", Opt::Off, "trap", &[]),
-        runtime_line(3, "9", Opt::Off, "normal", &[1, 0, 9]),
+        runtime_line(1, "1 0", Opt::Off, NORMAL, &[1, 0]),
+        runtime_line(2, "/", Opt::Off, TRAP, &[]),
+        runtime_line(3, "9", Opt::Off, NORMAL, &[1, 0, 9]),
     ];
-    let script = Script::new("after-terminal", &body(&lines, true, "exit 1"));
+    let script = Script::new("after-terminal", body(&lines, true, "exit 1"));
     let submissions = ["1 0".to_owned(), "/".to_owned(), "9".to_owned()];
     assert_class(
         &expect_failure(script.cli(Opt::Off).session(&submissions)),
-        l1::PROTOCOL,
+        PROTOCOL,
         "follows the terminal",
     );
 
@@ -205,10 +205,10 @@ fn a_line_after_a_terminal_outcome_or_past_the_bound_fails_as_protocol() {
         "{{\"padding\":\"{}\"}}",
         "x".repeat(l1::MAX_REPORT_BYTES)
     )];
-    let script = Script::new("oversized", &body(&oversized, true, "exit 0"));
+    let script = Script::new("oversized", body(&oversized, true, "exit 0"));
     assert_class(
         &expect_failure(script.cli(Opt::Off).session(&["5 4".to_owned()])),
-        l1::PROTOCOL,
+        PROTOCOL,
         "exceeds",
     );
 }
