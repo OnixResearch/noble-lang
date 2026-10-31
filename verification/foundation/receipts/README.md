@@ -439,3 +439,9 @@ active-pair characterisation under the documented orientation and the three vali
 `0d59c4105/` records the clean run that added `dip` frames and `ifte` branches to the effects
 model and proved OWN-PO-1 there over stack and frame-held resources (14 new theorems; that
 run reported 1019 in total).
+
+## 588403e92 — first-order unification for implicit proof arguments (issue #12)
+
+`588403e92/` records the clean run that proved the implicit-argument unification model: most
+general answers, sound refusals, fragment completeness, budget determinism and uniqueness
+exactly at ground answers (59 new theorems; that run reported 1078 in total).

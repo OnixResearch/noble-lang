@@ -2706,7 +2706,10 @@ Fixtures, all decided:
 - `case08_underconstrained`: IMPL-CASE-08, a meta bound only to another meta,
   is not unique.
 
-The parent attaches the clean foundation receipt for implicit-argument unification at integration.
+The clean-source receipt for implicit-argument unification is
+[`verification/foundation/receipts/588403e92/`](../../verification/foundation/receipts/588403e92/foundation-check.json)
+(1078 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 Open, and deliberately not closed by this model:
 
