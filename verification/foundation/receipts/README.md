@@ -452,3 +452,10 @@ exactly at ground answers (59 new theorems; that run reported 1078 in total).
 composing scoping, an ill-scoped binding that no later substitution repairs, the value-meta
 exact-code rule, and source-bound premise arguments (18 new theorems; that run reported
 1096 in total).
+
+## 5da1aa2bc — propositions and sorts of implicit proof arguments (issue #12)
+
+`5da1aa2bc/` records the clean run that proved the implicit-argument propositions model: structural
+identity as tree equality, disjoint ranges from code and value metas, and rebasal that acts on
+exactly the level occurrences and composes (7 new theorems; that run reported 1103 in
+total).

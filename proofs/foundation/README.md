@@ -2821,7 +2821,10 @@ Open, and deliberately not closed by this model:
   same propositions either way, but the presentation differs.
 - **Translation** stays V-INTRINSIC-01.
 
-The parent attaches the clean foundation receipt for implicit-argument propositions at integration.
+The clean-source receipt for implicit-argument propositions is
+[`verification/foundation/receipts/5da1aa2bc/`](../../verification/foundation/receipts/5da1aa2bc/foundation-check.json)
+(1103 theorems, `clean_source: true`, axiom sets inside the allow-list,
+`implementation_theorem: false`).
 
 ## Status by phase
 
