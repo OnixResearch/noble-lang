@@ -5968,6 +5968,72 @@
       "claim": "1.5 * 2^-149 is certified with the absolute term, refused without it, and its actual error eta exceeds the bound without it"
     },
     {
+      "name": "NobleFoundation.Binary32.Checker.checkBound_only_certifies_matching",
+      "phase": 2,
+      "role": "binary32-certificate-binding",
+      "claim": "acceptance by the bound checker implies the declared context equals the executing one and the unbounded checker accepts"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.checkBound_sound",
+      "phase": 2,
+      "role": "binary32-certificate-binding",
+      "claim": "an accepted certificate encloses every node under an equal context; the binding gate adds the context premise and nothing else"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.checkBound_agrees_when_equal",
+      "phase": 2,
+      "role": "binary32-certificate-binding",
+      "claim": "under equal contexts the bound checker returns exactly the unbounded checker answer"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.matching_context_certifies",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "the fixture cancellation certificate certifies under its own declared context, so the binding gate is not vacuous"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.changed_snapshot_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a certificate declaring a different graph snapshot is notApplicable rather than certified or unknown"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.changed_revision_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a certificate declaring a different graph revision is notApplicable"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.changed_domain_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a certificate declaring a different input-domain-set digest is notApplicable even though its domains pass the unbounded checker"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.reordered_execution_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a certificate declaring a different executed node order digest is notApplicable"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.fma_contraction_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a contraction policy difference in either direction is notApplicable"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.stale_model_is_not_applicable",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a certificate proposed by an older analyzer model revision is notApplicable"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.mismatch_is_not_an_unknown_outcome",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a context mismatch is its own refusal class, never unknown, unsupported or exhausted"
+    },
+    {
       "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
       "phase": 3,
       "role": "specification-quality",

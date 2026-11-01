@@ -318,12 +318,14 @@ def checkNode (domains : List InputDomain) (done : List NodeBound) (bound : Node
   | .outside => .unsupported
 
 /-- The checker's answer. `unknown` means a check failed, so the certificate does not establish its
-bound; it is not a disproof. -/
+bound; it is not a disproof. `notApplicable` is the binding layer's refusal (`Binary32Binding`): the
+certificate was produced for a different context, so no bound was checked at all. -/
 inductive Outcome where
   | certified
   | unknown (position : Nat)
   | unsupported (position : Nat)
   | exhausted
+  | notApplicable
 deriving DecidableEq, Repr
 
 /-- Check the remaining nodes against the remaining bounds, one node at a time. -/

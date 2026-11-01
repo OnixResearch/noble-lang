@@ -61,6 +61,20 @@ The receipt is [`receipts/2026-10-30/lane.json`](receipts/2026-10-30/lane.json),
 
 ## Non-claims
 
+- **Binding is identity equality, not derivation.** [`Binary32Binding.lean`](../../proofs/foundation/NobleFoundation/Binary32Binding.lean)
+  (issue #44, NGRAPH-ERR-04) gates the checker on six identities — snapshot, graph revision,
+  domain-set digest, executed-order digest, FMA-contraction flag and analyzer model revision — and
+  refuses with its own outcome, `notApplicable`, when the declared and executing contexts differ.
+  Theorems: `checkBound_only_certifies_matching` (acceptance implies equal contexts and an accepted
+  unbounded check), `checkBound_sound` (the bounded statement is the unbounded one under that
+  premise), and six kernel-decided controls (`changed_snapshot_is_not_applicable`,
+  `changed_revision_is_not_applicable`, `changed_domain_is_not_applicable`,
+  `reordered_execution_is_not_applicable`, `fma_contraction_is_not_applicable`,
+  `stale_model_is_not_applicable`) plus `matching_context_certifies` (the same certificate is still
+  accepted under its own context, so the gate refuses nothing vacuously) and
+  `mismatch_is_not_an_unknown_outcome` (a mismatch is never reported as a failed check). How the
+  identities are computed, and whether they name the graph they claim to, is **outside** this model:
+  a digest computed wrongly still compares equal to itself.
 - Sampling is secondary evidence: soundness is the kernel-checked certificate, not the absence of
   sampled violations.
 - The sampled machine is the host's binary32 arithmetic, not the Lean model; their agreement is not

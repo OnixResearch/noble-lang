@@ -49,6 +49,7 @@ import NobleFoundation.Binary32Subnormal
 import NobleFoundation.Binary32Sequence
 import NobleFoundation.Binary32SequenceFinite
 import NobleFoundation.Binary32Checker
+import NobleFoundation.Binary32Binding
 import NobleFoundation.ReverseADTranspose
 import NobleFoundation.ReverseADAdjoint
 import NobleFoundation.ReverseADOrdered

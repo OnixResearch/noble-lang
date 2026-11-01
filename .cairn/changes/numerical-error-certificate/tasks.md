@@ -52,16 +52,26 @@
   `cancellation_applies` showing its premises are satisfiable). It certifies squaring over
   `[1, 2^63]` and refuses it over `[1, 2^64]` (`near_overflow_square`). These are Lean model graphs:
   no encoded `noble-ngraph` graph is mapped to the fragment, so the task stays open.
-- [ ] [serial] Add the negative controls for underestimated error and ranges, missing input error, changed operation order, FMA contraction, wrong snapshot/domain/output, stale model, unproved underflow premise and oversized certificates. r[NGRAPH-ERR-03] r[NGRAPH-ERR-05]
-  Progress (2026-10-30): `Binary32Checker.lean` decides the checker-level controls.
+- [x] [serial] Add the negative controls for underestimated error and ranges, missing input error, changed operation order, FMA contraction, wrong snapshot/domain/output, stale model, unproved underflow premise and oversized certificates. r[NGRAPH-ERR-03] r[NGRAPH-ERR-05]
+  Ticked 2026-10-31: the binding layer `NobleFoundation/Binary32Binding.lean` closes the four controls
+  that the checker could not decide, and every listed control now has a kernel-decided theorem.
   - Refused as `unknown`: an underestimated error, an underestimated range and a missing input error.
+  - Refused as `notApplicable` by the binding layer: a changed snapshot, a changed graph revision, a
+    changed domain-set digest, a changed executed-order digest, a differing FMA-contraction policy in
+    either direction, and a stale analyzer model revision. Acceptance implies the declared context
+    equals the executing one (`checkBound_only_certifies_matching`), and the bounded statement is the
+    unbounded one under that premise (`checkBound_sound`). `matching_context_certifies` accepts the
+    same certificate under its own context, so the six refusals are not satisfied vacuously, and
+    `mismatch_is_not_an_unknown_outcome` keeps the refusal class apart from a failed check.
   - Classified `unsupported`: an operation outside the fragment, an operand that is not an earlier
     node, and an output naming no node.
   - Classified `exhausted`: an oversized rational or graph.
   - `subnormal_needs_eta` shows that a bound without the absolute term is refused and would be false.
-
-  Changed operation order, FMA contraction, wrong snapshot or domain, and a stale model need the
-  binding layer and stay open.
+  Limits: the binding identities are compared, not derived. How each digest is computed, and whether
+  it names the graph it claims to, is outside the model and stays open with the encoded-graph and
+  external-analyzer items.
+  Progress (2026-10-30), superseded by the tick above: `Binary32Checker.lean` decided the
+  checker-level controls, and the five context controls still needed the binding layer.
 - [x] [serial] Add an independent expected-value lane that does not reuse the analyzer's arithmetic as the oracle. r[NGRAPH-ERR-02]
   Ticked 2026-10-30: `verification/numerical-certificate/lane.mjs` evaluates every node of every
   corpus graph on 2,000 sampled inputs per graph, both ways:
