@@ -60,14 +60,20 @@ def isThm (info : ConstantInfo) : Bool :=
   match info with
   | .thmInfo _ => true
   | _ => false
+/-- Lean derives declarations from a user declaration: equation lemmas (`meaning.eq_3`), constructor
+    index lemmas (`ofNat_ctorIdx`), `match_*` splitters, `noConfusion*`, `sizeOf_spec`. Counting those
+    as roots would let a lane report machinery as coverage, exactly as for `_proof_*` auxiliaries. -/
+def isDerivedShape (part : String) : Bool :=
+  part.startsWith "eq_" || part.startsWith "match_" || part == "ofNat_ctorIdx" ||
+    part.startsWith "noConfusion" || part.startsWith "sizeOf_spec" || part.startsWith "casesOn"
 
-/-- Auxiliary declarations Lean generates (`_proof_1_2`, `_simp_1`, …) and Aeneas' own library
-    theorems are not handwritten refinement roots: keeping them would let a lane count machinery as
-    coverage. -/
+/-- Auxiliary declarations are not handwritten refinement roots: the `_proof_*` and `_simp_*`
+    machinery Lean generates, Aeneas' own library theorems, and Lean-derived shapes handled by
+    `isDerivedShape`. Counting them would let a lane report machinery as coverage. -/
 def isAuxiliary (declName : Name) : Bool :=
   let text := nameText declName
   text.startsWith "Aeneas." ||
-    (text.splitOn ".").any fun part => part.startsWith "_"
+    (text.splitOn ".").any fun part => part.startsWith "_" || isDerivedShape part
 
 /-- Every constant reachable from `starts` through declaration types and values, transitively. -/
 partial def reachable (env : Environment) (pending : List Name) (seen : Std.HashSet Name)

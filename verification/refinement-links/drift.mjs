@@ -39,8 +39,16 @@ const reviewed = fs.existsSync(reviewedFile)
   ? JSON.parse(fs.readFileSync(reviewedFile, 'utf8'))
   : { schema: 'noble-refinement-links-reviewed/v1', links: {}, roots: {} };
 
-const reviewedLinks = reviewed.links ?? {};
-const reviewedRoots = reviewed.roots ?? {};
+// One reviewed file covers every subject (the two proofs' link keys and root names are fully
+// qualified), so a run must compare only its own subject's records: otherwise the other subject's
+// links look `removed` and the gate fails on correct work.
+const sameSubject = (record) => (record?.subject ?? manifest.subject) === manifest.subject;
+const reviewedLinks = Object.fromEntries(
+  Object.entries(reviewed.links ?? {}).filter(([, record]) => sameSubject(record)),
+);
+const reviewedRoots = Object.fromEntries(
+  Object.entries(reviewed.roots ?? {}).filter(([, record]) => sameSubject(record)),
+);
 const currentLinks = new Map(manifest.links.map((link) => [link.key, link]));
 const currentRoots = manifest.closures ?? {};
 
@@ -103,6 +111,15 @@ for (const [name, record] of Object.entries(currentRoots)) {
   }
   if (reviewedRoot.statement !== record.statement) {
     add(name, 'proof-changed', { root: name, reason: 'root statement differs from the reviewed statement' });
+  }
+}
+
+// A reviewed root that the closure no longer declares has vanished: the theorem was renamed, removed,
+// or the root filter stopped selecting it. Same reasoning as `removed` for links: the gate must fail
+// rather than accept a smaller root set as clean.
+for (const name of Object.keys(reviewedRoots)) {
+  if (!(name in currentRoots)) {
+    add(name, 'removed-root', { reason: 'reviewed root absent from the current closure' });
   }
 }
 

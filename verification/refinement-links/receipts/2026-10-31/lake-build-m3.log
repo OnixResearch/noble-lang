@@ -1,0 +1,72 @@
++ PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:/run/current-system/sw/bin:/usr/bin:/bin
++ nice -n 10 lake build NobleM2.Refinement
+⚠ [1672/1684] Replayed NobleKernel.FunsExternal
+warning: NobleKernel/FunsExternal.lean:521:59: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: NobleKernel/FunsExternal.lean:537:78: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+⚠ [1673/1684] Replayed NobleKernel.Funs
+warning: NobleKernel/Funs.lean:14162:4: The declaration 'async_tasks.domain.DebugError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:14174:4: The declaration 'async_tasks.domain.DebugError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:14526:4: The declaration 'async_tasks.schema.DebugEventKind.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:14537:4: The declaration 'async_tasks.schema.DebugEventKind.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:21027:4: The declaration 'authority.permit.DebugDenial.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:21038:4: The declaration 'authority.permit.DebugDenial.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:22620:4: The declaration 'authority.report.DebugBoundaryError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:22631:4: The declaration 'authority.report.DebugBoundaryError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:29704:4: The declaration 'resources.DebugError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+warning: NobleKernel/Funs.lean:29714:4: The declaration 'resources.DebugError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.
+
+Note: This linter can be disabled with `set_option linter.style.nameCheck false`
+⚠ [1676/1684] Replayed NobleM2.Shapes
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+warning: NobleM2/Shapes.lean:30:19: unused `termination_by`, function is not recursive
+⚠ [1678/1684] Replayed NobleM2.Env
+warning: NobleM2/Env.lean:429:38: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+ℹ [1683/1684] Replayed NobleM2.Fixtures
+info: NobleM2/Fixtures.lean:289:0: true
+info: NobleM2/Fixtures.lean:292:0: [("sequence_and_literals_accept_arithmetic", true),
+ ("quotation_construction_checks_body_and_runs", true),
+ ("limits_nodes_exact", true),
+ ("limits_nodes_over", true),
+ ("limits_depth_deep", true),
+ ("limits_depth_shallow", true),
+ ("limits_work_eight", true),
+ ("limits_work_four", true),
+ ("hidden_emit_rejects_against_empty_bound", true),
+ ("diagnostics_report_order", true),
+ ("diagnostics_truncation", true),
+ ("resource_eligibility_rejects_duplication", true)]
+⚠ [1684/1684] Replayed NobleM2.Refinement
+warning: NobleM2/Refinement.lean:190:5: Variable name `checked` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+Build completed successfully (1684 jobs).

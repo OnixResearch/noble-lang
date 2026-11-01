@@ -207,7 +207,7 @@ const functions = parseGenerated(generatedText).map((entry) => {
   };
 });
 
-const roots = fs.existsSync(rootsFile) ? JSON.parse(fs.readFileSync(rootsFile, 'utf8')) : { roots: [] };
+const roots = fs.existsSync(rootsFile) ? JSON.parse(fs.readFileSync(rootsFile, 'utf8')) : { subjects: {} };
 const closureAvailable = Boolean(closureFile && fs.existsSync(closureFile));
 const closure = closureAvailable ? JSON.parse(fs.readFileSync(closureFile, 'utf8')) : { roots: { records: [], declared: [] } };
 const records = closure.roots?.records ?? [];
@@ -216,6 +216,28 @@ const byRoot = new Map(records.map((record) => [record.name, record]));
 // scope, never names. Without a closure there is no root set to claim, and that absence is exactly
 // what the `closure-unavailable` coverage class records.
 const declaredRoots = closureAvailable ? (closure.roots?.declared ?? []) : [];
+// A closure can declare any modules it likes, so the declared scope must equal the reviewed scope in
+// `roots.json` for this subject. Otherwise a run could widen its own root set (and its coverage
+// numbers) without any reviewed edit, which is the one thing a root-set declaration must prevent.
+const subjectKey = path.relative(repoRoot, generatedFile);
+const declaredScope = closure.roots?.modules ?? [];
+if (closureAvailable) {
+  if (roots.schema !== 'noble-refinement-links-roots/v2' || !roots.subjects) {
+    console.error(`roots declaration must be schema noble-refinement-links-roots/v2 with a subjects map: ${path.relative(repoRoot, rootsFile)}`);
+    process.exit(2);
+  }
+  const scope = roots.subjects[subjectKey];
+  if (!scope) {
+    console.error(`no reviewed root scope for ${subjectKey} in ${path.relative(repoRoot, rootsFile)}`);
+    process.exit(2);
+  }
+  const declared = [...declaredScope].sort().join(',');
+  const reviewed = [...scope.modules].sort().join(',');
+  if (declared !== reviewed) {
+    console.error(`root scope mismatch for ${subjectKey}: closure declares [${declared}], roots.json reviews [${reviewed}]`);
+    process.exit(2);
+  }
+}
 
 const byLean = new Map(functions.map((entry) => [entry.lean, entry]));
 const linked = new Map(functions.map((entry) => [entry.lean, new Set()]));

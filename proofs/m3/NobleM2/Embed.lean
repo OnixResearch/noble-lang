@@ -57,6 +57,9 @@ def embedI64 (i : Int) : Std.I64 := ⟨BitVec.ofInt 64 i⟩
 /-- Extracted `U32` → its natural value. -/
 def projectU32 (x : Std.U32) : Nat := x.val
 
+/-- Extracted `U64` → its natural value (nominal type identity). -/
+def projectU64 (x : Std.U64) : Nat := x.val
+
 /-! ## Types, stacks, effect bounds: embedding -/
 
 mutual
@@ -77,6 +80,14 @@ mutual
       .ProgramType (embedTyListFuel fuel i) (embedTyListFuel fuel o)
         (vecOf embedU32 e.ids)
     | _ + 1, .resource k => .ResourceType (embedU32 k)
+    -- Identity-only types. The fragment models neither the nominal shape or export flag nor any
+    -- contract/evidence/certified payload, so the embedding carries identity and places an opaque unit
+    -- shape that no theorem in this milestone depends on (the fragment never admits such a value).
+    | _ + 1, .contract => .ContractType
+    | _ + 1, .evidence => .EvidenceType
+    | _ + 1, .certified => .CertifiedType
+    | _ + 1, .nominal module ordinal =>
+      .NominalType ⟨⟨BitVec.ofNat 64 module⟩, ⟨BitVec.ofNat 32 ordinal⟩⟩ (.Opaque .UnitType)
     termination_by fuel
 
   /-- Fuel-driven stack (list) embedding; the whole stack shares the budget. -/
@@ -299,14 +310,62 @@ def embedSchemaDecl (decl : SchemaDecl) : noble_kernel.contracts.SchemaDecl :=
     scheme := embedScheme decl.scheme
     recursive := decl.recursive }
 
+/-- Fragment v1 admission assumptions, stated once so every embedding that reaches for them inherits
+    the same premises.
+
+    The reference environment (`NobleM2.Env`) models schemes, behavior kinds, effects, dependency lists
+    and user-declared schemas. The extracted kernel's environment additionally carries nominal types,
+    resource kinds, the caller module, declared-module admission, definition owners and bound adapters.
+    This milestone does not model those, so the embedding lifts the EMPTY admission fragment:
+
+    - no nominal declarations (`nominals` empty),
+    - the resource kinds are NOT part of this assumption: the reference environment declares them
+      (`Env.resourceKinds`) and they embed directly, because the kernel admits a `resource` type only
+      when its kind is declared,
+    - no caller module (`caller_module` = `none`) and no declared modules (`declared_modules` = `false`),
+    - no definition owners (`definition_owners` empty) and no bound adapters (`bound_adapters` empty).
+
+    Consequence, and it MUST NOT be overstated: every theorem in this milestone is about a kernel run
+    whose environment declares exactly the resource kinds the reference environment declares and
+    whose admission surface is that empty fragment. Nothing here is evidence about a run carrying
+    nominals beyond its declared kinds, a caller module, declared modules, owners or adapters. `emptyAdmission`
+    exists so that extending the reference model later means changing one function, not every literal. -/
+structure Admission where
+  /-- Nominal type declarations the embedding claims. Fragment v1: none. -/
+  nominals : alloc.vec.Vec noble_kernel.contracts.NominalDecl
+  /-- The caller module the embedding claims. Fragment v1: none. -/
+  callerModule : Option Std.U64
+  /-- Whether the embedding claims declared-module admission. Fragment v1: no. -/
+  declaredModules : Bool
+  /-- One owner per definition, or `none`. Fragment v1: no owners. -/
+  definitionOwners : alloc.vec.Vec (Option Std.U64)
+  /-- Bound adapters the embedding claims. Fragment v1: none. -/
+  boundAdapters : alloc.vec.Vec noble_kernel.contracts.BoundAdapter
+
+/-- The empty admission fragment, as documented above. Its emptiness is a premise of this milestone's
+    theorems, not a fact about the Rust kernel. -/
+def emptyAdmission : Admission :=
+  { nominals := alloc.vec.Vec.new noble_kernel.contracts.NominalDecl
+    callerModule := none
+    declaredModules := false
+    definitionOwners := alloc.vec.Vec.new (Option Std.U64)
+    boundAdapters := alloc.vec.Vec.new noble_kernel.contracts.BoundAdapter }
+
 /-- Reference environment → extracted environment. -/
 def embedEnv (env : Env) : noble_kernel.contracts.Env :=
+  let admission := emptyAdmission
   { defs := vecOf embedScheme env.defs
     kinds := vecOf embedBehavior env.kinds
     -- Fragment v1: the environment's external data embeds with it — the
     -- dependency lists and the user-declared schemas.
     deps := vecOf (fun ds => vecOf embedU32 ds) env.deps
     schemas := vecOf embedSchemaDecl env.schemas
+    resource_kinds := vecOf embedU32 env.resourceKinds
+    nominals := admission.nominals
+    caller_module := admission.callerModule
+    declared_modules := admission.declaredModules
+    definition_owners := admission.definitionOwners
+    bound_adapters := admission.boundAdapters
     effects := vecOf embedU32 env.effects }
 
 /-! ## Projection: extracted values → reference model -/
@@ -370,6 +429,7 @@ mutual
       1 + genTyListSizeN i.slice.leng i.slice.list
         + genTyListSizeN o.slice.leng o.slice.list
     | .ResourceType _ => 1
+    | .ContractType | .EvidenceType | .CertifiedType | .NominalType _ _ => 1
     termination_by t => sizeOf t
     decreasing_by
       all_goals
@@ -406,6 +466,10 @@ mutual
     | _ + 1, .I64Type => .i64
     | _ + 1, .TextType => .text
     | _ + 1, .SyntaxType => .syn
+    | _ + 1, .ContractType => .contract
+    | _ + 1, .EvidenceType => .evidence
+    | _ + 1, .CertifiedType => .certified
+    | _ + 1, .NominalType id _ => .nominal (projectU64 id.module) (projectU32 id.ordinal)
     | fuel + 1, .PairType a b => .pair (projectTyFuel fuel a) (projectTyFuel fuel b)
     | fuel + 1, .SumType a b => .sum (projectTyFuel fuel a) (projectTyFuel fuel b)
     | fuel + 1, .ListType a => .list (projectTyFuel fuel a)
@@ -461,6 +525,11 @@ def projectConstraint : noble_kernel.untrusted.Constraint → Constraint
   | .MalformedReference n => .malformedReference (projectU32 n)
   | .UnknownDefinition d => .unknownDefinition (projectU32 d)
   | .CyclicWitness => .cyclicWitness
+  -- Kernel-only rejection reasons: the reference checker never emits these, and the projection keeps
+  -- them distinguishable rather than mapping them onto an unrelated reason.
+  | .InvalidType => .invalidType
+  | .InvalidContract => .invalidContract
+  | .PrivateDefinition d => .privateDefinition (projectU32 d)
 
 /-- Extracted diagnostic → reference diagnostic. -/
 def projectDiagnostic (d : noble_kernel.untrusted.Diagnostic) : Diagnostic :=

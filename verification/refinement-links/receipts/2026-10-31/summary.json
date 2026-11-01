@@ -1,0 +1,49 @@
+{
+  "schema": "noble-refinement-links-summary/v1",
+  "measured": "2026-10-31",
+  "revision": "e8929966 (subjectRevision a46f588a)",
+  "subjects": {
+    "proofs/mc1/NobleContractImpl/Funs.lean": {
+      "generatedFunctions": 1023,
+      "linked": 9,
+      "linkedInTree": 6,
+      "linkedExternal": 3,
+      "unlinked": 1014,
+      "unlinkedInTree": 674,
+      "unlinkedExternal": 340,
+      "missingRustBodies": 343,
+      "declaredRoots": 10,
+      "orphaned": 0,
+      "drift": { "unchanged": 1023, "failing": 0 },
+      "closure": "available (before-repair/m3-closure-error.txt records the earlier unavailability of the M3 subject)"
+    },
+    "proofs/m3/NobleKernel/Funs.lean": {
+      "generatedFunctions": 922,
+      "linked": 258,
+      "linkedInTree": 199,
+      "linkedExternal": 59,
+      "unlinked": 664,
+      "unlinkedInTree": 104,
+      "unlinkedExternal": 560,
+      "missingRustBodies": 619,
+      "declaredRoots": 13,
+      "orphaned": 0,
+      "drift": { "unchanged": 922, "failing": 0 },
+      "mentionKinds": { "defn": 9906, "thm": 1469, "ctor": 2262, "induct": 702, "rec": 338 },
+      "note": "all 13 declared roots mention the same 258 linked functions, so the link set is the intersection-free closure of one root family",
+      "closure": "available: NobleM2/Embed.lean now projects the six admission fields (empty admission fragment) and the three kernel-only rejection reasons"
+    }
+  },
+  "rootScope": {
+    "file": "verification/refinement-links/roots.json",
+    "enforcement": "links.mjs exits 2 when the closure declares a scope the file does not review"
+  },
+  "files": {
+    "closure": ["mc1-closure.json", "m3-closure.json"],
+    "manifest": ["mc1-links.json", "m3-links.json"],
+    "drift": ["drift-mc1.json", "drift-m3.json"],
+    "reviewed": "reviewed.json",
+    "controls": "controls.json",
+    "build": "lake-build-m3.log"
+  }
+}

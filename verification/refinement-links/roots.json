@@ -1,5 +1,13 @@
 {
-  "schema": "noble-refinement-links-roots/v1",
-  "modules": ["NobleContractImpl.Projection", "NobleContractImpl.Statement"],
-  "rationale": "Every theorem these two handwritten modules declare is a root. The theorem names themselves are read from the compiled environment by closure.lean, never listed here, so adding a theorem does not need an edit to this file and no root can be silently forgotten. Changing which modules count is a deliberate, reviewed change."
+  "schema": "noble-refinement-links-roots/v2",
+  "subjects": {
+    "proofs/mc1/NobleContractImpl/Funs.lean": {
+      "modules": ["NobleContractImpl.Projection", "NobleContractImpl.Statement"],
+      "rationale": "Every theorem these two handwritten modules declare is a root. The theorem names themselves are read from the compiled environment by closure.lean, never listed here, so adding a theorem does not need an edit to this file and no root can be silently forgotten. Changing which modules count is a deliberate, reviewed change."
+    },
+    "proofs/m3/NobleKernel/Funs.lean": {
+      "modules": ["NobleM2.Refinement"],
+      "rationale": "Every theorem NobleM2.Refinement declares is a root of the M3 (kernel embedding) subject. links.mjs fails if a closure declares a scope this file does not review, so a run cannot widen its own root set."
+    }
+  }
 }

@@ -63,6 +63,12 @@ structure Env where
   deps : List (List Nat)
   /-- The environment's user-declared schemas (v1: external data). -/
   schemas : List SchemaDecl
+  /-- The resource kinds this environment declares. The extracted kernel admits a
+      `resource` type only when its kind is in this list, so the reference model
+      carries the same declared universe: without it a reference acceptance and a
+      kernel acceptance cannot even agree on what a resource type is. Defaults to
+      empty, i.e. an environment that declares no resource kinds. -/
+  resourceKinds : List ResourceKind := []
   deriving Repr, DecidableEq, Inhabited
 
 /-- The scheme of a definition. -/

@@ -63,6 +63,9 @@ def constraintEq : Constraint → Constraint → Bool
   | .instantiationArity, .instantiationArity => true
   | .malformedReference a, .malformedReference b => a == b
   | .unknownDefinition a, .unknownDefinition b => a == b
+  | .invalidType, .invalidType => true
+  | .invalidContract, .invalidContract => true
+  | .privateDefinition a, .privateDefinition b => a == b
   | _, _ => false
 
 def diagnosticEq (a b : Diagnostic) : Bool :=
@@ -244,7 +247,9 @@ def eligibilityEnv : Env :=
     kinds := bootstrapTable.map (fun entry => entry.1) ++ [Behavior.named],
     effects := [testEmitEffect],
     deps := [],
-    schemas := [] }
+    schemas := [],
+    -- The fixture's `dup` duplicates a resource value, so this environment declares the kind it uses.
+    resourceKinds := [fixtureResource] }
 
 def eligibilityCandidate : Candidate := candidateOf
   [ invoke makerDef [seg []],

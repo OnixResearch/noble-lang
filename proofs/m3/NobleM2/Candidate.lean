@@ -113,6 +113,13 @@ inductive Constraint where
   | malformedReference : Nat → Constraint
   | unknownDefinition : Nat → Constraint
   | cyclicWitness : Constraint
+  /-- The extracted kernel can reject a value whose type is not a nominal type it admits. The reference
+      checker never emits this reason; it exists so kernel diagnostics project without loss. -/
+  | invalidType : Constraint
+  /-- Likewise for a value whose contract is not admitted. -/
+  | invalidContract : Constraint
+  /-- Likewise for a reference to a definition the kernel keeps private. -/
+  | privateDefinition : Nat → Constraint
   deriving Repr, Inhabited
 
 /-- One rejection's diagnostic. -/

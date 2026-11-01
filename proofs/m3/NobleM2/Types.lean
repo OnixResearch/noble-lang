@@ -90,6 +90,16 @@ mutual
     /-- A first-class program type: invocation stack, result stack, latent bound. -/
     | program : TyList → TyList → EffSet → Ty
     | resource : ResourceKind → Ty
+    /-- A contract type identity. The fragment does not admit contract values: the constructor exists so
+        extracted types project without loss, and it is never `Data`. -/
+    | contract : Ty
+    /-- An evidence type identity, likewise outside the admitted fragment. -/
+    | evidence : Ty
+    /-- A certified type identity, likewise outside the admitted fragment. -/
+    | certified : Ty
+    /-- A nominal type identity: the declaring module and ordinal, and nothing else. The fragment does not model the
+        nominal shape or export flag, so a projection here carries identity only. -/
+    | nominal : Nat → Nat → Ty
     deriving Repr, DecidableEq, Inhabited
 
   /-- A finite stack of types, bottom first (the head is the stack bottom). -/
@@ -109,6 +119,7 @@ mutual
     | Ty.list a => a.isData
     | Ty.program _ _ _ => true
     | Ty.resource _ => false
+    | Ty.contract | Ty.evidence | Ty.certified | Ty.nominal _ _ => false
 
   /-- Whether every stack entry is `Data`. -/
   def TyList.isData : TyList → Bool
@@ -123,6 +134,7 @@ mutual
   def Ty.size : Ty → Nat
     | Ty.unit | Ty.bool | Ty.i64 | Ty.text | Ty.syn => 1
     | Ty.resource _ => 1
+    | Ty.contract | Ty.evidence | Ty.certified | Ty.nominal _ _ => 1
     | Ty.pair a b | Ty.sum a b => 1 + a.size + b.size
     | Ty.list a => 1 + a.size
     | Ty.program i o _ => 1 + i.size + o.size
