@@ -1,0 +1,1 @@
+1 5 pair [ unpair ] [ swap 1 + swap ] compose [ pair ] compose run

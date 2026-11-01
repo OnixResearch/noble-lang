@@ -1,0 +1,189 @@
+{
+  "schema": "noble-focus-elaboration-measure/v1",
+  "noble": "/nix/store/43zqhiiv73l7f99kb1spix4njwqm1f6m-noble-0.0.0/bin/noble",
+  "nobleSha256": "980ed0e14cedd51e040ab91121d440114cbf288e21680fcb61687f08d8335e91",
+  "host": "linux x64",
+  "opt": "off",
+  "runs": 7,
+  "formsDirectory": "verification/focus-elaboration/forms",
+  "results": [
+    {
+      "form": "nested-product.explicit",
+      "path": "verification/focus-elaboration/forms/nested-product.explicit.noble",
+      "authored": {
+        "bytes": 35,
+        "tokens": 9,
+        "stackManipulationTokens": 6,
+        "quotations": 0
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 1.567,
+        "minMilliseconds": 1.419,
+        "maxMilliseconds": 2.234,
+        "warmupMilliseconds": 3.828,
+        "moduleBytes": 61094,
+        "moduleLines": 1057,
+        "moduleSha256": "743f7f8b8e275a105fdbaf9339cf84c4d7dc26a0d3bccea718b5f599056b1b55"
+      },
+      "executed": {
+        "status": 0,
+        "stack": [
+          {
+            "handle": 24,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 23,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 22,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "executionSteps": 25,
+        "quoteInvocations": 0,
+        "allocatedTotalBytes": 1152,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 8,
+        "reflectionSteps": 3
+      }
+    },
+    {
+      "form": "nested-product.library",
+      "path": "verification/focus-elaboration/forms/nested-product.library.noble",
+      "authored": {
+        "bytes": 67,
+        "tokens": 18,
+        "stackManipulationTokens": 9,
+        "quotations": 3
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 1.829,
+        "minMilliseconds": 1.728,
+        "maxMilliseconds": 2.134,
+        "warmupMilliseconds": 2.807,
+        "moduleBytes": 68127,
+        "moduleLines": 1167,
+        "moduleSha256": "67a0b900b74d4fcdab05462faa15de2a7bff5edde9574e3456a0030e3f80875f"
+      },
+      "executed": {
+        "status": 0,
+        "stack": [
+          {
+            "handle": 40,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 39,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 38,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "executionSteps": 46,
+        "quoteInvocations": 0,
+        "allocatedTotalBytes": 1920,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24,
+        "reflectionSteps": 3
+      }
+    },
+    {
+      "form": "type-changing-step.explicit",
+      "path": "verification/focus-elaboration/forms/type-changing-step.explicit.noble",
+      "authored": {
+        "bytes": 6,
+        "tokens": 3,
+        "stackManipulationTokens": 1,
+        "quotations": 0
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 1.499,
+        "minMilliseconds": 1.291,
+        "maxMilliseconds": 1.768,
+        "warmupMilliseconds": 2.31,
+        "moduleBytes": 56472,
+        "moduleLines": 970,
+        "moduleSha256": "9639a15fa6532efbdd18e20a7c2e0d832e8928b92b92a65991dfc542d583d4b7"
+      },
+      "executed": {
+        "status": 0,
+        "stack": [
+          {
+            "handle": null,
+            "type": "Bool",
+            "value": false
+          }
+        ],
+        "executionSteps": 12,
+        "quoteInvocations": 0,
+        "allocatedTotalBytes": 288,
+        "operandPeakBytes": 32,
+        "continuationPeakBytes": 8,
+        "reflectionSteps": 1
+      }
+    },
+    {
+      "form": "type-changing-step.library",
+      "path": "verification/focus-elaboration/forms/type-changing-step.library.noble",
+      "authored": {
+        "bytes": 26,
+        "tokens": 9,
+        "stackManipulationTokens": 3,
+        "quotations": 2
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 1.51,
+        "minMilliseconds": 1.408,
+        "maxMilliseconds": 1.698,
+        "warmupMilliseconds": 2.311,
+        "moduleBytes": 61043,
+        "moduleLines": 1045,
+        "moduleSha256": "cb56d7dea5a786f3f880bea89efc22f7bf737ededd36697b0b48d289203dce9e"
+      },
+      "executed": {
+        "status": 0,
+        "stack": [
+          {
+            "handle": null,
+            "type": "Bool",
+            "value": false
+          }
+        ],
+        "executionSteps": 26,
+        "quoteInvocations": 0,
+        "allocatedTotalBytes": 768,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 16,
+        "reflectionSteps": 1
+      }
+    }
+  ]
+}
