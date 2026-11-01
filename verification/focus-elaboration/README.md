@@ -56,6 +56,15 @@ node verification/focus-elaboration/measure.mjs \
   --noble <noble-cli> --output verification/focus-elaboration/receipts/<date>/measure.json
 ```
 
+## Where the rest of the issue lives
+
+| Document | Answers |
+|---|---|
+| `decision.md` | the written go/no-go: no new focus syntax now, library-form composition selected, and what would reopen it |
+| `differential-plan.md` | the oracle, vectors and rules for later differential tests of values, stack order, resource obligations and effect traces, with every unexecuted vector marked `not-run` |
+| `obligations.md` | the five obligations kept formally separate, each asserted as *none* today |
+| `forms/proposed-sugar.md` | the sugar snippets and the compiled form each expands to |
+
 ## Non-claims
 
 - Compile wall time is a frontend measurement on one host, not a proof-cost claim; the checker's
