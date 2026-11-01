@@ -245,3 +245,6 @@ fn an_f32_profile_is_outside_this_validator() {
     let refused = schedule::check(&accepted, &compiled.packed_layout(), &[]);
     assert_eq!(refused, Err(StreamRefusal::UnsupportedProfile));
 }
+
+#[path = "schedule_guards_dir/guards.rs"]
+mod guards;

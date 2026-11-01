@@ -242,6 +242,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15544 production paths = 8039 body/open + 4324 generated + 3181 structural;
 #   6830 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed guarded-stream regression and guard module for issue 85 from a complete 110-unit selected collection:
+#   IR 7219387b43c95802c1fd399c25576258686d4a9dd8b4a4d8ebb57b9b423c0b65; coverage 8d25d96f2dfb99da9f5042eff2a477016ea42149b9bbc20ac797acdb7af0aadb;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15544 production paths = 8039 body/open + 4324 generated + 3181 structural;
+#   6857 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -15854,10 +15859,10 @@ let
     body "noble_ngraph::schedule::expected" "noble-ngraph" "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::schedule::instruction_nodes" "noble-ngraph" "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::schedule::register" "noble-ngraph" "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-    # Renewed batch-continuation criteria and measurement lane, octet lint clearance at the current tree: 1 newly observed production paths,
+    # Renewed guarded-stream regression and guard module for issue 85: 1 newly observed production paths,
     # classified from compiler facts only (see tools/source-inventory-renew.mjs).
     # Bodies keep OPEN extraction and refinement obligations.
-    body "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:6781:6785" "noble-ngraph" "Renewed batch-continuation criteria and measurement lane, octet lint clearance at the current tree from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:7143:7147" "noble-ngraph" "Renewed guarded-stream regression and guard module for issue 85 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
@@ -20628,6 +20633,12 @@ let
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7895:8513",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8523:9818",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:9828:10446",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:1846:2527",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:1976:2006",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:2115:2128",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:2537:2970",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:2980:3659",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:3669:4256",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:10127:10793",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:10803:12408",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:11078:11119",
@@ -21992,6 +22003,27 @@ let
     "schedule_correspondence::common::{use#8}",
     "schedule_correspondence::common::{use#9}",
     "schedule_correspondence::declared",
+    "schedule_correspondence::guards",
+    "schedule_correspondence::guards::a_displaced_or_dropped_guard_is_refused",
+    "schedule_correspondence::guards::a_guard_with_a_forged_register_is_refused",
+    "schedule_correspondence::guards::a_real_i64_guard_stream_is_accepted",
+    "schedule_correspondence::guards::a_wrong_guard_identity_is_refused",
+    "schedule_correspondence::guards::guard_position",
+    "schedule_correspondence::guards::guarded",
+    "schedule_correspondence::guards::test",
+    "schedule_correspondence::guards::{use#0}",
+    "schedule_correspondence::guards::{use#10}",
+    "schedule_correspondence::guards::{use#11}",
+    "schedule_correspondence::guards::{use#12}",
+    "schedule_correspondence::guards::{use#1}",
+    "schedule_correspondence::guards::{use#2}",
+    "schedule_correspondence::guards::{use#3}",
+    "schedule_correspondence::guards::{use#4}",
+    "schedule_correspondence::guards::{use#5}",
+    "schedule_correspondence::guards::{use#6}",
+    "schedule_correspondence::guards::{use#7}",
+    "schedule_correspondence::guards::{use#8}",
+    "schedule_correspondence::guards::{use#9}",
     "schedule_correspondence::interleaved",
     "schedule_correspondence::main",
     "schedule_correspondence::main::test",

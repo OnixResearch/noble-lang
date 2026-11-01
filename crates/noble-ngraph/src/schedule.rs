@@ -103,28 +103,39 @@ fn register(layout: &crate::layout::PackedLayout, id: crate::ir::NodeId) -> Opti
 }
 
 /// The body the graph supplies for one instruction-emitting node under the declared register map.
-/// `None` means an operand or the destination has no declared register, which is already a
-/// declaration refusal; the caller reports `BodyMismatch` rather than inventing a register.
+/// `None` means a register-writing body's operand or destination has no declared register, which is
+/// already a declaration refusal; the caller reports `BodyMismatch` rather than inventing a register.
+///
+/// A guard writes no register by construction, so it must **not** be routed through the destination
+/// lookup: `layout::check` requires its `u32::MAX` sentinel, and a demanded destination would refuse
+/// every genuine guarded graph (issue #85).
 fn expected(
     checked: &crate::check::CheckedGraph,
     layout: &crate::layout::PackedLayout,
     id: crate::ir::NodeId,
 ) -> Option<I64Instruction> {
-    let destination = register(layout, id)?;
     Some(match checked.graph().nodes[id.0 as usize].op {
-        crate::ir::Op::I64Add(a, b) => {
-            I64Instruction::Add(destination, register(layout, a)?, register(layout, b)?)
-        }
-        crate::ir::Op::I64Sub(a, b) => {
-            I64Instruction::Sub(destination, register(layout, a)?, register(layout, b)?)
-        }
-        crate::ir::Op::I64Mul(a, b) => {
-            I64Instruction::Mul(destination, register(layout, a)?, register(layout, b)?)
-        }
-        crate::ir::Op::I64Eq(a, b) => {
-            I64Instruction::Eq(destination, register(layout, a)?, register(layout, b)?)
-        }
         crate::ir::Op::Guard { .. } => I64Instruction::Guard { node: id.0 },
+        crate::ir::Op::I64Add(a, b) => I64Instruction::Add(
+            register(layout, id)?,
+            register(layout, a)?,
+            register(layout, b)?,
+        ),
+        crate::ir::Op::I64Sub(a, b) => I64Instruction::Sub(
+            register(layout, id)?,
+            register(layout, a)?,
+            register(layout, b)?,
+        ),
+        crate::ir::Op::I64Mul(a, b) => I64Instruction::Mul(
+            register(layout, id)?,
+            register(layout, a)?,
+            register(layout, b)?,
+        ),
+        crate::ir::Op::I64Eq(a, b) => I64Instruction::Eq(
+            register(layout, id)?,
+            register(layout, a)?,
+            register(layout, b)?,
+        ),
         _ => return None,
     })
 }
