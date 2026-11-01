@@ -8,14 +8,11 @@
     tigerstyle::fallible_int_fallback,
     tigerstyle::missing_const_fn,
     tigerstyle::no_unwrap,
+    tigerstyle::no_panic,
     tigerstyle::non_trait_imports,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::underscore_in_module_filename,
-    reason = "Owner: noble-maintainers; this integration harness builds an interleaved checked I64 graph, validates its actual packed stream and then mutates one obligation at a time, so terse fixture names and unwraps are the readable form."
-)]
-#![expect(
-    tigerstyle::no_panic,
-    reason = "test target: assertion panic reports a refused or wrongly admitted stream"
+    reason = "Owner: noble-maintainers; this integration harness builds an interleaved checked I64 graph, validates its actual packed stream and then mutates one obligation at a time, so terse fixture names, unwraps and assertion panics are the readable form."
 )]
 //! The actual emitted I64/Bool stream validated against its checked graph, one mutation per
 //! obligation the issue names (issue #43).

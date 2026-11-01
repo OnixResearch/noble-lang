@@ -1,8 +1,3 @@
-#![expect(
-    tigerstyle::path_segment_repetition,
-    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
-)]
-
 //! Independent validation of the **actual packed instruction stream** against its checked graph
 //! (issue #43, the graph-to-packed-schedule edge).
 //!

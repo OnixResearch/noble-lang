@@ -568,3 +568,15 @@ Two fixture mutations were wrong when first written and were fixed rather than r
 boundary on a zero-width first layer mutated nothing, and a destination mutation that matched no
 multiplication left the stream untouched. Both are recorded because a control that silently does
 nothing is the failure mode this lane exists to prevent.
+
+# CPU batch continuation decision (2026-11-01, issue #41)
+
+[`batch-continuation-criteria.md`](batch-continuation-criteria.md) froze the continuation rule before
+anything was measured: agreement, 1.15× the compiled single-row loop at 65536 rows, no medium-size
+regression, and resident growth bounds. [`batch-decision.md`](batch-decision.md) applies it to the
+one release run retained in [`batch-measurements-2026-11-01.json`](batch-measurements-2026-11-01.json):
+batching was 1.7× **slower** per row than the compiled single-row loop with about 172 bytes of report
+per row, so the decision is **NO-GO** and no batching work (SIMD, `F32`, chunked staging) starts on
+that issue. The lane lives in the existing `batch_row_reference` target as
+`tests/batch_rows/measure.rs`, is `#[ignore]`d by default, and reports allocation counts as an
+unavailable instrument because the workspace forbids `unsafe_code`.

@@ -370,6 +370,7 @@
     "noble-ngraph:test+test:crates/noble-ngraph/tests/retained_bytes.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_cost.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_quality.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/schedule_correspondence.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/snapshot_file.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/soft_float.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/train_admission.rs:test",

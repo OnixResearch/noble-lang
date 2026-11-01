@@ -1,0 +1,34 @@
+{
+  "schema": "noble-ngraph-batch-measurements/v1",
+  "issue": 41,
+  "source": "the measurement lane of this commit, run on the tree this commit lands",
+  "build": {
+    "command": "nix build --offline --impure --option min-free 0 --option max-free 0 -f /tmp/measure.nix",
+    "nix_expression": "flake.packages.x86_64-linux.noble.overrideAttrs with preCheck setting HOME/XDG_CACHE_HOME inside TMPDIR and cargoTestFlags = --locked --package noble-ngraph --test batch_row_reference --no-default-features -- --ignored --nocapture --test-threads=1",
+    "profile": "release (debug_assertions = false), as the package's check runs it"
+  },
+  "workload": {
+    "graph": "two I64 inputs, add, mul, mul, sub, eq; two outputs (difference, equality)",
+    "retained_bytes": 188,
+    "operands": "the seven i64 boundary values (i64::MIN, i64::MIN+1, -1, 0, 1, i64::MAX-1, i64::MAX) cycled by two division-free counters",
+    "sizes": [1, 4096, 65536],
+    "warm": "each compiled lane runs once before timing"
+  },
+  "lanes": {
+    "reference": {"1": {"ns_per_row": 4538, "first_row_ns": 3627}, "4096": {"ns_per_row": 179}, "65536": {"ns_per_row": 179}},
+    "single": {"1": {"ns_per_row": 1102, "first_row_ns": 912}, "4096": {"ns_per_row": 182}, "65536": {"ns_per_row": 181}},
+    "batch": {"1": {"ns_per_row": 511, "first_row_ns": 511, "resident_growth_bytes": 0},
+              "4096": {"ns_per_row": 290, "resident_growth_bytes": 724992},
+              "65536": {"ns_per_row": 311, "resident_growth_bytes": 11276288}},
+    "native": {"1": {"ns_per_row": 70}, "4096": {"ns_per_row": 0}, "65536": {"ns_per_row": 0},
+               "note": "the native loop is eliminated by the optimiser because only its last value escapes, so this lane is not a usable floor"}
+  },
+  "agreement": {
+    "note": "reference, single and batch report identical outputs for the last row of each size ([i64::MIN, false], [0, false], [0, false]); per-row agreement over interleaved rows is the existing batch_row_reference graph lane"
+  },
+  "instrument_gaps": [
+    "allocation counts are unavailable: the workspace forbids unsafe_code, so no counting global allocator can exist in any target",
+    "resident-set growth is read from /proc/self/statm with a 4096-byte page assumption on this host",
+    "the 65536-row batch growth (11276288 bytes) is the per-row report vector, about 172 bytes per row"
+  ]
+}

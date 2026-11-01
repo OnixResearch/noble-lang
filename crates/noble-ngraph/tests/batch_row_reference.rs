@@ -33,6 +33,8 @@ mod budgets;
 mod common;
 #[path = "batch_rows/graph.rs"]
 mod graph;
+#[path = "batch_rows/measure.rs"]
+mod measure;
 
 struct Case {
     row: noble_ngraph::batch::Row,
