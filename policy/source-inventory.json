@@ -23218,62 +23218,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:15362:15365",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:17985:17988",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:18747:18781",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:23485:23507",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed octet-9d134f0-architecture-clean-20261020 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:3265:3269",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed octet-9d134f0-architecture-clean-20261020 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:3633:3656",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed octet-9d134f0-architecture-clean-20261020 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:4467:4521",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Renewed octet-9d134f0-architecture-clean-20261020 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-ngraph",
       "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/eval.rs:10146:10168",
@@ -95100,38 +95044,6 @@
       "disposition": "generated",
       "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
       "package": "noble-ngraph",
-      "qualified_path": "noble_ngraph::<compiled::I as core::clone::Clone>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble_ngraph::<compiled::I as core::clone::Clone>::clone",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble_ngraph::<compiled::I as core::fmt::Debug>",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble_ngraph::<compiled::I as core::fmt::Debug>::fmt",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::<compiled::View<'a> as core::clone::Clone>",
       "refinement": "not-applicable"
     },
@@ -101293,14 +101205,6 @@
       "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): declaration-only compiler kind (enum); accounting only, with no body obligation.",
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::compiled::F",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "structural",
-      "disposition": "structural",
-      "note": "Renewed Numeric-Graph-v1 integration (noble-ngraph library, noble ngraph CLI; complete 88/88-unit collection of 5406170): declaration-only compiler kind (enum); accounting only, with no body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble_ngraph::compiled::I",
       "refinement": "not-applicable"
     },
     {
@@ -124382,6 +124286,302 @@
       "package": "noble-ngraph-experiment",
       "qualified_path": "noble-ngraph-experiment::closure@crates/noble-ngraph-experiment/src/l1/mod.rs:36885:36887",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:16336:16339",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:18959:18962",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:19721:19755",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:24678:24700",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:3310:3314",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/compiled.rs:3678:3701",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:6968:6972",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::I64Instruction as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::<schedule::StreamRefusal as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::compiled::Compiled::i64_instructions",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: declaration-only compiler kind (enum); accounting only, with no body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::I64Instruction",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5: declaration-only compiler kind (enum); accounting only, with no body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::StreamRefusal",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::check",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::expected",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::instruction_nodes",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ngraph-stream-validator-7b01c8b5 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::schedule::register",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
@@ -129101,6 +129301,19 @@
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality.rs:665:795",
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality/acceptance.rs:3055:3064",
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality/acceptance.rs:3779:3781",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:2921:3414",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3424:3950",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3960:4695",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4705:5775",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4870:4883",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5205:5215",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5785:6358",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:6368:6885",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:6895:7542",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7552:7970",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7980:8598",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8608:9903",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:9913:10531",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:10127:10793",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:10803:12408",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:11078:11119",
@@ -130395,6 +130608,105 @@
     "rewrite_quality::std",
     "rewrite_quality::test",
     "rewrite_quality::{use#0}",
+    "schedule_correspondence::<common::Streams as noble_ngraph::IdentityHasher>",
+    "schedule_correspondence::<common::Streams as noble_ngraph::IdentityHasher>::finish",
+    "schedule_correspondence::<common::Streams as noble_ngraph::IdentityHasher>::update",
+    "schedule_correspondence::<common::TestScheme as noble_ngraph::IdentityScheme>",
+    "schedule_correspondence::<common::TestScheme as noble_ngraph::IdentityScheme>::name",
+    "schedule_correspondence::<common::TestScheme as noble_ngraph::IdentityScheme>::start",
+    "schedule_correspondence::<common::TestScheme as std::clone::Clone>",
+    "schedule_correspondence::<common::TestScheme as std::clone::Clone>::clone",
+    "schedule_correspondence::<common::TestScheme as std::clone::TrivialClone>",
+    "schedule_correspondence::<common::TestScheme as std::marker::Copy>",
+    "schedule_correspondence::a_bad_layer_boundary_keeps_the_declaration_class",
+    "schedule_correspondence::a_missing_or_duplicated_computation_is_refused",
+    "schedule_correspondence::a_post_check_substitution_is_refused",
+    "schedule_correspondence::a_stale_layout_revision_is_refused_before_any_body",
+    "schedule_correspondence::a_within_layer_reorder_is_refused",
+    "schedule_correspondence::a_wrong_destination_is_refused",
+    "schedule_correspondence::a_wrong_operation_is_refused",
+    "schedule_correspondence::an_f32_profile_is_outside_this_validator",
+    "schedule_correspondence::common",
+    "schedule_correspondence::common::IDS",
+    "schedule_correspondence::common::Streams",
+    "schedule_correspondence::common::TestScheme",
+    "schedule_correspondence::common::checked",
+    "schedule_correspondence::common::contract",
+    "schedule_correspondence::common::linear",
+    "schedule_correspondence::common::mse",
+    "schedule_correspondence::common::points",
+    "schedule_correspondence::common::rewrite_corpus",
+    "schedule_correspondence::common::rewrite_corpus::Fixture",
+    "schedule_correspondence::common::rewrite_corpus::Manifest",
+    "schedule_correspondence::common::rewrite_corpus::Stage",
+    "schedule_correspondence::common::rewrite_corpus::Threshold",
+    "schedule_correspondence::common::rewrite_corpus::build",
+    "schedule_correspondence::common::rewrite_corpus::parse",
+    "schedule_correspondence::common::rewrite_corpus::parse_fixture",
+    "schedule_correspondence::common::rewrite_corpus::parse_stage",
+    "schedule_correspondence::common::rewrite_corpus::parse_threshold",
+    "schedule_correspondence::common::rewrite_corpus::{use#0}",
+    "schedule_correspondence::common::rewrite_corpus::{use#1}",
+    "schedule_correspondence::common::rewrite_corpus::{use#2}",
+    "schedule_correspondence::common::rewrite_corpus::{use#3}",
+    "schedule_correspondence::common::rewrite_corpus::{use#4}",
+    "schedule_correspondence::common::rewrite_corpus::{use#5}",
+    "schedule_correspondence::common::rewrite_corpus::{use#6}",
+    "schedule_correspondence::common::rewrite_corpus::{use#7}",
+    "schedule_correspondence::common::rewrite_corpus::{use#8}",
+    "schedule_correspondence::common::{use#0}",
+    "schedule_correspondence::common::{use#10}",
+    "schedule_correspondence::common::{use#11}",
+    "schedule_correspondence::common::{use#12}",
+    "schedule_correspondence::common::{use#13}",
+    "schedule_correspondence::common::{use#14}",
+    "schedule_correspondence::common::{use#15}",
+    "schedule_correspondence::common::{use#16}",
+    "schedule_correspondence::common::{use#17}",
+    "schedule_correspondence::common::{use#18}",
+    "schedule_correspondence::common::{use#19}",
+    "schedule_correspondence::common::{use#1}",
+    "schedule_correspondence::common::{use#20}",
+    "schedule_correspondence::common::{use#21}",
+    "schedule_correspondence::common::{use#22}",
+    "schedule_correspondence::common::{use#2}",
+    "schedule_correspondence::common::{use#3}",
+    "schedule_correspondence::common::{use#4}",
+    "schedule_correspondence::common::{use#5}",
+    "schedule_correspondence::common::{use#6}",
+    "schedule_correspondence::common::{use#7}",
+    "schedule_correspondence::common::{use#8}",
+    "schedule_correspondence::common::{use#9}",
+    "schedule_correspondence::declared",
+    "schedule_correspondence::interleaved",
+    "schedule_correspondence::main",
+    "schedule_correspondence::main::test",
+    "schedule_correspondence::packed",
+    "schedule_correspondence::std",
+    "schedule_correspondence::swapped_operands_are_refused",
+    "schedule_correspondence::swapped_output_registers_are_refused",
+    "schedule_correspondence::test",
+    "schedule_correspondence::the_real_packed_stream_is_validated",
+    "schedule_correspondence::{use#0}",
+    "schedule_correspondence::{use#10}",
+    "schedule_correspondence::{use#11}",
+    "schedule_correspondence::{use#12}",
+    "schedule_correspondence::{use#13}",
+    "schedule_correspondence::{use#14}",
+    "schedule_correspondence::{use#15}",
+    "schedule_correspondence::{use#16}",
+    "schedule_correspondence::{use#17}",
+    "schedule_correspondence::{use#18}",
+    "schedule_correspondence::{use#19}",
+    "schedule_correspondence::{use#1}",
+    "schedule_correspondence::{use#2}",
+    "schedule_correspondence::{use#3}",
+    "schedule_correspondence::{use#4}",
+    "schedule_correspondence::{use#5}",
+    "schedule_correspondence::{use#6}",
+    "schedule_correspondence::{use#7}",
+    "schedule_correspondence::{use#8}",
+    "schedule_correspondence::{use#9}",
     "service::OBSERVER",
     "service::PUBLISHER",
     "service::admitted_facets_observe_both_ready_states_and_drop_retires_children",
