@@ -459,3 +459,20 @@ exact-code rule, and source-bound premise arguments (18 new theorems; that run r
 identity as tree equality, disjoint ranges from code and value metas, and rebasal that acts on
 exactly the level occurrences and composes (7 new theorems; that run reported 1103 in
 total).
+
+## 4a1dfff22 — binary32 certificate binding (issue #44, NGRAPH-ERR-04)
+
+`4a1dfff22/` records the clean run after the binding layer landed. It audits 1114 inventoried
+theorems with `clean_source: true` and axiom sets inside the allow-list, including the 11 new
+`NobleFoundation.Binary32.Checker` binding theorems:
+
+- `checkBound_only_certifies_matching`, `checkBound_sound`, `checkBound_agrees_when_equal`;
+- the six kernel-decided refusals (`changed_snapshot_is_not_applicable`,
+  `changed_revision_is_not_applicable`, `changed_domain_is_not_applicable`,
+  `reordered_execution_is_not_applicable`, `fma_contraction_is_not_applicable`,
+  `stale_model_is_not_applicable`), the non-vacuity witness `matching_context_certifies`, and
+  `mismatch_is_not_an_unknown_outcome`.
+
+The receipt is evidence for that commit and tree only. The binding identities are compared, not
+derived: how each digest is computed, and whether it names the graph it claims to, is outside the
+model and stays open.
