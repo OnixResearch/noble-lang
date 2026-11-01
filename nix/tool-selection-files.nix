@@ -31,6 +31,7 @@
   "crates/noble-cli/src/core/entry.rs"
   "crates/noble-cli/src/core/entry/compilation.rs"
   "crates/noble-cli/src/core/framing.rs"
+  "crates/noble-cli/src/core/inspect.rs"
   "crates/noble-cli/src/core/live.rs"
   "crates/noble-cli/src/core/live_slot.rs"
   "crates/noble-cli/src/core/live_slot_origin.rs"

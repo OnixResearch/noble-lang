@@ -4104,3 +4104,100 @@ fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack(
     );
     live.finish()
 }
+
+/// Issue #76: a bounded inspection of an already observed Program is inert, keeps the observation's
+/// own identity, and cannot retarget a saved Program's dependency through a later rebinding.
+#[test]
+fn inspection_reports_the_observed_program_and_stays_inert(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let (_, _) = live_ack(&live.report()?, &[]);
+    let prior = live.submit("20 \"keep\" [ addone ]")?;
+    assert_eq!(text_field(&prior, "outcome"), "normal");
+    let retained = prior["stack"].as_array().ok_or("missing stack")?.clone();
+    assert_eq!(retained[2]["type"], "Program", "{prior}");
+    let observed = live.submit(":inspect 2")?;
+    assert_inspection(&observed, "selected");
+    assert_eq!(observed["selection"]["stack_index"], 2);
+    assert_eq!(
+        observed["observed"]["source_epoch"], retained[2]["source_epoch"],
+        "the report echoes the observation's own epoch"
+    );
+    let dependency = observed["program"]["dependencies"][0]["identity"]["value"]
+        .as_str()
+        .ok_or("a definition identity")?
+        .to_owned();
+    assert_eq!(
+        observed["program"]["dependencies"][0]["identity"]["kind"],
+        "session-local-definition-id"
+    );
+    assert_eq!(observed["evidence"]["status"], "not-checked");
+    let before_generation = live.submit(":generation")?;
+    assert_generation_inspection(
+        &before_generation,
+        number_field(&observed, "generation"),
+        &before_generation["stack"],
+    );
+
+    // Rebinding the name and reloading must not retarget the saved observation.
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed");
+    assert_eq!(ack["stack"], serde_json::Value::Array(retained.clone()));
+    let after = live.submit(":inspect 2")?;
+    assert_inspection(&after, "selected");
+    assert_eq!(
+        after["program"]["dependencies"][0]["identity"]["value"],
+        dependency.as_str(),
+        "the saved Program keeps its own recorded identity"
+    );
+    assert!(
+        number_field(&after, "generation") > number_field(&observed, "generation"),
+        "the report distinguishes the current namespace generation: {after}"
+    );
+
+    // Failure states are their own outcomes, never a silent success.
+    assert_inspection(&live.submit(":inspect")?, "path-malformed");
+    assert_inspection(&live.submit(":inspect 9")?, "out-of-range");
+    let literal = live.submit("[ 1 + ]")?;
+    let pushed = literal["stack"]
+        .as_array()
+        .ok_or("missing stack")?
+        .len()
+        .checked_sub(1)
+        .ok_or("empty stack")?;
+    assert_eq!(literal["stack"][pushed]["type"], "Program", "{literal}");
+    let nested = format!(":inspect {pushed}.0");
+    assert_inspection(&live.submit(&nested)?, "node-not-a-quotation");
+    let past = format!(":inspect {pushed}.3");
+    assert_inspection(&live.submit(&past)?, "node-out-of-range");
+
+    // Repeated open/expand/close leaves the stack and namespace generation unchanged.
+    let stable = live.submit(":generation")?;
+    let reopened = format!(":inspect {pushed}");
+    for _ in 0..3 {
+        let expanded = live.submit(&reopened)?;
+        assert_inspection(&expanded, "selected");
+        assert_eq!(number_field(&expanded, "protected_operations"), 0);
+    }
+    let closed = live.submit(":generation")?;
+    assert_generation_inspection(
+        &closed,
+        number_field(&stable, "generation"),
+        &stable["stack"],
+    );
+    live.finish()
+}
+
+fn assert_inspection(report: &Value, outcome: &str) {
+    assert_eq!(text_field(report, "schema"), "noble-live-inspection/v1");
+    assert_eq!(text_field(report, "stage"), "inspection");
+    assert_eq!(text_field(report, "outcome"), outcome, "{report}");
+    assert_eq!(number_field(report, "guest_requests"), 0);
+    assert_eq!(number_field(report, "protected_operations"), 0);
+    assert!(
+        report["truncated"].is_array(),
+        "every report names its truncations: {report}"
+    );
+}

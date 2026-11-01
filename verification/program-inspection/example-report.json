@@ -1,0 +1,70 @@
+{
+  "engine": "v8",
+  "evidence": {
+    "assumptions": [],
+    "claims": [],
+    "context": [],
+    "reason": "no evidence is bound to this observation; this is neither a proof failure nor a proof success",
+    "status": "not-checked",
+    "subjects": []
+  },
+  "generation": 1,
+  "guest_requests": 0,
+  "observed": {
+    "dependency_identity_scope": "session-local, not portable content identity or authority",
+    "generation_scope": "observation-not-current-namespace",
+    "source_epoch": null,
+    "source_store_id": null,
+    "stack_handle": 7
+  },
+  "outcome": "selected",
+  "program": {
+    "dependencies": [
+      {
+        "identity": {
+          "kind": "session-local-definition-id",
+          "value": "1"
+        },
+        "node": 0,
+        "provenance": {
+          "reason": "this observation carries no retained source metadata for that identity",
+          "status": "unavailable-origin"
+        }
+      }
+    ],
+    "effects": [],
+    "interface": {
+      "effects": [],
+      "stack_in": "[I64]",
+      "stack_out": "[I64]"
+    },
+    "nodes": {
+      "depth_bound": 8,
+      "kept": 1,
+      "node_bound": 512,
+      "total": 1
+    },
+    "recipe": [
+      {
+        "invoke": "definition:1"
+      }
+    ],
+    "witnesses": [
+      {
+        "effects": [],
+        "node": 0,
+        "stack_in": "[I64]",
+        "stack_out": "[I64]"
+      }
+    ]
+  },
+  "protected_operations": 0,
+  "schema": "noble-live-inspection/v1",
+  "selection": {
+    "node_path": [],
+    "path": "0",
+    "stack_index": 0
+  },
+  "stage": "inspection",
+  "truncated": []
+}

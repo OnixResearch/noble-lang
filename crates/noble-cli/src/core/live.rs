@@ -377,6 +377,26 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }));
             continue;
         }
+        // A bounded, inert inspection of the observation this REPL already captured. It reads
+        // `last_stack` only: no guest, no install, no re-check, and no namespace mutation.
+        if let Some(path) = line.strip_prefix(":inspect ") {
+            emit(&super::inspect::report(
+                &live.last_stack,
+                path.trim(),
+                live.generation,
+                engine,
+            ));
+            continue;
+        }
+        if line == ":inspect" {
+            emit(&super::inspect::report(
+                &live.last_stack,
+                "",
+                live.generation,
+                engine,
+            ));
+            continue;
+        }
         if let Some(selection) = line.strip_prefix(":revoke-effect ") {
             match live.revoke_effect(selection) {
                 Ok(report) => emit(&report),

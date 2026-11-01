@@ -7,6 +7,7 @@ mod declared;
 pub(crate) mod editor;
 pub(crate) mod entry;
 pub(crate) mod framing;
+pub(crate) mod inspect;
 pub(crate) mod live;
 pub(crate) mod live_slot;
 pub(crate) mod output;
