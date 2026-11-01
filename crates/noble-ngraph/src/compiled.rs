@@ -52,7 +52,6 @@ enum F {
 
 /// The packed I64/Bool instruction stream's element type lives in [`crate::schedule`] so an
 /// independent validator can inspect the actual emitted bodies (issue #43).
-use crate::schedule::I64Instruction as I;
 
 #[derive(Clone, Debug)]
 enum Code {
@@ -62,7 +61,7 @@ enum Code {
         src: alloc::vec::Vec<u32>,
     },
     I64 {
-        ins: alloc::vec::Vec<I>,
+        ins: alloc::vec::Vec<crate::schedule::I64Instruction>,
     },
 }
 
@@ -120,20 +119,20 @@ impl Compiled {
         let mut layers = alloc::vec![(0u32, 0u32); layer_count.max(1)];
         let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count.max(1)];
         let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::with_capacity(n);
-        let mut iins: alloc::vec::Vec<I> = alloc::vec::Vec::with_capacity(n);
+        let mut iins: alloc::vec::Vec<crate::schedule::I64Instruction> =
+            alloc::vec::Vec::with_capacity(n);
         let mut coef = alloc::vec::Vec::with_capacity(n);
         let mut src = alloc::vec::Vec::with_capacity(n);
         let mut cur_layer = u32::MAX;
         for &i in &order {
             let node = &g.nodes[i as usize];
             let l = checked.layer(crate::ir::NodeId(i));
-            let count = |fins: &alloc::vec::Vec<F>, iins: &alloc::vec::Vec<I>| match g.profile {
-                crate::ir::SubProfile::F32 => fins.len() as u32,
-                crate::ir::SubProfile::I64 => iins.len() as u32,
-            };
             if l != cur_layer {
                 cur_layer = l;
-                let c = count(&fins, &iins);
+                let c = match g.profile {
+                    crate::ir::SubProfile::F32 => fins.len() as u32,
+                    crate::ir::SubProfile::I64 => iins.len() as u32,
+                };
                 layers[l as usize] = (c, c);
             }
             let d = reg[i as usize];
@@ -147,10 +146,18 @@ impl Compiled {
                     };
                     consts.push((d, bits));
                 }
-                crate::ir::Op::I64Add(a, b) => iins.push(I::Add(d, r(a), r(b))),
-                crate::ir::Op::I64Sub(a, b) => iins.push(I::Sub(d, r(a), r(b))),
-                crate::ir::Op::I64Mul(a, b) => iins.push(I::Mul(d, r(a), r(b))),
-                crate::ir::Op::I64Eq(a, b) => iins.push(I::Eq(d, r(a), r(b))),
+                crate::ir::Op::I64Add(a, b) => {
+                    iins.push(crate::schedule::I64Instruction::Add(d, r(a), r(b)))
+                }
+                crate::ir::Op::I64Sub(a, b) => {
+                    iins.push(crate::schedule::I64Instruction::Sub(d, r(a), r(b)))
+                }
+                crate::ir::Op::I64Mul(a, b) => {
+                    iins.push(crate::schedule::I64Instruction::Mul(d, r(a), r(b)))
+                }
+                crate::ir::Op::I64Eq(a, b) => {
+                    iins.push(crate::schedule::I64Instruction::Eq(d, r(a), r(b)))
+                }
                 crate::ir::Op::F32Add(a, b) => fins.push(F::Add(d, r(a), r(b))),
                 crate::ir::Op::F32Sub(a, b) => fins.push(F::Sub(d, r(a), r(b))),
                 crate::ir::Op::F32Mul(a, b) => fins.push(F::Mul(d, r(a), r(b))),
@@ -204,12 +211,16 @@ impl Compiled {
                     *m = (*m).min(i);
                     match g.profile {
                         crate::ir::SubProfile::F32 => fins.push(F::Guard { node: i }),
-                        crate::ir::SubProfile::I64 => iins.push(I::Guard { node: i }),
+                        crate::ir::SubProfile::I64 => {
+                            iins.push(crate::schedule::I64Instruction::Guard { node: i })
+                        }
                     }
                 }
             }
-            let c = count(&fins, &iins);
-            layers[l as usize].1 = c;
+            layers[l as usize].1 = match g.profile {
+                crate::ir::SubProfile::F32 => fins.len() as u32,
+                crate::ir::SubProfile::I64 => iins.len() as u32,
+            };
         }
         let mut fail_suffix_min = alloc::vec![u32::MAX; layers.len() + 1];
         for l in (0..layers.len()).rev() {
@@ -271,7 +282,7 @@ impl Compiled {
     /// (`crate::schedule::check`). `None` for the F32 sub-profile, whose stream is
     /// not covered by that validator yet.
     #[must_use]
-    pub fn i64_instructions(&self) -> Option<&[I]> {
+    pub fn i64_instructions(&self) -> Option<&[crate::schedule::I64Instruction]> {
         match &self.code {
             Code::I64 { ins } => Some(ins),
             Code::F32 { .. } => None,
@@ -286,7 +297,9 @@ impl Compiled {
             Code::F32 { ins, coef, src } => {
                 ins.len() * core::mem::size_of::<F>() + coef.len() * 4 + src.len() * 4
             }
-            Code::I64 { ins } => ins.len() * core::mem::size_of::<I>(),
+            Code::I64 { ins } => {
+                ins.len() * core::mem::size_of::<crate::schedule::I64Instruction>()
+            }
         };
         (code
             + self.layers.len() * 8
@@ -578,7 +591,7 @@ impl Compiled {
 
     fn run_i64<const OBSERVED: bool>(
         &self,
-        ins: &[I],
+        ins: &[crate::schedule::I64Instruction],
         w: &mut Workspace,
         evaluated_nodes: &mut Option<&mut u64>,
     ) -> Option<(u32, crate::ir::Fact)> {
@@ -591,17 +604,19 @@ impl Compiled {
                 }
             }
             match *x {
-                I::Add(d, a, b) => {
+                crate::schedule::I64Instruction::Add(d, a, b) => {
                     ri[d as usize] = crate::sem::i64_add(ri[a as usize], ri[b as usize])
                 }
-                I::Sub(d, a, b) => {
+                crate::schedule::I64Instruction::Sub(d, a, b) => {
                     ri[d as usize] = crate::sem::i64_sub(ri[a as usize], ri[b as usize])
                 }
-                I::Mul(d, a, b) => {
+                crate::schedule::I64Instruction::Mul(d, a, b) => {
                     ri[d as usize] = crate::sem::i64_mul(ri[a as usize], ri[b as usize])
                 }
-                I::Eq(d, a, b) => ri[d as usize] = i64::from(ri[a as usize] == ri[b as usize]),
-                I::Guard { node } => {
+                crate::schedule::I64Instruction::Eq(d, a, b) => {
+                    ri[d as usize] = i64::from(ri[a as usize] == ri[b as usize])
+                }
+                crate::schedule::I64Instruction::Guard { node } => {
                     if let Some(f) = self.guard_fails(node, View::I(ri)) {
                         if fail.as_ref().is_none_or(|(m, _)| node < *m) {
                             fail = Some((node, f));

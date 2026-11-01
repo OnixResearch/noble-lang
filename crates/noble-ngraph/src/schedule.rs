@@ -117,10 +117,18 @@ fn expected(
 ) -> Option<I64Instruction> {
     let destination = register(layout, id)?;
     Some(match checked.graph().nodes[id.0 as usize].op {
-        crate::ir::Op::I64Add(a, b) => I64Instruction::Add(destination, register(layout, a)?, register(layout, b)?),
-        crate::ir::Op::I64Sub(a, b) => I64Instruction::Sub(destination, register(layout, a)?, register(layout, b)?),
-        crate::ir::Op::I64Mul(a, b) => I64Instruction::Mul(destination, register(layout, a)?, register(layout, b)?),
-        crate::ir::Op::I64Eq(a, b) => I64Instruction::Eq(destination, register(layout, a)?, register(layout, b)?),
+        crate::ir::Op::I64Add(a, b) => {
+            I64Instruction::Add(destination, register(layout, a)?, register(layout, b)?)
+        }
+        crate::ir::Op::I64Sub(a, b) => {
+            I64Instruction::Sub(destination, register(layout, a)?, register(layout, b)?)
+        }
+        crate::ir::Op::I64Mul(a, b) => {
+            I64Instruction::Mul(destination, register(layout, a)?, register(layout, b)?)
+        }
+        crate::ir::Op::I64Eq(a, b) => {
+            I64Instruction::Eq(destination, register(layout, a)?, register(layout, b)?)
+        }
         crate::ir::Op::Guard { .. } => I64Instruction::Guard { node: id.0 },
         _ => return None,
     })

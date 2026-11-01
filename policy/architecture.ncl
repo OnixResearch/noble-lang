@@ -443,8 +443,20 @@ let contracts = import "./architecture.contracts.ncl" in
     # cap was unchanged and the collection was complete without widening one, so
     # this is a capacity re-measurement rather than a classification waiver,
     # source/native assurance approval, or a gate PASS.
-    max_units = 109,
-    max_shards = 109,
+    # 110 units (2026-11-01): the stream validator of issue #43 adds its own
+    # test target (`crates/noble-ngraph/tests/schedule_correspondence.rs`), so
+    # `checks.x86_64-linux.source-coverage` failed on `selected compiler
+    # architecture units exceed policy limit 109`. Measured on a source-only
+    # scratch copy of 488b8d77 with `max_units` and `max_shards` only raised to
+    # 400, the deterministic Nickel export regenerated and the pin hashes
+    # re-pinned inside that scratch copy: expected=110, observed=110, 0 missing,
+    # 0 unexpected, 0 duplicate unit ids, 0 invalid shards, status=complete, and
+    # a 258,357,470-byte IR. Every other cap was unchanged and the collection
+    # was complete without widening one, so this is a capacity re-measurement
+    # rather than a classification waiver, source/native assurance approval, or
+    # a gate PASS.
+    max_units = 110,
+    max_shards = 110,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
