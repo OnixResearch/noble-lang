@@ -40,6 +40,12 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     escaped | String = "crates/noble-kernel/src/../tests/support/production_import.rs",
     module | String = "production_import",
   },
+  # Renewed 2026-11-01 for issue #43 from the same complete pinned-hook
+  # collection: expected=110, observed=110, and the only delta from the
+  # 109-unit roster below is one added test target
+  # (`noble-ngraph:test+test:crates/noble-ngraph/tests/schedule_correspondence.rs:test`),
+  # removed none. Exact equality remains mandatory; the separate acyclic-shell
+  # fixture still adds two units.
   # Renewed 2026-10-29 for issue #72 from complete pinned-hook coverage
   # 901f41665ecd7e97b68dca0372c9876d360d802d388811d9654ec59990645ce4:
   # expected=109, observed=109; 13 existing test targets added, none removed
@@ -135,6 +141,7 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-ngraph:test+test:crates/noble-ngraph/tests/retained_bytes.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_cost.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/rewrite_quality.rs:test",
+    "noble-ngraph:test+test:crates/noble-ngraph/tests/schedule_correspondence.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/snapshot_file.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/soft_float.rs:test",
     "noble-ngraph:test+test:crates/noble-ngraph/tests/train_admission.rs:test",
