@@ -83,6 +83,7 @@ pub mod prng;
 pub mod sem;
 pub mod snapshot;
 pub mod train;
+pub mod schedule;
 
 pub use batch::{declared_row_work, evaluate, evaluate_into, Row, RowOp};
 pub use check::{check, check_with, Budgets, CheckedGraph};

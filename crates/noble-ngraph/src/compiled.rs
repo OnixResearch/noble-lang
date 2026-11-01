@@ -50,14 +50,9 @@ enum F {
     },
 }
 
-#[derive(Clone, Debug)]
-enum I {
-    Add(u32, u32, u32),
-    Sub(u32, u32, u32),
-    Mul(u32, u32, u32),
-    Eq(u32, u32, u32),
-    Guard { node: u32 },
-}
+/// The packed I64/Bool instruction stream's element type lives in [`crate::schedule`] so an
+/// independent validator can inspect the actual emitted bodies (issue #43).
+use crate::schedule::I64Instruction as I;
 
 #[derive(Clone, Debug)]
 enum Code {
@@ -270,6 +265,17 @@ impl Compiled {
     #[must_use]
     pub const fn layout_key(&self) -> crate::ir::Digest {
         self.layout_key
+    }
+
+    /// The actual packed I64/Bool instruction stream, for independent validation
+    /// (`crate::schedule::check`). `None` for the F32 sub-profile, whose stream is
+    /// not covered by that validator yet.
+    #[must_use]
+    pub fn i64_instructions(&self) -> Option<&[I]> {
+        match &self.code {
+            Code::I64 { ins } => Some(ins),
+            Code::F32 { .. } => None,
+        }
     }
 
     /// Estimated retained bytes of the compiled code (instructions, term

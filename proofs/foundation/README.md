@@ -1483,13 +1483,22 @@ fixture is `reordered_stream_sound`.
 
 Open, and deliberately not closed:
 
-- **No Rust instruction-body export yet.** `Compiled::new`'s Rust `I` stream
-  remains private; this Lean validator has no decoder or byte-level instruction
-  input to consume.
+- **The Rust stream is exported and independently validated, but not consumed here.**
+  `crates/noble-ngraph/src/schedule.rs` makes the actual emitted I64/Bool bodies a
+  public type (`I64Instruction`) with `Compiled::i64_instructions()`, and
+  `schedule::check` refuses a stream whose body is not the body its graph node
+  supplies under the declared register map — the Rust counterpart of `bodiesMatch`,
+  plus stream shape and layer coverage, while the declaration refusals keep
+  `layout::Refusal`'s own classes. That validator is **tested, not proved equal** to
+  these definitions, it covers I64/Bool only, and no versioned serialization or
+  decoder lets this Lean validator consume it.
+- **Definition-before-use and single-writer registers are implied in the Rust slice,
+  not rechecked.** They follow from acyclic layers, the injective declared register map
+  and a matching body; a slice with in-layer reordering freedom or writing guards would
+  have to check them, and the module states that rather than leaving it to a reader.
 - **No Lean↔Rust correspondence theorem.** The result is a proof about the
-  definitions in this file, not a theorem that the Rust evaluator's private
-  instruction bodies equal these `Instr` values or that its graph matches this
-  `Graph`.
+  definitions in this file, not a theorem that the Rust evaluator's instruction
+  bodies equal these `Instr` values or that its graph matches this `Graph`.
 - The selected fragment excludes guards, failure-suffix ordering, F32/affine
   instructions, effects, resources, register reuse after last use, and dynamic
   multi-output reconstruction. The graph well-formedness premise and all

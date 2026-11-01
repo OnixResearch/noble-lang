@@ -523,3 +523,48 @@ events versus the reference evaluator's three-node cutoff, no publication,
 unchanged snapshot bytes, and scratch `(acquired, released, live) = (1, 1, 0)`;
 cancellation before a step observed zero events/publications/leases. These are
 finite, specific exercised cases, not global no-work or resource-proof claims.
+
+## The packed instruction stream itself (issue #43)
+
+`layout::check` validates a *declaration* only: register map, constant and slot tables, register
+count, layer ranges and failure-suffix minima. It never reads an instruction body, so a stream could
+name the right registers and still compute the wrong operation. `crates/noble-ngraph/src/schedule.rs`
+closes that for the total I64/Bool fragment:
+
+| Obligation | What is compared |
+|---|---|
+| declarations | `layout::check` runs inside `schedule::check`, and its refusal keeps its own class (`StreamRefusal::Declarations(_)`) |
+| ordered bodies | position `i` in the stream must be exactly the body the graph node at position `i` supplies under the declared register map: operation identity, **ordered** source registers, destination register |
+| shape | the stream length is the number of instruction-emitting nodes |
+| layer coverage | each declared layer range holds exactly that layer's instruction count |
+
+Definition-before-use, single-writer registers and ordered output retention are *implied* for this
+slice (acyclic layers + injective declared register map + matching body), and the module says so
+instead of adding checks that a matching stream could never reach.
+
+The stream is a public type (`I64Instruction`), reachable through `Compiled::i64_instructions()`,
+which is what makes an independent validator possible at all. There is still **no versioned
+serialization** of it, so the Lean validator in `proofs/foundation/NobleFoundation/PackedSchedule.lean`
+cannot consume these bytes; that gap stays open and is named in the foundation README.
+
+`crates/noble-ngraph/tests/schedule_correspondence.rs` (11 tests, all passing) validates the stream
+of the real `Compiled::new` output for an interleaved two-branch I64 graph, then mutates one
+obligation at a time:
+
+| Mutation | Refusal |
+|---|---|
+| addition replaced by subtraction | `BodyMismatch` |
+| a wrapping addition's operands swapped | `BodyMismatch` |
+| a multiplication's destination moved to a register the stream does not write | `BodyMismatch` |
+| two independent instructions of one layer swapped | `BodyMismatch` (positions are compared against their own node, not against the layer as a set) |
+| one instruction dropped, one duplicated | `StreamShape` |
+| the last layer's end shortened | `Declarations(LayerCoverage)` |
+| a layout revision from another release | `Declarations(StaleRevision)` |
+| two output registers swapped in the declaration | the declaration stays admissible, and the stream is refused: `BodyMismatch` |
+| a checked graph's layout and stream paired with a different graph | refused, while each graph's own pair validates |
+| an F32 graph | `UnsupportedProfile` |
+
+Two fixture mutations were wrong when first written and were fixed rather than relaxed: shortening a
+boundary on a zero-width first layer mutated nothing, and a destination mutation that matched no
+multiplication left the stream untouched. Both are recorded because a control that silently does
+nothing is the failure mode this lane exists to prevent.
