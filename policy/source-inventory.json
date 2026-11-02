@@ -3714,158 +3714,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:11085:11101",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:11657:11688",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:13660:13691",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:14894:14910",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15587:15593",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:16374:16381",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17230:17254",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17845:17852",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:19869:21683",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21701:22154",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:22172:22984",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:23002:23380",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:23398:24163",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24181:24722",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24740:25794",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-27 for issue #69 from compiler kind closure: compiler-generated item; no independent Noble-authored source body.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25812:26626",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:4329:4336",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:4464:4471",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-27 for issue #69 source classification from compiler kind closure: authored source-body semantics; extraction and refinement remain open.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9795:9802",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Renewed 2026-10-19 integration of the deny-all clearance branch onto origin/main from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/callback_owner.rs:11160:11176",
@@ -125365,6 +125213,638 @@
       "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::source::tests::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:14785:14792",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:16281:16297",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:18136:18167",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:20139:20170",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:22529:22545",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24253:24259",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25040:25047",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25896:25920",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:26511:26518",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:28535:30349",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30367:30820",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30838:31650",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:31668:32046",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32064:32829",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32847:33388",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:33406:34460",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34478:35292",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36140:36147",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36419:37357",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37375:38102",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38120:38508",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38526:38922",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:5668:5675",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7420:7427",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7555:7562",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::HostEvent as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Offset as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ResponseKind as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Host::read_region",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Host::record",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (enum/implementation); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::HostEvent",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::HostEvent::encode",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::MAX_EVENTS",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (implementation/struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Offset",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Offset::encode",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (enum/implementation); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ResponseKind",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ResponseKind::label",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::a_refused_read_records_its_reason_and_no_commit",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::a_trace_that_hits_its_bound_says_so_instead_of_dropping_silently",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::an_admitted_read_records_request_response_and_its_protected_commit_in_order",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::host",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::host_retirement_is_its_own_request_and_never_a_guest_release",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::identities",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::kinds",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed ordered host trace: bounded_region records request/commit/response identity events and its unit lanes (#50): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#4}",
       "refinement": "not-applicable"
     }
   ],
