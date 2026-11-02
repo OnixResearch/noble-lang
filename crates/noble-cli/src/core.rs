@@ -11,6 +11,7 @@ pub(crate) mod inspect;
 pub(crate) mod live;
 pub(crate) mod live_slot;
 pub(crate) mod output;
+pub(crate) mod preview;
 mod report;
 pub(crate) mod spec_quality;
 pub(crate) mod worker;

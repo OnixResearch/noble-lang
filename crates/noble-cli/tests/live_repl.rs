@@ -4201,3 +4201,177 @@ fn assert_inspection(report: &Value, outcome: &str) {
         "every report names its truncations: {report}"
     );
 }
+
+/// Issue #77: a bounded Core replacement preview compares the installed definition
+/// with an explicitly selected candidate without installing, staging or executing
+/// either version, and binds the next explicit installation to its exact bytes and
+/// base namespace.
+#[test]
+fn preview_binds_the_next_installation_to_exact_bytes_and_base(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let (_, _) = live_ack(&live.report()?, &[]);
+    let used = live.submit("1 addone")?;
+    assert_eq!(text_field(&used, "outcome"), "normal");
+    let stack_before = used["stack"].clone();
+
+    let preview = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&preview, "schema"), "noble-live-preview/v1");
+    assert_eq!(text_field(&preview, "outcome"), "previewed", "{preview}");
+    assert_eq!(number_field(&preview["base"], "generation"), 1);
+    assert_eq!(text_field(&preview["candidate"], "definition"), "addone");
+    assert_eq!(
+        text_field(&preview["candidate"], "identity_scope"),
+        "prospective-not-installed"
+    );
+    assert_eq!(
+        number_field(
+            &preview["checks"]["inert_submission"]["expectation"],
+            "stack_in"
+        ),
+        1
+    );
+    assert_eq!(
+        number_field(
+            &preview["checks"]["inert_submission"]["expectation"],
+            "stack_out"
+        ),
+        1
+    );
+    assert_eq!(
+        number_field(
+            &preview["checks"]["inert_submission"]["expectation"],
+            "effects"
+        ),
+        0
+    );
+    assert_eq!(
+        text_field(&preview["comparison"], "interface"),
+        "unavailable-not-exposed-by-this-preview"
+    );
+    assert_eq!(
+        text_field(&preview["comparison"], "equivalence"),
+        "not-established",
+        "structural checks never render as equivalence"
+    );
+    assert_eq!(
+        text_field(&preview["comparison"], "behaviour"),
+        "not-compared"
+    );
+    assert_eq!(
+        text_field(&preview["checks"], "backend_admission"),
+        "not-run"
+    );
+    assert_eq!(text_field(&preview["checks"], "publication"), "not-run");
+    assert_eq!(
+        text_field(&preview["checks"]["evidence"], "status"),
+        "not-checked"
+    );
+    assert_eq!(
+        text_field(&preview["token"], "authority"),
+        "comparison-reference-not-publication-authority"
+    );
+    for field in [
+        "staged_binaries",
+        "grants_consumed",
+        "guest_requests",
+        "protected_operations",
+    ] {
+        assert_eq!(
+            number_field(&preview["installed_state"], field),
+            0,
+            "{field}"
+        );
+    }
+    let candidate_sha256 = text_field(&preview["candidate"], "sha256").to_owned();
+
+    // Repeating and cancelling a preview installs, stages and executes nothing.
+    let repeated = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&repeated, "outcome"), "previewed");
+    assert_eq!(repeated["discarded_previous"], true);
+    let cancelled = live.submit(":preview cancel")?;
+    assert_eq!(text_field(&cancelled, "outcome"), "cancelled");
+    assert_eq!(
+        text_field(&live.submit(":preview cancel")?, "outcome"),
+        "nothing-retained"
+    );
+    let after_cancel = live.submit(":generation")?;
+    assert_eq!(number_field(&after_cancel, "generation"), 1);
+    assert_eq!(after_cancel["stack"], stack_before);
+
+    // Same bytes in the same base: the explicit installation consumes the reference
+    // and reports the exact committed bytes and generation.
+    let _ = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    let installed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&installed, "outcome"),
+        "reload-committed",
+        "{installed}"
+    );
+    assert_eq!(text_field(&installed, "preview_token"), "consumed");
+    assert_eq!(text_field(&installed, "source_sha256"), candidate_sha256);
+    assert_eq!(number_field(&installed, "generation"), 2);
+
+    // Candidate bytes changed after the preview: refuse rather than install them.
+    let _ = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    fixture.replace("def addone [ 2 + ]")?;
+    let stale_bytes = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&stale_bytes, "outcome"),
+        "reload-refused",
+        "{stale_bytes}"
+    );
+    assert!(
+        text_field(&stale_bytes, "diagnostic")
+            .contains("candidate bytes changed after the preview"),
+        "{stale_bytes}"
+    );
+    assert_eq!(number_field(&stale_bytes, "generation"), 2);
+
+    // The next preview is over the changed bytes; it installs them explicitly and
+    // reports the exact committed generation.
+    let reviewed = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&reviewed, "outcome"), "previewed", "{reviewed}");
+    let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&committed, "outcome"),
+        "reload-committed",
+        "{committed}"
+    );
+    assert_eq!(text_field(&committed, "preview_token"), "consumed");
+    assert_eq!(number_field(&committed, "generation"), 3);
+    // Without a retained reference the ordinary guarded path claims no preview
+    // authority, so a token is never reused.
+    let ordinary = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ordinary, "outcome"), "reload-committed");
+    assert!(ordinary.get("preview_token").is_none(), "{ordinary}");
+    assert_eq!(number_field(&ordinary, "generation"), 4);
+
+    // A same-interface, different-behaviour candidate stays visibly different and is
+    // never labelled equivalent.
+    fixture.replace("def addone [ 3 + ]")?;
+    let different = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&different, "outcome"),
+        "previewed",
+        "{different}"
+    );
+    assert_eq!(
+        different["candidate"]["reload_submission"], preview["candidate"]["reload_submission"],
+        "same ordered arities and effect count"
+    );
+    assert_ne!(
+        text_field(&different["candidate"], "sha256"),
+        candidate_sha256
+    );
+    assert_eq!(
+        text_field(&different["comparison"], "equivalence"),
+        "not-established"
+    );
+    assert_eq!(
+        text_field(&different["comparison"], "equivalence"),
+        "not-established"
+    );
+    live.finish()
+}

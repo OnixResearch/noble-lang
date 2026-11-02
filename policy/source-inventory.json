@@ -5780,22 +5780,6 @@
       "disposition": "open",
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:6196:6203",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:8531:8538",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live/declared.rs:10073:10086",
       "refinement": "open"
     },
@@ -17077,270 +17061,6 @@
       "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/metering.rs:2034:2036",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:10031:10033",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:11637:11649",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:12277:12290",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:16331:16340",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:16493:16505",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:21580:21586",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:21823:21829",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:23853:23855",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:25024:25031",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:27672:27678",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:29951:29963",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:30894:30901",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:33546:33558",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:34436:34438",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:34703:34705",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:34942:34944",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:35218:35221",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:35429:35432",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:35672:35674",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:35889:35891",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37500:37508",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37565:37573",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:39328:39338",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:39665:39675",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:48962:52238",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:52496:54541",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:5434:5441",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:54738:58004",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:55033:55047",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:58022:59727",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:59745:61096",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:61114:62042",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:9577:9579",
       "refinement": "open"
     },
     {
@@ -123544,38 +123264,6 @@
       "refinement": "open"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:16294:16304",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19084:19086",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19882:19884",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:20941:20943",
-      "refinement": "open"
-    },
-    {
       "category": "generated",
       "disposition": "generated",
       "note": "Renewed bounded program inspection report and its inertness lane for issue 76: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
@@ -123684,1007 +123372,7 @@
       "disposition": "open",
       "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:100215:100222",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:100300:100307",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:100395:100402",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:100747:100754",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:101538:101545",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:101617:101624",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:101952:101959",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102140:102147",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102225:102232",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102309:102316",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102403:102410",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:103529:103536",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:103615:103617",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:105254:105261",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:106106:107489",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:107507:108804",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:108822:111483",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109116:109119",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109345:109348",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109479:109482",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109636:109639",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109857:109860",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:110217:110220",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:110395:110398",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111018:111021",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111187:111190",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111501:114616",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111788:111791",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:112017:112020",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:112155:112158",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:112312:112315",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:112533:112536",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:112967:112970",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:113779:113782",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:113962:113965",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:114502:114505",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:15073:15094",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:15342:15345",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:17738:17748",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:19216:19223",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:23379:23382",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:24649:24656",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:25276:25279",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:25512:25515",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27001:27003",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27216:27223",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27286:27288",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27453:27460",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27523:27525",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27695:27702",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27765:27767",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:27940:27947",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28010:28012",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28191:28198",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28261:28263",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28461:28468",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28531:28533",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28891:28894",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29044:29046",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:30421:30424",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:31281:31284",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:32722:32725",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:33719:33722",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:34029:34031",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:34711:34713",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:34887:34896",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:35774:35781",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:36534:36536",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:36722:36724",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:37102:37109",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:37505:37508",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:37899:37902",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:38056:38063",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:39097:39100",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:39234:39236",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:39369:39372",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:45459:45466",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:45623:45635",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:45816:45828",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:47610:47612",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:48380:48386",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:48466:48476",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:48565:48572",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49111:49118",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49303:49310",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49828:49835",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49875:49883",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49997:50004",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:50062:50070",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:51625:51628",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:52750:52756",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:54050:54053",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:55239:55241",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:58570:58572",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:59350:59352",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:61373:61375",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:61867:61874",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:65970:65973",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:70580:70582",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:70747:70749",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:71615:71617",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:75411:75413",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:75677:75693",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:75754:75760",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:75809:75816",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:76051:76067",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:76253:76260",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:76524:76526",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:77601:77608",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:78005:78008",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:78151:78153",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:78441:78443",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:81843:81845",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82369:82371",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:83613:83615",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:84396:84402",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:84461:84471",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:86128:86130",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:87366:87368",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:90497:90500",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:90698:90700",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:93437:93444",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:94889:94914",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:94974:94981",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:95038:95045",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed bounded program inspection report and its inertness lane for issue 76 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:95114:95156",
       "refinement": "open"
     },
     {
@@ -125013,6 +123701,1670 @@
       "note": "Renewed bounded program inspection report and its inertness lane for issue 76: declaration-only compiler kind (other); accounting only, with no body obligation.",
       "package": "noble-cli",
       "qualified_path": "noble::core::inspect::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:16318:16328",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19108:19110",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:19906:19908",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core.rs:20965:20967",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:101220:101227",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102672:102697",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102757:102764",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102821:102828",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:102897:102939",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:107998:108005",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:108083:108090",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:108178:108185",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:108530:108537",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109321:109328",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109400:109407",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109735:109742",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:109923:109930",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:110008:110015",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:110092:110099",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:110186:110193",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111312:111319",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:111398:111400",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:113037:113044",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:113889:115272",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:115290:116587",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:116605:119266",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:116899:116902",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:117128:117131",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:117262:117265",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:117419:117422",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:117640:117643",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:118000:118003",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:118178:118181",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:118801:118804",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:118970:118973",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:119284:122399",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:119571:119574",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:119800:119803",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:119938:119941",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:120095:120098",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:120316:120319",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:120750:120753",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:121562:121565",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:121745:121748",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:122285:122288",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:16107:16128",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:16376:16379",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:18772:18782",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:20250:20257",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:24413:24416",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:25683:25690",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:26310:26313",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:26546:26549",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28035:28037",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28250:28257",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28320:28322",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28487:28494",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28557:28559",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28729:28736",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28799:28801",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:28974:28981",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29225:29232",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29295:29297",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29495:29502",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29565:29567",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:29925:29928",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:30078:30080",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:31455:31458",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:32315:32318",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:33756:33759",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:34753:34756",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:35063:35065",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:35745:35747",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:35921:35930",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:36808:36815",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:37568:37570",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:37756:37758",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:38136:38143",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:38539:38542",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:38933:38936",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:39090:39097",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:40131:40134",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:40268:40270",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:40403:40406",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:46493:46500",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:46657:46669",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:46850:46862",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:48644:48646",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49414:49420",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49500:49510",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:49599:49606",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:50145:50152",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:50337:50344",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:50862:50869",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:50909:50917",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:51031:51038",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:51096:51104",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:52659:52662",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:53784:53790",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:55084:55087",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:56273:56275",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:59604:59606",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:60384:60386",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:62407:62409",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:62901:62908",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:6395:6402",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:67004:67007",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:76970:76972",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:77137:77139",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:78005:78007",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:81801:81803",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82067:82083",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82144:82150",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82199:82206",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82441:82457",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82643:82650",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:82914:82916",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:83991:83998",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:84395:84398",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:84541:84543",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:84831:84833",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:8730:8737",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:88233:88235",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:89864:89866",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:91396:91398",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:92179:92185",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:92244:92254",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:93911:93913",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:95149:95151",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:98280:98283",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live.rs:98481:98483",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:10524:10526",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:10978:10980",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:12584:12596",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:13224:13237",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:17278:17287",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:17440:17452",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:18309:18321",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:23237:23243",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:23480:23486",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:25510:25512",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:26681:26688",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:28064:28075",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:28172:28184",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:30101:30107",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:32380:32392",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:33323:33330",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:35975:35987",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:36865:36867",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37132:37134",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37371:37373",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37647:37650",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:37858:37861",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:38101:38103",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:38318:38320",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:39929:39937",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:39994:40002",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:41757:41767",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:42094:42104",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:51414:54690",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:54948:56993",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:57190:60456",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:57485:57499",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:60474:62179",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:62197:64936",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:6381:6388",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:64954:66305",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:66323:67251",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<core::preview::Retained as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<core::preview::Retained as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<core::preview::Retained as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<core::preview::Retained as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live::Live::cancel_preview",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live::Live::inert_expectation",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live::Live::preview_candidate",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live::Live::respond_preview",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::Candidate",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::NOT_COMPARED",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::Observed",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::Retained",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::SCHEMA",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::cancelled",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::interface",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::previewed",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::refused",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::preview::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::DefinitionInterface as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (implementation/struct); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::DefinitionInterface",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::DefinitionInterface::of",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::Prepared::definition_identity",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::Prepared::submission_interface",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::Session::current_dependent_names",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77 from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::tests::current_dependents_and_submission_expectations_are_reported_without_publishing",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::tests::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed bounded Core replacement preview with its installation binding for issue 77: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::tests::{use#2}",
       "refinement": "not-applicable"
     }
   ],
@@ -127516,6 +127868,7 @@
     "live_repl::old_saved_program_is_denied_after_rearming_new_checked_owner",
     "live_repl::ordinary_run_and_session_leave_self_propose_unbound",
     "live_repl::postreturn_guest_dependent_refusal_retains_stack_and_grant",
+    "live_repl::preview_binds_the_next_installation_to_exact_bytes_and_base",
     "live_repl::queued_reload_ack_follows_prior_wasm_invocation",
     "live_repl::refused_reload",
     "live_repl::rejected_replacement_keeps_old_addone",
@@ -128369,6 +128722,7 @@
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:155943:158528",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:158602:163550",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:163755:167214",
+    "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:167992:174366",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:18669:18671",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:18870:18872",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:20671:21418",

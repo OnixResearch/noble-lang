@@ -112,6 +112,29 @@ pub struct CoreInterface {
     pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
 }
 
+/// A bounded, ordered descriptor of one prepared submission's expectation: the
+/// required and result arities and the allowed effect count. It is a comparison
+/// descriptor, not interface equality and never behavioral equivalence.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DefinitionInterface {
+    pub stack_in: u32,
+    pub stack_out: u32,
+    pub effects: u32,
+}
+
+impl DefinitionInterface {
+    /// Both arities and the allowed effect count are reported as absent rather
+    /// than saturated when they cannot be represented, so no caller can mistake a
+    /// bound for a measured value.
+    fn of(expected: &noble_kernel::untrusted::Expected) -> Option<Self> {
+        Some(Self {
+            stack_in: u32::try_from(expected.stack_in.len()).ok()?,
+            stack_out: u32::try_from(expected.stack_out.len()).ok()?,
+            effects: u32::try_from(expected.allowed_effects.as_slice().len()).ok()?,
+        })
+    }
+}
+
 /// Parse host-selected Core interface words with the source type parser.
 /// The C source-only caller separately checks this against kernel acceptance
 /// and still refuses value forms its emitter cannot lower.
@@ -470,6 +493,20 @@ impl Prepared {
     pub const fn is_definition(&self) -> bool {
         self.definition.is_some()
     }
+    /// Prospective identity of this checked definition. It is not an installed
+    /// identity and never publication authority.
+    pub fn definition_identity(&self) -> Option<u64> {
+        self.definition
+            .as_ref()
+            .map(|definition| definition.identity)
+    }
+    /// Ordered interface descriptor of this checked definition.
+    /// Descriptor of this preparation's own submission expectation. A definition
+    /// preparation has no deferred submission and therefore no descriptor here.
+    pub fn submission_interface(&self) -> Option<DefinitionInterface> {
+        self.submission()
+            .and_then(|submission| DefinitionInterface::of(&submission.request.expected))
+    }
 }
 
 /// A pure namespace, independent of the runtime value stack.
@@ -714,6 +751,27 @@ impl Session {
             .rev()
             .find(|definition| definition.name == name)
             .map(|definition| definition.identity)
+    }
+
+    /// Names of current named dependents whose resolved calls reach `name`, in
+    /// declaration order. Historical definitions retained for captured Programs
+    /// are not dependents.
+    pub fn current_dependent_names(&self, name: &str) -> alloc::vec::Vec<alloc::string::String> {
+        let Some(index) = self
+            .definitions
+            .iter()
+            .rposition(|definition| definition.name == name)
+        else {
+            return alloc::vec::Vec::new();
+        };
+        self.current_dependents(index)
+            .into_iter()
+            .filter_map(|dependent| {
+                self.definitions
+                    .get(dependent)
+                    .map(|definition| definition.name.clone())
+            })
+            .collect()
     }
 
     /// Only current named bodies count as live dependents. Old Programs may
@@ -1250,7 +1308,7 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
 )]
 #[cfg(test)]
 mod tests {
-    use super::Session;
+    use super::{DefinitionInterface, Session};
 
     fn live_limits() -> crate::Limits {
         crate::Limits {
@@ -1538,6 +1596,68 @@ mod tests {
                 .collect::<alloc::vec::Vec<_>>(),
             original
         );
+    }
+
+    #[test]
+    fn current_dependents_and_submission_expectations_are_reported_without_publishing() {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let mut session = Session::new();
+        for source in [
+            b"def addone [ 1 + ]".as_slice(),
+            b"def twice [ addone addone ]",
+            b"def four [ twice twice ]",
+            b"def unrelated [ 10 + ]",
+        ] {
+            let prepared = session.prepare(source, &[], limits).unwrap();
+            session.commit(prepared).unwrap();
+        }
+        let original: alloc::vec::Vec<_> = session
+            .definitions
+            .iter()
+            .map(|definition| definition.identity)
+            .collect();
+        assert_eq!(session.current_dependent_names("addone"), ["twice", "four"]);
+        assert_eq!(session.current_dependent_names("twice"), ["four"]);
+        assert!(session.current_dependent_names("four").is_empty());
+        assert!(session.current_dependent_names("unrelated").is_empty());
+        assert!(session.current_dependent_names("absent").is_empty());
+
+        // A caller submission into the current namespace yields its expectation
+        // descriptor; a definition preparation defers its submission and has none.
+        let radix = alloc::vec![noble_kernel::types::Ty::I64];
+        let one = session.prepare(b"1 +", &radix, limits).unwrap();
+        let two = session.prepare(b"2 +", &radix, limits).unwrap();
+        let expectation = DefinitionInterface {
+            stack_in: 1,
+            stack_out: 1,
+            effects: 0,
+        };
+        assert_eq!(one.submission_interface(), Some(expectation));
+        assert_eq!(two.submission_interface(), Some(expectation));
+
+        let replacement = session.prepare(b"def addone [ 2 + ]", &[], limits).unwrap();
+        assert!(replacement.is_definition());
+        assert_eq!(replacement.definition_name(), Some("addone"));
+        assert_eq!(replacement.submission_interface(), None);
+        assert!(replacement.definition_identity().is_some());
+        let preview = session.preview_core_rebuild(&replacement).unwrap();
+        // A preview establishes a prospective successor only: the installed
+        // namespace, its identities and its dependents are unchanged.
+        assert_eq!(
+            session
+                .definitions
+                .iter()
+                .map(|definition| definition.identity)
+                .collect::<alloc::vec::Vec<_>>(),
+            original
+        );
+        assert_eq!(session.current_dependent_names("addone"), ["twice", "four"]);
+        assert_eq!(preview.current_dependent_names("addone"), ["twice", "four"]);
     }
 
     #[test]

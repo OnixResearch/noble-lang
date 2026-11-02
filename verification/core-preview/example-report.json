@@ -1,0 +1,67 @@
+{
+  "base": {
+    "generation": 1,
+    "installed_definition": "addone",
+    "installed_identity": null,
+    "installed_identity_scope": "unavailable when the session grant names no definition",
+    "path": "math.noble",
+    "submissions": 1
+  },
+  "candidate": {
+    "bytes": 19,
+    "definition": "addone",
+    "identity_scope": "prospective-not-installed",
+    "path": "math.noble",
+    "prospective_identity": 1,
+    "sha256": "552a03e51b581c4598dbc9f9e8588221c3544fe9809b19aca6322238c11b5499"
+  },
+  "checks": {
+    "backend_admission": "not-run",
+    "dependent_rebuild": "passed",
+    "evidence": {
+      "reason": "a preview binds no evidence to any subject; it copies no badge from the installed definition",
+      "status": "not-checked",
+      "subject": null
+    },
+    "inert_submission": {
+      "expectation": {
+        "effects": 0,
+        "stack_in": 0,
+        "stack_out": 0
+      },
+      "scope": "the empty-body submission this preview prepared; it is not either definition's interface"
+    },
+    "publication": "not-run",
+    "source_preparation": "passed"
+  },
+  "comparison": {
+    "behaviour": "not-compared",
+    "equivalence": "not-established",
+    "interface": "unavailable-not-exposed-by-this-preview",
+    "interface_reason": "the preview checks replacement compatibility and exposes neither definition's ordered interface",
+    "reason": "behaviour is not compared by a preview, and passed structural checks establish neither equivalence nor termination"
+  },
+  "dependents": {
+    "rebuild": [],
+    "scope": "current named dependents whose resolved calls reach the replaced definition"
+  },
+  "discarded_previous": false,
+  "installed": {
+    "identity_scope": "installed-at-base-generation"
+  },
+  "installed_state": {
+    "grants_consumed": 0,
+    "guest_requests": 0,
+    "namespace_changed": false,
+    "protected_operations": 0,
+    "staged_binaries": 0
+  },
+  "outcome": "previewed",
+  "schema": "noble-live-preview/v1",
+  "stage": "core-preview",
+  "token": {
+    "authority": "comparison-reference-not-publication-authority",
+    "base_generation": 1,
+    "sha256": "552a03e51b581c4598dbc9f9e8588221c3544fe9809b19aca6322238c11b5499"
+  }
+}
