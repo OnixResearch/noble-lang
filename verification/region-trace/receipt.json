@@ -1,8 +1,8 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "2f7b449af149b9b7f053a0ea5e062d3a10fe4deb",
-  "source_tree": "bf7fb1998356e2fd216f10ee5a7aa4c8ab6c5d0c",
+  "source_commit": "ddf747a028d7bbeb22ec13b7340fbfa737ac8876",
+  "source_tree": "24c745f878b3746cf1427820878e370d0330c0ab",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "b62fcd88783ff23bfbe40f508881ef7bcd47cca0e3b2a453dbf09239d2d447b9",
-        "proofs/m5/region-trace-inventory.json": "d0a0d8f408e14091399140eff2203afea6e4bf7de81ed78ca37adadd580c6e4a"
+        "proofs/m5/RegionTrace.lean": "297ded61c2d4af5bf49d562483a72a8b4e5a9c8ae7dd9bd87d2df3491f710b00",
+        "proofs/m5/region-trace-inventory.json": "d7c2c8bfcbff435b65a87b9fdc35aff94434e8fe36214ca8b81fac5f01df62a5"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 40,
+    "model_theorems": 49,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "b62fcd88783ff23bfbe40f508881ef7bcd47cca0e3b2a453dbf09239d2d447b9",
-    "proofs/m5/region-trace-inventory.json": "d0a0d8f408e14091399140eff2203afea6e4bf7de81ed78ca37adadd580c6e4a",
-    "verification/region-trace/check.mjs": "8ca57112a417381d384937d4cacd94a4f6c34282c6c1dec3a14801c81e7c06ab"
+    "proofs/m5/RegionTrace.lean": "297ded61c2d4af5bf49d562483a72a8b4e5a9c8ae7dd9bd87d2df3491f710b00",
+    "proofs/m5/region-trace-inventory.json": "d7c2c8bfcbff435b65a87b9fdc35aff94434e8fe36214ca8b81fac5f01df62a5",
+    "verification/region-trace/check.mjs": "d6a728d1f572ee6784ec2c37b88e723b6237a49d17384e14640897c3b786e46a"
   },
-  "theorem_count": 40,
+  "theorem_count": 49,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -593,11 +593,133 @@
       "axioms": [
         "propext"
       ]
+    },
+    {
+      "name": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: the ordered trace the host actually records for an in-bounds read and a consuming release lowers onto the target alphabet and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: an abnormal exit after the read lowers to its own host-retirement commit and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.lowered_projection_starts_with_the_request",
+      "role": "WIT-TRACE-03: the lowering keeps the request ahead of its own commit and response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lowered_projection_starts_with_the_request : List.filterMap RegionTrace.projectStep (RegionTrace.lower RegionTrace.observedReadAndRelease) = [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.observed_traces_are_paired",
+      "role": "WIT-TRACE-03: every response in the observed trace follows a request of its own operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_traces_are_paired : RegionTrace.responsesPaired [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none]",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_implies_read_commits_explained",
+      "role": "WIT-TRACE-03: the corollary the pilot was missing — a related trace explains every read commit by its import crossing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_implies_read_commits_explained : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.readCommitsExplained target = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.swapped_response_is_unpaired",
+      "role": "WIT-TRACE-03 control: a response answering an operation its request never asked for is unpaired",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.swapped_response_is_unpaired : ¬RegionTrace.responsesPaired [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_response",
+      "role": "WIT-TRACE-03 control: a response answering the wrong operation is refused, not paired",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_swapped_response : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.AbiStep.returned RegionTrace.Operation.guestRelease none none] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_resource_identity",
+      "role": "WIT-TRACE-03 control: a commit under an identity the host never authorised is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_resource_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 3 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_observed_retirement_as_guest_release",
+      "role": "WIT-TRACE-02 control: an observed host retirement cannot be claimed as a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_observed_retirement_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "commands": [
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD"
@@ -605,7 +727,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD^{tree}"
@@ -613,7 +735,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "status",
         "--porcelain=v1",
@@ -642,12 +764,12 @@
         "env",
         "lean",
         "--json",
-        "/var/tmp/region50-check/Audit.lean"
+        "/var/tmp/rt-receipt/Audit.lean"
       ],
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD"
@@ -655,7 +777,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "rev-parse",
         "HEAD^{tree}"
@@ -663,7 +785,7 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/2k05jnr38sryn0fnvlrmjrshxbphj3jp-git-2.56.0/bin/git",
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
       "argv": [
         "status",
         "--porcelain=v1",
@@ -676,6 +798,9 @@
   "scope": [
     ".cairn/changes/region-trace-relation WIT-TRACE-01 model: source alphabet, target ABI alphabet and the relation.",
     "The target alphabet is a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,",
-    "no Rust host or lowering claim, and no liveness claim. Pairing and the host supplying the exact identity stay premises."
+    "no Rust host or lowering claim, and no liveness claim. The host records its own ordered trace with",
+    "the exact retained identity, and pairing is stated over projected source traces rather than proved",
+    "for the emitted component own steps; the observed-trace lowering maps an observation, not a",
+    "correspondence."
   ]
 }

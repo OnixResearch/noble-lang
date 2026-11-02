@@ -36,7 +36,7 @@
   `Trap::UnreachableCodeReached` / adapter fault, plus a real compiled `bounded-region` component
   end to end (`exit_class: normal|rejected`, `cleanup: already-retired`, `fuel_remaining` ~1e7).
   Observed from real executions at `70619c2fd`
-  (`verification/host-locality/evidence-70619c2fd.json`, clean source, 11 cases): `normal`,
+  (`verification/host-locality/evidence-ddf747a0.json`, clean source, 11 cases): `normal`,
   `rejected`, `trap` and `quota-exhausted`. The lane executes the selected guest plus three mutated
   emitted-core artifacts and binds `exit_class`, `cleanup` and `fuel_remaining` on every case: `trap`
   comes from a real `unreachable` after the genuine `region.read` import and from both malformed
@@ -58,7 +58,7 @@
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
   measurability control showing the boundary tracks the budget. Cancellation stays unsupported because
   the alphabets have no cancellation event. Host-side observations now exist for four classes
-  (`verification/host-locality/evidence-70619c2fd.json`: `normal`, `rejected`, `trap`,
+  (`verification/host-locality/evidence-ddf747a0.json`: `normal`, `rejected`, `trap`,
   `quota-exhausted` with `fuel_remaining: 0`); `adapter-invalid` and a refused cleanup are not
   producible from this interface, so the task stays open rather than being ticked.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
