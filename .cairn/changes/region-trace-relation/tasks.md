@@ -16,8 +16,13 @@
   prefix/ordering composition (`append_projection`, `take_projection`). Exact identity, read-commit
   explicability and at-most-once release are now **conditions of the relation** rather than claims:
   the six `related_rejects_*` controls refuse the forged traces and `related_accepts_well_formed_success`
-  keeps them non-vacuous. Pairing and the host's own identity supply stay premises, so the task stays
-  open.
+  keeps them non-vacuous. The host's own identity supply is now recorded rather than assumed: the
+  adapter's ordered event trace carries the exact retained table identity on every request and every
+  protected commit (`HostEvent::Request/Commit` in `bounded_region.rs`), and the host-locality lane
+  refuses a commit under an identity the read did not request. Pairing is stated over projected source
+  traces (`responsesPaired`, `responseFollows`, `observed_traces_are_paired`,
+  `swapped_response_is_unpaired`). Correspondence to the emitted component is still absent, so the
+  task stays open.
 - [x] [serial] Derive and prove prefix compatibility and the RegionProtocol corollaries under the declared host, identity, cost and cleanup premises. r[WIT-TRACE-03]
 - [x] [serial] Implement the cost or accounting relation and prove the committed prefix is preserved across an exhaustion boundary. r[WIT-TRACE-04]
 - [ ] [serial] Add host-side observations that separate trap, quota exhaustion and cleanup failure at the existing WIT interface, recording unknown where the observation is absent. r[WIT-TRACE-05]
@@ -40,7 +45,14 @@
   result-area mutants classify as `trap`, not `adapter-invalid`, because guest code writes the
   corruption into its own result area and Wasmtime traps inside the guest. `adapter-invalid`
   therefore stays unit-exercised only, and a refused cleanup still cannot be induced from this
-  interface, so the observation remains partial.
+  interface, so the observation remains partial. The ordered host trace is now itself an observation:
+  requests, the protected read commit, responses, guest releases and host retirements are recorded in
+  the host's own order with the exact identity, values and refusal reasons
+  (`HostEvent`, bounded at 64 events and flagged rather than truncated silently), and the region-trace
+  model lowers that observed shape onto the target alphabet
+  (`observedReadAndRelease`, `lower`, `observed_read_and_release_lowers_to_a_related_trace`,
+  `observed_abnormal_exit_lowers_to_a_related_trace`, `lowered_projection_starts_with_the_request`).
+  That lowering is a lowering of the observation, not a correspondence theorem.
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
   Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
@@ -55,8 +67,13 @@
   releases and retirements together; it previously bounded each kind separately and accepted that
   pair), missing protected commit, host cleanup as guest release and a denial traded for a success
   are refused.
-  Swapped requests and substituted responses at the host/WIT interface still need the instrumentation
-  this package does not add, so the task stays open.
+  Swapped responses are now refused twice over at both levels: the projected trace is unpaired
+  (`swapped_response_is_unpaired`) and the relation refuses the target trace
+  (`related_rejects_swapped_response`). At the host/WIT interface the ordered trace binds every
+  response to the request it answers and every protected commit to the identity that request named,
+  and the execution lane refuses a release that observes an identity the read did not retain. A
+  general correspondence between emitted-component steps and the model's witnessed steps is still not
+  proved, so the task stays open.
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
   Partial: the retained receipt binds the source and model revisions (pinned Lean version and executable
   hash, source and inventory hashes) and labels the verdict (model theorems 33, implementation theorems

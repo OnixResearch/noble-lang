@@ -327,6 +327,74 @@ function checkReport(report, label, expected) {
     `${label}: expected one successful cleanup and no live owner/pin`);
 }
 
+// The ordered host trace is an observation, never a protocol outcome inferred from the report.
+// Pairing, protected commits and host retirement are checked from the trace alone.
+function checkTrace(report, label) {
+  const { events } = report;
+  requireThat(Array.isArray(events), `${label}: report carries no ordered event trace`);
+  requireThat(report.events_truncated === false, `${label}: event trace hit its bound`);
+  requireThat(events.length > 0, `${label}: empty event trace`);
+  let pending = null;
+  let pendingIdentity = null;
+  let readIdentity = null;
+  for (const event of events) {
+    requireThat(event && typeof event.kind === 'string', `${label}: malformed event ${stable(event)}`);
+    if (event.kind === 'request') {
+      requireThat(pending === null, `${label}: request while another request is unanswered`);
+      requireThat(['region.read', 'region.release', 'host.retire'].includes(event.operation),
+        `${label}: unknown operation ${event.operation}`);
+      requireThat(Number.isSafeInteger(event.identity) && event.identity >= 0,
+        `${label}: request carries no exact resource identity`);
+      pending = event.operation;
+      pendingIdentity = event.identity;
+      if (event.operation === 'region.read') readIdentity = event.identity;
+    } else if (event.kind === 'commit') {
+      requireThat(pending === 'region.read', `${label}: protected commit without an in-flight read`);
+      requireThat(event.identity === pendingIdentity,
+        `${label}: protected commit ${event.identity} is not the identity the read requested (${pendingIdentity})`);
+    } else if (event.kind === 'response') {
+      requireThat(pending !== null, `${label}: response without a request`);
+      requireThat(['value', 'refused'].includes(event.result), `${label}: unknown response result`);
+      if (event.result === 'value') {
+        requireThat(event.reason === null, `${label}: a value response carries a refusal reason`);
+      } else {
+        requireThat(typeof event.reason === 'string', `${label}: a refused response carries no reason`);
+      }
+      pending = null;
+      pendingIdentity = null;
+    } else {
+      throw Error(`${label}: unknown event kind ${event.kind}`);
+    }
+  }
+  requireThat(pending === null, `${label}: the trace ends with an unanswered request`);
+  // A protected commit exists only beside a successful read response.
+  for (let index = 0; index < events.length; index += 1) {
+    if (events[index].kind !== 'commit') continue;
+    const response = events.slice(index).find(event => event.kind === 'response');
+    requireThat(response && response.result === 'value',
+      `${label}: protected commit without a successful read response`);
+  }
+  // Host retirement is its own operation and is recorded exactly when the host retired the owner.
+  const retirements = events.filter(event => event.kind === 'request' && event.operation === 'host.retire');
+  requireThat(retirements.length === (report.cleanup.state === 'retired' ? 1 : 0),
+    `${label}: host retirement events disagree with the cleanup observation`);
+  // A guest release observes the identity the host retained: a read and a release can never be
+  // reported under different identities for the same owner.
+  const releaseRequests = events.filter(event => event.kind === 'request'
+    && (event.operation === 'region.release' || event.operation === 'host.retire'));
+  if (readIdentity !== null) {
+    requireThat(releaseRequests.every(event => event.identity === readIdentity),
+      `${label}: a release observed an identity the read did not retain`);
+  }
+  return {
+    kinds: events.map(event => (event.kind === 'request' ? event.operation : event.kind)),
+    identities: events.filter(event => Number.isSafeInteger(event.identity))
+      .map(event => String(event.identity)),
+    protected_commits: events.filter(event => event.kind === 'commit').length,
+    refusals: events.filter(event => event.kind === 'response' && event.result === 'refused').length,
+  };
+}
+
 function invokeCase({ out, cli, cliEnv, label, componentPath, componentSha256, bufferHex,
   offset, length, expected, kind }) {
   const result = run(`read-region-${label}`, cli, [
@@ -335,10 +403,11 @@ function invokeCase({ out, cli, cliEnv, label, componentPath, componentSha256, b
   requireThat(result.status === 0, `${label}: production read-region CLI failed: ${result.stderr}`);
   const report = parseJson(result.stdout, `read-region ${label}`);
   checkReport(report, label, expected);
+  const trace = checkTrace(report, label);
   const row = {
     id: label, kind, component_sha256: componentSha256,
     input: { host_buffer_hex: bufferHex, offset: String(offset), length: String(length) },
-    expected, observed: report, command_id: result.record.id,
+    expected, trace, observed: report, command_id: result.record.id,
   };
   cases.push(row);
   return row;

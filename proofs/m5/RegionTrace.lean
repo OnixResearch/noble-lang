@@ -601,4 +601,135 @@ theorem fixture_quota_prefix_keeps_the_affordable_commit :
         [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .protectedCopy 8]) = true := by
   decide
 
+
+/-! ## Ordered pairing, identity retention and the observed host trace (WIT-TRACE-03/05)
+
+`crates/noble-cli/src/component/bounded_region.rs` now records an ordered trace of what the host
+actually observed: a request with its exact operation, exact table identity and arguments, the
+protected read commit it authorised, the response, the guest release and, on an abnormal exit, its
+own retirement. The lowering below maps that observed shape onto the target alphabet without
+inventing a step; it is a lowering of the observation, not a correspondence theorem about the
+emitted component. -/
+
+/-- One observed host event, exactly as the adapter records it. -/
+inductive ObservedEvent where
+  | request (op : Operation) (identity : Nat) (offset : Nat) (length : Nat)
+  | protectedReadCommit (identity : Nat) (start : Nat) (length : Nat)
+  | response (op : Operation) (value : Option Nat) (reason : Option String)
+  | hostRetirement (identity : Nat)
+  deriving DecidableEq, Repr
+
+/-- Lower the observed trace onto the target alphabet, preserving its order. A protected read
+commit becomes the copy and the commit of the exact identity that was authorised; a host
+retirement becomes a `hostRetire` commit and never a guest release. -/
+def lower : List ObservedEvent → List AbiStep
+  | [] => []
+  | .request op identity offset length :: rest =>
+      .importCrossing op offset length :: .hostDecision op true identity :: lower rest
+  | .protectedReadCommit identity start length :: rest =>
+      .protectedCopy length :: .cleanup (.regionRead start length) identity :: lower rest
+  | .response op value reason :: rest => .returned op value reason :: lower rest
+  | .hostRetirement identity :: rest => .cleanup .hostRetire identity :: lower rest
+
+/-- The observed trace of an in-bounds read and a consuming guest release, in the order the host
+really records it (`region.read`, commit, response, `region.release`, response). -/
+def observedReadAndRelease : List ObservedEvent :=
+  [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1, .response .regionRead (some 1) none,
+   .request .guestRelease 2 0 0, .response .guestRelease none none]
+
+/-- Fixture: the observed read-and-release trace lowers to a trace the relation accepts. -/
+theorem observed_read_and_release_lowers_to_a_related_trace :
+    related
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+       .req .guestRelease 0 0, .resp .guestRelease none none]
+      (lower observedReadAndRelease) = true := by
+  decide
+
+/-- Fixture: an abnormal exit after the read records the host's own retirement, and the relation
+accepts it as a retirement rather than as a guest release. -/
+theorem observed_abnormal_exit_lowers_to_a_related_trace :
+    related
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+       .commit .hostRetire 2]
+      (lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1,
+              .response .regionRead (some 1) none, .hostRetirement 2]) = true := by
+  decide
+
+/-- The lowering keeps the read request at the head of the projection: a request is never moved
+behind its own response. -/
+theorem lowered_projection_starts_with_the_request :
+    (lower observedReadAndRelease).filterMap projectStep =
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+       .req .guestRelease 0 0, .resp .guestRelease none none] := by
+  decide
+
+/-! Every response must follow a request of its own operation, with only that request's own
+protected commits in between. A response that precedes any request, answers a different
+operation, or arrives after another request, is not paired. -/
+mutual
+/-- A projected trace is paired when every response follows a request of its own operation. -/
+def responsesPaired : List SourceEvent → Prop
+  | [] => True
+  | .resp _ _ _ :: _ => False
+  | .req op _ _ :: rest => responseFollows op rest
+  | .commit _ _ :: rest => responsesPaired rest
+
+/-- The response a request expects, after any number of that request's protected commits. -/
+def responseFollows (op : Operation) : List SourceEvent → Prop
+  | [] => False
+  | .commit _ _ :: rest => responseFollows op rest
+  | .resp other _ _ :: more => op = other ∧ responsesPaired more
+  | .req _ _ _ :: _ => False
+end
+/-- The projected trace the observed fixtures lower to is paired: every response follows a request
+of its own operation. -/
+theorem observed_traces_are_paired :
+    responsesPaired
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+       .req .guestRelease 0 0, .resp .guestRelease none none] := by
+  simp [responsesPaired, responseFollows]
+
+/-! General corollary the pilot was missing: every read commit a related trace projects is
+explained by an import crossing that asked for that exact region. -/
+theorem related_implies_read_commits_explained (source : List SourceEvent) (target : List AbiStep) :
+    related source target = true → readCommitsExplained target = true := by
+  intro relatedTrace
+  have formed : wellFormed target = true := by
+    simp only [related, Bool.and_eq_true] at relatedTrace
+    exact relatedTrace.2
+  simp only [wellFormed, Bool.and_eq_true] at formed
+  exact formed.1.2
+
+/-- A swapped response is unpaired: the response answers an operation its request never asked for. -/
+theorem swapped_response_is_unpaired :
+    ¬ responsesPaired [.req .regionRead 0 1, .resp .guestRelease none none] := by
+  simp only [responsesPaired, responseFollows]
+  decide
+
+/-- And the relation refuses a target trace whose response answers the wrong operation. -/
+theorem related_rejects_swapped_response :
+    related [.req .regionRead 0 1, .resp .guestRelease none none]
+      [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 2, .protectedCopy 1,
+       .cleanup (.regionRead 0 1) 2, .returned .guestRelease none none] = false := by
+  decide
+
+/-- A substituted resource identity is refused: a commit under an identity the host never decided
+on is not related. -/
+theorem related_rejects_substituted_resource_identity :
+    related
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none]
+      (lower [.request .regionRead 2 0 1, .protectedReadCommit 3 0 1,
+              .response .regionRead (some 1) none]) = false := by
+  decide
+
+/-- A host retirement disguised as a guest release is refused: the observed retirement lowers to a
+`hostRetire` commit, so claiming the guest released the same region does not relate. -/
+theorem related_rejects_observed_retirement_as_guest_release :
+    related
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+       .commit .guestRelease 2]
+      (lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1,
+              .response .regionRead (some 1) none, .hostRetirement 2]) = false := by
+  decide
+
 end RegionTrace

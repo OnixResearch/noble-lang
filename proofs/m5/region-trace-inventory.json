@@ -361,6 +361,87 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: the ordered trace the host actually records for an in-bounds read and a consuming release lowers onto the target alphabet and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: an abnormal exit after the read lowers to its own host-retirement commit and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.lowered_projection_starts_with_the_request",
+      "role": "WIT-TRACE-03: the lowering keeps the request ahead of its own commit and response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_traces_are_paired",
+      "role": "WIT-TRACE-03: every response in the observed trace follows a request of its own operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_implies_read_commits_explained",
+      "role": "WIT-TRACE-03: the corollary the pilot was missing — a related trace explains every read commit by its import crossing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.swapped_response_is_unpaired",
+      "role": "WIT-TRACE-03 control: a response answering an operation its request never asked for is unpaired",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_response",
+      "role": "WIT-TRACE-03 control: a response answering the wrong operation is refused, not paired",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_resource_identity",
+      "role": "WIT-TRACE-03 control: a commit under an identity the host never authorised is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_observed_retirement_as_guest_release",
+      "role": "WIT-TRACE-02 control: an observed host retirement cannot be claimed as a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

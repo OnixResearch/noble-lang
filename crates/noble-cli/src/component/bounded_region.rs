@@ -91,6 +91,98 @@ impl CleanupObservation {
     }
 }
 
+/// One ordered host event. The trace preserves what RegionProtocol's relation must not erase:
+/// request/response pairing by exact resource identity, protected commits, guest releases and host
+/// retirements as distinct kinds. It is an observation, never a synthesized protocol outcome.
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum HostEvent {
+    /// A guest-initiated request, with the exact operation, the exact resource identity and
+    /// the arguments as they arrived.
+    Request {
+        operation: &'static str,
+        identity: u64,
+        offset: Option<Offset>,
+        length: Option<Offset>,
+    },
+    /// The host's answer to the request it follows: a value length or a refusal reason.
+    Response {
+        result: ResponseKind,
+        bytes: Option<usize>,
+        reason: Option<String>,
+    },
+    /// A protected read commit: it exists only when the host actually accessed the region, and it
+    /// carries the exact identity the host authorised.
+    Commit { identity: u64 },
+}
+
+/// A signed guest argument exactly as it arrived, without narrowing it to usize: a rejected
+/// negative offset is still an observed request.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct Offset(i64);
+
+impl Offset {
+    const fn encode(self) -> Json {
+        Json::Number(self.0 as u64)
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum ResponseKind {
+    Value,
+    Refused,
+}
+
+impl ResponseKind {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Value => "value",
+            Self::Refused => "refused",
+        }
+    }
+}
+
+impl HostEvent {
+    fn encode(&self) -> Json {
+        match self {
+            Self::Request {
+                operation,
+                identity,
+                offset,
+                length,
+            } => encoding::object([
+                ("kind", encoding::string("request")),
+                ("operation", encoding::string(operation)),
+                ("identity", Json::Number(*identity)),
+                ("offset", offset.map_or(Json::Null, Offset::encode)),
+                ("length", length.map_or(Json::Null, Offset::encode)),
+            ]),
+            Self::Response {
+                result,
+                bytes,
+                reason,
+            } => encoding::object([
+                ("kind", encoding::string("response")),
+                ("result", encoding::string(result.label())),
+                (
+                    "bytes",
+                    bytes.map_or(Json::Null, |count| Json::Number(count as u64)),
+                ),
+                (
+                    "reason",
+                    reason.as_deref().map_or(Json::Null, encoding::string),
+                ),
+            ]),
+            Self::Commit { identity } => encoding::object([
+                ("kind", encoding::string("commit")),
+                ("identity", Json::Number(*identity)),
+            ]),
+        }
+    }
+}
+
+/// Bounded: a trace never silently drops an event, and a trace that hit its bound says so.
+const MAX_EVENTS: usize = 64;
+
 /// What one bounded-region invocation returned, as the adapter observed it.
 struct Invocation {
     label: String,
@@ -110,6 +202,8 @@ struct Host {
     protected_operations: u64,
     region_reads: u64,
     releases: u64,
+    events: Vec<HostEvent>,
+    events_truncated: bool,
 }
 
 impl Host {
@@ -151,7 +245,17 @@ impl Host {
             protected_operations: 0,
             region_reads: 0,
             releases: 0,
+            events: Vec::new(),
+            events_truncated: false,
         })
+    }
+
+    fn record(&mut self, event: HostEvent) {
+        if self.events.len() >= MAX_EVENTS {
+            self.events_truncated = true;
+            return;
+        }
+        self.events.push(event);
     }
 
     const fn required(&self) -> ownership::Requirement {
@@ -165,6 +269,35 @@ impl Host {
     // Claims are untrusted even when Wasmtime has already checked the resource
     // representation. Every read still checks the independently retained table.
     fn read(
+        &mut self,
+        rep: u32,
+        claim: ownership::Handle,
+        offset: i64,
+        length: i64,
+    ) -> Result<Vec<u8>, &'static str> {
+        self.record(HostEvent::Request {
+            operation: "region.read",
+            identity: claim.table.0,
+            offset: Some(Offset(offset)),
+            length: Some(Offset(length)),
+        });
+        let answered = self.read_region(rep, claim, offset, length);
+        self.record(match &answered {
+            Ok(bytes) => HostEvent::Response {
+                result: ResponseKind::Value,
+                bytes: Some(bytes.len()),
+                reason: None,
+            },
+            Err(reason) => HostEvent::Response {
+                result: ResponseKind::Refused,
+                bytes: None,
+                reason: Some((*reason).to_owned()),
+            },
+        });
+        answered
+    }
+
+    fn read_region(
         &mut self,
         rep: u32,
         claim: ownership::Handle,
@@ -220,6 +353,9 @@ impl Host {
         match output {
             Some(bytes) => {
                 self.protected_operations += 1;
+                self.record(HostEvent::Commit {
+                    identity: claim.table.0,
+                });
                 Ok(bytes)
             }
             None => Err("invalid-handle"),
@@ -251,7 +387,26 @@ impl Host {
         if self.owner.is_none() {
             return CleanupObservation::AlreadyRetired;
         }
-        match self.release(1) {
+        self.record(HostEvent::Request {
+            operation: "host.retire",
+            identity: self.context.0,
+            offset: None,
+            length: None,
+        });
+        let retired = self.release(1);
+        self.record(match &retired {
+            Ok(()) => HostEvent::Response {
+                result: ResponseKind::Value,
+                bytes: None,
+                reason: None,
+            },
+            Err(error) => HostEvent::Response {
+                result: ResponseKind::Refused,
+                bytes: None,
+                reason: Some(format!("{error:#}")),
+            },
+        });
+        match retired {
             Ok(()) => CleanupObservation::Retired,
             Err(error) => CleanupObservation::Failed(format!("{error:#}")),
         }
@@ -297,6 +452,11 @@ impl Host {
             ),
             ("region_reads", Json::Number(self.region_reads)),
             ("native_memory_access", Json::Bool(false)),
+            (
+                "events",
+                Json::Array(self.events.iter().map(HostEvent::encode).collect()),
+            ),
+            ("events_truncated", Json::Bool(self.events_truncated)),
             ("released_owners", Json::Number(self.releases)),
             ("live_owners", Json::Number(observation.live as u64)),
             ("native_pins", Json::Number(observation.native_pins as u64)),
@@ -317,10 +477,31 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 ResourceType::host::<Region>(),
                                 |mut store, rep| {
                                     crate::safety_observe::event("guest-request");
-                                    if store.data().owner.is_some() {
-                                        store.data_mut().release(rep)?;
-                                    }
-                                    Ok(())
+                                    let identity = store.data().context.0;
+                                    store.data_mut().record(HostEvent::Request {
+                                        operation: "region.release",
+                                        identity,
+                                        offset: None,
+                                        length: None,
+                                    });
+                                    let released = if store.data().owner.is_some() {
+                                        store.data_mut().release(rep)
+                                    } else {
+                                        Ok(())
+                                    };
+                                    store.data_mut().record(match &released {
+                                        Ok(()) => HostEvent::Response {
+                                            result: ResponseKind::Value,
+                                            bytes: None,
+                                            reason: None,
+                                        },
+                                        Err(error) => HostEvent::Response {
+                                            result: ResponseKind::Refused,
+                                            bytes: None,
+                                            reason: Some(format!("{error:#}")),
+                                        },
+                                    });
+                                    released
                                 },
                             )?;
                         }
@@ -371,7 +552,27 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 if !region.owned() {
                                     bail!("release requires an owner");
                                 }
-                                store.data_mut().release(region.rep())
+                                let identity = store.data().context.0;
+                                store.data_mut().record(HostEvent::Request {
+                                    operation: "region.release",
+                                    identity,
+                                    offset: None,
+                                    length: None,
+                                });
+                                let released = store.data_mut().release(region.rep());
+                                store.data_mut().record(match &released {
+                                    Ok(()) => HostEvent::Response {
+                                        result: ResponseKind::Value,
+                                        bytes: None,
+                                        reason: None,
+                                    },
+                                    Err(error) => HostEvent::Response {
+                                        result: ResponseKind::Refused,
+                                        bytes: None,
+                                        reason: Some(format!("{error:#}")),
+                                    },
+                                });
+                                released
                             })?;
                         }
                         ComponentItem::Type(_) => {}
@@ -385,10 +586,31 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                     ResourceType::host::<Region>(),
                     |mut store, rep| {
                         crate::safety_observe::event("guest-request");
-                        if store.data().owner.is_some() {
-                            store.data_mut().release(rep)?;
-                        }
-                        Ok(())
+                        let identity = store.data().context.0;
+                        store.data_mut().record(HostEvent::Request {
+                            operation: "region.release",
+                            identity,
+                            offset: None,
+                            length: None,
+                        });
+                        let released = if store.data().owner.is_some() {
+                            store.data_mut().release(rep)
+                        } else {
+                            Ok(())
+                        };
+                        store.data_mut().record(match &released {
+                            Ok(()) => HostEvent::Response {
+                                result: ResponseKind::Value,
+                                bytes: None,
+                                reason: None,
+                            },
+                            Err(error) => HostEvent::Response {
+                                result: ResponseKind::Refused,
+                                bytes: None,
+                                reason: Some(format!("{error:#}")),
+                            },
+                        });
+                        released
                     },
                 )?;
             }
@@ -669,5 +891,109 @@ mod tests {
         host.release(1).unwrap();
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
+    }
+}
+
+#[cfg(test)]
+mod ordered_trace_tests {
+    use super::{Host, HostEvent, ResponseKind, MAX_EVENTS};
+
+    fn host(bytes: &[u8]) -> Host {
+        Host::new(bytes.to_vec()).expect("host registration")
+    }
+
+    fn kinds(host: &Host) -> Vec<&'static str> {
+        host.events
+            .iter()
+            .map(|event| match event {
+                HostEvent::Request { operation, .. } => operation,
+                HostEvent::Response { .. } => "response",
+                HostEvent::Commit { .. } => "commit",
+            })
+            .collect()
+    }
+
+    /// Every read request, its protected commit and every release request carry the exact table
+    /// identity the host retained, so a handle class can never stand in for it.
+    fn identities(host: &Host) -> Vec<u64> {
+        host.events
+            .iter()
+            .filter_map(|event| match event {
+                HostEvent::Request { identity, .. } | HostEvent::Commit { identity } => {
+                    Some(*identity)
+                }
+                HostEvent::Response { .. } => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn an_admitted_read_records_request_response_and_its_protected_commit_in_order() {
+        let mut host = host(b"abc");
+        let claim = host.owner.as_ref().expect("owner").handle();
+        let identity = claim.table.0;
+        assert_eq!(host.read(1, claim, 0, 1).expect("read"), b"a");
+        assert_eq!(kinds(&host), ["region.read", "commit", "response"]);
+        assert_eq!(
+            host.events.first(),
+            Some(&HostEvent::Request {
+                operation: "region.read",
+                identity,
+                offset: Some(super::Offset(0)),
+                length: Some(super::Offset(1)),
+            })
+        );
+        assert_eq!(
+            host.events.get(2),
+            Some(&HostEvent::Response {
+                result: ResponseKind::Value,
+                bytes: Some(1),
+                reason: None,
+            })
+        );
+        assert_eq!(identities(&host), [identity, identity]);
+    }
+
+    #[test]
+    fn a_refused_read_records_its_reason_and_no_commit() {
+        let mut host = host(b"abc");
+        let claim = host.owner.as_ref().expect("owner").handle();
+        assert_eq!(host.read(1, claim, 0, 9), Err("bounds-reject"));
+        assert_eq!(kinds(&host), ["region.read", "response"]);
+        match host.events.get(1) {
+            Some(HostEvent::Response {
+                result,
+                bytes,
+                reason,
+            }) => {
+                assert_eq!(*result, ResponseKind::Refused);
+                assert_eq!(*bytes, None);
+                assert_eq!(reason.as_deref(), Some("bounds-reject"));
+            }
+            other => panic!("expected a refused response: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn host_retirement_is_its_own_request_and_never_a_guest_release() {
+        let mut host = host(b"abc");
+        assert_eq!(
+            host.abnormal_exit_cleanup(),
+            super::CleanupObservation::Retired
+        );
+        assert_eq!(kinds(&host), ["host.retire", "response"]);
+        assert_eq!(identities(&host), [host.context.0]);
+        assert_eq!(host.releases, 1);
+    }
+
+    #[test]
+    fn a_trace_that_hits_its_bound_says_so_instead_of_dropping_silently() {
+        let mut host = host(b"abc");
+        let claim = host.owner.as_ref().expect("owner").handle();
+        for _ in 0..(MAX_EVENTS / 3 + 1) {
+            assert_eq!(host.read(1, claim, 0, 1).expect("read"), b"a");
+        }
+        assert!(host.events_truncated);
+        assert_eq!(host.events.len(), MAX_EVENTS);
     }
 }

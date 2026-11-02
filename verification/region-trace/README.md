@@ -53,8 +53,12 @@ well-formedness itself is a condition of the relation:
 | `retained_projection_is_permitted_prefix` | WIT-TRACE-03 corollary: a retained projection is a permitted ordered prefix of the *source* trace |
 | `source_commits_are_decided`, `source_release_is_at_most_once` | WIT-TRACE-03 corollaries: exact identity and at-most-once release are inherited by the source alphabet |
 | `fixture_{ordinary_error,host_bounds_refusal,trap_after_protected_copy,cleanup_failure_after_protected_copy,quota_prefix_stops_before_the_copy,quota_prefix_keeps_the_affordable_commit}` | WIT-TRACE-05 fixtures at model level: the design's observable executions relate as designed, and the quota boundary is measured rather than assumed |
+| `observed_read_and_release_lowers_to_a_related_trace`, `observed_abnormal_exit_lowers_to_a_related_trace`, `lowered_projection_starts_with_the_request` | WIT-TRACE-05: the ordered trace the host actually records (a read, its protected commit, the response, a consuming release; or an abnormal exit's own retirement) lowers onto the target alphabet and relates, in the host's order |
+| `observed_traces_are_paired`, `swapped_response_is_unpaired` | WIT-TRACE-03: every response follows a request of its own operation, tolerating only that request's own protected commits, and a response answering another operation is unpaired |
+| `related_rejects_swapped_response`, `related_rejects_substituted_resource_identity`, `related_rejects_observed_retirement_as_guest_release` | the relation refuses a target trace whose response answers the wrong operation, whose commit carries an identity the host never authorised, or whose host retirement is presented as a guest release |
+| `related_implies_read_commits_explained` | the corollary the pilot was missing: every read commit a related trace projects is explained by the import crossing that asked for that exact region |
 
-`verification/region-trace/receipt.json` is the retained receipt of one clean-source run at `2f7b449a`: **40** model
+`verification/region-trace/receipt.json` is the retained receipt of one run: **49** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
@@ -63,14 +67,14 @@ The receipt carries a `bindings` block: the model revision (pinned Lean version 
 plus the source and inventory hashes) is bound, and `component`, `helper` and `engine` are recorded as
 **`null` with the reason stated** — no component, lowering helper or engine instance is a subject of
 these theorems, so binding one would imply a correspondence this package does not establish. A
-`claims` block labels the verdict: 40 model theorems, 0 implementation theorems, correspondence none,
+`claims` block labels the verdict: 49 model theorems, 0 implementation theorems, correspondence none,
 liveness none, cancellation unsupported and unmodelled.
 
 ## Non-claims
 
 The target alphabet is a **handwritten machine**, not an emitted step sequence: there is no
 Canonical-ABI, Wasmtime, Rust host or lowering correspondence here, no liveness claim and no
-cancellation model. Response-to-request pairing stays a premise (a target response step carries its
-own operation, but which request it answers is not proved), and so does the host's own supply of the
-identity the relation then checks against its decisions. WIT-TRACE-02 through WIT-TRACE-06 remain
+cancellation model. Pairing is stated over projected source traces, not proved for the emitted
+component's own steps, and the ordered trace's lowering maps an *observation* onto the target
+alphabet rather than corresponding to the emitted steps. WIT-TRACE-02 through WIT-TRACE-06 remain
 open.

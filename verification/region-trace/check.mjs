@@ -158,7 +158,10 @@ const receipt = {
   implementation_theorem: false,
   scope: ['.cairn/changes/region-trace-relation WIT-TRACE-01 model: source alphabet, target ABI alphabet and the relation.',
     'The target alphabet is a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,',
-    'no Rust host or lowering claim, and no liveness claim. Pairing and the host supplying the exact identity stay premises.'],
+    'no Rust host or lowering claim, and no liveness claim. The host records its own ordered trace with',
+    'the exact retained identity, and pairing is stated over projected source traces rather than proved',
+    'for the emitted component own steps; the observed-trace lowering maps an observation, not a',
+    'correspondence.'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`REGION-TRACE: ${names.length} model theorems; strict axioms accepted\n`);
