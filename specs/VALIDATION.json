@@ -2120,7 +2120,7 @@
     },
     {
       "file": ".cairn/changes/numerical-error-certificate/tasks.md",
-      "sha256": "7fcb96d9e26ea3afb78990c76dd29cfc9ba761cd60942abf45671cf96894c551"
+      "sha256": "6356592fe9e75e0a8c8c2a0fccaec122b9327d895ead74fe6a8fe0e2cb4577b2"
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/design.md",
@@ -2212,7 +2212,7 @@
     },
     {
       "file": ".cairn/changes/region-trace-relation/tasks.md",
-      "sha256": "609989af5a27cf93f4c8d8a213cb137e9fc587bb30ded3187eca101af4dc11e3"
+      "sha256": "433304edb12355e5d7e8d0f1c96399413770f45058d133fc0e54f61982564e5f"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -2468,7 +2468,7 @@
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "560cb9fd5ee4a97499bf77ab4ab82a2001777731c2d84608a3cf1baa943a119c"
+      "sha256": "5f11e1637528209b608a7c935d25e6efcf8c03e6b2ba0167b0e4230c6a80cde6"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
@@ -2504,7 +2504,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "7f3a2c61f812c5d706a1bc9162cc6507266012764a7942a04b6c144444eecb74"
+      "sha256": "9b098bc7c6c42eefc3a79ecd2c18a37f4b10d7ba79ed8b8454eacf5590685608"
     },
     {
       "file": "proofs/m1/README.md",
@@ -2680,7 +2680,7 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "c4ca94527dd3bca7a434e894485a51d77a25a270b34f264f0e23b368c96ed364"
+      "sha256": "dab0651debc1ca41830923d75098b4c360e8f9c5b6212de26b7593b4169a463a"
     },
     {
       "file": "specs/VERIFICATION.md",
@@ -2767,8 +2767,36 @@
       "sha256": "d75b5da7c965d7c88b4b0265588990c803fbfdbd3dc2fa671ef5533adff206fe"
     },
     {
+      "file": "verification/core-preview/README.md",
+      "sha256": "23f10044bb8abdd2d5ee374b6a98263ef7909c5de0752471fe49b4a793b8ae45"
+    },
+    {
+      "file": "verification/crush-eval/README.md",
+      "sha256": "6d7178f2e790a535ce91cf81ed3ebb507f30dde555278539e043631a9b870bdc"
+    },
+    {
       "file": "verification/extraction.md",
       "sha256": "4bfe7f8d80d7cc77afb0e348ac2236e8d0ec87a6596999704ec853f45166eef7"
+    },
+    {
+      "file": "verification/focus-elaboration/decision.md",
+      "sha256": "e12b28c3466ce1373f27ee1279990b61e20f5e90970083cfc268f96d89792c5c"
+    },
+    {
+      "file": "verification/focus-elaboration/differential-plan.md",
+      "sha256": "c7677e559e6a255c8e99e8e9a304b5775008637174edbd0cad1b2cfc46f13620"
+    },
+    {
+      "file": "verification/focus-elaboration/forms/proposed-sugar.md",
+      "sha256": "0b6d8a66ec7042a9d1db62ed505a9456251692c233a29069922c5e6e2167667e"
+    },
+    {
+      "file": "verification/focus-elaboration/obligations.md",
+      "sha256": "bf4c075c67a7c883bf3965767587a43f57900763a82f3ea63f47ff174cebc44f"
+    },
+    {
+      "file": "verification/focus-elaboration/README.md",
+      "sha256": "d73cd51bf579243c5184e9289f7a2929ee7d8f347e4c1c87a1e536244abe58ad"
     },
     {
       "file": "verification/foundation/receipts/aa13a54e9/WITHDRAWN.md",
@@ -2776,7 +2804,7 @@
     },
     {
       "file": "verification/foundation/receipts/README.md",
-      "sha256": "d6019673b6e2cd60be0c2dbef1706e9990bac1886a7a5f11793f6ce6cb790eba"
+      "sha256": "f38b731ed4b0fa16e0b99c88680db96006e20e1b914e7d6fa7076c7027a6f0d9"
     },
     {
       "file": "verification/grad-ordered/README.md",
@@ -2887,8 +2915,16 @@
       "sha256": "5892a19d00619e44e6d4480c7057c4a8c12b4cbddcd737bf87d7c20c3011966f"
     },
     {
+      "file": "verification/ngraph/batch-continuation-criteria.md",
+      "sha256": "3f2d45787f59b14bcf8cb5a6632c444e2bf42ad14907f766be22e2e7ea3840bd"
+    },
+    {
+      "file": "verification/ngraph/batch-decision.md",
+      "sha256": "dff96d0db0734cc0111ccf1e130a77a5b505edea1c0064dba0bba387d800ceb6"
+    },
+    {
       "file": "verification/ngraph/README.md",
-      "sha256": "daec19890a3615edb84d172fd9b13a5fa31ae3f5139c38dae8eb943979d9a3f2"
+      "sha256": "bfa2d8be0ce41a5a90bb59b4987a0c50c95b4f824efb70db443622598bddc0e1"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
@@ -2916,7 +2952,7 @@
     },
     {
       "file": "verification/numerical-certificate/README.md",
-      "sha256": "8e7a1eaf1802d14436c2432c786b343ebb7c0cef485623a2577d3372b6032180"
+      "sha256": "b5af5f4e8d1280766d2fa95935b35058deb809e1c60968ebf75069fc99988926"
     },
     {
       "file": "verification/octet-lint-clearance/README.md",
@@ -2931,8 +2967,16 @@
       "sha256": "ea700340dbe0ad4214beed498bb61d27b06e603ee5d31675bbb604de69873224"
     },
     {
+      "file": "verification/program-inspection/README.md",
+      "sha256": "c781be7613dcd7e9caf5313e665675f5677a6638b645f8ec7de5a74e671c9b51"
+    },
+    {
+      "file": "verification/refinement-links/README.md",
+      "sha256": "94be1aa93165bb499ecd5ecb7201dd3c33f3b9b1addc362e6353ab9026388a1d"
+    },
+    {
       "file": "verification/region-trace/README.md",
-      "sha256": "5ef2a3a6440d33501a9fc2820a76275f775c38eff3f2839cf4a0ae55cd12dbdf"
+      "sha256": "5f38ed727b7a1a987724633439b9249983fecf9edab14422300e4c5e065e59bd"
     },
     {
       "file": "verification/service-wire-refinement/README.md",
