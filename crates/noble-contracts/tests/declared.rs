@@ -816,6 +816,79 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
     Ok(())
 }
 
+/// A module input longer than its byte budget is a budget refusal, exactly like
+/// the Core lexer's identical check: exhausted over the whole input, never
+/// invalid, and the same bytes prepare under a budget that admits them.
+#[test]
+fn a_module_input_over_its_byte_budget_is_exhausted_not_invalid() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit, Session, Stage};
+    let source = b"module m@1 [ export addone def addone [ 1 + ] ]";
+    let whole = noble_contracts::Span {
+        start: 0,
+        end: u32::try_from(source.len()).map_err(|error| error.to_string())?,
+    };
+    let tight = noble_contracts::Limits {
+        bytes: 16,
+        ..LIMITS
+    };
+    let retained = RetainedSourceLimit::new(65_536).ok_or("invalid retained source limit")?;
+    let session = ModuleSession::new(&[], retained).map_err(|error| format!("{error:?}"))?;
+    let refused = session
+        .prepare(source, &[], tight)
+        .err()
+        .ok_or("an over-budget module input was prepared")?;
+    assert_eq!(refused.stage(), Stage::Parse, "{refused:?}");
+    assert_eq!(
+        refused.diagnostic().kind,
+        noble_contracts::DiagnosticKind::Exhausted,
+        "{refused:?}"
+    );
+    assert_eq!(refused.diagnostic().span, whole, "{refused:?}");
+    let core = Session::new()
+        .prepare(source, &[], tight)
+        .err()
+        .ok_or("an over-budget Core input was prepared")?;
+    assert_eq!(core.diagnostic().kind, refused.diagnostic().kind);
+    assert_eq!(core.diagnostic().message, refused.diagnostic().message);
+    session
+        .prepare(source, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    Ok(())
+}
+
+/// The retained-source cap is a host budget too: a module that would carry the
+/// session past it is refused as exhausted, and the same module commits into a
+/// session whose cap has exactly enough room.
+#[test]
+fn a_module_over_the_retained_source_cap_is_exhausted_not_invalid() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit, Stage};
+    let first: &[u8] = b"module a@1 [ export one def one [ 1 + ] ]";
+    let second: &[u8] = b"module b@1 [ export two def two [ 2 + ] ]";
+    let room = u32::try_from(first.len() + second.len()).map_err(|error| error.to_string())?;
+    for cap in [room - 1, room] {
+        let retained = RetainedSourceLimit::new(cap).ok_or("invalid retained source limit")?;
+        let session = ModuleSession::new(&[], retained).map_err(|error| format!("{error:?}"))?;
+        let (session, _) = commit_module(session, first)?;
+        let outcome = session.prepare(second, &[], LIMITS);
+        if cap < room {
+            let refused = outcome
+                .err()
+                .ok_or("a module over the retained cap was prepared")?;
+            assert_eq!(refused.stage(), Stage::Check, "{refused:?}");
+            assert_eq!(
+                refused.diagnostic().kind,
+                noble_contracts::DiagnosticKind::Exhausted,
+                "{refused:?}"
+            );
+        } else {
+            let prepared = outcome.map_err(|error| format!("{error:?}"))?;
+            let (_, linked) = session.commit(prepared);
+            linked.map_err(|error| format!("{error:?}"))?;
+        }
+    }
+    Ok(())
+}
+
 #[test]
 fn failed_registration_and_alias_rebind_never_reissue_a_module_owner() -> Result<(), String> {
     use noble_contracts::source::{ModuleSession, RetainedSourceLimit};

@@ -12,6 +12,16 @@
 //! advertises the resource-free `test.emit` host contract as effect-free.
 //! The kernel accepts that locally consistent false premise; the Wasm compiler
 //! must refuse it against its own fixed host contract before emitting a program.
+//!
+//! The same target also replays the fuzz oracles (`fuzz/oracles.rs`, shared
+//! with the libFuzzer targets in `crates/noble-wasm/fuzz`) over committed
+//! regressions and tracked fixtures, because both lanes feed hostile input to
+//! the frontend and the backend.
+
+#[path = "fuzz/oracles.rs"]
+mod oracles;
+#[path = "fuzz/replay.rs"]
+mod replay;
 
 use noble_kernel::contracts::{Behavior, Definition, TEST_EMIT};
 use noble_kernel::execution::Submission;

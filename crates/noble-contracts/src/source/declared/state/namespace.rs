@@ -148,20 +148,20 @@ impl super::ModuleSession {
             index += 1;
         }
         if has_overflow {
-            return Err(super::super::error(
+            return Err(super::super::exhausted(
                 crate::source::Stage::Check,
                 "retained module byte count overflow",
             ));
         }
         let retained = attempt!(module_bytes
             .checked_add(self.source.history.len())
-            .ok_or_else(|| super::super::error(
+            .ok_or_else(|| super::super::exhausted(
                 crate::source::Stage::Check,
                 "retained namespace byte count overflow"
             )));
         let total = attempt!(retained
             .checked_add(extra)
-            .ok_or_else(|| super::super::error(
+            .ok_or_else(|| super::super::exhausted(
                 crate::source::Stage::Check,
                 "retained namespace byte count overflow",
             )));
@@ -172,7 +172,7 @@ impl super::ModuleSession {
             )
         }));
         if total > limit_bytes {
-            return Err(super::super::error(
+            return Err(super::super::exhausted(
                 crate::source::Stage::Check,
                 "retained module and definition byte limit exceeded",
             ));

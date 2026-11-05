@@ -1,0 +1,54 @@
+[package]
+name = "noble-wasm-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# cargo-fuzz layout: `cargo fuzz run <target>` from this directory works, and so
+# does the pinned-toolchain smoke run in `verification/fuzz/smoke.mjs`.
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "=0.4.10"
+noble-contracts = { path = "../../noble-contracts" }
+noble-wasm = { path = ".." }
+wasmparser = "=0.243.0"
+wat = { version = "=1.243.0", default-features = false }
+
+# Excluded from the Noble workspace on purpose: libFuzzer is not in the reviewed
+# offline vendor, and fuzzing is a separate, opt-in dynamic-evidence run.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+overflow-checks = true
+
+[[bin]]
+name = "prepare"
+path = "fuzz_targets/prepare.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "source"
+path = "fuzz_targets/source.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "prepare_to_wasm"
+path = "fuzz_targets/prepare_to_wasm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "wit_world"
+path = "fuzz_targets/wit_world.rs"
+test = false
+doc = false
+bench = false

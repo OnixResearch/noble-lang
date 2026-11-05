@@ -153,6 +153,11 @@ struct Alias {
 fn error(stage: crate::source::Stage, reason: &str) -> crate::source::Error {
     crate::source::Error::at(stage, crate::invalid(SPAN, reason))
 }
+/// A budget refusal: the host-selected bound decided it, not the input, so a
+/// larger budget can admit the same bytes.
+fn exhausted(stage: crate::source::Stage, reason: &str) -> crate::source::Error {
+    crate::source::Error::at(stage, crate::source::exhausted(SPAN, reason))
+}
 fn diagnostic(stage: crate::source::Stage, problem: crate::Diagnostic) -> crate::source::Error {
     crate::source::Error::at(stage, problem)
 }

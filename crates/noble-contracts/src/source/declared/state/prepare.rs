@@ -30,9 +30,19 @@ impl super::ModuleSession {
             )
         }));
         if input_bytes.len() > limit_bytes {
-            return Err(crate::source::declared::error(
+            // A budget refusal, so it is exhausted rather than invalid, exactly
+            // like the Core lexer's identical check: a larger budget can admit it.
+            let end = attempt!(
+                crate::index(input_bytes.len(), crate::source::declared::SPAN).map_err(|problem| {
+                    crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
+                })
+            );
+            return Err(crate::source::declared::diagnostic(
                 crate::source::Stage::Parse,
-                "source byte limit exceeded",
+                crate::source::exhausted(
+                    crate::Span { start: 0, end },
+                    "source byte limit exceeded",
+                ),
             ));
         }
         // Only modules retain the candidate source. If the aggregate would overflow,
