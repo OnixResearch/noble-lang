@@ -195,6 +195,14 @@ semantic subject check; the extracted checker itself is trifecta):
   `NobleM3.Refine.eligibility_iff`), `inclusion_extracted` (the extracted
   `is_subset_of` decides the reference `subsetOf` over the pair matrix;
   the iff is `NobleM2.subsetOf_iff`, aliased `NobleM3.Refine.inclusion_iff`).
+  Since 2026-11-05 the three eligibility rows run over `resourceEnv`, the
+  bootstrap environment declaring the witness's resource kind. The kernel
+  regenerated for Declared-Modules-v1 admits a `resource` type only when its
+  kind is declared, so over the bare bootstrap environment the extracted
+  path refused the witness as `InvalidType` before reaching the guard, the
+  rows evaluated false and the `proofs/m3` root stopped building; the same
+  regeneration also made `Ty` mutual with the new `NominalShape`, whose
+  `BEq` instances `NobleM3/Refine.lean` now derives (#88).
 - **The generalized composition**: `outcomes_via_refinement_v1` (trifecta —
   one agreement equation yields the full five-way outcome correspondence)
   and `accepted_via_refinement_v1` (trifecta — the v0 statement over the

@@ -368,22 +368,32 @@ def extractedConstraint
 /-- The resource witness for the constrained words' value slot. -/
 def resourceWit : Inst := ⟨[.stack .nil, .value (.resource fixtureResource)]⟩
 
+/-- The bootstrap environment declaring the witness's resource kind. The kernel
+admits a `resource` type only when its kind is declared, so without this the
+extracted path refuses the witness as an invalid type before it ever reaches
+the eligibility guard these rows exist to compare. -/
+def resourceEnv : Env := { bootstrapEnv with resourceKinds := [fixtureResource] }
+
+/-- Word position `n`'s extracted instantiation context over `resourceEnv`. -/
+def resourceCtx (n : Nat) : acceptance.parts.Ctx :=
+  ⟨embedRequest (wordRequestOf n), embedEnv resourceEnv⟩
+
 /-- `dup`: the extracted path rejects a resource witness with the eligibility
 constraint exactly where the reference guard declines `DataOk`. -/
 theorem eligibility_dup :
-    dataOkAt bootstrapEnv 0 resourceWit = false
+    dataOkAt resourceEnv 0 resourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme dupScheme)
           (embedInst resourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (WordRefinement.wordCtx 0))
+          (resourceCtx 0))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 
 /-- `drop`: as `dup`. -/
 theorem eligibility_drop :
-    dataOkAt bootstrapEnv 1 resourceWit = false
+    dataOkAt resourceEnv 1 resourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme dropScheme)
           (embedInst resourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (WordRefinement.wordCtx 1))
+          (resourceCtx 1))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 
@@ -393,10 +403,10 @@ def quoteResourceWit : Inst :=
   ⟨[.stack .nil, .value (.resource fixtureResource), .stack .nil]⟩
 
 theorem eligibility_quote :
-    dataOkAt bootstrapEnv 8 quoteResourceWit = false
+    dataOkAt resourceEnv 8 quoteResourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme quoteScheme)
           (embedInst quoteResourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (WordRefinement.wordCtx 8))
+          (resourceCtx 8))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 

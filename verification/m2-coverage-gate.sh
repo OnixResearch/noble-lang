@@ -12,8 +12,9 @@
 #   COVERAGE-JOIN     every generated function is classified exactly once
 #   (UNCLASSIFIED /   and every non-open record entry is generated (no
 #    STALE-ENTRY)    stale entries); statuses use the reviewed vocabulary
-#   STATUS /          extracted|proved|modeled|excepted|open, placed in the
-#    STATUS-PLACEMENT right generated file, with citations exactly on proved
+#   STATUS /          extracted|proved|fixture-checked|modeled|excepted|open,
+#    STATUS-PLACEMENT placed in the right generated file, with citations
+#                     exactly on proved and fixture-checked
 #   DRIFT             entries and record fields restating the generated facts
 #   EXCEPTED-         every excepted entry is a declared #[charon::opaque]
 #    DISCLOSURE       disclosure in the Rust crate (count and names match)
@@ -21,8 +22,17 @@
 #                     generated module (elaborated environment, not just
 #                     text), and the only residual definitions in those
 #                     modules are elaborator matchers
-#   CITATIONS         every proved citation exists, is a theorem, and its
+#   CITATIONS         every citation exists, is a theorem, and its
 #                     statement mentions the classified constant
+#   STRENGTH          every citation's statement shape (fixture |
+#                     conditional | universal) and axiom class (strict |
+#                     native) is computed from the elaborated statement and
+#                     its transitive axioms (verification/coverage-strength.lean)
+#                     and matches the record; a function is proved only with a
+#                     strict universal citation, otherwise fixture-checked
+#                     (verification/coverage-strength.mjs). Strength classes
+#                     describe statement shape only; they do not show that the
+#                     reference model is correct.
 #
 # Usage (from any directory; the pinned Lean must be first on PATH; `bun` is
 # required on PATH — the repository's checks already run on it):
@@ -73,7 +83,9 @@ pass "BUILD (lake build NobleM2 NobleM2.Refinement NobleKernel)"
 # enforce parity/classification/status/placement/drift.
 JOIN="$REPO/verification/m2-coverage-join.mjs"
 report="$(bun "$JOIN" check "$PROOF_ROOT" "$RECORD" 2>&1)" || true
-if ! printf '%s' "$report" | grep -q '"problems"'; then
+# A here-string, not a pipe: under pipefail, grep -q closing the pipe early
+# fails a large report's printf with SIGPIPE and misreports a join failure.
+if ! grep -q '"problems"' <<< "$report"; then
   printf '%s\n' "$report" >&2
   fail COVERAGE-DERIVE "the join tool could not derive the function list from the generated files"
 fi
@@ -142,20 +154,21 @@ pass "OPEN-SUBJECT (0 open entries; every generated function is classified)"
 # everything else -> checker A. Checker A also binds every classified
 # constant to its generated module and tolerates only elaborator matchers
 # as residual definitions.
+STRENGTH_LEAN="$REPO/verification/coverage-strength.lean"
+STRENGTH_LOG="$PROOF_ROOT/.m2-cov-strength.log"
 GATE_A="$PROOF_ROOT/.m2-cov-env-a.lean"
 GATE_B="$PROOF_ROOT/.m2-cov-env-b.lean"
 DATA_A="$PROOF_ROOT/.m2-cov-data-a.json"
 DATA_B="$PROOF_ROOT/.m2-cov-data-b.json"
-cleanup() { rm -f "$GATE_A" "$GATE_B" "$DATA_A" "$DATA_B" "$PROOF_ROOT/.m2-cov-parity.err"; }
+cleanup() { rm -f "$GATE_A" "$GATE_B" "$DATA_A" "$DATA_B" "$STRENGTH_LOG" "$PROOF_ROOT/.m2-cov-parity.err"; }
 trap cleanup EXIT
 bun "$JOIN" leanpayload "$PROOF_ROOT" "$RECORD" "$DATA_A" "$DATA_B" \
   || fail ENV-BINDING "could not build the checker payloads"
 
-cat > "$GATE_A" <<'LEAN_A'
-import Lean.Elab.Command
-import Lean.Util.FoldConsts
-import NobleKernel
-import NobleM2
+{
+printf '%s\n' 'import Lean.Elab.Command' 'import Lean.Util.FoldConsts' 'import NobleKernel' 'import NobleM2' ''
+cat "$STRENGTH_LEAN"
+cat <<'LEAN_A'
 
 open Lean
 
@@ -230,6 +243,8 @@ run_cmd do
         else if !(ci.type.getUsedConstants.contains n) then
           logError m!"m2-coverage: FAIL CITATION-BINDING: {c} does not mention {n} in its statement"
           errs := errs + 1
+        else
+          reportStrength "m2-coverage" n cn ci.type
   -- E2 residual definitions in the generated modules: matchers only
   let mut residual := 0
   for (n, ci) in env.constants.toList do
@@ -247,10 +262,11 @@ run_cmd do
   if errs == 0 then
     logInfo m!"m2-coverage: ENV-A-PASS {entries.size} classified constants bound to their modules; {residual} elaborator matchers tolerated"
 LEAN_A
-cat > "$GATE_B" <<'LEAN_B'
-import Lean.Elab.Command
-import Lean.Util.FoldConsts
-import NobleM2.Refinement
+} > "$GATE_A"
+{
+printf '%s\n' 'import Lean.Elab.Command' 'import Lean.Util.FoldConsts' 'import NobleM2.Refinement' ''
+cat "$STRENGTH_LEAN"
+cat <<'LEAN_B'
 
 open Lean
 
@@ -297,9 +313,12 @@ run_cmd do
         else if !(ci.type.getUsedConstants.contains n) then
           logError m!"m2-coverage: FAIL CITATION-BINDING: {c} does not mention {n} in its statement"
           errs := errs + 1
+        else
+          reportStrength "m2-coverage" n cn ci.type
   if errs == 0 then
     logInfo m!"m2-coverage: ENV-B-PASS {ncits} refinement citations verified (theorem exists, statement mentions the constant)"
 LEAN_B
+} > "$GATE_B"
 
 env_a_log="$(cd "$PROOF_ROOT" && lake env lean .m2-cov-env-a.lean 2>&1)"
 env_a_rc=$?
@@ -316,7 +335,27 @@ fi
 printf '%s\n%s\n' "$env_a_log" "$env_b_log" | grep -o 'm2-coverage: ENV-[AB]-PASS.*' | sed 's/^m2-coverage: /info: m2-coverage: /'
 pass "ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)"
 
-# C7 SUMMARY: full classification with per-status counts.
-echo "[m2-coverage] SUMMARY $counts"
+# C7 STRENGTH: the checkers classified every citation from its elaborated
+# statement and transitive axioms; the record must restate exactly that, and
+# a function is proved only with a strict universal citation.
+printf '%s\n%s\n' "$env_a_log" "$env_b_log" > "$STRENGTH_LOG"
+strength_report="$(bun "$JOIN" strength "$RECORD" "$STRENGTH_LOG" 2>&1)"
+strength_rc=$?
+if [ "$strength_rc" -ne 0 ]; then
+  printf '%s' "$strength_report" | bun -e '
+    const r = await new Response(Bun.stdin.stream()).json();
+    for (const p of r.problems) console.error(`[m2-coverage] FAIL ${p.code}: ${p.msg}`);
+  ' >&2 || printf '%s\n' "$strength_report" >&2
+  fail STRENGTH "computed citation strengths and the record disagree (see named problems above)"
+fi
+strength_counts="$(printf '%s' "$strength_report" | bun -e '
+  const r = await new Response(Bun.stdin.stream()).json();
+  console.log(Object.entries(r.counts).map(([k, v]) => `${k}=${v}`).join(" "));
+')"
+pass "STRENGTH ($strength_counts)"
+echo "[m2-coverage] NON-CLAIM strength classes describe statement shape only; they do not show that the reference model is correct"
+
+# C8 SUMMARY: full classification with per-status and per-strength counts.
+echo "[m2-coverage] SUMMARY $counts citations: $strength_counts"
 echo "[m2-coverage] PASS (all checks) — subject: $PROOF_ROOT; record: $RECORD"
 exit 0

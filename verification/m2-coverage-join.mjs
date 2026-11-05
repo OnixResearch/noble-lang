@@ -10,6 +10,9 @@
 //   bun m2-coverage-join.mjs emit   PROOF_ROOT        -> record skeleton (stdout)
 //   bun m2-coverage-join.mjs check  PROOF_ROOT RECORD -> join report (stdout);
 //     exit 0 = consistent, exit 1 = named violations
+//   bun m2-coverage-join.mjs strength RECORD CHECKER-LOG -> strength report
+//     (stdout): the checkers' computed citation strengths against the record
+//     (verification/coverage-strength.mjs); exit 0 = they agree
 //   bun m2-coverage-join.mjs leanpayload PROOF_ROOT RECORD OUT-A OUT-B
 //     -> writes the constant/citation payloads consumed by the gate's two
 //        Lean environment checkers (the root module and the Refinement
@@ -23,7 +26,9 @@
 
 const NAME_RE = /^(?:noncomputable\s+)?(def|impl_def)\s+([^\s(:{][^\s(:{]*)/;
 const KEYWORD_ONLY_RE = /^(?:noncomputable\s+)?(def|impl_def)\s*$/;
-const STATUSES = ['extracted', 'proved', 'modeled', 'excepted', 'open'];
+import { citationProblems, citedTheorems, parseStrengthLines, strengthReport } from './coverage-strength.mjs';
+
+const STATUSES = ['extracted', 'proved', 'fixture-checked', 'modeled', 'excepted', 'open'];
 
 // Strip leading `@[ ... ]` attribute groups (possibly multi-line) and
 // `set_option ... in` modifiers starting at line `k`; return the first
@@ -176,12 +181,7 @@ function joinCheck(derived, parity, record) {
     if (!STATUSES.includes(e.status)) {
       fail('STATUS', `${e.lean}: invalid status ${JSON.stringify(e.status)} (must be one of ${STATUSES.join('|')})`);
     }
-    if (e.status === 'proved' && (!Array.isArray(e.citations) || e.citations.length === 0)) {
-      fail('STATUS', `${e.lean}: status proved requires a non-empty citations array`);
-    }
-    if (e.status !== 'proved' && e.citations) {
-      fail('STATUS', `${e.lean}: citations present but status is ${e.status}`);
-    }
+    citationProblems(e, fail);
     if ((e.status === 'modeled' || e.status === 'excepted') && !e.rust) {
       fail('STATUS', `${e.lean}: status ${e.status} requires the Rust-side name`);
     }
@@ -206,7 +206,7 @@ function joinCheck(derived, parity, record) {
     const e = seen.get(d.lean);
     if (!e) continue;
     const inFuns = d.file === 'Funs.lean';
-    if ((e.status === 'extracted' || e.status === 'proved') && !inFuns) {
+    if ((e.status === 'extracted' || e.status === 'proved' || e.status === 'fixture-checked') && !inFuns) {
       fail('STATUS-PLACEMENT', `${d.lean}: status ${e.status} requires a def in Funs.lean, found in ${d.file}`);
     }
     if ((e.status === 'modeled' || e.status === 'excepted') && inFuns) {
@@ -283,7 +283,7 @@ if (import.meta.main) {
         lean: e.lean,
         module: byLean.get(e.lean).file === 'Funs.lean' ? 'NobleKernel.Funs' : 'NobleKernel.FunsExternal',
         status: e.status,
-        citations: e.citations ?? [],
+        citations: citedTheorems(e),
       }));
     const isRefinement = (c) => c.startsWith('NobleM2.Refinement.');
     const payloadA = payloadAll.map(e => ({ ...e, citations: e.citations.filter(c => !isRefinement(c)) }));
@@ -292,8 +292,14 @@ if (import.meta.main) {
       .map(e => ({ ...e, citations: e.citations.filter(isRefinement) }));
     await Bun.write(c, JSON.stringify(payloadA, null, 1) + '\n');
     await Bun.write(d ?? "/dev/null", JSON.stringify(payloadB, null, 1) + "\n");
+  } else if (mode === 'strength') {
+    // strength RECORD CHECKER-LOG: compare the checkers' STRENGTH lines with the record.
+    const record = JSON.parse(await Bun.file(a).text());
+    const report = strengthReport(record, parseStrengthLines(await Bun.file(b).text(), 'm2-coverage'));
+    await Bun.write(Bun.stdout, JSON.stringify(report, null, 1) + '\n');
+    process.exit(report.ok ? 0 : 1);
   } else {
-    console.error('usage: m2-coverage-join.mjs derive|emit|check|leanpayload PROOF_ROOT [RECORD] [OUT-A] [OUT-B]');
+    console.error('usage: m2-coverage-join.mjs strength RECORD CHECKER-LOG | derive|emit|check|leanpayload PROOF_ROOT [RECORD] [OUT-A] [OUT-B]');
     process.exit(2);
   }
 }

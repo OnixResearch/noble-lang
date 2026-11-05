@@ -17,7 +17,8 @@ open noble_kernel Aeneas Aeneas.Std
 
 deriving instance BEq for noble_kernel.shapes.EffectSlot
 deriving instance BEq for noble_kernel.types.ResourceKind
-deriving instance BEq for noble_kernel.types.Ty
+deriving instance BEq for noble_kernel.types.NominalTypeId
+deriving instance BEq for noble_kernel.types.NominalShape, noble_kernel.types.Ty
 deriving instance BEq for noble_kernel.shapes.Pattern
 deriving instance BEq for noble_kernel.words.VariableKind
 deriving instance BEq for noble_kernel.types.EffSet

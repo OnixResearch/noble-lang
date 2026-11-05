@@ -2129,23 +2129,75 @@
       "source": "crates/noble-kernel/src/acceptance.rs 46:0-58:1",
       "file": "Funs.lean",
       "line": 5194,
-      "status": "proved",
+      "status": "fixture-checked",
       "citations": [
-        "NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic",
-        "NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs",
-        "NobleM2.Refinement.refinement_limits_nodes_exact",
-        "NobleM2.Refinement.refinement_limits_nodes_over",
-        "NobleM2.Refinement.refinement_limits_depth_deep",
-        "NobleM2.Refinement.refinement_limits_depth_shallow",
-        "NobleM2.Refinement.refinement_limits_work_eight",
-        "NobleM2.Refinement.refinement_limits_work_four",
-        "NobleM2.Refinement.refinement_hidden_emit_rejects_against_empty_bound",
-        "NobleM2.Refinement.refinement_diagnostics_report_order",
-        "NobleM2.Refinement.refinement_diagnostics_truncation",
-        "NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication",
-        "NobleM2.Refinement.accepted_via_refinement"
+        {
+          "theorem": "NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_nodes_exact",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_nodes_over",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_depth_deep",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_depth_shallow",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_work_eight",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_work_four",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_hidden_emit_rejects_against_empty_bound",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_diagnostics_report_order",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_diagnostics_truncation",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.accepted_via_refinement",
+          "strength": "conditional",
+          "axioms": "strict"
+        }
       ],
-      "note": "The only extraction-subject function with subject-level theorems: the twelve kernel acceptance fixtures restated and proved to agree between the extracted checker and the reference model (Refinement.lean), plus accepted_via_refinement handing extracted acceptance to the reference soundness story."
+      "note": "Fixture-checked, not proved: twelve closed native_decide fixtures restate one kernel acceptance fixture each and agree between the extracted checker and the reference model, and accepted_via_refinement is conditional on the refinement equation it is cited for. No citation is a strict universal statement, so universal checker correctness is not established (#88)."
     },
     {
       "lean": "noble_kernel.contracts.bootstrap.scheme",

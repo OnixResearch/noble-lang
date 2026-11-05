@@ -1,8 +1,8 @@
 # M2 per-function coverage classification gate (task 3.3)
 
 **Status: complete.** Every function of the M2 kernel extraction subject is
-classified `extracted`, `proved`, `modeled`, `excepted`, or `open` in the
-reviewed record `verification/m2-coverage.json`; the gate
+classified `extracted`, `proved`, `fixture-checked`, `modeled`, `excepted`,
+or `open` in the reviewed record `verification/m2-coverage.json`; the gate
 `verification/m2-coverage-gate.sh` joins that record with the authoritative
 function list derived from the extraction output, enforces consistency in
 both directions, and refuses five mutation classes
@@ -10,6 +10,10 @@ both directions, and refuses five mutation classes
 baseline green, all five refusals demonstrated. Nothing under `proofs/`,
 the Rust crate, or the existing gates was modified; only the four new
 `verification/` files listed in §7 exist.
+
+Since 2026-11-05 (#88) every citation also carries its claim strength, and
+`noble_kernel.acceptance.check` is `fixture-checked`, not `proved`: see §8.
+The refusal matrix now has seven mutation classes and one positive control.
 
 ## 1. Binding source for the function list
 
@@ -50,11 +54,12 @@ identity, and stay with the extraction/proof gates; this record owns
 | C0 SETUP/TOOLCHAIN | `SETUP`, `TOOLCHAIN` | `bun` present (the repo's checks already run on it); pinned Lean 4.31.0 on PATH |
 | C1 BUILD | `BUILD` | `lake build NobleM2 NobleM2.Refinement NobleKernel` green (the env checkers elaborate against these oleans) |
 | C2 COVERAGE-DERIVE | `COVERAGE-DERIVE`, `PARSE-PARITY` | function list derived from the two generated files; parsed count == top-level `def`/`impl_def` keyword count |
-| C3 COVERAGE-JOIN | `UNCLASSIFIED`, `STALE-ENTRY`, `STATUS`, `STATUS-PLACEMENT`, `DRIFT`, `RECORD-FORM` | every generated function classified exactly once; every non-`open` entry generated; status vocabulary; `extracted`/`proved` live in `Funs.lean`, `modeled`/`excepted` in `FunsExternal.lean`; citations exactly on `proved`; record fields restate the generated facts (kind/rust/file/line/span/loop_body/trait_impl) |
+| C3 COVERAGE-JOIN | `UNCLASSIFIED`, `STALE-ENTRY`, `STATUS`, `STATUS-PLACEMENT`, `DRIFT`, `RECORD-FORM`, `CITATION-FORM`, `STRENGTH-STATUS` | every generated function classified exactly once; every non-`open` entry generated; status vocabulary; `extracted`/`proved`/`fixture-checked` live in `Funs.lean`, `modeled`/`excepted` in `FunsExternal.lean`; citations exactly on `proved` and `fixture-checked`, each `{theorem, strength, axioms}`; `proved` only with a strict universal citation, `fixture-checked` only without one; record fields restate the generated facts (kind/rust/file/line/span/loop_body/trait_impl) |
 | C4 EXCEPTED-DISCLOSURE | `EXCEPTED-DISCLOSURE` | the `excepted` set is exactly the crate's `#[charon::opaque]` declarations (count and short names, extracted from `crates/noble-kernel/src`) |
 | C5 OPEN-SUBJECT | `OPEN-ENTRY`, `OPEN-SUBJECT` | `open` entries may only name subject functions missing from the output, and must exist as Rust functions in the crate; a generated function marked `open` rejects |
 | C6 ENV-BINDING/CITATIONS | `CONSTANT-MISSING`, `CONSTANT-KIND`, `MODULE`, `ENV-UNCLASSIFIED`, `CITATION`, `CITATION-BINDING` | two scratch Lean checkers (proof-gate mechanics): every entry exists as a definition in its generated module; residual defs are matchers only; every citation exists, is a theorem, and its *statement mentions the classified constant* (semantic subject binding, as in the proof gate's GATE-B) |
-| C7 SUMMARY | — | per-status counts; 100% classification required |
+| C7 STRENGTH | `STRENGTH-DRIFT`, `STRENGTH-COUNT` | each checker classifies every citation it verifies from the elaborated statement and its transitive axioms (`verification/coverage-strength.lean`); the record must restate exactly those strengths, and every cited theorem must be classified exactly once |
+| C8 SUMMARY | — | per-status counts and per-strength citation counts; 100% classification required |
 
 The two scratch checkers exist because the root module `NobleM2` and
 `NobleM2.Refinement` cannot be imported together (both elaborate
@@ -80,6 +85,10 @@ imports it explicitly.
 Coverage: 471/471 = 100% of generated functions classified; the
 `Funs.lean` entries span 21 crate source files under
 `crates/noble-kernel/src` (plus 2 rustc/core macro/option paths).
+
+These counts and the outputs in §4 and §6 are the 2026-09-18 record. The
+current gate classifies 515 functions and, since #88, counts
+`acceptance.check` as `fixture-checked` (§8).
 
 ## 4. Commands and outputs
 
@@ -245,3 +254,53 @@ Dependencies: pinned Lean 4.31.0 (as every proof gate) and `bun`
 (already required by the repository's `noble-documents` check). Scratch
 files (`.m2-cov-*`) are written inside the proof root during a run and
 removed on exit.
+
+## 8. Claim strength (2026-11-05, #88)
+
+A `proved` label counted in totals must not rest on statements weaker than
+readers assume. Every citation is now `{theorem, strength, axioms}`, and the
+gate's two Lean checkers compute both fields from the compiled environment
+(`verification/coverage-strength.lean`, spliced after their imports), never
+from source text:
+
+| Strength | Statement shape |
+|---|---|
+| `conditional` | some hypothesis is an equation that mentions the classified constant: the theorem assumes the refinement it is cited for |
+| `fixture` | otherwise, no universally quantified non-proof input: a closed statement about one request and candidate |
+| `universal` | otherwise: it quantifies over inputs with no such hypothesis |
+
+`axioms` is `native` when a native-evaluation axiom (a per-declaration
+`native_decide` auxiliary, `Lean.ofReduceBool` or `Lean.trustCompiler`) is in
+the transitive axiom set, else `strict`. The join
+(`verification/coverage-strength.mjs`) then requires a strict universal
+citation for `proved`; anything else is `fixture-checked`, which the totals
+never count as proved. Every cited theorem must be classified exactly once
+(`STRENGTH-COUNT`), and a record that restates a strength the elaborated
+statement does not have refuses (`STRENGTH-DRIFT`).
+
+Current gate run (2026-11-05):
+
+```
+[m2-coverage] PASS COVERAGE-JOIN (total=515 classified=515 extracted=491 proved=0 fixture-checked=1 modeled=18 excepted=5 open=0)
+[m2-coverage] PASS STRENGTH (citations=13 fixture=12 conditional=1 universal=0 strict=1 native=12 strict_universal=0)
+[m2-coverage] NON-CLAIM strength classes describe statement shape only; they do not show that the reference model is correct
+```
+
+`noble_kernel.acceptance.check` is therefore `fixture-checked`: its twelve
+`refinement_*` citations are closed `native_decide` fixtures, and
+`accepted_via_refinement` is conditional on the refinement equation
+`project_result (acceptance.check …) = NobleM2.check env req cand`, which no
+theorem proves.
+
+Refusal matrix additions, all demonstrated on the current tree:
+
+| Cell | Mutation | Refused at |
+|---|---|---|
+| `native-fixtures-as-proved` | `acceptance.check` marked `proved` while every citation is a fixture or a conditional handoff | `STRENGTH-STATUS` |
+| `conditional-claimed-universal` | `accepted_via_refinement` recorded as `universal` and the function as `proved` | `STRENGTH-DRIFT` (the elaborated statement is conditional) |
+| `universal-probe` (positive control) | a synthetic `∀ e : EffId, clone e = ok e` theorem cited for the toy extracted `EffId` clone | accepted: classified universal/strict, `proved=1` |
+
+Strength classes describe statement shape only. They do not show that
+`NobleM2.check` is correct, and a `universal` theorem about the reference
+model would still need the extracted function in its statement (the existing
+`CITATION-BINDING` check) to count for that function.

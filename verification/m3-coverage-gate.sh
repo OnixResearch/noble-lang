@@ -13,8 +13,9 @@
 #   COVERAGE-JOIN     every generated function is classified exactly once
 #   (UNCLASSIFIED /   and every non-open record entry is generated; the
 #    STALE-ENTRY)    statuses use the reviewed vocabulary
-#   STATUS /          extracted|proved|modeled|excepted|open, placed in the
-#    STATUS-PLACEMENT right generated file, with citations exactly on proved
+#   STATUS /          extracted|proved|fixture-checked|modeled|excepted|open,
+#    STATUS-PLACEMENT placed in the right generated file, with citations
+#                     exactly on proved and fixture-checked
 #   DRIFT             entries and record fields restating the generated facts
 #   EXCEPTED-         every excepted entry is a declared #[charon::opaque]
 #    DISCLOSURE       disclosure in the Rust crate (count and names match)
@@ -22,8 +23,15 @@
 #                     generated module (elaborated environment, not just
 #                     text), and the only residual definitions in those
 #                     modules are elaborator matchers
-#   CITATIONS         every proved citation exists, is a theorem, and its
+#   CITATIONS         every citation exists, is a theorem, and its
 #                     statement mentions the classified constant
+#   STRENGTH          every citation's statement shape and axiom class is
+#                     computed from the elaborated statement and its
+#                     transitive axioms (verification/coverage-strength.lean)
+#                     and matches the record; a function is proved only with a
+#                     strict universal citation, otherwise fixture-checked.
+#                     Strength classes describe statement shape only; they do
+#                     not show that the reference model is correct.
 #
 # Tiers (as in m3-proof-gate.sh): when the proofs/m3 root builds, the full
 # battery runs against it (strict). Until then the gate says so and runs
@@ -92,7 +100,9 @@ pass "BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)"
 
 # COVERAGE-DERIVE + COVERAGE-JOIN against the m3 root.
 report="$(bun "$JOIN" check "$PROOF_ROOT" "$RECORD" 2>&1)" || true
-if ! printf '%s' "$report" | grep -q '"problems"'; then
+# A here-string, not a pipe: under pipefail, grep -q closing the pipe early
+# fails a large report's printf with SIGPIPE and misreports a join failure.
+if ! grep -q '"problems"' <<< "$report"; then
   printf '%s\n' "$report" >&2
   fail COVERAGE-DERIVE "the join tool could not derive the function list from the generated files"
 fi
@@ -156,21 +166,20 @@ pass "OPEN-SUBJECT (0 open entries; every generated function is classified)"
 # together (deriving-generated instance clashes), so the payloads are
 # split: non-refinement citations -> A (imports NobleKernel + NobleM2),
 # NobleM2.Refinement.* -> B, NobleM3.Refine.* -> C.
+STRENGTH_LEAN="$REPO/verification/coverage-strength.lean"
+STRENGTH_LOG="$PROOF_ROOT/.m3-cov-strength.log"
 GATE_A="$PROOF_ROOT/.m3-cov-env-a.lean"
 GATE_B="$PROOF_ROOT/.m3-cov-env-b.lean"
 GATE_C="$PROOF_ROOT/.m3-cov-env-c.lean"
 DATA_A="$PROOF_ROOT/.m3-cov-data-a.json"
 DATA_B="$PROOF_ROOT/.m3-cov-data-b.json"
 DATA_C="$PROOF_ROOT/.m3-cov-data-c.json"
-cleanup() { rm -f "$GATE_A" "$GATE_B" "$GATE_C" "$DATA_A" "$DATA_B" "$DATA_C"; }
+cleanup() { rm -f "$GATE_A" "$GATE_B" "$GATE_C" "$DATA_A" "$DATA_B" "$DATA_C" "$STRENGTH_LOG"; }
 trap cleanup EXIT
 bun "$JOIN" leanpayload "$PROOF_ROOT" "$RECORD" "$DATA_A" "$DATA_B" "$DATA_C" \
   || fail ENV-BINDING "could not build the checker payloads"
 
-CHECKER_HEAD='import Lean.Elab.Command
-import Lean.Util.FoldConsts
-
-open Lean
+CHECKER_HEAD='open Lean
 
 def nameOf (s : String) : Name :=
   s.splitOn "." |>.foldl (fun n p => n.mkStr p) .anonymous
@@ -240,6 +249,8 @@ CHECKER_A_BODY='  let mut classified : NameSet := {}
         else if !(ci.type.getUsedConstants.contains n) then
           logError m!"m3-coverage: FAIL CITATION-BINDING: {c} does not mention {n} in its statement"
           errs := errs + 1
+        else
+          reportStrength "m3-coverage" n cn ci.type
   let mut residual := 0
   for (n, ci) in env.constants.toList do
     if !(n.toString.startsWith "noble_kernel.") then continue
@@ -274,11 +285,15 @@ CHECKER_CIT_BODY='  let mut errs := 0
         else if !(ci.type.getUsedConstants.contains n) then
           logError m!"m3-coverage: FAIL CITATION-BINDING: {c} does not mention {n} in its statement"
           errs := errs + 1
+        else
+          reportStrength "m3-coverage" n cn ci.type
   if errs == 0 then
     logInfo m!"m3-coverage: TAG-PASS {ncits} citations verified (theorem exists, statement mentions the constant)"'
 
 make_checker() { # DATAFILE IMPORTS BODY TAG
   echo "import $2"
+  printf '%s\n' 'import Lean.Elab.Command' 'import Lean.Util.FoldConsts' ''
+  cat "$STRENGTH_LEAN"
   sed -e "s|DATAFILE|$1|" <<< "$CHECKER_HEAD"
   echo
   if [ "$4" = "ENV-A" ]; then
@@ -309,6 +324,26 @@ fi
 printf '%s\n' "$env_log" | grep -o 'm3-coverage: ENV-.-PASS.*' | sed 's/^m3-coverage: /info: m3-coverage: /'
 pass "ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)"
 
-echo "[m3-coverage] SUMMARY $counts"
+# STRENGTH: the checkers classified every citation from its elaborated
+# statement and transitive axioms; the record must restate exactly that, and
+# a function is proved only with a strict universal citation.
+printf '%s\n' "$env_log" > "$STRENGTH_LOG"
+strength_report="$(bun "$JOIN" strength "$RECORD" "$STRENGTH_LOG" 2>&1)"
+strength_rc=$?
+if [ "$strength_rc" -ne 0 ]; then
+  printf '%s' "$strength_report" | bun -e '
+    const r = await new Response(Bun.stdin.stream()).json();
+    for (const p of r.problems) console.error(`[m3-coverage] FAIL ${p.code}: ${p.msg}`);
+  ' >&2 || printf '%s\n' "$strength_report" >&2
+  fail STRENGTH "computed citation strengths and the record disagree (see named problems above)"
+fi
+strength_counts="$(printf '%s' "$strength_report" | bun -e '
+  const r = await new Response(Bun.stdin.stream()).json();
+  console.log(Object.entries(r.counts).map(([k, v]) => `${k}=${v}`).join(" "));
+')"
+pass "STRENGTH ($strength_counts)"
+echo "[m3-coverage] NON-CLAIM strength classes describe statement shape only; they do not show that the reference model is correct"
+
+echo "[m3-coverage] SUMMARY $counts citations: $strength_counts"
 echo "[m3-coverage] PASS (all checks) — subject: $PROOF_ROOT; record: $RECORD"
 exit 0

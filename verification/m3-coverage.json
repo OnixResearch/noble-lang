@@ -2128,39 +2128,155 @@
       "source": "crates/noble-kernel/src/acceptance/mod.rs 46:0-58:1",
       "file": "Funs.lean",
       "line": 5203,
-      "status": "proved",
+      "status": "fixture-checked",
       "citations": [
-        "NobleM2.Refinement.accepted_via_refinement",
-        "NobleM2.Refinement.refinement_diagnostics_report_order",
-        "NobleM2.Refinement.refinement_diagnostics_truncation",
-        "NobleM2.Refinement.refinement_hidden_emit_rejects_against_empty_bound",
-        "NobleM2.Refinement.refinement_limits_depth_deep",
-        "NobleM2.Refinement.refinement_limits_depth_shallow",
-        "NobleM2.Refinement.refinement_limits_nodes_exact",
-        "NobleM2.Refinement.refinement_limits_nodes_over",
-        "NobleM2.Refinement.refinement_limits_work_eight",
-        "NobleM2.Refinement.refinement_limits_work_four",
-        "NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs",
-        "NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication",
-        "NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic",
-        "NobleM3.Refine.accepted_via_refinement_v1",
-        "NobleM3.Refine.outcomes_via_refinement_v1",
-        "NobleM3.Refine.refinement_cyclic_witness_mutual",
-        "NobleM3.Refine.refinement_cyclic_witness_self",
-        "NobleM3.Refine.refinement_dependency_before_body",
-        "NobleM3.Refine.refinement_dependency_boundary",
-        "NobleM3.Refine.refinement_dependency_exhausted",
-        "NobleM3.Refine.refinement_duplication_negative",
-        "NobleM3.Refine.refinement_implicit_union_negative",
-        "NobleM3.Refine.refinement_kind_crossed_reference",
-        "NobleM3.Refine.refinement_recursive_dependency_mutual",
-        "NobleM3.Refine.refinement_recursive_dependency_self",
-        "NobleM3.Refine.refinement_recursive_schema",
-        "NobleM3.Refine.refinement_resolvable_chain",
-        "NobleM3.Refine.refinement_schema_boundary",
-        "NobleM3.Refine.refinement_schema_exhausted"
+        {
+          "theorem": "NobleM2.Refinement.accepted_via_refinement",
+          "strength": "conditional",
+          "axioms": "strict"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_diagnostics_report_order",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_diagnostics_truncation",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_hidden_emit_rejects_against_empty_bound",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_depth_deep",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_depth_shallow",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_nodes_exact",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_nodes_over",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_work_eight",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_limits_work_four",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.accepted_via_refinement_v1",
+          "strength": "conditional",
+          "axioms": "strict"
+        },
+        {
+          "theorem": "NobleM3.Refine.outcomes_via_refinement_v1",
+          "strength": "conditional",
+          "axioms": "strict"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_cyclic_witness_mutual",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_cyclic_witness_self",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_dependency_before_body",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_dependency_boundary",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_dependency_exhausted",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_duplication_negative",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_implicit_union_negative",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_kind_crossed_reference",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_recursive_dependency_mutual",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_recursive_dependency_self",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_recursive_schema",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_resolvable_chain",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_schema_boundary",
+          "strength": "fixture",
+          "axioms": "native"
+        },
+        {
+          "theorem": "NobleM3.Refine.refinement_schema_exhausted",
+          "strength": "fixture",
+          "axioms": "native"
+        }
       ],
-      "note": "Only the listed fixture correspondence and conditional refinement handoff theorems are claimed; this status does not establish universal checker correctness. The compiled proof and coverage gates recheck these exact citations against the regenerated checker."
+      "note": "Fixture-checked, not proved: the cited fixture correspondences are closed native_decide equalities between the extracted checker and the reference model on one request and candidate each, and the refinement handoffs (accepted_via_refinement, accepted_via_refinement_v1, outcomes_via_refinement_v1) are conditional on the refinement equation they are cited for. No citation is a strict universal statement, so universal checker correctness is not established (#88)."
     },
     {
       "lean": "noble_kernel.acceptance.parts.Site.Insts.CoreCloneClone.clone",

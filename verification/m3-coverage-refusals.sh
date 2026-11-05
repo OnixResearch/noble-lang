@@ -120,7 +120,7 @@ run_case() {
     record="$SCRATCH/$label.json"
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations[0] = "NobleM2.Refinement.refinement_ghost_theorem";
+      e.citations[0].theorem = "NobleM2.Refinement.refinement_ghost_theorem";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
   misbound-citation)
@@ -128,7 +128,7 @@ run_case() {
     record="$SCRATCH/$label.json"
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations = e.citations.map(() => "NobleM2.check_total");
+      e.citations[0].theorem = "NobleM2.check_total";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
   stale-entry)

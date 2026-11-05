@@ -2676,7 +2676,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "9588f6fd125b6efebd5ac687b86806a006792afd0894a56a5f1c6dcccb9c61dd"
+      "sha256": "352a8a963722f33537e9754f4e3f5eec389e05675fc6e4095c511f53fb5ae942"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2848,7 +2848,7 @@
     },
     {
       "file": "verification/m2-coverage.md",
-      "sha256": "bcef1b9d73d415c524b7e4bcc53176fc8c57c4a4b6269cdf1da84793d51aae87"
+      "sha256": "53c58cdeba49661e8522ae7ffade55474f7e8543e3eba2e94b1f99bd46fcbe5e"
     },
     {
       "file": "verification/m2-extraction-probe.md",
@@ -2888,7 +2888,7 @@
     },
     {
       "file": "verification/m3-proof-evidence.md",
-      "sha256": "c00125a4758b8fc45f0c28c4cc418c8a5158feb131ed642a31e5836a8696f7a7"
+      "sha256": "a26d66c7aac491fca3eba8f6606bcf1c681874687b4b0f0e246c00fd09528fec"
     },
     {
       "file": "verification/m3-scope-review.md",

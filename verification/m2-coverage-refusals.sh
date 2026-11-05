@@ -2,9 +2,10 @@
 # Task-3.3 refusal matrix for the M2 coverage gate.
 #
 # Runs the positive baseline (verification/m2-coverage-gate.sh on the
-# repository proof root and record), then five mutated scratch copies.
+# repository proof root and record), then seven mutated scratch copies.
 # Every mutation must be REFUSED: the gate exits non-zero with its named
-# check. Proof-root mutations share the lake package cache through hard
+# check. A final positive control shows the strength classifier is not
+# vacuous: a synthetic universal theorem makes its function proved. Proof-root mutations share the lake package cache through hard
 # links (the mutable .lake/build and .lake/config directories are real
 # copies); record mutations edit a scratch copy of
 # verification/m2-coverage.json. The repository tree is never touched.
@@ -26,6 +27,17 @@
 #   stale-entry       a record entry for a function that is not  -> STALE-
 #                     generated                                  ENTRY
 #   bad-status        a status outside the reviewed vocabulary   -> STATUS
+#   native-fixtures-  acceptance.check marked proved while every -> STRENGTH-
+#   as-proved         citation is a native fixture or            STATUS
+#                     conditional handoff (#88 control a)
+#   conditional-      the refinement handoff, whose hypothesis   -> STRENGTH-
+#   claimed-universal is the refinement equation, recorded as    DRIFT
+#                     universal and the function as proved
+#                     (#88 control b)
+# Positive control (#88 control c):
+#   universal-probe   a synthetic universal theorem about a toy  -> accepted,
+#                     extracted function (EffId clone) makes it   proved=1
+#                     proved
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -110,7 +122,7 @@ run_case() {
     record="$SCRATCH/$label.json"
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations[0] = "NobleM2.Refinement.refinement_ghost_theorem";
+      e.citations[0].theorem = "NobleM2.Refinement.refinement_ghost_theorem";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
   misbound-citation)
@@ -118,7 +130,7 @@ run_case() {
     record="$SCRATCH/$label.json"
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations = e.citations.map(() => "NobleM2.check_total");
+      e.citations[0].theorem = "NobleM2.check_total";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
   stale-entry)
@@ -137,6 +149,22 @@ run_case() {
     record="$SCRATCH/$label.json"
     mutate_record "$RECORD" "$record" '
       r.functions.find(f => f.lean === "noble_kernel.types.EffSet.empty").status = "reviewed";
+    ' || { echo "APPLY FAILED"; return 1; }
+    ;;
+  native-fixtures-as-proved)
+    fresh_copy "$copy"
+    record="$SCRATCH/$label.json"
+    mutate_record "$RECORD" "$record" '
+      r.functions.find(f => f.lean === "noble_kernel.acceptance.check").status = "proved";
+    ' || { echo "APPLY FAILED"; return 1; }
+    ;;
+  conditional-claimed-universal)
+    fresh_copy "$copy"
+    record="$SCRATCH/$label.json"
+    mutate_record "$RECORD" "$record" '
+      const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
+      e.citations.find(c => c.theorem === "NobleM2.Refinement.accepted_via_refinement").strength = "universal";
+      e.status = "proved";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
   *) echo "unknown case $label"; return 1 ;;
@@ -158,17 +186,58 @@ run_case() {
   return 0
 }
 
+# Positive control: a synthetic universal theorem about a toy extracted
+# function, appended (write-then-mv, so the hard-linked source is untouched)
+# to a scratch copy of NobleM2/Refinement.lean and cited for that function.
+# The classifier must call it universal with the strict axiom set, and the
+# gate must then accept the function as proved.
+run_universal_probe() {
+  local copy="$SCRATCH/universal-probe"
+  echo
+  echo "== positive control: universal-probe (expected: accepted, proved=1) =="
+  fresh_copy "$copy"
+  {
+    cat "$PROOF_ROOT/NobleM2/Refinement.lean"
+    printf '\n/-- #88 positive control: universal over every EffId, no refinement hypothesis. -/\n'
+    printf 'theorem NobleM2.Refinement.coverage_strength_universal_probe (e : noble_kernel.types.EffId) :\n'
+    printf '    noble_kernel.types.EffId.Insts.CoreCloneClone.clone e = Aeneas.Std.Result.ok e := rfl\n'
+  } > "$SCRATCH/refinement-probe.lean"
+  mv "$SCRATCH/refinement-probe.lean" "$copy/NobleM2/Refinement.lean"
+  local record="$SCRATCH/universal-probe.json"
+  mutate_record "$RECORD" "$record" '
+    const e = r.functions.find(f => f.lean === "noble_kernel.types.EffId.Insts.CoreCloneClone.clone");
+    e.status = "proved";
+    e.citations = [{ theorem: "NobleM2.Refinement.coverage_strength_universal_probe", strength: "universal", axioms: "strict" }];
+  ' || { echo "APPLY FAILED"; return 1; }
+  local out rc
+  out="$("$GATE" "$copy" "$record" 2>&1)"; rc=$?
+  printf '%s\n' "$out" | grep -E '^\[m2-coverage\] (PASS STRENGTH|SUMMARY|FAIL)' | sort -u
+  if [ "$rc" -ne 0 ]; then
+    echo "POSITIVE CONTROL FAILED: gate refused the universal probe (exit $rc)"
+    return 1
+  fi
+  if ! printf '%s\n' "$out" | grep -q 'proved=1 .*strict_universal=1'; then
+    echo "POSITIVE CONTROL FAILED: the probe was not counted as one strict universal proof"
+    return 1
+  fi
+  echo "accepted: the universal probe is classified universal/strict and its function is proved"
+  return 0
+}
+
 rc_all=0
 for case_label in \
   'unclassified-def UNCLASSIFIED' \
   'dangling-citation CITATION' \
   'misbound-citation CITATION-BINDING' \
   'stale-entry STALE-ENTRY' \
-  'bad-status STATUS'
+  'bad-status STATUS' \
+  'native-fixtures-as-proved STRENGTH-STATUS' \
+  'conditional-claimed-universal STRENGTH-DRIFT'
 do
   # shellcheck disable=SC2086
   run_case $case_label || rc_all=1
 done
+run_universal_probe || rc_all=1
 
 echo
 if [ "$rc_all" -eq 0 ]; then
