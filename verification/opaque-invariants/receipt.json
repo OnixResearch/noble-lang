@@ -1,0 +1,130 @@
+{
+  "schema": "noble-opaque-invariant-survey/v1",
+  "result": "measured",
+  "source_commit": "b4a6aee5976dd097410c1adc7d675043517bd762",
+  "source_tree": "0d5a3eaaa4c2e2da10fdda24efa91f551d9f67b3",
+  "clean_source": true,
+  "cli": {
+    "path": "/var/tmp/noble-ws/target/debug/noble",
+    "sha256": "64bfd465c0b4dddc0882a816358599aaf70ea6b888caee8e7398d4be3fff10fc"
+  },
+  "corpus": {
+    "files": 1105,
+    "files_with_contracts": 29,
+    "format_templates_excluded": 2
+  },
+  "distinct_contracts": 37,
+  "requires_classes": {
+    "true": 31,
+    "absent": 2,
+    "other": 2,
+    "i64-bound-on-input": 2
+  },
+  "nontrivial_requires": [
+    {
+      "name": "structural-roundtrip",
+      "requires": "(def identity)",
+      "class": "other",
+      "files": [
+        "verification/mc1/structural.noble-contract"
+      ]
+    },
+    {
+      "name": "hidden-output",
+      "requires": "(eq (def result) 0)",
+      "class": "other",
+      "files": [
+        "crates/noble-contracts/tests/contracts.rs"
+      ]
+    },
+    {
+      "name": "nonnegative-increment",
+      "requires": "(le 0 (in x))",
+      "class": "i64-bound-on-input",
+      "files": [
+        "verification/mc2/contracts/nonnegative.contract"
+      ]
+    },
+    {
+      "name": "conditional-monotonicity",
+      "requires": "(lt (in x) 9223372036854775807)",
+      "class": "i64-bound-on-input",
+      "files": [
+        "verification/mc2/contracts/guarded.contract"
+      ]
+    }
+  ],
+  "repeated_nontrivial_requires": [],
+  "contracts_mentioning_nominal_types": [],
+  "probes": [
+    {
+      "id": "mc1-opaque-input",
+      "command": "explain-proof",
+      "source_sha256": "5a1a06b89b9fc334904fe82b31a5d9e3fb8db1637d0659e8d8463e1201fca8c5",
+      "exit": 2,
+      "outcome": "error",
+      "stage": null,
+      "diagnostics": [
+        {
+          "code": "contract-invalid",
+          "message": "unknown type",
+          "details": {
+            "start": 42,
+            "end": 50
+          }
+        }
+      ],
+      "admitted": false,
+      "expect": "refused"
+    },
+    {
+      "id": "mc1-i64-control",
+      "command": "explain-proof",
+      "source_sha256": "bb2a5e5ec310fad3eb539c8d5b08840c0b57c7303b4b7bb3dad55f8b7028bdd7",
+      "exit": 0,
+      "outcome": "not-run",
+      "stage": null,
+      "diagnostics": [],
+      "admitted": true,
+      "expect": "accepted"
+    },
+    {
+      "id": "intrinsic-opaque-binder",
+      "command": "verify-module",
+      "source_sha256": "172bbd28cd544b59a0e22c4e1cbec8e88e0d3db154b8388d8a27df1ded88b020",
+      "exit": 2,
+      "outcome": "error",
+      "stage": "acceptance",
+      "diagnostics": [
+        {
+          "code": "intrinsic-proof-refused",
+          "message": "Acceptance: not a bound Type0 code",
+          "details": null
+        }
+      ],
+      "admitted": false,
+      "expect": "refused"
+    },
+    {
+      "id": "intrinsic-i64-control",
+      "command": "verify-module",
+      "source_sha256": "ad1e3f1b2b5cdf9fd7b9960c2b8fa8ee0c811ed452fbf7b8eef33bc53af0a7ac",
+      "exit": 4,
+      "outcome": "unsupported",
+      "stage": "independent-recheck",
+      "diagnostics": [
+        {
+          "code": "missing-tool",
+          "message": "cannot resolve NOBLE_BWRAP at /nonexistent/noble-required-tool: No such file or directory (os error 2)",
+          "details": null
+        }
+      ],
+      "admitted": true,
+      "expect": "accepted"
+    }
+  ],
+  "non_claims": [
+    "A survey of the tracked corpus, not of every possible contract.",
+    "No invariant mechanism is built or proved; the probes show what the current surfaces admit."
+  ]
+}
