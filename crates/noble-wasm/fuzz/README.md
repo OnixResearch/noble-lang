@@ -55,6 +55,17 @@ It needs network access once, to fetch `libfuzzer-sys` and the `wat`/`wasmparser
 versions pinned with checksums in `Cargo.lock`. `cargo fuzz run <target>` from
 this directory also works with any nightly toolchain.
 
+`verification/fuzz/receipt-3814dd83.json` is the retained receipt of one
+60-second-per-target run on clean source `3814dd83`: all four targets exited 0
+with no findings.
+
+| Target | Executions | Coverage edges | Corpus units | Seeds |
+|---|---|---|---|---|
+| `prepare` | 239,913 | 2,577 | 504 | 328 |
+| `source` | 28,289 | 5,908 | 880 | 1,337 |
+| `prepare_to_wasm` | 177,988 | 7,702 | 427 | 328 |
+| `wit_world` | 567,395 | 1,743 | 642 | 72 |
+
 ## Findings
 
 | Regression | Defect | Fix |

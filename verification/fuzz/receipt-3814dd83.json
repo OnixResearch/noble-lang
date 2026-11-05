@@ -1,0 +1,219 @@
+{
+  "schema": "noble-fuzz-smoke/v1",
+  "result": "passed",
+  "source_commit": "3814dd838e44d587b7f05ec5cb3f3d8eaee52b7d",
+  "source_tree": "7dfda68e40b4793349a0698563da6d33aa6cc6f6",
+  "clean_source": true,
+  "allow_dirty": false,
+  "toolchain": {
+    "rustc": {
+      "path": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+      "version": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)"
+    },
+    "cargo": {
+      "path": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo"
+    },
+    "cxx": {
+      "path": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/g++"
+    },
+    "node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "version": "v24.13.0"
+    }
+  },
+  "dependencies": {
+    "lock_sha256": "35e10caffd14c6d1bb8c8544541a636716c3189e22df7d6f38614ce92e7e14fe",
+    "libfuzzer_sys": {
+      "version": "0.4.10",
+      "checksum": "5037190e1f70cbeef565bd267599242926f724d3b8a9f510fd7e0b540cfa4404"
+    }
+  },
+  "rustflags": "-Cpasses=sancov-module -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-pc-table -Cllvm-args=-sanitizer-coverage-trace-compares --cfg fuzzing -Cdebug-assertions -Coverflow-checks",
+  "libfuzzer_options": [
+    "-timeout=5",
+    "-rss_limit_mb=1024",
+    "-dict=crates/noble-wasm/fuzz/noble.dict"
+  ],
+  "oracle_sha256": "57b6d0954405259ad794b31a1bb08fe9a4c827d43ca5fc0b844888e16b9dafc3",
+  "targets": [
+    {
+      "target": "prepare",
+      "binary_sha256": "e11c2b97253f3562c43496269f0647093dd8e5fefde7d65efe076643954c65af",
+      "exit": 0,
+      "signal": null,
+      "seconds": 60,
+      "seeds": {
+        "files": 86,
+        "inputs": 328,
+        "digest": "113aad6bd7bca833fe4590ec726e9c797a3ca13ce06f1a47ac4d46a20573f80f"
+      },
+      "stats": {
+        "number_of_executed_units": 239913,
+        "average_exec_per_sec": 3933,
+        "new_units_added": 1412,
+        "slowest_unit_time_sec": 0,
+        "peak_rss_mb": 30,
+        "coverage_edges": 2577,
+        "features": 9867,
+        "corpus_units": 504
+      },
+      "findings": [],
+      "command": "fuzz prepare"
+    },
+    {
+      "target": "source",
+      "binary_sha256": "c7a77f870b59c4842dcedf187aa0d3972e9d7244ad1326cb2bb51b2a9e35447d",
+      "exit": 0,
+      "signal": null,
+      "seconds": 60,
+      "seeds": {
+        "files": 86,
+        "inputs": 1337,
+        "digest": "943ffc4e3d5340c71e6c0196ff3aef3529d4af6e6bcdf2622823e558cf21c4b4"
+      },
+      "stats": {
+        "number_of_executed_units": 28289,
+        "average_exec_per_sec": 463,
+        "new_units_added": 869,
+        "slowest_unit_time_sec": 0,
+        "peak_rss_mb": 40,
+        "coverage_edges": 5908,
+        "features": 28040,
+        "corpus_units": 880
+      },
+      "findings": [],
+      "command": "fuzz source"
+    },
+    {
+      "target": "prepare_to_wasm",
+      "binary_sha256": "c7ca0bfd76f14a5f1749cc56bba7754518679200d3d2277b2422d14c2f7a6bfd",
+      "exit": 0,
+      "signal": null,
+      "seconds": 60,
+      "seeds": {
+        "files": 86,
+        "inputs": 328,
+        "digest": "113aad6bd7bca833fe4590ec726e9c797a3ca13ce06f1a47ac4d46a20573f80f"
+      },
+      "stats": {
+        "number_of_executed_units": 177988,
+        "average_exec_per_sec": 2917,
+        "new_units_added": 1095,
+        "slowest_unit_time_sec": 0,
+        "peak_rss_mb": 65,
+        "coverage_edges": 7702,
+        "features": 14347,
+        "corpus_units": 427
+      },
+      "findings": [],
+      "command": "fuzz prepare_to_wasm"
+    },
+    {
+      "target": "wit_world",
+      "binary_sha256": "aa00d6d6600826c44976132059cf72a3da5a81555eee588c0c7a19749f76c091",
+      "exit": 0,
+      "signal": null,
+      "seconds": 60,
+      "seeds": {
+        "files": 18,
+        "inputs": 72,
+        "digest": "3a7722f45504475d504f0984a3364e9f7499a377084d647cb0a4db9a4d0f299c"
+      },
+      "stats": {
+        "number_of_executed_units": 567395,
+        "average_exec_per_sec": 9301,
+        "new_units_added": 2776,
+        "slowest_unit_time_sec": 0,
+        "peak_rss_mb": 109,
+        "coverage_edges": 1743,
+        "features": 5341,
+        "corpus_units": 642
+      },
+      "findings": [],
+      "command": "fuzz wit_world"
+    }
+  ],
+  "commands": [
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 19
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 11
+    },
+    {
+      "label": "git status",
+      "exit": 0,
+      "milliseconds": 84
+    },
+    {
+      "label": "rustc --version",
+      "exit": 0,
+      "milliseconds": 35
+    },
+    {
+      "label": "fuzz build",
+      "exit": 0,
+      "milliseconds": 147824
+    },
+    {
+      "label": "git ls-files fixtures",
+      "exit": 0,
+      "milliseconds": 13
+    },
+    {
+      "label": "fuzz prepare",
+      "exit": 0,
+      "milliseconds": 61046
+    },
+    {
+      "label": "fuzz source",
+      "exit": 0,
+      "milliseconds": 61055
+    },
+    {
+      "label": "fuzz prepare_to_wasm",
+      "exit": 0,
+      "milliseconds": 61059
+    },
+    {
+      "label": "fuzz wit_world",
+      "exit": 0,
+      "milliseconds": 61068
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 17
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 18
+    },
+    {
+      "label": "git status",
+      "exit": 0,
+      "milliseconds": 82
+    }
+  ],
+  "claims": {
+    "kind": "dynamic evidence: coverage-guided fuzzing for a fixed time",
+    "properties": [
+      "no panic",
+      "no Internal frontend diagnostic",
+      "no Defective or Invalid backend outcome for a prepared contract",
+      "deterministic outcomes",
+      "non-exhausted outcomes reproduced under the default budget",
+      "emitted WAT parses and the module validates"
+    ],
+    "non_claims": [
+      "A clean run is not a proof that no input violates a property.",
+      "The oracles check outcome consistency, not that any accepted program is correct.",
+      "Peak RSS is libFuzzer getrusage, which a launching process can inflate."
+    ]
+  }
+}
