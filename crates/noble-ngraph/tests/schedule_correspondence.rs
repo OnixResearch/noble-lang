@@ -23,6 +23,8 @@ use noble_ngraph::layout::{self, PackedLayout, Refusal};
 use noble_ngraph::schedule::{self, I64Instruction, StreamRefusal};
 
 mod common;
+#[path = "schedule_cost_dir/measure.rs"]
+mod measure;
 
 /// Two branches sharing both inputs, a constant and a Bool equality: four instruction-emitting
 /// nodes, so a within-layer reorder and an operand swap are both expressible.

@@ -68,30 +68,44 @@ pub enum StreamRefusal {
     BodyMismatch,
 }
 
-/// The nodes that emit an instruction, in layer order then canonical order. Computed from the
-/// graph's layer assignment, never from the stream.
+/// The nodes that emit an instruction, in layer order then canonical order, and how many each
+/// layer holds. Computed from the graph's layer assignment, never from the stream.
+///
+/// One counting pass and one placing pass bucket the nodes by layer, so the cost is linear in the
+/// node and layer counts; rescanning every node once per layer was quadratic for deep graphs.
 fn instruction_nodes(
     checked: &crate::check::CheckedGraph,
     layers: &[(u32, u32)],
-) -> alloc::vec::Vec<crate::ir::NodeId> {
+) -> (alloc::vec::Vec<crate::ir::NodeId>, alloc::vec::Vec<usize>) {
     let graph = checked.graph();
-    let mut nodes = alloc::vec::Vec::with_capacity(graph.nodes.len());
-    for layer in 0..layers.len() {
-        for index in 0..graph.nodes.len() {
-            let id = crate::ir::NodeId(index as u32);
-            if checked.layer(id) as usize != layer {
-                continue;
-            }
-            if matches!(
-                graph.nodes[index].op,
-                crate::ir::Op::Input(_) | crate::ir::Op::Param(_) | crate::ir::Op::Const(_)
-            ) {
-                continue;
-            }
-            nodes.push(id);
+    let emitting = |index: usize| -> Option<usize> {
+        let layer = checked.layer(crate::ir::NodeId(index as u32)) as usize;
+        let is_table_entry = matches!(
+            graph.nodes[index].op,
+            crate::ir::Op::Input(_) | crate::ir::Op::Param(_) | crate::ir::Op::Const(_)
+        );
+        (layer < layers.len() && !is_table_entry).then_some(layer)
+    };
+    let mut counts = alloc::vec![0usize; layers.len()];
+    for index in 0..graph.nodes.len() {
+        if let Some(layer) = emitting(index) {
+            counts[layer] += 1;
         }
     }
-    nodes
+    let mut next = alloc::vec::Vec::with_capacity(layers.len());
+    let mut total = 0usize;
+    for count in &counts {
+        next.push(total);
+        total += count;
+    }
+    let mut nodes = alloc::vec![crate::ir::NodeId(0); total];
+    for index in 0..graph.nodes.len() {
+        if let Some(layer) = emitting(index) {
+            nodes[next[layer]] = crate::ir::NodeId(index as u32);
+            next[layer] += 1;
+        }
+    }
+    (nodes, counts)
 }
 
 fn register(layout: &crate::layout::PackedLayout, id: crate::ir::NodeId) -> Option<u32> {
@@ -141,6 +155,9 @@ fn expected(
 }
 
 /// Validate a packed I64/Bool stream against the graph it claims to implement.
+///
+/// The work is linear in the stream, node and layer counts after the declaration check, whose own
+/// cost is `O((n + k) log n)` (`crate::layout::check`).
 pub fn check(
     checked: &crate::check::CheckedGraph,
     layout: &crate::layout::PackedLayout,
@@ -150,17 +167,13 @@ pub fn check(
         return Err(StreamRefusal::UnsupportedProfile);
     }
     crate::layout::check(checked, layout).map_err(StreamRefusal::Declarations)?;
-    let nodes = instruction_nodes(checked, &layout.layers);
+    let (nodes, counts) = instruction_nodes(checked, &layout.layers);
     if nodes.len() != ins.len() {
         return Err(StreamRefusal::StreamShape);
     }
     let mut at = 0usize;
-    for (layer, (start, end)) in layout.layers.iter().enumerate() {
-        let count = nodes
-            .iter()
-            .filter(|id| checked.layer(**id) as usize == layer)
-            .count();
-        if (*end as usize).saturating_sub(*start as usize) != count || at != *start as usize {
+    for ((start, end), count) in layout.layers.iter().zip(&counts) {
+        if (*end as usize).saturating_sub(*start as usize) != *count || at != *start as usize {
             return Err(StreamRefusal::LayerCoverage);
         }
         at = *end as usize;

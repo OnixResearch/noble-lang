@@ -94,18 +94,21 @@ fn fails_suffix(node: &crate::ir::Node) -> bool {
     }
 }
 
-/// Validates a declared layout against the graph it claims to pack. The layer
-/// assignment comes from the checker, not from the scheduler: the declared layer
-/// ranges and failure-suffix minima are compared against it, never regenerated.
-pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Result<(), Refusal> {
-    let graph = checked.graph();
-    if layout.revision != LAYOUT_REVISION {
-        return Err(Refusal::StaleRevision);
-    }
-    if layout.reg.len() != graph.nodes.len() {
-        return Err(Refusal::RegisterMapShape);
-    }
-    let mut seen = alloc::vec::Vec::with_capacity(graph.nodes.len());
+/// The first refusal of the register map, in node order: a guard given a register, a register
+/// outside the declared count, or a register an earlier non-guard node already holds.
+///
+/// The aliasing scan sorts `(register, node)` pairs once instead of searching every earlier
+/// register for each node, so it costs `O(n log n)` rather than `O(n^2)`, while still reporting the
+/// refusal at the earliest node exactly as a node-by-node walk would. Returns the highest declared
+/// register when the map is accepted.
+fn register_map(graph: &crate::ir::Graph, layout: &PackedLayout) -> Result<Option<u32>, Refusal> {
+    let mut first: Option<(usize, Refusal)> = None;
+    let mut earliest = |index: usize, refusal: Refusal| {
+        if first.is_none_or(|(at, _)| index < at) {
+            first = Some((index, refusal));
+        }
+    };
+    let mut held = alloc::vec::Vec::with_capacity(graph.nodes.len());
     let mut highest: Option<u32> = None;
     for (index, node) in graph.nodes.iter().enumerate() {
         let declared = layout
@@ -115,19 +118,62 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
             .ok_or(Refusal::RegisterMapShape)?;
         if guard(&node.op) {
             if declared != u32::MAX {
-                return Err(Refusal::GuardRegister);
+                earliest(index, Refusal::GuardRegister);
             }
             continue;
         }
         if declared >= layout.regs {
-            return Err(Refusal::RegisterOutOfRange);
+            earliest(index, Refusal::RegisterOutOfRange);
+            continue;
         }
-        if seen.contains(&declared) {
-            return Err(Refusal::AliasedRegisters);
-        }
-        seen.push(declared);
+        held.push((declared, index));
         highest = Some(highest.map_or(declared, |current| current.max(declared)));
     }
+    // Sorted by register, then node: within one register's run every node after the first holds
+    // an alias, and the earliest of those is where a walk in node order would have stopped.
+    held.sort_unstable();
+    for pair in held.windows(2) {
+        if pair[0].0 == pair[1].0 {
+            earliest(pair[1].1, Refusal::AliasedRegisters);
+        }
+    }
+    match first {
+        Some((_, refusal)) => Err(refusal),
+        None => Ok(highest),
+    }
+}
+
+/// How many nodes carry each `(register, key)` pair, for the nodes `key` selects. One pass over
+/// the graph replaces a full rescan per declared table entry.
+fn table_counts<K: Ord + Copy>(
+    graph: &crate::ir::Graph,
+    layout: &PackedLayout,
+    key: impl Fn(&crate::ir::Op) -> Option<K>,
+) -> alloc::collections::BTreeMap<(u32, K), usize> {
+    let mut counts = alloc::collections::BTreeMap::new();
+    for (index, node) in graph.nodes.iter().enumerate() {
+        if let (Some(key), Some(&register)) = (key(&node.op), layout.reg.get(index)) {
+            *counts.entry((register, key)).or_insert(0) += 1;
+        }
+    }
+    counts
+}
+
+/// Validates a declared layout against the graph it claims to pack. The layer
+/// assignment comes from the checker, not from the scheduler: the declared layer
+/// ranges and failure-suffix minima are compared against it, never regenerated.
+///
+/// The work is `O((n + k) log n)` for `n` graph nodes and `k` declared table entries, and every
+/// allocation is sized by the graph, not by the declaration.
+pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Result<(), Refusal> {
+    let graph = checked.graph();
+    if layout.revision != LAYOUT_REVISION {
+        return Err(Refusal::StaleRevision);
+    }
+    if layout.reg.len() != graph.nodes.len() {
+        return Err(Refusal::RegisterMapShape);
+    }
+    let highest = register_map(graph, layout)?;
     // The declared count may sit one above the highest declared register (the
     // scheduler reserves one register), but no further: an inflated count is a
     // wrong declaration rather than capacity headroom.
@@ -138,35 +184,25 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     {
         return Err(Refusal::RegisterCount);
     }
+    let constants = table_counts(graph, layout, |op| match op {
+        crate::ir::Op::Const(lit) => Some(constant_bits(*lit)),
+        _ => None,
+    });
     for &(register, bits) in &layout.consts {
-        let matching = graph
-            .nodes
-            .iter()
-            .enumerate()
-            .filter(|(index, node)| {
-                matches!(node.op, crate::ir::Op::Const(lit) if constant_bits(lit) == bits)
-                    && layout.reg.get(*index).copied() == Some(register)
-            })
-            .count();
-        if matching != 1 {
+        if constants.get(&(register, bits)).copied() != Some(1) {
             return Err(Refusal::ConstantTable);
         }
     }
     // Both slot kinds share one table in the compiler, so an entry may describe an input node or a
     // parameter node. Each declared slot is still covered exactly once: a second entry for the same
     // slot, a swapped kind, or a register that no node of that slot carries is refused.
+    let slots = table_counts(graph, layout, |op| match op {
+        crate::ir::Op::Input(slot) | crate::ir::Op::Param(slot) => Some(*slot),
+        _ => None,
+    });
     let mut covered = alloc::vec![false; graph.slots.len()];
     for &(register, slot) in &layout.slot_regs {
-        let matching = graph
-            .nodes
-            .iter()
-            .enumerate()
-            .filter(|(index, node)| {
-                matches!(node.op, crate::ir::Op::Input(k) | crate::ir::Op::Param(k) if k == slot)
-                    && layout.reg.get(*index).copied() == Some(register)
-            })
-            .count();
-        if matching != 1 {
+        if slots.get(&(register, slot)).copied() != Some(1) {
             return Err(Refusal::SlotTable);
         }
         let Some(seen) = covered.get_mut(slot as usize) else {
@@ -381,5 +417,34 @@ mod tests {
             check(&shifted_suffix),
             Err(super::Refusal::FailSuffixMismatch)
         );
+    }
+
+    /// Two register-map faults in one declaration: the refusal is the one at the earlier node,
+    /// in either order, as a walk in node order reports it. The aliasing scan sorts registers, so
+    /// it must not let a later alias outrank an earlier out-of-range register, or the reverse.
+    #[test]
+    fn the_earlier_register_fault_is_the_refusal() {
+        let (graph, checked, layout) = sample();
+        let check = |layout: &super::PackedLayout| super::check(&checked, layout);
+        let held: alloc::vec::Vec<usize> = graph
+            .nodes
+            .iter()
+            .enumerate()
+            .filter(|(_, node)| !matches!(node.op, crate::ir::Op::Guard { .. }))
+            .map(|(index, _)| index)
+            .collect();
+        let [first, second, third] = held[..] else {
+            panic!("the sample holds three registers, found {}", held.len());
+        };
+
+        let mut alias_first = layout.clone();
+        alias_first.reg[second] = layout.reg[first];
+        alias_first.reg[third] = layout.regs;
+        assert_eq!(check(&alias_first), Err(super::Refusal::AliasedRegisters));
+
+        let mut range_first = layout.clone();
+        range_first.reg[second] = layout.regs;
+        range_first.reg[third] = layout.reg[first];
+        assert_eq!(check(&range_first), Err(super::Refusal::RegisterOutOfRange));
     }
 }
