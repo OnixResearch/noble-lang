@@ -16916,102 +16916,6 @@
       "disposition": "open",
       "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:10277:10279",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:10434:10436",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:11574:11577",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:11716:11719",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:11870:11872",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:12820:12822",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13005:13007",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13147:13150",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13298:13301",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13478:13480",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:14017:14020",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:16610:16612",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/parsing.rs:17278:17290",
       "refinement": "open"
     },
@@ -17708,38 +17612,6 @@
       "disposition": "open",
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:10637:10639",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11005:11007",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11324:11332",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11400:11402",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:1606:1608",
       "refinement": "open"
     },
@@ -17757,54 +17629,6 @@
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:4809:4811",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:5924:5926",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:6161:6163",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:6392:6395",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:8011:8013",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:9393:9414",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:9636:9642",
       "refinement": "open"
     },
     {
@@ -17837,206 +17661,6 @@
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:1037:1040",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:11223:11235",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:18893:18915",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:1946:1955",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:2145:2154",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:2718:2727",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:27708:27714",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:29871:29873",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:29908:29910",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:3027:3029",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:30873:30879",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:31992:33574",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:32164:32167",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:32346:32348",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:33360:33362",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:33801:35385",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:33969:33972",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:3406:3408",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:34151:34153",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:35171:35173",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:4341:4343",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:4924:4926",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:5976:5985",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:6958:6967",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:7021:7033",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-24 native-async worker shell at 031d01a4 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:8220:8222",
       "refinement": "open"
     },
     {
@@ -125846,6 +125470,398 @@
       "package": "noble-cli",
       "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#4}",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:10559:10561",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:10716:10718",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:11856:11859",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:11998:12001",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:12152:12154",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13102:13104",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13287:13289",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13429:13432",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13580:13583",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:13760:13762",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:14299:14302",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:16892:16894",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:10653:10655",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11021:11023",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11340:11348",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:11416:11418",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:5928:5930",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:6169:6171",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:6404:6407",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:8027:8029",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:9409:9430",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:9652:9658",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:11768:11780",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:1556:1565",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:19438:19460",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:2491:2500",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:2690:2699",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:28253:28259",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:30416:30418",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:30453:30455",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:31418:31424",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:32537:34119",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:3263:3272",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:32709:32712",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:32891:32893",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:33905:33907",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:34346:35930",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:34514:34517",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:34696:34698",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:35716:35718",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:3572:3574",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:3951:3953",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:4886:4888",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:5469:5471",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:6521:6530",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:7503:7512",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:7566:7578",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/prepare.rs:8765:8767",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed fuzz oracles and replay in the forged_effects target; declared budget refusals classified as exhausted (#87) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::exhausted",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
@@ -127018,6 +127034,17 @@
     "core_live_code_owner::{use#3}",
     "declared::Binding",
     "declared::LIMITS",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid::{use#0}",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid::{use#1}",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid::{use#2}",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid::{use#3}",
+    "declared::a_module_input_over_its_byte_budget_is_exhausted_not_invalid::{use#4}",
+    "declared::a_module_over_the_retained_source_cap_is_exhausted_not_invalid",
+    "declared::a_module_over_the_retained_source_cap_is_exhausted_not_invalid::{use#0}",
+    "declared::a_module_over_the_retained_source_cap_is_exhausted_not_invalid::{use#1}",
+    "declared::a_module_over_the_retained_source_cap_is_exhausted_not_invalid::{use#2}",
+    "declared::a_module_over_the_retained_source_cap_is_exhausted_not_invalid::{use#3}",
     "declared::alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner",
     "declared::alias_rebind_refuses_a_new_host_effect_above_the_previous_ceiling",
     "declared::alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners",
@@ -127596,13 +127623,57 @@
     "extract_b3::{use#7}",
     "extract_b3::{use#8}",
     "extract_b3::{use#9}",
+    "forged_effects::<oracles::Profile as std::clone::Clone>",
+    "forged_effects::<oracles::Profile as std::clone::Clone>::clone",
+    "forged_effects::<oracles::Profile as std::clone::TrivialClone>",
+    "forged_effects::<oracles::Profile as std::marker::Copy>",
     "forged_effects::EMIT",
     "forged_effects::authentic",
     "forged_effects::forged_effect_free_emit_contract_is_refused_before_emission",
     "forged_effects::kernel",
     "forged_effects::main",
     "forged_effects::main::test",
+    "forged_effects::oracles",
+    "forged_effects::oracles::Case",
+    "forged_effects::oracles::DEFAULT_LIMITS",
+    "forged_effects::oracles::HEADER",
+    "forged_effects::oracles::Outcome",
+    "forged_effects::oracles::Outcome::refusal",
+    "forged_effects::oracles::Profile",
+    "forged_effects::oracles::Profile::select",
+    "forged_effects::oracles::RETAINED_BYTES",
+    "forged_effects::oracles::UNITS",
+    "forged_effects::oracles::backend",
+    "forged_effects::oracles::case",
+    "forged_effects::oracles::check_prepare",
+    "forged_effects::oracles::check_prepare_to_wasm",
+    "forged_effects::oracles::check_source",
+    "forged_effects::oracles::check_wit_world",
+    "forged_effects::oracles::contract_outcome",
+    "forged_effects::oracles::describe",
+    "forged_effects::oracles::diagnostic",
+    "forged_effects::oracles::encode",
+    "forged_effects::oracles::monotone",
+    "forged_effects::oracles::parse_world",
+    "forged_effects::oracles::source_error",
+    "forged_effects::oracles::source_run",
+    "forged_effects::oracles::within_default",
+    "forged_effects::oracles::world_name",
+    "forged_effects::oracles::world_outcome",
     "forged_effects::refused",
+    "forged_effects::replay",
+    "forged_effects::replay::HEADERS",
+    "forged_effects::replay::Oracle",
+    "forged_effects::replay::PROFILES",
+    "forged_effects::replay::TARGETS",
+    "forged_effects::replay::committed_fuzz_regressions_replay_clean",
+    "forged_effects::replay::files",
+    "forged_effects::replay::fixtures",
+    "forged_effects::replay::fuzz_oracles_reach_emission_and_real_worlds",
+    "forged_effects::replay::prepare_to_wasm",
+    "forged_effects::replay::repository",
+    "forged_effects::replay::test",
+    "forged_effects::replay::tracked_fixtures_satisfy_every_fuzz_oracle",
     "forged_effects::request_only_empty_bound_is_an_effect_inclusion_refusal",
     "forged_effects::std",
     "forged_effects::test",
@@ -129517,39 +129588,48 @@
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:29854:29861",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:30340:30347",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:30436:30443",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:30572:33057",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:30925:30932",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:31127:31134",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:31346:31353",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:31793:31800",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32057:32064",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:30802:32251",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:31155:31162",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:31429:31436",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:3210:3213",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32450:32457",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32740:32747",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32944:32951",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33067:34401",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32207:32214",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32468:33844",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:32842:32849",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33063:33070",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:3340:3347",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33416:33423",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34288:34295",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34411:35669",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33669:33676",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33784:33791",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:33854:36339",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34207:34214",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34409:34416",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:3455:3462",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34836:34843",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:35679:36693",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36023:36030",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36344:36351",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36596:36603",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:34628:34635",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:35075:35082",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:35339:35346",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:35732:35739",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36022:36029",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36226:36233",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36349:37683",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:3664:3671",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36703:37791",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:37008:37011",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:37402:37405",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:36698:36705",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:37570:37577",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:37693:38951",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:3785:3792",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38015:40264",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38469:38517",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38602:38609",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38960:38967",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39247:39254",
-    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39351:39387",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38118:38125",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:38961:39975",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39305:39312",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39626:39633",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39878:39885",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:39985:41073",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:40290:40293",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:40684:40687",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:41297:43546",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:41751:41799",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:41884:41891",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:42242:42249",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:42529:42536",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:4262:5740",
+    "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:42633:42669",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:4538:4545",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:4855:4862",
     "noble-contracts::closure@crates/noble-contracts/tests/declared.rs:4967:4974",
@@ -130943,10 +131023,25 @@
     "noble-wasm::closure@crates/noble-wasm/tests/declared_text.rs:9078:9085",
     "noble-wasm::closure@crates/noble-wasm/tests/declared_text.rs:9639:9646",
     "noble-wasm::closure@crates/noble-wasm/tests/declared_text.rs:998:1005",
-    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:1481:1488",
-    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:2271:2279",
-    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:2932:3847",
-    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:3857:4427",
+    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:1831:1838",
+    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:2621:2629",
+    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:3282:4197",
+    "noble-wasm::closure@crates/noble-wasm/tests/forged_effects.rs:4207:4777",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/oracles.rs:11480:11487",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/oracles.rs:15466:15473",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/oracles.rs:16399:16405",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:2018:2025",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:2134:2141",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:2293:2300",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:2823:2829",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:2932:3888",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:3492:3499",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:3898:5231",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:4508:4515",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:5442:6305",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:5644:5651",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:6043:6050",
+    "noble-wasm::closure@crates/noble-wasm/tests/fuzz/replay.rs:6248:6255",
     "noble-wasm::closure@crates/noble-wasm/tests/live_slot_admission.rs:11191:11200",
     "noble-wasm::closure@crates/noble-wasm/tests/live_slot_admission.rs:1887:1896",
     "noble-wasm::closure@crates/noble-wasm/tests/live_slot_admission.rs:2024:2033",
