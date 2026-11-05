@@ -481,8 +481,11 @@ fn declared_retained_source_opt_in_preserves_default_and_explicit_input_caps(
             assert!(status.success());
             assert_eq!(reports[1]["outcome"], "linked");
         } else {
-            assert_eq!(status.code(), Some(2));
+            // The retained-source cap is a host budget: the same module links
+            // once the cap is raised, so its refusal is exhausted, not rejected.
+            assert_eq!(status.code(), Some(5));
             assert_eq!(reports[1]["stage"], "check");
+            assert_eq!(reports[1]["outcome"], "exhausted");
             assert!(reports[1]["diagnostic"]
                 .as_str()
                 .ok_or("missing source retention refusal diagnostic")?

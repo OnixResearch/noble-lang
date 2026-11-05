@@ -11,7 +11,10 @@
     tigerstyle::function_length,
     tigerstyle::no_recursion,
     tigerstyle::ambient_env,
-    reason = "Owner: noble-maintainers; this replay walks the committed fixture tree and reports every oracle violation it finds, so recursive directory reads, owned paths and collected reports are the readable form."
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; this replay walks the committed fixture tree and reports every oracle violation it finds, so recursive directory reads into one accumulator, owned paths and collected reports bounded by the tracked fixture set are the readable form."
 )]
 
 /// One oracle and the regression directory its findings are committed under.
@@ -76,7 +79,7 @@ fn fixtures(extension: &str) -> Result<Vec<std::path::PathBuf>, String> {
 }
 
 #[test]
-fn committed_fuzz_regressions_replay_clean() -> Result<(), String> {
+fn committed_fuzz_regressions_stay_fixed() -> Result<(), String> {
     let mut violations = Vec::new();
     let mut replayed = 0usize;
     for (target, oracle) in TARGETS {
@@ -107,10 +110,8 @@ fn committed_fuzz_regressions_replay_clean() -> Result<(), String> {
 fn tracked_fixtures_satisfy_every_fuzz_oracle() -> Result<(), String> {
     let sources = fixtures("noble")?;
     let worlds = fixtures("wit")?;
-    assert!(
-        !sources.is_empty() && !worlds.is_empty(),
-        "fixture tree is missing"
-    );
+    assert!(!sources.is_empty(), "no tracked .noble fixture was found");
+    assert!(!worlds.is_empty(), "no tracked .wit fixture was found");
     let mut violations = Vec::new();
     for (target, oracle) in TARGETS {
         let inputs = if target == "wit_world" {
@@ -125,7 +126,7 @@ fn tracked_fixtures_satisfy_every_fuzz_oracle() -> Result<(), String> {
             for header in HEADERS {
                 for profile in 0..profiles {
                     let mut selected = header;
-                    selected[super::oracles::HEADER - 1] = profile;
+                    selected[super::oracles::SELECT] = profile;
                     let data = super::oracles::encode(selected, &body);
                     if let Err(violation) = oracle(&data) {
                         violations.push(format!(

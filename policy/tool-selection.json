@@ -135,7 +135,7 @@
     "crates/noble-cli/tests/live_repl.rs": "c5d3dc86ce97e5d03e92439d40e2a735aa02d3123f105a222133b42058d59c9a",
     "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
     "crates/noble-cli/tests/live_slot_selected_retention.rs": "c3d570334884cbda25ed5b7822ff76aefba3cf8f3e3f36699c49e98cb38d6fa0",
-    "crates/noble-cli/tests/smoke.rs": "ec8aedd20cfb6b09d1b857607f4be92afbfd7f44e80d058aecf3369696194f80",
+    "crates/noble-cli/tests/smoke.rs": "b1261d681fb09fee77cec13b0a0082e54fd5ec74bd842036cd02786f099d946d",
     "crates/noble-cli/tests/worker_host_child.rs": "b684f43d88297bb029fb1aac25a41ea9dc52dab0e669f9723c8c3c874fa0866a",
     "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
     "crates/noble-contracts/src/component/bindings.rs": "b6c15ae0d787db0adb1473c532d0f36f4271ea248eb59d19a367d5dbced47025",

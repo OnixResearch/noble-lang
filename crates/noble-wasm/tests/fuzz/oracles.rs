@@ -24,11 +24,15 @@
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::function_length,
     tigerstyle::allocation_in_loop,
-    reason = "Owner: noble-maintainers; these oracles compare whole frontend and backend outcomes on hostile input, so exhaustive outcome matches, owned comparison strings and long property legs are the readable form."
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; these oracles compare whole frontend and backend outcomes on hostile input, so exhaustive outcome matches, owned comparison strings and long property legs are the readable form, and every collected module or report is bounded by the one input under test."
 )]
 
 /// Bytes before the subject.
 pub(crate) const HEADER: usize = 5;
+
+/// The header byte that selects a frontend profile.
+pub(crate) const SELECT: usize = 4;
 
 /// Header byte 0 selects `Limits::default()` when both low bits are set.
 pub(crate) const DEFAULT_LIMITS: u8 = 0b11;
@@ -63,7 +67,7 @@ pub(crate) fn case(data: &[u8]) -> Option<Case<'_>> {
     Some(Case {
         limits,
         retained,
-        select: header[4],
+        select: header[SELECT],
         body,
     })
 }
@@ -419,7 +423,7 @@ pub(crate) fn world_name(wit: &[u8]) -> &str {
         .unwrap_or(rest.len());
     match core::str::from_utf8(&rest[..end]) {
         Ok(name) if !name.is_empty() => name,
-        _ => "bounded",
+        Ok(_) | Err(_) => "bounded",
     }
 }
 
