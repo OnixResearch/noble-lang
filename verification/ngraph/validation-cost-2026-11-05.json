@@ -1,0 +1,184 @@
+{
+  "schema": "noble-ngraph-validation-cost/v1",
+  "result": "measured",
+  "source_commit": "dd639ee8e7dff85d96caa7686cc86f4c624fd4f6",
+  "source_tree": "ebdd8b7b653b50fad23d9822a212112893cbef02",
+  "clean_source": true,
+  "baseline_commit": "f5e55f38e40be9b562432a9600be5c07590546af",
+  "baseline_scope": "the current source with crates/noble-ngraph/src/layout.rs and crates/noble-ngraph/src/schedule.rs replaced by the baseline commit's",
+  "harness": {
+    "path": "crates/noble-ngraph/tests/schedule_cost_dir/measure.rs",
+    "sha256": "830b2c2e61dd06106353d6cdcaf08be4c848665f9c4e55de4d438d9bf9a29ad3"
+  },
+  "toolchain": {
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ="
+  },
+  "command": [
+    "cargo",
+    "test",
+    "--release",
+    "--locked",
+    "--offline",
+    "-p",
+    "noble-ngraph",
+    "--test",
+    "schedule_correspondence",
+    "--",
+    "--ignored",
+    "--nocapture",
+    "validation_cost_at_the_graph_budget"
+  ],
+  "variants": {
+    "baseline": {
+      "validator_sha256": {
+        "crates/noble-ngraph/src/layout.rs": "8c576d6c36d0189840009339b778047b58dba3dd901cc0cb720938b51b8e00af",
+        "crates/noble-ngraph/src/schedule.rs": "390d20ca5ce2d07f20553e5301d4ea3fbbe33ce3d59717799a5579dfa545a90e"
+      },
+      "rows": [
+        {
+          "shape": "deepest-chain",
+          "nodes": 16384,
+          "layers": 16384,
+          "instructions": 16383,
+          "check_ns": 2257038,
+          "compile_ns": 376655,
+          "layout_check_median_ns": 7941307,
+          "schedule_check_median_ns": 322792265,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 196608
+        },
+        {
+          "shape": "four-deepest-chains",
+          "nodes": 65533,
+          "layers": 16384,
+          "instructions": 65532,
+          "check_ns": 8624868,
+          "compile_ns": 2332410,
+          "layout_check_median_ns": 118327943,
+          "schedule_check_median_ns": 1386628451,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 258048
+        },
+        {
+          "shape": "sixteen-deepest-chains",
+          "nodes": 262129,
+          "layers": 16384,
+          "instructions": 262128,
+          "check_ns": 36839624,
+          "compile_ns": 13292171,
+          "layout_check_median_ns": 1775445431,
+          "schedule_check_median_ns": 6569572203,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 1044480
+        },
+        {
+          "shape": "balanced-tree",
+          "nodes": 262144,
+          "layers": 19,
+          "instructions": 262143,
+          "check_ns": 37830602,
+          "compile_ns": 5837594,
+          "layout_check_median_ns": 1738627355,
+          "schedule_check_median_ns": 1739998386,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 1044480
+        }
+      ]
+    },
+    "current": {
+      "validator_sha256": {
+        "crates/noble-ngraph/src/layout.rs": "d86a2a8e1cfa432a4861d83546f38c9f18068b624423ed9c4c31bbcf508cb1ad",
+        "crates/noble-ngraph/src/schedule.rs": "b0008646490b00c0ac75857a730262f61a10e143a0dfad3b0d18f715b6528808"
+      },
+      "rows": [
+        {
+          "shape": "deepest-chain",
+          "nodes": 16384,
+          "layers": 16384,
+          "instructions": 16383,
+          "check_ns": 2285530,
+          "compile_ns": 388608,
+          "layout_check_median_ns": 172653,
+          "schedule_check_median_ns": 303158,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 327680
+        },
+        {
+          "shape": "four-deepest-chains",
+          "nodes": 65533,
+          "layers": 16384,
+          "instructions": 65532,
+          "check_ns": 8663356,
+          "compile_ns": 1791636,
+          "layout_check_median_ns": 2170456,
+          "schedule_check_median_ns": 2621701,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 1187840
+        },
+        {
+          "shape": "sixteen-deepest-chains",
+          "nodes": 262129,
+          "layers": 16384,
+          "instructions": 262128,
+          "check_ns": 36171158,
+          "compile_ns": 14497193,
+          "layout_check_median_ns": 11212170,
+          "schedule_check_median_ns": 14905187,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 5238784
+        },
+        {
+          "shape": "balanced-tree",
+          "nodes": 262144,
+          "layers": 19,
+          "instructions": 262143,
+          "check_ns": 37340228,
+          "compile_ns": 5628983,
+          "layout_check_median_ns": 3163124,
+          "schedule_check_median_ns": 5137283,
+          "runs": 5,
+          "first_validation_resident_growth_bytes": 5238784
+        }
+      ]
+    }
+  },
+  "median_speedup": [
+    {
+      "shape": "deepest-chain",
+      "nodes": 16384,
+      "layers": 16384,
+      "layout_check": 46,
+      "schedule_check": 1064.8
+    },
+    {
+      "shape": "four-deepest-chains",
+      "nodes": 65533,
+      "layers": 16384,
+      "layout_check": 54.5,
+      "schedule_check": 528.9
+    },
+    {
+      "shape": "sixteen-deepest-chains",
+      "nodes": 262129,
+      "layers": 16384,
+      "layout_check": 158.3,
+      "schedule_check": 440.8
+    },
+    {
+      "shape": "balanced-tree",
+      "nodes": 262144,
+      "layers": 19,
+      "layout_check": 549.7,
+      "schedule_check": 338.7
+    }
+  ],
+  "instruments": {
+    "time": "median wall-clock nanoseconds of five runs, release build, one thread",
+    "memory": "resident-set growth across the first validation only; the workspace forbids unsafe_code, so no counting allocator exists"
+  },
+  "non_claims": [
+    "Reporting only: no timing threshold is a correctness claim.",
+    "One host and one run; the numbers bound nothing on other hardware."
+  ]
+}

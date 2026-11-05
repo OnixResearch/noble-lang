@@ -569,6 +569,53 @@ boundary on a zero-width first layer mutated nothing, and a destination mutation
 multiplication left the stream untouched. Both are recorded because a control that silently does
 nothing is the failure mode this lane exists to prevent.
 
+### Validation cost at the default budgets (2026-11-05)
+
+Issue #43 asks for bounded checking work and measured validation time and scratch bytes. Measured
+at the graph checker's default budgets (262,144 nodes, 16,384 layers), both validators were
+quadratic:
+- `layout::check` searched every earlier register for each node, and rescanned the graph once per
+  declared constant and slot entry.
+- `schedule::check` rescanned every node once per layer to order the stream, then again to count
+  coverage.
+
+The fixes:
+- **`layout::check`.** One pass plus one sort of `(register, node)` pairs finds the first register
+  fault, and one counting pass handles each table. The cost is `O((n + k) log n)`.
+- **`schedule::check`.** One counting pass and one placing pass bucket the stream by layer. After the
+  declaration check the cost is linear in nodes, layers and stream length.
+
+Every scratch allocation is sized by the graph. The reported refusal is still the one at the
+earliest node. `the_earlier_register_fault_is_the_refusal` pins both orders of an alias and an
+out-of-range register, and it fails a "last fault wins" mutant.
+
+[`validation-cost.mjs`](validation-cost.mjs) runs one ignored harness,
+`crates/noble-ngraph/tests/schedule_cost_dir/measure.rs`, in release mode twice over an archived
+copy of the source. The baseline run swaps in the validator files of a named baseline commit. The
+retained receipt is [`validation-cost-2026-11-05.json`](validation-cost-2026-11-05.json): clean
+source `dd639ee8`, baseline `f5e55f38`, medians of five runs.
+
+| Shape | Nodes | Layers | Check | Compile | `layout::check` before → after | `schedule::check` before → after | First-validation resident growth |
+|---|---|---|---|---|---|---|---|
+| deepest chain | 16,384 | 16,384 | 2.29 ms | 389 µs | 7.94 ms → 173 µs | 322.79 ms → 303 µs | 0.2 → 0.3 MiB |
+| four deepest chains | 65,533 | 16,384 | 8.66 ms | 1.79 ms | 118.33 ms → 2.17 ms | 1.39 s → 2.62 ms | 0.2 → 1.1 MiB |
+| sixteen deepest chains | 262,129 | 16,384 | 36.17 ms | 14.50 ms | 1.78 s → 11.21 ms | 6.57 s → 14.91 ms | 1.0 → 5.0 MiB |
+| balanced tree | 262,144 | 19 | 37.34 ms | 5.63 ms | 1.74 s → 3.16 ms | 1.74 s → 5.14 ms | 1.0 → 5.0 MiB |
+
+`schedule::check` includes its own `layout::check`. Validation of the largest admitted graph now
+costs about what checking and compiling it cost, instead of about 400 times more.
+
+The extra scratch is the sorted pairs and the table counts, and it is freed when validation
+returns. Resident-set growth is the only memory instrument here, because the workspace forbids
+`unsafe_code` and so no counting allocator can exist. It is also an upper bound: it includes what
+the allocator retains.
+
+Still open from the same acceptance item:
+- Validation has no caller-selected budget and no `Exhausted` refusal class. It is bounded only by
+  the graph checker's budgets.
+- There is no decoder, so no decoding cost exists to bound.
+- One host and one run bound nothing on other hardware.
+
 # CPU batch continuation decision (2026-11-01, issue #41)
 
 [`batch-continuation-criteria.md`](batch-continuation-criteria.md) froze the continuation rule before
