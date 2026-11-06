@@ -53,6 +53,15 @@
   (`observedReadAndRelease`, `lower`, `observed_read_and_release_lowers_to_a_related_trace`,
   `observed_abnormal_exit_lowers_to_a_related_trace`, `lowered_projection_starts_with_the_request`).
   That lowering is a lowering of the observation, not a correspondence theorem.
+  Correction (#90): until `1bf39a52` the adapter serialized a refused negative argument as its
+  unsigned 64-bit reinterpretation, and the model's request alphabets carried `Nat`, so neither could
+  state the request the guest made. `evidence-ddf747a0.json` therefore records offset `-1` and length
+  `-1` as `18446744073709552000`; JavaScript rounding also hit the printed `18446744073709551615` and
+  `i64::MAX`. The report now emits signed arguments, and the request alphabets carry `Int`
+  (`lower_keeps_read_arguments`). The lane compares every read request with the CLI's arguments as
+  exact decimal text and requires a release to carry none.
+  `verification/host-locality/evidence-1bf39a52.json` (clean source, 11 cases) shows every case's
+  read request carrying its arguments exactly.
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
   Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
@@ -74,9 +83,15 @@
   and the execution lane refuses a release that observes an identity the read did not retain. A
   general correspondence between emitted-component steps and the model's witnessed steps is still not
   proved, so the task stays open.
+  A request argument replaced by its unsigned reinterpretation (#90) is refused in three places:
+  - by the relation (`related_rejects_unsigned_reinterpretation`, with
+    `related_accepts_the_signed_refused_request` as its positive control);
+  - as a laundered read commit (`related_rejects_commit_of_reinterpreted_region`);
+  - by the execution lane's checker (`reinterpreted-unsigned-request-argument`, forged into the real
+    refused reports).
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
   Partial: the retained receipt binds the source and model revisions (pinned Lean version and executable
-  hash, source and inventory hashes) and labels the verdict (model theorems 33, implementation theorems
-  0, correspondence none, liveness none, cancellation unsupported). `component`, `helper` and `engine`
+  hash, source and inventory hashes) and labels the verdict (model theorems 54 at `1bf39a52`,
+  implementation theorems 0, correspondence none, liveness none, cancellation unsupported). `component`, `helper` and `engine`
   are recorded as null with the reason, because no correspondence route exists yet; the task stays open
   until those three are bound to real revisions.

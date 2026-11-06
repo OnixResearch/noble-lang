@@ -1,8 +1,8 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "ddf747a028d7bbeb22ec13b7340fbfa737ac8876",
-  "source_tree": "24c745f878b3746cf1427820878e370d0330c0ab",
+  "source_commit": "1bf39a527cf2b55914d1c6329f97b5b6d6178620",
+  "source_tree": "f53439be562912bcab1feeb663d37c07d05505ea",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -11,8 +11,8 @@
       "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
       "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "297ded61c2d4af5bf49d562483a72a8b4e5a9c8ae7dd9bd87d2df3491f710b00",
-        "proofs/m5/region-trace-inventory.json": "d7c2c8bfcbff435b65a87b9fdc35aff94434e8fe36214ca8b81fac5f01df62a5"
+        "proofs/m5/RegionTrace.lean": "8c6b078a948f955f649f235438505c73e2816fb0bd9b7acf22bc7a80640043d1",
+        "proofs/m5/region-trace-inventory.json": "3eba383bbf893c420ad1551fe269c239564116ab9e0ba2e833c0165a01695652"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 49,
+    "model_theorems": 54,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "297ded61c2d4af5bf49d562483a72a8b4e5a9c8ae7dd9bd87d2df3491f710b00",
-    "proofs/m5/region-trace-inventory.json": "d7c2c8bfcbff435b65a87b9fdc35aff94434e8fe36214ca8b81fac5f01df62a5",
+    "proofs/m5/RegionTrace.lean": "8c6b078a948f955f649f235438505c73e2816fb0bd9b7acf22bc7a80640043d1",
+    "proofs/m5/region-trace-inventory.json": "3eba383bbf893c420ad1551fe269c239564116ab9e0ba2e833c0165a01695652",
     "verification/region-trace/check.mjs": "d6a728d1f572ee6784ec2c37b88e723b6237a49d17384e14640897c3b786e46a"
   },
-  "theorem_count": 49,
+  "theorem_count": 54,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -609,6 +609,74 @@
       ]
     },
     {
+      "name": "RegionTrace.lower_keeps_read_arguments",
+      "role": "#90: for every observed trace, the lowering's read crossings are exactly the observed read requests' signed arguments, in order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lower_keeps_read_arguments : ∀ (events : List RegionTrace.ObservedEvent), RegionTrace.readCrossings (RegionTrace.lower events) = RegionTrace.observedReadArguments events",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_negative_request_projects_with_its_sign",
+      "role": "#90 fixture: a refused read with offset -1 lowers and projects with -1, not with its unsigned 64-bit reinterpretation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_negative_request_projects_with_its_sign : List.filterMap RegionTrace.projectStep (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_unsigned_reinterpretation",
+      "role": "#90: a source trace reporting the refused -1 offset as 2^64 - 1 does not relate to the observed trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_unsigned_reinterpretation : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 18446744073709551615 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_the_signed_refused_request",
+      "role": "#90 positive control: the same observed refused trace relates to the source trace that keeps the sign, so the refusal above is not vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_the_signed_refused_request : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_commit_of_reinterpreted_region",
+      "role": "#90: a protected read commit of the reinterpreted region is not explained by the signed crossing that asked for -1",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_commit_of_reinterpreted_region : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead (-1) 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
       "name": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace",
       "role": "WIT-TRACE-05: an abnormal exit after the read lowers to its own host-retirement commit and relates",
       "allowed_standard_axioms": [
@@ -764,7 +832,7 @@
         "env",
         "lean",
         "--json",
-        "/var/tmp/rt-receipt/Audit.lean"
+        "/var/tmp/noble-rt-clean/Audit.lean"
       ],
       "exit": 0
     },
