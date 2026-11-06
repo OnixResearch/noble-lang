@@ -128,8 +128,8 @@ does not install these runtime tools.
 ### Independent Mathlib comparison for implemented I64 arithmetic
 
 `verification/mathlib-i64/compare.mjs` compiles
-[`MathlibI64.lean`](proofs/m3/MathlibI64.lean) with pinned Lean 4.31.0 and
-explicitly imports Mathlib4 at `fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`
+[`MathlibI64.lean`](proofs/m3/MathlibI64.lean) with pinned Lean 4.35.0 and
+explicitly imports Mathlib4 at `56a005855ea17e0b0958f73ec801ae140b0a1679`
 (the existing `proofs/m3/lake-manifest.json` dependency). The mathematical
 model takes an `Int` through `ZMod (2^64)`, then interprets residues below
 `2^63` as nonnegative and residues above it as negative. The Lean module

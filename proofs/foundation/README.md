@@ -27,16 +27,16 @@ claim universal equivalence of the generated original and variant.
 ## Reproduce
 
 Prerequisites:
-- the policy-selected Lean 4.31.0 (`policy/tool-selection.json`
+- the policy-selected Lean 4.35.0 (`policy/tool-selection.json`
   `tool_paths.lean.output`; build it with `nix build .#lean`);
 - the Node at `tool_paths.node.output`.
 
 Pins are identical to `proofs/m3` and `proofs/mc1`. The checker refuses
-any difference: Lean `v4.31.0`, Aeneas `505b6ca3`, Mathlib4 `fabf563a`.
+any difference: Lean `v4.35.0`, Aeneas Lean library `1238879f`, Mathlib4 `56a00585`.
 
 ```sh
 cd proofs/foundation
-PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
   lake exe cache get        # downloads Mathlib .oleans (not rebuilt)
 cd ../..
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
@@ -582,7 +582,7 @@ encoding, round-to-nearest/ties-to-even with gradual underflow, and
 add/subtract/multiply. `NobleFoundation/Binary32Expectations.lean` states the
 proved theorems and kernel-checks 26 retained expectations.
 
-The model is *selected*, not proposed: it is Lean 4.31.0 at the Noble pin with
+The model is *selected*, not proposed: it is plain Lean at the Noble pin with
 no new dependency, no axiom beyond the foundation's allow-list, and no
 `native_decide`, `decide +native` or native `#eval` anywhere in the lane.
 

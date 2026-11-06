@@ -24,7 +24,7 @@ worktree. `--allow-dirty` records a dirty run instead of refusing it, but does n
 1. **The generated input.** It unpacks `verification/m5/discovery.tar.gz` and requires the five
    generated `NobleKernel` sources to match both [the profile](model-inputs.json) and the
    historical extraction receipt `verification/m5/extraction.json`. It compiles them anew; archived
-   `.olean` files are never imported. The pinned Lean 4.31 executable and the Aeneas/Mathlib
+   `.olean` files are never imported. The pinned Lean executable and the Aeneas/Mathlib
    checkouts must match the M5 lake manifest.
 2. **Statements, subjects and axioms.** Every theorem in
    [`M5Authority.lean`](../../proofs/m5/M5Authority.lean) must appear in

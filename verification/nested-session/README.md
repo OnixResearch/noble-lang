@@ -1,7 +1,7 @@
 # Nested session protocol model (WIT-SESSION-01, WIT-SESSION-02)
 
 Model-theorem check for `.cairn/changes/nested-session-protocol`. It builds
-`proofs/m6/NestedSession.lean` in an isolated project with the pinned Lean 4.31 toolchain, then checks
+`proofs/m6/NestedSession.lean` in an isolated project with the pinned Lean toolchain, then checks
 every inventoried theorem's compiled statement and transitive axioms.
 
 ## Command

@@ -24,7 +24,7 @@ The pure checker compares those observations with the reviewed policy.
 It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
-The checker requires eight immutable source revisions with NAR hashes.
+The checker requires nine immutable source revisions with NAR hashes.
 This source-only integration binds exact file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
@@ -55,8 +55,9 @@ This binds their transitive build inputs without evaluating every unused optiona
 A matching top-level Git revision alone cannot hide a changed selected tool recipe or output.
 These Nix identities assume store integrity and do not independently authenticate builds or caches.
 
-The selected Aeneas source supplies its required Charon revision and Lean toolchain.
-The inherited M1 checker compares that proof project's resolved Lake dependencies with the source's backend manifest.
+The selected Aeneas extractor source (`sources.aeneas`) supplies its required Charon revision.
+The separately selected Aeneas Lean library source (`sources.aeneas_lean`, the VT-PIN-02 exception of issue #86) supplies the Lean toolchain and the backend manifest.
+The inherited M1 checker compares that proof project's resolved Lake dependencies with the library's backend manifest.
 The comparison preserves the complete dependency set but ignores package ordering and inherited placement metadata.
 It rejects duplicate packages, floating resolved revisions, missing dependencies, path overrides, and noncanonical package directories.
 A resolved Git revision remains mandatory even when an upstream `inputRev` names a branch or release tag.
@@ -186,10 +187,10 @@ soundness, Rust refinement, or owner law release.
 
 ## Lean release packaging
 
-The selected Nixpkgs Lean is 4.28.0. It does not satisfy this backend's 4.31.0 requirement.
-`nix/lean-release.nix` therefore consumes the upstream 4.31.0 Linux release archive with a fixed SHA-256 digest.
+The selected Nixpkgs Lean is 4.28.0. It does not satisfy the Aeneas Lean library's 4.35.0 requirement.
+`nix/lean-release.nix` therefore consumes the upstream 4.35.0 Linux release archive with a fixed SHA-256 digest.
 The GitHub release API supplied the archive URL and digest; Nix checks the downloaded bytes.
-The declared Lean commit is `68218e876d2a38b1985b8590fff244a83c321783`.
+The declared Lean commit is `eb6cafb7290e8bd5f2937522d8d804f58f02bafc`.
 The tool check compares the executable's version output with that commit.
 
 The package retains the upstream distribution and notices.

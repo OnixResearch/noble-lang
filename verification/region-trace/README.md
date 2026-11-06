@@ -1,7 +1,7 @@
 # Region trace relation pilot (WIT-TRACE-01)
 
 Model-theorem check for `.cairn/changes/region-trace-relation`. It builds
-`proofs/m5/RegionTrace.lean` in an isolated project with the pinned Lean 4.31 toolchain, then checks
+`proofs/m5/RegionTrace.lean` in an isolated project with the pinned Lean toolchain, then checks
 every inventoried theorem's compiled statement and transitive axioms, so a finite instance, an extra
 premise or a weaker statement cannot satisfy the inventory by mentioning a dependency.
 

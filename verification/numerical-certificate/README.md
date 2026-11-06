@@ -29,7 +29,7 @@ bound quality.
 Run it from the repository root:
 
 ```sh
-node verification/numerical-certificate/lane.mjs --lean-bin <Lean 4.31.0 bin> \
+node verification/numerical-certificate/lane.mjs --lean-bin <pinned Lean bin> \
   --foundation proofs/foundation --corpus verification/numerical-certificate/corpus.lean \
   --output verification/numerical-certificate/receipts/<date>/lane.json --graphs 24 --samples 2000 --seed 44
 ```

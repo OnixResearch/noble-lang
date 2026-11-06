@@ -35,7 +35,7 @@ The harness refuses three things:
    [project](../../proofs/service-wire)'s `lean-toolchain` must equal M7's byte for byte, and its
    `lake-manifest.json` must equal M7's apart from the package name. Each run copies exactly these
    files into a fresh tree in the checkout's relative layout and compiles them; no retained `.olean`
-   of the project is imported. The pinned Lean 4.31 executable and the Aeneas/Mathlib checkouts must
+   of the project is imported. The pinned Lean executable and the Aeneas/Mathlib checkouts must
    match the manifest.
 2. **Statements, subjects and axioms.** Every theorem in
    [`ServiceWireRefinement.lean`](../../proofs/service-wire/ServiceWireRefinement.lean) must appear

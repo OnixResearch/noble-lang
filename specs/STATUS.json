@@ -1400,6 +1400,25 @@
           ]
         },
         {
+          "claim": "All 37 actual MC1 CLI controls pass on Lean 4.35.0, including refusal at admission of the published #14613 kernel exploit",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "binary-sha256:b56c6bcc1dd2866cb2b322bbf3031bc354501725ebe8d079c18ab213b25527b6",
+          "configuration": {
+            "target": "x86_64-unknown-linux-gnu",
+            "receipt": "../verification/mc1/acceptance-lean-4.35.0.json",
+            "gate": "verification/mc1/gate.mjs",
+            "lean": "4.35.0",
+            "isolation": "bubblewrap namespaces and bounded user systemd scopes"
+          },
+          "assumptions": [
+            "The independently selected Lean kernel, source rule library, host isolation tools, and operating system are trusted.",
+            "Application proof admission is separate from Rust implementation refinement, backend correspondence, and MC2."
+          ]
+        },
+        {
           "claim": "MC1-v1 has 43 strict application/rule theorems, 61 strict bridge/projection theorems, and six separately trusted closed actual-source equations",
           "subject": "program-contracts",
           "revision": "0.1.0-draft.5",

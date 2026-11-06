@@ -15,11 +15,12 @@ The CLI exposes only an internal budget smoke route.
 | Features | All features, currently none |
 | Profile | `dev`, overflow checks enabled, panic unwind |
 | Test profile | Cargo test harness, panic unwind |
-| Aeneas and Lean backend | `505b6ca35217e7be5c96c3e2f8045edfbdf47291` |
+| Aeneas extractor | `505b6ca35217e7be5c96c3e2f8045edfbdf47291` |
+| Aeneas Lean library | `1238879f9ea550512096e9bf8bd6fe7407b3eaef`, pinned separately (VT-PIN-02 exception, issue #86) |
 | Required Charon | `b104e24fea7d721b71e6c39fd70f26ff20bc0980` |
 | Extraction Rust and Miri | `nightly-2026-08-18`, supplied by that Charon input |
-| Lean | `v4.31.0`, commit `68218e876d2a38b1985b8590fff244a83c321783` |
-| Mathlib | `fabf563a7c95a166b8d7b6efca11c8b4dc9d911f` |
+| Lean | `v4.35.0`, commit `eb6cafb7290e8bd5f2937522d8d804f58f02bafc` |
+| Mathlib | `56a005855ea17e0b0958f73ec801ae140b0a1679` |
 | Extraction limits | 120 seconds per translator |
 | Lean limits | 900 seconds, 1,000,000 heartbeats, recursion depth 2048 |
 
@@ -134,7 +135,7 @@ The probe then supplies its own selected driver and flags explicitly.
 The first Lake setup failed because `/tmp` was full and `leantar` was absent from the selected sysroot.
 A private temporary directory and the pinned Lean directory on `PATH` resolved those failures.
 The historical Elan provider was Nixpkgs `b3d51a0365f6695e7dd5cdf3e180604530ed33b4`.
-The current tool selection instead uses the hash-pinned Lean 4.31.0 release package.
+The current tool selection instead uses the hash-pinned Lean 4.35.0 release package.
 
 An unrooted Nix tool later disappeared. Persistent output links now retain tool closures.
 An unavailable tool or failed cache phase is not a passing result.
