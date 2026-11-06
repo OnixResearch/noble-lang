@@ -198,6 +198,6 @@ theorem invocation_wrapper_layout (template : GuardTemplate) :
       invocationLayout template := by
   cases template <;>
     simp only [noble_contracts.companion.guard.invocation_wrapper, invocationLayout,
-      rustGuard, guardLiteral, bind_tc_ok]
+      rustGuard, guardLiteral, bind_tc_eq, bind_ok]
 
 end NobleCertificates.Correspondence

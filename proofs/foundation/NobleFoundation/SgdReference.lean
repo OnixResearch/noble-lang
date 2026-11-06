@@ -194,7 +194,7 @@ theorem nonfinite_parameter_is_refused_at_its_lane (eta : Bits) (params grads : 
     (sameShape : grads.length = params.length) (found : firstNonfinite 0 params = some index) :
     checkStep eta params grads = .refused .unsupported (.param index) := by
   unfold checkStep
-  rw [if_neg nonEmpty, if_neg (by omega), if_neg (by simp [sameShape]), found]
+  rw [ite_eq_right nonEmpty, ite_eq_right (by omega), ite_eq_right (by simp [sameShape]), found]
 
 /-! ## Kernel-checked expectations -/
 

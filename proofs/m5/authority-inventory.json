@@ -46,6 +46,30 @@
   ],
   "theorems": [
     {
+      "name": "M5Authority.specIffReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement is exactly a normal return that satisfies the postcondition; restated here because Aeneas #1384 removed WP.spec_equiv_exists.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.specIffReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P ↔ ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": []
+    },
+    {
+      "name": "M5Authority.specReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement forces a normal return that satisfies the postcondition (the forward direction of specIffReturns).",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.specReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P → ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": []
+    },
+    {
       "name": "M5Authority.bind_eq_ok",
       "role": "result-inversion",
       "claim": "A bind that returns ok came from an ok computation and an ok continuation.",

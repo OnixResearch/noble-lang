@@ -39,7 +39,7 @@ The transpose identity is proved here as a one-step pairing invariant
 (`adjointDot_step`) and for the fixture (`exampleGraph_adjointDot`);
 `ReverseADTranspose.lean` proves it over every well-formed graph.
 -/
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
@@ -394,7 +394,6 @@ theorem unused_input_slot_tangent :
     tangent exampleGraph (fun _ => 3) (fun _ => 0) (fun slot => if slot = 1 then 5 else 0)
       (fun _ => 0) 3 = 0 := by
   simp [tangent, tangentUpTo, valuesUpTo, evalStep, tangentStep, exampleGraph]
-  try norm_num
 
 /-- The reverse traversal keeps a non-unit seed until a consumer contributes. -/
 theorem non_unit_seed_unconsumed :
@@ -430,7 +429,6 @@ def overwritingAdjoints : Nat → ℝ :=
 theorem the_overwriting_update_pairs_to_four :
     adjointDot exampleGraph overwritingAdjoints (fun slot => if slot = 2 then 1 else 0) = 4 := by
   simp [adjointDot, exampleGraph, overwritingAdjoints]
-  try norm_num
 
 /-- The sweep pairs to `8` on the same slot, so the two updates are told apart rather than both
 being accepted. -/

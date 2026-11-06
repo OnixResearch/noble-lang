@@ -10,7 +10,7 @@ pub const USAGE: &str = "usage:
 Consumer configuration (absolute paths): NOBLE_LEAN, NOBLE_BWRAP,
 NOBLE_PRLIMIT, NOBLE_SYSTEMD_RUN, NOBLE_CONTRACT_LIBRARY
 (and NOBLE_NIX_STORE for a Nix toolchain).
-Lean must be release 4.31.0.
+Lean must be release 4.35.0.
 Default proof budget: 120000 ms; maximum: 600000 ms. Missing evidence is unknown.
 Explanation never executes Lean. Proof source runs only in a Linux bubblewrap
 sandbox with no network, credentials, or writable host directories.

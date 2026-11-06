@@ -34,6 +34,18 @@
   ],
   "theorems": [
     {
+      "name": "ServiceWireRefinement.specReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement forces a normal return that satisfies the postcondition; restated here because Aeneas #1384 removed WP.spec_imp_exists.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.specReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P → ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": []
+    },
+    {
       "name": "ServiceWireRefinement.bytesOf_length",
       "role": "byte-view",
       "claim": "The byte view of a slice has the slice length.",

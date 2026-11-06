@@ -70,7 +70,7 @@ theorem takeTail_self (s : TyList) : TyList.takeTail s s.length = s := by
         | nil => rfl
         | cons t ts =>
             simp only [TyList.takeTail]
-            rw [if_pos (Nat.le_refl _), Nat.sub_self]
+            rw [ite_eq_left (Nat.le_refl _), Nat.sub_self]
             rfl
   exact key s.length s (Nat.le_refl _)
 
@@ -81,7 +81,7 @@ theorem tailEquals_self (s : TyList) : tailEquals s s = true := by
 /-- Replacing a stack's top segment by `out`, when the segment is the whole
 stack, is `out`. -/
 theorem replaceTail_self {s out : TyList} : replaceTail s s out = out := by
-  simp [replaceTail, prefixStack, Nat.sub_self, TyList.append]
+  simp [replaceTail, prefixStack, TyList.append]
 
 /-- One invoking node derives its instantiated interface: the word rule
 under one SEQUENCE step, with the empty body closing the derivation. -/

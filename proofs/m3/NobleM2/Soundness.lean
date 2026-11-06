@@ -113,7 +113,7 @@ theorem resolveOne_position {kinds : List Kind} {witness : Inst} {index : Nat}
       subst hb
       exact PositionResolves.direct hlook (by simp [Binding.kindOf])
   | ref v =>
-      simp only [Inst.resolveOne] at h
+      simp only at h
       cases hf : witness.followFrom v remaining 0 with
       | error => simp only [hf] at h; exact absurd h (by simp)
       | ok pair =>
@@ -136,7 +136,7 @@ theorem resolveOne_position {kinds : List Kind} {witness : Inst} {index : Nat}
                     refine PositionResolves.chain hlook hchain ht ?_
                     cases hterm : term.kindOf with
                     | none => rw [hterm] at hcond; simp at hcond
-                    | some k => simp [hterm]
+                    | some k => simp
                   · exact absurd h (by simp)
 
 /-- The resolution pass over one witness, stated against the positions the
@@ -207,7 +207,7 @@ theorem resolve_resolvesTo {kinds : List Kind} {witness resolved : Inst} {fuel l
       subst inst_eq
       subst left_eq
       obtain ⟨hlen, hpos⟩ := resolveList_positions kinds witness 0 fuel
-        witness.bindings bs left' (fun i _ => by simpa using rfl) hres
+        witness.bindings bs left' (fun i _ => by simp) hres
       exact ⟨hlen.symm, fun i hi => by
         obtain ⟨b, hb, hpos'⟩ := hpos i (by omega)
         exact ⟨b, hb, by simpa using hpos'⟩⟩

@@ -62,7 +62,7 @@ private theorem extend_mono_pos (v : ℤ) (hv : 0 ≤ v) (ds : List (Fin 10)) :
   induction ds generalizing v with
   | nil => simp [extend]
   | cons d ds ih =>
-      simp only [extend, List.foldl_cons, Bool.false_eq_true, if_false] at *
+      simp only [extend, List.foldl_cons, Bool.false_eq_true, ite_false] at *
       have := ih (v * 10 + d.val) (by omega)
       omega
 
@@ -71,7 +71,7 @@ private theorem extend_mono_neg (v : ℤ) (hv : v ≤ 0) (ds : List (Fin 10)) :
   induction ds generalizing v with
   | nil => simp [extend]
   | cons d ds ih =>
-      simp only [extend, List.foldl_cons, if_true] at *
+      simp only [extend, List.foldl_cons, ite_true] at *
       have := ih (v * 10 - d.val) (by omega)
       omega
 
@@ -88,40 +88,40 @@ private theorem foldl_checked (negative : Bool) (ds : List (Fin 10)) (v : ℤ)
       unfold checked
       cases negative with
       | false =>
-          simp only [Bool.false_eq_true, if_false] at hs ⊢
+          simp only [Bool.false_eq_true, ite_false] at hs ⊢
           have hmono := extend_mono_pos (v * 10 + d.val) (by omega) ds
           by_cases h1 : I64Range (v * 10)
-          · simp only [h1, if_true, Option.bind_some]
+          · simp only [h1, ite_true, Option.bind_some]
             by_cases h2 : I64Range (v * 10 + d.val)
-            · simp only [h2, if_true]
-              rw [ih _ h2 (by simp only [Bool.false_eq_true, if_false]; omega)]; rfl
-            · simp only [h2, if_false, foldl_none]
+            · simp only [h2, ite_true]
+              rw [ih _ h2 (by simp only [Bool.false_eq_true, ite_false]; omega)]; rfl
+            · simp only [h2, ite_false, foldl_none]
               have : ¬ I64Range (extend false v (d :: ds)) := by
                 unfold I64Range at *; simp only [extend, List.foldl_cons,
-                  Bool.false_eq_true, if_false] at *; omega
+                  Bool.false_eq_true, ite_false] at *; omega
               simp [this]
-          · simp only [h1, if_false, Option.bind_none, foldl_none]
+          · simp only [h1, ite_false, Option.bind_none, foldl_none]
             have : ¬ I64Range (extend false v (d :: ds)) := by
               unfold I64Range at *; simp only [extend, List.foldl_cons,
-                Bool.false_eq_true, if_false] at *; omega
+                Bool.false_eq_true, ite_false] at *; omega
             simp [this]
       | true =>
-          simp only [if_true] at hs ⊢
+          simp only [ite_true] at hs ⊢
           have hmono := extend_mono_neg (v * 10 - d.val) (by omega) ds
           by_cases h1 : I64Range (v * 10)
-          · simp only [h1, if_true, Option.bind_some]
+          · simp only [h1, ite_true, Option.bind_some]
             by_cases h2 : I64Range (v * 10 - d.val)
-            · simp only [h2, if_true]
-              rw [ih _ h2 (by simp only [if_true]; omega)]; rfl
-            · simp only [h2, if_false, foldl_none]
+            · simp only [h2, ite_true]
+              rw [ih _ h2 (by simp only [ite_true]; omega)]; rfl
+            · simp only [h2, ite_false, foldl_none]
               have : ¬ I64Range (extend true v (d :: ds)) := by
                 unfold I64Range at *; simp only [extend, List.foldl_cons,
-                  if_true] at *; omega
+                  ite_true] at *; omega
               simp [this]
-          · simp only [h1, if_false, Option.bind_none, foldl_none]
+          · simp only [h1, ite_false, Option.bind_none, foldl_none]
             have : ¬ I64Range (extend true v (d :: ds)) := by
               unfold I64Range at *; simp only [extend, List.foldl_cons,
-                if_true] at *; omega
+                ite_true] at *; omega
             simp [this]
 
 private theorem extend_zero (negative : Bool) (ds : List (Fin 10)) :
@@ -135,7 +135,7 @@ private theorem extend_zero (negative : Bool) (ds : List (Fin 10)) :
         intro a
         have := ih (a * 10 + d.val)
         cases negative <;> simp only [extend, List.foldl_cons, Bool.false_eq_true,
-          if_true, if_false] at this ⊢ <;> push_cast at this ⊢
+          ite_true, ite_false] at this ⊢ <;> push_cast at this ⊢
         · exact this
         · rw [← this]; congr 1; ring
   have := key 0

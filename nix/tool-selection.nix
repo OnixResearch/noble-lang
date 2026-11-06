@@ -34,6 +34,7 @@ let
   require = condition: diagnostic: if condition then [ ] else [ diagnostic ];
   sourceNames = [
     "aeneas"
+    "aeneas_lean"
     "aeneas_nixpkgs"
     "cairn"
     "charon"
@@ -152,9 +153,11 @@ let
       ) "file-binding-mismatch:${name}"
     ) fileNames
   );
-  aeneasRev = at policy [
+  # The proof projects require the Aeneas Lean library at its own reviewed pin; the extractor is
+  # `sources.aeneas`, checked through the upstream Charon pin below.
+  aeneasLeanRev = at policy [
     "sources"
-    "aeneas"
+    "aeneas_lean"
     "rev"
   ];
   charonRev = at policy [
@@ -189,7 +192,7 @@ let
         "subDir"
       ]
       && get backend "name" == "aeneas"
-      && get backend "rev" == aeneasRev
+      && get backend "rev" == aeneasLeanRev
       &&
         at backend [
           "git"
@@ -264,7 +267,7 @@ let
     && namesUnique packages
     && namesUnique upstream
     && length backendPackages == 1
-    && get (builtins.head backendPackages) "rev" == aeneasRev
+    && get (builtins.head backendPackages) "rev" == aeneasLeanRev
     && get (builtins.head backendPackages) "url" == get lean "backend_url"
     && get (builtins.head backendPackages) "subDir" == get lean "backend_subdir"
     && normalized dependencyPackages == normalized upstream;

@@ -277,7 +277,6 @@ private theorem tquot_upper_iff {a b : ℤ} (ha : I64Range a)
           exfalso
           rw [ha'] at hq
           norm_num [tquot, sgn, upper] at hq
-          omega
       | negSucc n =>
           change n.succ = 1 at hB
           have hn : n = 0 := by omega
@@ -291,17 +290,17 @@ theorem checkedDivRem_overflow_iff {a b : ℤ} (ha : I64Range a)
     (hb : I64Range b) (hb0 : b ≠ 0) :
     checkedDivRem a b = .error .overflow ↔ a = minInt ∧ b = -1 := by
   unfold checkedDivRem
-  rw [if_neg hb0]
+  rw [ite_eq_right hb0]
   by_cases hq : I64Range (tquot a b)
   · have hnot : ¬ (a = minInt ∧ b = -1) := by
       rintro ⟨rfl, rfl⟩
       norm_num [tquot, sgn, minInt, upper, I64Range] at hq
-    rw [if_pos hq]
+    rw [ite_eq_left hq]
     simp [hnot]
   · have hupper : tquot a b = upper := by
       by_contra hne
       exact hq (tquot_range_of_ne_upper ha hb hb0 hne)
-    rw [if_neg hq]
+    rw [ite_eq_right hq]
     simpa [hupper] using (tquot_upper_iff ha hb hb0)
 
 theorem checkedDivRem_divisionByZero (a : ℤ) :

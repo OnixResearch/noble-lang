@@ -12,7 +12,7 @@
 # Usage (from any directory; the pinned Lean must be first on PATH; bun
 # must be on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m3-coverage-refusals.sh
 #
 # Mutations (each a separate cell):
@@ -47,7 +47,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GATE="$REPO/verification/m3-coverage-gate.sh"
 PROOF_ROOT="${M3_PROOF_ROOT:-$REPO/proofs/m3}"
 RECORD="${M3_COVERAGE_RECORD:-$REPO/verification/m3-coverage.json}"
-export PATH  # the pinned Lean must already be on PATH; the gate pins 4.31.0
+export PATH  # the pinned Lean must already be on PATH; the gate pins 4.35.0
 
 SCRATCH="$(mktemp -d "$REPO/.m3-cov-refusals-XXXXXX")"
 trap 'rm -rf "$SCRATCH"' EXIT

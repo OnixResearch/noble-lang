@@ -157,7 +157,7 @@ export function accepted(observed, entry, expectedProof, label, context, expecte
     ]) assert.equal(fs.realpathSync(proof.strict_lean_tools?.[field]),
       context.record.receipt.tools[tool].original,
       `${label}: independent checker used unpinned ${field}`);
-    assert.match(proof.strict_lean_tools?.lean_version ?? '', /Lean.*4\.31\.0/iu,
+    assert.match(proof.strict_lean_tools?.lean_version ?? '', /Lean.*4\.35\.0/iu,
       `${label}: unselected Lean kernel version`);
     assert.match(proof.consumer_wire_sha256 ?? '', /^[0-9a-f]{64}$/u,
       `${label}: independent consumer wire identity missing`);
@@ -226,7 +226,7 @@ function realConsumerFailure(context) {
     'actual pinned Lean consumer process did not receive SIGKILL');
   assert.equal(fault.selected_version?.status, 0, 'pinned Lean version was not checked');
   const version = Buffer.from(fault.selected_version.stdout_base64, 'base64');
-  assert.match(version.toString('utf8'), /Lean \(version 4\.31\.0,.*68218e876d2a38b1985b8590fff244a83c321783/u);
+  assert.match(version.toString('utf8'), /Lean \(version 4\.35\.0,.*eb6cafb7290e8bd5f2937522d8d804f58f02bafc/u);
   const target = fault.target;
   assert.ok(Number.isSafeInteger(target?.pid) && target.pid > 0
     && Number.isSafeInteger(target?.parent_pid) && target.parent_pid > 0,

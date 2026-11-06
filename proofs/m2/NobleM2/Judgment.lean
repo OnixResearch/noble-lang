@@ -223,27 +223,27 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
             split
             · -- y < z
               rename_i hyz
-              rw [EffSet.union.eq_3, if_pos hxy]
+              rw [EffSet.union.eq_3, ite_eq_left hxy]
               exact cons_congr x
                 (ih (xs.length + (y :: ys).length + (z :: zs).length) (by omega)
                   xs (y :: ys) (z :: zs) (Nat.le_refl _)
-                  |> (fun k => by rw [EffSet.union.eq_3, if_pos hyz] at k; exact k))
+                  |> (fun k => by rw [EffSet.union.eq_3, ite_eq_left hyz] at k; exact k))
             · -- ¬(y < z)
               rename_i hyz
               split
               · -- z < y
                 rename_i hzy
-                rw [EffSet.union.eq_3, if_pos hxz]
+                rw [EffSet.union.eq_3, ite_eq_left hxz]
                 have key := ih (xs.length + (y :: ys).length + (z :: zs).length)
                   (by omega) xs (y :: ys) (z :: zs) (Nat.le_refl _)
-                rw [EffSet.union.eq_3, if_neg hyz, if_pos hzy] at key
+                rw [EffSet.union.eq_3, ite_eq_right hyz, ite_eq_left hzy] at key
                 exact cons_congr x key
               · -- y = z
                 rename_i hzy
-                rw [EffSet.union.eq_3, if_pos hxy]
+                rw [EffSet.union.eq_3, ite_eq_left hxy]
                 have key := ih (xs.length + (y :: ys).length + (z :: zs).length)
                   (by omega) xs (y :: ys) (z :: zs) (Nat.le_refl _)
-                rw [EffSet.union.eq_3, if_neg hyz, if_neg hzy] at key
+                rw [EffSet.union.eq_3, ite_eq_right hyz, ite_eq_right hzy] at key
                 exact cons_congr x key
           · -- ¬(x < z)
             rename_i hxz
@@ -257,10 +257,10 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
                 split
                 · -- z < y
                   rename_i hzy
-                  rw [EffSet.union.eq_3, if_neg hxz, if_pos hzx]
+                  rw [EffSet.union.eq_3, ite_eq_right hxz, ite_eq_left hzx]
                   have key := ih ((x :: xs).length + (y :: ys).length + zs.length)
                     (by omega) (x :: xs) (y :: ys) zs (Nat.le_refl _)
-                  rw [EffSet.union.eq_3, if_pos hxy] at key
+                  rw [EffSet.union.eq_3, ite_eq_left hxy] at key
                   exact cons_congr z key
                 · -- y = z, z < x
                   rename_i hzy
@@ -269,8 +269,8 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
               rename_i hzx
               have h1 : ¬(y < z) := by omega
               have h2 : z < y := by omega
-              rw [EffSet.union.eq_3, if_neg h1, if_pos h2,
-                EffSet.union.eq_3, if_neg hxz, if_neg hzx]
+              rw [EffSet.union.eq_3, ite_eq_right h1, ite_eq_left h2,
+                EffSet.union.eq_3, ite_eq_right hxz, ite_eq_right hzx]
               have key := ih (xs.length + (y :: ys).length + zs.length) (by omega)
                 xs (y :: ys) zs (Nat.le_refl _)
               exact cons_congr x key
@@ -284,7 +284,7 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
             split
             · -- y < z
               rename_i hyz
-              rw [EffSet.union.eq_3, if_neg hxy, if_pos hyx]
+              rw [EffSet.union.eq_3, ite_eq_right hxy, ite_eq_left hyx]
               have key := ih ((x :: xs).length + ys.length + (z :: zs).length)
                 (by omega) (x :: xs) ys (z :: zs) (Nat.le_refl _)
               exact cons_congr y key
@@ -293,15 +293,15 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
               split
               · -- z < y < x
                 rename_i hzy
-                rw [EffSet.union.eq_3, if_neg (by omega : ¬(x < z)),
-                  if_pos (by omega : z < x)]
+                rw [EffSet.union.eq_3, ite_eq_right (by omega : ¬(x < z)),
+                  ite_eq_left (by omega : z < x)]
                 have key := ih ((x :: xs).length + (y :: ys).length + zs.length)
                   (by omega) (x :: xs) (y :: ys) zs (Nat.le_refl _)
-                rw [EffSet.union.eq_3, if_neg hxy, if_pos hyx] at key
+                rw [EffSet.union.eq_3, ite_eq_right hxy, ite_eq_left hyx] at key
                 exact cons_congr z key
               · -- y = z, y < x
                 rename_i hzy
-                rw [EffSet.union.eq_3, if_neg hxy, if_pos hyx]
+                rw [EffSet.union.eq_3, ite_eq_right hxy, ite_eq_left hyx]
                 have key := ih ((x :: xs).length + ys.length + zs.length) (by omega)
                   (x :: xs) ys zs (Nat.le_refl _)
                 exact cons_congr y key
@@ -311,8 +311,8 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
             split
             · -- x < z
               rename_i hxz
-              rw [if_pos (show y < z by omega),
-                EffSet.union.eq_3, if_neg hxy, if_neg hyx]
+              rw [ite_eq_left (show y < z by omega),
+                EffSet.union.eq_3, ite_eq_right hxy, ite_eq_right hyx]
               have key := ih (xs.length + ys.length + (z :: zs).length) (by omega)
                 xs ys (z :: zs) (Nat.le_refl _)
               exact cons_congr x key
@@ -321,18 +321,18 @@ private theorem union_assoc_aux : ∀ n (l1 l2 l3 : List Nat),
               split
               · -- z < x, x = y
                 rename_i hzx
-                rw [if_neg (show ¬(y < z) by omega),
-                  if_pos (show z < y by omega),
-                  EffSet.union.eq_3, if_neg hxz, if_pos hzx]
+                rw [ite_eq_right (show ¬(y < z) by omega),
+                  ite_eq_left (show z < y by omega),
+                  EffSet.union.eq_3, ite_eq_right hxz, ite_eq_left hzx]
                 have key := ih ((x :: xs).length + (y :: ys).length + zs.length)
                   (by omega) (x :: xs) (y :: ys) zs (Nat.le_refl _)
-                rw [EffSet.union.eq_3, if_neg hxy, if_neg hyx] at key
+                rw [EffSet.union.eq_3, ite_eq_right hxy, ite_eq_right hyx] at key
                 exact cons_congr z key
               · -- x = y = z
                 rename_i hzx
-                rw [if_neg (show ¬(y < z) by omega),
-                  if_neg (show ¬(z < y) by omega),
-                  EffSet.union.eq_3, if_neg hxy, if_neg hyx]
+                rw [ite_eq_right (show ¬(y < z) by omega),
+                  ite_eq_right (show ¬(z < y) by omega),
+                  EffSet.union.eq_3, ite_eq_right hxy, ite_eq_right hyx]
                 have key := ih (xs.length + ys.length + zs.length) (by omega)
                   xs ys zs (Nat.le_refl _)
                 exact cons_congr x key

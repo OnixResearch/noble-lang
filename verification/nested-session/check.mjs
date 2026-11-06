@@ -1,6 +1,6 @@
 // Lean-kernel check for the nested session protocol model (`.cairn/changes/nested-session-protocol`,
 // WIT-SESSION-01/02). Builds `proofs/m6/NestedSession.lean` in an isolated project with the pinned Lean
-// 4.31 toolchain and audits every inventoried theorem's statement and transitive axioms.
+// toolchain and audits every inventoried theorem's statement and transitive axioms.
 // This is a model theorem check: no lowering, runtime, scheduler or peer claim.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -106,7 +106,7 @@ requireThat(allowDirty || initial.status === '', `source worktree dirty: ${initi
 const inventory = JSON.parse(readFileSync(join(root, inventoryFile)));
 const names = checkDeclarations(inventory);
 const version = run(join(leanBin, 'lean'), ['--version']).trim();
-requireThat(version.includes('version 4.31.0') && version.includes('68218e876d2a38b1985b8590fff244a83c321783'),
+requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
   'wrong pinned Lean executable');
 const project = join(output, 'project');
 mkdirSync(project);

@@ -116,7 +116,7 @@ not a quotation, carries a SEQUENCE step at the head node: its node rule
 instance, the frame join, and the tail's derivation from the joined stack. -/
 theorem rule_sequence_sound (h : check env request cand = .accepted checked)
     {id : Nat} {rest : List Nat} {node : Node}
-    (hbody : cand.body = id :: rest) (hrest : rest ≠ [])
+    (hbody : cand.body = id :: rest) (_hrest : rest ≠ [])
     (hnode : cand.nodes[id]? = some node)
     (hnotq : ∀ body inst, node ≠ Node.quotation body inst) :
     ∃ a b head mid tail,
@@ -348,8 +348,8 @@ theorem duplication_shares_one_interface (s i o : TyList) (e : EffSet) :
           s.append (TyList.cons (.program i o e)
             (TyList.singleton (.program i o e))), EffSet.empty) := by
   simp [dupScheme, Scheme.instantiate, Scheme.substStack, Scheme.substPattern,
-    Scheme.substSignature, Scheme.substEffects, PartList.ofList, SlotList.ofList,
-    Inst.value, Inst.stack, Inst.effects]
+    Scheme.substEffects, PartList.ofList,
+    Inst.value, Inst.stack]
   exact ⟨rfl, rfl⟩
 
 /-- Fresh instantiation (K-CHECK-01): the same definition invoked twice in

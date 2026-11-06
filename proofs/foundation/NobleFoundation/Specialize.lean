@@ -71,7 +71,7 @@ theorem staticValuesUpTo_eq_staticValue (graph : Graph) (σ : Nat → Option (Bi
       · rw [hlast]
         simp [staticValue, staticValuesUpTo]
       · have hlt : index < count := by omega
-        simp only [staticValuesUpTo, if_neg hlast]
+        simp only [staticValuesUpTo, ite_eq_right hlast]
         exact ih index hlt
 
 /-- Rewrite one node without changing its index. -/

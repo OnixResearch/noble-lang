@@ -91,7 +91,7 @@ theorem quotient_round_error (q r d n : Nat) (hr : r < d)
   dsimp
   have hplus : (q + 1) * d = q * d + d := by simp [Nat.add_mul]
   by_cases hgt : 2 * r > d
-  · rw [if_pos hgt, hplus]
+  · rw [ite_eq_left hgt, hplus]
     by_cases hge : n ≤ q * d + d
     · simp [natAbsDiff, hge]
       omega
@@ -101,7 +101,7 @@ theorem quotient_round_error (q r d n : Nat) (hr : r < d)
   · by_cases heq : 2 * r = d
     · by_cases hodd : q % 2 = 1
       · have hround : q + q % 2 = q + 1 := by omega
-        rw [if_neg hgt, if_pos heq, hround, hplus]
+        rw [ite_eq_right hgt, ite_eq_left heq, hround, hplus]
         by_cases hge : n ≤ q * d + d
         · simp [natAbsDiff, hge]
           omega
@@ -110,14 +110,14 @@ theorem quotient_round_error (q r d n : Nat) (hr : r < d)
           omega
       · have heven : q % 2 = 0 := by omega
         have hround : q + q % 2 = q := by omega
-        rw [if_neg hgt, if_pos heq, hround]
+        rw [ite_eq_right hgt, ite_eq_left heq, hround]
         by_cases hge : n ≤ q * d
         · simp [natAbsDiff, hge]
           omega
         · have hlt : q * d < n := by omega
           simp [natAbsDiff, hge]
           omega
-    · rw [if_neg hgt, if_neg heq]
+    · rw [ite_eq_right hgt, ite_eq_right heq]
       by_cases hge : n ≤ q * d
       · simp [natAbsDiff, hge]
         omega
@@ -258,11 +258,11 @@ theorem carriedPair_m_bounds (a b : Nat) (hb : 0 < b)
   have hrange := roundedQuotient_bounds a b hb hlo hhi
   unfold carriedPair
   by_cases h : roundedQuotient a b = pow2 24
-  · simp only [if_pos h]
+  · simp only [ite_eq_left h]
     norm_num [pow2]
   · have hupper : roundedQuotient a b < pow2 24 := by
       exact Nat.lt_of_le_of_ne hrange.2 h
-    simp only [if_neg h]
+    simp only [ite_eq_right h]
     exact ⟨hrange.1, hupper⟩
 
 /-- The binary32 reference's `roundPositive` agrees with the normal encoding
@@ -293,10 +293,10 @@ theorem roundPositive_eq_roundedNormalBits (a b : Nat)
   have hchi : c.2 ≤ 127 := by simpa [c] using hhi
   by_cases h1 : c.2 > 127
   · omega
-  · simp only [if_neg h1]
+  · simp only [ite_eq_right h1]
     by_cases h2 : c.2 < -126
     · omega
-    · simp only [if_neg h2]
+    · simp only [ite_eq_right h2]
       rfl
 
 /-- The exact rational interpretation of a normal encoding. -/

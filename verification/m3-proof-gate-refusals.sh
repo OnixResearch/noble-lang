@@ -14,7 +14,7 @@
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m3-proof-gate-refusals.sh
 #
 #   RUST_BIN=/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin
@@ -46,7 +46,7 @@ set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GATE="$REPO/verification/m3-proof-gate.sh"
 PROOF_ROOT="${M3_PROOF_ROOT:-$REPO/proofs/m3}"
-export PATH  # the pinned Lean must already be on PATH; the gate pins 4.31.0
+export PATH  # the pinned Lean must already be on PATH; the gate pins 4.35.0
 RUST_BIN="${RUST_BIN:-/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin}"
 export CARGO_HOME="${CARGO_HOME:-/tmp/cargo-home}"
 

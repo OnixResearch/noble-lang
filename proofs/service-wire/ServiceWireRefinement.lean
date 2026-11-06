@@ -32,6 +32,21 @@ namespace ServiceWireRefinement
 
 open NobleFoundation.ServiceWire
 
+/-- A `spec` judgement forces a normal return with the postcondition. Aeneas #1384 removed the
+library's own statement of this (`WP.spec_imp_exists`); it follows from `spec_ok`, `spec_vis` and
+`spec_div` by cases on the result (#86). -/
+theorem specReturns {α : Type _} {m : Result α} {P : α → Prop} (h : WP.spec m P) :
+    ∃ y, m = Result.ok y ∧ P y := by
+  cases m with
+  | ret y => exact ⟨y, rfl, (WP.spec_ok y).1 h⟩
+  | vis e k => exact ((WP.spec_vis e k).1 h).elim
+  | div => exact (WP.spec_div.1 h).elim
+
+/- The proofs view a `Str` as its byte slice (`bytesOf label`). `Str` is a plain definition of
+`Slice U8`, and Lean 4.35 `simp` only rewrites terms that are type-correct when instances, but not
+plain definitions, unfold; this lets `Str` unfold there too, within this file only (#86). -/
+attribute [local implicit_reducible] Str
+
 /-! ## Byte views -/
 
 /-- The byte values of a slice. -/
@@ -71,23 +86,23 @@ theorem scanFails_eq (limit : Nat) (rest : List Nat) :
   | nil =>
       intro current reached within
       simp [scanFails, depthScanAux]
-      omega
+      exact decide_eq_false (by omega)
   | cons byte rest ih =>
       intro current reached within
       unfold scanFails depthScanAux
       by_cases opener : byte = 60
-      · rw [if_pos opener, if_pos opener]
+      · rw [ite_eq_left opener, ite_eq_left opener]
         by_cases over : limit < current + 1
-        · rw [if_pos over]
+        · rw [ite_eq_left over]
           have := depthScanAux_ge rest (current + 1) (max reached (current + 1))
           exact (decide_eq_true (by omega)).symm
-        · rw [if_neg over]
+        · rw [ite_eq_right over]
           exact ih (current + 1) (max reached (current + 1)) (by omega)
-      · rw [if_neg opener, if_neg opener]
+      · rw [ite_eq_right opener, ite_eq_right opener]
         by_cases closer : byte = 62
-        · rw [if_pos closer, if_pos closer]
+        · rw [ite_eq_left closer, ite_eq_left closer]
           exact ih (current - 1) reached within
-        · rw [if_neg closer, if_neg closer]
+        · rw [ite_eq_right closer, ite_eq_right closer]
           exact ih current reached within
 
 /-- **The model's depth decision is the decoder's scan.** -/
@@ -173,36 +188,36 @@ theorem check_depth_eq (bytes : Slice U8) (limit : U32) (bounded : limit.val ≤
       by_cases hlt : index.val < bytes.length
       · have hlt' : index < Slice.len bytes := by scalar_tac
         obtain ⟨byte, hget, hbyte⟩ :=
-          WP.spec_imp_exists (Slice.index_usize_spec bytes index hlt)
+          specReturns (Slice.index_usize_spec bytes index hlt)
         obtain ⟨index1, hadd, hval⟩ :=
-          WP.spec_imp_exists (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
+          specReturns (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
         rw [bytesOf_drop bytes index.val hlt, ← hbyte] at hsame
-        simp only [hlt', if_true, hget, bind_tc_ok]
+        simp only [hlt', ite_true, hget, bind_ok]
         by_cases h60 : byte = 60#u8
         · have hv : byte.val = 60 := by rw [h60]; rfl
-          simp only [scanFails, hv, if_true] at hsame
+          simp only [scanFails, hv, ite_true] at hsame
           obtain ⟨depth1, hdadd, hdval⟩ :=
-            WP.spec_imp_exists (UScalar.add_spec (x := depth) (y := 1#u32) (by scalar_tac))
-          simp only [h60, if_true, hdadd, bind_tc_ok]
+            specReturns (UScalar.add_spec (x := depth) (y := 1#u32) (by scalar_tac))
+          simp only [h60, ite_true, hdadd, bind_ok]
           by_cases over : depth1 > limit
           · have over' : limit.val < depth.val + 1 := by scalar_tac
-            rw [if_pos over'] at hsame
-            simp only [over, if_true, WP.spec_ok]
+            rw [ite_eq_left over'] at hsame
+            simp only [over, ite_true, WP.spec_ok]
             rw [← hsame]
             rfl
           · have over' : ¬ limit.val < depth.val + 1 := by scalar_tac
-            rw [if_neg over'] at hsame
-            simp only [over, if_false, hadd, bind_tc_ok, WP.spec_ok]
+            rw [ite_eq_right over'] at hsame
+            simp only [over, ite_false, hadd, bind_ok, WP.spec_ok]
             refine ⟨⟨by scalar_tac, by scalar_tac, ?_⟩, by scalar_tac⟩
             rw [hdval, hval]
             exact hsame
         · have hv : byte.val ≠ 60 := fun h => h60 ((UScalar.eq_equiv _ _).mpr (by simpa using h))
-          simp only [scanFails, hv, if_false] at hsame
-          simp only [h60, if_false]
+          simp only [scanFails, hv, ite_false] at hsame
+          simp only [h60, ite_false]
           by_cases h62 : byte = 62#u8
           · have hv62 : byte.val = 62 := by rw [h62]; rfl
-            simp only [hv62, if_true] at hsame
-            simp only [h62, if_true, bind_tc_ok, hadd, WP.spec_ok]
+            simp only [hv62, ite_true] at hsame
+            simp only [h62, ite_true, bind_ok, hadd, WP.spec_ok]
             refine ⟨⟨?_, by scalar_tac, ?_⟩, by scalar_tac⟩
             · rw [saturating_sub_one_val]
               omega
@@ -210,19 +225,19 @@ theorem check_depth_eq (bytes : Slice U8) (limit : U32) (bounded : limit.val ≤
               rw [saturating_sub_one_val]
               exact hsame
           · have hv62 : byte.val ≠ 62 := fun h => h62 ((UScalar.eq_equiv _ _).mpr (by simpa using h))
-            simp only [hv62, if_false] at hsame
-            simp only [h62, if_false, bind_tc_ok, hadd, WP.spec_ok]
+            simp only [hv62, ite_false] at hsame
+            simp only [h62, ite_false, bind_ok, hadd, WP.spec_ok]
             refine ⟨⟨hdepth, by scalar_tac, ?_⟩, by scalar_tac⟩
             rw [hval]
             exact hsame
       · have hge : ¬ index < Slice.len bytes := by scalar_tac
         have hend : index.val = bytes.length := by omega
         rw [hend, bytesOf_drop_length] at hsame
-        simp only [hge, if_false, WP.spec_ok]
+        simp only [hge, ite_false, WP.spec_ok]
         rw [← hsame]
         rfl
     · exact ⟨by simp, by simp, by simp⟩
-  obtain ⟨r, hr, hpost⟩ := WP.spec_imp_exists spec
+  obtain ⟨r, hr, hpost⟩ := specReturns spec
   rw [hr, hpost]
 
 /-! ## The prefix loop -/
@@ -253,7 +268,7 @@ theorem has_service_prefix_eq (bytes : Slice U8) (long : 10 ≤ bytes.length) :
         (bytesOf bytes).take index.val = recordPrefix.take index.val)
     · rintro index ⟨hle, hsame⟩
       unfold dataspace.wire.has_service_prefix_loop.body
-      simp only [lift, bind_tc_ok]
+      simp only [lift, bind_ok]
       by_cases hlt : index.val < 10
       · have hlt' : index < Slice.len (Array.to_slice (Array.make 10#usize [60#u8, 115#u8, 101#u8,
             114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8])) := by
@@ -261,21 +276,21 @@ theorem has_service_prefix_eq (bytes : Slice U8) (long : 10 ≤ bytes.length) :
           scalar_tac
         have hbytes : index.val < bytes.length := by omega
         obtain ⟨byte, hget, hbyte⟩ :=
-          WP.spec_imp_exists (Slice.index_usize_spec bytes index hbytes)
-        obtain ⟨expected, hexp, hexpected⟩ := WP.spec_imp_exists
+          specReturns (Slice.index_usize_spec bytes index hbytes)
+        obtain ⟨expected, hexp, hexpected⟩ := specReturns
           (Array.index_usize_spec (Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8,
             105#u8, 99#u8, 101#u8, 32#u8, 34#u8]) index (by simpa using hlt))
         obtain ⟨index1, hadd, hval⟩ :=
-          WP.spec_imp_exists (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
+          specReturns (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
         have hmodel : recordPrefix[index.val]'(by simp [recordPrefix_length]; omega) = expected.val := by
           rw [hexpected]
           simp only [← hpre, List.getElem_map]
         have hbytesval : (bytesOf bytes)[index.val]'(by simp [bytesOf_length]; omega) = byte.val := by
           rw [hbyte]
           simp [bytesOf]
-        simp only [hlt', if_true, hget, hexp, bind_tc_ok]
+        simp only [hlt', ite_true, hget, hexp, bind_ok]
         by_cases same : byte = expected
-        · simp only [same, bne_self_eq_false, Bool.false_eq_true, if_false, hadd, bind_tc_ok,
+        · simp only [same, bne_self_eq_false, Bool.false_eq_true, ite_false, hadd, bind_ok,
             WP.spec_ok]
           refine ⟨⟨by scalar_tac, ?_⟩, by scalar_tac⟩
           rw [show index1.val = index.val + 1 by scalar_tac]
@@ -283,12 +298,12 @@ theorem has_service_prefix_eq (bytes : Slice U8) (long : 10 ≤ bytes.length) :
             take_succ_of_lt _ _ (by simp [recordPrefix_length]; omega), hsame, hbytesval, hmodel,
             same]
         · have differ : (byte != expected) = true := by simpa using same
-          simp only [differ, if_true, WP.spec_ok]
+          simp only [differ, ite_true, WP.spec_ok]
           symm
           rw [decide_eq_false_iff_not]
           intro whole
           have at10 := congrArg (fun l : List Nat => l[index.val]?) whole
-          simp only [List.getElem?_take, if_pos hlt] at at10
+          simp only [List.getElem?_take, ite_eq_left hlt] at at10
           rw [List.getElem?_eq_getElem (by simp [bytesOf_length]; omega),
             List.getElem?_eq_getElem (by simp [recordPrefix_length]; omega), hbytesval, hmodel] at at10
           exact same ((UScalar.eq_equiv _ _).mpr (by simpa using at10))
@@ -297,14 +312,14 @@ theorem has_service_prefix_eq (bytes : Slice U8) (long : 10 ≤ bytes.length) :
             101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8])) := by
           simp [Array.to_slice]
           scalar_tac
-        simp only [hge, if_false, WP.spec_ok]
+        simp only [hge, ite_false, WP.spec_ok]
         rw [hend] at hsame
         symm
         rw [decide_eq_true_iff]
         rw [hsame]
         rfl
     · exact ⟨by simp, by simp⟩
-  obtain ⟨r, hr, hpost⟩ := WP.spec_imp_exists spec
+  obtain ⟨r, hr, hpost⟩ := specReturns spec
   rw [hr, hpost]
 
 /-! ## The name check -/
@@ -324,9 +339,9 @@ theorem valid_name_eq (label : Str) :
       unfold dataspace.wire.valid_name_loop.body
       by_cases hlt : index.val < label.length
       · have hlt' : index < Slice.len label := by scalar_tac
-        obtain ⟨byte, hget, hbyte⟩ := WP.spec_imp_exists (Slice.index_usize_spec label index hlt)
+        obtain ⟨byte, hget, hbyte⟩ := specReturns (Slice.index_usize_spec label index hlt)
         obtain ⟨index1, hadd, hval⟩ :=
-          WP.spec_imp_exists (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
+          specReturns (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
         have hbytesval : (bytesOf label)[index.val]'(by simp [bytesOf_length]; omega) = byte.val := by
           rw [hbyte]
           simp [bytesOf]
@@ -338,10 +353,10 @@ theorem valid_name_eq (label : Str) :
               byte.val == 95 || byte.val == 45) := by
           unfold nameByte
           simp only [Bool.decide_or, Bool.decide_and, Bool.or_assoc]
-        simp only [hlt', if_true, hget, bind_tc_ok, core.num.U8.is_ascii_alphanumeric]
+        simp only [hlt', ite_true, hget, bind_ok, core.num.U8.is_ascii_alphanumeric]
         split
         · rename_i alnum
-          simp only [hadd, bind_tc_ok, WP.spec_ok]
+          simp only [hadd, bind_ok, WP.spec_ok]
           refine ⟨⟨by scalar_tac, ?_⟩, by scalar_tac⟩
           rw [show index1.val = index.val + 1 by scalar_tac]
           rw [hnext, List.all_append, hprefix]
@@ -349,7 +364,7 @@ theorem valid_name_eq (label : Str) :
         · rename_i notAlnum
           by_cases under : byte = 95#u8
           · have hv : byte.val = 95 := by rw [under]; rfl
-            simp only [under, bne_self_eq_false, Bool.false_eq_true, if_false, hadd, bind_tc_ok,
+            simp only [under, bne_self_eq_false, Bool.false_eq_true, ite_false, hadd, bind_ok,
               WP.spec_ok]
             refine ⟨⟨by scalar_tac, ?_⟩, by scalar_tac⟩
             rw [show index1.val = index.val + 1 by scalar_tac]
@@ -357,10 +372,10 @@ theorem valid_name_eq (label : Str) :
             simp [hv, nameByte]
           · have differ : (byte != 95#u8) = true := by simpa using under
             have hv95 : byte.val ≠ 95 := fun h => under ((UScalar.eq_equiv _ _).mpr (by simpa using h))
-            simp only [differ, if_true]
+            simp only [differ, ite_true]
             by_cases hyphen : byte = 45#u8
             · have hv : byte.val = 45 := by rw [hyphen]; rfl
-              simp only [hyphen, bne_self_eq_false, Bool.false_eq_true, if_false, hadd, bind_tc_ok,
+              simp only [hyphen, bne_self_eq_false, Bool.false_eq_true, ite_false, hadd, bind_ok,
                 WP.spec_ok]
               refine ⟨⟨by scalar_tac, ?_⟩, by scalar_tac⟩
               rw [show index1.val = index.val + 1 by scalar_tac]
@@ -368,7 +383,7 @@ theorem valid_name_eq (label : Str) :
               simp [hv, nameByte]
             · have differ45 : (byte != 45#u8) = true := by simpa using hyphen
               have hv45 : byte.val ≠ 45 := fun h => hyphen ((UScalar.eq_equiv _ _).mpr (by simpa using h))
-              simp only [differ45, if_true, WP.spec_ok]
+              simp only [differ45, ite_true, WP.spec_ok]
               symm
               rw [Bool.eq_false_iff]
               intro all
@@ -380,13 +395,13 @@ theorem valid_name_eq (label : Str) :
               simp [hv95, hv45, notAlnum] at good
       · have hend : index.val = label.length := by omega
         have hge : ¬ index < Slice.len label := by scalar_tac
-        simp only [hge, if_false, WP.spec_ok]
+        simp only [hge, ite_false, WP.spec_ok]
         rw [hend, take_all _ _ (by simp [bytesOf_length])] at hprefix
         exact hprefix.symm
     · exact ⟨by simp, by simp⟩
-  obtain ⟨r, hr, hpost⟩ := WP.spec_imp_exists loopSpec
+  obtain ⟨r, hr, hpost⟩ := specReturns loopSpec
   unfold dataspace.wire.valid_name
-  simp only [core.str.Str.is_empty, core.str.Str.len, core.str.Str.as_bytes, bind_tc_ok]
+  simp only [core.str.Str.is_empty, core.str.Str.len, core.str.Str.as_bytes, bind_ok]
   unfold validName
   by_cases empty : label.val.isEmpty
   · have zero : (bytesOf label).length = 0 := by
@@ -408,7 +423,7 @@ theorem valid_name_eq (label : Str) :
         simp only [dataspace.MAX_NAME_BYTES] at long
         simp only [bytesOf_length, maxNameBytes]
         scalar_tac
-      simp only [empty, Bool.false_eq_true, if_false, long, hr, hpost]
+      simp only [empty, Bool.false_eq_true, ite_false, long, hr, hpost]
       simp [nonzero, fits]
 
 /-! ## The decoder -/
@@ -478,7 +493,7 @@ theorem index_from (bytes : Slice U8) (start : Usize) (fits : start.val ≤ byte
     core.slice.index.Slice.index (core.slice.index.SliceIndexRangeFromUsizeSlice U8) bytes
       { start := start } = Result.ok (bytes.drop start) := by
   simp only [core.slice.index.Slice.index, core.slice.index.SliceIndexRangeFromUsizeSlice.index,
-    if_pos fits]
+    ite_eq_left fits]
 
 theorem index_range (bytes : Slice U8) (start stop : Usize) (ordered : start.val ≤ stop.val)
     (fits : stop.val ≤ bytes.length) :
@@ -486,14 +501,14 @@ theorem index_range (bytes : Slice U8) (start stop : Usize) (ordered : start.val
         { start := start, «end» := stop } = Result.ok part ∧
       bytesOf part = ((bytesOf bytes).drop start.val).take (stop.val - start.val) := by
   simp only [core.slice.index.Slice.index, core.slice.index.SliceIndexRangeUsizeSlice.index]
-  rw [if_pos ⟨by scalar_tac, by scalar_tac⟩]
+  rw [ite_eq_left ⟨by scalar_tac, by scalar_tac⟩]
   refine ⟨_, rfl, ?_⟩
   simp [bytesOf, Slice.from_val, List.slice, List.map_take, List.map_drop]
 
 theorem index_usize_eq (v : Slice U8) (k : Usize) (i : Nat) (hi : k.val = i) (l : List U8)
     (hv : v.val = l) (hk : i < l.length) : v.index_usize k = Result.ok (l[i]'hk) := by
   subst hi hv
-  obtain ⟨y, hy, hyv⟩ := WP.spec_imp_exists (Slice.index_usize_spec v k hk)
+  obtain ⟨y, hy, hyv⟩ := specReturns (Slice.index_usize_spec v k hk)
   rw [hy, hyv]
 
 theorem five_cases (l : List U8) (h : l.length = 5) : ∃ a b c d e, l = [a, b, c, d, e] := by
@@ -539,7 +554,7 @@ theorem decode_after_checks (bytes : List Nat) (configured : Nat)
     decode bytes configured = .schema ∨
       ∃ label ready, decode bytes configured = .accepted label ready := by
   unfold decode
-  rw [if_neg (by omega), if_neg (by simpa using allowed), if_neg (by simp [scan])]
+  rw [ite_eq_right (by omega), ite_eq_right (by simpa using allowed), ite_eq_right (by simp [scan])]
   split
   · exact Or.inl rfl
   · split
@@ -580,37 +595,37 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
       simp only [dataspace.MAX_WIRE_BYTES] at over
       simp only [bytesOf_length, maxWireBytes]
       scalar_tac
-    refine ⟨.Err .ByteLimit, by simp only [over, if_true], ?_⟩
+    refine ⟨.Err .ByteLimit, by simp only [over, ite_true], ?_⟩
     simp [observed, decode, long]
   have fits : (bytesOf bytes).length ≤ maxWireBytes := by
     simp only [dataspace.MAX_WIRE_BYTES] at over
     simp only [bytesOf_length, maxWireBytes]
     scalar_tac
-  simp only [over, if_false]
+  simp only [over, ite_false]
   by_cases zero : configured = 0#u32
   · have disallowed : ¬ (1 ≤ configured.val ∧ configured.val ≤ maxWireDepth) := by
       rw [zero]
       simp
-    refine ⟨.Err .DepthLimit, by simp only [zero, if_true], ?_⟩
+    refine ⟨.Err .DepthLimit, by simp only [zero, ite_true], ?_⟩
     simp [observed, decode, disallowed, show ¬ (bytesOf bytes).length > maxWireBytes by omega]
-  simp only [zero, if_false]
+  simp only [zero, ite_false]
   by_cases deep : configured > dataspace.MAX_WIRE_DEPTH
   · have disallowed : ¬ (1 ≤ configured.val ∧ configured.val ≤ maxWireDepth) := by
       simp only [dataspace.MAX_WIRE_DEPTH] at deep
       simp only [maxWireDepth]
       scalar_tac
-    refine ⟨.Err .DepthLimit, by simp only [deep, if_true], ?_⟩
+    refine ⟨.Err .DepthLimit, by simp only [deep, ite_true], ?_⟩
     simp [observed, decode, disallowed, show ¬ (bytesOf bytes).length > maxWireBytes by omega]
   have allowed : 1 ≤ configured.val ∧ configured.val ≤ maxWireDepth := by
     simp only [dataspace.MAX_WIRE_DEPTH] at deep
     have : configured.val ≠ 0 := fun h => zero ((UScalar.eq_equiv _ _).mpr (by simpa using h))
     simp only [maxWireDepth]
     scalar_tac
-  simp only [deep, if_false]
+  simp only [deep, ite_false]
   rw [check_depth_eq bytes configured (by simpa [maxWireDepth] using allowed.2)]
-  simp only [bind_tc_ok]
+  simp only [bind_ok]
   by_cases fails : scanFails configured.val 0 (bytesOf bytes) = true
-  · refine ⟨.Err .DepthLimit, by simp only [fails, if_true], ?_⟩
+  · refine ⟨.Err .DepthLimit, by simp only [fails, ite_true], ?_⟩
     have exceeds : depthExceeds configured.val (bytesOf bytes) = true := by
       rw [depthExceeds_eq_scanFails]
       exact fails
@@ -618,12 +633,12 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
   have passes : depthExceeds configured.val (bytesOf bytes) = false := by
     rw [depthExceeds_eq_scanFails]
     simpa using fails
-  simp only [fails, Bool.false_eq_true, if_false]
-  simp only [lift, bind_tc_ok, prefix_len, suffix_len]
+  simp only [fails, Bool.false_eq_true, ite_false]
+  simp only [lift, bind_ok, prefix_len, suffix_len]
   have min15 := min_service_bytes
   by_cases short : bytes.len < dataspace.wire.decode_service.MIN_SERVICE_BYTES
   · have short' : (bytesOf bytes).length < 15 := by rw [bytesOf_length]; scalar_tac
-    refine ⟨.Err .Schema, by rw [if_pos short], ?_⟩
+    refine ⟨.Err .Schema, by rw [ite_eq_left short], ?_⟩
     simp only [observed]
     rw [schema_of_refuted _ _ fits allowed passes]
     intro label ready _ enc
@@ -631,8 +646,8 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
     rw [enc] at this
     omega
   have long : 15 ≤ (bytesOf bytes).length := by rw [bytesOf_length]; scalar_tac
-  rw [if_neg short, has_service_prefix_eq bytes (by rw [bytesOf_length] at long; omega)]
-  simp only [bind_tc_ok]
+  rw [ite_eq_right short, has_service_prefix_eq bytes (by rw [bytesOf_length] at long; omega)]
+  simp only [bind_ok]
   by_cases pre : (bytesOf bytes).take 10 = recordPrefix
   swap
   · refine ⟨.Err .Schema, by simp [pre], ?_⟩
@@ -641,7 +656,7 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
     intro label ready _ enc
     rw [← enc] at pre
     exact pre (encode_take label ready)
-  rw [if_pos (decide_eq_true pre)]
+  rw [ite_eq_left (decide_eq_true pre)]
   obtain ⟨name_end, hsome, hval⟩ : ∃ n : Usize, bytes.len.checked_sub 5#usize = some n ∧
       n.val = (bytesOf bytes).length - 5 := by
     have hsub := Usize.checked_sub_bv_spec bytes.len 5#usize
@@ -654,9 +669,9 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
         rw [hc] at hsub
         exact ⟨z, rfl, by rw [bytesOf_length]; scalar_tac⟩
   simp only [hsome]
-  rw [if_neg (show ¬ name_end < 10#usize by scalar_tac),
+  rw [ite_eq_right (show ¬ name_end < 10#usize by scalar_tac),
     index_from bytes name_end (by rw [bytesOf_length] at hval; scalar_tac)]
-  simp only [bind_tc_ok]
+  simp only [bind_ok]
   obtain ⟨a, b, c, d, e, hsfx⟩ := five_cases (bytes.drop name_end).val
     (by rw [Slice.getElem!_val_drop, List.length_drop]; rw [bytesOf_length] at hval long; scalar_tac)
   have hT : (bytesOf bytes).drop ((bytesOf bytes).length - 5) = [a.val, b.val, c.val, d.val, e.val] := by
@@ -671,8 +686,8 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
     index_usize_eq _ 2#usize 2 (by scalar_tac) _ hsfx (by simp),
     index_usize_eq _ 3#usize 3 (by scalar_tac) _ hsfx (by simp),
     index_usize_eq _ 4#usize 4 (by scalar_tac) _ hsfx (by simp)]
-  simp only [bind_tc_ok, List.getElem_cons_zero, List.getElem_cons_succ]
-  simp only [ite_ok_decide, bind_tc_ok, decide_eq_true_eq]
+  simp only [bind_ok, List.getElem_cons_zero, List.getElem_cons_succ]
+  simp only [ite_ok_decide, bind_ok, decide_eq_true_eq]
   have suffix_bytes : ∀ label ready, encode label ready = bytesOf bytes →
       a.val = 34 ∧ b.val = 32 ∧ c.val = 35 ∧ d.val = (if ready then 116 else 102) ∧ e.val = 62 := by
     intro label ready enc
@@ -683,24 +698,24 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
     exact ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1, h.2.2.2.2.1⟩
   by_cases quote : a = 34#u8 ∧ b = 32#u8
   swap
-  · refine ⟨.Err .Schema, by rw [if_neg quote], ?_⟩
+  · refine ⟨.Err .Schema, by rw [ite_eq_right quote], ?_⟩
     simp only [observed]
     rw [schema_of_refuted _ _ fits allowed passes]
     intro label ready _ enc
     obtain ⟨ha, hb, -, -, -⟩ := suffix_bytes label ready enc
     exact quote ⟨(UScalar.eq_equiv _ _).mpr (by simpa using ha),
       (UScalar.eq_equiv _ _).mpr (by simpa using hb)⟩
-  rw [if_pos quote]
+  rw [ite_eq_left quote]
   by_cases close : c = 35#u8 ∧ e = 62#u8
   swap
-  · refine ⟨.Err .Schema, by rw [if_neg close], ?_⟩
+  · refine ⟨.Err .Schema, by rw [ite_eq_right close], ?_⟩
     simp only [observed]
     rw [schema_of_refuted _ _ fits allowed passes]
     intro label ready _ enc
     obtain ⟨-, -, hc, -, he⟩ := suffix_bytes label ready enc
     exact close ⟨(UScalar.eq_equiv _ _).mpr (by simpa using hc),
       (UScalar.eq_equiv _ _).mpr (by simpa using he)⟩
-  rw [if_pos close]
+  rw [ite_eq_left close]
   have ha : a.val = 34 := by rw [quote.1]; rfl
   have hb : b.val = 32 := by rw [quote.2]; rfl
   have hc : c.val = 35 := by rw [close.1]; rfl
@@ -722,25 +737,25 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
   split
   · have post116 := post true rfl
     rw [hnm]
-    simp only [bind_tc_ok]
+    simp only [bind_ok]
     rcases from_utf8_cases nm with hu | hu
     · rw [hu]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       rw [valid_name_eq]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       by_cases hv : validName (bytesOf nm) = true
-      · refine ⟨.Ok { «name» := nm, ready := true }, by rw [if_pos hv], ?_⟩
+      · refine ⟨.Ok { «name» := nm, ready := true }, by rw [ite_eq_left hv], ?_⟩
         simp only [observed]
         rw [middle] at hv ⊢
         rw [accepted_of_shape _ _ true allowed long pre post116 hv]
-      · refine ⟨.Err .Schema, by rw [if_neg hv], ?_⟩
+      · refine ⟨.Err .Schema, by rw [ite_eq_right hv], ?_⟩
         simp only [observed]
         rw [schema_of_refuted _ _ fits allowed passes]
         intro label ready valid enc
         rw [middle_of label ready enc] at valid
         exact hv valid
     · rw [hu]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       refine ⟨.Err .Schema, rfl, ?_⟩
       simp only [observed]
       rw [schema_of_refuted _ _ fits allowed passes]
@@ -750,25 +765,25 @@ theorem decode_service_refines (bytes : Slice U8) (configured : U32) :
       cases hu
   · have post102 := post false rfl
     rw [hnm]
-    simp only [bind_tc_ok]
+    simp only [bind_ok]
     rcases from_utf8_cases nm with hu | hu
     · rw [hu]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       rw [valid_name_eq]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       by_cases hv : validName (bytesOf nm) = true
-      · refine ⟨.Ok { «name» := nm, ready := false }, by rw [if_pos hv], ?_⟩
+      · refine ⟨.Ok { «name» := nm, ready := false }, by rw [ite_eq_left hv], ?_⟩
         simp only [observed]
         rw [middle] at hv ⊢
         rw [accepted_of_shape _ _ false allowed long pre post102 hv]
-      · refine ⟨.Err .Schema, by rw [if_neg hv], ?_⟩
+      · refine ⟨.Err .Schema, by rw [ite_eq_right hv], ?_⟩
         simp only [observed]
         rw [schema_of_refuted _ _ fits allowed passes]
         intro label ready valid enc
         rw [middle_of label ready enc] at valid
         exact hv valid
     · rw [hu]
-      simp only [bind_tc_ok]
+      simp only [bind_ok]
       refine ⟨.Err .Schema, rfl, ?_⟩
       simp only [observed]
       rw [schema_of_refuted _ _ fits allowed passes]
@@ -943,7 +958,7 @@ theorem suffixArray_length (ready : Bool) : (suffixArray ready).to_slice.length 
 theorem copy_ok (s src : Slice U8) (h : s.length = src.length) :
     core.slice.Slice.copy_from_slice core.marker.CopyU8 s src = Result.ok src := by
   unfold core.slice.Slice.copy_from_slice
-  rw [if_pos ((UScalar.eq_equiv _ _).mpr (by simp [h]))]
+  rw [ite_eq_left ((UScalar.eq_equiv _ _).mpr (by simp [h]))]
 
 theorem encode_service_refines (label : Str) (ready : Bool) :
     ∃ r, dataspace.wire.encode_service label ready = Result.ok r ∧
@@ -954,18 +969,19 @@ theorem encode_service_refines (label : Str) (ready : Bool) :
       else r = .Err .InvalidName := by
   unfold dataspace.wire.encode_service
   rw [valid_name_eq]
-  simp only [bind_tc_ok]
+  simp only [bind_ok]
   by_cases valid : validName (bytesOf label) = true
   swap
   · refine ⟨.Err .InvalidName, by simp [valid], ?_⟩
     simp [valid]
-  simp only [valid, if_true]
+  simp only [valid, ite_true]
   have bounds : 1 ≤ label.length ∧ label.length ≤ 32 := by
     have v := valid
     unfold validName at v
-    simp only [Bool.and_eq_true, decide_eq_true_eq, maxNameBytes, bytesOf_length] at v
+    simp only [Bool.and_eq_true, decide_eq_true_eq] at v
+    simp only [maxNameBytes, bytesOf_length] at v
     exact v.1
-  simp only [suffix_choice, lift, bind_tc_ok, prefix_slice_eq, to_slice_len, core.str.Str.len]
+  simp only [suffix_choice, lift, bind_ok, prefix_slice_eq, to_slice_len, core.str.Str.len]
   obtain ⟨stop, hstop, hstopval⟩ : ∃ e : Usize, Usize.checked_add 10#usize label.len = some e ∧
       e.val = 10 + label.length := by
     have hs := Usize.checked_add_bv_spec 10#usize label.len
@@ -990,34 +1006,34 @@ theorem encode_service_refines (label : Str) (ready : Bool) :
         exact ⟨z, rfl, by scalar_tac⟩
   rw [htotal]
   dsimp only
-  rw [if_neg (show ¬ total > dataspace.MAX_WIRE_BYTES by simp only [dataspace.MAX_WIRE_BYTES]; scalar_tac)]
-  obtain ⟨⟨s3, back0⟩, h3, hp3⟩ := WP.spec_imp_exists
+  rw [ite_eq_right (show ¬ total > dataspace.MAX_WIRE_BYTES by simp only [dataspace.MAX_WIRE_BYTES]; scalar_tac)]
+  obtain ⟨⟨s3, back0⟩, h3, hp3⟩ := specReturns
     (Array.index_mut_SliceIndexRangeToUsizeSlice (Array.repeat 64#usize 0#u8) { «end» := 10#usize }
       (by scalar_tac))
   simp only [WP.uncurry'_pair] at hp3
   obtain ⟨-, hs3len, hback0⟩ := hp3
   rw [h3]
-  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair]
+  simp only [bind_ok, Aeneas.Std.uncurry_apply_pair]
   rw [copy_ok s3 prefixSlice (by rw [hs3len, prefixSlice_length]; scalar_tac)]
-  simp only [bind_tc_ok]
-  obtain ⟨⟨s7, back1⟩, h7, hp7⟩ := WP.spec_imp_exists
+  simp only [bind_ok]
+  obtain ⟨⟨s7, back1⟩, h7, hp7⟩ := specReturns
     (Array.index_mut_SliceIndexRangeUsizeSlice.step (back0 prefixSlice)
       { start := 10#usize, «end» := stop } (by scalar_tac) (by scalar_tac))
   simp only [WP.uncurry'_pair] at hp7
   obtain ⟨-, hs7len, hback1⟩ := hp7
   rw [h7]
-  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair, core.str.Str.as_bytes]
+  simp only [bind_ok, Aeneas.Std.uncurry_apply_pair, core.str.Str.as_bytes]
   rw [copy_ok s7 label (by rw [hs7len]; scalar_tac)]
-  simp only [bind_tc_ok]
-  obtain ⟨⟨s10, back2⟩, h10, hp10⟩ := WP.spec_imp_exists
+  simp only [bind_ok]
+  obtain ⟨⟨s10, back2⟩, h10, hp10⟩ := specReturns
     (Array.index_mut_SliceIndexRangeUsizeSlice.step (back1 label)
       { start := stop, «end» := total } (by scalar_tac) (by scalar_tac))
   simp only [WP.uncurry'_pair] at hp10
   obtain ⟨-, hs10len, hback2⟩ := hp10
   rw [h10]
-  simp only [bind_tc_ok, Aeneas.Std.uncurry_apply_pair]
+  simp only [bind_ok, Aeneas.Std.uncurry_apply_pair]
   rw [copy_ok s10 (suffixArray ready).to_slice (by rw [hs10len, suffixArray_length]; scalar_tac)]
-  simp only [bind_tc_ok]
+  simp only [bind_ok]
   refine ⟨_, rfl, _, rfl, ?_, ?_⟩
   · show total.val = 15 + (bytesOf label).length
     rw [htotalval, bytesOf_length]
@@ -1046,14 +1062,15 @@ theorem as_bytes_eq (packet : dataspace.wire.Packet) (fits : packet.len.val ≤ 
   have whole : packet.bytes.to_slice.length = 64 := by
     simp only [Array.to_slice, Slice.length, Slice.from_val, Array.length_eq]
     scalar_tac
-  rw [if_pos (by rw [whole]; exact fits)]
+  rw [ite_eq_left (by rw [whole]; exact fits)]
   refine ⟨_, rfl, ?_⟩
   simp [bytesOf, packetBytes, Slice.from_val, Array.to_slice, List.slice, List.map_take]
 
 theorem validName_length (label : List Nat) (valid : validName label = true) :
     1 ≤ label.length ∧ label.length ≤ 32 := by
   unfold validName at valid
-  simp only [Bool.and_eq_true, decide_eq_true_eq, maxNameBytes] at valid
+  simp only [Bool.and_eq_true, decide_eq_true_eq] at valid
+  simp only [maxNameBytes] at valid
   exact valid.1
 
 /-- **Rust round trip, encode then decode.** For a valid name, the extracted encoder returns a packet
@@ -1068,7 +1085,7 @@ theorem decode_service_encode_service (label : Str) (ready : Bool) (configured :
       dataspace.wire.decode_service wire configured = Result.ok (.Ok value) ∧
       bytesOf value.«name» = bytesOf label ∧ value.ready = ready := by
   obtain ⟨r, hr, hspec⟩ := encode_service_refines label ready
-  rw [if_pos valid] at hspec
+  rw [ite_eq_left valid] at hspec
   obtain ⟨packet, rfl, hlen, hbytes⟩ := hspec
   have bound := validName_length _ valid
   obtain ⟨wire, hwire, hwirebytes⟩ := as_bytes_eq packet (by rw [hlen]; omega)
@@ -1086,7 +1103,7 @@ theorem encode_service_decode_service (wire : Slice U8) (configured : U32)
       dataspace.wire.Packet.as_bytes packet = Result.ok again ∧ bytesOf again = bytesOf wire := by
   obtain ⟨valid, canonical⟩ := decode_service_accepted_is_canonical wire configured value h
   obtain ⟨r, hr, hspec⟩ := encode_service_refines value.«name» value.ready
-  rw [if_pos valid] at hspec
+  rw [ite_eq_left valid] at hspec
   obtain ⟨packet, rfl, hlen, hbytes⟩ := hspec
   have bound := validName_length _ valid
   obtain ⟨again, hagain, hagainbytes⟩ := as_bytes_eq packet (by rw [hlen]; omega)

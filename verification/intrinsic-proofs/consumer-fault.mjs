@@ -79,7 +79,7 @@ async function run() {
     encoding: null, timeout: 30_000, maxBuffer: 4096 });
   assert.equal(version.status, 0, 'selected real Lean version probe failed');
   assert.equal(version.signal, null, 'selected Lean version probe was killed');
-  assert.match(version.stdout.toString('utf8'), /Lean \(version 4\.31\.0,.*68218e876d2a38b1985b8590fff244a83c321783/u,
+  assert.match(version.stdout.toString('utf8'), /Lean \(version 4\.35\.0,.*eb6cafb7290e8bd5f2937522d8d804f58f02bafc/u,
     'selected real Lean version/commit differs from the pinned checker');
   const argv = ['verify-module', source, '--timeout-ms', timeoutText];
   const child = spawn(cli, argv, { cwd: root, env: process.env,

@@ -426,6 +426,6 @@ theorem wordScheme_lookup (index : Nat) (h : index < 23) :
   | none =>
       rw [List.getElem?_eq_none_iff, wordTable_length] at hlook
       omega
-  | some word => exact ⟨word, rfl, by simpa using hlook⟩
+  | some word => exact ⟨word, rfl, by simp⟩
 
 end NobleM2

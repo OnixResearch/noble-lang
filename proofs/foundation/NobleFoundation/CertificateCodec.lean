@@ -115,7 +115,7 @@ theorem decode_encode_replays (derivation : Derivation) (hrev : derivation.revis
         rw [decode_encode_step_replays step hstep]
         rw [ih (fun member hmem => hallSteps member (List.mem_cons_of_mem step hmem))]
   simp only [decode, encodeSteps]
-  rw [if_pos hrev, hsteps derivation.steps hall]
+  rw [ite_eq_left hrev, hsteps derivation.steps hall]
   rfl
 
 /-! ### Refusals -/

@@ -13,6 +13,8 @@ let
     listToAttrs
     ;
   charon = inputs.aeneas.inputs.charon;
+  # The Lean library the proof projects require; the extractor binaries come from `inputs.aeneas`.
+  aeneasLean = inputs.aeneas-lean;
   pin = input: {
     rev = input.sourceInfo.rev or null;
     narHash = input.sourceInfo.narHash or null;
@@ -35,6 +37,7 @@ in
     inherit charon;
     rust_overlay = inputs.rust-overlay;
     aeneas_nixpkgs = inputs.aeneas.inputs.nixpkgs;
+    aeneas_lean = aeneasLean;
     extraction_nixpkgs = charon.inputs.nixpkgs;
   };
   file_sha256 = listToAttrs (
@@ -49,10 +52,10 @@ in
   extraction_rust = (fromTOML (readFile (charon + "/rust-toolchain"))).toolchain.channel;
   charon_pin_text = readFile (inputs.aeneas + "/charon-pin");
   lean_toolchain_text = readFile (root + "/proofs/m1/lean-toolchain");
-  upstream_lean_toolchain_text = readFile (inputs.aeneas + "/backends/lean/lean-toolchain");
+  upstream_lean_toolchain_text = readFile (aeneasLean + "/backends/lean/lean-toolchain");
   lake_config = fromTOML (readFile (root + "/proofs/m1/lakefile.toml"));
   lake_manifest = fromJSON (readFile (root + "/proofs/m1/lake-manifest.json"));
-  upstream_lake_manifest = fromJSON (readFile (inputs.aeneas + "/backends/lean/lake-manifest.json"));
+  upstream_lake_manifest = fromJSON (readFile (aeneasLean + "/backends/lean/lake-manifest.json"));
   profiles = cargo.profile;
   features = builtins.attrNames (
     builtins.foldl' (features: manifest: features // (manifest.features or { })) { } manifests

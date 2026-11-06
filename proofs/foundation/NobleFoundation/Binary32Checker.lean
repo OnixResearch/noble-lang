@@ -84,10 +84,10 @@ theorem finite_of_magnitude (magnitude : Nat) (small : magnitude < 255 * 2 ^ 23)
     Finite (BitVec.ofNat 32 (if negative then magnitude ||| 0x80000000 else magnitude)) := by
   apply finite_of_exponent
   cases negative
-  · simp only [Bool.false_eq_true, if_false]
+  · simp only [Bool.false_eq_true, ite_false]
     rw [exponent_of_toNat, toNat_ofNat_of_lt magnitude (by omega)]
     omega
-  · simp only [if_true]
+  · simp only [ite_true]
     have orAdd : magnitude ||| 0x80000000 = magnitude + 2 ^ 31 := by
       rw [Nat.or_comm, show (0x80000000 : Nat) = 2 ^ 31 * 1 from rfl,
         ← Nat.two_pow_add_eq_or_of_lt (by omega : magnitude < 2 ^ 31) 1]

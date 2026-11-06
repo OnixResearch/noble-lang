@@ -19,7 +19,7 @@
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m2-proof-gate.sh [PROOF_ROOT]
 #
 # PROOF_ROOT defaults to the repository's proofs/m2 and may be overridden with
@@ -46,9 +46,9 @@ fail() { echo "[m2-gate] FAIL $1: $2" >&2; exit 1; }
 pass() { echo "[m2-gate] PASS $1"; }
 
 # G0 TOOLCHAIN: the proof tree is bound to the pinned Lean revision.
-lean --version 2>/dev/null | grep -q 'version 4\.31\.0' \
-  || fail TOOLCHAIN "lean on PATH is not the pinned 4.31.0 release: $(lean --version 2>&1)"
-pass "TOOLCHAIN (lean 4.31.0)"
+lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
+  || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
+pass "TOOLCHAIN (lean 4.35.0)"
 
 # G1 BUILD: the reference root, the refinement module (not imported by the
 # root module), and the generated kernel all compile.

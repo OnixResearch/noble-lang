@@ -22,8 +22,8 @@
     output = "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18",
   },
   lean = {
-    derivation = "/nix/store/93d3dz41ps7wqq9lbs1cysnx34d43pqr-noble-lean-release-4.31.0.drv",
-    output = "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0",
+    derivation = "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv",
+    output = "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
   },
   nickel = {
     derivation = "/nix/store/fnvv96qkzwb6rfxh7mxkxgx9akcjgqyv-nickel-lang-rev-fixup-1.17.0.drv",

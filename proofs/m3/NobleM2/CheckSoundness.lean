@@ -186,15 +186,15 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
                 have hdataeq : dataOkAt env index resolved = true := by simpa using hdata
                 have hdataok : DataOk env index resolved := (dataOkAt_iff env index resolved).1 hdataeq
                 cases hj : joinInterface stack derivedIn iface limits with
-                  | error problem => simp only [hap, hj] at h; cases h
+                  | error problem => simp only [hj] at h; cases h
                   | ok pair =>
                     obtain ⟨joined, bound⟩ := pair
                     have hjoin := joinInterface_ok hj
                     cases hst : stepFold fold (schemeCost scheme
                         + joinCost iface) id iface with
-                    | error problem => simp only [hap, hj, hst] at h; cases h
+                    | error problem => simp only [hj, hst] at h; cases h
                     | ok stepped =>
-                      simp only [hap, hj, hst] at h
+                      simp only [hj, hst] at h
                       obtain ⟨heads', d', hd', hdeq', hout'⟩ := ih depth rest joined
                         bound stepped final finalBound next h
                       refine ⟨iface.effects :: heads', iface.effects.union d', ?_, by simp only [List.foldr_cons, hdeq'], ?_⟩

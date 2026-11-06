@@ -31,9 +31,9 @@
     }
   },
   "scope": "Pinned historical M5 generated table decision model, rebuilt from source for this pilot. Current resource-table Rust and CLI/Wasmtime wrapper refinement are separate obligations; archival source reuse is not fresh Rust extraction.",
-  "lean_version": "4.31.0",
-  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
-  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "lean_version": "4.35.0",
+  "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+  "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
   "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
   "historical_resource_source_sha256": {
     "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",

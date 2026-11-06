@@ -115,7 +115,6 @@ theorem slotGraph_addDropsSecond_caught :
   · simp [slotGradientWith, adjointAfterWith, addDropsSecond, stepCoefficient, slotNode,
       slotNodeUpTo, slotGraph, slotGraphValues, slotGraphSeed, value, valuesUpTo, evalStep,
       slotGraphInputs]
-    try norm_num
 
 /-- **Repeated operand counted once**: only the slot behind `mul 0 0` moves, to `24`. The other
 slot keeps its correct `17`, so this fault is visible on slot 1 alone. -/
@@ -142,7 +141,6 @@ theorem slotGraph_overwrite_caught :
   refine ⟨?_, ?_, by norm_num, by norm_num⟩ <;>
   · simp [adjointAfterOverwrite, stepCoefficient, Node.operands, slotNode, slotNodeUpTo,
       slotGraph, slotGraphValues, slotGraphSeed, value, valuesUpTo, evalStep, slotGraphInputs]
-    try norm_num
 
 /-! ## A subtraction fixture for the sign control
 

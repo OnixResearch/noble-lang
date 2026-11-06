@@ -6,6 +6,7 @@ import { userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, fileHash } from '../foundation/execution.mjs';
+import { appendCompatibility, compatibilitySource, libraryCompatibility } from '../aeneas-library-compatibility.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
@@ -81,7 +82,7 @@ function checkedSources(profile) {
   const files = [
     codeFile, inventoryFile, profileFile, 'verification/host-locality/check.mjs',
     'proofs/m5/M5Resources.lean', 'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain',
-    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json',
+    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource,
     ...sourceFiles('crates/noble-kernel/src/resources'),
   ];
   return Object.fromEntries(files.map(file => [file, fileHash(join(root, file))]));
@@ -150,6 +151,9 @@ function prepareProject(profile, inventory) {
     const name = member.split('/m3/')[1];
     writeFileSync(join(project, name), readFileSync(join(extracted, member.slice(2))));
   }
+  // The archived subject names library declarations the selected Aeneas Lean library dropped (#86).
+  const compatibility = libraryCompatibility(root);
+  appendCompatibility(join(project, 'NobleKernel/TypesExternal.lean'), compatibility);
   writeFileSync(join(project, 'M5Resources.lean'), readFileSync(join(root, 'proofs/m5/M5Resources.lean')));
   writeFileSync(join(project, 'HostLocality.lean'), readFileSync(join(root, codeFile)));
   writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m5/lean-toolchain')));
@@ -176,7 +180,7 @@ function prepareProject(profile, inventory) {
   ].join('\n'));
   mkdirSync(join(project, '.lake'));
   symlinkSync(dependencyRoot, join(project, '.lake/packages'), 'dir');
-  return { project, packages };
+  return { project, packages, compatibility };
 }
 function auditTheorems(project, inventory, names) {
   const auditFile = join(output, 'Audit.lean');
@@ -234,9 +238,9 @@ try {
   const names = checkDeclarations(inventory);
   const sources = checkedSources(profile);
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
-  requireThat(version.includes('version 4.31.0') && version.includes('68218e876d2a38b1985b8590fff244a83c321783'),
+  requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
     'wrong pinned Lean executable');
-  const { project, packages } = prepareProject(profile, inventory);
+  const { project, packages, compatibility } = prepareProject(profile, inventory);
   const build = run(join(leanBin, 'lake'), ['build', 'HostLocality'], project);
   const generatedWarnings = build.split('\n').filter(line => line.startsWith('warning:'));
   requireThat(generatedWarnings.every(line => line.startsWith('warning: NobleKernel/Funs.lean:') &&
@@ -249,6 +253,8 @@ try {
     clean_source: initial.status === '', allow_dirty: allowDirty, lean: version,
     lean_path: join(leanBin, 'lean'), lean_sha256: fileHash(join(leanBin, 'lean')),
     model_inputs: profile, dependencies: packages, sources_sha256: sources,
+    library_compatibility: { source: compatibility.source, sha256: compatibility.sha256,
+      appended_to: 'NobleKernel/TypesExternal.lean' },
     artifacts_sha256: { 'Audit.lean': fileHash(join(output, 'Audit.lean')), ...commandArtifacts },
     generated_source_lint_warnings: generatedWarnings,
     theorem_count: names.length, reused_m5_theorem_count: reusedNames.length, theorems,
@@ -256,6 +262,7 @@ try {
     scope: 'Conditional bounded synchronous adapter/guest model and reused extracted M5 decision lemmas; not Rust host, lowering, Wasmtime or whole-engine refinement.',
     assumptions: ['Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The retained generated M5 sources are compiled anew, not replaced with a handwritten table; all six resource decision source files must retain their extraction-recorded bytes.',
+      'The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
       'Current CLI host wrapper, guest lowering and Wasmtime/Canonical ABI correspondence remain separate explicit obligations.'],
     artifact_directory: output, command_count: commandSerial,
   };

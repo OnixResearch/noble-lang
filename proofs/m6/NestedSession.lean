@@ -96,14 +96,14 @@ unfolding check can never be read as a decision it never made. -/
 theorem resolve_refuses_exhaustion (definitions : List Node) (index name parameter : Nat)
     (nestedAt : definitions[index]? = some (.nested name parameter)) :
     resolve definitions 0 index = none := by
-  simp only [resolve, nestedAt, if_true]
+  simp only [resolve, nestedAt, ite_true]
 
 /-- With depth left, a named nested constructor resolves to its named definition rather than
 expanding without bound. -/
 theorem resolve_unfolds_with_depth (definitions : List Node) (index name parameter : Nat)
     (nestedAt : definitions[index]? = some (.nested name parameter)) :
     resolve definitions 1 index = definitions[name]? := by
-  simp only [resolve, nestedAt, Nat.one_ne_zero, if_false]
+  simp only [resolve, nestedAt, Nat.one_ne_zero, ite_false]
 
 /-- An index outside the closed table is refused. -/
 theorem resolve_refuses_unknown_definition (definitions : List Node) (depth : Nat) :
@@ -198,16 +198,16 @@ theorem endpoint_capture_is_refused (endpoint : Endpoint) : capture endpoint = .
 
 theorem stale_generation_is_refused (endpoint : Endpoint) :
     useWith endpoint endpoint.generation.succ = .refusedStale := by
-  simp only [useWith, Nat.succ_ne_self, if_false]
+  simp only [useWith, Nat.succ_ne_self, ite_false]
 
 theorem matching_generation_is_accepted (endpoint : Endpoint) :
     useWith endpoint endpoint.generation = .accepted := by
-  simp only [useWith, if_true]
+  simp only [useWith, ite_true]
 
 theorem double_close_is_refused (endpoint : Endpoint) :
     closeOnce ⟨endpoint.channel, endpoint.responder, endpoint.protocol, endpoint.state,
       endpoint.generation, true⟩ = .refusedDoubleClose := by
-  simp only [closeOnce, if_true]
+  simp only [closeOnce, ite_true]
 
 /-- A closed endpoint cannot send, so a send after close is refused rather than modelled. -/
 theorem closed_endpoint_cannot_send (definitions : List Node) (depth : Nat) (endpoint : Endpoint)
@@ -215,7 +215,7 @@ theorem closed_endpoint_cannot_send (definitions : List Node) (depth : Nat) (end
     (atSend : resolve definitions depth endpoint.state = some (.send message continuation)) :
     stepSend definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, true⟩ = none := by
-  simp only [stepSend, atSend, advance, if_true]
+  simp only [stepSend, atSend, advance, ite_true]
 
 /-- One step from a send node advances the endpoint to exactly that node's continuation, and the
 peer, channel, protocol and generation are unchanged: no action outside the protocol. -/
@@ -225,7 +225,7 @@ theorem send_step_advances_to_the_continuation (definitions : List Node) (depth 
     stepSend definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, false⟩ = some ⟨endpoint.channel, endpoint.responder,
         endpoint.protocol, continuation, endpoint.generation, false⟩ := by
-  simp only [stepSend, atSend, advance, Bool.false_eq_true, if_false]
+  simp only [stepSend, atSend, advance, Bool.false_eq_true, ite_false]
 
 /-! ## Session state, bounded admission and duplication (WIT-SESSION-03, WIT-SESSION-05)
 
@@ -254,9 +254,9 @@ premise violation, and the model refuses to claim boundedness for it. -/
 theorem admitOne_is_bounded (queued limit : Nat) (within : queued ≤ limit) :
     admitOne queued limit ≤ limit := by
   by_cases room : queued < limit
-  · rw [admitOne, if_pos room]
+  · rw [admitOne, ite_eq_left room]
     exact Nat.succ_le_of_lt room
-  · rw [admitOne, if_neg room]
+  · rw [admitOne, ite_eq_right room]
     exact within
 
 /-- Admission never exceeds the declared queue limit. -/
@@ -268,7 +268,7 @@ theorem admission_is_bounded (session : Session) (within : session.queued ≤ se
 theorem full_mailbox_is_unchanged (session : Session)
     (full : session.queueLimit ≤ session.queued) : deliver session = session := by
   simp only [deliver, admitOne]
-  rw [if_neg (by omega)]
+  rw [ite_eq_right (by omega)]
 
 /-- Admission neither copies nor removes an endpoint: the inventory is exactly preserved. -/
 theorem admission_preserves_the_endpoint_inventory (session : Session) :
@@ -412,7 +412,7 @@ theorem closed_endpoint_cannot_receive (definitions : List Node) (depth : Nat) (
     (atRecv : resolve definitions depth endpoint.state = some (.recv message continuation)) :
     stepRecv definitions depth ⟨endpoint.channel, endpoint.responder, endpoint.protocol,
       endpoint.state, endpoint.generation, true⟩ = none := by
-  simp only [stepRecv, atRecv, advance, if_true]
+  simp only [stepRecv, atRecv, advance, ite_true]
 
 /-! ## No action outside the current protocol (WIT-SESSION-05)
 
@@ -904,7 +904,7 @@ theorem receipt_of_another_branch_is_refused (declared continuation received : N
     (different : received ≠ declared) :
     continuationOf (.receiveBranch received) (.offer declared continuation) = none := by
   simp only [continuationOf]
-  rw [if_neg (Ne.symm different)]
+  rw [ite_eq_right (Ne.symm different)]
 
 /-! ## Duality of steps (WIT-SESSION-01, WIT-SESSION-05)
 
@@ -1013,17 +1013,17 @@ theorem enqueue_raises_the_depth_by_one (box : Mailbox) (sound : box.dequeued �
 theorem dequeue_never_raises_the_depth (box : Mailbox) :
     mailboxDepth (dequeue box) ≤ mailboxDepth box := by
   by_cases room : 0 < mailboxDepth box
-  · rw [dequeue, if_pos room]
+  · rw [dequeue, ite_eq_left room]
     simp only [mailboxDepth]
     omega
-  · rw [dequeue, if_neg room]
+  · rw [dequeue, ite_eq_right room]
     exact Nat.le_refl _
 
 /-- A dequeue of an empty mailbox leaves it unchanged: a full-queue misaccounting cannot invent a
 payload to dequeue. -/
 theorem dequeue_of_empty_mailbox_is_unchanged (box : Mailbox) (empty : mailboxDepth box = 0) :
     dequeue box = box := by
-  simp only [dequeue, empty, Nat.lt_irrefl, if_false]
+  simp only [dequeue, empty, Nat.lt_irrefl, ite_false]
 
 /-- Full-queue misaccounting is refused: a mailbox that admitted nothing has depth zero and a dequeue
 changes nothing, so an observation cannot borrow depth the ledger never recorded. -/
@@ -1055,20 +1055,20 @@ theorem bounded_admission_is_bounded (box : Mailbox) (limit : Nat) (reached : Ma
     mailboxDepth reached ≤ limit := by
   unfold boundedAdmit at accepted
   by_cases room : mailboxDepth box < limit
-  · rw [if_pos room] at accepted
+  · rw [ite_eq_left room] at accepted
     simp only [Option.some.injEq] at accepted
     subst accepted
     have unfolded : mailboxDepth box = box.enqueued - box.dequeued := rfl
     simp only [mailboxDepth, enqueue]
     omega
-  · rw [if_neg room] at accepted
+  · rw [ite_eq_right room] at accepted
     exact absurd accepted (by simp)
 
 /-- A mailbox at its limit refuses the next admission instead of recording it. -/
 theorem admission_at_the_limit_is_refused (box : Mailbox) (limit : Nat)
     (full : limit ≤ mailboxDepth box) : boundedAdmit box limit = none := by
   unfold boundedAdmit
-  rw [if_neg (by omega)]
+  rw [ite_eq_right (by omega)]
 
 /-- The dequeue/accounting pair: an admission refused at the limit is accepted after one accounted
 dequeue. A model that counted attempts instead of depth would accept it in both places. -/
@@ -1079,7 +1079,7 @@ theorem dequeue_restores_admission_room (box : Mailbox) (limit : Nat) (room : 0 
   have refused : boundedAdmit box limit = none := admission_at_the_limit_is_refused box limit full
   have nonempty : 0 < mailboxDepth box := by rw [atLimit]; exact room
   have step : mailboxDepth (dequeue box) = mailboxDepth box - 1 := by
-    rw [dequeue, if_pos nonempty]
+    rw [dequeue, ite_eq_left nonempty]
     simp only [mailboxDepth]
     omega
   have dropped : mailboxDepth (dequeue box) < limit := by
@@ -1087,7 +1087,7 @@ theorem dequeue_restores_admission_room (box : Mailbox) (limit : Nat) (room : 0 
     omega
   refine ⟨by rw [refused]; rfl, ?_⟩
   unfold boundedAdmit
-  rw [if_pos dropped]
+  rw [ite_eq_left dropped]
   rfl
 
 /-- The limit is load-bearing: an admission that ignores it derives a depth past the declared bound,

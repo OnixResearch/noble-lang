@@ -105,21 +105,21 @@ theorem identity_value (graph : Graph) (hwf : WellFormed graph) (noEq : NoEq gra
       obtain ⟨y, hy⟩ := value_i64_of_noEq graph hwf noEq inputs second
       rw [value_mul graph hwf inputs index first second hnode x y hx hy]
       by_cases one : graph.node first = .constant 1
-      · rw [if_pos one] at identity
+      · rw [ite_eq_left one] at identity
         cases identity
         rw [constant_value graph inputs first 1 one] at hx
         cases hx
         rw [hy]
         simp
-      · rw [if_neg one] at identity
+      · rw [ite_eq_right one] at identity
         by_cases other : graph.node second = .constant 1
-        · rw [if_pos other] at identity
+        · rw [ite_eq_left other] at identity
           cases identity
           rw [constant_value graph inputs second 1 other] at hy
           cases hy
           rw [hx]
           simp
-        · rw [if_neg other] at identity
+        · rw [ite_eq_right other] at identity
           cases identity
   | add first second =>
       rw [hnode] at identity
@@ -128,21 +128,21 @@ theorem identity_value (graph : Graph) (hwf : WellFormed graph) (noEq : NoEq gra
       obtain ⟨y, hy⟩ := value_i64_of_noEq graph hwf noEq inputs second
       rw [value_add graph hwf inputs index first second hnode x y hx hy]
       by_cases zero : graph.node second = .constant 0
-      · rw [if_pos zero] at identity
+      · rw [ite_eq_left zero] at identity
         cases identity
         rw [constant_value graph inputs second 0 zero] at hy
         cases hy
         rw [hx]
         simp
-      · rw [if_neg zero] at identity
+      · rw [ite_eq_right zero] at identity
         by_cases other : graph.node first = .constant 0
-        · rw [if_pos other] at identity
+        · rw [ite_eq_left other] at identity
           cases identity
           rw [constant_value graph inputs first 0 other] at hx
           cases hx
           rw [hy]
           simp
-        · rw [if_neg other] at identity
+        · rw [ite_eq_right other] at identity
           cases identity
   | sub first second =>
       rw [hnode] at identity
@@ -151,13 +151,13 @@ theorem identity_value (graph : Graph) (hwf : WellFormed graph) (noEq : NoEq gra
       obtain ⟨y, hy⟩ := value_i64_of_noEq graph hwf noEq inputs second
       rw [value_sub graph hwf inputs index first second hnode x y hx hy]
       by_cases zero : graph.node second = .constant 0
-      · rw [if_pos zero] at identity
+      · rw [ite_eq_left zero] at identity
         cases identity
         rw [constant_value graph inputs second 0 zero] at hy
         cases hy
         rw [hx]
         simp
-      · rw [if_neg zero] at identity
+      · rw [ite_eq_right zero] at identity
         cases identity
   | input slot =>
       rw [hnode] at identity

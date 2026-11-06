@@ -427,7 +427,8 @@ def tableStep (table : async_tasks.table.Table) (claim : Handle) (event : Event)
   simp [async_tasks.accounting.Decision.unchanged, unchanged]
 
 @[simp] theorem mask_refines (count : U8) : async_tasks.bounds.mask count = mask count := by
-  simp [async_tasks.bounds.mask, mask, async_tasks.bounds.MAX_OBLIGATIONS, core.num.U64.MAX, U64.rMax]
+  simp [async_tasks.bounds.mask, mask, async_tasks.bounds.MAX_OBLIGATIONS, core.num.U64.MAX, U64.rMax,
+    bind_tc_eq]
 
 @[simp] theorem reservationFootprint_refines (request : async_tasks.bounds.Request) :
     async_tasks.bounds.Request.validated_footprint request = reservationFootprint request := by
@@ -435,7 +436,7 @@ def tableStep (table : async_tasks.table.Table) (claim : Handle) (event : Event)
     by_cases resultBuffer : request.result_bytes = 0#usize <;>
     by_cases parkedBuffer : request.parked_bytes = 0#usize <;>
     simp only [async_tasks.bounds.Request.validated_footprint, reservationFootprint,
-      lift, bind_tc_ok,
+      lift, bind_tc_eq, bind_ok,
       inputBuffer, resultBuffer, parkedBuffer, ↓reduceIte]
 
 @[simp] theorem footprint_refines (request : async_tasks.bounds.Request) :
@@ -443,7 +444,7 @@ def tableStep (table : async_tasks.table.Table) (claim : Handle) (event : Event)
   simp only [async_tasks.bounds.Request.footprint, footprint, maxBytes,
     reservationFootprint_refines, async_tasks.bounds.MAX_BYTES,
     async_tasks.bounds.MAX_OBLIGATIONS, async_tasks.bounds.MAX_WAKEUPS,
-    lift, resultPure, bind_tc_ok]
+    lift, resultPure, bind_tc_eq, bind_ok]
 
 @[simp] theorem settled_refines (record : Snapshot) :
     async_tasks.transition.validation.settled record = Result.ok (settled record) := by
@@ -460,20 +461,20 @@ def tableStep (table : async_tasks.table.Table) (claim : Handle) (event : Event)
 
 @[simp] theorem dispositionCheck_refines (record : Snapshot) (completion : Completion) :
     async_tasks.transition.validation.disposition record completion = dispositionCheck record completion := by
-  simp [async_tasks.transition.validation.disposition, dispositionCheck, lift]
+  simp [async_tasks.transition.validation.disposition, dispositionCheck, lift, bind_tc_eq]
 
 @[simp] theorem ownersValid_refines (record : Snapshot) :
     async_tasks.transition.validation.owners_valid record = ownersValid record := by
   cases completion : record.completion <;>
     simp [async_tasks.transition.validation.owners_valid, ownersValid, completion,
-      core.option.Option.is_none, lift]
+      core.option.Option.is_none, lift, bind_tc_eq]
   all_goals split_ifs <;> simp_all [UScalar.eq_equiv]
 
 @[simp] theorem recordCheck_refines (record : Snapshot) :
     async_tasks.transition.validation.record record = recordCheck record := by
   simp only [async_tasks.transition.validation.record, recordCheck, footprint_refines,
     mask_refines, ownersValid_refines, stateValid_refines, settled_refines, isError_refines,
-    async_tasks.bounds.MAX_SLOTS, lift, resultPure, bind_tc_ok]
+    async_tasks.bounds.MAX_SLOTS, lift, resultPure, bind_tc_eq, bind_ok]
 
 @[simp] theorem handleCheck_refines (retained claim : Handle) :
     async_tasks.transition.validation.handle retained claim = Result.ok (handleCheck retained claim) := by
@@ -491,12 +492,13 @@ theorem classify_refines (state : State) (event : Event) :
   cases state <;> cases event <;>
     simp only [async_tasks.schema.classify, async_tasks.schema.completion_rule,
       async_tasks.schema.retirement_rule, async_tasks.schema.delivery_rule, classify, failureRule,
-      bind_tc_ok]
+      bind_ok]
 
 @[simp] theorem retire_refines (record : Snapshot) (reason : Failure) :
     async_tasks.transition.lifecycle.retire record reason = retire record reason := by
   cases state : record.state <;> cases reason <;> cases stopped : record.native_stopped <;>
-    simp [async_tasks.transition.lifecycle.retire, retire, retireWith, state, stopped, lift]
+    simp [async_tasks.transition.lifecycle.retire, retire, retireWith, state, stopped, lift,
+      bind_tc_eq]
 
 @[simp] theorem deliver_refines (record : Snapshot) :
     async_tasks.transition.lifecycle.deliver record = Result.ok (deliver record) := by
@@ -510,7 +512,7 @@ theorem classify_refines (state : State) (event : Event) :
 
 @[simp] theorem wake_refines (record : Snapshot) :
     async_tasks.transition.lifecycle.wake record = wake record := by
-  simp [async_tasks.transition.lifecycle.wake, wake, unchanged]
+  simp [async_tasks.transition.lifecycle.wake, wake, unchanged, bind_tc_eq]
 
 @[simp] theorem takeWake_refines (record : Snapshot) :
     async_tasks.transition.lifecycle.take_wake record = Result.ok (takeWake record) := by
@@ -561,7 +563,7 @@ theorem classify_refines (state : State) (event : Event) :
 /-- Universal equality includes rejection and checked-machine failure paths. -/
 theorem transition_refines (record : Snapshot) (claim : Handle) (event : Event) :
     async_tasks.transition.transition record claim event = step record claim event := by
-  simp [async_tasks.transition.transition, step, applyEvent, classify_refines]
+  simp [async_tasks.transition.transition, step, applyEvent, classify_refines, bind_tc_eq]
   congr 1
   funext valid
   cases valid <;> simp
@@ -569,7 +571,7 @@ theorem transition_refines (record : Snapshot) (claim : Handle) (event : Event) 
   cases nativeCheck record.native event <;> simp
   cases classify record.state event <;> simp
   rename_i rule
-  cases rule <;> simp [applyRule]
+  cases rule <;> simp [applyRule, bind_tc_eq]
 
 /-- This is the retained production Table.decide, including its namespace check
     and actual retained slot lookup, not a model-only transition wrapper. -/

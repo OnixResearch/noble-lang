@@ -199,18 +199,18 @@ theorem wrapperProgram_exec_iff (template : GuardTemplate) (subject : List Op)
     have hbranch := (branch_exec_iff (acceptProgram subject) rejectionProgram
       (guardRejects template x) tail (.i64 x) result).mp hrest
     by_cases hflag : guardRejects template x = true
-    · rw [if_pos hflag] at hbranch ⊢
+    · rw [ite_eq_left hflag] at hbranch ⊢
       exact (rejectionProgram_exec_iff x tail result).mp hbranch
-    · rw [if_neg hflag] at hbranch ⊢
+    · rw [ite_eq_right hflag] at hbranch ⊢
       exact (acceptProgram_exec_iff subject x tail result).mp hbranch
   · intro h
     refine ⟨_, (guardProgram_exec_iff template x tail _).mpr rfl, ?_⟩
     refine (branch_exec_iff (acceptProgram subject) rejectionProgram
       (guardRejects template x) tail (.i64 x) result).mpr ?_
     by_cases hflag : guardRejects template x = true
-    · rw [if_pos hflag] at h ⊢
+    · rw [ite_eq_left hflag] at h ⊢
       exact (rejectionProgram_exec_iff x tail result).mpr h
-    · rw [if_neg hflag] at h ⊢
+    · rw [ite_eq_right hflag] at h ⊢
       exact (acceptProgram_exec_iff subject x tail result).mpr h
 
 /-- Rejection is decided purely by the flag: `true` refuses the body. -/
@@ -218,7 +218,7 @@ theorem wrapperProgram_rejects (template : GuardTemplate) (subject : List Op)
     (x : BitVec 64) (tail result : Stack) (h : guardRejects template x = true) :
     Exec (wrapperProgram template subject) (tail ++ [.i64 x]) result ↔
       result = tail ++ [.inl (.i64 1)] := by
-  rw [wrapperProgram_exec_iff, if_pos h]
+  rw [wrapperProgram_exec_iff, ite_eq_left h]
 
 /-- Acceptance runs the candidate body on the original argument stack. -/
 theorem wrapperProgram_accepts (template : GuardTemplate) (subject : List Op)
@@ -227,7 +227,7 @@ theorem wrapperProgram_accepts (template : GuardTemplate) (subject : List Op)
       ∃ middle, Exec subject (tail ++ [.i64 x]) middle ∧
         Exec [.word 16] middle result := by
   have hne : ¬ (guardRejects template x = true) := by rw [h]; decide
-  rw [wrapperProgram_exec_iff, if_neg hne]
+  rw [wrapperProgram_exec_iff, ite_eq_right hne]
 
 /-- Swapping the equality-template branches is exactly the rejection-flag
 normal form. Both success tagging and rejection payload are preserved. -/

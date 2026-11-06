@@ -113,9 +113,9 @@ theorem scaledArgs_pos (m s : Int) (nonzero : m ≠ 0) :
   have magnitude : 0 < m.natAbs := Int.natAbs_pos.mpr nonzero
   unfold scaledArgs
   by_cases nonneg : (0 : Int) ≤ s
-  · simp only [if_pos nonneg]
+  · simp only [ite_eq_left nonneg]
     exact ⟨Nat.mul_pos magnitude (pow2Int_pos s), by norm_num⟩
-  · simp only [if_neg nonneg]
+  · simp only [ite_eq_right nonneg]
     exact ⟨magnitude, by simpa using pow2Int_pos (-s)⟩
 
 /-- The ratio is the magnitude of `m · 2^s`. -/
@@ -123,10 +123,10 @@ theorem scaledArgs_ratio (m s : Int) :
     ((scaledArgs m s).1 : ℚ) / (scaledArgs m s).2 = (m.natAbs : ℚ) * (2 : ℚ) ^ s := by
   unfold scaledArgs
   by_cases nonneg : (0 : Int) ≤ s
-  · simp only [if_pos nonneg]
+  · simp only [ite_eq_left nonneg]
     rw [Nat.cast_mul, pow2Int_rat s nonneg]
     simp
-  · simp only [if_neg nonneg]
+  · simp only [ite_eq_right nonneg]
     have negated : (0 : Int) ≤ -s := by omega
     rw [Nat.cast_mul, pow2Int_rat (-s) negated, zpow_neg]
     field_simp
@@ -139,7 +139,7 @@ theorem carried_significand_lt (a b : Nat) (ha : 0 < a) (hb : 0 < b) :
   by_cases boundary : powerBoundary a b
   · have rounded := boundary_rounded a b hb boundary
     unfold carriedPair
-    simp only [rounded, if_true, pow2]
+    simp only [rounded, ite_true, pow2]
     norm_num
   · exact (carriedPair_m_bounds a b hb (scale_lower a b ha hb)
       (scale_upper a b ha hb boundary)).2
@@ -169,7 +169,7 @@ theorem roundPositive_normal_nat (a b : Nat) (range : InRange (a, b)) :
   rw [← named]
   have notHigh : ¬ c.2 > 127 := by simp only [c]; omega
   have notLow : ¬ c.2 < -126 := by simp only [c]; omega
-  simp only [if_neg notHigh, if_neg notLow]
+  simp only [ite_eq_right notHigh, ite_eq_right notLow]
 
 /-- A normal-range rounding leaves the sign bit clear. -/
 theorem roundPositive_lt (a b : Nat) (ha : 0 < a) (hb : 0 < b) (range : InRange (a, b)) :
@@ -204,7 +204,7 @@ theorem roundScaled_relative_error (m s : Int) (nonzero : m ≠ 0) (range : InRa
   rw [roundedIs, magnitude]
   unfold unit
   by_cases negative : m < 0
-  · simp only [negative, decide_true, if_true]
+  · simp only [negative, decide_true, ite_true]
     rw [exactValue_signed _ small]
     have signedValue : (m : ℚ) * (2 : ℚ) ^ s = -((m.natAbs : ℚ) * (2 : ℚ) ^ s) := by
       have : (m : ℚ) = -(m.natAbs : ℚ) := by
@@ -214,7 +214,7 @@ theorem roundScaled_relative_error (m s : Int) (nonzero : m ≠ 0) (range : InRa
       ring
     rw [signedValue, show ∀ p q : ℚ, -p - -q = -(p - q) from fun p q => by ring, abs_neg]
     exact relative
-  · simp only [negative, decide_false, Bool.false_eq_true, if_false]
+  · simp only [negative, decide_false, Bool.false_eq_true, ite_false]
     have signedValue : (m : ℚ) * (2 : ℚ) ^ s = (m.natAbs : ℚ) * (2 : ℚ) ^ s := by
       rw [Nat.cast_natAbs, Int.cast_abs, abs_of_nonneg (by exact_mod_cast not_lt.mp negative)]
     rw [signedValue]
@@ -273,11 +273,11 @@ theorem exact_sum (x y : Bits) :
   rcases scaledValue y with ⟨my, sy⟩
   dsimp only
   by_cases order : sx ≤ sy
-  · simp only [if_pos order]
+  · simp only [ite_eq_left order]
     rw [rescale mx sx sx le_rfl, rescale my sy sx order]
     push_cast
     ring
-  · simp only [if_neg order]
+  · simp only [ite_eq_right order]
     rw [rescale mx sx sy (by omega), rescale my sy sy le_rfl]
     push_cast
     ring
@@ -377,7 +377,7 @@ theorem mul_scaled_eq (x y : Bits) (nonzeroX : classify x = .subnormal ∨ class
       rcases valueX : scaledValue x with ⟨mx, sx⟩
       rcases valueY : scaledValue y with ⟨my, sy⟩
       simp only [mulScaled, valueX, valueY]
-  rw [branch, if_neg nonzero, sign]
+  rw [branch, ite_eq_right nonzero, sign]
 
 /-- The premises of one multiplication: finite operands, and a normal-range carried exponent
 whenever the exact product is nonzero. -/

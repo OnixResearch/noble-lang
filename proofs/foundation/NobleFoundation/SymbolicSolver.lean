@@ -50,7 +50,7 @@ theorem decode_encode_replays (slots : List Nat) (inputs : Nat → BitVec 64)
     | cons head rest ih =>
         simp only [List.map_cons]
         by_cases hhead : head = slot
-        · rw [lookup, if_pos hhead, hhead]
+        · rw [lookup, ite_eq_left hhead, hhead]
         · simp only [lookup, hhead]
           exact ih (List.mem_of_ne_of_mem (fun h => hhead h.symm) hmem)
   simp [decodeInputs, hlookup]
@@ -88,9 +88,9 @@ theorem firstIndex_none_agrees (pair : Pair) (candidates : List (Nat → BitVec 
       intro inputs hmem
       simp only [firstIndex] at hsearch
       by_cases hhead : refuted pair candidate = true
-      · rw [if_pos hhead] at hsearch
+      · rw [ite_eq_left hhead] at hsearch
         simp at hsearch
-      · rw [if_neg hhead] at hsearch
+      · rw [ite_eq_right hhead] at hsearch
         cases hrest : firstIndex pair rest with
         | none =>
             rcases List.mem_cons.mp hmem with hsame | hlater
@@ -119,14 +119,14 @@ theorem firstIndex_some_decomposes (pair : Pair) (candidates : List (Nat → Bit
   | cons head tail ih =>
       simp only [firstIndex] at hsearch
       by_cases hhead : refuted pair head = true
-      · rw [if_pos hhead] at hsearch
+      · rw [ite_eq_left hhead] at hsearch
         have hzero : index = 0 := by
           cases index with
           | zero => rfl
           | succ k => simp at hsearch
         subst hzero
         exact ⟨[], head, tail, by simp, by simp, by simp, hhead⟩
-      · rw [if_neg hhead] at hsearch
+      · rw [ite_eq_right hhead] at hsearch
         cases hrest : firstIndex pair tail with
         | none => rw [hrest] at hsearch; simp at hsearch
         | some found =>

@@ -45,7 +45,7 @@
 # Usage (from any directory; the pinned Lean must be first on PATH; `bun`
 # is required on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m3-coverage-gate.sh [PROOF_ROOT] [RECORD]
 #
 # PROOF_ROOT defaults to the repository's proofs/m3 and RECORD to
@@ -72,9 +72,9 @@ fail() { echo "[m3-coverage] FAIL $1: $2" >&2; exit 1; }
 pass() { echo "[m3-coverage] PASS $1"; }
 
 command -v bun >/dev/null 2>&1 || fail SETUP "bun not found on PATH (required by the join tool)"
-lean --version 2>/dev/null | grep -q 'version 4\.31\.0' \
-  || fail TOOLCHAIN "lean on PATH is not the pinned 4.31.0 release: $(lean --version 2>&1)"
-pass "SETUP (bun + lean 4.31.0)"
+lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
+  || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
+pass "SETUP (bun + lean 4.35.0)"
 
 # Tier probe: the strict tier needs the m3 root's four targets to build
 # AND the v1 theorem set's anchor (`check_total_v1`, task 5.3) to be

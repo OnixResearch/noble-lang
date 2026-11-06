@@ -4,8 +4,8 @@ mod launch;
 pub(crate) mod process;
 mod runtime;
 
-pub const PIN: &str = "leanprover/lean4:v4.31.0";
-pub const COMMIT: &str = "68218e876d2a38b1985b8590fff244a83c321783";
+pub const PIN: &str = "leanprover/lean4:v4.35.0";
+pub const COMMIT: &str = "eb6cafb7290e8bd5f2937522d8d804f58f02bafc";
 pub const OUTPUT_LIMIT: usize = 131_072;
 pub const ARTIFACT_LIMIT: u64 = 33_554_432;
 pub const MEMORY_LIMIT: u64 = 2_147_483_648;

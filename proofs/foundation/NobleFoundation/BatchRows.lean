@@ -87,9 +87,9 @@ theorem a_rows_run_starts_from_an_empty_stack (row : Row) :
 theorem add_row_result_is_the_wrapping_sum (x y : ℤ) (xRange : I64Range x) (yRange : I64Range y) :
     rowRun { operation := .add, deeper := x, top := y } = some [MathlibI64.wrap (x + y)] := by
   simp only [rowRun, rowOps, refRun, AOp.ref]
-  rw [if_pos xRange]
+  rw [ite_eq_left xRange]
   simp only [Option.bind_some]
-  rw [if_pos yRange]
+  rw [ite_eq_left yRange]
   simp only [Option.bind_some]
 
 /-- A validated subtraction row's reference result is the wrapping difference. -/
@@ -97,9 +97,9 @@ theorem sub_row_result_is_the_wrapping_difference (x y : ℤ) (xRange : I64Range
     (yRange : I64Range y) :
     rowRun { operation := .sub, deeper := x, top := y } = some [MathlibI64.wrap (x - y)] := by
   simp only [rowRun, rowOps, refRun, AOp.ref]
-  rw [if_pos xRange]
+  rw [ite_eq_left xRange]
   simp only [Option.bind_some]
-  rw [if_pos yRange]
+  rw [ite_eq_left yRange]
   simp only [Option.bind_some]
 
 /-- A validated multiplication row's reference result is the wrapping product. -/
@@ -107,9 +107,9 @@ theorem mul_row_result_is_the_wrapping_product (x y : ℤ) (xRange : I64Range x)
     (yRange : I64Range y) :
     rowRun { operation := .mul, deeper := x, top := y } = some [MathlibI64.wrap (x * y)] := by
   simp only [rowRun, rowOps, refRun, AOp.ref]
-  rw [if_pos xRange]
+  rw [ite_eq_left xRange]
   simp only [Option.bind_some]
-  rw [if_pos yRange]
+  rw [ite_eq_left yRange]
   simp only [Option.bind_some]
 
 /-- An out-of-range literal row is refused at its own position rather than silently coerced. -/
@@ -180,10 +180,10 @@ theorem chunksOfGo_flatten (chunk : Nat) (rows : List Row) (remaining : Nat) (ac
   | nil => simp [chunksOfGo]
   | cons row rest ih =>
       by_cases hZero : remaining = 0
-      · simp only [chunksOfGo, hZero, if_true, List.flatten_cons]
+      · simp only [chunksOfGo, hZero, ite_true, List.flatten_cons]
         rw [ih]
         simp
-      · simp only [chunksOfGo, hZero, if_false]
+      · simp only [chunksOfGo, hZero, ite_false]
         rw [ih (remaining - 1) (row :: acc)]
         simp
 
@@ -222,7 +222,7 @@ theorem every_chunk_is_bounded_by_the_chunk_size (chunk : Nat) (positive : 1 ≤
   | cons row rest ih =>
       by_cases hZero : remaining = 0
       · intro staged hMember
-        simp only [chunksOfGo, hZero, if_true, List.mem_cons] at hMember
+        simp only [chunksOfGo, hZero, ite_true, List.mem_cons] at hMember
         rcases hMember with hFlushed | hRest
         · subst hFlushed
           have hLength : acc.length = chunk := by omega
@@ -230,7 +230,7 @@ theorem every_chunk_is_bounded_by_the_chunk_size (chunk : Nat) (positive : 1 ≤
           exact Nat.le_refl chunk
         · exact ih (chunk - 1) [row] (by simp only [List.length_cons, List.length_nil]; omega) staged hRest
       · intro staged hMember
-        simp only [chunksOfGo, hZero, if_false] at hMember
+        simp only [chunksOfGo, hZero, ite_false] at hMember
         exact ih (remaining - 1) (row :: acc) (by simp only [List.length_cons]; omega) staged hMember
 
 /-- **Live row slots are bounded by the chunk size**: a staging pass holds at most one chunk of rows,

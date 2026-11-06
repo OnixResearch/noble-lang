@@ -27,9 +27,9 @@
       "bytes": 13952
     }
   },
-  "lean_version": "4.31.0",
-  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
-  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "lean_version": "4.35.0",
+  "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+  "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
   "scope": "Retained M5 Charon/Aeneas translation of the authority ledger, compiled anew for each run. The checker binds every Rust source file with a generated declaration reachable from the inventoried theorems to its extraction-recorded bytes; the translation step itself is not re-run.",
   "mutation_controls": [
     {

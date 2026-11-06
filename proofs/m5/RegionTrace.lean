@@ -185,14 +185,14 @@ theorem erase_preserves_projection (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, projectStep] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, projectStep] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
       | importCrossing op offset length => simpa [erase, eraseStep, projectStep] using ih
-      | hostDecision op accepted identity => simpa [erase, eraseStep, projectStep] using ih
-      | protectedCopy length => simpa [erase, eraseStep, projectStep] using ih
+      | hostDecision op accepted identity => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
+      | protectedCopy length => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
       | returned op value reason => simpa [erase, eraseStep, projectStep] using ih
-      | normalReturn => simpa [erase, eraseStep, projectStep] using ih
-      | abnormalExit exitClass => simpa [erase, eraseStep, projectStep] using ih
+      | normalReturn => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
+      | abnormalExit exitClass => simpa [erase, eraseStep, projectStep, List.filterMap_cons] using ih
       | cleanup kind identity => simpa [erase, eraseStep, projectStep] using ih
 
 /-- Erasure leaves each scan input list alone: it removes only the two named bookkeeping
@@ -235,8 +235,8 @@ theorem erase_preserves_read_crossings (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, readCrossings, Operation.noConfusion] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, readCrossings, Operation.noConfusion] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, readCrossings, Operation.noConfusion, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, readCrossings, Operation.noConfusion, List.filterMap_cons] using ih
       | importCrossing op offset length =>
           cases op <;> simpa [erase, eraseStep, readCrossings] using ih
       | hostDecision op accepted identity => simpa [erase, eraseStep, readCrossings, Operation.noConfusion] using ih
@@ -252,8 +252,8 @@ theorem erase_preserves_release_members (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion, List.filterMap_cons] using ih
       | importCrossing op offset length => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion] using ih
       | hostDecision op accepted identity => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion] using ih
       | protectedCopy length => simpa [erase, eraseStep, releaseMembers, CommitKind.noConfusion] using ih
@@ -269,8 +269,8 @@ theorem erase_preserves_read_commits (steps : List AbiStep) :
   | nil => rfl
   | cons head tail ih =>
       cases head with
-      | handleTableIndex index => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion] using ih
-      | storeBookkeeping slot => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion] using ih
+      | handleTableIndex index => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion, List.filterMap_cons] using ih
+      | storeBookkeeping slot => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion, List.filterMap_cons] using ih
       | importCrossing op offset length => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion] using ih
       | hostDecision op accepted identity => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion] using ih
       | protectedCopy length => simpa [erase, eraseStep, readCommits, CommitKind.noConfusion] using ih
@@ -442,9 +442,9 @@ theorem retainFrom_prefix (fuel : Nat) (steps : List AbiStep) : retainFrom fuel 
   | nil => exact List.nil_prefix
   | cons head tail ih =>
       by_cases affordable : stepCost head ≤ fuel
-      · rw [retainFrom, if_neg (Nat.not_lt.mpr affordable)]
+      · rw [retainFrom, ite_eq_right (Nat.not_lt.mpr affordable)]
         exact (List.cons_prefix_cons.mpr ⟨rfl, ih (fuel - stepCost head)⟩)
-      · rw [retainFrom, if_pos (Nat.lt_of_not_le affordable)]
+      · rw [retainFrom, ite_eq_left (Nat.lt_of_not_le affordable)]
         exact List.nil_prefix
 
 /-- A projected prefix is a prefix of the projection, so the relation composes with exhaustion. -/
@@ -480,7 +480,7 @@ theorem retainFrom_cost_bounded (fuel : Nat) (steps : List AbiStep) :
   | nil => exact Nat.zero_le fuel
   | cons head tail ih =>
       by_cases affordable : stepCost head ≤ fuel
-      · rw [retainFrom, if_neg (Nat.not_lt.mpr affordable)]
+      · rw [retainFrom, ite_eq_right (Nat.not_lt.mpr affordable)]
         have bounded : traceCost (retainFrom (fuel - stepCost head) tail) ≤ fuel - stepCost head :=
           ih (fuel - stepCost head)
         calc traceCost (head :: retainFrom (fuel - stepCost head) tail)
@@ -488,7 +488,7 @@ theorem retainFrom_cost_bounded (fuel : Nat) (steps : List AbiStep) :
                 simp only [traceCost, List.map_cons, List.sum_cons]
           _ ≤ stepCost head + (fuel - stepCost head) := Nat.add_le_add_left bounded _
           _ = fuel := by omega
-      · rw [retainFrom, if_pos (Nat.lt_of_not_le affordable)]
+      · rw [retainFrom, ite_eq_left (Nat.lt_of_not_le affordable)]
         simp only [traceCost, List.map_nil, List.sum_nil]
         exact Nat.zero_le fuel
 

@@ -10,6 +10,7 @@ import { userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, fileHash } from '../foundation/execution.mjs';
+import { compatibilitySource, libraryCompatibility, withoutCompatibility } from '../aeneas-library-compatibility.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
@@ -136,13 +137,18 @@ function verifyProfile(profile) {
   requireThat(receipt.result === 'passed', 'recorded extraction did not pass');
   requireThat(JSON.stringify(Object.keys(profile.generated_inputs).sort()) === JSON.stringify([...generatedInputs].sort()),
     'generated input set changed');
+  // The kernel's TypesExternal.lean is its recorded bytes followed by the reviewed Aeneas library
+  // compatibility block (VT-PIN-02 exception, #86); the recorded bytes remain the binding.
+  const compatibility = libraryCompatibility(root);
   for (const file of generatedInputs) {
     const recorded = handwrittenModels.has(file)
       ? [receipt.source_files[file], lock.source_files[file]]
       : [receipt.extractions.kernel.generated[basename(file)], lock.generated_files.kernel[basename(file)]];
     requireThat(recorded.every(hash => hash === profile.generated_inputs[file]),
       `generated input detached from the recorded extraction: ${file}`);
-    requireThat(fileHash(join(root, file)) === profile.generated_inputs[file], `generated input changed: ${file}`);
+    const current = readFileSync(join(root, file));
+    const bound = file === compatibilitySource ? withoutCompatibility(current, compatibility) : current;
+    requireThat(bound !== null && digest(bound) === profile.generated_inputs[file], `generated input changed: ${file}`);
   }
   for (const [file, hash] of Object.entries(profile.model)) {
     requireThat(file === modelFile && fileHash(join(root, file)) === hash, `model changed: ${file}`);
@@ -159,7 +165,7 @@ function verifyProfile(profile) {
     'lake manifest differs from the reviewed reference beyond its package name');
   requireThat(Array.isArray(profile.mutation_controls) && profile.mutation_controls.length > 0,
     'mutation controls required');
-  return { receipt, lock, manifest };
+  return { receipt, lock, manifest, compatibility };
 }
 
 function dependencyPackages(profile, manifest) {
@@ -477,7 +483,7 @@ try {
     modelFile, ...generatedInputs, profile.extraction_receipt, profile.extraction_lock, 'policy/tool-selection.json'];
   const sources = Object.fromEntries(checkedFiles.map(file => [file, fileHash(join(root, file))]));
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
-  requireThat(version.includes('version 4.31.0') && version.includes('68218e876d2a38b1985b8590fff244a83c321783'),
+  requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
     'wrong pinned Lean executable');
   const dependencies = dependencyPackages(profile, records.manifest);
   const files = Object.fromEntries([...projectFiles, codeFile, modelFile, ...generatedInputs]
@@ -503,6 +509,8 @@ try {
     lean_path: join(leanBin, 'lean'), lean_sha256: fileHash(join(leanBin, 'lean')),
     model_inputs: { ...profile, mutation_controls: profile.mutation_controls.map(control => control.id) },
     dependencies: dependencies.packages, sources_sha256: sources,
+    library_compatibility: { source: records.compatibility.source, sha256: records.compatibility.sha256,
+      appended_to: compatibilitySource },
     artifacts_sha256: { 'Audit.lean': fileHash(join(output, 'Audit.lean')), ...commandArtifacts },
     generated_source_lint_warnings: buildWarnings,
     theorem_count: names.length, theorems, specification, binding, mutation_controls: mutations,
@@ -516,6 +524,7 @@ try {
     },
     assumptions: [
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
+      'The kernel\'s TypesExternal.lean is its recorded bytes followed by the reviewed Aeneas library compatibility block, which restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
       'The recorded Charon/Aeneas translation (verification/declared-modules-v1/extraction.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
       'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',

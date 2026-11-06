@@ -53,7 +53,7 @@ theorem lookup_returns_recorded (assign : List (Nat × BitVec 64)) (slot : Nat)
   | nil => simp [lookup] at hlookup
   | cons pair rest ih =>
       by_cases hhit : pair.1 = slot
-      · rw [lookup, if_pos hhit] at hlookup
+      · rw [lookup, ite_eq_left hhit] at hlookup
         have hval : pair.2 = value := Option.some.inj hlookup
         rw [← hval, ← hhit]
         exact List.mem_cons_self

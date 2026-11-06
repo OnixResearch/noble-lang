@@ -100,7 +100,9 @@ private def checkDeclarations (trusted fresh : Kernel.Environment)
     let index := ready[cursor]!
     let item := declarations[index]!
     cursor := cursor + 1
-    match checked.addDeclCore 0 item.declaration (cancelTk? := none) with
+    -- No heartbeat limit (the wall-clock budget bounds the worker); kernel recursion is bounded by
+    -- Lean's default `maxRecDepth`, the limit under which the producer's kernel accepted the terms.
+    match checked.addDeclCore 0 maxRecDepth.defValue.toUSize item.declaration (cancelTk? := none) with
     | .ok next => checked := next
     | .error _ => fail "MC1_KERNEL_REJECTED" s!"kernel rejected declaration {item.name}"
     for dependent in dependents[index]! do
@@ -196,8 +198,8 @@ private def check (refutation : Bool) (path : System.FilePath) : IO Unit := do
   let imported ← importModules #[{ module := `MC1Obligation }] {}
     (trustLevel := 0) (loadExts := false)
   let trusted := imported.toKernelEnv
-  let fresh ← (← mkEmptyEnvironment).replay trusted.constants.map₁
-  let checked ← checkDeclarations trusted fresh.toKernelEnv declarations theoremName
+  let fresh ← Kernel.Environment.replay trusted.constants.map₁ (← mkEmptyEnvironment).toKernelEnv
+  let checked ← checkDeclarations trusted fresh declarations theoremName
   let some (.thmInfo proof) := checked.find? theoremName
     | fail "MC1_THEOREM_MISSING" "kernel did not retain the selected theorem"
   let claim := mkConst `MC1Obligation.claim

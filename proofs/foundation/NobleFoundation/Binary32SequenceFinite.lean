@@ -103,7 +103,7 @@ theorem roundScaled_mixed_error (m s : Int) (nonzero : m ≠ 0) (finite : NoOver
         0x80000000 else roundPositive (scaledArgs m s).1 (scaledArgs m s).2) := rfl
   rw [roundedIs, magnitude]
   by_cases negative : m < 0
-  · simp only [negative, decide_true, if_true]
+  · simp only [negative, decide_true, ite_true]
     rw [exactValue_signed _ small]
     have signedValue : (m : ℚ) * (2 : ℚ) ^ s = -((m.natAbs : ℚ) * (2 : ℚ) ^ s) := by
       have : (m : ℚ) = -(m.natAbs : ℚ) := by
@@ -113,7 +113,7 @@ theorem roundScaled_mixed_error (m s : Int) (nonzero : m ≠ 0) (finite : NoOver
       ring
     rw [signedValue, show ∀ p q : ℚ, -p - -q = -(p - q) from fun p q => by ring, abs_neg]
     exact mixed
-  · simp only [negative, decide_false, Bool.false_eq_true, if_false]
+  · simp only [negative, decide_false, Bool.false_eq_true, ite_false]
     have signedValue : (m : ℚ) * (2 : ℚ) ^ s = (m.natAbs : ℚ) * (2 : ℚ) ^ s := by
       rw [Nat.cast_natAbs, Int.cast_abs, abs_of_nonneg (by exact_mod_cast not_lt.mp negative)]
     rw [signedValue]

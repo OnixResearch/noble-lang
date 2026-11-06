@@ -36,11 +36,11 @@ theorem log2_go_eq : ∀ (fuel n acc : Nat), n ≤ fuel → log2.go n acc fuel =
   | fuel + 1, n, acc, h => by
       by_cases hn : n < 2
       · have hlog : Nat.log2 n = 0 := by
-          rw [Nat.log2_def, if_neg (by omega)]
+          rw [Nat.log2_def, ite_eq_right (by omega)]
         simp [log2.go, hn, hlog]
       · have hlog : Nat.log2 n = Nat.log2 (n / 2) + 1 := by
-          rw [Nat.log2_def, if_pos (by omega)]
-        simp only [log2.go, if_neg hn]
+          rw [Nat.log2_def, ite_eq_left (by omega)]
+        simp only [log2.go, ite_eq_right hn]
         rw [log2_go_eq fuel (n / 2) (acc + 1) (by omega), hlog]
         omega
 
@@ -126,7 +126,7 @@ theorem floorLog2Ratio_boundary (a b : Nat) (h : powerBoundary a b) :
     (a : ℚ) = (2 : ℚ) ^ (floorLog2Ratio a b + 1) * b := by
   obtain ⟨hab, heq⟩ := h
   unfold floorLog2Ratio
-  rw [if_neg (by omega)]
+  rw [ite_eq_right (by omega)]
   have hexp : (-(((log2 (b / a) : Nat) : Int) + 1) + 1 : Int) =
       -(((log2 (b / a) : Nat)) : Int) := by
     ring
@@ -233,7 +233,7 @@ theorem boundary_rounded (a b : Nat) (hb : 0 < b) (h : powerBoundary a b) :
   simp only [hdiv, hmod, pow2]
   have hne : ¬ 2 * 0 > (scalePair a b).2 := by omega
   have hne' : ¬ 2 * 0 = (scalePair a b).2 := by omega
-  rw [if_neg hne, if_neg hne']
+  rw [ite_eq_right hne, ite_eq_right hne']
 
 /-- **On the power boundary the result is exact.** The rounded significand `2^24` carries to
 `2^23` in the next exponent, which encodes the exact ratio. -/
@@ -243,7 +243,7 @@ theorem boundary_rounds_exactly (a b : Nat) (hb : 0 < b) (h : powerBoundary a b)
   have hq := boundary_rounded a b hb h
   have hcarry : carriedPair a b = (pow2 23, floorLog2Ratio a b + 1) := by
     unfold carriedPair
-    simp only [hq, if_true]
+    simp only [hq, ite_true]
   have he₁ : -126 ≤ floorLog2Ratio a b + 1 := by simpa [hcarry] using hcarryLo
   have he₂ : floorLog2Ratio a b + 1 ≤ 127 := by simpa [hcarry] using hcarryHi
   have hbq : (0 : ℚ) < b := by exact_mod_cast hb

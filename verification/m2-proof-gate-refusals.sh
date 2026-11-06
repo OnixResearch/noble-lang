@@ -10,7 +10,7 @@
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m2-proof-gate-refusals.sh
 #
 # Mutations (each a separate cell, per the M1 control-matrix convention):
@@ -26,7 +26,7 @@ set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GATE="$REPO/verification/m2-proof-gate.sh"
 PROOF_ROOT="${M2_PROOF_ROOT:-$REPO/proofs/m2}"
-export PATH  # the pinned Lean must already be on PATH; the gate pins 4.31.0
+export PATH  # the pinned Lean must already be on PATH; the gate pins 4.35.0
 
 SCRATCH="$(mktemp -d "$REPO/.m2-gate-refusals-XXXXXX")"
 trap 'rm -rf "$SCRATCH"' EXIT

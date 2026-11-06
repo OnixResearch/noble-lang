@@ -22,8 +22,8 @@ const childBase = Object.freeze({
   HOME: home, USER: username, LOGNAME: username, LANG: 'C.UTF-8', CI: '1', GIT_TERMINAL_PROMPT: '0',
   PATH: [leanBin, dirname(git), '/run/current-system/sw/bin', '/usr/bin', '/bin'].join(':'),
 });
-const mathlibRevision = 'fabf563a7c95a166b8d7b6efca11c8b4dc9d911f';
-const leanCommit = '68218e876d2a38b1985b8590fff244a83c321783';
+const mathlibRevision = '56a005855ea17e0b0958f73ec801ae140b0a1679';
+const leanCommit = 'eb6cafb7290e8bd5f2937522d8d804f58f02bafc';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const fileHash = path => digest(readFileSync(path));
@@ -78,7 +78,7 @@ try {
   const lean = join(leanBin, 'lean');
   const lake = join(leanBin, 'lake');
   const version = run(lean, ['--version']);
-  requireThat(version.includes('version 4.31.0') && version.includes(leanCommit), 'wrong Lean executable');
+  requireThat(version.includes('version 4.35.0') && version.includes(leanCommit), 'wrong Lean executable');
 
   // Source hygiene: no escape hatches anywhere in the foundation sources.
   const sourceDir = join(project, 'NobleFoundation');

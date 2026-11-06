@@ -193,17 +193,21 @@ theorem isop_exact (n : Nat) (f : BFun n) :
       | cons value tail =>
           cases value with
           | false =>
+              have hBoth := ih (fun row => f (.cons false row) && f (.cons true row)) tail
+              have hLowOnly := ih (fun row => f (.cons false row) && !(f (.cons true row))) tail
               cases hLow : f (.cons false tail) <;>
                 cases hHigh : f (.cons true tail) <;>
-                simp [isop, attach, attachNone, cofactor, coverEval_append,
+                simp [isop, attach, attachNone, cofactor, coverEval_append, hBoth, hLowOnly,
                   map_none_eval_false, map_false_eval_false,
-                  map_true_eval_false, ih, hLow, hHigh]
+                  map_true_eval_false, hLow, hHigh]
           | true =>
+              have hBoth := ih (fun row => f (.cons false row) && f (.cons true row)) tail
+              have hHighOnly := ih (fun row => f (.cons true row) && !(f (.cons false row))) tail
               cases hLow : f (.cons false tail) <;>
                 cases hHigh : f (.cons true tail) <;>
-                simp [isop, attach, attachNone, cofactor, coverEval_append,
+                simp [isop, attach, attachNone, cofactor, coverEval_append, hBoth, hHighOnly,
                   map_none_eval_true, map_false_eval_true,
-                  map_true_eval_true, ih, hLow, hHigh]
+                  map_true_eval_true, hLow, hHigh]
 
 /-! ## Support intervals -/
 

@@ -12,11 +12,11 @@
     "proofs/m3/NobleKernel/FunsExternal.lean": "d2907d53341cdd929463e2361ec75854874d3e707e9405021e8cdd51726bfd84"
   },
   "model": {
-    "proofs/foundation/NobleFoundation/ServiceWire.lean": "fed96a54925fde5d4b04bfb68c1a7c93509fbdd72deb374140bb018b0452438b"
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "3d395fe311a205e6db5db693367c9744d808c6e32b1bb367d002814663c63855"
   },
   "toolchain_reference": "proofs/m7",
-  "aeneas_revision": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
-  "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+  "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
   "mutation_controls": [
     {
       "id": "byte-budget-boundary",

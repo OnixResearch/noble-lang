@@ -87,7 +87,7 @@ theorem roundPositive_subnormal (a b : Nat) (hlow : (carriedPair a b).2 < -126) 
           else roundNearest (a * pow2 149) b)
       else ((carriedPair a b).2 + 127).toNat * pow2 23 + ((carriedPair a b).1 - pow2 23) := by
     rfl
-  rw [hbody, if_neg (by omega), if_pos hlow]
+  rw [hbody, ite_eq_right (by omega), ite_eq_left hlow]
 
 /-- Below the normal range the cap never changes the value: the significand is at most `2^23`. -/
 theorem roundPositive_eq_significand (a b : Nat) (ha : 0 < a) (hb : 0 < b)

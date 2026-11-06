@@ -3,7 +3,14 @@
 
   inputs = {
     octet.url = "git+ssh://git@github.com/OnixResearch/octet?rev=9d134f00e902586c08bc71e8dc910d305c8dd875";
+    # The extractor (Charon -> Aeneas binaries) that generated the checked-in Lean subjects.
     aeneas.url = "github:AeneasVerif/aeneas/505b6ca35217e7be5c96c3e2f8045edfbdf47291";
+    # The Aeneas Lean library the proof projects build against. It is pinned separately because no
+    # Aeneas release that supports Lean 4.35 can re-extract the noble-contracts subject (#86).
+    aeneas-lean = {
+      url = "github:AeneasVerif/aeneas/1238879f9ea550512096e9bf8bd6fe7407b3eaef";
+      flake = false;
+    };
     cairn.url = "git+ssh://git@github.com/OnixResearch/cairn?rev=15f00875562025e7ea7e0d1f4af24d1a2e2ac06f";
     nixpkgs.follows = "octet/nixpkgs";
     rust-overlay.follows = "octet/rust-overlay";
@@ -16,6 +23,7 @@
       rust-overlay,
       octet,
       aeneas,
+      aeneas-lean,
       cairn,
     }:
     let

@@ -155,7 +155,7 @@ theorem depthScanAux_of_plain (name : List Nat) (current reached : Nat) (rest : 
       have hTail : ∀ byte ∈ tail, nameByte byte = true := by
         intro byte hmem
         exact hAll byte (List.mem_cons_of_mem head hmem)
-      simp only [depthScanAux, List.cons_append, if_neg hStructure.2.1, if_neg hStructure.2.2]
+      simp only [depthScanAux, List.cons_append, ite_eq_right hStructure.2.1, ite_eq_right hStructure.2.2]
       exact ih current reached hTail
 
 /-- A record suffix closes the prefix's bracket and opens none, so the scan keeps reaching at
@@ -192,7 +192,7 @@ theorem takeName_encode (name : List Nat) (tag : Nat)
       have hTail : ∀ byte ∈ tail, nameByte byte = true := by
         intro byte hmem
         exact hAll byte (List.mem_cons_of_mem head hmem)
-      rw [List.cons_append, takeName, if_neg hHead.1, ih hTail]
+      rw [List.cons_append, takeName, ite_eq_right hHead.1, ih hTail]
 
 /-- The parser recognizes one canonical encoding. -/
 theorem parseService_encode (name : List Nat) (ready : Bool)
@@ -228,10 +228,10 @@ theorem decode_encode (name : List Nat) (ready : Bool) (configuredDepth : Nat)
     omega
   have hScan := depthExceeds_encode name ready configuredDepth hDepthAdmitted.1 hAll'
   unfold decode
-  rw [if_neg hLengthOk]
-  rw [if_neg (by intro h; exact h hDepthAdmitted)]
+  rw [ite_eq_right hLengthOk]
+  rw [ite_eq_right (by intro h; exact h hDepthAdmitted)]
   rw [hScan]
-  rw [if_neg (by simp)]
+  rw [ite_eq_right (by simp)]
   rw [parseService_encode name ready hAll']
   simp only [validName, hNonEmpty, hBound32, hAll, Bool.and_self, reduceIte]
 
@@ -247,17 +247,17 @@ theorem encode_of_accepted (bytes : List Nat) (configuredDepth : Nat)
   unfold decode at hDecode
   have hLen : ¬ bytes.length > maxWireBytes := by
     intro h
-    rw [if_pos h] at hDecode
+    rw [ite_eq_left h] at hDecode
     exact absurd hDecode (by simp)
   have hDepth : ¬ ¬ (1 ≤ configuredDepth ∧ configuredDepth ≤ maxWireDepth) := by
     intro h
-    rw [if_neg hLen, if_pos h] at hDecode
+    rw [ite_eq_right hLen, ite_eq_left h] at hDecode
     exact absurd hDecode (by simp)
   have hScan : ¬ depthExceeds configuredDepth bytes := by
     intro h
-    rw [if_neg hLen, if_neg hDepth, if_pos h] at hDecode
+    rw [ite_eq_right hLen, ite_eq_right hDepth, ite_eq_left h] at hDecode
     exact absurd hDecode (by simp)
-  rw [if_neg hLen, if_neg hDepth, if_neg hScan] at hDecode
+  rw [ite_eq_right hLen, ite_eq_right hDepth, ite_eq_right hScan] at hDecode
   cases hParse : parseService bytes with
   | none =>
       rw [hParse] at hDecode
@@ -267,16 +267,16 @@ theorem encode_of_accepted (bytes : List Nat) (configuredDepth : Nat)
       rw [hParse] at hDecode
       dsimp only at hDecode
       by_cases hBytes : encode parsedName parsedReady = bytes
-      · rw [if_pos hBytes] at hDecode
+      · rw [ite_eq_left hBytes] at hDecode
         by_cases hValid : validName parsedName = true
-        · rw [if_pos hValid] at hDecode
+        · rw [ite_eq_left hValid] at hDecode
           injection hDecode with hName hReady
           subst hName
           subst hReady
           exact hBytes
-        · rw [if_neg hValid] at hDecode
+        · rw [ite_eq_right hValid] at hDecode
           exact absurd hDecode (by simp)
-      · rw [if_neg hBytes] at hDecode
+      · rw [ite_eq_right hBytes] at hDecode
         exact absurd hDecode (by simp)
 
 /-- The longest admitted name still fits the wire budget. -/

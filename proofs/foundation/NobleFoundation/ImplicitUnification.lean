@@ -392,7 +392,7 @@ theorem find_eq_none {S : Solved} {n : Nat} (h : ∀ q ∈ S, q.1 ≠ n) : find 
   | cons q S ih =>
       obtain ⟨k, t⟩ := q
       have hk : n ≠ k := fun e => h (k, t) (List.mem_cons_self ..) e.symm
-      simp only [find, hk, if_false]
+      simp only [find, hk, ite_false]
       exact ih (fun q hq => h q (List.mem_cons_of_mem _ hq))
 
 theorem find_of_mem {S : Solved} (hnd : (S.map Prod.fst).Nodup) {k : Nat} {t : Tm}
@@ -411,7 +411,7 @@ theorem find_of_mem {S : Solved} (hnd : (S.map Prod.fst).Nodup) {k : Nat} {t : T
           apply hnd.1
           rw [← e]
           exact List.mem_map.mpr ⟨(k, t), h', rfl⟩
-        simp only [find, hne, if_false]
+        simp only [find, hne, ite_false]
         exact ih hnd.2 h'
 
 theorem find_some {S : Solved} {n : Nat} {t : Tm} (h : find S n = some t) : (n, t) ∈ S := by

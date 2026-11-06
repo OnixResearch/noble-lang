@@ -281,6 +281,13 @@ theorem empty_table_satisfies_the_invariants (capacity : Nat) :
   · refine ⟨?_, ?_⟩ <;> intro held <;> simp [emptyTable] at held
   · refine ⟨?_, ?_⟩ <;> intro held <;> simp [emptyTable] at held
 
+-- Lean 4.33 made `isDefEq` check types at the ambient (reducible or instances) transparency
+-- (`backward.isDefEq.respectTransparency.types`, on by default). These case-splitting proofs unfold
+-- `step` on structure literals: simp then reduces an `if` condition, for example `slot table id` to
+-- the literal's field, but not the implicit arguments of that condition's `Decidable` instance. The
+-- two agree only after unfolding, so on 4.35 `split` cannot rewrite the `if`. The option restores
+-- the pre-4.33 type check for these proofs only; the kernel still checks every proof term (#86).
+set_option backward.isDefEq.respectTransparency.types false in
 /-- One step preserves every slot invariant, so the explorer never has to special-case a prefix. -/
 theorem step_preserves_invariants (action : Action) (table next : Table)
     (invariants : Invariants table) (taken : step action table = some next) : Invariants next := by
@@ -926,12 +933,12 @@ theorem scanFrom_none_all_agree (start reference : Table) (sequence : List Actio
       intro offset hAgreed hScan length hLow hHigh
       by_cases hHere : disagrees start reference (sequence.take offset) = true
       · simp only [scanFrom] at hScan
-        rw [if_pos hHere] at hScan
+        rw [ite_eq_left hHere] at hScan
         simp at hScan
       · have hHereFalse : disagrees start reference (sequence.take offset) = false := by
           cases hValue : disagrees start reference (sequence.take offset) <;> simp_all
         simp only [scanFrom] at hScan
-        rw [if_neg hHere] at hScan
+        rw [ite_eq_right hHere] at hScan
         have hNext : ∀ shorter, shorter < offset + 1 →
             disagrees start reference (sequence.take shorter) = false := by
           intro shorter hShorter
@@ -965,14 +972,14 @@ theorem scanFrom_some_finds_the_first (start reference : Table) (sequence : List
       intro offset hAgreed length hScan
       by_cases hHere : disagrees start reference (sequence.take offset) = true
       · simp only [scanFrom] at hScan
-        rw [if_pos hHere] at hScan
+        rw [ite_eq_left hHere] at hScan
         simp only [Option.some.injEq] at hScan
         subst hScan
         exact ⟨Nat.le_refl offset, by omega, hHere, hAgreed⟩
       · have hHereFalse : disagrees start reference (sequence.take offset) = false := by
           cases hValue : disagrees start reference (sequence.take offset) <;> simp_all
         simp only [scanFrom] at hScan
-        rw [if_neg hHere] at hScan
+        rw [ite_eq_right hHere] at hScan
         have hNext : ∀ shorter, shorter < offset + 1 →
             disagrees start reference (sequence.take shorter) = false := by
           intro shorter hShorter
@@ -1094,6 +1101,8 @@ theorem independent_symm (first second : Action) :
     simp [independent, Action.id, Action.readsCapacity, Action.movesCapacity,
       Action.writesFailure, Action.isDelivery, Action.isSettlement, bne_comm, Bool.and_comm]
 
+-- Pre-4.33 type unification for `split`; see the note before `step_preserves_invariants` (#86).
+set_option backward.isDefEq.respectTransparency.types false in
 set_option maxHeartbeats 8000000 in
 /-- Every independent pair with the left action first commutes on every table: either order reaches
 the same table, or both orders are refused. -/
@@ -1671,6 +1680,8 @@ theorem isSome_ite {c : Prop} [Decidable c] (first second : Option Table) :
     (if c then first else second).isSome = if c then first.isSome else second.isSome := by
   by_cases held : c <;> simp [held]
 
+-- Pre-4.33 type unification for `split`; see the note before `step_preserves_invariants` (#86).
+set_option backward.isDefEq.respectTransparency.types false in
 set_option maxHeartbeats 8000000 in
 /-- A right-id step taken first never changes whether an independent left-id call is accepted. -/
 theorem acceptance_kept_left_right (first second : Action) (table next : Table)
@@ -1695,6 +1706,8 @@ theorem acceptance_kept_left_right (first second : Action) (table next : Table)
       counted, liveSlot, retiredSlot] <;>
     (repeat' split) <;> simp_all
 
+-- Pre-4.33 type unification for `split`; see the note before `step_preserves_invariants` (#86).
+set_option backward.isDefEq.respectTransparency.types false in
 set_option maxHeartbeats 8000000 in
 /-- A left-id step taken first never changes whether an independent right-id call is accepted. -/
 theorem acceptance_kept_right_left (first second : Action) (table next : Table)
@@ -1943,7 +1956,9 @@ theorem holds_after_other_issue (held : List (TaskId × Nat)) (first second : Ac
           rw [hIssued]
           exact hIds
         cases second <;> simp only [Action.id] at hNe <;>
-          simp [holds, Action.handle, hNe, Ne.symm hNe]
+          simp only [holds, Action.handle] <;>
+          (try rw [decide_eq_decide]) <;>
+          simp [hNe, Ne.symm hNe]
   · rfl
 
 /-- Two admissions on different ids issue the same handles in either order. -/

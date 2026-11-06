@@ -127,7 +127,7 @@ theorem rne_negative_sign (digits : List (Fin 10)) (exponent : Int) :
   split
   · decide
   · unfold signedMagnitude
-    simp only [if_true]
+    simp only [ite_true]
     rw [BitVec.ofNat_or, BitVec.msb_or]
     change (BitVec.ofNat 32 (roundPositive (decimalRatio ⟨true, digits, exponent⟩).1
       (decimalRatio ⟨true, digits, exponent⟩).2)).msb ||
@@ -186,7 +186,7 @@ theorem exactImport_exactValue {d : Decimal} {bits : Bits}
   dsimp at hmatch
   rw [hscaled, hratio] at hmatch
   by_cases hs : (0 : Int) ≤ s
-  · simp only [if_pos hs] at hmatch
+  · simp only [ite_eq_left hs] at hmatch
     have heq : m * pow2Int s * den = a := by
       simpa using hmatch
     have hpow := NobleFoundation.Binary32.Error.pow2Int_rat s hs
@@ -202,7 +202,7 @@ theorem exactImport_exactValue {d : Decimal} {bits : Bits}
     all_goals simp [hrat]
     all_goals ring
   · have hns : 0 ≤ -s := by omega
-    simp only [if_neg hs] at hmatch
+    simp only [ite_eq_right hs] at hmatch
     have heq : m * den = a * pow2Int (-s) := by
       simpa using hmatch
     have hpow := NobleFoundation.Binary32.Error.pow2Int_rat (-s) hns

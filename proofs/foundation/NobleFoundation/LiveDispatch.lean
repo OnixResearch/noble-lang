@@ -83,7 +83,7 @@ theorem publish_preserves_other_keys (entries : EntryMap) (key other generation 
     (distinct : key ≠ other) :
     select (publish entries key generation) other = select entries other := by
   unfold publish
-  simp only [select, distinct, if_false]
+  simp only [select, distinct, ite_false]
 
 /-- Publishing one slot changes that slot's selection to the published one. -/
 theorem publish_selects_the_published_generation (entries : EntryMap) (key generation : Nat) :

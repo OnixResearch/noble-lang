@@ -759,7 +759,7 @@ theorem exec_append (host : Host) :
           cases trapped : (step host s request).trapped with
           | true => simp
           | false =>
-              simp only [Bool.false_eq_true, if_false]
+              simp only [Bool.false_eq_true, ite_false]
               rw [ih second]
               cases stopped : (exec host (step host s request).next rest).stopped with
               | none => simp

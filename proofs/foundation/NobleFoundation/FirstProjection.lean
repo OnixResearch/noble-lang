@@ -342,7 +342,7 @@ theorem annihilate_sound (graph : Graph) (hwf : WellFormed graph) (noEq : NoEq g
           unfold annihilateNode
           rw [hnode]
           dsimp only
-          rw [if_pos hzero]
+          rw [ite_eq_left hzero]
         rw [constant_value (annihilate graph) inputs index 0 rewritten]
         obtain ⟨x, hx⟩ := value_i64_of_noEq graph hwf noEq inputs first
         obtain ⟨y, hy⟩ := value_i64_of_noEq graph hwf noEq inputs second
@@ -360,7 +360,7 @@ theorem annihilate_sound (graph : Graph) (hwf : WellFormed graph) (noEq : NoEq g
           cases hnode : graph.node index with
           | mul first second =>
               dsimp only
-              rw [if_neg (fun hzero => zero ⟨first, second, hnode, hzero⟩)]
+              rw [ite_eq_right (fun hzero => zero ⟨first, second, hnode, hzero⟩)]
           | input slot => rfl
           | constant bits => rfl
           | add first second => rfl

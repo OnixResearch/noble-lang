@@ -3,12 +3,19 @@ let Pin = { rev | String, narHash | String } in
 {
   schema_version | String = "noble-tool-selection-policy/v1",
   sources | {
-    aeneas | Pin, aeneas_nixpkgs | Pin, cairn | Pin, charon | Pin,
+    aeneas | Pin, aeneas_lean | Pin, aeneas_nixpkgs | Pin, cairn | Pin, charon | Pin,
     extraction_nixpkgs | Pin, nixpkgs | Pin, octet | Pin, rust_overlay | Pin,
   } = {
+    # The extractor that generated the checked-in Lean subjects (Charon -> Aeneas).
     aeneas = {
       rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
       narHash = "sha256-V6H12+Qg3qlZBGdjoTHCbYWSOwcdZ86XCxOkWURo6Qs=",
+    },
+    # The Aeneas Lean library every proof project requires. No Aeneas that supports Lean 4.35 can
+    # re-extract the noble-contracts subject yet, so the extractor stays at `aeneas` (#86).
+    aeneas_lean = {
+      rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      narHash = "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
     },
     aeneas_nixpkgs = {
       rev = "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
@@ -68,11 +75,11 @@ let Pin = { rev | String, narHash | String } in
     lean_recursion_depth | Number = 2048,
   },
   lean = {
-    toolchain | String = "leanprover/lean4:v4.31.0",
-    version | String = "4.31.0",
-    rev | String = "68218e876d2a38b1985b8590fff244a83c321783",
-    archive_url | String = "https://github.com/leanprover/lean4/releases/download/v4.31.0/lean-4.31.0-linux.tar.zst",
-    archive_sha256 | String = "07a633cc8d9151cbc08825ea4cdda50d4b02a2c9cb852c0131b13046f49cad7f",
+    toolchain | String = "leanprover/lean4:v4.35.0",
+    version | String = "4.35.0",
+    rev | String = "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+    archive_url | String = "https://github.com/leanprover/lean4/releases/download/v4.35.0/lean-4.35.0-linux.tar.zst",
+    archive_sha256 | String = "7289597a44543246c9227b8cae501767e095ce17f6d448b95fc4a8dc97268f6d",
     backend_url | String = "https://github.com/AeneasVerif/aeneas",
     backend_subdir | String = "backends/lean",
   },

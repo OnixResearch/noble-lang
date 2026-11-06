@@ -26,6 +26,23 @@
         "type": "github"
       }
     },
+    "aeneas-lean": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792092964,
+        "narHash": "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
+        "owner": "AeneasVerif",
+        "repo": "aeneas",
+        "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AeneasVerif",
+        "repo": "aeneas",
+        "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+        "type": "github"
+      }
+    },
     "aeneasCharon": {
       "flake": false,
       "locked": {
@@ -1620,6 +1637,7 @@
     "root": {
       "inputs": {
         "aeneas": "aeneas",
+        "aeneas-lean": "aeneas-lean",
         "cairn": "cairn",
         "nixpkgs": [
           "octet",

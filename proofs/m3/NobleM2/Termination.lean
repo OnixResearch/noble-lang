@@ -154,14 +154,14 @@ theorem foldBody_work_bounded {env : Env} {cand : Candidate} {limits : Limits} :
               split at h
               · cases h
               · cases hj : joinInterface stack derived iface limits with
-                | error problem => simp only [hap, hj] at h; cases h
+                | error problem => simp only [hj] at h; cases h
                 | ok pair =>
                   obtain ⟨joined, bound⟩ := pair
                   cases hst : stepFold fold (schemeCost scheme
                       + joinCost iface) id iface with
-                  | error problem => simp only [hap, hj, hst] at h; cases h
+                  | error problem => simp only [hj, hst] at h; cases h
                   | ok stepped =>
-                    simp only [hap, hj, hst] at h
+                    simp only [hj, hst] at h
                     obtain ⟨hle, _⟩ := ih depth rest joined bound stepped final
                       finalBound next h
                     obtain ⟨hwork, _⟩ := stepFold_ok hst

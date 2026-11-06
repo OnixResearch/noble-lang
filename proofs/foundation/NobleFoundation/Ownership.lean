@@ -109,7 +109,8 @@ theorem resource_not_duplicable (tag : Nat) : duplicable (.resource tag) = false
 /-- Eligibility is recursive: wrapping a payload never changes it. -/
 theorem wrapped_duplicable (inner : Payload) :
     duplicable (.wrapped inner) = duplicable inner := by
-  simp [duplicable, containsResource]
+  change decide (containsResource inner = false) = decide (containsResource inner = false)
+  rfl
 
 theorem wrapped_data_duplicable (tag : Nat) :
     duplicable (.wrapped (.data tag)) = true := by
@@ -301,9 +302,9 @@ theorem merge_represents_each_arm (left right : Payload) :
       mergePosition left right = .conflicting left right) := by
   unfold mergePosition
   by_cases same : left = right
-  · rw [if_pos same]
+  · rw [ite_eq_left same]
     exact Or.inl ⟨left, rfl, rfl, same⟩
-  · rw [if_neg same]
+  · rw [ite_eq_right same]
     exact Or.inr rfl
 
 /-- **Distinct owners are never conflated**: two different payloads at the same position are recorded
@@ -311,7 +312,7 @@ as conflicting rather than merged, so a join cannot pick one arm's owner and dro
 theorem distinct_owners_are_not_merged (left right : Payload) (different : left ≠ right) :
     mergePosition left right = .conflicting left right := by
   unfold mergePosition
-  rw [if_neg different]
+  rw [ite_eq_right different]
 
 /-- The seeded one-armed join — keeping only the first arm at every position — is refuted wherever the
 arms differ, so it cannot be accepted as a join. -/

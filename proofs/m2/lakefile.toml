@@ -4,7 +4,7 @@ defaultTargets = ["NobleM2"]
 [[require]]
 name = "aeneas"
 git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
-rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
 
 [[lean_lib]]
 name = "NobleM2"

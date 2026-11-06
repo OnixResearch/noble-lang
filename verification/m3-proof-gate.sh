@@ -38,7 +38,7 @@
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m3-proof-gate.sh [PROOF_ROOT]
 #
 # PROOF_ROOT defaults to the repository's proofs/m3. Exit 0 = the active
@@ -58,9 +58,9 @@ M2_GATE="$REPO/verification/m2-proof-gate.sh"
 fail() { echo "[m3-gate] FAIL $1: $2" >&2; exit 1; }
 pass() { echo "[m3-gate] PASS $1"; }
 
-lean --version 2>/dev/null | grep -q 'version 4\.31\.0' \
-  || fail TOOLCHAIN "lean on PATH is not the pinned 4.31.0 release: $(lean --version 2>&1)"
-pass "TOOLCHAIN (lean 4.31.0)"
+lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
+  || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
+pass "TOOLCHAIN (lean 4.35.0)"
 
 # Tier probe: the strict tier needs the m3 root's four targets to build.
 probe_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"

@@ -314,7 +314,7 @@ fn probe_toolchain(
         failure.details = transcript_json(&probe);
         return Err(failure);
     }
-    if !probe.stdout.contains("version 4.31.0,") || !probe.stdout.contains(crate::sandbox::COMMIT) {
+    if !probe.stdout.contains("version 4.35.0,") || !probe.stdout.contains(crate::sandbox::COMMIT) {
         let mut failure = super::output::Failure::unsupported(
             "toolchain-mismatch",
             "selected Lean executable does not report the pinned release and commit".into(),

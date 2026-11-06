@@ -31,6 +31,16 @@ namespace M5Authority
 
 open authority
 
+/-- A `spec` judgement is exactly a normal return with the postcondition. Aeneas #1384 removed the
+library's own statements of this (`WP.spec_equiv_exists`, `WP.spec_imp_exists`); it follows from
+`spec_ok`, `spec_vis` and `spec_div` by cases on the result (#86). -/
+theorem specIffReturns {α : Type _} {m : Result α} {P : α → Prop} :
+    WP.spec m P ↔ ∃ y, m = Result.ok y ∧ P y := by
+  cases m <;> simp [WP.spec_ok, WP.spec_vis, WP.spec_div]
+
+theorem specReturns {α : Type _} {m : Result α} {P : α → Prop} (h : WP.spec m P) :
+    ∃ y, m = Result.ok y ∧ P y := specIffReturns.mp h
+
 /-! ### Result inversion -/
 
 theorem bind_eq_ok {α β : Type} {m : Result α} {f : α → Result β} {v : β}
@@ -103,7 +113,7 @@ theorem bytes_allM : ∀ (l0 l1 : List U8), l0.length = l1.length →
     OperationContract.Insts.CoreCmpPartialEqOperationContract.eq a b = Result.ok (decide (a = b)) := by
   obtain ⟨an, ae⟩ := a
   obtain ⟨bn, be⟩ := b
-  simp only [OperationContract.Insts.CoreCmpPartialEqOperationContract.eq, bytes_eq, bind_tc_ok,
+  simp only [OperationContract.Insts.CoreCmpPartialEqOperationContract.eq, bytes_eq, bind_ok,
     types.EffId.Insts.CoreCmpPartialEqEffId.eq, OperationContract.mk.injEq]
   split_ifs <;> simp_all
 
@@ -113,7 +123,7 @@ theorem bytes_allM : ∀ (l0 l1 : List U8), l0.length = l1.length →
   obtain ⟨bop, bargs, bact, bown, bpol, bcon⟩ := b
   simp only [PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq, operation_eq, bytes_eq,
     owner_eq, constraints_eq, ActorId.Insts.CoreCmpPartialEqActorId.eq,
-    PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision.eq, bind_tc_ok, PlanDescription.mk.injEq]
+    PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision.eq, bind_ok, PlanDescription.mk.injEq]
   split_ifs <;> simp_all
 
 @[simp] theorem plan_eq (a b : Plan) :
@@ -127,14 +137,14 @@ theorem bytes_allM : ∀ (l0 l1 : List U8), l0.length = l1.length →
   obtain ⟨ao, aslot, ag, ak, ar, asc⟩ := a
   obtain ⟨bo, bslot, bg, bk, br, bsc⟩ := b
   simp only [permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq, owner_eq,
-    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq, bind_tc_ok, permit.WitnessClaim.mk.injEq]
+    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq, bind_ok, permit.WitnessClaim.mk.injEq]
   split_ifs <;> simp_all
 
 /-! ### Cloning a plan returns the same plan -/
 
 theorem clone_bytes (v : alloc.vec.Vec U8) :
     alloc.vec.CloneVec.clone core.clone.CloneU8 v = Result.ok v := by
-  obtain ⟨s', hclone, hsame⟩ := WP.spec_imp_exists
+  obtain ⟨s', hclone, hsame⟩ := specReturns
     (Slice.clone_spec (clone := core.clone.CloneU8.clone) (s := v.slice) (fun _ _ => rfl))
   simp [alloc.vec.CloneVec.clone, hclone, ← hsame]
 
@@ -155,21 +165,21 @@ def QuotaMatch (s : Authority) (plan : Plan) : Option Usize → Prop
 
 theorem quota_position_matches (s : Authority) (plan : Plan) :
     ∃ o, facts.Authority.quota_position s plan = Result.ok o ∧ QuotaMatch s plan o := by
-  apply WP.spec_imp_exists
+  apply specReturns
   unfold facts.Authority.quota_position facts.Authority.quota_position_loop
   apply loop.spec_decr_nat (fun index : Usize => s.quotas.val.length - index.val) (fun _ => True)
   · intro index _
-    rw [WP.spec_equiv_exists]
+    rw [specIffReturns]
     unfold facts.Authority.quota_position_loop.body
     by_cases hlt : index.val < s.quotas.val.length
     · have hbound := alloc.vec.Vec.len_ineq s.quotas
-      obtain ⟨index1, hadd, hval⟩ := WP.spec_imp_exists
+      obtain ⟨index1, hadd, hval⟩ := specReturns
         (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
       have hget : alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice QuotaRecord) s.quotas index =
           Result.ok (s.quotas.val[index.val]) := by
         simp [alloc.vec.Vec.index_slice_index, alloc.vec.Vec.index_usize, hlt]
       have hlt' : index < alloc.vec.Vec.len s.quotas := by scalar_tac
-      simp only [hlt', if_true, hget, bind_tc_ok, QuotaId.Insts.CoreCmpPartialEqQuotaId.eq, checkpoint_eq]
+      simp only [hlt', ite_true, hget, bind_ok, QuotaId.Insts.CoreCmpPartialEqQuotaId.eq, checkpoint_eq]
       split_ifs with hquota hcheckpoint
       · refine ⟨_, rfl, ?_⟩
         simp only [QuotaMatch]
@@ -194,7 +204,7 @@ theorem attempt_record_ok (s : Authority) (key : permit.AttemptKey) (record : At
         key.generation = record.key.generation := by
   unfold admission.Authority.attempt_record
   simp only [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, owner_eq,
-    bind_tc_ok, alloc.vec.Vec.deref, core.slice.Slice.get, core.slice.index.Usize.get]
+    bind_tc_eq, bind_ok, alloc.vec.Vec.deref, core.slice.Slice.get, core.slice.index.Usize.get]
   by_cases howner : key.owner = s.profile.owner
   · simp only [howner, decide_true, true_and, not_true_eq_false, decide_false, Bool.false_eq_true,
       ↓reduceIte]
@@ -281,10 +291,10 @@ theorem start_execution_marks_one_unstarted_attempt
         simp only [plan_clone, Result.ok.injEq] at hp
         subst hp
         simp only [alloc.vec.Vec.index_mut_slice_index, alloc.vec.Vec.index_mut_usize,
-          alloc.vec.Vec.index_usize, alloc.vec.Vec.getElem?_Nat_eq, hfound.2.1, bind_tc_ok,
+          alloc.vec.Vec.index_usize, alloc.vec.Vec.getElem?_Nat_eq, hfound.2.1, bind_tc_eq, bind_ok,
           Result.ok.injEq, Prod.mk.injEq] at hmut
         obtain ⟨rfl, rfl⟩ := hmut
-        obtain ⟨i', hadd, hval⟩ := WP.spec_imp_exists
+        obtain ⟨i', hadd, hval⟩ := specReturns
           (UScalar.add_spec (x := self.counters.protected_operations) (y := 1#u32) (by
             have := (UScalar.add_equiv self.counters.protected_operations 1#u32)
             rw [hi] at this
@@ -370,7 +380,7 @@ theorem witness_record_found (s : Authority) (claim : permit.WitnessClaim) (reco
     (h : admission.Authority.witness_record s claim = Result.ok (.Ok record)) :
     claim.owner = s.profile.owner ∧ s.witnesses.val[claim.slot.val]? = some record := by
   unfold admission.Authority.witness_record at h
-  simp only [ne_trait_default_owner, ne_trait_default_kind, bind_tc_ok, lift, alloc.vec.Vec.deref,
+  simp only [ne_trait_default_owner, ne_trait_default_kind, bind_ok, lift, alloc.vec.Vec.deref,
     core.slice.Slice.get, core.slice.index.Usize.get] at h
   by_cases howner : claim.owner = s.profile.owner
   · refine ⟨howner, ?_⟩
@@ -555,7 +565,7 @@ theorem validate_facts_requires_current_authority
                 split at hgrant
                 · simp at hgrant
                 · rename_i grant hsome
-                  simp only [ne_trait_default_kind, ne_trait_default_plan, bind_tc_ok, lift] at hgrant
+                  simp only [ne_trait_default_kind, ne_trait_default_plan, bind_ok, lift] at hgrant
                   split_ifs at hgrant with hkind hright hplan <;> simp at hgrant
                   exact ⟨grant, hsome, by simpa using hplan, (UScalar.eq_equiv _ _).2 (by simpa using hkind)⟩
               · unfold facts.current_status at hstatus
@@ -755,7 +765,7 @@ theorem index_mut_ok {α : Type} {v : alloc.vec.Vec α} {i : Usize} {x : α} {ba
   split at h
   · simp at h
   · rename_i found hfound
-    simp only [bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at h
+    simp only [bind_tc_eq, bind_ok, Result.ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, rfl⟩ := h
     exact ⟨by simpa using hfound, fun y => by simp [alloc.vec.Vec.set_val_eq]⟩
 
@@ -1255,7 +1265,7 @@ theorem retire_live_witnesses_keeps_quotas (s s' : Authority)
       unfold observation.Authority.retire_live_witnesses_loop.body
       by_cases hlt : index.val < st.witnesses.val.length
       · have hbound := alloc.vec.Vec.len_ineq st.witnesses
-        obtain ⟨index1, hadd, hval⟩ := WP.spec_imp_exists
+        obtain ⟨index1, hadd, hval⟩ := specReturns
           (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
         have hlt' : index < alloc.vec.Vec.len st.witnesses := by scalar_tac
         have hget : alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice WitnessRecord) st.witnesses index =
@@ -1267,25 +1277,25 @@ theorem retire_live_witnesses_keeps_quotas (s s' : Authority)
           simp [alloc.vec.Vec.index_mut_slice_index, alloc.vec.Vec.index_mut_usize,
             alloc.vec.Vec.index_usize, hlt]
           rfl
-        simp only [hlt', if_true, hget, bind_tc_ok]
+        simp only [hlt', ite_true, hget, bind_ok]
         split
-        · simp only [hmut, hadd, bind_tc_ok, uncurry_apply_pair, WP.spec_ok]
+        · simp only [hmut, hadd, bind_ok, uncurry_apply_pair, WP.spec_ok]
           refine ⟨hq, ?_⟩
           simp only [alloc.vec.Vec.set_val_eq, List.length_set]
           scalar_tac
-        · simp only [hadd, bind_tc_ok, WP.spec_ok]
+        · simp only [hadd, bind_ok, WP.spec_ok]
           exact ⟨hq, by scalar_tac⟩
-        · simp only [hadd, bind_tc_ok, WP.spec_ok]
+        · simp only [hadd, bind_ok, WP.spec_ok]
           exact ⟨hq, by scalar_tac⟩
       · have hge : ¬ index < alloc.vec.Vec.len st.witnesses := by scalar_tac
-        simp only [hge, if_false, WP.spec_ok]
+        simp only [hge, ite_false, WP.spec_ok]
         exact hq
     · rfl
-  obtain ⟨r, hr, hpost⟩ := WP.spec_imp_exists hspec
+  obtain ⟨r, hr, hpost⟩ := specReturns hspec
   obtain ⟨p, v, v1, v2, v3, c, io, o⟩ := r
   unfold observation.Authority.retire_live_witnesses at h
   rw [hr] at h
-  simp only [bind_tc_ok, uncurry_apply_pair, Result.ok.injEq] at h
+  simp only [bind_ok, uncurry_apply_pair, Result.ok.injEq] at h
   subst h
   exact hpost
 
@@ -1656,7 +1666,7 @@ theorem retire_live_witnesses_effect (s s' : Authority)
       unfold observation.Authority.retire_live_witnesses_loop.body
       by_cases hlt : index.val < st.witnesses.val.length
       · have hbound := alloc.vec.Vec.len_ineq st.witnesses
-        obtain ⟨index1, hadd, hval⟩ := WP.spec_imp_exists
+        obtain ⟨index1, hadd, hval⟩ := specReturns
           (UScalar.add_spec (x := index) (y := 1#usize) (by scalar_tac))
         have hnext : index1.val = index.val + 1 := by simpa using hval
         have hlt' : index < alloc.vec.Vec.len st.witnesses := by scalar_tac
@@ -1692,10 +1702,10 @@ theorem retire_live_witnesses_effect (s s' : Authority)
             cases s.witnesses.val[j]? with
             | none => rfl
             | some r => simp only [Option.map_some, hiff]
-        simp only [hlt', if_true, hget, bind_tc_ok]
+        simp only [hlt', ite_true, hget, bind_ok]
         split
         · rename_i hlive
-          simp only [hmut, hadd, bind_tc_ok, uncurry_apply_pair, WP.spec_ok]
+          simp only [hmut, hadd, bind_ok, uncurry_apply_pair, WP.spec_ok]
           refine ⟨⟨ha, hc, ?_, fun j => ?_⟩, ?_⟩
           · simp [alloc.vec.Vec.set_val_eq, hlen]
           · simp only [alloc.vec.Vec.set_val_eq]
@@ -1703,19 +1713,19 @@ theorem retire_live_witnesses_effect (s s' : Authority)
           · simp only [alloc.vec.Vec.set_val_eq, List.length_set]
             scalar_tac
         · rename_i hconsumed
-          simp only [hadd, bind_tc_ok, WP.spec_ok]
+          simp only [hadd, bind_ok, WP.spec_ok]
           refine ⟨⟨ha, hc, hlen, fun j => ?_⟩, by scalar_tac⟩
           have h1 := hstep st.witnesses.val[index.val]
             (retireIfLive_eq_self _ (by simp [hconsumed])) j
-          rwa [List.set_getElem_self] at h1
+          exact (congrArg (fun l : List WitnessRecord => l[j]?) (List.set_getElem_self hlt)).symm.trans h1
         · rename_i hretired
-          simp only [hadd, bind_tc_ok, WP.spec_ok]
+          simp only [hadd, bind_ok, WP.spec_ok]
           refine ⟨⟨ha, hc, hlen, fun j => ?_⟩, by scalar_tac⟩
           have h1 := hstep st.witnesses.val[index.val]
             (retireIfLive_eq_self _ (by simp [hretired])) j
-          rwa [List.set_getElem_self] at h1
+          exact (congrArg (fun l : List WitnessRecord => l[j]?) (List.set_getElem_self hlt)).symm.trans h1
       · have hge : ¬ index < alloc.vec.Vec.len st.witnesses := by scalar_tac
-        simp only [hge, if_false, WP.spec_ok]
+        simp only [hge, ite_false, WP.spec_ok]
         refine ⟨?_, ha, hc⟩
         apply List.ext_getElem?
         intro j
@@ -1728,11 +1738,11 @@ theorem retire_live_witnesses_effect (s s' : Authority)
           simp [hbefore]
     · refine ⟨rfl, rfl, rfl, fun j => ?_⟩
       cases s.witnesses.val[j]? <;> simp
-  obtain ⟨r, hr, hpost⟩ := WP.spec_imp_exists hspec
+  obtain ⟨r, hr, hpost⟩ := specReturns hspec
   obtain ⟨p, v, v1, v2, v3, c, io, o⟩ := r
   unfold observation.Authority.retire_live_witnesses at h
   rw [hr] at h
-  simp only [bind_tc_ok, uncurry_apply_pair, Result.ok.injEq] at h
+  simp only [bind_ok, uncurry_apply_pair, Result.ok.injEq] at h
   subst h
   exact hpost
 

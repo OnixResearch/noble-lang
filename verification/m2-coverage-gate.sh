@@ -37,7 +37,7 @@
 # Usage (from any directory; the pinned Lean must be first on PATH; `bun` is
 # required on PATH — the repository's checks already run on it):
 #
-#   PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
+#   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m2-coverage-gate.sh [PROOF_ROOT] [RECORD]
 #
 # PROOF_ROOT defaults to the repository's proofs/m2 and RECORD to
@@ -63,9 +63,9 @@ pass() { echo "[m2-coverage] PASS $1"; }
 # C0 SETUP: bun runs the join tool (the repository's checks already depend
 # on it); the pinned Lean must be on PATH.
 command -v bun >/dev/null 2>&1 || fail SETUP "bun not found on PATH (required by the join tool)"
-lean --version 2>/dev/null | grep -q 'version 4\.31\.0' \
-  || fail TOOLCHAIN "lean on PATH is not the pinned 4.31.0 release: $(lean --version 2>&1)"
-pass "SETUP (bun + lean 4.31.0)"
+lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
+  || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
+pass "SETUP (bun + lean 4.35.0)"
 
 # C1 BUILD: the generated kernel and the two proof modules the environment
 # checkers import must be current (their .olean are what `lake env lean`

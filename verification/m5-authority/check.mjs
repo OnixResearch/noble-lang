@@ -9,6 +9,7 @@ import { userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { digest, fileHash } from '../foundation/execution.mjs';
+import { appendCompatibility, compatibilitySource, libraryCompatibility } from '../aeneas-library-compatibility.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
@@ -37,6 +38,7 @@ const standardAxioms = new Set(['propext', 'Classical.choice', 'Quot.sound']);
 let commandSerial = 0;
 const commandArtifacts = {};
 let output;
+let compatibility;
 
 function execute(command, argv, cwd, expect) {
   const observed = spawnSync(command, argv, {
@@ -173,6 +175,8 @@ function makeProject(directory, generated, moduleText, dependencies, profile) {
   const project = join(directory, 'project');
   mkdirSync(join(project, 'NobleKernel'), { recursive: true });
   for (const [name, bytes] of Object.entries(generated)) writeFileSync(join(project, name), bytes);
+  // The archived subject names library declarations the selected Aeneas Lean library dropped (#86).
+  appendCompatibility(join(project, 'NobleKernel/TypesExternal.lean'), compatibility);
   writeFileSync(join(project, 'M5Authority.lean'), moduleText);
   writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m5/lean-toolchain')));
   writeFileSync(join(project, 'lake-manifest.json'), json({ ...dependencies.manifest, name: 'noble_m5_authority' }));
@@ -488,12 +492,13 @@ try {
   const historical = verifyProfile(profile);
   const checkedFiles = [codeFile, inventoryFile, profileFile, 'verification/m5-authority/check.mjs',
     'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain', profile.source,
-    profile.historical_extraction_receipt, 'policy/tool-selection.json'];
+    profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource];
   const sources = Object.fromEntries(checkedFiles.map(file => [file, fileHash(join(root, file))]));
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
-  requireThat(version.includes('version 4.31.0') && version.includes('68218e876d2a38b1985b8590fff244a83c321783'),
+  requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
     'wrong pinned Lean executable');
   const generated = extractGenerated(profile);
+  compatibility = libraryCompatibility(root);
   const dependencies = dependencyPackages(profile);
   const project = makeProject(join(output, 'baseline'), generated, moduleText, dependencies, profile);
   const build = run(lake, ['build', 'M5Authority'], project);
@@ -514,6 +519,8 @@ try {
     lean_path: join(leanBin, 'lean'), lean_sha256: fileHash(join(leanBin, 'lean')),
     model_inputs: { ...profile, mutation_controls: profile.mutation_controls.map(control => control.id) },
     dependencies: dependencies.packages, sources_sha256: sources,
+    library_compatibility: { source: compatibility.source, sha256: compatibility.sha256,
+      appended_to: 'NobleKernel/TypesExternal.lean' },
     artifacts_sha256: { 'Audit.lean': fileHash(join(output, 'Audit.lean')), ...commandArtifacts },
     generated_source_lint_warnings: generatedWarnings,
     theorem_count: names.length, theorems, specification, binding, mutation_controls: mutations,
@@ -531,6 +538,7 @@ try {
     assumptions: [
       'Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The retained Charon/Aeneas translation is trusted to model the bound Rust sources; this lane does not re-run the translation.',
+      'The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models.',
       'Checkpoint renewal is a host premise: a fresh checkpoint opens fresh quota records from fresh host snapshots.',
     ],

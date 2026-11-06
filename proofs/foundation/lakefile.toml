@@ -1,5 +1,9 @@
 name = "noble-foundation"
 defaultTargets = ["NobleFoundation"]
+# Mathlib declares itself designed for the module system, and Lake warns on every
+# import of it from a file without a `module` header. These proof files are not
+# module-system files; this is Lake's documented opt-out for such importers.
+allowNonModules = true
 
 # Same Lean/Mathlib pins as proofs/m3 and proofs/mc1: Mathlib4 arrives through
 # the pinned Aeneas backend (see lake-manifest.json). The MC1 model and the
@@ -8,7 +12,7 @@ defaultTargets = ["NobleFoundation"]
 [[require]]
 name = "aeneas"
 git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
-rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
 
 [[lean_lib]]
 name = "NobleFoundation"

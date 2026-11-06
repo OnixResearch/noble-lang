@@ -206,7 +206,7 @@ theorem valuesUpTo_eq_value (graph : Graph) (inputs : Nat → BitVec 64) :
       · rw [hlast]
         simp [value, valuesUpTo]
       · have hlt : index < count := by omega
-        simp only [valuesUpTo, if_neg hlast]
+        simp only [valuesUpTo, ite_eq_right hlast]
         exact ih index hlt
 
 /-! ### Soundness

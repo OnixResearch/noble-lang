@@ -244,7 +244,7 @@ private theorem representative_refines (kind : async_tasks.schema.EventKind) :
     async_tasks.schema.coverage.EventKind.representative kind = Result.ok (eventFor kind) := by
   cases kind <;>
     simp only [async_tasks.schema.coverage.EventKind.representative, eventFor, completion,
-      obligations, async_tasks.domain.Obligations.empty, bind_tc_ok]
+      obligations, async_tasks.domain.Obligations.empty, bind_ok]
 
 private def ruleFor : String → Option (M6Async.Checked async_tasks.schema.Rule)
   | "ok:Inspect" => some (.Ok .Inspect)

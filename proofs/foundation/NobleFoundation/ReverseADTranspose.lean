@@ -35,7 +35,7 @@ theorem valuesUpTo_stable (graph : Graph) (is ip : Nat → ℝ) :
       by_cases last : index = count
       · subst last
         rfl
-      · simp only [valuesUpTo, if_neg last]
+      · simp only [valuesUpTo, ite_eq_right last]
         exact ih index (by omega)
 
 theorem tangentUpTo_stable (graph : Graph) (is ip ds dp : Nat → ℝ) :
@@ -49,7 +49,7 @@ theorem tangentUpTo_stable (graph : Graph) (is ip ds dp : Nat → ℝ) :
       by_cases last : index = count
       · subst last
         rfl
-      · simp only [tangentUpTo, if_neg last]
+      · simp only [tangentUpTo, ite_eq_right last]
         exact ih index (by omega)
 
 /-! ## A node's coefficients pair its operand tangents to its own tangent -/
@@ -84,7 +84,7 @@ theorem coefficients_pair_to_the_tangent (graph : Graph) (hwf : WellFormed graph
       have hb : b < consumer := earlier b (by simp [Node.operands])
       simp only [stepCoefficient, tangentStep, add_mul, ite_mul, one_mul, zero_mul,
         Finset.sum_add_distrib, Finset.sum_ite_eq, Finset.mem_range]
-      rw [if_pos (by omega), if_pos (by omega),
+      rw [ite_eq_left (by omega), ite_eq_left (by omega),
         tangentUpTo_stable graph is ip ds dp consumer a ha,
         tangentUpTo_stable graph is ip ds dp consumer b hb]
   | sub a b =>
@@ -93,7 +93,7 @@ theorem coefficients_pair_to_the_tangent (graph : Graph) (hwf : WellFormed graph
       have hb : b < consumer := earlier b (by simp [Node.operands])
       simp only [stepCoefficient, tangentStep, add_mul, ite_mul, one_mul, zero_mul,
         Finset.sum_add_distrib, Finset.sum_ite_eq, Finset.mem_range]
-      rw [if_pos (by omega), if_pos (by omega),
+      rw [ite_eq_left (by omega), ite_eq_left (by omega),
         tangentUpTo_stable graph is ip ds dp consumer a ha,
         tangentUpTo_stable graph is ip ds dp consumer b hb]
       ring
@@ -103,7 +103,7 @@ theorem coefficients_pair_to_the_tangent (graph : Graph) (hwf : WellFormed graph
       have hb : b < consumer := earlier b (by simp [Node.operands])
       simp only [stepCoefficient, tangentStep, add_mul, ite_mul, zero_mul,
         Finset.sum_add_distrib, Finset.sum_ite_eq, Finset.mem_range]
-      rw [if_pos (by omega), if_pos (by omega),
+      rw [ite_eq_left (by omega), ite_eq_left (by omega),
         tangentUpTo_stable graph is ip ds dp consumer a ha,
         tangentUpTo_stable graph is ip ds dp consumer b hb,
         valuesUpTo_stable graph is ip consumer a ha,
@@ -133,7 +133,7 @@ theorem frontier_succ (graph : Graph) (tangents : Nat → ℝ) (fuel index : Nat
   by_cases inner : (graph.node index).operands ≠ []
   · simp only [and_iff_left inner]
     split_ifs <;> first | rfl | (exfalso; omega)
-  · simp only [inner, and_false, if_false]
+  · simp only [inner, and_false, ite_false]
 
 /-- **The frontier pairing never changes**: after any number of reverse steps up to the arity, the
 adjoints paired with the frontier weights equal the seed paired with every tangent. -/
@@ -150,7 +150,7 @@ theorem frontier_invariant (graph : Graph) (hwf : WellFormed graph) (is ip ds dp
       refine Finset.sum_congr rfl fun index member => ?_
       have below := Finset.mem_range.mp member
       simp only [adjointAfter, frontier]
-      rw [if_neg (by omega)]
+      rw [ite_eq_right (by omega)]
   | succ fuel ih =>
       intro within
       set consumer := graph.arity - 1 - fuel with hconsumer
@@ -172,7 +172,7 @@ theorem frontier_invariant (graph : Graph) (hwf : WellFormed graph) (is ip ds dp
         by_cases operand : index ∈ (graph.node consumer).operands
         · have before : index < consumer := hwf consumer index operand
           simp only [frontier]
-          rw [if_neg (by omega)]
+          rw [ite_eq_right (by omega)]
           ring
         · rw [stepCoefficient_of_not_operand _ _ _ operand]
           ring
@@ -210,12 +210,12 @@ theorem frontier_invariant (graph : Graph) (hwf : WellFormed graph) (is ip ds dp
             · subst same
               have gone : frontier graph (tangent graph is ip ds dp) (fuel + 1) consumer = 0 := by
                 unfold frontier
-                rw [if_pos ⟨by omega, inner⟩]
-              rw [if_pos ⟨rfl, inner⟩, if_pos rfl, gone]
+                rw [ite_eq_left ⟨by omega, inner⟩]
+              rw [ite_eq_left ⟨rfl, inner⟩, ite_eq_left rfl, gone]
               ring
-            · rw [if_neg (fun h => same h.1), if_neg same, add_zero]
+            · rw [ite_eq_right (fun h => same h.1), ite_eq_right same, add_zero]
           rw [Finset.sum_congr rfl pointwise, Finset.sum_add_distrib, Finset.sum_ite_eq,
-            if_pos (Finset.mem_range.mpr inRange)]
+            ite_eq_left (Finset.mem_range.mpr inRange)]
         rw [split] at previous
         linarith
       · -- A leaf carries the same frontier weight before and after, and contributes nothing.
@@ -234,7 +234,7 @@ theorem frontier_invariant (graph : Graph) (hwf : WellFormed graph) (is ip ds dp
           unfold adjointDot
           refine Finset.sum_congr rfl fun index _ => ?_
           rw [frontier_succ graph (tangent graph is ip ds dp) fuel index within, ← hconsumer,
-            if_neg (fun h => h.2 (h.1 ▸ leaf))]
+            ite_eq_right (fun h => h.2 (h.1 ▸ leaf))]
         rw [same]
         exact previous
 
@@ -255,8 +255,8 @@ theorem transpose_identity (graph : Graph) (hwf : WellFormed graph) (is ip ds dp
   refine Finset.sum_congr rfl fun index _ => ?_
   simp only [frontier, Nat.sub_self, Nat.zero_le, true_and]
   by_cases leaf : (graph.node index).operands = []
-  · rw [if_pos leaf, if_neg (fun h => h leaf)]
-  · rw [if_neg leaf, if_pos leaf, mul_zero]
+  · rw [ite_eq_left leaf, ite_eq_right (fun h => h leaf)]
+  · rw [ite_eq_right leaf, ite_eq_left leaf, mul_zero]
 
 /-- A seed of `1` on one output node and `0` elsewhere. -/
 def unitSeed (output : Nat) : Nat → ℝ := fun index => if index = output then 1 else 0
@@ -276,7 +276,7 @@ theorem reverse_sweep_is_the_derivative (graph : Graph) (hwf : WellFormed graph)
   have pick : ∑ index ∈ Finset.range graph.arity, unitSeed output index *
       tangent graph is ip ds dp index = tangent graph is ip ds dp output := by
     simp only [unitSeed, ite_mul, one_mul, zero_mul, Finset.sum_ite_eq', Finset.mem_range,
-      if_pos inRange]
+      ite_eq_left inRange]
   rw [pick]
   exact tangent_is_directional_derivative graph hwf is ip ds dp output
 
@@ -294,7 +294,7 @@ theorem slotGraph_transpose :
       tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) index =
       tangent slotGraph slotGraphInputs (fun _ => 0) (slotGraphDirection 0) (fun _ => 0) 7 := by
     simp only [slotGraphSeed, ite_mul, one_mul, zero_mul, Finset.sum_ite_eq', Finset.mem_range]
-    rw [if_pos (by decide)]
+    rw [ite_eq_left (by decide)]
   rw [pick, slotGraph_tangent_slot_zero]
 
 end NobleFoundation.ReverseAD.Transpose
