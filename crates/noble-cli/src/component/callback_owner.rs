@@ -275,10 +275,7 @@ impl Host {
                 "callback_rejection",
                 self.callback_rejection.map_or(Json::Null, encoding::string),
             ),
-            (
-                "guest_value",
-                guest_value.map_or(Json::Null, |value| Json::Number(value as u64)),
-            ),
+            ("guest_value", guest_value.map_or(Json::Null, Json::Signed)),
             ("guest_requests", Json::Number(self.guest_requests)),
             (
                 "trusted_values_created",

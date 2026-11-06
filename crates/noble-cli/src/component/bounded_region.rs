@@ -116,13 +116,13 @@ enum HostEvent {
 }
 
 /// A signed guest argument exactly as it arrived, without narrowing it to usize: a rejected
-/// negative offset is still an observed request.
+/// negative offset is still an observed request, and it is reported with its sign.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Offset(i64);
 
 impl Offset {
     const fn encode(self) -> Json {
-        Json::Number(self.0 as u64)
+        Json::Signed(self.0)
     }
 }
 
@@ -984,6 +984,60 @@ mod ordered_trace_tests {
         assert_eq!(kinds(&host), ["host.retire", "response"]);
         assert_eq!(identities(&host), [host.context.0]);
         assert_eq!(host.releases, 1);
+    }
+
+    /// A recorded request reports the arguments the guest passed, signed. A refused negative or
+    /// extreme argument is reported as itself, never as its unsigned reinterpretation (#90), and
+    /// an admitted read reports its own arguments the same way.
+    #[test]
+    fn recorded_requests_report_the_signed_arguments_the_guest_passed() {
+        for (offset, length, answer, arguments) in [
+            (-1, 1, Err("bounds-reject"), r#""offset":-1,"length":1"#),
+            (0, -1, Err("bounds-reject"), r#""offset":0,"length":-1"#),
+            (
+                i64::MIN,
+                1,
+                Err("bounds-reject"),
+                r#""offset":-9223372036854775808,"length":1"#,
+            ),
+            (
+                1,
+                i64::MIN,
+                Err("bounds-reject"),
+                r#""offset":1,"length":-9223372036854775808"#,
+            ),
+            (
+                i64::MAX,
+                1,
+                Err("bounds-reject"),
+                r#""offset":9223372036854775807,"length":1"#,
+            ),
+            (1, 2, Ok(b"bc".to_vec()), r#""offset":1,"length":2"#),
+        ] {
+            let mut host = host(b"abc");
+            let claim = host.owner.as_ref().expect("owner").handle();
+            let identity = claim.table.0;
+            assert_eq!(host.read(1, claim, offset, length), answer);
+            let request = host
+                .events
+                .first()
+                .expect("request event")
+                .encode()
+                .encode();
+            assert_eq!(
+                request,
+                format!(
+                    r#"{{"kind":"request","operation":"region.read","identity":{identity},{arguments}}}"#
+                ),
+                "({offset}, {length})"
+            );
+            let admitted = u64::from(answer.is_ok());
+            assert_eq!(
+                (host.protected_operations, host.region_reads),
+                (admitted, admitted)
+            );
+            assert!(!host.events_truncated);
+        }
     }
 
     #[test]

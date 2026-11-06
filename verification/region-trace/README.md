@@ -21,12 +21,22 @@ unless `--allow-dirty` is passed explicitly (a dirty receipt records it, it does
 The source alphabet is `RegionProtocol-v1`'s `Req`/`Resp`/`Commit`; the target alphabet is the
 emitted ABI step sequence this host performs (`importCrossing`, `hostDecision`, `protectedCopy`,
 `returned`, `normalReturn`, `abnormalExit`, `cleanup`, and the two named erasable bookkeeping steps).
+
+A request carries the guest's signed (`s64`) arguments as `Int`, in the source alphabet, the target
+alphabet and the observed trace alike. Until #90 all three carried `Nat`, so the refused negative
+requests the host really receives could not be written down. Meanwhile the adapter printed them as
+their unsigned 64-bit reinterpretation. A protected read commit keeps a `Nat` region, because the
+host commits only a region it admitted. A release request carries no arguments: the adapter records
+`null`, and the model writes `0 0`. The lowering's decision step writes an acceptance bit of `true`
+that the host does not observe, and no definition reads that bit.
+
 The relation is the projection of a **well-formed** target trace onto the source alphabet, where
 well-formedness itself is a condition of the relation:
 
 * every commit identity was decided by a `hostDecision` first (a rep number or handle class can never
   stand in for the exact identity);
-* every protected read commit is preceded by the crossing that asked for exactly that region;
+* every protected read commit is preceded by the crossing that asked for exactly that region, compared
+  through the exact embedding of `Nat` into `Int`, so a negative crossing explains no commit;
 * a trace commits at most one release or retirement (`guestRelease`, `destructorRelease` or
   `hostRetire`), so a guest release followed by a host retirement of the same region is refused.
   Until 2026-10-29 the condition bounded each kind separately, so that pair was well formed even
@@ -57,8 +67,12 @@ well-formedness itself is a condition of the relation:
 | `observed_traces_are_paired`, `swapped_response_is_unpaired` | WIT-TRACE-03: every response follows a request of its own operation, tolerating only that request's own protected commits, and a response answering another operation is unpaired |
 | `related_rejects_swapped_response`, `related_rejects_substituted_resource_identity`, `related_rejects_observed_retirement_as_guest_release` | the relation refuses a target trace whose response answers the wrong operation, whose commit carries an identity the host never authorised, or whose host retirement is presented as a guest release |
 | `related_implies_read_commits_explained` | the corollary the pilot was missing: every read commit a related trace projects is explained by the import crossing that asked for that exact region |
+| `lower_keeps_read_arguments` | #90: for every observed trace, the lowering's read crossings are exactly the observed read requests' signed arguments, in order |
+| `observed_negative_request_projects_with_its_sign` | #90 fixture: a refused read with offset `-1` lowers and projects with `-1` |
+| `related_rejects_unsigned_reinterpretation`, `related_accepts_the_signed_refused_request` | #90: a source trace that reports the refused `-1` as `2^64 - 1` does not relate to the observed trace, and the source trace that keeps the sign does |
+| `related_rejects_commit_of_reinterpreted_region` | #90: a protected read commit of the reinterpreted region is not explained by the signed crossing that asked for `-1` |
 
-`verification/region-trace/receipt.json` is the retained receipt of one run: **49** model
+`verification/region-trace/receipt.json` is the retained receipt of one run: **54** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
@@ -67,7 +81,7 @@ The receipt carries a `bindings` block: the model revision (pinned Lean version 
 plus the source and inventory hashes) is bound, and `component`, `helper` and `engine` are recorded as
 **`null` with the reason stated** — no component, lowering helper or engine instance is a subject of
 these theorems, so binding one would imply a correspondence this package does not establish. A
-`claims` block labels the verdict: 49 model theorems, 0 implementation theorems, correspondence none,
+`claims` block labels the verdict: 54 model theorems, 0 implementation theorems, correspondence none,
 liveness none, cancellation unsupported and unmodelled.
 
 ## Non-claims

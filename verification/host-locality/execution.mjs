@@ -144,6 +144,23 @@ function parseJson(text, label) {
   }
 }
 
+// A number a JavaScript double cannot hold exactly keeps its decimal source text, so the trace
+// comparison and the retained report see the digits the CLI printed (#90).
+function parseExactJson(text, label) {
+  try {
+    return JSON.parse(text, (key, value, context) =>
+      (typeof value === 'number' && !Number.isSafeInteger(value) ? JSON.rawJSON(context.source) : value));
+  } catch (error) {
+    throw Error(`${label} did not emit JSON: ${error.message}`);
+  }
+}
+
+// The exact decimal text of a JSON integer, or null when the value is not an integer.
+function exactInteger(value) {
+  const text = JSON.isRawJSON(value) ? value.rawJSON : Number.isSafeInteger(value) ? String(value) : null;
+  return text !== null && /^-?(?:0|[1-9][0-9]*)$/.test(text) ? text : null;
+}
+
 function selectedFiles(rootPath) {
   const files = {};
   function walk(directory, prefix = '') {
@@ -328,8 +345,9 @@ function checkReport(report, label, expected) {
 }
 
 // The ordered host trace is an observation, never a protocol outcome inferred from the report.
-// Pairing, protected commits and host retirement are checked from the trace alone.
-function checkTrace(report, label) {
+// Pairing, protected commits and host retirement are checked from the trace alone; every read
+// request must carry the exact signed arguments the CLI passed, compared as decimal text.
+function checkTrace(report, label, input) {
   const { events } = report;
   requireThat(Array.isArray(events), `${label}: report carries no ordered event trace`);
   requireThat(report.events_truncated === false, `${label}: event trace hit its bound`);
@@ -345,6 +363,13 @@ function checkTrace(report, label) {
         `${label}: unknown operation ${event.operation}`);
       requireThat(Number.isSafeInteger(event.identity) && event.identity >= 0,
         `${label}: request carries no exact resource identity`);
+      if (event.operation === 'region.read') {
+        requireThat(exactInteger(event.offset) === input.offset && exactInteger(event.length) === input.length,
+          `${label}: the read request reports (${stable(event.offset)}, ${stable(event.length)}), not the passed (${input.offset}, ${input.length})`);
+      } else {
+        requireThat(event.offset === null && event.length === null,
+          `${label}: a ${event.operation} request carries arguments`);
+      }
       pending = event.operation;
       pendingIdentity = event.identity;
       if (event.operation === 'region.read') readIdentity = event.identity;
@@ -390,6 +415,9 @@ function checkTrace(report, label) {
     kinds: events.map(event => (event.kind === 'request' ? event.operation : event.kind)),
     identities: events.filter(event => Number.isSafeInteger(event.identity))
       .map(event => String(event.identity)),
+    requests: events.filter(event => event.kind === 'request').map(event => ({
+      operation: event.operation, offset: exactInteger(event.offset), length: exactInteger(event.length),
+    })),
     protected_commits: events.filter(event => event.kind === 'commit').length,
     refusals: events.filter(event => event.kind === 'response' && event.result === 'refused').length,
   };
@@ -401,12 +429,12 @@ function invokeCase({ out, cli, cliEnv, label, componentPath, componentSha256, b
     'component', 'read-region', componentPath, bufferHex, String(offset), String(length),
   ], { env: cliEnv, allowFailure: true });
   requireThat(result.status === 0, `${label}: production read-region CLI failed: ${result.stderr}`);
-  const report = parseJson(result.stdout, `read-region ${label}`);
+  const report = parseExactJson(result.stdout, `read-region ${label}`);
   checkReport(report, label, expected);
-  const trace = checkTrace(report, label);
+  const input = { host_buffer_hex: bufferHex, offset: String(offset), length: String(length) };
+  const trace = checkTrace(report, label, input);
   const row = {
-    id: label, kind, component_sha256: componentSha256,
-    input: { host_buffer_hex: bufferHex, offset: String(offset), length: String(length) },
+    id: label, kind, component_sha256: componentSha256, input,
     expected, trace, observed: report, command_id: result.record.id,
   };
   cases.push(row);
@@ -566,6 +594,29 @@ function main() {
     faultComponents[spec.id] = { ...fault, execution_case: row.id };
   }
 
+  // The checker's own refusal of the #90 signature: each real refused report, with its negative
+  // argument replaced by the unsigned 64-bit reinterpretation the adapter used to print, is refused.
+  const reinterpreted = '18446744073709551615';
+  const forgeries = [
+    ['negative-offset-ordinary-error', 'offset'],
+    ['negative-length-ordinary-error', 'length'],
+  ].map(([caseId, field]) => {
+    const row = cases.find(item => item.id === caseId);
+    const forged = parseExactJson(stable(row?.observed), `forged ${caseId}`);
+    const read = forged.events.find(event => event.kind === 'request' && event.operation === 'region.read');
+    requireThat(read && exactInteger(read[field]) === '-1', `${caseId}: no signed ${field} to forge`);
+    read[field] = JSON.rawJSON(reinterpreted);
+    let refusal = null;
+    try { checkTrace(forged, `forged-${caseId}`, row.input); } catch (error) { refusal = error.message; }
+    requireThat(refusal !== null, `${caseId}: the trace checker accepted the reinterpreted ${field}`);
+    return { case_id: caseId, field, forged_value: reinterpreted, refusal };
+  });
+  controls.push({
+    id: 'reinterpreted-unsigned-request-argument', status: 'passed', class: 'lane-trace-checker-refusal',
+    forgeries,
+    observation: 'The real refused reports for offset -1 and length -1, with that argument replaced by its unsigned 64-bit reinterpretation (what the adapter printed before #90), are refused by the trace checker. This control exercises the lane checker, not the production adapter.',
+  });
+
   const hostTests = run('direct-production-host-controls', cargo, [
     'test', '--locked', '--offline', '-j', '4', '-p', 'noble-cli', '--bin', 'noble',
     'component::bounded_region::tests', '--', '--test-threads=1',
@@ -706,7 +757,7 @@ function main() {
       'Trap and malformed-result controls start from the exact module.wat emitted for the selected guest, alter only its emitted core-Wasm instructions after the actual region.read import call, reassemble it with selected wasm-tools, and execute it through the same public CLI/Wasmtime adapter.',
       'Malformed result tag/length controls corrupt guest result-area memory after Wasmtime has supplied a valid typed host response. They test emitted lowering validation and cleanup on those finite mutated artifacts, not an adversarial host returning a malformed Val.',
       'The current noble-bounded-region/v1 report conflates guest release, destructor release and host post-return cleanup in released_owners. Normal guest source includes consuming release, but the report cannot attribute the one count to that source operation rather than cleanup.',
-      'The adapter report records no ordered event trace. The actual trap fault is placed immediately after the selected host read call; no guest continuation or guest restoration is inferred after the trap.',
+      'The adapter report records the host\'s own ordered event trace, bounded at 64 events and flagged when truncated. Its read-request arguments are compared with the CLI inputs as exact decimal text, and a release carries none. The actual trap fault is placed immediately after the selected host read call; no guest continuation or guest restoration is inferred after the trap.',
       'Direct Host::release refusal/recovery is observed separately from the public CLI post-return cleanup-failure path, which remains unexercised without a production fault-injection seam.',
       'Finite execution, Rust unit controls and artifacts do not prove general Canonical ABI, Noble lowering, host/runtime, Wasmtime, or Lean-model refinement. Borrow-restoration/result-validation event order and unrelated logical frame mutation remain unobserved or model-only as identified in controls.',
     ],

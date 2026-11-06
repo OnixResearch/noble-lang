@@ -47,16 +47,19 @@ inductive CommitKind where
   | hostRetire
   deriving DecidableEq, Repr
 
-/-- The source alphabet: exactly `RegionProtocol-v1`'s request, response and commit classes. -/
+/-- The source alphabet: exactly `RegionProtocol-v1`'s request, response and commit classes.
+A request carries the guest's signed (`s64`) arguments as `Int`, so a refused negative argument is
+represented as itself (#90). A release request has no arguments, and the model writes them `0 0`.
+A commit's region stays a `Nat` pair: the host commits only a region it admitted. -/
 inductive SourceEvent where
-  | req (op : Operation) (offset : Nat) (length : Nat)
+  | req (op : Operation) (offset : Int) (length : Int)
   | resp (op : Operation) (value : Option Nat) (reason : Option String)
   | commit (kind : CommitKind) (identity : Nat)
   deriving DecidableEq, Repr
 
 /-- The target alphabet: the emitted ABI steps this host actually performs. -/
 inductive AbiStep where
-  | importCrossing (op : Operation) (offset : Nat) (length : Nat)
+  | importCrossing (op : Operation) (offset : Int) (length : Int)
   | hostDecision (op : Operation) (accepted : Bool) (identity : Nat)
   | protectedCopy (length : Nat)
   | returned (op : Operation) (value : Option Nat) (reason : Option String)
@@ -116,8 +119,8 @@ def commitStep : AbiStep → Option Nat
 def commitIdentities (steps : List AbiStep) : List Nat :=
   steps.filterMap commitStep
 
-/-- The read crossings a trace performed, in order. -/
-def readCrossings (steps : List AbiStep) : List (Nat × Nat) :=
+/-- The read crossings a trace performed, in order, with their signed arguments. -/
+def readCrossings (steps : List AbiStep) : List (Int × Int) :=
   steps.filterMap fun step =>
     match step with
     | .importCrossing .regionRead start length => some (start, length)
@@ -151,7 +154,9 @@ def readCommits (steps : List AbiStep) : List (Nat × Nat) :=
 
 def readCommitsExplained (steps : List AbiStep) : Bool :=
   let crossings := readCrossings steps
-  (readCommits steps).all (fun read => crossings.contains read)
+  -- A commit's `Nat` region is compared through the exact embedding into `Int`, so a negative
+  -- crossing never explains a commit and a reinterpreted region is not the region asked for.
+  (readCommits steps).all (fun read => crossings.contains ((read.1 : Int), (read.2 : Int)))
 
 /-- At most one release or retirement per trace: of `guestRelease`, `destructorRelease` and
 `hostRetire`, a trace commits at most one, so a guest release followed by a host retirement of
@@ -611,9 +616,11 @@ own retirement. The lowering below maps that observed shape onto the target alph
 inventing a step; it is a lowering of the observation, not a correspondence theorem about the
 emitted component. -/
 
-/-- One observed host event, exactly as the adapter records it. -/
+/-- One observed host event, as the adapter records it. A read request carries the guest's signed
+arguments exactly. A release request records none (the adapter writes `null`), and the model writes
+them `0 0`. -/
 inductive ObservedEvent where
-  | request (op : Operation) (identity : Nat) (offset : Nat) (length : Nat)
+  | request (op : Operation) (identity : Nat) (offset : Int) (length : Int)
   | protectedReadCommit (identity : Nat) (start : Nat) (length : Nat)
   | response (op : Operation) (value : Option Nat) (reason : Option String)
   | hostRetirement (identity : Nat)
@@ -621,7 +628,8 @@ inductive ObservedEvent where
 
 /-- Lower the observed trace onto the target alphabet, preserving its order. A protected read
 commit becomes the copy and the commit of the exact identity that was authorised; a host
-retirement becomes a `hostRetire` commit and never a guest release. -/
+retirement becomes a `hostRetire` commit and never a guest release. The decision step's acceptance
+bit is not observed: `lower` writes `true`, and no definition reads it. -/
 def lower : List ObservedEvent → List AbiStep
   | [] => []
   | .request op identity offset length :: rest =>
@@ -643,6 +651,60 @@ theorem observed_read_and_release_lowers_to_a_related_trace :
       [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
        .req .guestRelease 0 0, .resp .guestRelease none none]
       (lower observedReadAndRelease) = true := by
+  decide
+
+/-- The read requests an observed trace records, with their signed arguments, in order. -/
+def observedReadArguments (events : List ObservedEvent) : List (Int × Int) :=
+  events.filterMap fun event =>
+    match event with
+    | .request .regionRead _ offset length => some (offset, length)
+    | _ => none
+
+/-- The lowering keeps every observed read request's arguments, in order: a negative argument
+stays negative and no argument is reinterpreted (#90). -/
+theorem lower_keeps_read_arguments (events : List ObservedEvent) :
+    readCrossings (lower events) = observedReadArguments events := by
+  induction events with
+  | nil => rfl
+  | cons head tail ih =>
+      cases head with
+      | request op identity offset length =>
+          cases op <;> simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+      | protectedReadCommit identity start length =>
+          simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+      | response op value reason =>
+          simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+      | hostRetirement identity =>
+          simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+
+/-- Fixture (#90): a refused read with a negative offset lowers and projects with that offset,
+not with its unsigned 64-bit reinterpretation. -/
+theorem observed_negative_request_projects_with_its_sign :
+    (lower [.request .regionRead 2 (-1) 1, .response .regionRead none (some "bounds-reject")]).filterMap
+        projectStep =
+      [.req .regionRead (-1) 1, .resp .regionRead none (some "bounds-reject")] := by
+  decide
+
+/-- The relation tells a signed argument from its unsigned reinterpretation: a source trace that
+reports the refused `-1` offset as `2^64 - 1` does not relate to the observed trace (#90). -/
+theorem related_rejects_unsigned_reinterpretation :
+    related [.req .regionRead 18446744073709551615 1, .resp .regionRead none (some "bounds-reject")]
+      (lower [.request .regionRead 2 (-1) 1, .response .regionRead none (some "bounds-reject")]) = false := by
+  decide
+
+/-- Positive control: the same observed trace relates to the source trace that keeps the sign, so
+the refusal above comes from the reinterpreted argument and is not vacuous. -/
+theorem related_accepts_the_signed_refused_request :
+    related [.req .regionRead (-1) 1, .resp .regionRead none (some "bounds-reject")]
+      (lower [.request .regionRead 2 (-1) 1, .response .regionRead none (some "bounds-reject")]) = true := by
+  decide
+
+/-- A commit of the reinterpreted region is not explained by the signed crossing that asked for
+`-1`, so the reinterpretation cannot launder a protected read commit. -/
+theorem related_rejects_commit_of_reinterpreted_region :
+    related [.req .regionRead (-1) 1, .commit (.regionRead 18446744073709551615 1) 2]
+      [.importCrossing .regionRead (-1) 1, .hostDecision .regionRead true 2,
+       .protectedCopy 1, .cleanup (.regionRead 18446744073709551615 1) 2] = false := by
   decide
 
 /-- Fixture: an abnormal exit after the read records the host's own retirement, and the relation

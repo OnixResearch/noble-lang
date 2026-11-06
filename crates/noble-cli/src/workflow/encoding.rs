@@ -5,6 +5,9 @@ pub(crate) enum Json {
     Null,
     Bool(bool),
     Number(u64),
+    /// A signed integer, emitted with its sign. A signed value is never cast into `Number`: the
+    /// cast would report a negative value as a different, positive one.
+    Signed(i64),
     String(std::string::String),
     Array(std::vec::Vec<Json>),
     Object(std::vec::Vec<(&'static str, Json)>),
@@ -92,6 +95,7 @@ fn append_value<'a>(
         Json::Null => output.push_str("null"),
         Json::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
         Json::Number(value) => output.push_str(&value.to_string()),
+        Json::Signed(value) => output.push_str(&value.to_string()),
         Json::String(value) => quote_json(value, output),
         Json::Array(values) => {
             output.push('[');
