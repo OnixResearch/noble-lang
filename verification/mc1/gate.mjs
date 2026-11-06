@@ -68,6 +68,9 @@ async function check(name, args, expected, options = {}) {
     assert.equal(result.exit, expected.exit);
     if (options.ordinary) assert.equal(report.ordinary_typing.outcome, 'accepted');
     if (options.code) assert.ok(report.diagnostics.some(item => item.code === options.code));
+    // The consumer's own refusal code travels in the diagnostic's transcript details.
+    if (options.consumerCode) assert.ok(JSON.stringify(report.diagnostics).includes(options.consumerCode),
+      `consumer did not report ${options.consumerCode}`);
     if (['proved', 'disproved'].includes(report.outcome)) {
       assert.equal(report.independent_recheck, true);
       assert.equal(report.implementation_refinement.status, 'not-checked-by-this-command');
@@ -172,11 +175,24 @@ try {
       const sorry = ['app', ['app', ['const', ['sorryAx'], [['zero']]], constant('True')], constant('Bool.true')];
       declaration.value = ['let', ['erased'], constant('True'), sorry, declaration.value, true];
     }), 'error', 2],
+    // Every published exploit for the kernel fixes after Lean 4.31.0 that MC1 could carry declares
+    // an inductive type (lean4 tests/elab/kernelImaxProp.lean for #14613, and likewise for #14806
+    // and #14807). This is the #14613 exploit's declaration sequence, in its upstream order; the
+    // consumer refuses the inductive while decoding, before any declaration reaches the kernel.
+    ['published-kernel-exploit-needs-inductive', JSON.stringify({ format: 'noble-mc1-proof/v1', root: selectedRoot, declarations: [
+      { kind: 'inductive', name: ['KMWeird'], levels: [], type: ['sort', ['imax', ['succ', ['zero']], ['zero']]], value: constant('Bool') },
+      { kind: 'definition', name: ['KMAsProp'], levels: [], type: ['sort', ['zero']], value: constant('KMWeird') },
+      { kind: 'theorem', name: ['kmLeft'], levels: [], type: constant('KMAsProp'), value: ['app', constant('KMWeird.mk'), constant('Bool.false')] },
+      { kind: 'theorem', name: ['kmRight'], levels: [], type: constant('KMAsProp'), value: ['app', constant('KMWeird.mk'), constant('Bool.true')] },
+      { kind: 'theorem', name: selectedRoot, levels: [], type: constant('MC1Obligation.claim'), value: constant('kmLeft') },
+    ] }), 'error', 2],
   ];
   await parallel(rawCases, async ([name, payload, outcome, exit]) => {
     const proof = await source(`${name}.lean`, injectedWire(payload));
     await check(name, ['verify', incrementPath, '--proof', proof], { outcome, exit },
-      name === 'erased-forbidden-axiom' ? { code: 'forbidden-axiom' } : {});
+      name === 'erased-forbidden-axiom' ? { code: 'forbidden-axiom' }
+        : name === 'published-kernel-exploit-needs-inductive'
+          ? { code: 'independent-recheck-rejected', consumerCode: 'MC1_UNSUPPORTED_FORMAT' } : {});
   });
 
   const originalProof = await readFile(incrementProof, 'utf8');
