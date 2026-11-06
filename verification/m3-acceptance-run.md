@@ -329,3 +329,58 @@ test result: FAILED. 1 passed; 1 failed; ... (exit 101)
 
 and the restored file is green again (2 passed). The illustrative
 control still proves untagged blocks stay unexecuted.
+
+## Coverage record re-derivation (2026-11-05, #88)
+
+The record described above covered the extraction as it stood in September: 515 functions, then
+534 after the 2026-09-20 renewal. At `a46f588a` (Declared-Modules-v1) the kernel was regenerated to
+1,920 generated and 63 external definitions. The record was not re-derived, so from then on the
+strict-tier join refused. Two things were stale:
+
+- **The parser.** 24 of the 63 external models carry their Rust name only in an `@[rust_fun "…"]`
+  attribute, two of them split across lines, with no doc comment. `m3-coverage-join.mjs` attached
+  declarations only to doc comments, so keyword parity refused: 39 parsed against 63 counted. It now
+  also reads an attribute-led declaration. The parity rule is unchanged, and it holds at 1,920 of
+  1,920 and 63 of 63.
+- **The record.** It was re-derived from the join's `emit` output. Retained identities keep their
+  reviewed status, note and citations, and their derived fields (line, source span) are restated.
+  `excepted` is unchanged, because the crate's `#[charon::opaque]` set is still the same five
+  functions.
+
+| Entries | Count | Status |
+|---|---|---|
+| Retained identities | 498 | as reviewed |
+| New generated functions | 1,445 | `extracted` |
+| New external models (24 `core`, 16 `alloc`) | 40 | `modeled` |
+| Functions no longer generated | 36 | dropped (all were `extracted`) |
+
+Neither new label claims anything about behaviour:
+- `extracted` says only that Aeneas generated the function.
+- `modeled` says only that a hand-written model in `FunsExternal.lean` stands in for a library
+  function. It does not say the model is correct.
+
+Strict tier on the renewed record:
+
+```
+[m3-coverage] PASS COVERAGE-JOIN (total=1983 classified=1983 extracted=1919 proved=0 fixture-checked=1 modeled=58 excepted=5 open=0)
+[m3-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+info: m3-coverage: ENV-A-PASS 1983 classified constants bound to their modules; 235 elaborator matchers tolerated
+info: m3-coverage: ENV-B-PASS 13 citations verified (theorem exists, statement mentions the constant)
+info: m3-coverage: ENV-C-PASS 16 citations verified (theorem exists, statement mentions the constant)
+[m3-coverage] PASS STRENGTH (citations=29 fixture=26 conditional=3 universal=0 strict=3 native=26 strict_universal=0)
+[m3-coverage] PASS (all checks)
+```
+
+`m3-coverage-refusals.sh` gained four cells, and all ten cells refuse at their named check. Two
+cells cover the parser:
+- `unparsed-external-def`: a bare external `def` with neither form is refused by keyword parity
+  (63 parsed, 64 counted).
+- `unclassified-external-model`: an attribute-only model, with the attribute split across lines, is
+  parsed and reported as `UNCLASSIFIED`, not skipped.
+
+Two cells port the M2 strength controls onto M3:
+- `native-fixtures-as-proved` (#88 control a): `acceptance.check` marked `proved` on its fixture and
+  conditional citations is refused at `STRENGTH-STATUS`.
+- `conditional-claimed-universal` (#88 control b): the record claims the M3 handoff
+  `NobleM3.Refine.accepted_via_refinement_v1` is universal and the function `proved`. The M3 checker
+  computes the elaborated statement as conditional and refuses at `STRENGTH-DRIFT`.

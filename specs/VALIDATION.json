@@ -2212,7 +2212,7 @@
     },
     {
       "file": ".cairn/changes/region-trace-relation/tasks.md",
-      "sha256": "433304edb12355e5d7e8d0f1c96399413770f45058d133fc0e54f61982564e5f"
+      "sha256": "26ad143fefb6a4e281f6cac10f41446fdd3a96bde53bb77435df78d0c24366e6"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -2676,7 +2676,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "352a8a963722f33537e9754f4e3f5eec389e05675fc6e4095c511f53fb5ae942"
+      "sha256": "d6c8a9483780ec178f209b584ff88fbd116b746a3f6c8e77ebb160c28d38b83d"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2868,7 +2868,7 @@
     },
     {
       "file": "verification/m3-acceptance-run.md",
-      "sha256": "b0d18180105a97b306cd293eee5c02e6e400e7fca6c79596116d0bde6ab66943"
+      "sha256": "e21feacc6eb64b75fd5d436791451006a6808ef5209fead18f0fccaf34f3f47d"
     },
     {
       "file": "verification/m3-docexamples.md",
@@ -2924,7 +2924,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "bfa2d8be0ce41a5a90bb59b4987a0c50c95b4f824efb70db443622598bddc0e1"
+      "sha256": "2e846d6a437b85743b1e3e4adda392c7fa89f6dc380e59a47c5e59b536fa7728"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
@@ -2963,6 +2963,10 @@
       "sha256": "6e6ffb731ebd4cc5464da4d9055e4cc8b1ae163d6338d8652f50edaf3ffd8083"
     },
     {
+      "file": "verification/opaque-invariants/decision.md",
+      "sha256": "7fb0ee23c56aff838f6d74ac21bab9f34a02879ddc7e62459c920279010e80c1"
+    },
+    {
       "file": "verification/owi/README.md",
       "sha256": "ea700340dbe0ad4214beed498bb61d27b06e603ee5d31675bbb604de69873224"
     },
@@ -2976,7 +2980,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "5f38ed727b7a1a987724633439b9249983fecf9edab14422300e4c5e065e59bd"
+      "sha256": "e568091f68f50d197dd91934a8e5c9959ee8ce13046a4402d17b61bb38305f16"
     },
     {
       "file": "verification/service-wire-refinement/README.md",

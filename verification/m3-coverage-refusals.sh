@@ -28,6 +28,19 @@
 #   stale-entry        a record entry for a function that is not         -> STALE-
 #                      generated                                          ENTRY
 #   bad-status         a status outside the reviewed vocabulary          -> STATUS
+#   unparsed-          a column-0 external def with neither a doc nor   -> PARSE-
+#   external-def       a rust_fun attribute, spliced into the m3 root's   PARITY
+#                      NobleKernel/FunsExternal.lean: the parser cannot
+#                      attach it, so keyword parity must refuse
+#   unclassified-      an attribute-only external model (the form the    -> UNCLASSIFIED
+#   external-model     regenerated FunsExternal.lean uses) spliced in: it
+#                      is parsed, so the join must report it, not skip it
+#   native-fixtures-   acceptance.check marked proved while every         -> STRENGTH-
+#   as-proved          citation is a native fixture or conditional          STATUS
+#                      handoff (#88 control a, on M3)
+#   conditional-       the M3 refinement handoff, whose hypothesis is     -> STRENGTH-
+#   claimed-universal  the refinement equation, recorded as universal and   DRIFT
+#                      the function as proved (#88 control b, on M3)
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -70,6 +83,20 @@ mutate_record() { # IN OUT SCRIPT
     '"$3"'
     await Bun.write(process.argv[2], JSON.stringify(r, null, 1) + "\n");
   ' "$1" "$2"
+}
+
+# Splice Lean text before the final `end noble_kernel` of the copy's FunsExternal.lean, through a
+# temp file and `mv` so the hard-linked repository file is never written.
+splice_external() { # COPY TEXT
+  local file="$1/NobleKernel/FunsExternal.lean" last_end
+  last_end="$(awk '/^end noble_kernel$/ { n = NR } END { print n }' "$file")"
+  [ -n "$last_end" ] || return 1
+  {
+    head -n $((last_end - 1)) "$file"
+    printf '%b\n' "$2"
+    tail -n +"$last_end" "$file"
+  } > "$SCRATCH/funs-external-mutated.lean"
+  mv "$SCRATCH/funs-external-mutated.lean" "$file"
 }
 
 run_case() {
@@ -149,6 +176,36 @@ run_case() {
       r.functions.find(f => f.lean === "noble_kernel.types.EffSet.empty").status = "reviewed";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
+  unparsed-external-def)
+    fresh_copy "$copy"
+    splice_external "$copy" 'def coverage_probe_unparsed : Result Bool := do\n  ok true\n' \
+      || { echo "APPLY FAILED"; return 1; }
+    grep -q '^def coverage_probe_unparsed' "$copy/NobleKernel/FunsExternal.lean" \
+      || { echo "APPLY FAILED"; return 1; }
+    ;;
+  unclassified-external-model)
+    fresh_copy "$copy"
+    splice_external "$copy" '@[rust_fun\n  "core::probe::coverage_probe"]\ndef core.probe.coverage_probe : Result Bool := do\n  ok true\n' \
+      || { echo "APPLY FAILED"; return 1; }
+    grep -q '^def core.probe.coverage_probe' "$copy/NobleKernel/FunsExternal.lean" \
+      || { echo "APPLY FAILED"; return 1; }
+    ;;
+  native-fixtures-as-proved)
+    fresh_copy "$copy"
+    record="$SCRATCH/$label.json"
+    mutate_record "$RECORD" "$record" '
+      r.functions.find(f => f.lean === "noble_kernel.acceptance.check").status = "proved";
+    ' || { echo "APPLY FAILED"; return 1; }
+    ;;
+  conditional-claimed-universal)
+    fresh_copy "$copy"
+    record="$SCRATCH/$label.json"
+    mutate_record "$RECORD" "$record" '
+      const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
+      e.citations.find(c => c.theorem === "NobleM3.Refine.accepted_via_refinement_v1").strength = "universal";
+      e.status = "proved";
+    ' || { echo "APPLY FAILED"; return 1; }
+    ;;
   *) echo "unknown case $label"; return 1 ;;
   esac
 
@@ -175,7 +232,11 @@ for case_label in \
   'dangling-citation CITATION' \
   'misbound-citation CITATION-BINDING' \
   'stale-entry STALE-ENTRY' \
-  'bad-status STATUS'
+  'bad-status STATUS' \
+  'unparsed-external-def PARSE-PARITY' \
+  'unclassified-external-model UNCLASSIFIED' \
+  'native-fixtures-as-proved STRENGTH-STATUS' \
+  'conditional-claimed-universal STRENGTH-DRIFT'
 do
   # shellcheck disable=SC2086
   run_case $case_label || rc_all=1

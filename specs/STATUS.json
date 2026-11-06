@@ -35,7 +35,7 @@
     },
     "m4_extraction_acceptance": "passed-independent-whole-crate-check-and-27-refusal-controls",
     "mc2_extraction_acceptance": "passed-independent-whole-crate-check-and-28-refusal-controls",
-    "coverage_claim_strength": "M2 and M3 coverage records cite theorems with a computed statement strength and axiom class; noble_kernel::acceptance::check is fixture-checked, not proved, in both, because its citations are closed native_decide fixtures and refinement handoffs conditional on the equation they are cited for (no strict universal statement). The M2 coverage gate and its refusal matrix pass with these checks; the M3 coverage gate's function join is stale against the regenerated kernel and does not pass. Strength classes describe statement shape only.",
+    "coverage_claim_strength": "M2 and M3 coverage records cite theorems with a computed statement strength and axiom class; noble_kernel::acceptance::check is fixture-checked, not proved, in both, because its citations are closed native_decide fixtures and refinement handoffs conditional on the equation they are cited for (no strict universal statement). The M2 and M3 coverage gates and their refusal matrices pass with these checks; the M3 record was re-derived against the regenerated kernel on 2026-11-05 and classifies all 1,983 generated functions. Strength classes describe statement shape only.",
     "independent_proof_records": [
       "../verification/m3-coverage.json",
       "../verification/mc1/implementation.json",

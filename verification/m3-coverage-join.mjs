@@ -74,11 +74,49 @@ function stripAttrs(lines, k) {
   return null;
 }
 
+// The declaration a doc comment or attribute run attaches to: its keyword, name and line.
+function declarationAt(lines, hit) {
+  const dm = hit.rest.match(NAME_RE);
+  if (dm) return { kind: dm[1], name: dm[2], declLine: hit.k };
+  if (KEYWORD_ONLY_RE.test(hit.rest) && hit.k + 1 < lines.length) {
+    // `def` keyword alone on its line; the name follows on the next line
+    const kw = hit.rest.trim().match(/^(?:noncomputable\s+)?(def|impl_def)/);
+    const nm = lines[hit.k + 1].trim().match(/^([^\s(:{][^\s(:{]*)/);
+    if (kw && nm) return { kind: kw[1], name: nm[1], declLine: hit.k + 1 };
+  }
+  return null;
+}
+
 async function parseGeneratedFuns(path, nsPrefix) {
   const lines = (await Bun.file(path).text()).split('\n');
   const out = [];
   let i = 0;
   while (i < lines.length) {
+    // A hand-written external model may carry its Rust name only in a `rust_fun` attribute, with
+    // no doc comment; the attribute may span lines. Attributes that follow a doc comment are
+    // consumed with that doc below.
+    const run = lines[i].startsWith('@[') ? stripAttrs(lines, i) : null;
+    const runText = run ? lines.slice(i, run.k + 1).join(' ') : '';
+    const attrName = runText.match(/rust_fun\s+"([^"]+)"/);
+    if (attrName) {
+      const decl = declarationAt(lines, run);
+      if (!decl) throw new Error(`${path}: rust_fun attribute at line ${i + 1} attaches to no function declaration`);
+      const rustAttr = attrName[1];
+      out.push({
+        lean: nsPrefix + decl.name,
+        kind: decl.kind,
+        rust: rustAttr,
+        rustDoc: null,
+        rustAttr,
+        loopBody: false,
+        traitImpl: /rust_trait_impl/.test(runText),
+        source: null,
+        file: path.slice(path.lastIndexOf('/') + 1),
+        line: decl.declLine + 1,
+      });
+      i = decl.declLine + 1;
+      continue;
+    }
     if (!lines[i].startsWith('/--') && !lines[i].startsWith('/- [')) { i++; continue; }
     const doc = [lines[i]];
     let j = i;
@@ -100,17 +138,10 @@ async function parseGeneratedFuns(path, nsPrefix) {
 
     const hit = stripAttrs(lines, j + 1);
     if (!hit) throw new Error(`${path}: doc at line ${i + 1} attaches to no declaration`);
-    let kind = null, name = null, declLine = hit.k;
-    const dm = hit.rest.match(NAME_RE);
-    if (dm) { kind = dm[1]; name = dm[2]; }
-    else if (KEYWORD_ONLY_RE.test(hit.rest) && hit.k + 1 < lines.length) {
-      // `def` keyword alone on its line; the name follows on the next line
-      const kw = hit.rest.trim().match(/^(?:noncomputable\s+)?(def|impl_def)/);
-      const nm = lines[hit.k + 1].trim().match(/^([^\s(:{][^\s(:{]*)/);
-      if (kw && nm) { kind = kw[1]; name = nm[1]; declLine = hit.k + 1; }
-    }
-    if (!kind) throw new Error(
+    const decl = declarationAt(lines, hit);
+    if (!decl) throw new Error(
       `${path}: doc at line ${i + 1} attaches to a non-function declaration: ${hit.rest.slice(0, 60)}`);
+    const { kind, name, declLine } = decl;
     // rust_fun attribute (FunsExternal): between the doc and the decl.
     const attrText = lines.slice(j + 1, hit.k + 2).join(' ');
     const rf = attrText.match(/rust_fun\s+"([^"]+)"/);
