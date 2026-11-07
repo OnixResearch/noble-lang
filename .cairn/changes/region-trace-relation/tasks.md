@@ -89,6 +89,17 @@
   - as a laundered read commit (`related_rejects_commit_of_reinterpreted_region`);
   - by the execution lane's checker (`reinterpreted-unsigned-request-argument`, forged into the real
     refused reports).
+  Swapped requests and a substituted response value are refused at model level
+  (`related_rejects_swapped_requests`, `related_rejects_substituted_response_value`). The trace in the
+  host's order relates. The four Langlib-addendum controls each pair a refusal with a positive case:
+  - fuel stability (`retainFrom_fuel_stable`) refuses a semantics right at one budget only;
+  - an omitted protected read whose value is unused is refused although the final answer agrees, and
+    a related source trace claims exactly the target's read crossings
+    (`related_source_reads_are_target_reads`);
+  - a source trace that drops a commit made before a trap is refused;
+  - `lower_correct_on_every_input` quantifies over identity, region and value, and refuses a lowering
+    right on the empty input only.
+  The correspondence gap above still keeps the task open.
 - [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
   Partial: the retained receipt binds the source and model revisions (pinned Lean version and executable
   hash, source and inventory hashes) and labels the verdict (model theorems 54 at `1bf39a52`,

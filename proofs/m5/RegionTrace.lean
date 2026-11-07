@@ -794,4 +794,205 @@ theorem related_rejects_observed_retirement_as_guest_release :
               .response .regionRead (some 1) none, .hostRetirement 2]) = false := by
   decide
 
+/-! ## Langlib-addendum controls, swapped requests and substituted responses (#50)
+
+The adoption review of `Langlib/Common/Compilation.lean` named four ways a trace contract can pass
+while saying too little:
+* a semantics that is right at one fuel value only;
+* a trace that omits a behaviourally inert read;
+* an erroring run that drops an earlier commit;
+* a contract that holds for the empty input only.
+
+Each is a control here, paired with the property that refuses it and a positive case that relates, so
+no refusal is vacuous. Swapped requests and a substituted response value are refused alongside them. -/
+
+/-- A budget that affords the whole trace cuts nothing. -/
+theorem retainFrom_complete (fuel : Nat) (steps : List AbiStep)
+    (affordable : traceCost steps ≤ fuel) : retainFrom fuel steps = steps := by
+  induction steps generalizing fuel with
+  | nil => rfl
+  | cons head tail ih =>
+      simp only [traceCost, List.map_cons, List.sum_cons] at affordable
+      have headFits : stepCost head ≤ fuel := by omega
+      have tailFits : traceCost tail ≤ fuel - stepCost head := by
+        simp only [traceCost]
+        omega
+      rw [retainFrom, ite_eq_right (Nat.not_lt.mpr headFits), ih (fuel - stepCost head) tailFits]
+
+/-- Fuel stability as a property of any budgeted semantics (Langlib's `halted_stable`): a run that
+completed under one budget returns the same trace under every larger budget. -/
+def FuelStable (run : Nat → List AbiStep → List AbiStep) : Prop :=
+  ∀ (steps : List AbiStep) (fuel more : Nat),
+    traceCost steps ≤ fuel → fuel ≤ more → run more steps = run fuel steps
+
+/-- The model's budgeted semantics is fuel stable. -/
+theorem retainFrom_fuel_stable : FuelStable retainFrom := by
+  intro steps fuel more completes larger
+  rw [retainFrom_complete more steps (Nat.le_trans completes larger),
+    retainFrom_complete fuel steps completes]
+
+/-- So the relation cannot hold at one magic fuel value only: once a budget completes the trace, a
+source trace related under it stays related under every larger budget. -/
+theorem related_stable_under_more_fuel (source : List SourceEvent) (steps : List AbiStep)
+    (fuel more : Nat) (completes : traceCost steps ≤ fuel) (larger : fuel ≤ more)
+    (relatedAt : related source (retainFrom fuel steps) = true) :
+    related source (retainFrom more steps) = true := by
+  rw [retainFrom_fuel_stable steps fuel more completes larger]
+  exact relatedAt
+
+/-- Control semantics: right at the completing budget, but returns nothing once the budget is
+larger. -/
+def magicFuelRetain (fuel : Nat) (steps : List AbiStep) : List AbiStep :=
+  if fuel ≤ traceCost steps then retainFrom fuel steps else []
+
+/-- A read whose region is released: three steps, each costing one unit. -/
+def releasedReadTarget : List AbiStep :=
+  [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .cleanup .guestRelease 7]
+
+/-- Control: at the completing budget the control semantics relates exactly as the model does, but
+one unit later it does not, so a contract checked at a single fuel value would accept it. -/
+theorem magic_fuel_relates_only_at_one_budget :
+    related [.req .regionRead 0 8, .commit .guestRelease 7]
+        (magicFuelRetain 3 releasedReadTarget) = true ∧
+      related [.req .regionRead 0 8, .commit .guestRelease 7]
+        (magicFuelRetain 4 releasedReadTarget) = false := by
+  decide
+
+/-- Fuel stability refuses the control semantics. -/
+theorem magic_fuel_is_not_fuel_stable : ¬ FuelStable magicFuelRetain := by
+  intro stable
+  have same := stable releasedReadTarget 3 4 (by decide) (by decide)
+  revert same
+  decide
+
+/-- The last source event a target trace projects: its final observable answer. -/
+def finalResponse (steps : List AbiStep) : Option SourceEvent :=
+  (steps.filterMap projectStep).getLast?
+
+/-- The observed trace of the same release with the read left out. The read's value was never used,
+so the final answer does not change. -/
+def observedReleaseWithoutRead : List ObservedEvent :=
+  [.request .guestRelease 2 0 0, .response .guestRelease none none]
+
+/-- Control: Langlib's `trace_faithful` permits omitting a behaviourally inert read. Both traces end
+in the same answer, yet the relation refuses the one that skipped the protected read: a protected
+read matters even when its value is discarded. The trace with the read relates
+(`observed_read_and_release_lowers_to_a_related_trace`). -/
+theorem related_rejects_omitted_unused_read :
+    finalResponse (lower observedReleaseWithoutRead) = finalResponse (lower observedReadAndRelease) ∧
+      related
+        [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
+         .req .guestRelease 0 0, .resp .guestRelease none none]
+        (lower observedReleaseWithoutRead) = false := by
+  decide
+
+/-- The read requests a source trace claims, with their arguments, in order. -/
+def sourceReads (source : List SourceEvent) : List (Int × Int) :=
+  source.filterMap fun event =>
+    match event with
+    | .req .regionRead offset length => some (offset, length)
+    | _ => none
+
+/-- In general, a related source trace claims exactly the read crossings the target performed, in
+order, whether or not each read's value is later used: no protected read is dropped or invented. -/
+theorem related_source_reads_are_target_reads (source : List SourceEvent) (target : List AbiStep)
+    (relatedTrace : related source target = true) : sourceReads source = readCrossings target := by
+  have both := relatedTrace
+  rw [related, Bool.and_eq_true, beq_iff_eq] at both
+  rw [both.1, sourceReads, readCrossings, List.filterMap_filterMap]
+  congr 1
+  funext step
+  cases step with
+  | importCrossing op offset length => cases op <;> rfl
+  | hostDecision op accepted identity => rfl
+  | protectedCopy length => rfl
+  | returned op value reason => rfl
+  | normalReturn => rfl
+  | abnormalExit exitClass => rfl
+  | cleanup kind identity => rfl
+  | handleTableIndex index => rfl
+  | storeBookkeeping slot => rfl
+
+/-- An abnormal exit projects to nothing, so a trap cannot remove from the projection a commit the
+trace already made. -/
+theorem abnormal_exit_keeps_commits (steps : List AbiStep) (exitClass : ExitClass) :
+    (steps ++ [AbiStep.abnormalExit exitClass]).filterMap projectStep =
+      steps.filterMap projectStep := by
+  rw [append_projection]
+  simp [projectStep]
+
+/-- A read committed before a trap. -/
+def trappedAfterCommit : List AbiStep :=
+  lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1] ++ [.abnormalExit .trap]
+
+/-- Control: Langlib's laws leave erroring runs unconstrained. A source trace that drops the
+committed read because the run later trapped is refused, and the trace that keeps the commit
+relates. -/
+theorem related_rejects_trap_that_drops_a_commit :
+    related [.req .regionRead 0 1] trappedAfterCommit = false ∧
+      related [.req .regionRead 0 1, .commit (.regionRead 0 1) 2] trappedAfterCommit = true := by
+  decide
+
+/-- The observed trace of an in-bounds read of `length` bytes at `start` under `identity`, its
+response and a consuming guest release. -/
+def observedRead (identity start length : Nat) (value : Option Nat) : List ObservedEvent :=
+  [.request .regionRead identity start length, .protectedReadCommit identity start length,
+   .response .regionRead value none, .request .guestRelease identity 0 0,
+   .response .guestRelease none none]
+
+/-- The source trace that input relates to. -/
+def readAndReleaseSource (start length identity : Nat) (value : Option Nat) : List SourceEvent :=
+  [.req .regionRead start length, .commit (.regionRead start length) identity,
+   .resp .regionRead value none, .req .guestRelease 0 0, .resp .guestRelease none none]
+
+/-- A lowering is correct on every read-and-release input, not on one. -/
+def CorrectOnEveryInput (lowering : List ObservedEvent → List AbiStep) : Prop :=
+  ∀ (identity start length : Nat) (value : Option Nat),
+    related (readAndReleaseSource start length identity value)
+      (lowering (observedRead identity start length value)) = true
+
+/-- The model's lowering is correct on every such input: the statement quantifies over the identity,
+the region and the returned value. -/
+theorem lower_correct_on_every_input : CorrectOnEveryInput lower := by
+  intro identity start length value
+  simp [readAndReleaseSource, observedRead, lower, related, wellFormed, identitiesDecided,
+    readCommitsExplained, atMostOnce, decisions, commitIdentities, readCrossings, readCommits,
+    releaseMembers, decisionStep, commitStep, projectStep, List.filterMap_cons]
+
+/-- Control lowering: right for the empty input only. -/
+def lowerEmptyOnly (_events : List ObservedEvent) : List AbiStep := []
+
+/-- Control: the empty-input-only lowering agrees with the model on the empty input, and the empty
+traces relate there. -/
+theorem empty_only_lowering_matches_on_the_empty_input :
+    lowerEmptyOnly [] = lower [] ∧ related [] (lowerEmptyOnly []) = true := by
+  decide
+
+/-- The universally quantified statement refuses the empty-input-only lowering. -/
+theorem empty_only_lowering_is_not_correct_on_every_input :
+    ¬ CorrectOnEveryInput lowerEmptyOnly := by
+  intro correct
+  have refused := correct 2 0 1 (some 1)
+  revert refused
+  decide
+
+/-- A swapped request order is refused: the source trace claims the release before the read, while
+the host performed the read first. The trace in the host's order relates
+(`observed_read_and_release_lowers_to_a_related_trace`). -/
+theorem related_rejects_swapped_requests :
+    related
+      [.req .guestRelease 0 0, .resp .guestRelease none none, .req .regionRead 0 1,
+       .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none]
+      (lower observedReadAndRelease) = false := by
+  decide
+
+/-- A substituted response value is refused: the source trace claims the read returned 2 where the
+host returned 1. -/
+theorem related_rejects_substituted_response_value :
+    related
+      [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 2) none,
+       .req .guestRelease 0 0, .resp .guestRelease none none]
+      (lower observedReadAndRelease) = false := by
+  decide
+
 end RegionTrace

@@ -487,6 +487,132 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_complete",
+      "role": "WIT-TRACE-04: a budget that affords the whole trace cuts nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_fuel_stable",
+      "role": "WIT-TRACE-04: the budgeted semantics is fuel stable (Langlib halted_stable)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_stable_under_more_fuel",
+      "role": "WIT-TRACE-04: a relation that holds at a completing budget holds at every larger budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_relates_only_at_one_budget",
+      "role": "WIT-TRACE-04 control: a semantics right at one fuel value only relates there and not one unit later",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_is_not_fuel_stable",
+      "role": "WIT-TRACE-04 control: fuel stability refuses the one-fuel-value semantics",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_omitted_unused_read",
+      "role": "WIT-TRACE-02 control: a trace omitting a protected read whose value is unused is refused although its final answer agrees",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_source_reads_are_target_reads",
+      "role": "WIT-TRACE-02: a related source trace claims exactly the target read crossings, in order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_keeps_commits",
+      "role": "WIT-TRACE-04: an abnormal exit projects to nothing, so a trap cannot remove an earlier commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_trap_that_drops_a_commit",
+      "role": "WIT-TRACE-04 control: a source trace dropping a commit made before a trap is refused; keeping it relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.lower_correct_on_every_input",
+      "role": "WIT-TRACE-05: the lowering relates every read-and-release input (identity, region, value)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_matches_on_the_empty_input",
+      "role": "WIT-TRACE-05 control: a lowering right only on the empty input agrees with the model there",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_is_not_correct_on_every_input",
+      "role": "WIT-TRACE-05 control: the universally quantified statement refuses the empty-input-only lowering",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_requests",
+      "role": "WIT-TRACE-03 control: a swapped request order is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_response_value",
+      "role": "WIT-TRACE-03 control: a substituted response value is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }

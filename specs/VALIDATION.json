@@ -1061,7 +1061,7 @@
     },
     {
       "file": ".cairn/changes/region-trace-relation/tasks.md",
-      "sha256": "26ad143fefb6a4e281f6cac10f41446fdd3a96bde53bb77435df78d0c24366e6"
+      "sha256": "cdd98b3dc0b5d1b694e847517c6a2ef971d06ed595a67ad1253da3495594afc5"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -1829,7 +1829,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "25e35f99c14f7ed674b442030144d7be2803e8a833faf18f5685a6d009abe191"
+      "sha256": "adf2802d324d46186feebb5720d8cf84fb279487bbbf0b638b0c5513d31f1b47"
     },
     {
       "file": "verification/service-wire-refinement/README.md",

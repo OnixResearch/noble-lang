@@ -71,6 +71,12 @@ well-formedness itself is a condition of the relation:
 | `observed_negative_request_projects_with_its_sign` | #90 fixture: a refused read with offset `-1` lowers and projects with `-1` |
 | `related_rejects_unsigned_reinterpretation`, `related_accepts_the_signed_refused_request` | #90: a source trace that reports the refused `-1` as `2^64 - 1` does not relate to the observed trace, and the source trace that keeps the sign does |
 | `related_rejects_commit_of_reinterpreted_region` | #90: a protected read commit of the reinterpreted region is not explained by the signed crossing that asked for `-1` |
+| `retainFrom_complete`, `retainFrom_fuel_stable`, `related_stable_under_more_fuel` | fuel stability (Langlib's `halted_stable`): a budget that affords the whole trace cuts nothing, so a run completed under one budget, and any relation it satisfies, is unchanged under every larger budget |
+| `magic_fuel_relates_only_at_one_budget`, `magic_fuel_is_not_fuel_stable` | control: a semantics that is right at the completing budget but returns nothing one unit later relates there and not after, and `FuelStable` refuses it |
+| `related_rejects_omitted_unused_read`, `related_source_reads_are_target_reads` | control: a trace that omits a protected read whose value is unused ends in the same answer, yet is refused; in general, a related source trace claims exactly the target's read crossings, in order |
+| `abnormal_exit_keeps_commits`, `related_rejects_trap_that_drops_a_commit` | an abnormal exit projects to nothing, so a source trace that drops a commit made before a trap is refused, and the one that keeps it relates |
+| `lower_correct_on_every_input`, `empty_only_lowering_matches_on_the_empty_input`, `empty_only_lowering_is_not_correct_on_every_input` | the lowering relates every read-and-release input (identity, region, returned value); a lowering that is right only on the empty input agrees there, but the universal statement refuses it |
+| `related_rejects_swapped_requests`, `related_rejects_substituted_response_value` | a source trace that claims the release before the read, or a different read value, does not relate to the observed trace |
 
 `verification/region-trace/receipt.json` is the retained receipt of one run: **54** model
 theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
@@ -92,3 +98,7 @@ cancellation model. Pairing is stated over projected source traces, not proved f
 component's own steps, and the ordered trace's lowering maps an *observation* onto the target
 alphabet rather than corresponding to the emitted steps. WIT-TRACE-02 through WIT-TRACE-06 remain
 open.
+
+The four fuel, omitted-read, trap and empty-input controls follow the adoption review of
+`Langlib/Common/Compilation.lean` (#50). They use it as a checklist only: no Langlib code is reused
+or pinned, and its completed-trace agreement does not replace the every-prefix relation here.
