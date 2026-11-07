@@ -1041,6 +1041,9 @@ model's `exactImport` and `rne` give the same answers (`*_exact`, `*_rne`). The 
 regenerated. `other_spellings_import_the_same` checks that five other spellings import the same.
 Reading `[-]digits e exponent` as the model's `Decimal` is the one trusted translation. This is
 agreement at these rows, not a proof about `sem.rs` or Rust's float parser.
+The clean-source receipt is
+[`verification/foundation/receipts/e59906c67/`](../../verification/foundation/receipts/e59906c67/foundation-check.json)
+(1179 theorems, `clean_source: true`, Lean 4.35.0). The 36 agreements report only `propext`.
 
 Open, and deliberately not closed by this model:
 
