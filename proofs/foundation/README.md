@@ -1553,6 +1553,10 @@ The clean-source receipt for the instruction-stream validator is
 (622 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`). The earlier schedule theorem set was first
 retained at `8eef09184`.
+The real-artifact corpus was first retained at
+[`verification/foundation/receipts/3e95f070a/`](../../verification/foundation/receipts/3e95f070a/foundation-check.json)
+(1143 theorems, `clean_source: true`, Lean 4.35.0). Its 23 theorems report only `propext` and
+`Quot.sound`.
 
 `PackedLayout.lean` remains a separate declaration-table model. Its register,
 constant/slot, layer, count and failure-suffix obligations do not export or
