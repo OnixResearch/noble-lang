@@ -292,6 +292,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15717 production paths = 8111 body/open + 4397 generated + 3209 structural;
 #   7037 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed Decimal-import agreement generator (#40) from a complete 110-unit selected collection:
+#   IR 1568a494de2d6e21e37dd56c32e788d2129b66f42dfa3882d4145c5231354844; coverage 71b3547dd64ba967660f973ee25c12f6a353a68db50260c6469a785bc9addfc3;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15717 production paths = 8111 body/open + 4397 generated + 3209 structural;
+#   7063 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -20978,10 +20983,15 @@ let
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:7616:7619",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:8837:8840",
     "noble-ngraph::closure@crates/noble-ngraph/tests/snapshot_file.rs:8943:10117",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:2554:2934",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:2944:3441",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:4244:4331",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:4462:4557",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:2606:2986",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:2996:3493",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:4296:4383",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float.rs:4514:4609",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:5742:5744",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:5775:5781",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:7792:8048",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:8058:8340",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:8461:8723",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11040:12711",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11297:11323",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11444:11474",
@@ -22650,6 +22660,27 @@ let
     "snapshot_file::{use#9}",
     "soft_float::check32",
     "soft_float::check64",
+    "soft_float::decimal",
+    "soft_float::decimal::COMMITTED",
+    "soft_float::decimal::DOUBLE_ROUNDING",
+    "soft_float::decimal::HALF_LEAST_SUBNORMAL",
+    "soft_float::decimal::HEADER",
+    "soft_float::decimal::LARGEST_SUBNORMAL",
+    "soft_float::decimal::LEAST_SUBNORMAL",
+    "soft_float::decimal::ROWS",
+    "soft_float::decimal::Row",
+    "soft_float::decimal::SMALLEST_NORMAL",
+    "soft_float::decimal::SPELLINGS",
+    "soft_float::decimal::THREE_QUARTERS_LEAST_SUBNORMAL",
+    "soft_float::decimal::hex",
+    "soft_float::decimal::lean_file",
+    "soft_float::decimal::other_spellings_import_the_same",
+    "soft_float::decimal::row_text",
+    "soft_float::decimal::test",
+    "soft_float::decimal::text",
+    "soft_float::decimal::the_lean_file_is_the_real_import",
+    "soft_float::decimal::write_the_lean_file",
+    "soft_float::decimal::{use#0}",
     "soft_float::main",
     "soft_float::main::test",
     "soft_float::powers_of_two_are_exact",

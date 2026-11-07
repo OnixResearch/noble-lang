@@ -10,6 +10,7 @@ import NobleFoundation.Binary32
 import NobleFoundation.ArithmeticModels
 import NobleFoundation.Binary32Error
 import NobleFoundation.DecimalImport
+import NobleFoundation.DecimalImportCorpus
 import NobleFoundation.LiveDispatch
 import NobleFoundation.Ownership
 import NobleFoundation.OwnershipConservation

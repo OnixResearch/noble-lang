@@ -18,6 +18,9 @@
 use noble_ngraph::prng::SplitMix64;
 use noble_ngraph::sem::soft;
 
+#[path = "soft_float_dir/decimal.rs"]
+mod decimal;
+
 fn same64(a: f64, b: f64) -> bool {
     a.to_bits() == b.to_bits() || (a.is_nan() && b.is_nan())
 }
