@@ -1619,6 +1619,9 @@ accepted two forged declarations:
 
 `exampleLayout_accepted` still holds for the real declaration. Both forgeries are
 regression tests in `crates/noble-ngraph/src/layout.rs` that fail on the old checker.
+The clean-source receipt is
+[verification/foundation/receipts/a681e250b/](../../verification/foundation/receipts/a681e250b/foundation-check.json)
+(1117 theorems, `clean_source: true`, Lean 4.35.0).
 
 **Correction (2026-10-29).** `countWithinOne` used to compare the declared count with
 *every* declared register (`regs ≤ register + 2` for each), not with the highest one as the
