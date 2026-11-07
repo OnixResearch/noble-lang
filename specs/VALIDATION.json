@@ -1305,7 +1305,7 @@
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
-      "sha256": "71cf6a42aec2ade8a0063a7ee810a452e0c1e32a25d474939f371ccfcb1f3d0f"
+      "sha256": "386fc50b02eccc94c4990fe7791e4cae434d11470b54aeac7a571152c7c9ccce"
     },
     {
       "file": ".cairn/specs/resource-adapters/spec.md",
@@ -1481,7 +1481,7 @@
     },
     {
       "file": "specs/PROGRAM-CONTRACTS.md",
-      "sha256": "15a40fd791b9a5c937ebcf6ab1e21cc0dc92d83b31877a6cde5307459e473840"
+      "sha256": "dcd6842e3019432b507b10e3651c94aa07dc6d1a99bbcff5ab3931f53daacd82"
     },
     {
       "file": "specs/README.md",

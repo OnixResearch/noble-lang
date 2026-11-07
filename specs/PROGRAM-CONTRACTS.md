@@ -128,12 +128,21 @@ The [exact calculator](CALCULATOR.md) uses a separate library model of arbitrary
 | `binary64-rne` | IEEE 754 binary64 with round to nearest, ties to even | No model is selected, so evidence naming it is `unsupported`. |
 | `reals` | Ideal real arithmetic, such as Mathlib `ℝ` or an SMT real theory | A named idealization only. It is never reported as a machine-float result. |
 | `reals+machine-samples` | A `reals` proof plus checks of sampled machine values | The samples can refute a claim. They prove nothing about values that were not sampled. |
+| `balanced-ternary` | Balanced-ternary words over the trits −1, 0 and +1, lowered to `I64` by value as defined below | A named profile (issue #93). No implementation or proof selects it yet, so evidence naming it is `unsupported`. |
 
 Evidence for a claim whose statement mentions floating-point operations, a real-valued idealization of them, or a conversion between exact and rounded values MUST name its model. A missing or unknown identifier is `unsupported`, not a pass. A proof under `reals` MUST NOT be admitted or reported as a `binary32-*` or `binary64-*` execution claim, and a machine-float proof MUST NOT be reported as a `reals` claim. A claim bridged by an explicit exact-to-rounded conversion names the model on each side of the conversion.
 
 `proofs/foundation/NobleFoundation/ArithmeticModels.lean` retains the negative control. `(x + 1) - x > 1/2` holds for every real `x` (`reals_claim_holds`). In the binary32 model, `2^24 + 1` rounds back to `2^24` (`binary32_increment_rounds_back`), so `(x + 1) - x` is `+0` at `x = 2^24` (`binary32_claim_fails`). The binary64 example at `x = 1e17` that motivated issue #91 follows the same pattern. Noble selects no binary64 model in which to state it.
 
 Naming a model does not verify the Rust or Wasm backend. It does not discharge the Aeneas extraction trust, and it does not make FloatLib or Lean's `Float` a dependency. `noble verify` still checks supplied evidence only and searches for no proof.
+
+**Balanced-ternary profile (issue #93).** `balanced-ternary` is an optional numeric profile. It is not a Core type and not a hardware target. Its digits are the trits −1, 0 and +1. A word of width `n` is a sequence of `n` trits `t[0] … t[n−1]`, least significant first, and denotes the integer `t[0]·3^0 + … + t[n−1]·3^(n−1)`. Each integer from `−(3^n − 1)/2` to `(3^n − 1)/2` has exactly one word of width `n`. Negation flips every trit. Addition, subtraction and multiplication are those of the denoted integers.
+
+Wasm and current hosts are binary, so the profile lowers to `I64` by value: a word of width at most 40 is the `I64` that holds its integer. Width 40 fits because `(3^40 − 1)/2 = 6078832729528464400` is below `2^63`; width 41 does not. Each operation computes its exact integer result, so no intermediate value wraps. A result outside the declared width's range is refused, never wrapped and never saturated. A packed lowering, such as several trits per byte, must be bit-exact against this definition.
+
+A ternary-execution proof is a `balanced-ternary` claim only. It is not an `i64-wrapping`, `binary32-*`, `binary64-*` or `reals` claim, and none of those is a `balanced-ternary` claim. Quantizing a real or binary32 quantity to trits is an explicit conversion that names the source model, `balanced-ternary` and the quantization rule. A proved ternary matrix product is not a proved real-valued or binary32 matrix product; issue #44 owns forward-error certificates.
+
+The profile adds no kernel `Trit` or ternary stack type, no host ternary operation and no change to wrapping `I64`. It does not wait on Aeneas float support (issue #92) and does not require an LLM or BitNet runtime. It makes no performance claim against binary arithmetic or against the binary32 reference (issue #38).
 
 ## 5. Reflection, rewrites, and identity
 
