@@ -1,0 +1,101 @@
+{
+  "schema": "noble-ngraph-batch-breakdown/v1",
+  "issue": 41,
+  "result": "measured",
+  "source_commit": "d2a66ff365bd0edb9cc8973c8e3f74e63c6f50af",
+  "source_tree": "b510eab94d4bd0715c35a519431b457486843aff",
+  "clean_source": true,
+  "harness": {
+    "path": "crates/noble-ngraph/tests/batch_rows/breakdown.rs",
+    "sha256": "8ca981ba949f8947bb85204e87a5d6d868e3d54a966f5308356efaf9d27726c6"
+  },
+  "toolchain": {
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ="
+  },
+  "command": [
+    "cargo",
+    "test",
+    "--release",
+    "--locked",
+    "--offline",
+    "-p",
+    "noble-ngraph",
+    "--test",
+    "batch_row_reference",
+    "--",
+    "--ignored",
+    "--nocapture",
+    "--exact",
+    "breakdown::cold_staging_and_bytes"
+  ],
+  "workload": "the measure.rs graph: two I64 inputs, add, mul, mul, sub, eq; two outputs; rows cycle the seven i64 boundary values",
+  "cold": {
+    "lane": "cold",
+    "check": {
+      "first_ns": 18664,
+      "median_ns": 2735
+    },
+    "compile": {
+      "first_ns": 7654,
+      "median_ns": 581
+    },
+    "prepare": {
+      "first_ns": 832,
+      "median_ns": 140
+    },
+    "retained_bytes": 188,
+    "workspace_scratch_bytes": 64
+  },
+  "sizes": [
+    {
+      "lane": "size",
+      "rows": 1,
+      "staging_median_ns": 70,
+      "run_median_ns": 211,
+      "output_copy_median_ns": 80,
+      "input_bytes": 32,
+      "report_bytes": 128,
+      "report_output_bytes": 32,
+      "copied_output_bytes": 32,
+      "first_run_resident_growth_bytes": 0
+    },
+    {
+      "lane": "size",
+      "rows": 4096,
+      "staging_median_ns": 4999,
+      "run_median_ns": 412280,
+      "output_copy_median_ns": 10129,
+      "input_bytes": 131072,
+      "report_bytes": 524288,
+      "report_output_bytes": 131072,
+      "copied_output_bytes": 131072,
+      "first_run_resident_growth_bytes": 724992
+    },
+    {
+      "lane": "size",
+      "rows": 65536,
+      "staging_median_ns": 77895,
+      "run_median_ns": 6577957,
+      "output_copy_median_ns": 489144,
+      "input_bytes": 2097152,
+      "report_bytes": 8388608,
+      "report_output_bytes": 2097152,
+      "copied_output_bytes": 2097152,
+      "first_run_resident_growth_bytes": 11141120
+    }
+  ],
+  "instruments": {
+    "time": "wall-clock nanoseconds, release build, one thread; cold costs as the first call in the process and the median of five fresh calls; per-size costs as the median of five",
+    "bytes": "declared from sizes, not measured: retained_bytes and scratch_bytes of the compiled graph; staged inputs, per-row reports, the outputs each report owns, and the copied outputs as element counts times size_of",
+    "memory": "resident-set growth across the first run at each size, from /proc/self/statm with a 4096-byte page"
+  },
+  "unavailable": [
+    "allocation counts: the workspace forbids unsafe_code, so no counting global allocator can exist in any target",
+    "extraction: the workload is an authored ngraph-ir/0 graph, so no extraction cost exists for it"
+  ],
+  "non_claims": [
+    "Reporting only: no timing threshold is a correctness claim.",
+    "One host and one run; the numbers bound nothing on other hardware."
+  ]
+}

@@ -658,3 +658,6 @@ per row, so the decision is **NO-GO** and no batching work (SIMD, `F32`, chunked
 that issue. The lane lives in the existing `batch_row_reference` target as
 `tests/batch_rows/measure.rs`, is `#[ignore]`d by default, and reports allocation counts as an
 unavailable instrument because the workspace forbids `unsafe_code`.
+The cold, staging, output-copy and byte breakdown that item 6 asks for is retained in
+[`batch-breakdown-2026-11-07.json`](batch-breakdown-2026-11-07.json), with its table in
+[`batch-decision.md`](batch-decision.md). The per-row reports are about five times the staged inputs.

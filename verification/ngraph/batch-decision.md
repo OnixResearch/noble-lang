@@ -46,9 +46,49 @@ measurement that claims either must also state the allocation-count gap recorded
 workspace cannot host a counting allocator under `unsafe_code = "forbid"`, so an allocation claim
 needs an explicit instrumentation seam decision by an owner first.
 
+## Cold, staging, output-copy and byte breakdown (item 6, 2026-11-07)
+
+[`batch-breakdown.mjs`](batch-breakdown.mjs) runs `crates/noble-ngraph/tests/batch_rows/breakdown.rs`,
+an ignored release harness over the same workload and rows, on an archived copy of the committed
+source with the pinned toolchain. The retained receipt is
+[`batch-breakdown-2026-11-07.json`](batch-breakdown-2026-11-07.json): clean source `d2a66ff3`, one
+run, one host. Times are medians of five.
+
+One-time costs per graph, as the first call in the process and the median of five fresh calls:
+
+| Step | First call | Median |
+|---|---|---|
+| `check::check` | 18.7 µs | 2.7 µs |
+| `Compiled::new` | 7.7 µs | 0.58 µs |
+| `Prepared::new` | 0.83 µs | 0.14 µs |
+
+The compiled graph retains 188 bytes, and one workspace's scratch is 64 bytes. Costs per batch
+size:
+
+| Rows | 1 | 4096 | 65536 |
+|---|---|---|---|
+| staging the input values | 70 ns | 5.0 µs | 77.9 µs |
+| warm `Prepared::run` | 211 ns | 412 µs | 6.58 ms |
+| copying every row's outputs out | 80 ns | 10.1 µs | 489 µs |
+| staged input bytes | 32 | 131 072 | 2 097 152 |
+| per-row report bytes | 128 | 524 288 | 8 388 608 |
+| outputs owned by the reports | 32 | 131 072 | 2 097 152 |
+| copied output bytes | 32 | 131 072 | 2 097 152 |
+| resident growth across the first run | 0 | 724 992 | 11 141 120 |
+
+Byte rows are declared from element counts and `size_of`, not measured. The per-row reports, 128
+bytes each plus 32 bytes of outputs that each report owns, are five times the staged inputs. They
+account for nearly all of the roughly 170 bytes per row of resident growth. That is the cost the
+missing into-sink path above would remove. Staging inputs and copying outputs out cost about 1.2
+and 7.5 ns per row at 65536 rows, small next to the run.
+
+This is not a continuation measurement. Its warm run used a different build route from the
+2026-11-01 lanes, and the two are not comparable, so the NO-GO above stands under its frozen
+criteria. Allocation counts remain unavailable. The authored workload has no extraction cost.
+
 ## Scope
 
 This decision covers CPU independent-row batching only. It says nothing about native code
 generation, GPUs, specialization/`#32`–`#33`, direct Wasm lowering (`#36`) or interaction nets
 (`#37`). #14's historical performance STOP is unchanged, and no throughput, speed or memory claim
-beyond these six numbers is made.
+beyond the numbers in the two retained receipts is made.

@@ -1769,11 +1769,11 @@
     },
     {
       "file": "verification/ngraph/batch-decision.md",
-      "sha256": "dff96d0db0734cc0111ccf1e130a77a5b505edea1c0064dba0bba387d800ceb6"
+      "sha256": "63eb0f963c2442d0e02eb8ea3795ca016c60d15155734cb501780db237e10c7f"
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "d74b2bf72b340643fe1d88b0da129918d580394ce24b1b7532adf39249c24d50"
+      "sha256": "ebbaa7f883b638aae5a5ed10281222fe9186802fe7fd9574b7b4a8d43a7a6490"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
