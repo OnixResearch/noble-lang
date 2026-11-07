@@ -1419,6 +1419,25 @@
           ]
         },
         {
+          "claim": "All 37 actual MC1 CLI controls pass on Lean 4.35.0, and all 36 reports name the arithmetic model i64-wrapping across all seven outcomes",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "binary-sha256:e1370590bc7ac5ccaec6351d51d69440ac2c5c905c4469297c354edc86a9d5f1",
+          "configuration": {
+            "target": "x86_64-unknown-linux-gnu",
+            "receipt": "../verification/mc1/acceptance-arithmetic-model.json",
+            "gate": "verification/mc1/gate.mjs",
+            "lean": "4.35.0",
+            "isolation": "bubblewrap namespaces and bounded user systemd scopes"
+          },
+          "assumptions": [
+            "The independently selected Lean kernel, source rule library, host isolation tools, and operating system are trusted.",
+            "Application proof admission is separate from Rust implementation refinement, backend correspondence, and MC2."
+          ]
+        },
+        {
           "claim": "MC1-v1 has 43 strict application/rule theorems, 61 strict bridge/projection theorems, and six separately trusted closed actual-source equations",
           "subject": "program-contracts",
           "revision": "0.1.0-draft.5",

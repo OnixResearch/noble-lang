@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "c8b348f36a43dd78aee24e9e068fe84bdda5037c1292d016f90e1aaab3b64d52"
+      "sha256": "89dfd6910172a16b3f3b20e0ad209379873e5774e8b234a7142c065a1b452085"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1525,7 +1525,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "ce9b0fbb0ce1fb5813197682fc1fc53e23cf42e299e79cacaee1d840bdd52945"
+      "sha256": "5412cd5d4aa13eeadb25cfaebf6ff9bdebaf61ebd060b8cdbbff03cc5f25de15"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
