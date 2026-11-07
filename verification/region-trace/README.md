@@ -78,8 +78,11 @@ well-formedness itself is a condition of the relation:
 | `lower_correct_on_every_input`, `empty_only_lowering_matches_on_the_empty_input`, `empty_only_lowering_is_not_correct_on_every_input` | the lowering relates every read-and-release input (identity, region, returned value); a lowering that is right only on the empty input agrees there, but the universal statement refuses it |
 | `related_rejects_swapped_requests`, `related_rejects_substituted_response_value` | a source trace that claims the release before the read, or a different read value, does not relate to the observed trace |
 
-`verification/region-trace/receipt.json` is the retained receipt of one run: **54** model
-theorems, `propext` and `Quot.sound` the only reported axioms, both inside the standard allow-list.
+`verification/region-trace/receipt.json` is the retained receipt of one run, on the clean commit
+`918db86a` with Lean 4.35.0: **68** model theorems. The reported axioms are `propext`,
+`Classical.choice` and `Quot.sound`, all inside the standard allow-list. Most proofs report
+`Classical.choice` under Lean 4.35.0. The previous receipt, at `1bf39a52` under Lean 4.31.0, reported
+only `propext` and `Quot.sound`.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
 
@@ -87,7 +90,7 @@ The receipt carries a `bindings` block: the model revision (pinned Lean version 
 plus the source and inventory hashes) is bound, and `component`, `helper` and `engine` are recorded as
 **`null` with the reason stated** — no component, lowering helper or engine instance is a subject of
 these theorems, so binding one would imply a correspondence this package does not establish. A
-`claims` block labels the verdict: 54 model theorems, 0 implementation theorems, correspondence none,
+`claims` block labels the verdict: 68 model theorems, 0 implementation theorems, correspondence none,
 liveness none, cancellation unsupported and unmodelled.
 
 ## Non-claims

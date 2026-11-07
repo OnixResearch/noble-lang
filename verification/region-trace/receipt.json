@@ -1,18 +1,18 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "1bf39a527cf2b55914d1c6329f97b5b6d6178620",
-  "source_tree": "f53439be562912bcab1feeb663d37c07d05505ea",
+  "source_commit": "918db86a8b5736f3092c3a155c8c7eb4e5613d8c",
+  "source_tree": "77724da2fd39866458442aef58a44178d067f65e",
   "clean_source": true,
   "allow_dirty": false,
-  "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
   "bindings": {
     "model": {
-      "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
-      "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "8c6b078a948f955f649f235438505c73e2816fb0bd9b7acf22bc7a80640043d1",
-        "proofs/m5/region-trace-inventory.json": "3eba383bbf893c420ad1551fe269c239564116ab9e0ba2e833c0165a01695652"
+        "proofs/m5/RegionTrace.lean": "d07d4aab52a396fd44455facaf493eb14c98dfa00e4cab61eed4b029a31e79c6",
+        "proofs/m5/region-trace-inventory.json": "16f665b74fab9f5600dbf3e5833a01a51e2006e1e5335ccb8cb110e4d76f9f21"
       }
     },
     "component": null,
@@ -21,18 +21,18 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 54,
+    "model_theorems": 68,
     "implementation_theorems": 0,
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unsupported and unmodelled"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "8c6b078a948f955f649f235438505c73e2816fb0bd9b7acf22bc7a80640043d1",
-    "proofs/m5/region-trace-inventory.json": "3eba383bbf893c420ad1551fe269c239564116ab9e0ba2e833c0165a01695652",
-    "verification/region-trace/check.mjs": "d6a728d1f572ee6784ec2c37b88e723b6237a49d17384e14640897c3b786e46a"
+    "proofs/m5/RegionTrace.lean": "d07d4aab52a396fd44455facaf493eb14c98dfa00e4cab61eed4b029a31e79c6",
+    "proofs/m5/region-trace-inventory.json": "16f665b74fab9f5600dbf3e5833a01a51e2006e1e5335ccb8cb110e4d76f9f21",
+    "verification/region-trace/check.mjs": "06677c2e011ec7e3b67548504a33a890d70991e802e1aa0152fc375f28e382d5"
   },
-  "theorem_count": 54,
+  "theorem_count": 68,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -130,6 +130,7 @@
       "statement": "RegionTrace.erase_preserves_well_formedness : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.wellFormed (RegionTrace.erase steps) = RegionTrace.wellFormed steps",
       "axioms": [
         "propext",
+        "Classical.choice",
         "Quot.sound"
       ]
     },
@@ -145,6 +146,7 @@
       "statement": "RegionTrace.related_erase_invariant : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = RegionTrace.related source (RegionTrace.erase target)",
       "axioms": [
         "propext",
+        "Classical.choice",
         "Quot.sound"
       ]
     },
@@ -159,7 +161,9 @@
       "status": "proved",
       "statement": "RegionTrace.denial_projects_to_request_only : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -173,7 +177,9 @@
       "status": "proved",
       "statement": "RegionTrace.normal_success_projects_request_and_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.normalReturn, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -249,7 +255,9 @@
       "status": "proved",
       "statement": "RegionTrace.take_projection : ∀ (steps : List RegionTrace.AbiStep) (bound : Nat), RegionTrace.wellFormed (List.take bound steps) = true → RegionTrace.related (List.filterMap RegionTrace.projectStep (List.take bound steps)) (List.take bound steps) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -263,7 +271,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_substituted_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 9, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -277,7 +287,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_unexplained_read_commit : RegionTrace.related [RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 5] [RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 5] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -291,7 +303,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_two_guest_releases : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -305,7 +319,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_release_then_retirement : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.normalReturn, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -319,7 +335,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_missing_protected_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.normalReturn] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -333,7 +351,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_host_cleanup_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -347,7 +367,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_denial_erased_into_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -361,7 +383,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_accepts_well_formed_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -450,7 +474,9 @@
       "status": "proved",
       "statement": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.retainFrom 1 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -464,7 +490,9 @@
       "status": "proved",
       "statement": "RegionTrace.exhaustion_relates_when_affordable : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.retainFrom 3 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -479,6 +507,7 @@
       "statement": "RegionTrace.retained_projection_is_permitted_prefix : ∀ (fuel : Nat) (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → List.filterMap RegionTrace.projectStep (RegionTrace.retainFrom fuel steps) <+: source",
       "axioms": [
         "propext",
+        "Classical.choice",
         "Quot.sound"
       ]
     },
@@ -493,7 +522,9 @@
       "status": "proved",
       "statement": "RegionTrace.source_commits_are_decided : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → ((RegionTrace.commitIdentities steps).all fun identity => (RegionTrace.decisions steps).contains identity) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -507,7 +538,9 @@
       "status": "proved",
       "statement": "RegionTrace.source_release_is_at_most_once : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → (RegionTrace.releaseMembers steps).length ≤ 1",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -521,7 +554,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_ordinary_error : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead none (some \"bounds-reject\")] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -535,7 +570,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_host_bounds_refusal : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -549,7 +586,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_trap_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -563,7 +602,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_cleanup_failure_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cleanupFailure] = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -577,7 +618,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_quota_prefix_stops_before_the_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 2 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7]) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -591,7 +634,9 @@
       "status": "proved",
       "statement": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 10 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8]) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -605,7 +650,9 @@
       "status": "proved",
       "statement": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -645,7 +692,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_unsigned_reinterpretation : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 18446744073709551615 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -659,7 +708,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_accepts_the_signed_refused_request : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -673,7 +724,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_commit_of_reinterpreted_region : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead (-1) 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -687,7 +740,9 @@
       "status": "proved",
       "statement": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -727,7 +782,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_implies_read_commits_explained : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.readCommitsExplained target = true",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -753,7 +810,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_swapped_response : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.AbiStep.returned RegionTrace.Operation.guestRelease none none] = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -767,7 +826,9 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_substituted_resource_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 3 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none]) = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     },
     {
@@ -781,7 +842,226 @@
       "status": "proved",
       "statement": "RegionTrace.related_rejects_observed_retirement_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = false",
       "axioms": [
-        "propext"
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_complete",
+      "role": "WIT-TRACE-04: a budget that affords the whole trace cuts nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_complete : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.traceCost steps ≤ fuel → RegionTrace.retainFrom fuel steps = steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_fuel_stable",
+      "role": "WIT-TRACE-04: the budgeted semantics is fuel stable (Langlib halted_stable)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_fuel_stable : RegionTrace.FuelStable RegionTrace.retainFrom",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_stable_under_more_fuel",
+      "role": "WIT-TRACE-04: a relation that holds at a completing budget holds at every larger budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_stable_under_more_fuel : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep) (fuel more : Nat), RegionTrace.traceCost steps ≤ fuel → fuel ≤ more → RegionTrace.related source (RegionTrace.retainFrom fuel steps) = true → RegionTrace.related source (RegionTrace.retainFrom more steps) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_relates_only_at_one_budget",
+      "role": "WIT-TRACE-04 control: a semantics right at one fuel value only relates there and not one unit later",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.magic_fuel_relates_only_at_one_budget : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.magicFuelRetain 3 RegionTrace.releasedReadTarget) = true ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] (RegionTrace.magicFuelRetain 4 RegionTrace.releasedReadTarget) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_is_not_fuel_stable",
+      "role": "WIT-TRACE-04 control: fuel stability refuses the one-fuel-value semantics",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.magic_fuel_is_not_fuel_stable : ¬RegionTrace.FuelStable RegionTrace.magicFuelRetain",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_omitted_unused_read",
+      "role": "WIT-TRACE-02 control: a trace omitting a protected read whose value is unused is refused although its final answer agrees",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_omitted_unused_read : RegionTrace.finalResponse (RegionTrace.lower RegionTrace.observedReleaseWithoutRead) = RegionTrace.finalResponse (RegionTrace.lower RegionTrace.observedReadAndRelease) ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReleaseWithoutRead) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_source_reads_are_target_reads",
+      "role": "WIT-TRACE-02: a related source trace claims exactly the target read crossings, in order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_source_reads_are_target_reads : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.sourceReads source = RegionTrace.readCrossings target",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_keeps_commits",
+      "role": "WIT-TRACE-04: an abnormal exit projects to nothing, so a trap cannot remove an earlier commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_keeps_commits : ∀ (steps : List RegionTrace.AbiStep) (exitClass : RegionTrace.ExitClass), List.filterMap RegionTrace.projectStep (steps ++ [RegionTrace.AbiStep.abnormalExit exitClass]) = List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_trap_that_drops_a_commit",
+      "role": "WIT-TRACE-04 control: a source trace dropping a commit made before a trap is refused; keeping it relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_trap_that_drops_a_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1] RegionTrace.trappedAfterCommit = false ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2] RegionTrace.trappedAfterCommit = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.lower_correct_on_every_input",
+      "role": "WIT-TRACE-05: the lowering relates every read-and-release input (identity, region, value)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lower_correct_on_every_input : RegionTrace.CorrectOnEveryInput RegionTrace.lower",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_matches_on_the_empty_input",
+      "role": "WIT-TRACE-05 control: a lowering right only on the empty input agrees with the model there",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.empty_only_lowering_matches_on_the_empty_input : RegionTrace.lowerEmptyOnly [] = RegionTrace.lower [] ∧ RegionTrace.related [] (RegionTrace.lowerEmptyOnly []) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_is_not_correct_on_every_input",
+      "role": "WIT-TRACE-05 control: the universally quantified statement refuses the empty-input-only lowering",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.empty_only_lowering_is_not_correct_on_every_input : ¬RegionTrace.CorrectOnEveryInput RegionTrace.lowerEmptyOnly",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_requests",
+      "role": "WIT-TRACE-03 control: a swapped request order is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_swapped_requests : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_response_value",
+      "role": "WIT-TRACE-03 control: a substituted response value is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_response_value : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
       ]
     }
   ],
@@ -812,14 +1092,14 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
       "argv": [
         "--version"
       ],
       "exit": 0
     },
     {
-      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
       "argv": [
         "build",
         "RegionTrace"
@@ -827,12 +1107,12 @@
       "exit": 0
     },
     {
-      "command": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lake",
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
       "argv": [
         "env",
         "lean",
         "--json",
-        "/var/tmp/noble-rt-clean/Audit.lean"
+        "/var/tmp/noble-lean435/lanes-50/region-trace-918db86a/Audit.lean"
       ],
       "exit": 0
     },
