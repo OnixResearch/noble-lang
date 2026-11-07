@@ -2596,6 +2596,144 @@
       "claim": "The validator refuses an output map that names the wrong destination register."
     },
     {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The kernel accepts the real emitted interleaved artifact (shared inputs, a constant, a Bool equality, two outputs) under validate."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The exported interleaved graph is well formed."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The real interleaved stream returns the graph reference at both outputs for every input."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_wrong_operation_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real interleaved artifact with its first addition emitted as a subtraction."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_operands_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real interleaved artifact with its first subtraction operands swapped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_reordered_within_layer_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real interleaved artifact with two instructions of one layer swapped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_dropped_instruction_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real interleaved artifact with its last instruction dropped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_outputs_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real interleaved artifact with its two output registers swapped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_0_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs 3 and 8, the kernel evaluates run on the real interleaved stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_1_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs 0 and 0, the kernel evaluates run on the real interleaved stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_2_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs -1 and 1, the kernel evaluates run on the real interleaved stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_3_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs i64::MAX and i64::MIN + 4 (wrap-around), the kernel evaluates run on the real interleaved stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_4_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs i64::MIN and -1, the kernel evaluates run on the real interleaved stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The kernel accepts the real emitted artifact whose late-created input is moved ahead of an addition in packed order, with a repeated output."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The exported late-input graph is well formed."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The real late-input stream returns the graph reference at both requested outputs for every input."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_wrong_operation_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real late-input artifact with its addition emitted as a subtraction."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_dropped_instruction_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "validate refuses the real late-input artifact with its last instruction dropped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_0_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs 3 and 8, the kernel evaluates run on the real late-input stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_1_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs 0 and 0, the kernel evaluates run on the real late-input stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_2_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs -1 and 1, the kernel evaluates run on the real late-input stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_3_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs i64::MAX and i64::MIN + 4 (wrap-around), the kernel evaluates run on the real late-input stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_4_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs i64::MIN and -1, the kernel evaluates run on the real late-input stream to the outputs the Rust packed machine computed, which the generator checked against the Rust reference interpreter."
+    },
+    {
       "name": "NobleFoundation.GraphRewrite.constant_value",
       "phase": 1,
       "role": "helper-model",

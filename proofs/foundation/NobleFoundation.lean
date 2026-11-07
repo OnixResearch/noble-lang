@@ -18,6 +18,7 @@ import NobleFoundation.AuthorityLedger
 import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
+import NobleFoundation.PackedScheduleCorpus
 import NobleFoundation.GraphRewrite
 import NobleFoundation.Specialize
 import NobleFoundation.SymbolicMutations

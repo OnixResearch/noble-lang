@@ -544,7 +544,8 @@ instead of adding checks that a matching stream could never reach.
 The stream is a public type (`I64Instruction`), reachable through `Compiled::i64_instructions()`,
 which is what makes an independent validator possible at all. There is still **no versioned
 serialization** of it, so the Lean validator in `proofs/foundation/NobleFoundation/PackedSchedule.lean`
-cannot consume these bytes; that gap stays open and is named in the foundation README.
+cannot consume arbitrary streams. It consumes the exported artifacts below, one at a time; the
+general gap stays open and is named in the foundation README.
 
 `crates/noble-ngraph/tests/schedule_correspondence.rs` (11 tests, all passing) validates the stream
 of the real `Compiled::new` output for an interleaved two-branch I64 graph, then mutates one
@@ -567,6 +568,37 @@ Two fixture mutations were wrong when first written and were fixed rather than r
 boundary on a zero-width first layer mutated nothing, and a destination mutation that matched no
 multiplication left the stream untouched. Both are recorded because a control that silently does
 nothing is the failure mode this lane exists to prevent.
+
+### The same artifacts, validated by the Lean kernel (2026-11-07)
+
+`crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs` exports the real declaration and stream of
+two graphs into the vocabulary of `NobleFoundation.PackedSchedule`, and generates
+`proofs/foundation/NobleFoundation/PackedScheduleCorpus.lean` from them:
+
+| Artifact | What it exercises | Mutated copies the kernel refuses |
+|---|---|---|
+| `interleaved` (the graph above) | shared inputs, a negative constant, all four operations, a Bool equality, two outputs | wrong operation, swapped operands, a within-layer reorder, a dropped instruction, swapped output registers |
+| `lateInput` | an input created after an addition it does not feed, moved ahead of it in packed order (`[0, 1, 3, 2, 4]`), and a repeated output | wrong operation, a dropped instruction |
+
+For each artifact the foundation lane kernel-checks `validate` (`*_validated`). Through
+`validate_sound`, it also proves that the exported stream returns the graph reference at every output
+for every input (`*_sound`). `the_lean_file_is_the_real_emission` fails when `Compiled::new` emits
+something else, until the file is regenerated (the ignored `write_the_lean_file`) and the lane is
+rerun.
+
+That gives item 4's three-way comparison at five boundary inputs per artifact, including
+`i64::MAX + 5` wrapping onto `i64::MIN + 4`. The generator runs the real packed machine
+(`Compiled::evaluate`), asserts that the reference interpreter (`eval::reference`) agrees, and writes
+the outputs into `*_execution_*_agrees` theorems. The kernel evaluates the model's `run` to the same
+outputs, and by `*_sound` that is also the graph reference. The agreement is tested at those inputs,
+not proved for the executor.
+
+The exporter is untrusted: it claims which node each instruction computes, and a wrong claim is
+refused rather than accepted. One translation is trusted. The packed machine preloads the slot and
+constant tables into their registers before the first layer, and the export writes those preloads as
+`setInput`/`setConst` at their packed positions. This is per-artifact validation of two artifacts. It
+is not a theorem about the scheduler, `schedule::check`, the Rust executor, the host or the engine,
+and it adds no decoder or versioned serialization.
 
 ### Validation cost at the default budgets (2026-11-05)
 

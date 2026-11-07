@@ -23,6 +23,10 @@ use noble_ngraph::layout::{self, PackedLayout, Refusal};
 use noble_ngraph::schedule::{self, I64Instruction, StreamRefusal};
 
 mod common;
+#[path = "schedule_lean_dir/corpus.rs"]
+mod corpus;
+#[path = "schedule_lean_dir/emit.rs"]
+mod emit;
 #[path = "schedule_cost_dir/measure.rs"]
 mod measure;
 
