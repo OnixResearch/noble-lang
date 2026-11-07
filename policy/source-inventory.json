@@ -125456,94 +125456,6 @@
       "refinement": "open"
     },
     {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:13537:13753",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:13771:16701",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:13897:13927",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:17010:18047",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:17128:17158",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:4787:4819",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:5628:5637",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:7839:7848",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:7993:7997",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:8610:8614",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:4322:4353",
-      "refinement": "open"
-    },
-    {
       "category": "body",
       "disposition": "open",
       "note": "Renewed linear-time packed-schedule validation and its ignored cost harness (#43) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -125917,6 +125829,142 @@
       "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble::component::bounded_region::ordered_trace_tests::recorded_requests_report_the_signed_arguments_the_guest_passed",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:10647:10651",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:14986:15202",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:15220:18150",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:15346:15376",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:18459:19496",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:18577:18607",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:19703:20759",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:21049:22197",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:21178:21208",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:4940:4972",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:5781:5790",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:9596:9605",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:9754:9758",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:4224:4255",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::layout::layer_coverage",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::layout::tests::a_duplicated_constant_row_cannot_hide_another_constant",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::layout::tests::layer_ranges_must_hold_each_layers_own_instructions",
       "refinement": "open"
     }
   ],

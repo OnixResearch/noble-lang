@@ -533,10 +533,9 @@ closes that for the total I64/Bool fragment:
 
 | Obligation | What is compared |
 |---|---|
-| declarations | `layout::check` runs inside `schedule::check`, and its refusal keeps its own class (`StreamRefusal::Declarations(_)`) |
+| declarations | `layout::check` runs inside `schedule::check`, and its refusal keeps its own class (`StreamRefusal::Declarations(_)`); this includes layer coverage, each declared layer range starting where the previous one ends and holding exactly that layer's instruction count (#95) |
 | ordered bodies | position `i` in the stream must be exactly the body the graph node at position `i` supplies under the declared register map: operation identity, **ordered** source registers, destination register |
 | shape | the stream length is the number of instruction-emitting nodes |
-| layer coverage | each declared layer range holds exactly that layer's instruction count |
 
 Definition-before-use, single-writer registers and ordered output retention are *implied* for this
 slice (acyclic layers + injective declared register map + matching body), and the module says so

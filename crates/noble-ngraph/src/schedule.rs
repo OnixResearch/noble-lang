@@ -18,8 +18,9 @@
 //!   `i` supplies under the declared register map: operation identity, ordered source registers and
 //!   destination register. Operand order is part of the body, so a swapped-operand stream is
 //!   refused instead of accepted because both registers happen to be reachable.
-//! - **Shape and layer coverage.** The stream length is exactly the number of
-//!   instruction-emitting nodes, and each declared layer range holds exactly that layer's count.
+//! - **Shape.** The stream length is exactly the number of instruction-emitting nodes. That each
+//!   declared layer range holds exactly that layer's count is a declaration obligation, refused
+//!   by `layout::check` as `Declarations(LayerCoverage)`.
 //!
 //! Definition-before-use, single-writer registers and ordered output retention are *implied* by
 //! those obligations for this slice rather than checked a second time: the graph is acyclic, the
@@ -61,22 +62,20 @@ pub enum StreamRefusal {
     Declarations(crate::layout::Refusal),
     /// The stream length is not the number of instruction-emitting nodes.
     StreamShape,
-    /// A declared layer range holds a different number of instructions than that layer has nodes.
-    LayerCoverage,
     /// An instruction body is not the body its node supplies, or its destination is not the node's
     /// declared register.
     BodyMismatch,
 }
 
-/// The nodes that emit an instruction, in layer order then canonical order, and how many each
-/// layer holds. Computed from the graph's layer assignment, never from the stream.
+/// The nodes that emit an instruction, in layer order then canonical order. Computed from the
+/// graph's layer assignment, never from the stream.
 ///
 /// One counting pass and one placing pass bucket the nodes by layer, so the cost is linear in the
 /// node and layer counts; rescanning every node once per layer was quadratic for deep graphs.
 fn instruction_nodes(
     checked: &crate::check::CheckedGraph,
     layers: &[(u32, u32)],
-) -> (alloc::vec::Vec<crate::ir::NodeId>, alloc::vec::Vec<usize>) {
+) -> alloc::vec::Vec<crate::ir::NodeId> {
     let graph = checked.graph();
     let emitting = |index: usize| -> Option<usize> {
         let layer = checked.layer(crate::ir::NodeId(index as u32)) as usize;
@@ -105,7 +104,7 @@ fn instruction_nodes(
             next[layer] += 1;
         }
     }
-    (nodes, counts)
+    nodes
 }
 
 fn register(layout: &crate::layout::PackedLayout, id: crate::ir::NodeId) -> Option<u32> {
@@ -167,16 +166,9 @@ pub fn check(
         return Err(StreamRefusal::UnsupportedProfile);
     }
     crate::layout::check(checked, layout).map_err(StreamRefusal::Declarations)?;
-    let (nodes, counts) = instruction_nodes(checked, &layout.layers);
+    let nodes = instruction_nodes(checked, &layout.layers);
     if nodes.len() != ins.len() {
         return Err(StreamRefusal::StreamShape);
-    }
-    let mut at = 0usize;
-    for ((start, end), count) in layout.layers.iter().zip(&counts) {
-        if (*end as usize).saturating_sub(*start as usize) != *count || at != *start as usize {
-            return Err(StreamRefusal::LayerCoverage);
-        }
-        at = *end as usize;
     }
     for (index, id) in nodes.iter().enumerate() {
         let want = expected(checked, layout, *id).ok_or(StreamRefusal::BodyMismatch)?;

@@ -7,12 +7,14 @@
 //!
 //! The scheduler stays untrusted: this module never regenerates the schedule and
 //! never reads an instruction body. It checks the declared register map, the
-//! constant and slot tables and the register count against the graph's own ops, so
-//! a wrong declaration is refused rather than compared with another copy of
-//! itself. It is the Rust side of the correspondence the Lean model in
+//! constant and slot tables and the register count against the graph's own ops, and
+//! the layer ranges and failure-suffix minima against the checker's layer
+//! assignment, so a wrong declaration is refused rather than compared with another
+//! copy of itself. Each table entry must account for a distinct node, and the layer
+//! ranges must tile the instruction stream with each layer's exact count. It is the
+//! Rust side of the correspondence the Lean model in
 //! `proofs/foundation/NobleFoundation/PackedSchedule.lean` states abstractly;
-//! **no correspondence theorem binds these bytes to that model**, and the layer
-//! ranges and guard registers are deliberately outside this check.
+//! **no correspondence theorem binds these bytes to that model**.
 
 /// Layout declaration revision bound into every accepted layout.
 pub const LAYOUT_REVISION: &str = "ngraph-layout/0";
@@ -159,6 +161,41 @@ fn table_counts<K: Ord + Copy>(
     counts
 }
 
+/// Each declared layer range starts where its predecessor ends and holds exactly the
+/// instruction-emitting nodes the checker assigned to that layer, so the ranges tile the
+/// instruction stream; slots and constants are table entries, not instructions. The counts come
+/// from the checker's layer assignment, never from the declaration, and the work is linear in the
+/// node and layer counts. A same-sized table whose last range ends at the right total but that
+/// empties one layer, or moves an instruction into a neighbouring layer, is refused.
+fn layer_coverage(
+    checked: &crate::check::CheckedGraph,
+    layout: &PackedLayout,
+    layer_count: usize,
+) -> Result<(), Refusal> {
+    let mut per_layer = alloc::vec![0u32; layer_count];
+    for (index, node) in checked.graph().nodes.iter().enumerate() {
+        if matches!(
+            node.op,
+            crate::ir::Op::Input(_) | crate::ir::Op::Param(_) | crate::ir::Op::Const(_)
+        ) {
+            continue;
+        }
+        let index = u32::try_from(index).map_err(|_| Refusal::LayerCoverage)?;
+        let layer = usize::try_from(checked.layer(crate::ir::NodeId(index)))
+            .map_err(|_| Refusal::LayerShape)?;
+        let count = per_layer.get_mut(layer).ok_or(Refusal::LayerShape)?;
+        *count = count.checked_add(1).ok_or(Refusal::LayerCoverage)?;
+    }
+    let mut at = 0u32;
+    for (&(start, end), &count) in layout.layers.iter().zip(&per_layer) {
+        if start != at || end.checked_sub(start) != Some(count) {
+            return Err(Refusal::LayerCoverage);
+        }
+        at = end;
+    }
+    Ok(())
+}
+
 /// Validates a declared layout against the graph it claims to pack. The layer
 /// assignment comes from the checker, not from the scheduler: the declared layer
 /// ranges and failure-suffix minima are compared against it, never regenerated.
@@ -184,12 +221,15 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     {
         return Err(Refusal::RegisterCount);
     }
-    let constants = table_counts(graph, layout, |op| match op {
+    let mut constants = table_counts(graph, layout, |op| match op {
         crate::ir::Op::Const(lit) => Some(constant_bits(*lit)),
         _ => None,
     });
+    // Each declared row consumes the constant it names, so a row repeated in place of another
+    // constant's row finds nothing the second time. With the count check below, the table is a
+    // bijection with the graph's constants rather than a list of individually valid rows.
     for &(register, bits) in &layout.consts {
-        if constants.get(&(register, bits)).copied() != Some(1) {
+        if constants.remove(&(register, bits)) != Some(1) {
             return Err(Refusal::ConstantTable);
         }
     }
@@ -255,24 +295,7 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     if minima != layout.fail_suffix_min {
         return Err(Refusal::FailSuffixMismatch);
     }
-    // Every node that produces an instruction is packed exactly once: slots and
-    // constants are table entries, not instructions.
-    let instructions = graph
-        .nodes
-        .iter()
-        .filter(|node| {
-            !matches!(
-                node.op,
-                crate::ir::Op::Input(_) | crate::ir::Op::Param(_) | crate::ir::Op::Const(_)
-            )
-        })
-        .count();
-    let Ok(instructions) = u32::try_from(instructions) else {
-        return Err(Refusal::LayerCoverage);
-    };
-    if layout.layers.last().map(|&(_, end)| end) != Some(instructions) {
-        return Err(Refusal::LayerCoverage);
-    }
+    layer_coverage(checked, layout, layer_count)?;
     let declared_slots = layout.slot_regs.len();
     let slot_nodes = graph
         .nodes
@@ -446,5 +469,62 @@ mod tests {
         range_first.reg[second] = layout.regs;
         range_first.reg[third] = layout.reg[first];
         assert_eq!(check(&range_first), Err(super::Refusal::RegisterOutOfRange));
+    }
+
+    /// A constant row repeated in place of another constant's row keeps the table's length and
+    /// every row individually valid, but leaves the second constant undeclared (issue #94).
+    #[test]
+    fn a_duplicated_constant_row_cannot_hide_another_constant() {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "duplicate-constant-row"),
+        );
+        let three = builder.i64_const(3);
+        let four = builder.i64_const(4);
+        let sum = builder.op(crate::ir::Op::I64Add(three, four));
+        builder.output(sum);
+        let checked =
+            crate::check::check(&scheme, builder.finish()).expect("the two-constant graph checks");
+        let layout = crate::compiled::Compiled::new(&scheme, &checked).packed_layout();
+        assert_eq!(layout.consts.len(), 2);
+        assert_ne!(layout.consts[0], layout.consts[1]);
+        assert_eq!(super::check(&checked, &layout), Ok(()));
+
+        let mut duplicated = layout.clone();
+        duplicated.consts[1] = duplicated.consts[0];
+        assert_eq!(
+            super::check(&checked, &duplicated),
+            Err(super::Refusal::ConstantTable)
+        );
+    }
+
+    /// The layer ranges must hold each layer's own instructions, not merely end at the right
+    /// total (issue #95): emptying a range, or shifting an instruction into a neighbouring layer
+    /// while every range stays ordered and the last end stays put, is refused.
+    #[test]
+    fn layer_ranges_must_hold_each_layers_own_instructions() {
+        let (_graph, checked, layout) = sample();
+        let check = |layout: &super::PackedLayout| super::check(&checked, layout);
+        assert_eq!(check(&layout), Ok(()));
+        let index = layout
+            .layers
+            .iter()
+            .position(|&(start, end)| start < end)
+            .expect("the sample has an instruction-emitting layer");
+
+        let mut emptied = layout.clone();
+        emptied.layers[index].0 = emptied.layers[index].1;
+        assert_eq!(check(&emptied), Err(super::Refusal::LayerCoverage));
+
+        // Move the first instruction of that layer into the previous layer's range, keeping the
+        // ranges contiguous and the total unchanged.
+        let mut shifted = layout.clone();
+        let previous = index
+            .checked_sub(1)
+            .expect("an instruction layer follows layer 0");
+        shifted.layers[previous].1 = shifted.layers[previous].1.saturating_add(1);
+        shifted.layers[index].0 = shifted.layers[index].0.saturating_add(1);
+        assert_eq!(check(&shifted), Err(super::Refusal::LayerCoverage));
     }
 }

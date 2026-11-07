@@ -1591,13 +1591,34 @@ one above the highest declared register's count is accepted
 (`count_one_above_is_accepted`); a missing,
 out-of-range or shared register is refused (`missing_register_refused`,
 `out_of_range_refused`, `alias_refused`); a constant table with the wrong entry count
-is refused (`constant_count_refused`); the layer table must have one ordered range
-per layer (`layer_shape_refused`, `layers_unordered_refused`) and its ranges must
-cover exactly the instruction nodes (`coverage_refused`); a declared failure-suffix
-table that differs from the graph's own prefix minima is refused
-(`fail_suffix_mismatch_refused`); and acceptance implies a register per node,
-non-aliasing and coverage (`accepted_implies_registers`,
-`accepted_implies_distinct`, `accepted_implies_coverage`).
+is refused (`constant_count_refused`), and so is one that names an entry twice
+(`constant_duplicate_refused`); the layer table must have one ordered range per layer
+(`layer_shape_refused`, `layers_unordered_refused`) and its ranges must tile the
+instruction stream, each starting where its predecessor ends and holding exactly its
+layer's instruction nodes (`layer_range_refused`), with the last ending at the
+instruction count (`coverage_refused`); a declared failure-suffix table that differs
+from the graph's own prefix minima is refused (`fail_suffix_mismatch_refused`); and
+acceptance implies a register per node, non-aliasing, distinct constant entries and
+coverage (`accepted_implies_registers`, `accepted_implies_distinct`,
+`accepted_implies_constants_distinct`, `accepted_implies_coverage`).
+
+**Correction (2026-11-07, issues #94 and #95).** The model and the Rust checker both
+accepted two forged declarations:
+
+- **Duplicate constant rows.** The constant obligation checked each entry and the
+  entry count, so a constant's row repeated in place of another constant's row passed,
+  leaving the second constant undeclared (#94). The model now requires distinct
+  entries (`constantsDistinctOk`). The Rust check consumes each matched row, which is
+  the same condition, because aliasing is refused first.
+- **Coverage by the last end alone.** Coverage compared only the last range's end with
+  the instruction count, so emptying a layer's range, or moving an instruction into a
+  neighbouring range, passed while every range stayed ordered (#95). Coverage
+  (`coverageOk`) is now the exact tiling `tiles`, over the checker's layer assignment
+  `layerOf`. The Rust check (`layout::layer_coverage`) requires the same, and
+  `schedule::check` no longer repeats it.
+
+`exampleLayout_accepted` still holds for the real declaration. Both forgeries are
+regression tests in `crates/noble-ngraph/src/layout.rs` that fail on the old checker.
 
 **Correction (2026-10-29).** `countWithinOne` used to compare the declared count with
 *every* declared register (`regs ≤ register + 2` for each), not with the highest one as the

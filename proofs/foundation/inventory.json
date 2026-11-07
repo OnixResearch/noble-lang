@@ -2992,6 +2992,12 @@
       "claim": "A constant table with a different entry count than the graph's constant nodes is refused."
     },
     {
+      "name": "NobleFoundation.PackedLayout.constant_duplicate_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A constant table that names one entry twice is refused, even when its length equals the constant count and every entry names a real constant (issue #94)."
+    },
+    {
       "name": "NobleFoundation.PackedLayout.layer_shape_refused",
       "phase": 2,
       "role": "packed-layout",
@@ -3008,6 +3014,12 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "A layer table whose last range does not end at the instruction count is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.layer_range_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A first layer range that does not start at the beginning of the stream, or does not hold exactly layer 0's instruction nodes, is refused (issue #95)."
     },
     {
       "name": "NobleFoundation.PackedLayout.fail_suffix_mismatch_refused",
@@ -3028,10 +3040,16 @@
       "claim": "An accepted layout never aliases a register."
     },
     {
+      "name": "NobleFoundation.PackedLayout.accepted_implies_constants_distinct",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "An accepted layout names each constant table entry at most once."
+    },
+    {
       "name": "NobleFoundation.PackedLayout.accepted_implies_coverage",
       "phase": 2,
       "role": "packed-layout",
-      "claim": "An accepted layout's last layer range ends exactly at the instruction count."
+      "claim": "An accepted layout's layer ranges tile the instruction stream: each holds exactly its layer's instruction nodes and the last ends at the instruction count."
     },
     {
       "name": "NobleFoundation.PackedLayout.exampleLayout_accepted",

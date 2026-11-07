@@ -12,14 +12,17 @@ tables and the obligations*, not the Rust bytes, and proves:
   no declared register it may be at most one;
 * a missing register, an out-of-range register and a shared register are each refused
   (`missing_register_refused`, `out_of_range_refused`, `alias_refused`);
-* the constant table must have one entry per constant node (`constant_count_refused`), and an
-  entry that names no node is refused (`constant_entry_refused`); the Boolean table check is
-  tied to the readable obligation by `constant_predicate_iff` and `slot_predicate_iff`;
+* the constant table must have one entry per constant node (`constant_count_refused`), no entry
+  twice (`constant_duplicate_refused`, issue #94), and an entry that names no node is refused
+  (`constant_entry_refused`); the Boolean table check is tied to the readable obligation by
+  `constant_predicate_iff` and `slot_predicate_iff`;
 * the layer table must have one ordered range per layer (`layer_shape_refused`,
-  `layers_unordered_refused`) and its ranges must cover exactly the instruction nodes
-  (`coverage_refused`);
-* acceptance implies a declared register per node, non-aliasing and coverage
-  (`accepted_implies_registers`, `accepted_implies_distinct`, `accepted_implies_coverage`);
+  `layers_unordered_refused`), and its ranges must tile the instruction stream: each starts where
+  its predecessor ends and holds exactly its layer's instruction nodes (`layer_range_refused`,
+  issue #95), and the last ends at the instruction count (`coverage_refused`);
+* acceptance implies a declared register per node, non-aliasing, distinct constant entries and
+  coverage (`accepted_implies_registers`, `accepted_implies_distinct`,
+  `accepted_implies_constants_distinct`, `accepted_implies_coverage`);
 * a declared failure-suffix table that differs from the graph's own prefix minima is
   refused (`fail_suffix_mismatch_refused`).
 * the layout `Compiled::new` emits for `PackedSchedule.exampleGraph`'s Rust counterpart,
@@ -116,6 +119,12 @@ def constantCountOk (graph : Graph) (layout : Layout) : Bool :=
     | _ => false).length
   decide (layout.consts.length = constants)
 
+/-- The constant table names each entry at most once. An entry repeated in place of another
+constant's entry keeps the count and every entry individually valid while leaving that other
+constant undeclared (issue #94). -/
+def constantsDistinctOk (layout : Layout) : Bool :=
+  decide layout.consts.Nodup
+
 /-- A slot table entry names exactly one interface input node of that slot. -/
 def slotEntryOk (graph : Graph) (layout : Layout) (entry : Nat × Nat) : Bool :=
   decide (((List.range graph.arity).filter fun index =>
@@ -138,17 +147,35 @@ def layerOrderList : List (Nat × Nat) → Bool
 def layerOrderOk (layout : Layout) : Bool :=
   layerOrderList layout.layers
 
-/-- Every node that produces an instruction is covered exactly once: the last layer range
-ends at the instruction count. -/
-def coverageOk (graph : Graph) (layout : Layout) : Bool :=
+/-- Whether a node produces an instruction: inputs and constants are table entries. -/
+def instructionNode : Node → Bool
+  | .input _ => false
+  | .constant _ => false
+  | _ => true
+
+/-- The instruction nodes the checker assigns to one layer. -/
+def layerInstructions (graph : Graph) (layerOf : Nat → Nat) (layer : Nat) : Nat :=
+  ((List.range graph.arity).filter fun index =>
+    instructionNode (graph.node index) && decide (layerOf index = layer)).length
+
+/-- From a running offset, the declared ranges tile the instruction stream layer by layer: each
+range starts where its predecessor ends and holds exactly its layer's instruction nodes. -/
+def tiles (graph : Graph) (layerOf : Nat → Nat) : Nat → Nat → List (Nat × Nat) → Bool
+  | _, _, [] => true
+  | offset, layer, range :: rest =>
+      decide (range.1 = offset ∧ range.2 = offset + layerInstructions graph layerOf layer) &&
+        tiles graph layerOf range.2 (layer + 1) rest
+
+/-- Every node that produces an instruction is covered exactly once: the ranges tile the stream
+layer by layer (issue #95), and the last range ends at the instruction count, so no instruction
+node lies outside the declared layers. -/
+def coverageOk (graph : Graph) (layerOf : Nat → Nat) (layout : Layout) : Bool :=
   let instructions := ((List.range graph.arity).filter fun index =>
-    match graph.node index with
-    | .input _ => false
-    | .constant _ => false
-    | _ => true).length
-  match layout.layers.reverse with
-  | [] => decide (instructions = 0)
-  | last :: _ => decide (last.2 = instructions)
+    instructionNode (graph.node index)).length
+  tiles graph layerOf 0 0 layout.layers &&
+    match layout.layers.reverse with
+    | [] => decide (instructions = 0)
+    | last :: _ => decide (last.2 = instructions)
 
 /-- The graph's own failure-suffix prefix minima: over every layer at or after each layer,
 the least node index that needs a failure suffix. The declared table is compared against
@@ -179,11 +206,12 @@ def obligations (graph : Graph) (layerCount : Nat) (fails : Node → Bool)
     countWithinOne graph layout,
     layout.consts.all (constantEntryOk graph layout),
     constantCountOk graph layout,
+    constantsDistinctOk layout,
     layout.slotRegs.all (slotEntryOk graph layout),
     layerShapeOk layerCount layout,
     layerOrderOk layout,
     failSuffixOk layerCount graph fails layerOf layout,
-    coverageOk graph layout]
+    coverageOk graph layerOf layout]
 
 /-- Acceptance of a declared layout is the conjunction of those obligations. -/
 def accepted (graph : Graph) (layerCount : Nat) (fails : Node → Bool) (layerOf : Nat → Nat)
@@ -303,6 +331,12 @@ theorem constant_count_refused (graph : Graph) (layout : Layout) (expected : Nat
   unfold constantCountOk
   simp [hconstants, hentries]
 
+/-- A constant table that names one entry twice is refused, even when its length equals the
+constant count and every entry names a real constant (issue #94). -/
+theorem constant_duplicate_refused (layout : Layout) (hduplicate : ¬ layout.consts.Nodup) :
+    constantsDistinctOk layout = false := by
+  simp [constantsDistinctOk, hduplicate]
+
 /-- A layer table without one range per layer is refused. -/
 theorem layer_shape_refused (layerCount : Nat) (layout : Layout)
     (hshape : layout.layers.length ≠ layerCount) :
@@ -321,19 +355,30 @@ theorem layers_unordered_refused (layout : Layout) (start end_ previousStart pre
   simp [layerOrderList, hfirst, hsecond, horder]
 
 /-- A layer table whose last range does not end at the instruction count is refused. -/
-theorem coverage_refused (graph : Graph) (layout : Layout) (start end_ : Nat)
+theorem coverage_refused (graph : Graph) (layerOf : Nat → Nat) (layout : Layout)
+    (start end_ : Nat)
     (hlayers : layout.layers = [(start, end_)])
     (hinstructions : ((List.range graph.arity).filter fun index =>
-      match graph.node index with
-      | .input _ => false
-      | .constant _ => false
-      | _ => true).length ≠ end_) :
-    coverageOk graph layout = false := by
+      instructionNode (graph.node index)).length ≠ end_) :
+    coverageOk graph layerOf layout = false := by
+  have hend : end_ ≠ ((List.range graph.arity).filter fun index =>
+      instructionNode (graph.node index)).length := fun equal => hinstructions equal.symm
   unfold coverageOk
   rw [hlayers]
-  simp only [List.reverse_cons, List.reverse_nil, List.nil_append]
-  rw [decide_eq_false_iff_not]
-  exact fun equal => hinstructions equal.symm
+  simp [hend]
+
+/-- A first layer range that does not start at the beginning of the stream, or does not hold
+exactly layer 0's instruction nodes, is refused. Emptying a layer or moving one of its
+instructions into a neighbouring range is therefore caught even when every range stays ordered
+and the last ends at the right total (issue #95). -/
+theorem layer_range_refused (graph : Graph) (layerOf : Nat → Nat) (layout : Layout)
+    (range : Nat × Nat) (rest : List (Nat × Nat))
+    (hlayers : layout.layers = range :: rest)
+    (hrange : ¬ (range.1 = 0 ∧ range.2 = layerInstructions graph layerOf 0)) :
+    coverageOk graph layerOf layout = false := by
+  unfold coverageOk
+  rw [hlayers]
+  simp [tiles, hrange]
 
 /-- A declared failure-suffix table that differs from the graph's own prefix minima is
 refused. -/
@@ -375,17 +420,31 @@ theorem accepted_implies_distinct (graph : Graph) (layerCount : Nat) (fails : No
   have hdistinct := haccepted (distinctRegisters graph layout) hmem
   simpa only [id_eq] using hdistinct
 
-/-- An accepted layout's last layer range ends exactly at the instruction count. -/
+/-- An accepted layout names each constant at most once. -/
+theorem accepted_implies_constants_distinct (graph : Graph) (layerCount : Nat)
+    (fails : Node → Bool) (layerOf : Nat → Nat) (layout : Layout)
+    (haccepted : accepted graph layerCount fails layerOf layout = true) :
+    layout.consts.Nodup := by
+  unfold accepted at haccepted
+  rw [List.all_eq_true] at haccepted
+  have hmem : constantsDistinctOk layout ∈ obligations graph layerCount fails layerOf layout := by
+    unfold obligations
+    simp
+  have hdistinct := haccepted (constantsDistinctOk layout) hmem
+  simpa [constantsDistinctOk] using hdistinct
+
+/-- An accepted layout's layer ranges tile the instruction stream: each holds exactly its
+layer's instruction nodes, and the last ends at the instruction count. -/
 theorem accepted_implies_coverage (graph : Graph) (layerCount : Nat) (fails : Node → Bool)
     (layerOf : Nat → Nat) (layout : Layout)
     (haccepted : accepted graph layerCount fails layerOf layout = true) :
-    coverageOk graph layout = true := by
+    coverageOk graph layerOf layout = true := by
   unfold accepted at haccepted
   rw [List.all_eq_true] at haccepted
-  have hmem : coverageOk graph layout ∈ obligations graph layerCount fails layerOf layout := by
+  have hmem : coverageOk graph layerOf layout ∈ obligations graph layerCount fails layerOf layout := by
     unfold obligations
-    exact List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_self))))))))))
-  have hcoverage := haccepted (coverageOk graph layout) hmem
+    simp
+  have hcoverage := haccepted (coverageOk graph layerOf layout) hmem
   simpa only [id_eq] using hcoverage
 
 /-! ### A real layout is accepted -/
