@@ -44,11 +44,11 @@ type Row = (i64, i64);
 /// Outputs one row produces.
 type Outputs = Vec<Value>;
 
-const SIZES: [usize; 3] = [1, 4096, 65536];
+pub(super) const SIZES: [usize; 3] = [1, 4096, 65536];
 
 /// Five arithmetic nodes over two inputs and two outputs, so one row does more than one step while
 /// staying small enough to measure per-row cost honestly.
-fn workload() -> Graph {
+pub(super) fn workload() -> Graph {
     let scheme = super::common::IDS;
     let subject = Subject::authored(&scheme, "batch-measure");
     let mut builder = GraphBuilder::new(SubProfile::I64, subject);
@@ -65,7 +65,7 @@ fn workload() -> Graph {
 }
 
 /// Operands that stress the wrap boundaries without making every row identical.
-fn rows(count: usize) -> Vec<Row> {
+pub(super) fn rows(count: usize) -> Vec<Row> {
     const BOUNDARY: [i64; 7] = [i64::MIN, i64::MIN + 1, -1, 0, 1, i64::MAX - 1, i64::MAX];
     let mut built = Vec::with_capacity(count);
     let mut left = 0;
@@ -89,7 +89,7 @@ fn next(index: usize) -> usize {
     }
 }
 
-fn values(rows: &[Row]) -> Vec<Value> {
+pub(super) fn values(rows: &[Row]) -> Vec<Value> {
     let mut values = Vec::with_capacity(rows.len() * 2);
     for (left, right) in rows {
         values.push(Value::I64(*left));
@@ -99,13 +99,13 @@ fn values(rows: &[Row]) -> Vec<Value> {
 }
 
 /// Resident set size in bytes, from the kernel's own report.
-fn resident_bytes() -> Option<u64> {
+pub(super) fn resident_bytes() -> Option<u64> {
     let text = std::fs::read_to_string("/proc/self/statm").ok()?;
     let pages = text.split_whitespace().nth(1)?.parse::<u64>().ok()?;
     Some(pages * 4096)
 }
 
-fn growth(before: Option<u64>, after: Option<u64>) -> u64 {
+pub(super) fn growth(before: Option<u64>, after: Option<u64>) -> u64 {
     match (before, after) {
         (Some(before), Some(after)) => after.saturating_sub(before),
         _ => 0,
