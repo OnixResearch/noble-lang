@@ -597,6 +597,24 @@ no new dependency, no axiom beyond the foundation's allow-list, and no
 | Observations | `obsEq` equality: NaNs collapse, every other class keeps its exact bytes |
 | Correspondence | **none claimed** to the Rust graph evaluator, `wasm-opt`, V8 or any host FPU |
 
+**Rust float kernels are a separate, blocked path (issue #92).** This model is reference
+semantics for `ngraph-f32/0` graphs. It is not an implementation proof of any Rust code that
+computes with `f32` or `f64`. Such proofs would go through Charon, Aeneas and Lean, and Aeneas
+does not translate Rust floats yet: its float support is the open draft
+[AeneasVerif/aeneas#1073](https://github.com/AeneasVerif/aeneas/pull/1073), for
+[AeneasVerif/aeneas#828](https://github.com/AeneasVerif/aeneas/issues/828). The draft lowers
+`f32`/`f64` to Lean `Float`/`Float32` with many routines left `opaque`.
+
+Lean 4.35.0, now pinned (#86), backs `Float`/`Float32` with logical models, so the remaining
+blocker is the translation. Until it lands, and its float model is audited against Noble's NaN,
+signed-zero and round-to-nearest-even policy in a new issue, **no Noble kernel code that computes
+with floats has an implementation proof, and none is claimed**. What this does not do:
+
+- it does not add `F32` or `F64` to Core;
+- it does not block numeric-graph work, this reference, Core completeness or self-hosting;
+- it does not treat opaque Lean float operations as a proved IEEE model;
+- it does not make this graph reference a substitute for an extracted float-capable kernel.
+
 `verification/binary32/propose.py` proposes expected bits from Python integers
 and its own rounding search. A proposal is not evidence: `retained_expectations_checked`
 is a single theorem the Lean kernel checks over all 26 retained expectations.

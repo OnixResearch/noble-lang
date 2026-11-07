@@ -359,6 +359,9 @@ conversion: exact `ngraph-i64/0` (wrapping `I64`, as in K-NUM-01) and
 experimental `ngraph-f32/0` (IEEE binary32, round to nearest even, no FMA, no
 flush to zero). `F32` graphs are authored directly in `ngraph-ir/0` and
 admitted only by the graph checker (decision B0(b)); there is no kernel `F32`.
+Implementation proofs of Rust code that computes with floats wait on Aeneas
+float support; the [foundation README](proofs/foundation/README.md) records that
+blocker (issue #92) and its non-claims.
 Extraction from Core source produces `ngraph-i64/0` graphs only. Facts with
 `evidence` provenance are refused (`E-FACT-UNCHECKED`) until issue #8 supplies
 witness binding. The subcommands run no Node, Wasm, `wasm-opt` or other

@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "bf42565cae9404ffbee0c762bd2174faa14012608b858a40dd67552c547d5a17"
+      "sha256": "0f0e8055ea6bea8ef615ea1dd31830c4b0e2c908b720d1babbbd882560ab5372"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1361,7 +1361,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "1c22b6ea87807876d352b106de21af3e87fea44c01d33706a92f93d2f92325de"
+      "sha256": "5f7dbc84393d6a49cfb95a75c1e98fad94c4dabe22d01f8c8156154b3ac01367"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
