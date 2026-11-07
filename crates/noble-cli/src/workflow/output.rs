@@ -141,6 +141,8 @@ impl Report {
             ("generated_statement", super::encoding::optional_string(self.generated.as_deref())),
             ("proof_declarations", super::encoding::optional_string(self.proof_wire.as_deref())),
             ("claim_kind", super::encoding::string("partial-correctness")),
+            // MC1 contract expressions denote `BitVec 64` wrapping arithmetic (VC-NUM-01, #91).
+            ("arithmetic_model", super::encoding::string("i64-wrapping")),
             ("subject", self.subject.clone()),
             ("ordinary_typing", self.ordinary_typing.clone()),
             ("assumptions", super::encoding::object([

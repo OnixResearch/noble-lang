@@ -148,6 +148,8 @@ r[VC-LOGIC-06]
 
 **VC-LOGIC-06.** A relational postcondition MUST distinguish initial-state snapshots from final-state observations. The claim MUST name its arithmetic semantics and applicability conditions. Two references to the same final value MUST NOT be presented as an initial/final relation.
 
+The arithmetic semantics are named with an identifier from the arithmetic-model table under VC-NUM-01.
+
 For a bounded integer deposit, the intended relation is `balance_after = balance_before + amount`. Preconditions must establish agreement with the selected `I64` arithmetic and the domain's balance rules. At `balance_before = 100` and `amount = 10`, the result is 110, not a claim that `110 = 110 + 10`.
 
 This is contract notation, not a new Noble record declaration or assertion form. Ghost snapshots do not duplicate a live resource. They describe its modeled state under explicit assumptions.
@@ -343,6 +345,23 @@ r[VC-NUM-01]
 An implementation may later provide ordinary checked-arithmetic words returning `Result`; their contracts require those words' own specifications and do not change the meaning of the existing operators.
 
 The [exact calculator](../calculator/spec.md) uses a separate library model of arbitrary-precision integers and normalized rationals. CALC-EVIDENCE-02 requires claims for its actual implementation, including zero-divisor errors. The bootstrap `I64` examples do not establish those claims. This application does not expand VC-BOOT-01 automatically.
+
+**Named arithmetic models.** Evidence for a program-contract claim names the arithmetic model it was checked under, using an identifier from this table. The model is part of the claim. A proof under one model does not establish a claim under another, and naming a model checks nothing by itself.
+
+| Identifier | Meaning | Status |
+|---|---|---|
+| `i64-wrapping` | Noble `I64`: 64-bit two's complement with wrapping `+`, `-` and `*` and signed comparison (`BitVec 64` in the MC1 model) | Selected. Every MC1 report (`noble-mc1-report/v1`) names it, whatever the outcome. |
+| `rat-exact` | The exact calculator's arbitrary-precision integers and normalized rationals | Selected for calculator evidence (CALC-EVIDENCE-02). |
+| `binary32-rne-noble-foundation` | IEEE 754 binary32 with round to nearest, ties to even, as `NobleFoundation.Binary32` defines it | The `ngraph-f32/0` reference model. No program-contract claim uses it yet. |
+| `binary64-rne` | IEEE 754 binary64 with round to nearest, ties to even | No model is selected, so evidence naming it is `unsupported`. |
+| `reals` | Ideal real arithmetic, such as Mathlib `ℝ` or an SMT real theory | A named idealization only. It is never reported as a machine-float result. |
+| `reals+machine-samples` | A `reals` proof plus checks of sampled machine values | The samples can refute a claim. They prove nothing about values that were not sampled. |
+
+Evidence for a claim whose statement mentions floating-point operations, a real-valued idealization of them, or a conversion between exact and rounded values MUST name its model. A missing or unknown identifier is `unsupported`, not a pass. A proof under `reals` MUST NOT be admitted or reported as a `binary32-*` or `binary64-*` execution claim, and a machine-float proof MUST NOT be reported as a `reals` claim. A claim bridged by an explicit exact-to-rounded conversion names the model on each side of the conversion.
+
+`proofs/foundation/NobleFoundation/ArithmeticModels.lean` retains the negative control. `(x + 1) - x > 1/2` holds for every real `x` (`reals_claim_holds`). In the binary32 model, `2^24 + 1` rounds back to `2^24` (`binary32_increment_rounds_back`), so `(x + 1) - x` is `+0` at `x = 2^24` (`binary32_claim_fails`). The binary64 example at `x = 1e17` that motivated issue #91 follows the same pattern. Noble selects no binary64 model in which to state it.
+
+Naming a model does not verify the Rust or Wasm backend. It does not discharge the Aeneas extraction trust, and it does not make FloatLib or Lean's `Float` a dependency. `noble verify` still checks supplied evidence only and searches for no proof.
 
 
 <!-- cairn:scenario-links:start -->

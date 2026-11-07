@@ -65,6 +65,8 @@ async function check(name, args, expected, options = {}) {
     const report = JSON.parse(result.stdout);
     row.report = report;
     assert.equal(report.outcome, expected.outcome);
+    // Every report names the arithmetic model of the MC1 claim language, on any outcome (#91).
+    assert.equal(report.arithmetic_model, 'i64-wrapping');
     assert.equal(result.exit, expected.exit);
     if (options.ordinary) assert.equal(report.ordinary_typing.outcome, 'accepted');
     if (options.code) assert.ok(report.diagnostics.some(item => item.code === options.code));

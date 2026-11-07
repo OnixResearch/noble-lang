@@ -615,6 +615,13 @@ with floats has an implementation proof, and none is claimed**. What this does n
 - it does not treat opaque Lean float operations as a proved IEEE model;
 - it does not make this graph reference a substitute for an extracted float-capable kernel.
 
+**Arithmetic models are not interchangeable (issue #91).**
+`NobleFoundation/ArithmeticModels.lean` is the negative control for evidence that names the
+wrong arithmetic model (PROGRAM-CONTRACTS VC-NUM-01). Over the reals, `(x + 1) - x > 1/2` holds
+for every `x` (`reals_claim_holds`). In this binary32 model, `2^24 + 1` rounds back to `2^24`
+(`binary32_increment_rounds_back`), so `(x + 1) - x` is `+0` there (`binary32_claim_fails`).
+A `reals` proof therefore never stands in for a `binary32-rne-noble-foundation` claim.
+
 `verification/binary32/propose.py` proposes expected bits from Python integers
 and its own rounding search. A proposal is not evidence: `retained_expectations_checked`
 is a single theorem the Lean kernel checks over all 26 retained expectations.

@@ -1305,7 +1305,7 @@
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
-      "sha256": "07dc7809f48b21f67d7372ec1655bd784165d70db0eab95a0cfd9aef34203bb9"
+      "sha256": "71cf6a42aec2ade8a0063a7ee810a452e0c1e32a25d474939f371ccfcb1f3d0f"
     },
     {
       "file": ".cairn/specs/resource-adapters/spec.md",
@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "0f0e8055ea6bea8ef615ea1dd31830c4b0e2c908b720d1babbbd882560ab5372"
+      "sha256": "c8b348f36a43dd78aee24e9e068fe84bdda5037c1292d016f90e1aaab3b64d52"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1481,7 +1481,7 @@
     },
     {
       "file": "specs/PROGRAM-CONTRACTS.md",
-      "sha256": "599587f126b3000d3f0afb678ab4baeaa958c8cb8d4a332bfeb03b1bc9ee4c5c"
+      "sha256": "15a40fd791b9a5c937ebcf6ab1e21cc0dc92d83b31877a6cde5307459e473840"
     },
     {
       "file": "specs/README.md",

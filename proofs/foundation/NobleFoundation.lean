@@ -7,6 +7,7 @@ import NobleFoundation.Branch
 import NobleFoundation.Binary32Expectations
 import NobleFoundation.Binary32Mutations
 import NobleFoundation.Binary32
+import NobleFoundation.ArithmeticModels
 import NobleFoundation.Binary32Error
 import NobleFoundation.DecimalImport
 import NobleFoundation.LiveDispatch

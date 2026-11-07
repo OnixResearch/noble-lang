@@ -6052,6 +6052,24 @@
       "claim": "a context mismatch is its own refusal class, never unknown, unsupported or exhausted"
     },
     {
+      "name": "NobleFoundation.ArithmeticModels.reals_claim_holds",
+      "phase": 5,
+      "role": "negative-control",
+      "claim": "over the reals (x + 1) - x > 1/2 holds for every x"
+    },
+    {
+      "name": "NobleFoundation.ArithmeticModels.binary32_increment_rounds_back",
+      "phase": 5,
+      "role": "negative-control",
+      "claim": "in the selected binary32 model 2^24 + 1 rounds back to 2^24 (round to nearest, ties to even)"
+    },
+    {
+      "name": "NobleFoundation.ArithmeticModels.binary32_claim_fails",
+      "phase": 5,
+      "role": "negative-control",
+      "claim": "in the selected binary32 model (x + 1) - x is +0 at x = 2^24, so a reals proof never stands in for a binary32 claim (#91)"
+    },
+    {
       "name": "NobleFoundation.ReverseAD.Transpose.valuesUpTo_stable",
       "phase": 3,
       "role": "specification-quality",
