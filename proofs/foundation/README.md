@@ -1942,6 +1942,10 @@ verdicts change. Reading checked nodes as model nodes is the one trusted transla
 compares both graphs at the same output positions, and the generator asserts that each checked
 graph's outputs sit there. Twelve inventoried theorems (41 for the #56 slice). The fixtures
 bind no encoder, formula, solver or emitted Wasm, so the open items above stand.
+The clean-source receipt is
+[`verification/foundation/receipts/3ed4c990c/`](../../verification/foundation/receipts/3ed4c990c/foundation-check.json)
+(1195 theorems, `clean_source: true`, Lean 4.35.0). The twelve pair theorems report only `propext`
+and `Quot.sound`.
 
 ## Specification-quality obligations (issue #65)
 
