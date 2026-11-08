@@ -25,6 +25,7 @@ import NobleFoundation.Specialize
 import NobleFoundation.SymbolicMutations
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver
+import NobleFoundation.SymbolicPairCorpus
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
 import NobleFoundation.PackedLayout

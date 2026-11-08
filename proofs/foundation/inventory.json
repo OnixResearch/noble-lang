@@ -3946,6 +3946,78 @@
       "claim": "No declared faulty graph, output-order, encoder or verdict variant escapes the retained reference expectations."
     },
     {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair a shared input read three times, (x + x) + x against x · 3: equivalent, the model's firstIndex over the declared universe is none, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the sharedInput pair agrees on every candidate of its declared universe, and nothing beyond it"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair x - y against y - x: refuted, first where x ≠ y, the model's firstIndex over the declared universe is some 2, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the reported candidate really refutes the subtractionOrder pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapOnlyEquivalent_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair x · 2^63 · 2 against x · 0 · 1: equivalent only because arithmetic wraps at 2^64, the model's firstIndex over the declared universe is none, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapOnlyEquivalent_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the wrapOnlyEquivalent pair agrees on every candidate of its declared universe, and nothing beyond it"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair x · 2^63 against x · 0: agree on even inputs, refuted first at an odd one, the model's firstIndex over the declared universe is some 3, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the reported candidate really refutes the wrapBoundary pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.boolOutput_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair x + 1 = 0 against x + 0 = -1, a Bool output: equivalent, the model's firstIndex over the declared universe is none, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.boolOutput_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the boolOutput pair agrees on every candidate of its declared universe, and nothing beyond it"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair ordered outputs [x + y, x - y, x + y] against [y + x, y - x, y + x]: the repeated sum agrees, and the difference refutes first where x ≠ y, the model's firstIndex over the declared universe is some 2, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the reported candidate really refutes the repeatedOutputs pair"
+    },
+    {
       "name": "NobleFoundation.evalBatch_is_the_ordered_map",
       "phase": 3,
       "role": "independent-row-batch",

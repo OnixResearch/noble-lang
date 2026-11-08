@@ -29,6 +29,8 @@ mod corpus;
 mod emit;
 #[path = "schedule_cost_dir/measure.rs"]
 mod measure;
+#[path = "schedule_lean_dir/pairs.rs"]
+mod pairs;
 
 /// Two branches sharing both inputs, a constant and a Bool equality: four instruction-emitting
 /// nodes, so a within-layer reorder and an operand swap are both expressible.
