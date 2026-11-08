@@ -321,8 +321,8 @@ fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<()
 #[path = "source/lifecycle.rs"]
 mod lifecycle;
 
-#[path = "source/stack_difference.rs"]
-mod stack_difference;
+#[path = "source/positional-join.rs"]
+mod positional_join;
 
 #[path = "models/finite-bases.rs"]
 mod finite_bases;

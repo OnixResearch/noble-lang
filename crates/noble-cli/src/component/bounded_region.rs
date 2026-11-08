@@ -75,6 +75,23 @@ impl ExitClass {
     }
 }
 
+/// The v2 exit classes: the v1 classes, and `outside-model` for a returned result outside
+/// RegionProtocol-v1's result schema.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum ExitV2 {
+    Class(ExitClass),
+    OutsideModel,
+}
+
+impl ExitV2 {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Class(class) => class.label(),
+            Self::OutsideModel => "outside-model",
+        }
+    }
+}
+
 /// Which report a run emits. `V1` stays the `noble-bounded-region/v1` report, byte for byte; the
 /// opt-in `V2` adds what EPROTO-OBS-01 asks of a protocol-evidence report.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -96,10 +113,10 @@ enum Operation {
 impl Operation {
     const fn label(self, schema: Schema) -> &'static str {
         match (self, schema) {
-            (Self::Read, _) => "region.read",
-            (Self::Release, _) | (Self::Drop, Schema::V1) => "region.release",
+            (Self::Read, Schema::V1 | Schema::V2) => "region.read",
+            (Self::Release, Schema::V1 | Schema::V2) | (Self::Drop, Schema::V1) => "region.release",
             (Self::Drop, Schema::V2) => "region.drop",
-            (Self::HostRetire, _) => "host.retire",
+            (Self::HostRetire, Schema::V1 | Schema::V2) => "host.retire",
         }
     }
 }
@@ -656,7 +673,7 @@ impl Host {
     fn report_v2(
         &self,
         outcome: &str,
-        exit_class: &'static str,
+        exit: ExitV2,
         cleanup: &CleanupObservation,
         fuel_remaining: Option<u64>,
         bytes: Option<&[u8]>,
@@ -667,7 +684,7 @@ impl Host {
             ("schema", encoding::string("noble-bounded-region/v2")),
             ("stage", encoding::string("adapter")),
             ("outcome", encoding::string(outcome)),
-            ("exit_class", encoding::string(exit_class)),
+            ("exit_class", encoding::string(exit.label())),
             ("cancellation", encoding::string("unsupported")),
             (
                 "cleanup",
@@ -1038,9 +1055,9 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         Schema::V2 => store.data().report_v2(
             &outcome,
             if outside {
-                "outside-model"
+                ExitV2::OutsideModel
             } else {
-                exit_class.label()
+                ExitV2::Class(exit_class)
             },
             &cleanup,
             fuel_remaining,
@@ -1383,8 +1400,8 @@ mod ordered_trace_tests {
 #[cfg(test)]
 mod report_v2_tests {
     use super::{
-        outside_model, CleanupObservation, ExitClass, Host, HostEvent, Invocation, Operation,
-        RefusalClass, Release, ResponseKind, Schema,
+        outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent, Invocation,
+        Operation, RefusalClass, Release, ResponseKind, Schema,
     };
     use crate::workflow::encoding::Json;
 
@@ -1398,8 +1415,15 @@ mod report_v2_tests {
     }
 
     fn v2(host: &Host, cleanup: &CleanupObservation) -> String {
-        host.report_v2("read", "normal", cleanup, Some(0), None, None)
-            .encode()
+        host.report_v2(
+            "read",
+            ExitV2::Class(ExitClass::Normal),
+            cleanup,
+            Some(0),
+            None,
+            None,
+        )
+        .encode()
     }
 
     /// F1 and F9: a guest release, a destructor release and a host retirement are different

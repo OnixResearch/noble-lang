@@ -19,8 +19,11 @@ fn difference(source: &[u8]) -> Result<noble_contracts::StackDifference, String>
         .ok_or_else(|| String::from("the stack rejection has no positional difference"))
 }
 
-const fn span(start: u32, end: u32) -> Option<noble_contracts::Span> {
-    Some(noble_contracts::Span { start, end })
+const fn span(range: core::ops::Range<u32>) -> Option<noble_contracts::Span> {
+    Some(noble_contracts::Span {
+        start: range.start,
+        end: range.end,
+    })
 }
 
 #[test]
@@ -32,8 +35,8 @@ fn arity_off_by_one_differs_below_the_shared_top() -> Result<(), String> {
             shared_prefix: 1,
             expected: String::from("I64"),
             actual: String::from("[]"),
-            expected_word: span(2, 3),
-            actual_word: span(0, 1),
+            expected_word: span(2..3),
+            actual_word: span(0..1),
         }
     );
     assert_eq!(difference.position(), 2);
@@ -50,8 +53,8 @@ fn swapped_operands_differ_at_the_top() -> Result<(), String> {
         "if expects a quotation on top: {difference:?}"
     );
     assert_eq!(difference.actual, "Bool");
-    assert_eq!(difference.expected_word, span(17, 19));
-    assert_eq!(difference.actual_word, span(12, 16));
+    assert_eq!(difference.expected_word, span(17..19));
+    assert_eq!(difference.actual_word, span(12..16));
     Ok(())
 }
 
@@ -65,8 +68,8 @@ fn quotation_in_place_of_a_value_differs_below_the_shared_top() -> Result<(), St
         difference.actual.starts_with("Program<"),
         "the quotation sits where + expects a value: {difference:?}"
     );
-    assert_eq!(difference.expected_word, span(8, 9));
-    assert_eq!(difference.actual_word, span(6, 7));
+    assert_eq!(difference.expected_word, span(8..9));
+    assert_eq!(difference.actual_word, span(6..7));
     Ok(())
 }
 
@@ -76,7 +79,7 @@ fn a_mismatch_at_the_start_of_a_body_has_no_producing_word() -> Result<(), Strin
     assert_eq!(difference.shared_prefix, 0);
     assert_eq!(difference.expected, "I64");
     assert_eq!(difference.actual, "[]");
-    assert_eq!(difference.expected_word, span(0, 1));
+    assert_eq!(difference.expected_word, span(0..1));
     assert_eq!(difference.actual_word, None);
     Ok(())
 }

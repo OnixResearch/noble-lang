@@ -125952,318 +125952,6 @@
       "refinement": "open"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:11892:11899",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12027:12034",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15042:15045",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:20941:20948",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21480:21487",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:23585:23592",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24124:24131",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24800:24807",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25850:25866",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:27839:27870",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:29842:29873",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32392:32408",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34226:34232",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:35986:35993",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36842:36866",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37457:37464",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38468:38480",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:39995:41825",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:41843:42312",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42330:43158",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43176:43586",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43604:44369",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44387:44992",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:45010:46128",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:46146:46992",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47326:47333",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47877:47884",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48156:49125",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49143:49964",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49982:50392",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:50670:52454",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:52472:52868",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:53819:55340",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:55627:56597",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:56809:58884",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59082:59746",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59168:59214",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9396:9403",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9844:9851",
-      "refinement": "open"
-    },
-    {
       "category": "generated",
       "disposition": "generated",
       "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
@@ -127013,6 +126701,430 @@
       "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
       "package": "noble-cli",
       "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:10339:10346",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12387:12394",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12522:12529",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15537:15540",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21436:21443",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21975:21982",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24070:24077",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24609:24616",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25285:25292",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:26335:26351",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:28324:28355",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30327:30358",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32877:32893",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34711:34717",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36471:36478",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37327:37351",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37942:37949",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38953:38965",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:40492:42322",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42340:42809",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42827:43655",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43673:44083",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44101:44866",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44884:45489",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:45507:46625",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:46643:47489",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47823:47830",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48374:48381",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48653:49622",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49640:50461",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:50479:50889",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:51167:52951",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:52969:53365",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:54427:55948",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:56235:57205",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:57417:59492",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59690:60354",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59776:59822",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9891:9898",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::ExitV2 as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: declaration-only compiler kind (enum/implementation); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ExitV2",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ExitV2::label",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#13}",
       "refinement": "not-applicable"
     }
   ],
@@ -131131,11 +131243,11 @@
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:1700:2288",
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:2298:3259",
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:968:1690",
-    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1020:1476",
-    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1486:1989",
-    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1999:2524",
-    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:2534:2901",
-    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:819:821",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/positional-join.rs:1073:1529",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/positional-join.rs:1539:2042",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/positional-join.rs:2052:2577",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/positional-join.rs:2587:2954",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/positional-join.rs:819:821",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10032:10039",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10161:10168",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10553:10560",
@@ -133948,6 +134060,14 @@
     "source::main",
     "source::main::test",
     "source::named_uses_are_fresh_but_duplicated_programs_are_monomorphic",
+    "source::positional_join",
+    "source::positional_join::a_mismatch_at_the_start_of_a_body_has_no_producing_word",
+    "source::positional_join::arity_off_by_one_differs_below_the_shared_top",
+    "source::positional_join::difference",
+    "source::positional_join::quotation_in_place_of_a_value_differs_below_the_shared_top",
+    "source::positional_join::span",
+    "source::positional_join::swapped_operands_differ_at_the_top",
+    "source::positional_join::test",
     "source::prepare",
     "source::rebinding_preserves_saved_dependency_meaning",
     "source::semantic_merge_model",
@@ -134004,14 +134124,6 @@
     "source::semantic_merge_model::tests::{use#7}",
     "source::semantic_merge_model::tests::{use#8}",
     "source::semantic_merge_model::tests::{use#9}",
-    "source::stack_difference",
-    "source::stack_difference::a_mismatch_at_the_start_of_a_body_has_no_producing_word",
-    "source::stack_difference::arity_off_by_one_differs_below_the_shared_top",
-    "source::stack_difference::difference",
-    "source::stack_difference::quotation_in_place_of_a_value_differs_below_the_shared_top",
-    "source::stack_difference::span",
-    "source::stack_difference::swapped_operands_differ_at_the_top",
-    "source::stack_difference::test",
     "source::stale_and_cross_namespace_declarations_cannot_commit",
     "source::std",
     "source::test",

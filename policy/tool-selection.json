@@ -176,7 +176,7 @@
     "crates/noble-contracts/tests/declared/origin.rs": "cddf070687d9ef8430ce63049faa0ea70f99a0b5e78ed9bd94b2a6b67eb2c74e",
     "crates/noble-contracts/tests/named_v2.rs": "cbdfdbb01860e8e6aff2e0a5aa821d952b9a64b4476adade5582317bab2334aa",
     "crates/noble-contracts/tests/publication.rs": "da184b6785f8606dd7821f4249e741d30242c2eb026d86b21695db88fabccc19",
-    "crates/noble-contracts/tests/source.rs": "f01684a5a4b2b9069f50d3a69f3664990a95ce75d7cc93443cf7ea456ac9c413",
+    "crates/noble-contracts/tests/source.rs": "84cbc0a9d7def8ce14ac1cb9de545217ed538f07328f35305cb94c4eeed78d91",
     "crates/noble-contracts/tests/source_proof.rs": "8d097211ddc8f051686a601c316bd4fd5eed7c42d0dac69319045e4be774382c",
     "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
     "crates/noble-kernel/src/acceptance/nodes/visibility.rs": "12c8013f94a6e748a3e3e5051f1bc3cf938d8480419624a97ad174c0e9c7069c",
