@@ -180,7 +180,7 @@ Status words:
 | Rounding error of whole operation sequences (issue #44) | `exactValue_signed`, `roundScaled_relative_error`, `add_relative_error`, `mul_relative_error`, `step_bound`, `fold_error`, `cancellation_needs_the_term_scale` | exact `Binary32Sequence` model only; each rounding's carried exponent in the normal range is a premise, and no Rust/host correspondence is claimed | model **proved**: one model addition or multiplication is within `2^-24` of its exact result relatively, and the ordered affine fold of `n` terms within `((1 + 2^-24)^(2n) - 1)` times the bias and term magnitudes. Implementation correspondence **open** |
 | Sequence error with subnormal intermediates (issue #44) | `roundPositive_mixed_error`, `add_mixed_error`, `mul_mixed_error`, `step_bound_mixed`, `fold_finite_error`, `subnormal_needs_the_absolute_term` | exact `Binary32SequenceFinite` model only; no overflow is the only premise, and no Rust/host correspondence is claimed | model **proved**: every finite rounding is within `2^-24 · \|x\| + 2^-150`, and the ordered affine fold adds `3n(1 + 2^-24)^n · 2^-150` to the relative bound. Implementation correspondence **open** |
 | `RegionProtocol-v1` normal-return postconditions, prefix safety and composition (issue #9) | `subject_normal_return`, `subject_rejects_exactly_out_of_bounds`, `exactly_one_release_commit`, `run_is_accepted`, `stop_discards_the_rest`, `seq`, `counters_do_not_commute`, `no_set_union_rule` | the `RegionProtocol` model only: its host is an explicit oracle under A1–A6, and no Wasmtime, Canonical ABI, host-Rust or component correspondence is claimed | model **proved** (T1–T3); T4–T6 and every runtime case **open** |
-| Roundoff certificate checker for the add/multiply fragment (issue #44) | `check_sound`, `check_output_bound`, `noOverflow_of_lt`, `add_finite`, `mul_mem_bounds`, `subnormal_needs_eta` | exact `Binary32Checker` model only; a model graph of inputs, constants, `add` and `mul`, no encoded `noble-ngraph` graph, analyzer or Rust/host correspondence | model **proved**: an accepted certificate gives every node a finite machine value within its proposed error bound of the real value, for every input meeting the declared domains. Encoded graphs and analyzer comparison **open** |
+| Roundoff certificate checker for the add/multiply fragment (issue #44) | `check_sound`, `check_output_bound`, `noOverflow_of_lt`, `add_finite`, `mul_mem_bounds`, `subnormal_needs_eta`, and `Encoded.cancellation_certified`, `Encoded.square_near_overflow` with their `*_sound` corollaries | exact `Binary32Checker` model, plus two graphs `noble-ngraph` parses and checks from `ngraph-f32/0` encodings; no identity binding, analyzer or Rust/host correspondence | model **proved**: an accepted certificate gives every node a finite machine value within its proposed error bound of the real value, for every input meeting the declared domains. The cancellation and near-overflow bounds are certified on the two encoded graphs. Identity binding and analyzer comparison **open** |
 | Certificate binding to a declared context (issue #44, NGRAPH-ERR-04) | `checkBound_only_certifies_matching`, `checkBound_sound`, `checkBound_agrees_when_equal`, `matching_context_certifies`, `changed_snapshot_is_not_applicable`, `changed_revision_is_not_applicable`, `changed_domain_is_not_applicable`, `reordered_execution_is_not_applicable`, `fma_contraction_is_not_applicable`, `stale_model_is_not_applicable`, `mismatch_is_not_an_unknown_outcome` | the `Binary32Binding` model: six *identities* (snapshot, revision, domain digest, executed-order digest, contraction flag, model revision) compared for equality. How each identity is computed, and whether it names the graph it claims to, is outside the model and not claimed: a digest computed wrongly still compares equal to itself | model **proved**: acceptance implies the declared context equals the executing one and the unbounded checker accepts; a mismatch is its own refusal class (`notApplicable`), never `unknown`; each of the six context changes is refused by the kernel while the matching context certifies the same certificate. Producer-side digest derivation and encoded graphs **open** |
 | Restricted SGD reference update and its admission rule (issue #58) | `update_preserves_shape`, `update_lane`, `checkStep_accepted`, `nonfinite_input_is_never_accepted`, `nonfinite_parameter_is_refused_at_its_lane`, `fused_update_is_detected` | the published `ngraph-opt/1` reference over the #38 model only; no candidate checker, Rust or training correspondence | model **proved**; candidate checker, snapshots, rollback and evaluation **open** |
 | First Futamura projection for a one-hot two-instruction bytecode family (issue #34) | `interpreter_agrees`, `first_projection`, `annihilate_sound`, `residual_sound`, `unselected_branches_are_dead`, `remaining_dispatch_overhead` | a deliberately restricted source family over the #32 `PackedSchedule` specializer; no general interpreter, Rust or runtime correspondence | model **proved**; identity forwarding, general source languages and measurements **open** |
@@ -823,8 +823,17 @@ theorem itself; subnormals are covered by the mixed rule and never flushed.
   that is not an earlier node and an output naming no node (all `unsupported`), and an oversized
   rational or graph (`exhausted`).
 
-No encoded `noble-ngraph` graph, snapshot or revision is bound, and no analyzer, Rust, Wasm or host
-correspondence is claimed.
+**On actual encoded graphs.** `NobleFoundation/Binary32CheckerEncoded.lean` is generated by
+`crates/noble-ngraph/tests/soft_float_dir/encoded.rs` from two `ngraph-f32/0` encodings, `x · x +
+(-1)` and `x · x`, which `noble-ngraph` parses and checks. Their checked node lists are written in
+the fragment, and the kernel certifies the cancellation bound (`Encoded.cancellation_certified`) and
+the near-overflow pair (`Encoded.square_near_overflow`) on them. `check_sound` gives each its
+enclosure statement (`Encoded.cancellation_sound`, `Encoded.square_sound`).
+`the_lean_file_is_the_real_encoding` fails when the parsed and checked graphs change. Reading the
+checked nodes as fragment nodes is the one trusted translation.
+
+No snapshot or revision identity of these graphs is bound to a certificate context, and no
+analyzer, Rust, Wasm or host correspondence is claimed.
 
 The corpus lane [`verification/numerical-certificate/`](../../verification/numerical-certificate/README.md)
 generates 24 graphs and has an untrusted analyzer propose their certificates.
@@ -938,7 +947,8 @@ Open, and deliberately not closed by this model:
   intermediates, whenever no rounding overflows. A sequence with an overflowing
   intermediate has no sequence bound. `Binary32Checker.lean` certifies add/multiply
   graphs, but the affine fold and the other graph operations are outside its
-  fragment, and no encoded graph is bound to it;
+  fragment. Two encoded add/multiply graphs are certified against it
+  (`Binary32CheckerEncoded.lean`), and no graph's identity is bound to a certificate;
 - retained-expectation shrinking is exercised only for the flush-to-zero
   multiplication candidate
   (`retained_expectation_discrepancies_shrink_and_preserve_their_classes` in

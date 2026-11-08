@@ -6406,6 +6406,30 @@
       "claim": "a context mismatch is its own refusal class, never unknown, unsupported or exhausted"
     },
     {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_certified",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "the cancellation certificate is accepted on the graph noble-ngraph parses and checks from the ngraph-f32/0 encoding of x * x + (-1)"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_sound",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "on that encoded graph every applicable input's machine and real values are enclosed by the certified bounds"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.square_near_overflow",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "on the graph parsed and checked from the ngraph-f32/0 encoding of x * x, squaring is certified over [1, 2^63] and refused over [1, 2^64]"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.square_sound",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "on that encoded graph every applicable input's machine and real values are enclosed by the [1, 2^63] bounds"
+    },
+    {
       "name": "NobleFoundation.ArithmeticModels.reals_claim_holds",
       "phase": 5,
       "role": "negative-control",

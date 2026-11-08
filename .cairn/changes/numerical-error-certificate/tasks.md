@@ -46,7 +46,16 @@
   which is attained and holds only absolutely, and every finite positive result is
   within half the spacing of its binade. The analyzer/checker bridge and
   implementation correspondence remain open.
-- [ ] [serial] Demonstrate a nontrivial bound on an actual encoded graph, including a cancellation case and a near-overflow case. r[NGRAPH-ERR-01]
+- [x] [serial] Demonstrate a nontrivial bound on an actual encoded graph, including a cancellation case and a near-overflow case. r[NGRAPH-ERR-01]
+  Ticked 2026-11-07: `crates/noble-ngraph/tests/soft_float_dir/encoded.rs` parses and checks two
+  `ngraph-f32/0` encodings, `x · x + (-1)` and `x · x`, with `noble-ngraph`. It writes their checked
+  node lists into `NobleFoundation/Binary32CheckerEncoded.lean`. There the kernel certifies the
+  cancellation bound over `[1, 2]` (`Encoded.cancellation_certified`) and the near-overflow pair,
+  certified over `[1, 2^63]` and refused over `[1, 2^64]` (`Encoded.square_near_overflow`).
+  `check_sound` gives the enclosure statements (`Encoded.cancellation_sound`,
+  `Encoded.square_sound`). `the_lean_file_is_the_real_encoding` fails when the parsed graphs change.
+  Reading checked nodes as fragment nodes is the one trusted translation. Binding these graphs'
+  identities to a certificate context stays with the receipt task below.
   Progress (2026-10-30): at model level only, `Binary32Checker.lean` certifies `x · x + (-1)` over
   `x ∈ [1, 2]`, which cancels towards zero near `x = 1` (`cancellation_certified`, with
   `cancellation_applies` showing its premises are satisfiable). It certifies squaring over
