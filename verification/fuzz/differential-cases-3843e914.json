@@ -1,0 +1,255 @@
+{
+  "schema": "noble-fuzz-differential-cases/v1",
+  "corpus": {
+    "units": 1770,
+    "names_sha256": "2f65f810402781c30ddae3a74b509b5babc52f48c3c426505fedefd42476b6ea"
+  },
+  "counts": {
+    "files": 1770,
+    "short": 1,
+    "module_or_calculator_profile": 1332,
+    "multi_unit": 125,
+    "non_utf8": 5,
+    "empty": 10,
+    "outside_fragment": 275,
+    "reference_refusal": 10,
+    "duplicate": 1,
+    "imported": 11
+  },
+  "cases": [
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [
+        {
+          "push": "41"
+        }
+      ],
+      "program": {
+        "arith": []
+      },
+      "origin": {
+        "unit": "4064a1cba9d18c0f0ce1259e57025603c0d47658",
+        "sha256": "8fb78da4f510ee0e86731da4cf352a7f85dfac25b26019974520528a22d24fd7",
+        "profile": 1,
+        "budget": "tiny",
+        "text": "41 [ ] run\n"
+      }
+    },
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [
+        {
+          "push": "7"
+        }
+      ],
+      "program": {
+        "compose": [
+          {
+            "arith": [
+              {
+                "push": "0"
+              }
+            ]
+          },
+          {
+            "arith": [
+              {
+                "push": "0"
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "unit": "4881df6e45526bb8c4ce36c454122f1a14400281",
+        "sha256": "2cca564b239dd7492e03721045211d105736c152e6eae964a2158c19a86331bc",
+        "profile": 1,
+        "budget": "tiny",
+        "text": "7 [ 0 ] [0] compose run\n"
+      }
+    },
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [
+        {
+          "push": "41"
+        }
+      ],
+      "program": {
+        "arith": [
+          {
+            "push": "1"
+          },
+          "add"
+        ]
+      },
+      "origin": {
+        "unit": "4884468c6f296975daef65ffa3972b97637dc2b4",
+        "sha256": "bb659e4686fbcc9da545700a65083699e7ba54a63cb6e5fc6bba797be87960b0",
+        "profile": 1,
+        "budget": "default",
+        "text": "41 [ 1 + ] run\n"
+      }
+    },
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [
+        {
+          "push": "4"
+        }
+      ],
+      "program": {
+        "arith": [
+          {
+            "push": "1"
+          },
+          "add"
+        ]
+      },
+      "origin": {
+        "unit": "61c4dfc7d89b12dda59f7cc63d69ed0b027d9edc",
+        "sha256": "82162f54c5f1479ca1b275bd4803e740be11e5e12b2a063a4c028694a9a498c6",
+        "profile": 0,
+        "budget": "tiny",
+        "text": "4[ 1 + ] run\n"
+      }
+    },
+    {
+      "kind": "straight",
+      "prefix": [
+        [
+          "Bool",
+          "true"
+        ]
+      ],
+      "ops": [],
+      "origin": {
+        "unit": "6a149f42ac0fd2b239a2034b7d342bec6bde078b",
+        "sha256": "f77ac0b78487cb771786caa5ed26a9d44b01aa41da5ca24c04b31a00452e311b",
+        "profile": 0,
+        "budget": "tiny",
+        "text": "true"
+      }
+    },
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [],
+      "program": {
+        "arith": [
+          {
+            "push": "1"
+          },
+          {
+            "push": "1"
+          },
+          "add"
+        ]
+      },
+      "origin": {
+        "unit": "6d47aa72961748a3d16e177aeefaafe443a4285d",
+        "sha256": "575f0c691d0c9d619c1f7b3818e0747461017c864b7cbab38bfba4831154af70",
+        "profile": 0,
+        "budget": "tiny",
+        "text": "[1 1 + ] run\n"
+      }
+    },
+    {
+      "kind": "program",
+      "prefix": [],
+      "ins": [],
+      "program": {
+        "arith": [
+          {
+            "push": "0"
+          }
+        ]
+      },
+      "origin": {
+        "unit": "7ba6d241887c3e609efbe7ab6379c8f91d974be6",
+        "sha256": "7708f8309905fc94a4d1cf26ba1690ee2e6d345369bac451ecf75bea5f6ea43a",
+        "profile": 0,
+        "budget": "tiny",
+        "text": "[0] run\n"
+      }
+    },
+    {
+      "kind": "straight",
+      "prefix": [],
+      "ops": [
+        {
+          "push": "1"
+        },
+        {
+          "push": "2"
+        },
+        {
+          "push": "0"
+        }
+      ],
+      "origin": {
+        "unit": "92e0eb0ca2114c2a65932e881f8959609b31ba59",
+        "sha256": "96765cc17d85e7240929de8b90831fbffb625d18b574f645c1c751e3e64a5eaa",
+        "profile": 1,
+        "budget": "tiny",
+        "text": "1 2 0\n"
+      }
+    },
+    {
+      "kind": "straight",
+      "prefix": [],
+      "ops": [
+        {
+          "push": "1"
+        },
+        {
+          "push": "2"
+        },
+        "add"
+      ],
+      "origin": {
+        "unit": "95d134c1a13eb2670f78e796608548bb6736b19b",
+        "sha256": "ad16b51804410c1ae628ee2a342d27a0db845abc373f4295e517acd5eee86155",
+        "profile": 0,
+        "budget": "default",
+        "text": "1 2 +"
+      }
+    },
+    {
+      "kind": "straight",
+      "prefix": [],
+      "ops": [
+        {
+          "push": "4"
+        }
+      ],
+      "origin": {
+        "unit": "d5d9c1a51d0cefabe405eac939e3ae67574bed44",
+        "sha256": "48bbadb4a17ba45c8c6241def075f2c5739dfe22e31a66467c7ef8e9365a8478",
+        "profile": 0,
+        "budget": "tiny",
+        "text": "4"
+      }
+    },
+    {
+      "kind": "straight",
+      "prefix": [],
+      "ops": [
+        {
+          "push": "92233720368542891"
+        }
+      ],
+      "origin": {
+        "unit": "ebdaa2042260c0620adad6eb45ef49311472cad1",
+        "sha256": "35a39f8936bbefc7a96558a206a30d427bbf193b2922f04e94ae5ea3f4a3fb21",
+        "profile": 0,
+        "budget": "default",
+        "text": "92233720368542891"
+      }
+    }
+  ]
+}

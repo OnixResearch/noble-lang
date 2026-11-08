@@ -1,0 +1,7719 @@
+{
+  "schema": "noble-foundation-differential/v1",
+  "profile": "Core-Bootstrap / managed-linear-memory",
+  "fragment": "I64 literals, + - *, quote, literal blocks, compose, run, nested quote-run-run, Bool/I64 prefix",
+  "seed": "15",
+  "count": 80,
+  "opt_modes": [
+    "off",
+    "on"
+  ],
+  "universal_backend_proof": false,
+  "source_commit": "3843e9146b0c97dc597d1b1848dcc3d371a80b5d",
+  "source_tree": "ccd0364ad7affa5d26f3c4958cf0ce65475dc5c7",
+  "clean_source": true,
+  "theorems": [
+    {
+      "name": "NobleFoundation.PExpr.exec_inputs_run",
+      "statement": "NobleFoundation.PExpr.exec_inputs_run : ∀ (P : NobleFoundation.PExpr) (ins : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ P.flat) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ (P.code ++ [NobleContracts.Op.word 10])) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll_from_empty",
+      "statement": "@NobleFoundation.exec_lowerAll_from_empty : ∀ {ops : List NobleFoundation.AOp} {zs' : List ℤ}, NobleFoundation.refRun ops [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_inputs_nested",
+      "statement": "NobleFoundation.exec_inputs_nested : ∀ (ins ops : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ ops) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ [NobleContracts.Op.block (NobleFoundation.lowerAll ops), NobleContracts.Op.word 8, NobleContracts.Op.word 10, NobleContracts.Op.word 10]) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll",
+      "statement": "@NobleFoundation.exec_lowerAll : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_run_ref",
+      "statement": "NobleFoundation.PExpr.exec_run_ref : ∀ (P : NobleFoundation.PExpr) {zs zs' : List ℤ}, NobleFoundation.refRun P.flat zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 10]) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.accumulate_eq_acceptLiteral",
+      "statement": "NobleFoundation.accumulate_eq_acceptLiteral : ∀ (negative : Bool) (ds : List (Fin 10)), NobleFoundation.accumulate negative ds = NobleFoundation.acceptLiteral negative ds",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.refRun_range",
+      "statement": "@NobleFoundation.refRun_range : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → (∀ z ∈ zs, NobleFoundation.I64Range z) → ∀ z ∈ zs', NobleFoundation.I64Range z",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_knum01",
+      "statement": "NobleFoundation.wrap_eq_knum01 : ∀ (z : ℤ), MathlibI64.wrap z = (z + 2 ^ 63) % 2 ^ 64 - 2 ^ 63",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "foundation_receipt_sha256": "42c82f6a43a9d9718c086f9214f31001926a114e906e3a2e33b7e9722f039a91",
+  "toolchain": {
+    "cli_sha256": "d7f7cd5f64dfa2ee8c7efab18537c49e831b54b0a5a8b0e1f038b9839518f1e9",
+    "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+    "mathlib_commit": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "tools": {
+      "node": {
+        "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+      },
+      "wasm_tools": {
+        "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+      },
+      "wasm_opt": {
+        "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+        "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2"
+      }
+    }
+  },
+  "expected_lean": {
+    "path": "Expected.lean",
+    "sha256": "5167acdf3e3ea2a8ed4c4120511393f8eab5b26ccce0e5c5ad7826ea61f35b52",
+    "kernel_checked_cases": 94
+  },
+  "cases": [
+    {
+      "index": 0,
+      "kind": "nested",
+      "mode": "off",
+      "source": "3983018303918726471 2 [ 1 ] quote run run",
+      "source_sha256": "b4a1172cfd072e8a5444496cc4ca1f4183629b64069d343ca658472aef25c0d4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3983018303918726471"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3983018303918726471"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "1805c03b8f739eeb429d8b8bcc13dfc8b12794301963d8a2d840271135743114",
+      "lean_theorem": "case_0_ref",
+      "matched": true
+    },
+    {
+      "index": 0,
+      "kind": "nested",
+      "mode": "on",
+      "source": "3983018303918726471 2 [ 1 ] quote run run",
+      "source_sha256": "b4a1172cfd072e8a5444496cc4ca1f4183629b64069d343ca658472aef25c0d4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3983018303918726471"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3983018303918726471"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "cc9d148e450edd3eb056a62d0f46bc9942c55b4192ab97d249a20160ad31923c",
+      "lean_theorem": "case_0_ref",
+      "matched": true
+    },
+    {
+      "index": 1,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-7839798930683989258 -5612569452955848779 [ -4611686018427387904 7698608312410612001 1 - - ] quote run run",
+      "source_sha256": "239105fb8a9cb156a71805d5c4ee18626e2ce8925f75f55e91cf6485b7cd5090",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-7839798930683989258"
+          ],
+          [
+            "I64",
+            "-5612569452955848779"
+          ],
+          [
+            "I64",
+            "6136449742871551712"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-7839798930683989258"
+          ],
+          [
+            "I64",
+            "-5612569452955848779"
+          ],
+          [
+            "I64",
+            "6136449742871551712"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3d2c97168c9768bc90e914ce236fa835f958c1bffe4b139d28d6505f3a7d2040",
+      "lean_theorem": "case_1_ref",
+      "matched": true
+    },
+    {
+      "index": 1,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-7839798930683989258 -5612569452955848779 [ -4611686018427387904 7698608312410612001 1 - - ] quote run run",
+      "source_sha256": "239105fb8a9cb156a71805d5c4ee18626e2ce8925f75f55e91cf6485b7cd5090",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-7839798930683989258"
+          ],
+          [
+            "I64",
+            "-5612569452955848779"
+          ],
+          [
+            "I64",
+            "6136449742871551712"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-7839798930683989258"
+          ],
+          [
+            "I64",
+            "-5612569452955848779"
+          ],
+          [
+            "I64",
+            "6136449742871551712"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b23b83cfa0a783f48dc1de900dacd8d6dad5de1177551068aecf7873e704846f",
+      "lean_theorem": "case_1_ref",
+      "matched": true
+    },
+    {
+      "index": 2,
+      "kind": "program",
+      "mode": "off",
+      "source": "-5933668222403073492 2621641400166809910 2147483648 quote run",
+      "source_sha256": "59cd327ccd5de83489993d4105e7fb39c9d6546a782ec4a6371ce5ed0709dc7e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5933668222403073492"
+          ],
+          [
+            "I64",
+            "2621641400166809910"
+          ],
+          [
+            "I64",
+            "2147483648"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5933668222403073492"
+          ],
+          [
+            "I64",
+            "2621641400166809910"
+          ],
+          [
+            "I64",
+            "2147483648"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9cf3ac1c086e1cbc80792b9a1f91e2b54a237a11b0902d63826fc7a67f413352",
+      "lean_theorem": "case_2_ref",
+      "matched": true
+    },
+    {
+      "index": 2,
+      "kind": "program",
+      "mode": "on",
+      "source": "-5933668222403073492 2621641400166809910 2147483648 quote run",
+      "source_sha256": "59cd327ccd5de83489993d4105e7fb39c9d6546a782ec4a6371ce5ed0709dc7e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5933668222403073492"
+          ],
+          [
+            "I64",
+            "2621641400166809910"
+          ],
+          [
+            "I64",
+            "2147483648"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5933668222403073492"
+          ],
+          [
+            "I64",
+            "2621641400166809910"
+          ],
+          [
+            "I64",
+            "2147483648"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0896f42d4549848569387c9369925e155193116f04980181b31b1567323c3707",
+      "lean_theorem": "case_2_ref",
+      "matched": true
+    },
+    {
+      "index": 3,
+      "kind": "program",
+      "mode": "off",
+      "source": "2 3 -1464233955315737856 quote run",
+      "source_sha256": "f1020081e8e98f2f2c251f79f5c0f6378a0629e2e3df0cff78540a33d4ca6714",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1464233955315737856"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1464233955315737856"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "def1865900380db28b832df064b8aa9cca2bf7aac0bddad811109f5cdbcb96f6",
+      "lean_theorem": "case_3_ref",
+      "matched": true
+    },
+    {
+      "index": 3,
+      "kind": "program",
+      "mode": "on",
+      "source": "2 3 -1464233955315737856 quote run",
+      "source_sha256": "f1020081e8e98f2f2c251f79f5c0f6378a0629e2e3df0cff78540a33d4ca6714",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1464233955315737856"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1464233955315737856"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e8410f2a1038f777445f43fcc6d134efd3fd4bd8495aaef60bea4389c0a6d5f3",
+      "lean_theorem": "case_3_ref",
+      "matched": true
+    },
+    {
+      "index": 4,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2147483648 -4611686018427387904 9223372036854775807 -661528059219725723 quote run",
+      "source_sha256": "fc11e6ec222f0e45d7ae22737d30f0f33f4c380212644262bb36df74385f8e00",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775807"
+          ],
+          [
+            "I64",
+            "-661528059219725723"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775807"
+          ],
+          [
+            "I64",
+            "-661528059219725723"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3f81f453f2049e17266f4c8ebe372e9ca5e169364021087215f2442a26f6c128",
+      "lean_theorem": "case_4_ref",
+      "matched": true
+    },
+    {
+      "index": 4,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2147483648 -4611686018427387904 9223372036854775807 -661528059219725723 quote run",
+      "source_sha256": "fc11e6ec222f0e45d7ae22737d30f0f33f4c380212644262bb36df74385f8e00",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775807"
+          ],
+          [
+            "I64",
+            "-661528059219725723"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775807"
+          ],
+          [
+            "I64",
+            "-661528059219725723"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ed1b1515655d3ccb5f686a3a95957a75e55eb733236f7dec33721a3c4155d56b",
+      "lean_theorem": "case_4_ref",
+      "matched": true
+    },
+    {
+      "index": 5,
+      "kind": "program",
+      "mode": "off",
+      "source": "-4611686018427387904 -1592057366560244949 [ 4181467377463739153 2 + * - ] run",
+      "source_sha256": "ce879febefd6a9543b0cbfe0fa007e0de8559d9e9fdcbb7505f2f38077d1de83",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1698430722522094287"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1698430722522094287"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "8aa6c07e1811eb6fed81746619b2fe578d1a3fc3cebaf4bebb3772f63c9e3cf7",
+      "lean_theorem": "case_5_ref",
+      "matched": true
+    },
+    {
+      "index": 5,
+      "kind": "program",
+      "mode": "on",
+      "source": "-4611686018427387904 -1592057366560244949 [ 4181467377463739153 2 + * - ] run",
+      "source_sha256": "ce879febefd6a9543b0cbfe0fa007e0de8559d9e9fdcbb7505f2f38077d1de83",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1698430722522094287"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1698430722522094287"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f55b500095bda05403a8d2343fbefa1c239036e944db96b0e13e5d5e50819cc4",
+      "lean_theorem": "case_5_ref",
+      "matched": true
+    },
+    {
+      "index": 6,
+      "kind": "program",
+      "mode": "off",
+      "source": "-1225094451109458443 quote run",
+      "source_sha256": "09a1495f1b9c268eb0ce2438cf81ae441c1db993da39f3ab6d68b9f6a2bfe615",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1225094451109458443"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1225094451109458443"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "38e8857d6ca6102e713fd0ad79d0affb274d22f5f4d90ffcf39c4295c0844785",
+      "lean_theorem": "case_6_ref",
+      "matched": true
+    },
+    {
+      "index": 6,
+      "kind": "program",
+      "mode": "on",
+      "source": "-1225094451109458443 quote run",
+      "source_sha256": "09a1495f1b9c268eb0ce2438cf81ae441c1db993da39f3ab6d68b9f6a2bfe615",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1225094451109458443"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1225094451109458443"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ca17494e7958ba504a3afd72247e9e10a5db657ccdeb0e2333cbd1cc494a4464",
+      "lean_theorem": "case_6_ref",
+      "matched": true
+    },
+    {
+      "index": 7,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2556634184171212278 9223372036854775806 -1 6167911582681462373 [ * ] run",
+      "source_sha256": "364044a7e48bf7cc8523f986e354304c7f11140e0b9a00e3f3ce062e6c73a015",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2556634184171212278"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-6167911582681462373"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2556634184171212278"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-6167911582681462373"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "5f9547f70647e95c509647f89dbb00ee6f44161bf6cc7d80004bff527b998836",
+      "lean_theorem": "case_7_ref",
+      "matched": true
+    },
+    {
+      "index": 7,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2556634184171212278 9223372036854775806 -1 6167911582681462373 [ * ] run",
+      "source_sha256": "364044a7e48bf7cc8523f986e354304c7f11140e0b9a00e3f3ce062e6c73a015",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2556634184171212278"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-6167911582681462373"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2556634184171212278"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-6167911582681462373"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "911451dac1bfd524c389efcae3d91354d92c01674c7c5a10cb316b92b9013f20",
+      "lean_theorem": "case_7_ref",
+      "matched": true
+    },
+    {
+      "index": 8,
+      "kind": "program",
+      "mode": "off",
+      "source": "-9112394692986770299 7273812009252645689 -7511403052013548223 -2299467107295762922 [ + 4611686018427387904 + ] run",
+      "source_sha256": "c7045941697bec299ddad3e26aa1602ea800905ccec3d94eacc427c596a097c5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9112394692986770299"
+          ],
+          [
+            "I64",
+            "7273812009252645689"
+          ],
+          [
+            "I64",
+            "-5199184140881923241"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9112394692986770299"
+          ],
+          [
+            "I64",
+            "7273812009252645689"
+          ],
+          [
+            "I64",
+            "-5199184140881923241"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "99c001e8b7438c62fd7aa6d90e3ff2b0c3999e4241be72a6acbdd194ae902c22",
+      "lean_theorem": "case_8_ref",
+      "matched": true
+    },
+    {
+      "index": 8,
+      "kind": "program",
+      "mode": "on",
+      "source": "-9112394692986770299 7273812009252645689 -7511403052013548223 -2299467107295762922 [ + 4611686018427387904 + ] run",
+      "source_sha256": "c7045941697bec299ddad3e26aa1602ea800905ccec3d94eacc427c596a097c5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9112394692986770299"
+          ],
+          [
+            "I64",
+            "7273812009252645689"
+          ],
+          [
+            "I64",
+            "-5199184140881923241"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9112394692986770299"
+          ],
+          [
+            "I64",
+            "7273812009252645689"
+          ],
+          [
+            "I64",
+            "-5199184140881923241"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ee83363a2ced8727a3e7ae0d5c178c9f03cbb05c7a7a5ba26aaa97b774693c18",
+      "lean_theorem": "case_8_ref",
+      "matched": true
+    },
+    {
+      "index": 9,
+      "kind": "nested",
+      "mode": "off",
+      "source": "true 2958481310697596669 [ -147155906030548130 -9223372036854775807 -2 3037000500 + + + ] quote run run",
+      "source_sha256": "33b3e1856dfcd4983d4294db7b866a51dff7c68539f0c988afc048ad7eaa6d58",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2958481310697596669"
+          ],
+          [
+            "I64",
+            "9076216133861228177"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2958481310697596669"
+          ],
+          [
+            "I64",
+            "9076216133861228177"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c101d09842ef72d5bb9b798a11d3e4a2f232f5f189d1ebb0b63a3e78b1cfa878",
+      "lean_theorem": "case_9_ref",
+      "matched": true
+    },
+    {
+      "index": 9,
+      "kind": "nested",
+      "mode": "on",
+      "source": "true 2958481310697596669 [ -147155906030548130 -9223372036854775807 -2 3037000500 + + + ] quote run run",
+      "source_sha256": "33b3e1856dfcd4983d4294db7b866a51dff7c68539f0c988afc048ad7eaa6d58",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2958481310697596669"
+          ],
+          [
+            "I64",
+            "9076216133861228177"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2958481310697596669"
+          ],
+          [
+            "I64",
+            "9076216133861228177"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c03fe4efca9c1b9d6baec1e0321d2c600591f88725f1a26697575fc7b2907798",
+      "lean_theorem": "case_9_ref",
+      "matched": true
+    },
+    {
+      "index": 10,
+      "kind": "straight",
+      "mode": "off",
+      "source": "5163882927946503765 4294967296 2147483648 -1663032477503263483 + -756829867680437596 +",
+      "source_sha256": "e57c3fe1e068f98d3010939890938aa6d7529b003e49cf328c388f04c0468789",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5163882927946503765"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2419862343036217431"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5163882927946503765"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2419862343036217431"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "8960588cebc581375fb7de8abd7a553099e8ed96ff6ecb016183feff929e1c0d",
+      "lean_theorem": "case_10_ref",
+      "matched": true
+    },
+    {
+      "index": 10,
+      "kind": "straight",
+      "mode": "on",
+      "source": "5163882927946503765 4294967296 2147483648 -1663032477503263483 + -756829867680437596 +",
+      "source_sha256": "e57c3fe1e068f98d3010939890938aa6d7529b003e49cf328c388f04c0468789",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5163882927946503765"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2419862343036217431"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5163882927946503765"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2419862343036217431"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9f2e85ce0a5279cda7201a25a199a3830e219c3905306220be1b2c9ce7126db2",
+      "lean_theorem": "case_10_ref",
+      "matched": true
+    },
+    {
+      "index": 11,
+      "kind": "nested",
+      "mode": "off",
+      "source": "[ -5950818314411341142 6963980989772733349 + ] quote run run",
+      "source_sha256": "b0912eb7bb3cd32becbbb52dae7a06ed61fed40e081ba01d239ecf82f67c3e78",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1013162675361392207"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1013162675361392207"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d236045a8a04c668c68eba491c072fb286cd329068923ad2adb97d2d0a635361",
+      "lean_theorem": "case_11_ref",
+      "matched": true
+    },
+    {
+      "index": 11,
+      "kind": "nested",
+      "mode": "on",
+      "source": "[ -5950818314411341142 6963980989772733349 + ] quote run run",
+      "source_sha256": "b0912eb7bb3cd32becbbb52dae7a06ed61fed40e081ba01d239ecf82f67c3e78",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1013162675361392207"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1013162675361392207"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "65d3c38ba6574b8601c112816ccc35fcf503cc097dec6b0de57c0381a011375d",
+      "lean_theorem": "case_11_ref",
+      "matched": true
+    },
+    {
+      "index": 12,
+      "kind": "straight",
+      "mode": "off",
+      "source": "6574061359249104895 -2 -6979860622507011934 2254209833158489695 * -7743306717048607083 -1866607057220972921 * + *",
+      "source_sha256": "72b8b780897672acc756dc4bf3ea08f80791f6fb1d775f08730696eafd685682",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6574061359249104895"
+          ],
+          [
+            "I64",
+            "-6101329173705006434"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6574061359249104895"
+          ],
+          [
+            "I64",
+            "-6101329173705006434"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "79153553d970ad4081e6d8da631f040eff12e6e646210f427c545d77c9a2cb06",
+      "lean_theorem": "case_12_ref",
+      "matched": true
+    },
+    {
+      "index": 12,
+      "kind": "straight",
+      "mode": "on",
+      "source": "6574061359249104895 -2 -6979860622507011934 2254209833158489695 * -7743306717048607083 -1866607057220972921 * + *",
+      "source_sha256": "72b8b780897672acc756dc4bf3ea08f80791f6fb1d775f08730696eafd685682",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6574061359249104895"
+          ],
+          [
+            "I64",
+            "-6101329173705006434"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6574061359249104895"
+          ],
+          [
+            "I64",
+            "-6101329173705006434"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "8cb85e76639cdd7d1273ad1b3d7220905e553cc7b05fee4949e7b89f8fefc237",
+      "lean_theorem": "case_12_ref",
+      "matched": true
+    },
+    {
+      "index": 13,
+      "kind": "program",
+      "mode": "off",
+      "source": "1663049831199463608 -1 -7671914197926969886 quote 3 quote compose run",
+      "source_sha256": "d672c5d194f614e9d01add7716382cfef32e2af212173a32d8fe3e079e08438f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1663049831199463608"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "-7671914197926969886"
+          ],
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1663049831199463608"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "-7671914197926969886"
+          ],
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9bae71f9838fc6ddf755cfa74b2d3b88010c11cf2cfd6963f7a6f9b2f5dbf822",
+      "lean_theorem": "case_13_ref",
+      "matched": true
+    },
+    {
+      "index": 13,
+      "kind": "program",
+      "mode": "on",
+      "source": "1663049831199463608 -1 -7671914197926969886 quote 3 quote compose run",
+      "source_sha256": "d672c5d194f614e9d01add7716382cfef32e2af212173a32d8fe3e079e08438f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1663049831199463608"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "-7671914197926969886"
+          ],
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1663049831199463608"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "-7671914197926969886"
+          ],
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f443c15e5ed0be84aadcff03e2c32aa726545f179e91a0b647b0a8f8951d39fc",
+      "lean_theorem": "case_13_ref",
+      "matched": true
+    },
+    {
+      "index": 14,
+      "kind": "program",
+      "mode": "off",
+      "source": "9066683492771450187 -4611686018427387904 -5520121927080497300 3037000500 7265514971922288719 quote run",
+      "source_sha256": "d42f234511e874d29e291b06ef01af4abf922cb59a0dbe14e7feae3d60c884e9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9066683492771450187"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-5520121927080497300"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "7265514971922288719"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9066683492771450187"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-5520121927080497300"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "7265514971922288719"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6ee5b502ff2a08baab06b27592ef6aa6cbc1f7a6318a7cb3d2b4ee4feaf63303",
+      "lean_theorem": "case_14_ref",
+      "matched": true
+    },
+    {
+      "index": 14,
+      "kind": "program",
+      "mode": "on",
+      "source": "9066683492771450187 -4611686018427387904 -5520121927080497300 3037000500 7265514971922288719 quote run",
+      "source_sha256": "d42f234511e874d29e291b06ef01af4abf922cb59a0dbe14e7feae3d60c884e9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9066683492771450187"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-5520121927080497300"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "7265514971922288719"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9066683492771450187"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-5520121927080497300"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "7265514971922288719"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6f39118746a39c79048fe4d8be92e710033ac5a1039c8bab42da7eed9c03389b",
+      "lean_theorem": "case_14_ref",
+      "matched": true
+    },
+    {
+      "index": 15,
+      "kind": "straight",
+      "mode": "off",
+      "source": "2575150354686444675",
+      "source_sha256": "462c6f0feb53a52b279e35e1041a5dd29ec0e2b5d227e67ec7f167194207cb66",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2575150354686444675"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2575150354686444675"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "462ad37b761e91c5b6f1fc190dffc0bda9b6d9a9e374b82ee463bde8b7da14ff",
+      "lean_theorem": "case_15_ref",
+      "matched": true
+    },
+    {
+      "index": 15,
+      "kind": "straight",
+      "mode": "on",
+      "source": "2575150354686444675",
+      "source_sha256": "462c6f0feb53a52b279e35e1041a5dd29ec0e2b5d227e67ec7f167194207cb66",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2575150354686444675"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2575150354686444675"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "702faf4fac4a976e19a293d070b3545a0ea1bf45b2c86827d2fec5386dd32662",
+      "lean_theorem": "case_15_ref",
+      "matched": true
+    },
+    {
+      "index": 16,
+      "kind": "program",
+      "mode": "off",
+      "source": "-9223372036854775808 -4739184436031538858 [ 857791617803525226 * ] [ 9219886474715031378 5521495694245394290 - + ] compose run",
+      "source_sha256": "9f548b4903ecf07049bf5a9ae6a621ec90beafc73782bab73bbb76fec3c7ef38",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-7684173146592373380"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-7684173146592373380"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d9758252d29a946b3dff53b3687b0f00ddc8f582acdee414cf9de40ff3d4bcef",
+      "lean_theorem": "case_16_ref",
+      "matched": true
+    },
+    {
+      "index": 16,
+      "kind": "program",
+      "mode": "on",
+      "source": "-9223372036854775808 -4739184436031538858 [ 857791617803525226 * ] [ 9219886474715031378 5521495694245394290 - + ] compose run",
+      "source_sha256": "9f548b4903ecf07049bf5a9ae6a621ec90beafc73782bab73bbb76fec3c7ef38",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-7684173146592373380"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-7684173146592373380"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b779b21299fcae0b297cd0efbe702501244522352afb3feee4159adc9a44d184",
+      "lean_theorem": "case_16_ref",
+      "matched": true
+    },
+    {
+      "index": 17,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2147483648 quote [ 2995312876387931994 -9223372036854775807 - - ] -3 quote compose compose run",
+      "source_sha256": "0991ef7b7e2c28e4cc9436b512709822b2bf6938cc31fcb1b24d9d1e0f657402",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6228059158319360167"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6228059158319360167"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "aaeedf970299f981bc591f43d54cfe9eb9192db2a860c4a7dbc872c55e846cec",
+      "lean_theorem": "case_17_ref",
+      "matched": true
+    },
+    {
+      "index": 17,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2147483648 quote [ 2995312876387931994 -9223372036854775807 - - ] -3 quote compose compose run",
+      "source_sha256": "0991ef7b7e2c28e4cc9436b512709822b2bf6938cc31fcb1b24d9d1e0f657402",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6228059158319360167"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6228059158319360167"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "7d89f060313f004b5f3cf6be19948288e8e73fc8a47f3092cb22341502702d02",
+      "lean_theorem": "case_17_ref",
+      "matched": true
+    },
+    {
+      "index": 18,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-3 -9223372036854775807 4880315166099362919 [ - -2 4294967296 * - ] quote run run",
+      "source_sha256": "0205f3ee0eac624ad4e39759cd5b8887a7e1b8d6189c87b909065591f0fed9fc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3"
+          ],
+          [
+            "I64",
+            "4343056879345347482"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3"
+          ],
+          [
+            "I64",
+            "4343056879345347482"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3a29475da01adcbbf7c7534ff13b2b75b13613748f7e8c0aa9d89cc3380ae904",
+      "lean_theorem": "case_18_ref",
+      "matched": true
+    },
+    {
+      "index": 18,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-3 -9223372036854775807 4880315166099362919 [ - -2 4294967296 * - ] quote run run",
+      "source_sha256": "0205f3ee0eac624ad4e39759cd5b8887a7e1b8d6189c87b909065591f0fed9fc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3"
+          ],
+          [
+            "I64",
+            "4343056879345347482"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3"
+          ],
+          [
+            "I64",
+            "4343056879345347482"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6c0a4c7cf88d79e6bfa81b5055be2573b0545d4f96b1b4d9cecb0c9a64ed98cd",
+      "lean_theorem": "case_18_ref",
+      "matched": true
+    },
+    {
+      "index": 19,
+      "kind": "program",
+      "mode": "off",
+      "source": "true -7547566963025962486 -5743569672550146316 -2045575344418864733 quote run",
+      "source_sha256": "c1c32e1f9439803c582842c3225f9c759aa5d9b3e634e16684bba020a39ebd8e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-7547566963025962486"
+          ],
+          [
+            "I64",
+            "-5743569672550146316"
+          ],
+          [
+            "I64",
+            "-2045575344418864733"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-7547566963025962486"
+          ],
+          [
+            "I64",
+            "-5743569672550146316"
+          ],
+          [
+            "I64",
+            "-2045575344418864733"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c75365666786fa6bac4dcf2892a087e3157375c89d87a96d89ee8416aafe4a02",
+      "lean_theorem": "case_19_ref",
+      "matched": true
+    },
+    {
+      "index": 19,
+      "kind": "program",
+      "mode": "on",
+      "source": "true -7547566963025962486 -5743569672550146316 -2045575344418864733 quote run",
+      "source_sha256": "c1c32e1f9439803c582842c3225f9c759aa5d9b3e634e16684bba020a39ebd8e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-7547566963025962486"
+          ],
+          [
+            "I64",
+            "-5743569672550146316"
+          ],
+          [
+            "I64",
+            "-2045575344418864733"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-7547566963025962486"
+          ],
+          [
+            "I64",
+            "-5743569672550146316"
+          ],
+          [
+            "I64",
+            "-2045575344418864733"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3f5a62c5f3a0832f1d2bdbf63d4c0dbeeb3b5e51e3fa3631629ed8412a971662",
+      "lean_theorem": "case_19_ref",
+      "matched": true
+    },
+    {
+      "index": 20,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2658036448665453803 4294967296 7594455470862138082 [ -3 3105609627512548883 + * ] run",
+      "source_sha256": "1d767bf29d97054e0fc549ff42db1ee4c79c3106c027a384ad49c6a7618ebf13",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2658036448665453803"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "4522062399925275168"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2658036448665453803"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "4522062399925275168"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "91622d6dd936de25e9ac4b99cdad92026bc0f963be80c3e4d2b85f5b1f364f8a",
+      "lean_theorem": "case_20_ref",
+      "matched": true
+    },
+    {
+      "index": 20,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2658036448665453803 4294967296 7594455470862138082 [ -3 3105609627512548883 + * ] run",
+      "source_sha256": "1d767bf29d97054e0fc549ff42db1ee4c79c3106c027a384ad49c6a7618ebf13",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2658036448665453803"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "4522062399925275168"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2658036448665453803"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "4522062399925275168"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "7db5c01cec8a6cd4fbeb3c715148483b47e95a96d815489b0a9fc9fd5348448c",
+      "lean_theorem": "case_20_ref",
+      "matched": true
+    },
+    {
+      "index": 21,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2147483648 -9223372036854775807 0 quote run",
+      "source_sha256": "6086dcfbd3208bd03faf944ec014e440f38bb433c83ca0318ae7917aeffd0e50",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "7872efa42eb71877b0bc06c8551885c2cb1d6ef8413f856cd865c81afe97e794",
+      "lean_theorem": "case_21_ref",
+      "matched": true
+    },
+    {
+      "index": 21,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2147483648 -9223372036854775807 0 quote run",
+      "source_sha256": "6086dcfbd3208bd03faf944ec014e440f38bb433c83ca0318ae7917aeffd0e50",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "8012a306aa7d53f93c784e4ee9cac34b899f0c8529bbd0f47a6a40e34d676034",
+      "lean_theorem": "case_21_ref",
+      "matched": true
+    },
+    {
+      "index": 22,
+      "kind": "nested",
+      "mode": "off",
+      "source": "9223372036854775807 [ 3 - ] quote run run",
+      "source_sha256": "2aaf04c208aca64b85be1b1cd3dad4cab2b4c72803300f57d646790c51f2a961",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775804"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775804"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "5a1c2ea0f8ea50851871b3ac5b769f438b9ab73dabeba8e6d3a32635acce7f05",
+      "lean_theorem": "case_22_ref",
+      "matched": true
+    },
+    {
+      "index": 22,
+      "kind": "nested",
+      "mode": "on",
+      "source": "9223372036854775807 [ 3 - ] quote run run",
+      "source_sha256": "2aaf04c208aca64b85be1b1cd3dad4cab2b4c72803300f57d646790c51f2a961",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775804"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775804"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "788819bcd385814f4e7e5cc676a1f3723b7e583177c29f10b63c22a164a38ca5",
+      "lean_theorem": "case_22_ref",
+      "matched": true
+    },
+    {
+      "index": 23,
+      "kind": "program",
+      "mode": "off",
+      "source": "8760348431507767508 6539531904306703224 3037000499 4294967295 quote run",
+      "source_sha256": "049ee0863234ea8eb48a90077b07e0c895c9e6ee5ccb380f5817eb6a109a238a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8760348431507767508"
+          ],
+          [
+            "I64",
+            "6539531904306703224"
+          ],
+          [
+            "I64",
+            "3037000499"
+          ],
+          [
+            "I64",
+            "4294967295"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8760348431507767508"
+          ],
+          [
+            "I64",
+            "6539531904306703224"
+          ],
+          [
+            "I64",
+            "3037000499"
+          ],
+          [
+            "I64",
+            "4294967295"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "a46f1bfab0f67dd847b2c885dbd94cd4856faa75e12a7a4097a5c888a40f1fca",
+      "lean_theorem": "case_23_ref",
+      "matched": true
+    },
+    {
+      "index": 23,
+      "kind": "program",
+      "mode": "on",
+      "source": "8760348431507767508 6539531904306703224 3037000499 4294967295 quote run",
+      "source_sha256": "049ee0863234ea8eb48a90077b07e0c895c9e6ee5ccb380f5817eb6a109a238a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8760348431507767508"
+          ],
+          [
+            "I64",
+            "6539531904306703224"
+          ],
+          [
+            "I64",
+            "3037000499"
+          ],
+          [
+            "I64",
+            "4294967295"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8760348431507767508"
+          ],
+          [
+            "I64",
+            "6539531904306703224"
+          ],
+          [
+            "I64",
+            "3037000499"
+          ],
+          [
+            "I64",
+            "4294967295"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d0bd677af97ea83b48e035caba174b8e10ec1491a06e7e49d800ad16906b8e67",
+      "lean_theorem": "case_23_ref",
+      "matched": true
+    },
+    {
+      "index": 24,
+      "kind": "straight",
+      "mode": "off",
+      "source": "6724833292909842655 -2147483648 -9223372036854775808 9223372036854775806 + -8636865286049626332 *",
+      "source_sha256": "b5b6512e7f1d08ccb557f8843791bead4e1d608f4475d5e7df200f9b987d799f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6724833292909842655"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-1173013501610298952"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6724833292909842655"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-1173013501610298952"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "15b63b4b8319b33e0f1a0fb36fcf70318b1f0ce033019a1c128aa122fef9d15b",
+      "lean_theorem": "case_24_ref",
+      "matched": true
+    },
+    {
+      "index": 24,
+      "kind": "straight",
+      "mode": "on",
+      "source": "6724833292909842655 -2147483648 -9223372036854775808 9223372036854775806 + -8636865286049626332 *",
+      "source_sha256": "b5b6512e7f1d08ccb557f8843791bead4e1d608f4475d5e7df200f9b987d799f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6724833292909842655"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-1173013501610298952"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6724833292909842655"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ],
+          [
+            "I64",
+            "-1173013501610298952"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "2a28ddcc1b9ee328ec8cbdf5553f24139b7c7459e1988563bed45e53fb4dc0dd",
+      "lean_theorem": "case_24_ref",
+      "matched": true
+    },
+    {
+      "index": 25,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-4887442714103879745 true 6403235137134087576 [ -2147483648 * ] quote run run",
+      "source_sha256": "c24ed52b54754c46c7a408a92e8abf9746ac5ac077a2ae99bea4a9f00ba1f8f5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4887442714103879745"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4113658704753065984"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4887442714103879745"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4113658704753065984"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "1976c9fc908c3eb3f9462cee34dcadf296dd9682c0b9da8e902958dccbe967e0",
+      "lean_theorem": "case_25_ref",
+      "matched": true
+    },
+    {
+      "index": 25,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-4887442714103879745 true 6403235137134087576 [ -2147483648 * ] quote run run",
+      "source_sha256": "c24ed52b54754c46c7a408a92e8abf9746ac5ac077a2ae99bea4a9f00ba1f8f5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4887442714103879745"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4113658704753065984"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4887442714103879745"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4113658704753065984"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "fbf92dd1ac01809534c523b6e3144a2da9750e118a1af686a0308bf3b02af2d7",
+      "lean_theorem": "case_25_ref",
+      "matched": true
+    },
+    {
+      "index": 26,
+      "kind": "nested",
+      "mode": "off",
+      "source": "0 -6703738081971116178 4294967295 [ 7227857318947287915 - - ] quote run run",
+      "source_sha256": "da52ed6499abf50c2a834bd4e0d4fa7e3d9fb5724edbbabe2abcd63f9e0ae79d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "524119232681204442"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "524119232681204442"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ac3981cdd0b1cb88196a976fc1d07d393480917037db6041bd81047c37435213",
+      "lean_theorem": "case_26_ref",
+      "matched": true
+    },
+    {
+      "index": 26,
+      "kind": "nested",
+      "mode": "on",
+      "source": "0 -6703738081971116178 4294967295 [ 7227857318947287915 - - ] quote run run",
+      "source_sha256": "da52ed6499abf50c2a834bd4e0d4fa7e3d9fb5724edbbabe2abcd63f9e0ae79d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "524119232681204442"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "524119232681204442"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e33bb8d8ab7947d2b7026b0dda4db22d803e6a3075ea68b265e1afdbe65c0ed4",
+      "lean_theorem": "case_26_ref",
+      "matched": true
+    },
+    {
+      "index": 27,
+      "kind": "program",
+      "mode": "off",
+      "source": "-3037000500 [ -3508199439964380001 + ] run",
+      "source_sha256": "d21bf2485376c4b11d9883428f8b72da36cd81fd6d4574153fee613ba624cc93",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3508199443001380501"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3508199443001380501"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b4547624988b844e43f245336eff497503def69ee53d7c89f2b8213cc9a30280",
+      "lean_theorem": "case_27_ref",
+      "matched": true
+    },
+    {
+      "index": 27,
+      "kind": "program",
+      "mode": "on",
+      "source": "-3037000500 [ -3508199439964380001 + ] run",
+      "source_sha256": "d21bf2485376c4b11d9883428f8b72da36cd81fd6d4574153fee613ba624cc93",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3508199443001380501"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-3508199443001380501"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6a130407f5aacdf0d89c721e99a70e140f44a8c199df36cf85628df88838ab42",
+      "lean_theorem": "case_27_ref",
+      "matched": true
+    },
+    {
+      "index": 28,
+      "kind": "straight",
+      "mode": "off",
+      "source": "491462328015622466 -6026898215120095613 -2147483648 1411631039159769951 2817686979342181317 -9223372036854775808 * - - -",
+      "source_sha256": "d4fd9702a2ec0d83f63983d30ac0f90454582336cd17b319b02c163a99176f82",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "491462328015622466"
+          ],
+          [
+            "I64",
+            "4608104863041933794"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "491462328015622466"
+          ],
+          [
+            "I64",
+            "4608104863041933794"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c912169d1b8507f22d2acac3f9e5a0cc1ef372e7bb50c5a9bd1a6ac0a25c0d3e",
+      "lean_theorem": "case_28_ref",
+      "matched": true
+    },
+    {
+      "index": 28,
+      "kind": "straight",
+      "mode": "on",
+      "source": "491462328015622466 -6026898215120095613 -2147483648 1411631039159769951 2817686979342181317 -9223372036854775808 * - - -",
+      "source_sha256": "d4fd9702a2ec0d83f63983d30ac0f90454582336cd17b319b02c163a99176f82",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "491462328015622466"
+          ],
+          [
+            "I64",
+            "4608104863041933794"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "491462328015622466"
+          ],
+          [
+            "I64",
+            "4608104863041933794"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "89b9dcb25b7be9646ff77913d0204a6f3d2b65d46c0c32dcbc91969e0edf8397",
+      "lean_theorem": "case_28_ref",
+      "matched": true
+    },
+    {
+      "index": 29,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-646230281381513235 [ 7425411405043011104 6132376002957091453 + * ] quote run run",
+      "source_sha256": "8d37b351904bacbd08dac05b9e7fb3d88d2d3203933827610a58ca17ef8fe533",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5156162055767786407"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5156162055767786407"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f7a6b38b5f4f238409e201c329a41d1bc6454aa8622bf9c4bbc70668d0364dce",
+      "lean_theorem": "case_29_ref",
+      "matched": true
+    },
+    {
+      "index": 29,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-646230281381513235 [ 7425411405043011104 6132376002957091453 + * ] quote run run",
+      "source_sha256": "8d37b351904bacbd08dac05b9e7fb3d88d2d3203933827610a58ca17ef8fe533",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5156162055767786407"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5156162055767786407"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "680f85ab940af76725a6bc411e7485c2198804da80b364f6a71c4e4d826da52c",
+      "lean_theorem": "case_29_ref",
+      "matched": true
+    },
+    {
+      "index": 30,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2 4611686018427387904 quote run",
+      "source_sha256": "79c6ce49236e1579adb8f49c0cabe183e58c9072ef80ae64b4c07758ee04c50e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "325d79d1dcf9d3318eefdb01ca81be75703193dd3289b72a152962e71098fb51",
+      "lean_theorem": "case_30_ref",
+      "matched": true
+    },
+    {
+      "index": 30,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2 4611686018427387904 quote run",
+      "source_sha256": "79c6ce49236e1579adb8f49c0cabe183e58c9072ef80ae64b4c07758ee04c50e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b3ceb986071c65ab1b2279384935247e923e9878aecffd7ae1395603994d63a8",
+      "lean_theorem": "case_30_ref",
+      "matched": true
+    },
+    {
+      "index": 31,
+      "kind": "straight",
+      "mode": "off",
+      "source": "2127301455826180106 false 3654531270355143561",
+      "source_sha256": "919208ab87ccdd27e513ce9d994588b0fa028894c07db7a1705f05fb2aa23734",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2127301455826180106"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "3654531270355143561"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2127301455826180106"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "3654531270355143561"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "99cd9176f29c95cc059c79ffb6211b2978d5b53afac3cbd3d974ffab67125ad8",
+      "lean_theorem": "case_31_ref",
+      "matched": true
+    },
+    {
+      "index": 31,
+      "kind": "straight",
+      "mode": "on",
+      "source": "2127301455826180106 false 3654531270355143561",
+      "source_sha256": "919208ab87ccdd27e513ce9d994588b0fa028894c07db7a1705f05fb2aa23734",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2127301455826180106"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "3654531270355143561"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2127301455826180106"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "3654531270355143561"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "fbf7a0909000e7628f81f1bcfb496b2408ffe58de00134313e473ea4a8083867",
+      "lean_theorem": "case_31_ref",
+      "matched": true
+    },
+    {
+      "index": 32,
+      "kind": "nested",
+      "mode": "off",
+      "source": "false 4611686018427387904 [ -9223372036854775808 + 1 3135025580915557254 * - ] quote run run",
+      "source_sha256": "e935b6ef78c50ec9ff3b8c52509528e6f4ff83af9617ebcfac88e393c28cc115",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7746711599342945158"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7746711599342945158"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c78de47be41cd6f4c64ffdacfcea0271ea676b977914d029acb4a023e5d1e555",
+      "lean_theorem": "case_32_ref",
+      "matched": true
+    },
+    {
+      "index": 32,
+      "kind": "nested",
+      "mode": "on",
+      "source": "false 4611686018427387904 [ -9223372036854775808 + 1 3135025580915557254 * - ] quote run run",
+      "source_sha256": "e935b6ef78c50ec9ff3b8c52509528e6f4ff83af9617ebcfac88e393c28cc115",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7746711599342945158"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7746711599342945158"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "2a92f1cf871698d277109de3449f7e1a817f435556821438926c6de4484079c0",
+      "lean_theorem": "case_32_ref",
+      "matched": true
+    },
+    {
+      "index": 33,
+      "kind": "nested",
+      "mode": "off",
+      "source": "false -2 -57841638715668403 -3701496162612840983 [ + -1 + ] quote run run",
+      "source_sha256": "14e21bceeb88a51de1c0aef54e2d9e9f49ebec24e332af66fe58b712aa3b766f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-3759337801328509387"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-3759337801328509387"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6b15615c9a15d157c8eaf1e47d5535e507d5719227ce32b4e964562528776c17",
+      "lean_theorem": "case_33_ref",
+      "matched": true
+    },
+    {
+      "index": 33,
+      "kind": "nested",
+      "mode": "on",
+      "source": "false -2 -57841638715668403 -3701496162612840983 [ + -1 + ] quote run run",
+      "source_sha256": "14e21bceeb88a51de1c0aef54e2d9e9f49ebec24e332af66fe58b712aa3b766f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-3759337801328509387"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-3759337801328509387"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "801de7676c5c4d42d15caee2cb9189c735b512f5a594ab93698ed09ac60a4b56",
+      "lean_theorem": "case_33_ref",
+      "matched": true
+    },
+    {
+      "index": 34,
+      "kind": "straight",
+      "mode": "off",
+      "source": "true 2415857837737813854 -4611686018427387904 2 + 3 +",
+      "source_sha256": "f824127607b82f643554e93e0db1b1016e78da263853ce587a16f5d512851de2",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2415857837737813854"
+          ],
+          [
+            "I64",
+            "-4611686018427387899"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2415857837737813854"
+          ],
+          [
+            "I64",
+            "-4611686018427387899"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f45195401334055f12627efd85fe979fdccf1be27f3656c42799818bdced7006",
+      "lean_theorem": "case_34_ref",
+      "matched": true
+    },
+    {
+      "index": 34,
+      "kind": "straight",
+      "mode": "on",
+      "source": "true 2415857837737813854 -4611686018427387904 2 + 3 +",
+      "source_sha256": "f824127607b82f643554e93e0db1b1016e78da263853ce587a16f5d512851de2",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2415857837737813854"
+          ],
+          [
+            "I64",
+            "-4611686018427387899"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "2415857837737813854"
+          ],
+          [
+            "I64",
+            "-4611686018427387899"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4ad0805d9bf496561411628aa78aa590a1aa22d3917614d9bd582ec352589103",
+      "lean_theorem": "case_34_ref",
+      "matched": true
+    },
+    {
+      "index": 35,
+      "kind": "program",
+      "mode": "off",
+      "source": "true [ 1532993898726714527 ] -5260710828600048785 quote [ - 2147483648 -4073466658669793324 * + ] compose compose run",
+      "source_sha256": "ac4ad17e67b24c0631f1ab0ad7f006808b970256e03eee12054de29fbd89e457",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "6418630430277511472"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "6418630430277511472"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3e0f73832d2f437aba2b6621f26ae63a5ffc0987a8443b2deee0fe07bec765b8",
+      "lean_theorem": "case_35_ref",
+      "matched": true
+    },
+    {
+      "index": 35,
+      "kind": "program",
+      "mode": "on",
+      "source": "true [ 1532993898726714527 ] -5260710828600048785 quote [ - 2147483648 -4073466658669793324 * + ] compose compose run",
+      "source_sha256": "ac4ad17e67b24c0631f1ab0ad7f006808b970256e03eee12054de29fbd89e457",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "6418630430277511472"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "6418630430277511472"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b6497ab639083bf1cf16c35bb03b784d1e1165a7534a4595626c6ae6a0a724e7",
+      "lean_theorem": "case_35_ref",
+      "matched": true
+    },
+    {
+      "index": 36,
+      "kind": "program",
+      "mode": "off",
+      "source": "-9031571508636802692 4294967296 [ 3037000500 + 3037000500 586638954320860074 - + ] run",
+      "source_sha256": "92dc193b31faf2d4ab0090b3603b155faf9a7274f46f3e7287409e1d95ae1cbc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9031571508636802692"
+          ],
+          [
+            "I64",
+            "-586638943951891778"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9031571508636802692"
+          ],
+          [
+            "I64",
+            "-586638943951891778"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9b86d1ff5771573be5908d6934f04d37a274d125dfee52f9c6392f54e85fc2b8",
+      "lean_theorem": "case_36_ref",
+      "matched": true
+    },
+    {
+      "index": 36,
+      "kind": "program",
+      "mode": "on",
+      "source": "-9031571508636802692 4294967296 [ 3037000500 + 3037000500 586638954320860074 - + ] run",
+      "source_sha256": "92dc193b31faf2d4ab0090b3603b155faf9a7274f46f3e7287409e1d95ae1cbc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9031571508636802692"
+          ],
+          [
+            "I64",
+            "-586638943951891778"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9031571508636802692"
+          ],
+          [
+            "I64",
+            "-586638943951891778"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "64ee68f47e7a82f44dcb27fb82b7ed3b507523fe448c042e9406afb03deeaa3a",
+      "lean_theorem": "case_36_ref",
+      "matched": true
+    },
+    {
+      "index": 37,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-2971201592442936790 -1 4294967296",
+      "source_sha256": "6298a5599bda0a5a9d085a978eb6b906fc2b6f49c7f38b3508bd45803b158026",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2971201592442936790"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2971201592442936790"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "aa21a1e235fee88ea3f5d3927b769c79ab318f9fd57dfa9063b546a0d09cb196",
+      "lean_theorem": "case_37_ref",
+      "matched": true
+    },
+    {
+      "index": 37,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-2971201592442936790 -1 4294967296",
+      "source_sha256": "6298a5599bda0a5a9d085a978eb6b906fc2b6f49c7f38b3508bd45803b158026",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2971201592442936790"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2971201592442936790"
+          ],
+          [
+            "I64",
+            "-1"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "fb4c245d5087aeb3095d0a0c1f8cc1d032a4d4f15fd430fba1e39dfdd0aa9abc",
+      "lean_theorem": "case_37_ref",
+      "matched": true
+    },
+    {
+      "index": 38,
+      "kind": "program",
+      "mode": "off",
+      "source": "-9223372036854775807 -1 [ 1 * ] -9223372036854775807 quote compose [ - 2147483648 * -8592262357342399788 + ] compose run",
+      "source_sha256": "60eca18b65715fbde430d114e4b7590bd30a248d2de11f617fd08e52bb1fa86e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "-8592262361637367084"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "-8592262361637367084"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "440c7f6ff8e810768042c249ba99d9aead5741df14aac73292dfcc60b43510dc",
+      "lean_theorem": "case_38_ref",
+      "matched": true
+    },
+    {
+      "index": 38,
+      "kind": "program",
+      "mode": "on",
+      "source": "-9223372036854775807 -1 [ 1 * ] -9223372036854775807 quote compose [ - 2147483648 * -8592262357342399788 + ] compose run",
+      "source_sha256": "60eca18b65715fbde430d114e4b7590bd30a248d2de11f617fd08e52bb1fa86e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "-8592262361637367084"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "-8592262361637367084"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "df1ab5e9ea09d7d855f14735372ae1cc7448a292d2c89efb3dec0837d8b3772b",
+      "lean_theorem": "case_38_ref",
+      "matched": true
+    },
+    {
+      "index": 39,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-169959703033285770 -9223372036854775808 -6105600421741015645 * 3747427008831397400 - -910060233732971221 -",
+      "source_sha256": "e660e4def2e1e2324c42b007aba5280b51ed45a1a8c8f75e63a2e2f14867356f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-169959703033285770"
+          ],
+          [
+            "I64",
+            "6386005261756349629"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-169959703033285770"
+          ],
+          [
+            "I64",
+            "6386005261756349629"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "a28b97c86c128aaf05eeb66c5986cdcd6497ae2a97a3036d4ff66045fb151f0a",
+      "lean_theorem": "case_39_ref",
+      "matched": true
+    },
+    {
+      "index": 39,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-169959703033285770 -9223372036854775808 -6105600421741015645 * 3747427008831397400 - -910060233732971221 -",
+      "source_sha256": "e660e4def2e1e2324c42b007aba5280b51ed45a1a8c8f75e63a2e2f14867356f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-169959703033285770"
+          ],
+          [
+            "I64",
+            "6386005261756349629"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-169959703033285770"
+          ],
+          [
+            "I64",
+            "6386005261756349629"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b6cf83d204d4a827598ad0cfc3209e9a17421bcca3ee266aee6b22ab036042ff",
+      "lean_theorem": "case_39_ref",
+      "matched": true
+    },
+    {
+      "index": 40,
+      "kind": "straight",
+      "mode": "off",
+      "source": "3 -1060691307303142810 7945499027863479896 4294967295 * 0 1 * -",
+      "source_sha256": "2df4c7f803d95e2a2f894195603f3ce5964da6007ea62793bac7024e66f0cb38",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1060691307303142810"
+          ],
+          [
+            "I64",
+            "6971450259805067688"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1060691307303142810"
+          ],
+          [
+            "I64",
+            "6971450259805067688"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9c8ac6b91bc1a871287e69bdf12b30d9a08db36ba201a4e101dde0958a051b18",
+      "lean_theorem": "case_40_ref",
+      "matched": true
+    },
+    {
+      "index": 40,
+      "kind": "straight",
+      "mode": "on",
+      "source": "3 -1060691307303142810 7945499027863479896 4294967295 * 0 1 * -",
+      "source_sha256": "2df4c7f803d95e2a2f894195603f3ce5964da6007ea62793bac7024e66f0cb38",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1060691307303142810"
+          ],
+          [
+            "I64",
+            "6971450259805067688"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-1060691307303142810"
+          ],
+          [
+            "I64",
+            "6971450259805067688"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ea86a8be30533a1d3210bd40c8e1313e7a6b1b168d54d923b240fd0cb0bd68e3",
+      "lean_theorem": "case_40_ref",
+      "matched": true
+    },
+    {
+      "index": 41,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-6880077355008565370 1 101391639786689644 [ -2648512448488759989 -9223372036854775808 5348634504429381731 * - - ] quote run run",
+      "source_sha256": "2ef4a3f2a6cf46f7faebc62988b5664b64bd182171928b95f47d1bef74a12aa6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6880077355008565370"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-6473467948579326175"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6880077355008565370"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-6473467948579326175"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "89b79e0fc5ca06765f9142efc6179031dda8c147b5c1714fdea1cc61ece77d2e",
+      "lean_theorem": "case_41_ref",
+      "matched": true
+    },
+    {
+      "index": 41,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-6880077355008565370 1 101391639786689644 [ -2648512448488759989 -9223372036854775808 5348634504429381731 * - - ] quote run run",
+      "source_sha256": "2ef4a3f2a6cf46f7faebc62988b5664b64bd182171928b95f47d1bef74a12aa6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6880077355008565370"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-6473467948579326175"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6880077355008565370"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-6473467948579326175"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "395decf7b881769543d08334b6b35a154cc822cbc232404284b22be151e685c8",
+      "lean_theorem": "case_41_ref",
+      "matched": true
+    },
+    {
+      "index": 42,
+      "kind": "program",
+      "mode": "off",
+      "source": "true true [ -9223372036854775807 -1862539551802641110 - ] 8457029285514399999 quote [ 4294967296 * - ] compose compose run",
+      "source_sha256": "723596cb448d1cc13227fbf19b45b7274bbe79a56d507caf39789f7b7cc6ed2a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-6363655698713163049"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-6363655698713163049"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d1ab979a9fe516980252f7b31b66227fd205ee789ceddce9b9847ff1f7c1ae91",
+      "lean_theorem": "case_42_ref",
+      "matched": true
+    },
+    {
+      "index": 42,
+      "kind": "program",
+      "mode": "on",
+      "source": "true true [ -9223372036854775807 -1862539551802641110 - ] 8457029285514399999 quote [ 4294967296 * - ] compose compose run",
+      "source_sha256": "723596cb448d1cc13227fbf19b45b7274bbe79a56d507caf39789f7b7cc6ed2a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-6363655698713163049"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-6363655698713163049"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e99cd916b8398b08cbe321f08408ae96f7b4caa37c722bff320b0a2c7e512870",
+      "lean_theorem": "case_42_ref",
+      "matched": true
+    },
+    {
+      "index": 43,
+      "kind": "program",
+      "mode": "off",
+      "source": "4294967296 [ -3 0 3037000500 * * + ] -2147483648 quote compose run",
+      "source_sha256": "aeb358e2669035b2441f70b92017c2d0097ae3c49287f3aff66532e5d5e70e8d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "019ec8a316b93ce9154f4d9ee856716b60900dc18b5d74e46bbd520edc77d99d",
+      "lean_theorem": "case_43_ref",
+      "matched": true
+    },
+    {
+      "index": 43,
+      "kind": "program",
+      "mode": "on",
+      "source": "4294967296 [ -3 0 3037000500 * * + ] -2147483648 quote compose run",
+      "source_sha256": "aeb358e2669035b2441f70b92017c2d0097ae3c49287f3aff66532e5d5e70e8d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-2147483648"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "1d68798d5500e772b26313a902d949f7c39ce7d5d4fc82e93c6d534ba4b380a7",
+      "lean_theorem": "case_43_ref",
+      "matched": true
+    },
+    {
+      "index": 44,
+      "kind": "straight",
+      "mode": "off",
+      "source": "3037000500 -9223372036854775807 -3896028672807446169 5405263686804610376 1904152392735436528 8867754216334421527 * -3362996290485524561 - + +",
+      "source_sha256": "be03ccfe9fe568f62a9cd19943c735eb56728bf991268c7dc28400074d83889f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "8144904145485784720"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "8144904145485784720"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "89d241965d244ded645f77b55bff20522ca23c88315e090b89f7e1356c7a9702",
+      "lean_theorem": "case_44_ref",
+      "matched": true
+    },
+    {
+      "index": 44,
+      "kind": "straight",
+      "mode": "on",
+      "source": "3037000500 -9223372036854775807 -3896028672807446169 5405263686804610376 1904152392735436528 8867754216334421527 * -3362996290485524561 - + +",
+      "source_sha256": "be03ccfe9fe568f62a9cd19943c735eb56728bf991268c7dc28400074d83889f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "8144904145485784720"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ],
+          [
+            "I64",
+            "8144904145485784720"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4c0ddaf60df615ae62a35931b2687baa04e7b4c23e8fe8ef1781619ab78704fe",
+      "lean_theorem": "case_44_ref",
+      "matched": true
+    },
+    {
+      "index": 45,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-1 3037000500 - 1150193559063539234 4611686018427387904 8773588518146794266 + - +",
+      "source_sha256": "bbb4f961dfffec14b72ae399a8560b5eea34841edd9008e8c6da153dca8fa870",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6211663093161908179"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6211663093161908179"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "7ad8b332842f50ed55bf6ac2be7da9be400a2c27a4efc94a39fa7fca98b838e1",
+      "lean_theorem": "case_45_ref",
+      "matched": true
+    },
+    {
+      "index": 45,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-1 3037000500 - 1150193559063539234 4611686018427387904 8773588518146794266 + - +",
+      "source_sha256": "bbb4f961dfffec14b72ae399a8560b5eea34841edd9008e8c6da153dca8fa870",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6211663093161908179"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6211663093161908179"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b8d8468b7f6c99081bcfec603e49500f1edce63f3dac4b5b727f3bca239e77e1",
+      "lean_theorem": "case_45_ref",
+      "matched": true
+    },
+    {
+      "index": 46,
+      "kind": "program",
+      "mode": "off",
+      "source": "-4611686018427387904 9223372036854775806 -1691277446279494405 [ -3121493734180867327 2147483648 * * ] run",
+      "source_sha256": "1dd71def442195c0a91db7c9df2b46e587ff8cbbe23eb73e142f28d48ede31cd",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-5326206959009923072"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-5326206959009923072"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "904fd02a3838083d551ecccf03a206a13882fd43fd9ffb66379d8ef0152a9b26",
+      "lean_theorem": "case_46_ref",
+      "matched": true
+    },
+    {
+      "index": 46,
+      "kind": "program",
+      "mode": "on",
+      "source": "-4611686018427387904 9223372036854775806 -1691277446279494405 [ -3121493734180867327 2147483648 * * ] run",
+      "source_sha256": "1dd71def442195c0a91db7c9df2b46e587ff8cbbe23eb73e142f28d48ede31cd",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-5326206959009923072"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "-5326206959009923072"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "39cd1935ae6d859236e194900a1841f375f6683c9e6d655ae05512dcd7dcea6c",
+      "lean_theorem": "case_46_ref",
+      "matched": true
+    },
+    {
+      "index": 47,
+      "kind": "program",
+      "mode": "off",
+      "source": "3212165814518186187 -3829422227154133546 [ + -9223372036854775807 * ] [ -3 - ] [ -9223372036854775808 + ] compose compose run",
+      "source_sha256": "ba7065baab9481695d735df0d4fa8defcd0fd19e96c61c52230ffaacdf6828d2",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-617256412635947356"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-617256412635947356"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "1019caa79b5fcf3cccbc5a2c3615a3d586edfc203cf5299874dcc98279ce1be0",
+      "lean_theorem": "case_47_ref",
+      "matched": true
+    },
+    {
+      "index": 47,
+      "kind": "program",
+      "mode": "on",
+      "source": "3212165814518186187 -3829422227154133546 [ + -9223372036854775807 * ] [ -3 - ] [ -9223372036854775808 + ] compose compose run",
+      "source_sha256": "ba7065baab9481695d735df0d4fa8defcd0fd19e96c61c52230ffaacdf6828d2",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-617256412635947356"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-617256412635947356"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b97a492df688882f6fe6a0e0bd1f9a3ec47d7da6b18e7d4f7ea0b49a6e4b53e9",
+      "lean_theorem": "case_47_ref",
+      "matched": true
+    },
+    {
+      "index": 48,
+      "kind": "program",
+      "mode": "off",
+      "source": "-4087154931677304904 [ -927281105150802306 * 4709547707422268398 + ] [ 3089254907332376484 + ] compose run",
+      "source_sha256": "1c651fe56dfe8a516aba46c66f4d12162ce95fa506f03f7b45e0b075bd71f2cb",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5211759326296674270"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5211759326296674270"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3594a6ac7fe4897f3cbde510f143cbf3bd2e41ac678cb3303b018e72ccfde6f2",
+      "lean_theorem": "case_48_ref",
+      "matched": true
+    },
+    {
+      "index": 48,
+      "kind": "program",
+      "mode": "on",
+      "source": "-4087154931677304904 [ -927281105150802306 * 4709547707422268398 + ] [ 3089254907332376484 + ] compose run",
+      "source_sha256": "1c651fe56dfe8a516aba46c66f4d12162ce95fa506f03f7b45e0b075bd71f2cb",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5211759326296674270"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-5211759326296674270"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c067647c27b8639e2b2242a2814c66bab5e544f03834dd854be32c00f3a26da3",
+      "lean_theorem": "case_48_ref",
+      "matched": true
+    },
+    {
+      "index": 49,
+      "kind": "straight",
+      "mode": "off",
+      "source": "4294967296 -5144762583826209014 4294967296 -1506112973162975125 8969668455932034663 - +",
+      "source_sha256": "8c296c44f04c5047a3f0a489f220e10c534063a9b5df2bbc8430d786fe01006d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-5144762583826209014"
+          ],
+          [
+            "I64",
+            "7970962648909509124"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-5144762583826209014"
+          ],
+          [
+            "I64",
+            "7970962648909509124"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f7e37669ab03c255b082e93c06d3ff39ccc5048d23c35ad6c0a3e955ebc0d8da",
+      "lean_theorem": "case_49_ref",
+      "matched": true
+    },
+    {
+      "index": 49,
+      "kind": "straight",
+      "mode": "on",
+      "source": "4294967296 -5144762583826209014 4294967296 -1506112973162975125 8969668455932034663 - +",
+      "source_sha256": "8c296c44f04c5047a3f0a489f220e10c534063a9b5df2bbc8430d786fe01006d",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-5144762583826209014"
+          ],
+          [
+            "I64",
+            "7970962648909509124"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967296"
+          ],
+          [
+            "I64",
+            "-5144762583826209014"
+          ],
+          [
+            "I64",
+            "7970962648909509124"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c136f315b27d1f64fc982b2c1275377e1ba5a3938d754c053c9c2a7cb8e3cb68",
+      "lean_theorem": "case_49_ref",
+      "matched": true
+    },
+    {
+      "index": 50,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-1932177100307271968 724293441816303523 -",
+      "source_sha256": "ef2abbddf25abe9bad1aa650cfd10c01ea5ddcc127ad0c48ecc9c49ff058af43",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2656470542123575491"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2656470542123575491"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e7288048ecfd592a6fddad5420d3098f6c7d34d3a213ff5b8a7ac5a4ff9ccb74",
+      "lean_theorem": "case_50_ref",
+      "matched": true
+    },
+    {
+      "index": 50,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-1932177100307271968 724293441816303523 -",
+      "source_sha256": "ef2abbddf25abe9bad1aa650cfd10c01ea5ddcc127ad0c48ecc9c49ff058af43",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2656470542123575491"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2656470542123575491"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "31b9c63c0374cd168ab8654f608946c21c2bd1b2ea330c1cc354c296e0c9337d",
+      "lean_theorem": "case_50_ref",
+      "matched": true
+    },
+    {
+      "index": 51,
+      "kind": "program",
+      "mode": "off",
+      "source": "[ -6246015818222091668 ] run",
+      "source_sha256": "0b4eaf3c6038f2be02390df0b6068443d289a85a3ab8bd0ca72b21a15b62694f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6246015818222091668"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6246015818222091668"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3b436dbc1af59e3020e24cb72a0ed6a11b97c0ff2d19e4557af2fbe928c2e769",
+      "lean_theorem": "case_51_ref",
+      "matched": true
+    },
+    {
+      "index": 51,
+      "kind": "program",
+      "mode": "on",
+      "source": "[ -6246015818222091668 ] run",
+      "source_sha256": "0b4eaf3c6038f2be02390df0b6068443d289a85a3ab8bd0ca72b21a15b62694f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6246015818222091668"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6246015818222091668"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "12ef9eedc6e5a0dfd3be9cba082c3b06d90d8ba28c6d3ef7e4b8045b1b9cc52b",
+      "lean_theorem": "case_51_ref",
+      "matched": true
+    },
+    {
+      "index": 52,
+      "kind": "program",
+      "mode": "off",
+      "source": "-2185201862849463174 3792003259130364323 [ -4631482022918014477 -6835194163627652114 + ] run",
+      "source_sha256": "029b2c3362fdbd3603c78a2ff6b52dadd4462ca3f13798640803fa3cf2cf5aa9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2185201862849463174"
+          ],
+          [
+            "I64",
+            "3792003259130364323"
+          ],
+          [
+            "I64",
+            "6980067887163885025"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2185201862849463174"
+          ],
+          [
+            "I64",
+            "3792003259130364323"
+          ],
+          [
+            "I64",
+            "6980067887163885025"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "acf8d5e005bda30c7b3f1bfce98bd16aac8892135f524feabf34d9e700aba24f",
+      "lean_theorem": "case_52_ref",
+      "matched": true
+    },
+    {
+      "index": 52,
+      "kind": "program",
+      "mode": "on",
+      "source": "-2185201862849463174 3792003259130364323 [ -4631482022918014477 -6835194163627652114 + ] run",
+      "source_sha256": "029b2c3362fdbd3603c78a2ff6b52dadd4462ca3f13798640803fa3cf2cf5aa9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2185201862849463174"
+          ],
+          [
+            "I64",
+            "3792003259130364323"
+          ],
+          [
+            "I64",
+            "6980067887163885025"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2185201862849463174"
+          ],
+          [
+            "I64",
+            "3792003259130364323"
+          ],
+          [
+            "I64",
+            "6980067887163885025"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "a739a1dff85515d8cb4e4698a867ccb1ba5473137c318481a0f849ed64b709de",
+      "lean_theorem": "case_52_ref",
+      "matched": true
+    },
+    {
+      "index": 53,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-6529842999152986718 false -4611686018427387904 689462350849032056 6215262839161815776 5666021644819664343 4930735093888103547 - + * -",
+      "source_sha256": "4f7059c7406ec8bbfed831dbcb357e0931d09a00733f5e27b77bd2874f257ab6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6529842999152986718"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "190380698216431584"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6529842999152986718"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "190380698216431584"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "1440f4a4015983ba1d5b44aa96ffe4e02a396d439406d05d991f09dc06806837",
+      "lean_theorem": "case_53_ref",
+      "matched": true
+    },
+    {
+      "index": 53,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-6529842999152986718 false -4611686018427387904 689462350849032056 6215262839161815776 5666021644819664343 4930735093888103547 - + * -",
+      "source_sha256": "4f7059c7406ec8bbfed831dbcb357e0931d09a00733f5e27b77bd2874f257ab6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6529842999152986718"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "190380698216431584"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6529842999152986718"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "190380698216431584"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "5e9f9c8899625da7316f81ec9589a565dc312f442c0dbfb446c6e2248d3d16c8",
+      "lean_theorem": "case_53_ref",
+      "matched": true
+    },
+    {
+      "index": 54,
+      "kind": "program",
+      "mode": "off",
+      "source": "3037000500 -9223372036854775808 5794294103357352067 -6385118565393852455 [ - ] run",
+      "source_sha256": "a8e79a9af8abbe57db6a7eaec7a2daf580a1bb00f53d5c9ab251251f86868a3a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-6267331404958347094"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-6267331404958347094"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f78988e4556f644709cb029121e3e25dfafbe404a43099a6ecc17233da0c8b8b",
+      "lean_theorem": "case_54_ref",
+      "matched": true
+    },
+    {
+      "index": 54,
+      "kind": "program",
+      "mode": "on",
+      "source": "3037000500 -9223372036854775808 5794294103357352067 -6385118565393852455 [ - ] run",
+      "source_sha256": "a8e79a9af8abbe57db6a7eaec7a2daf580a1bb00f53d5c9ab251251f86868a3a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-6267331404958347094"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "-6267331404958347094"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9164cc4c5c6baeb95d4e390f2339a1aa89f92f2dba9ad0eb9aacfde7e257353c",
+      "lean_theorem": "case_54_ref",
+      "matched": true
+    },
+    {
+      "index": 55,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-3037000500 -8725946260792826731 [ - ] quote run run",
+      "source_sha256": "c7a82e9a694a9a9a275f5d18d7ea764e5f7eadb98ed92e66a08f52c541054ebc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8725946257755826231"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8725946257755826231"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b8f90a322d7240f6def5bfa165ffb996a1c4775efa39bcac63ceabfd69a8df96",
+      "lean_theorem": "case_55_ref",
+      "matched": true
+    },
+    {
+      "index": 55,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-3037000500 -8725946260792826731 [ - ] quote run run",
+      "source_sha256": "c7a82e9a694a9a9a275f5d18d7ea764e5f7eadb98ed92e66a08f52c541054ebc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8725946257755826231"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8725946257755826231"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0b675826273dd2b03d5376e56b145afe01202f99adaebededea414602025e025",
+      "lean_theorem": "case_55_ref",
+      "matched": true
+    },
+    {
+      "index": 56,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-9223372036854775808 9223372036854775807 2234857767651055315 * 4611686018427387904 -",
+      "source_sha256": "e598e54111b4e3f8ea4ef5a30ee81d73b8d49317f14d95000d2e3ce2561c8839",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "2376828250776332589"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "2376828250776332589"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6b97618915d2e84af6e5c7bdf924739a86ccf29aefc0ff579d276499b741c51f",
+      "lean_theorem": "case_56_ref",
+      "matched": true
+    },
+    {
+      "index": 56,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-9223372036854775808 9223372036854775807 2234857767651055315 * 4611686018427387904 -",
+      "source_sha256": "e598e54111b4e3f8ea4ef5a30ee81d73b8d49317f14d95000d2e3ce2561c8839",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "2376828250776332589"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "2376828250776332589"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0a3ea9393c42587a2cb4fae7839d5c6b6c38491656a0a527edc9d5bac4bd2884",
+      "lean_theorem": "case_56_ref",
+      "matched": true
+    },
+    {
+      "index": 57,
+      "kind": "program",
+      "mode": "off",
+      "source": "-8508500159909585345 quote -2 quote compose -5699667927003237388 quote compose run",
+      "source_sha256": "41516565996b74e7939ea36260f5789dd4797fe983ca6ce08215cf7ff6ae5917",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-8508500159909585345"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-5699667927003237388"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-8508500159909585345"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-5699667927003237388"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "31780d2cdc58e8d543d01376cff42377e6dc928922e2a55512cfdb88da203233",
+      "lean_theorem": "case_57_ref",
+      "matched": true
+    },
+    {
+      "index": 57,
+      "kind": "program",
+      "mode": "on",
+      "source": "-8508500159909585345 quote -2 quote compose -5699667927003237388 quote compose run",
+      "source_sha256": "41516565996b74e7939ea36260f5789dd4797fe983ca6ce08215cf7ff6ae5917",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-8508500159909585345"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-5699667927003237388"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-8508500159909585345"
+          ],
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "-5699667927003237388"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c05a6591a5876b36e187de5afa1ae8dad18a796f7c1ba1802e22d0a9baf257c1",
+      "lean_theorem": "case_57_ref",
+      "matched": true
+    },
+    {
+      "index": 58,
+      "kind": "nested",
+      "mode": "off",
+      "source": "1 [ 1340992993750734152 * 2200458770791390539 - ] quote run run",
+      "source_sha256": "99d6ccb8e345139307da034121d315061ab7e4e696a04cf964f827a438a4894e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-859465777040656387"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-859465777040656387"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "5636ba4c960e5fcd9288f200efe461346a373159ac31c266ea285dfff6c068dd",
+      "lean_theorem": "case_58_ref",
+      "matched": true
+    },
+    {
+      "index": 58,
+      "kind": "nested",
+      "mode": "on",
+      "source": "1 [ 1340992993750734152 * 2200458770791390539 - ] quote run run",
+      "source_sha256": "99d6ccb8e345139307da034121d315061ab7e4e696a04cf964f827a438a4894e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-859465777040656387"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-859465777040656387"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b3574116e49d0f53fdf052fd60142986e6b29efcab7aa6a26e50fbf7b4d53c4d",
+      "lean_theorem": "case_58_ref",
+      "matched": true
+    },
+    {
+      "index": 59,
+      "kind": "straight",
+      "mode": "off",
+      "source": "false -5737899358805763250 3037000500",
+      "source_sha256": "954e18e018e37ac1458588d4488bfd18bb8c192b8813b14b9b6a9e53a527772a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-5737899358805763250"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-5737899358805763250"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "89239ba40846792150788a6e24cb5a5ef38fc32987d79a5cad1c57c461e72b42",
+      "lean_theorem": "case_59_ref",
+      "matched": true
+    },
+    {
+      "index": 59,
+      "kind": "straight",
+      "mode": "on",
+      "source": "false -5737899358805763250 3037000500",
+      "source_sha256": "954e18e018e37ac1458588d4488bfd18bb8c192b8813b14b9b6a9e53a527772a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-5737899358805763250"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-5737899358805763250"
+          ],
+          [
+            "I64",
+            "3037000500"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "a58a9649eaefda7f78e7a7d7484d7751e8430e448a0291645a56d08cafe590c8",
+      "lean_theorem": "case_59_ref",
+      "matched": true
+    },
+    {
+      "index": 60,
+      "kind": "nested",
+      "mode": "off",
+      "source": "0 1 [ 4294967296 9017903828830211057 - ] quote run run",
+      "source_sha256": "c4d25ba62763e6776a0a9c46ecdf013244ce51c162a3dbcbc2f7d0b7726d347f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-9017903824535243761"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-9017903824535243761"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ca5d6db74cfc9080a3b7e7231ae3cee4a1b418c96da93c47e4344bfab453ad5b",
+      "lean_theorem": "case_60_ref",
+      "matched": true
+    },
+    {
+      "index": 60,
+      "kind": "nested",
+      "mode": "on",
+      "source": "0 1 [ 4294967296 9017903828830211057 - ] quote run run",
+      "source_sha256": "c4d25ba62763e6776a0a9c46ecdf013244ce51c162a3dbcbc2f7d0b7726d347f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-9017903824535243761"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "-9017903824535243761"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9d36688cbc0f72b62c777c2f28248963e876576d95b077f5b56173f06d4a3685",
+      "lean_theorem": "case_60_ref",
+      "matched": true
+    },
+    {
+      "index": 61,
+      "kind": "program",
+      "mode": "off",
+      "source": "true -5616292749438622146 [ -7124705098017129868 ] run",
+      "source_sha256": "643f24edcaaeb8f25fc79c697fb81210e73e8a0e9499813ef2a6c18304f7dca5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-5616292749438622146"
+          ],
+          [
+            "I64",
+            "-7124705098017129868"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-5616292749438622146"
+          ],
+          [
+            "I64",
+            "-7124705098017129868"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "792f1a0c7a673e2fa06f217655d0a015aec2913d89281002a03f8e3d97a8be93",
+      "lean_theorem": "case_61_ref",
+      "matched": true
+    },
+    {
+      "index": 61,
+      "kind": "program",
+      "mode": "on",
+      "source": "true -5616292749438622146 [ -7124705098017129868 ] run",
+      "source_sha256": "643f24edcaaeb8f25fc79c697fb81210e73e8a0e9499813ef2a6c18304f7dca5",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-5616292749438622146"
+          ],
+          [
+            "I64",
+            "-7124705098017129868"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-5616292749438622146"
+          ],
+          [
+            "I64",
+            "-7124705098017129868"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b2f61fe7cf1190267b063998a0f3562144ce3503d957c11f4a38fe14574a95d5",
+      "lean_theorem": "case_61_ref",
+      "matched": true
+    },
+    {
+      "index": 62,
+      "kind": "program",
+      "mode": "off",
+      "source": "true -1540618882999614672 [ 3037000500 + ] run",
+      "source_sha256": "d754f4cef04cd2ab47d2a1f2b304e005732fa6b6cdac5fd851961502a128e4e4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-1540618879962614172"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-1540618879962614172"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "127ef4e0e94c40ad49e3581917d162707d52732f3d423a9a181c3442564a1f08",
+      "lean_theorem": "case_62_ref",
+      "matched": true
+    },
+    {
+      "index": 62,
+      "kind": "program",
+      "mode": "on",
+      "source": "true -1540618882999614672 [ 3037000500 + ] run",
+      "source_sha256": "d754f4cef04cd2ab47d2a1f2b304e005732fa6b6cdac5fd851961502a128e4e4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-1540618879962614172"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-1540618879962614172"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e1ec447fdf217418a407a34b337d99d640a8c95eda032867bf7eb9c8ff82b132",
+      "lean_theorem": "case_62_ref",
+      "matched": true
+    },
+    {
+      "index": 63,
+      "kind": "nested",
+      "mode": "off",
+      "source": "false 4611686018427387904 -2147483648 [ -1372166499235156421 + 6862127142556782440 3037000499 * * ] quote run run",
+      "source_sha256": "2d8d09bfcbef5c7356418b7853c1ba10f236b0f704750094cf3fb83a1e4aee9f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "-836054383483335320"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "-836054383483335320"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "96110156b3d138fcaab767f628b706b6c234f9d281a30c6ab277258b7245c776",
+      "lean_theorem": "case_63_ref",
+      "matched": true
+    },
+    {
+      "index": 63,
+      "kind": "nested",
+      "mode": "on",
+      "source": "false 4611686018427387904 -2147483648 [ -1372166499235156421 + 6862127142556782440 3037000499 * * ] quote run run",
+      "source_sha256": "2d8d09bfcbef5c7356418b7853c1ba10f236b0f704750094cf3fb83a1e4aee9f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "-836054383483335320"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "-836054383483335320"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e5daefe88ba3db117fafc1e02cc96bdb9d39b27f0821c57392e96824805ac8fc",
+      "lean_theorem": "case_63_ref",
+      "matched": true
+    },
+    {
+      "index": 64,
+      "kind": "program",
+      "mode": "off",
+      "source": "3037000499 0 [ - -3410311503644117280 * ] -3 quote compose run",
+      "source_sha256": "7103ddbd92f758e944fb5a5b3c774ebb4e2444d454253f5dd98272d72e01df9e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6856007585710509728"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6856007585710509728"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "faa75a66d2b9051ae2c0247fff788fd3d89f78a52b092e2a7ec15a354ad0da2c",
+      "lean_theorem": "case_64_ref",
+      "matched": true
+    },
+    {
+      "index": 64,
+      "kind": "program",
+      "mode": "on",
+      "source": "3037000499 0 [ - -3410311503644117280 * ] -3 quote compose run",
+      "source_sha256": "7103ddbd92f758e944fb5a5b3c774ebb4e2444d454253f5dd98272d72e01df9e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6856007585710509728"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6856007585710509728"
+          ],
+          [
+            "I64",
+            "-3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f9eba2a1d8aad0265188bea31933bf82fa98b077f8fb7c153650540b2dd56028",
+      "lean_theorem": "case_64_ref",
+      "matched": true
+    },
+    {
+      "index": 65,
+      "kind": "program",
+      "mode": "off",
+      "source": "false -394692807105210439 -9223372036854775807 quote run",
+      "source_sha256": "1614be35d5d4cdad1f896fa918d2e10b1e3777280dc983afe2cbd67bb6c41fa7",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-394692807105210439"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-394692807105210439"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "111fdb5ee3a36536f2b6d56195e0f71c4d27d54a5c2369d24eccbf671b7e1d6f",
+      "lean_theorem": "case_65_ref",
+      "matched": true
+    },
+    {
+      "index": 65,
+      "kind": "program",
+      "mode": "on",
+      "source": "false -394692807105210439 -9223372036854775807 quote run",
+      "source_sha256": "1614be35d5d4cdad1f896fa918d2e10b1e3777280dc983afe2cbd67bb6c41fa7",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-394692807105210439"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-394692807105210439"
+          ],
+          [
+            "I64",
+            "-9223372036854775807"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0f7d2555bf8e48f4f4ab413cbf4aee01cfdf8f6a40caff02c7eabe20502210a6",
+      "lean_theorem": "case_65_ref",
+      "matched": true
+    },
+    {
+      "index": 66,
+      "kind": "program",
+      "mode": "off",
+      "source": "3 2147483648 [ - -758258534255444730 - 9223372036854775807 * ] run",
+      "source_sha256": "228d54a1d76b901ffed74532a690aec466438d8b099f5c9a5c80c84d23da3c82",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8465113504746814723"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8465113504746814723"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "08a50d31d3d36e0b07bf8d15ed27f98dffc8151b46e9ad764ded12ea30740a26",
+      "lean_theorem": "case_66_ref",
+      "matched": true
+    },
+    {
+      "index": 66,
+      "kind": "program",
+      "mode": "on",
+      "source": "3 2147483648 [ - -758258534255444730 - 9223372036854775807 * ] run",
+      "source_sha256": "228d54a1d76b901ffed74532a690aec466438d8b099f5c9a5c80c84d23da3c82",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8465113504746814723"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8465113504746814723"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "afc5f2059f47bd363cfc685f67931652ae55f89a50c3f5ea3ebfea36a7f60353",
+      "lean_theorem": "case_66_ref",
+      "matched": true
+    },
+    {
+      "index": 67,
+      "kind": "straight",
+      "mode": "off",
+      "source": "5601338544108070091 4167300571290526924 8439201003025654075 1177565440227062175 * * *",
+      "source_sha256": "0129195956e7a2c533fe3c92cc28f0a880441100570e72b9a95f03ffeda44815",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6419627695276529836"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6419627695276529836"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6096a9747e7358bb1acfc484960f4da167d3ca3de190305319af9e4e8e087c90",
+      "lean_theorem": "case_67_ref",
+      "matched": true
+    },
+    {
+      "index": 67,
+      "kind": "straight",
+      "mode": "on",
+      "source": "5601338544108070091 4167300571290526924 8439201003025654075 1177565440227062175 * * *",
+      "source_sha256": "0129195956e7a2c533fe3c92cc28f0a880441100570e72b9a95f03ffeda44815",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6419627695276529836"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6419627695276529836"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d1db7ebe09b5ce5f03fc5cd81a48fd19ab75c95eb00c041fc19ce789882c1892",
+      "lean_theorem": "case_67_ref",
+      "matched": true
+    },
+    {
+      "index": 68,
+      "kind": "nested",
+      "mode": "off",
+      "source": "7008284804098467950 [ -6942483610653444154 + ] quote run run",
+      "source_sha256": "5d0c4a493511a41f598e6b8de6c4270bb439998fb24797be5adcb60b9c8e7cd1",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "65801193445023796"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "65801193445023796"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "b1bf8a57ea7d5dba66972fd0c0d8d65c14c6b6eb1bec5d0d25771c241f2ac7ca",
+      "lean_theorem": "case_68_ref",
+      "matched": true
+    },
+    {
+      "index": 68,
+      "kind": "nested",
+      "mode": "on",
+      "source": "7008284804098467950 [ -6942483610653444154 + ] quote run run",
+      "source_sha256": "5d0c4a493511a41f598e6b8de6c4270bb439998fb24797be5adcb60b9c8e7cd1",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "65801193445023796"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "65801193445023796"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "954b0d57c6e5c52a59aaa439fbd6d67330ea0d782a13bf312e52021024667dff",
+      "lean_theorem": "case_68_ref",
+      "matched": true
+    },
+    {
+      "index": 69,
+      "kind": "program",
+      "mode": "off",
+      "source": "false 2244174187905515149 [ -3929414257926870937 1450451596451559471 * 453775962356179961 - ] 2147483648 quote [ - -4937552723386578067 + 2147483648 - ] compose compose run",
+      "source_sha256": "4fb7d96511903540c5a85850222c1486bfd068e2a3877523f14db13ba6c5b14c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2244174187905515149"
+          ],
+          [
+            "I64",
+            "8541288172785867357"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2244174187905515149"
+          ],
+          [
+            "I64",
+            "8541288172785867357"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "2346c4e285e984fefbfe94569884288e2889fa264815efebb3327ef2ab57aaea",
+      "lean_theorem": "case_69_ref",
+      "matched": true
+    },
+    {
+      "index": 69,
+      "kind": "program",
+      "mode": "on",
+      "source": "false 2244174187905515149 [ -3929414257926870937 1450451596451559471 * 453775962356179961 - ] 2147483648 quote [ - -4937552723386578067 + 2147483648 - ] compose compose run",
+      "source_sha256": "4fb7d96511903540c5a85850222c1486bfd068e2a3877523f14db13ba6c5b14c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2244174187905515149"
+          ],
+          [
+            "I64",
+            "8541288172785867357"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2244174187905515149"
+          ],
+          [
+            "I64",
+            "8541288172785867357"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "50f019f70d836b61c9625cf6ebfe3393036e1485e6273e9b4b5bb138f6c16642",
+      "lean_theorem": "case_69_ref",
+      "matched": true
+    },
+    {
+      "index": 70,
+      "kind": "nested",
+      "mode": "off",
+      "source": "2 false -1851326713155665975 4131477371707744247 [ 4294967296 * + ] quote run run",
+      "source_sha256": "44dd4eff8c6d5ef1de3cf46805a72d287a80d8be526285a5d45bf946124bb214",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7457076834863530039"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7457076834863530039"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "66266e9139f60f9e7d89e358ef67b11ec875e8505447907145c065d66c108f5f",
+      "lean_theorem": "case_70_ref",
+      "matched": true
+    },
+    {
+      "index": 70,
+      "kind": "nested",
+      "mode": "on",
+      "source": "2 false -1851326713155665975 4131477371707744247 [ 4294967296 * + ] quote run run",
+      "source_sha256": "44dd4eff8c6d5ef1de3cf46805a72d287a80d8be526285a5d45bf946124bb214",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7457076834863530039"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-7457076834863530039"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "378131cde40108809c7e48968a4e6ac7b6363bfaa79b2f073ec06e0bbb8323d1",
+      "lean_theorem": "case_70_ref",
+      "matched": true
+    },
+    {
+      "index": 71,
+      "kind": "program",
+      "mode": "off",
+      "source": "1264968533420068937 2 quote run",
+      "source_sha256": "4e798c0a48b7e6d7428aadbc1e1855249f1b76906eeabf7a69345a7a86c1b238",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1264968533420068937"
+          ],
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1264968533420068937"
+          ],
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c0c314bce2203ffc0707e28f72c73e8ba8f8b196c23b33b8572fdff51ad99dc4",
+      "lean_theorem": "case_71_ref",
+      "matched": true
+    },
+    {
+      "index": 71,
+      "kind": "program",
+      "mode": "on",
+      "source": "1264968533420068937 2 quote run",
+      "source_sha256": "4e798c0a48b7e6d7428aadbc1e1855249f1b76906eeabf7a69345a7a86c1b238",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1264968533420068937"
+          ],
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1264968533420068937"
+          ],
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ea424799762933d23e423966e60c1cbf86560f836a22c92b43b9ea9c9ae42c03",
+      "lean_theorem": "case_71_ref",
+      "matched": true
+    },
+    {
+      "index": 72,
+      "kind": "program",
+      "mode": "off",
+      "source": "3 1 [ -3128317140174166877 - ] [ 2 -4611686018427387904 + * ] 7925043865775631025 quote compose compose run",
+      "source_sha256": "61f7d0143ac4fe8a2159fd9677e8b890c999441e40b0c90973957c182ccf3dc6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-2966737756506442052"
+          ],
+          [
+            "I64",
+            "7925043865775631025"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-2966737756506442052"
+          ],
+          [
+            "I64",
+            "7925043865775631025"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "230c068a3d0f087c5b74eb64f3020ade94f84d2995867c5eee08d35d6f1e331e",
+      "lean_theorem": "case_72_ref",
+      "matched": true
+    },
+    {
+      "index": 72,
+      "kind": "program",
+      "mode": "on",
+      "source": "3 1 [ -3128317140174166877 - ] [ 2 -4611686018427387904 + * ] 7925043865775631025 quote compose compose run",
+      "source_sha256": "61f7d0143ac4fe8a2159fd9677e8b890c999441e40b0c90973957c182ccf3dc6",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-2966737756506442052"
+          ],
+          [
+            "I64",
+            "7925043865775631025"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ],
+          [
+            "I64",
+            "-2966737756506442052"
+          ],
+          [
+            "I64",
+            "7925043865775631025"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c4a7afe85b6b8982a94549ff170d41a08f5875a0d2ae2c6ce2efe188b4b8b124",
+      "lean_theorem": "case_72_ref",
+      "matched": true
+    },
+    {
+      "index": 73,
+      "kind": "straight",
+      "mode": "off",
+      "source": "3037000500 -6717904838821726953 1 -1 + 465827590296342600 * +",
+      "source_sha256": "70694fb2e173ec43b36bc45597d694418c215369fcf08dab156591dba91c7ffa",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-6717904838821726953"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-6717904838821726953"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f4914f35a3fe518989bbfe10ca98aa36b4ec38de7425a5249c562964e4fa9de7",
+      "lean_theorem": "case_73_ref",
+      "matched": true
+    },
+    {
+      "index": 73,
+      "kind": "straight",
+      "mode": "on",
+      "source": "3037000500 -6717904838821726953 1 -1 + 465827590296342600 * +",
+      "source_sha256": "70694fb2e173ec43b36bc45597d694418c215369fcf08dab156591dba91c7ffa",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-6717904838821726953"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3037000500"
+          ],
+          [
+            "I64",
+            "-6717904838821726953"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "97c5f020be96a26a7d997db04e4b3cdc9a38cebcbf0a7a43794be762ae83e0db",
+      "lean_theorem": "case_73_ref",
+      "matched": true
+    },
+    {
+      "index": 74,
+      "kind": "program",
+      "mode": "off",
+      "source": "2147483648 4294967296 quote run",
+      "source_sha256": "c225df7ffdfed8208b988cb6f033527e855d6bb65bafd69b7dbadf2854e7a8e9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2147483648"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2147483648"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0bd6878b0635cdd548ed97ed31434a5489e34b47f1380c89aaef9d1694bb7835",
+      "lean_theorem": "case_74_ref",
+      "matched": true
+    },
+    {
+      "index": 74,
+      "kind": "program",
+      "mode": "on",
+      "source": "2147483648 4294967296 quote run",
+      "source_sha256": "c225df7ffdfed8208b988cb6f033527e855d6bb65bafd69b7dbadf2854e7a8e9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2147483648"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2147483648"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0c3c95a8809d153df734bbef0836da6b92753ffdb0ae3344a8c5b2f6a94e3aa3",
+      "lean_theorem": "case_74_ref",
+      "matched": true
+    },
+    {
+      "index": 75,
+      "kind": "nested",
+      "mode": "off",
+      "source": "4662821328884780464 6021878450104336172 -9223372036854775807 [ 8567165528192942754 * ] quote run run",
+      "source_sha256": "5756f2c9a255d3de9ede42aad67fadf48757bc389816bddd12fec6816fb11383",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4662821328884780464"
+          ],
+          [
+            "I64",
+            "6021878450104336172"
+          ],
+          [
+            "I64",
+            "8567165528192942754"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4662821328884780464"
+          ],
+          [
+            "I64",
+            "6021878450104336172"
+          ],
+          [
+            "I64",
+            "8567165528192942754"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "93c3d61b428d967f8302de393a6c8b3a416c65a28179289af6e246132433524d",
+      "lean_theorem": "case_75_ref",
+      "matched": true
+    },
+    {
+      "index": 75,
+      "kind": "nested",
+      "mode": "on",
+      "source": "4662821328884780464 6021878450104336172 -9223372036854775807 [ 8567165528192942754 * ] quote run run",
+      "source_sha256": "5756f2c9a255d3de9ede42aad67fadf48757bc389816bddd12fec6816fb11383",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4662821328884780464"
+          ],
+          [
+            "I64",
+            "6021878450104336172"
+          ],
+          [
+            "I64",
+            "8567165528192942754"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4662821328884780464"
+          ],
+          [
+            "I64",
+            "6021878450104336172"
+          ],
+          [
+            "I64",
+            "8567165528192942754"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "019a710b48ea720ef8e5e0cc4dd2f173b4826fb511e128247775d7f03b7f11dd",
+      "lean_theorem": "case_75_ref",
+      "matched": true
+    },
+    {
+      "index": 76,
+      "kind": "straight",
+      "mode": "off",
+      "source": "false -4611686018427387904 1045967618118599118 -5657861832447828172 - +",
+      "source_sha256": "e092bc32145e9fde33fc0add93802c816ac2234670eae1f3af337f15366e27f0",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2092143432139039386"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2092143432139039386"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "f75c6b23ba7f3f2300d9bbcb93339c33b7e6a3fe36eeb795473bbee89c118c04",
+      "lean_theorem": "case_76_ref",
+      "matched": true
+    },
+    {
+      "index": 76,
+      "kind": "straight",
+      "mode": "on",
+      "source": "false -4611686018427387904 1045967618118599118 -5657861832447828172 - +",
+      "source_sha256": "e092bc32145e9fde33fc0add93802c816ac2234670eae1f3af337f15366e27f0",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2092143432139039386"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "2092143432139039386"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "a81c960d91291325547be0916ba4d528f88f66fdcb01e9c731e1e319d72fc841",
+      "lean_theorem": "case_76_ref",
+      "matched": true
+    },
+    {
+      "index": 77,
+      "kind": "program",
+      "mode": "off",
+      "source": "[ 2 0 * ] run",
+      "source_sha256": "65db3b47742e44d5c870322b0636856f18f3bcae93297690270658c57016ff14",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "513fb852ac74d231435314260f2e7b1019e46071d94ae31e6319cd7f32c8b8c0",
+      "lean_theorem": "case_77_ref",
+      "matched": true
+    },
+    {
+      "index": 77,
+      "kind": "program",
+      "mode": "on",
+      "source": "[ 2 0 * ] run",
+      "source_sha256": "65db3b47742e44d5c870322b0636856f18f3bcae93297690270658c57016ff14",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "3c77fe0b6821b2bc382aadd6cd6c6eacdd822370cd30c71e096681dab2eedc92",
+      "lean_theorem": "case_77_ref",
+      "matched": true
+    },
+    {
+      "index": 78,
+      "kind": "program",
+      "mode": "off",
+      "source": "1 [ -1338363697592365481 -6558672086552568399 - ] 4945246508370103258 quote compose run",
+      "source_sha256": "15507913d4d3dab82e6128d29005281a25078f4ba33e0ba08f80d2695b0a2181",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "5220308388960202918"
+          ],
+          [
+            "I64",
+            "4945246508370103258"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "5220308388960202918"
+          ],
+          [
+            "I64",
+            "4945246508370103258"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "87e28091f20ae717fd8d5a5fb935211c14e50d9d78c844c27e303105a1200373",
+      "lean_theorem": "case_78_ref",
+      "matched": true
+    },
+    {
+      "index": 78,
+      "kind": "program",
+      "mode": "on",
+      "source": "1 [ -1338363697592365481 -6558672086552568399 - ] 4945246508370103258 quote compose run",
+      "source_sha256": "15507913d4d3dab82e6128d29005281a25078f4ba33e0ba08f80d2695b0a2181",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "5220308388960202918"
+          ],
+          [
+            "I64",
+            "4945246508370103258"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "5220308388960202918"
+          ],
+          [
+            "I64",
+            "4945246508370103258"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "9305a9b80ab470f705e398e174c4eca0bb3e68de3330f4b0b606392a74703ce1",
+      "lean_theorem": "case_78_ref",
+      "matched": true
+    },
+    {
+      "index": 79,
+      "kind": "straight",
+      "mode": "off",
+      "source": "-2 0",
+      "source_sha256": "719aa89d1f2ab3b323fcfd273e78c23b6ec5dddacb479481a63d866666c36051",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "bb9b9d5b1135166b8480d296e184e7cc4640c634012213c0c76b5c2c5a0b7be8",
+      "lean_theorem": "case_79_ref",
+      "matched": true
+    },
+    {
+      "index": 79,
+      "kind": "straight",
+      "mode": "on",
+      "source": "-2 0",
+      "source_sha256": "719aa89d1f2ab3b323fcfd273e78c23b6ec5dddacb479481a63d866666c36051",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "75b380fdb959309c4c52672ccd2a74770f7748cda3e7c5e020da303114c6295f",
+      "lean_theorem": "case_79_ref",
+      "matched": true
+    },
+    {
+      "index": 80,
+      "kind": "straight",
+      "mode": "off",
+      "source": "9223372036854775808",
+      "source_sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64"
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_80_ref",
+      "matched": true
+    },
+    {
+      "index": 81,
+      "kind": "straight",
+      "mode": "off",
+      "source": "true 1 -9223372036854775809 +",
+      "source_sha256": "26dccfe262724f3e2a6fb5245844fcec6ebfa55c2b9299ec50fb4df64b3beda6",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64"
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_81_ref",
+      "matched": true
+    },
+    {
+      "index": 82,
+      "kind": "program",
+      "mode": "off",
+      "source": "5 [ 18446744073709551616 + ] run",
+      "source_sha256": "eb4df4aa17f21749af98a5b6056d6c6890b5e4d138b0c6d5e8389fcd0f758d8e",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64"
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_82_ref",
+      "matched": true
+    },
+    {
+      "index": 83,
+      "kind": "program",
+      "mode": "off",
+      "source": "41 [ ] run",
+      "source_sha256": "b8808aa1b482ce112dc66d5a29e842b8f8e78c69c10c819cf9b727fc4a05550c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "41"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "41"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "7e3000c599ed11700440958a5d99c7464d53a511c6da80366b398dd3e67d2d5e",
+      "lean_theorem": "case_83_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4064a1cba9d18c0f0ce1259e57025603c0d47658",
+        "sha256": "8fb78da4f510ee0e86731da4cf352a7f85dfac25b26019974520528a22d24fd7"
+      }
+    },
+    {
+      "index": 83,
+      "kind": "program",
+      "mode": "on",
+      "source": "41 [ ] run",
+      "source_sha256": "b8808aa1b482ce112dc66d5a29e842b8f8e78c69c10c819cf9b727fc4a05550c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "41"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "41"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "c4992bb75e5403e5df022dfbd45ba7702f92c5251db7bc880c771381105c9a52",
+      "lean_theorem": "case_83_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4064a1cba9d18c0f0ce1259e57025603c0d47658",
+        "sha256": "8fb78da4f510ee0e86731da4cf352a7f85dfac25b26019974520528a22d24fd7"
+      }
+    },
+    {
+      "index": 84,
+      "kind": "program",
+      "mode": "off",
+      "source": "7 [ 0 ] [0] compose run",
+      "source_sha256": "c212bc849288eb7822d1d7d8c1b802276ea5256b5b40d3de0d4de6cdfac7c091",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "39d1b462f2c087cc9651c2bd91e43f55ce763752a0a798a2524f62c592cf49ec",
+      "lean_theorem": "case_84_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4881df6e45526bb8c4ce36c454122f1a14400281",
+        "sha256": "2cca564b239dd7492e03721045211d105736c152e6eae964a2158c19a86331bc"
+      }
+    },
+    {
+      "index": 84,
+      "kind": "program",
+      "mode": "on",
+      "source": "7 [ 0 ] [0] compose run",
+      "source_sha256": "c212bc849288eb7822d1d7d8c1b802276ea5256b5b40d3de0d4de6cdfac7c091",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7"
+          ],
+          [
+            "I64",
+            "0"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4b479bfe1013c29e2aa559703d601fb7e5ea52d653122646ee73d490140f268d",
+      "lean_theorem": "case_84_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4881df6e45526bb8c4ce36c454122f1a14400281",
+        "sha256": "2cca564b239dd7492e03721045211d105736c152e6eae964a2158c19a86331bc"
+      }
+    },
+    {
+      "index": 85,
+      "kind": "program",
+      "mode": "off",
+      "source": "41 [ 1 + ] run",
+      "source_sha256": "2d38fa503d779be2ec1e126d8d3730ee1ce334959fca03e54cf0e5bf90616fd9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "42"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "42"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "413fc6e1739dcee0f4caaeb7e6e32e5c288f7d7f698328e4d1cc2828b809bb93",
+      "lean_theorem": "case_85_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4884468c6f296975daef65ffa3972b97637dc2b4",
+        "sha256": "bb659e4686fbcc9da545700a65083699e7ba54a63cb6e5fc6bba797be87960b0"
+      }
+    },
+    {
+      "index": 85,
+      "kind": "program",
+      "mode": "on",
+      "source": "41 [ 1 + ] run",
+      "source_sha256": "2d38fa503d779be2ec1e126d8d3730ee1ce334959fca03e54cf0e5bf90616fd9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "42"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "42"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+      "lean_theorem": "case_85_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "4884468c6f296975daef65ffa3972b97637dc2b4",
+        "sha256": "bb659e4686fbcc9da545700a65083699e7ba54a63cb6e5fc6bba797be87960b0"
+      }
+    },
+    {
+      "index": 86,
+      "kind": "program",
+      "mode": "off",
+      "source": "4[ 1 + ] run",
+      "source_sha256": "195b31f6b0e58efee536f2d7de7f07934361ea7d8c05d428e34f866c8f017f4b",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "ba74bf9d3d6c77139004b6396ce113acd7bdd5d331881660a343226451b591a4",
+      "lean_theorem": "case_86_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "61c4dfc7d89b12dda59f7cc63d69ed0b027d9edc",
+        "sha256": "82162f54c5f1479ca1b275bd4803e740be11e5e12b2a063a4c028694a9a498c6"
+      }
+    },
+    {
+      "index": 86,
+      "kind": "program",
+      "mode": "on",
+      "source": "4[ 1 + ] run",
+      "source_sha256": "195b31f6b0e58efee536f2d7de7f07934361ea7d8c05d428e34f866c8f017f4b",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "5"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4c462f6faf2c0231eb2eba9432d9960d98ef326ff59f77acd8bd1b42a9e21144",
+      "lean_theorem": "case_86_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "61c4dfc7d89b12dda59f7cc63d69ed0b027d9edc",
+        "sha256": "82162f54c5f1479ca1b275bd4803e740be11e5e12b2a063a4c028694a9a498c6"
+      }
+    },
+    {
+      "index": 87,
+      "kind": "straight",
+      "mode": "off",
+      "source": "true",
+      "source_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "6beaf8c3b9efcf8b4b81523255ee0155386231ce8d2478237a4a9c42364dff65",
+      "lean_theorem": "case_87_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "6a149f42ac0fd2b239a2034b7d342bec6bde078b",
+        "sha256": "f77ac0b78487cb771786caa5ed26a9d44b01aa41da5ca24c04b31a00452e311b"
+      }
+    },
+    {
+      "index": 87,
+      "kind": "straight",
+      "mode": "on",
+      "source": "true",
+      "source_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "08aa8e350bada5517af4f4f20ec208184b9c33d6bc96ec6c8c7e72bc2fc005ef",
+      "lean_theorem": "case_87_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "6a149f42ac0fd2b239a2034b7d342bec6bde078b",
+        "sha256": "f77ac0b78487cb771786caa5ed26a9d44b01aa41da5ca24c04b31a00452e311b"
+      }
+    },
+    {
+      "index": 88,
+      "kind": "program",
+      "mode": "off",
+      "source": "[1 1 + ] run",
+      "source_sha256": "88f24790b8999824af5b790c3a585fd8902b731563ae9b2647c147433edc715e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "0fabfc7f9d4bcb5eb44a49e58864bbde87df6114e8a507765ccf8ff19e5bfdd3",
+      "lean_theorem": "case_88_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "6d47aa72961748a3d16e177aeefaafe443a4285d",
+        "sha256": "575f0c691d0c9d619c1f7b3818e0747461017c864b7cbab38bfba4831154af70"
+      }
+    },
+    {
+      "index": 88,
+      "kind": "program",
+      "mode": "on",
+      "source": "[1 1 + ] run",
+      "source_sha256": "88f24790b8999824af5b790c3a585fd8902b731563ae9b2647c147433edc715e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "df876389f79fd3e47a84e92c853706317957bb5acb87f0d456e1762b0313075c",
+      "lean_theorem": "case_88_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "6d47aa72961748a3d16e177aeefaafe443a4285d",
+        "sha256": "575f0c691d0c9d619c1f7b3818e0747461017c864b7cbab38bfba4831154af70"
+      }
+    },
+    {
+      "index": 89,
+      "kind": "program",
+      "mode": "off",
+      "source": "[0] run",
+      "source_sha256": "093c5c3263f3e4df5e718fa6a10a8f9d966b355c19cd95702a0cf265b312f9f9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "d650d29a0cf95ec5888a262b88ed1b8d40d03b2878b398f6fcec95e6b8a6e501",
+      "lean_theorem": "case_89_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "7ba6d241887c3e609efbe7ab6379c8f91d974be6",
+        "sha256": "7708f8309905fc94a4d1cf26ba1690ee2e6d345369bac451ecf75bea5f6ea43a"
+      }
+    },
+    {
+      "index": 89,
+      "kind": "program",
+      "mode": "on",
+      "source": "[0] run",
+      "source_sha256": "093c5c3263f3e4df5e718fa6a10a8f9d966b355c19cd95702a0cf265b312f9f9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4a8260571806ac59d5a5740a76f76f4170549588e6263e1ccbb00936a38d8458",
+      "lean_theorem": "case_89_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "7ba6d241887c3e609efbe7ab6379c8f91d974be6",
+        "sha256": "7708f8309905fc94a4d1cf26ba1690ee2e6d345369bac451ecf75bea5f6ea43a"
+      }
+    },
+    {
+      "index": 90,
+      "kind": "straight",
+      "mode": "off",
+      "source": "1 2 0",
+      "source_sha256": "f33e4ee3af37194d557c0d8d3f2d801aa383e27bb0a40b3a4cc76ca9ffeaca97",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "33cc02ae53ec186bd34e0a8d582420b6a2eaf999d5916ca078ec3ab5d484731a",
+      "lean_theorem": "case_90_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "92e0eb0ca2114c2a65932e881f8959609b31ba59",
+        "sha256": "96765cc17d85e7240929de8b90831fbffb625d18b574f645c1c751e3e64a5eaa"
+      }
+    },
+    {
+      "index": 90,
+      "kind": "straight",
+      "mode": "on",
+      "source": "1 2 0",
+      "source_sha256": "f33e4ee3af37194d557c0d8d3f2d801aa383e27bb0a40b3a4cc76ca9ffeaca97",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ],
+          [
+            "I64",
+            "2"
+          ],
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "415b8266bcb81af71a6e9ab0838ee8539360d5476656f3d53d67b8db25debb23",
+      "lean_theorem": "case_90_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "92e0eb0ca2114c2a65932e881f8959609b31ba59",
+        "sha256": "96765cc17d85e7240929de8b90831fbffb625d18b574f645c1c751e3e64a5eaa"
+      }
+    },
+    {
+      "index": 91,
+      "kind": "straight",
+      "mode": "off",
+      "source": "1 2 +",
+      "source_sha256": "c6b8f1fb03356234b24989bf78682c1ca8b1779f75803deb95d203098220511e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "e2101aafa375b421e76f08ba376d0f57fb832ff758555b3b84fb50fe894f5f2c",
+      "lean_theorem": "case_91_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "95d134c1a13eb2670f78e796608548bb6736b19b",
+        "sha256": "ad16b51804410c1ae628ee2a342d27a0db845abc373f4295e517acd5eee86155"
+      }
+    },
+    {
+      "index": 91,
+      "kind": "straight",
+      "mode": "on",
+      "source": "1 2 +",
+      "source_sha256": "c6b8f1fb03356234b24989bf78682c1ca8b1779f75803deb95d203098220511e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "3"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "4bee8c5e5c8f8441907f86fb15e65d5db56ec59978c0f87e613d05b244aa8657",
+      "lean_theorem": "case_91_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "95d134c1a13eb2670f78e796608548bb6736b19b",
+        "sha256": "ad16b51804410c1ae628ee2a342d27a0db845abc373f4295e517acd5eee86155"
+      }
+    },
+    {
+      "index": 92,
+      "kind": "straight",
+      "mode": "off",
+      "source": "4",
+      "source_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "96eeb04f4980dfd10c0f3a0e3148cb750275c9839ba2bb947c8eb0dc3faf3337",
+      "lean_theorem": "case_92_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "d5d9c1a51d0cefabe405eac939e3ae67574bed44",
+        "sha256": "48bbadb4a17ba45c8c6241def075f2c5739dfe22e31a66467c7ef8e9365a8478"
+      }
+    },
+    {
+      "index": 92,
+      "kind": "straight",
+      "mode": "on",
+      "source": "4",
+      "source_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "fcb1fdecccc4949a5e0106f120dd5742abcc1dea4a1f9fb03acd2c9072cf75c7",
+      "lean_theorem": "case_92_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "d5d9c1a51d0cefabe405eac939e3ae67574bed44",
+        "sha256": "48bbadb4a17ba45c8c6241def075f2c5739dfe22e31a66467c7ef8e9365a8478"
+      }
+    },
+    {
+      "index": 93,
+      "kind": "straight",
+      "mode": "off",
+      "source": "92233720368542891",
+      "source_sha256": "0f60485a6a3d2b415fb1b6011bcb777ac7ff768179278e991f582af76a008710",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "92233720368542891"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "92233720368542891"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "58a6bdbbc0abf1f3f30cd001b3848f0e67305bc17bda63a14f77a21e3745ba19",
+      "lean_theorem": "case_93_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "ebdaa2042260c0620adad6eb45ef49311472cad1",
+        "sha256": "35a39f8936bbefc7a96558a206a30d427bbf193b2922f04e94ae5ea3f4a3fb21"
+      }
+    },
+    {
+      "index": 93,
+      "kind": "straight",
+      "mode": "on",
+      "source": "92233720368542891",
+      "source_sha256": "0f60485a6a3d2b415fb1b6011bcb777ac7ff768179278e991f582af76a008710",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "92233720368542891"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "92233720368542891"
+          ]
+        ],
+        "diagnostic": null
+      },
+      "wasm_sha256": "de987d2bcb4caeb42d1bc51749a1cfeb884c2546f37d105d100ad25fab241042",
+      "lean_theorem": "case_93_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "ebdaa2042260c0620adad6eb45ef49311472cad1",
+        "sha256": "35a39f8936bbefc7a96558a206a30d427bbf193b2922f04e94ae5ea3f4a3fb21"
+      }
+    }
+  ],
+  "all_matched": true,
+  "imported": {
+    "cases_sha256": "10809d1dbaac298a5346e307ba212f63d50d729e2a77080723434fe7926bdb06",
+    "corpus": {
+      "units": 1770,
+      "names_sha256": "2f65f810402781c30ddae3a74b509b5babc52f48c3c426505fedefd42476b6ea"
+    },
+    "export_counts": {
+      "files": 1770,
+      "short": 1,
+      "module_or_calculator_profile": 1332,
+      "multi_unit": 125,
+      "non_utf8": 5,
+      "empty": 10,
+      "outside_fragment": 275,
+      "reference_refusal": 10,
+      "duplicate": 1,
+      "imported": 11
+    },
+    "cases": 11,
+    "executed_cases": 11,
+    "executions": 22
+  },
+  "opt_on_off_same_stack": true,
+  "coverage": {
+    "kinds": {
+      "straight": 28,
+      "program": 47,
+      "nested": 19
+    },
+    "with_prefix": 56,
+    "with_bool_prefix": 20,
+    "with_compose": 15,
+    "with_nested_compose": 8,
+    "with_quote": 42,
+    "negative_results": 58,
+    "boundary_values": 21,
+    "rejection_cases": 3,
+    "imported_corpus_cases": 11
+  },
+  "controls": [
+    {
+      "id": "reversed-subtraction",
+      "intended": "reference computes top - deeper",
+      "detected_cases": 66,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ 0 1 - ] quote run run",
+        "steps": 49
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "unsigned-decoding",
+      "intended": "observed I64 decoded as unsigned",
+      "detected_cases": 116,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ -1 ] quote run run",
+        "steps": 17
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "prefix-corruption",
+      "intended": "expected bottom prefix item replaced",
+      "detected_cases": 110,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "2 [  ] quote run run",
+        "steps": 4
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "wrong-composition-order",
+      "intended": "compose evaluated as q then p",
+      "detected_cases": 26,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "-7671914197926969886 quote 3 quote compose run",
+        "steps": 4
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "trace-mismatch",
+      "intended": "expectation claims a host request",
+      "detected_cases": 182,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[  ] quote run run",
+        "steps": 3
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "literal-wrapping-instead-of-refusal",
+      "intended": "out-of-range literal assumed to wrap",
+      "detected_cases": 3,
+      "demonstrably_fails": true
+    },
+    {
+      "id": "stale-proof-subject",
+      "intended": "Lean case or foundation receipt for a different subject",
+      "lean_case_rebinding_rejected": true,
+      "foundation_tree_mismatch_rejected": true,
+      "demonstrably_fails": true
+    }
+  ],
+  "checker_property_lanes": {
+    "command": "cargo test --locked --offline -p noble-kernel --test property",
+    "exit": 0,
+    "summary": [
+      "test oracle_table_covers_every_pool_word ... ok",
+      "test malformed_candidates_never_panic_or_accept ... ok",
+      "test generated_candidates_agree_with_independent_oracle ... ok",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s"
+    ],
+    "generated_oracle_candidates": 1000,
+    "malformed_candidates": 200,
+    "coverage_class": "checker acceptance (kernel), NOT execution semantics"
+  },
+  "sources_sha256": {
+    "verification/foundation/differential.mjs": "745391fd5cbdabc494a8a671b3e53ded8e189f60dd17494c7ae46ab719a40acd",
+    "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+    "verification/foundation/execution.mjs": "607bfbe9a7c5656c18e0de84a3f3d9c584e0d7d5ee794b6de7419118cca4b263",
+    "verification/selected-vendor.mjs": "da20d74af3549fa71889a0427ed9f58ae38d3dcd0df5b0cd20a38194058cf0da",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/Literal.lean": "e6a2053848b738c7d1a7a0fcd6e6328c2199fc179a86344f032a038e33865d1f",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-cli/src/core/runtime/config.json": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+    "policy/tool-selection.json": "1128bfe36d2cdad2858cab9cb5a35ef1ff5a8de23d3046c7c95c75edc79d8459",
+    "Cargo.lock": "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b",
+    "crates/noble-kernel/tests/property.rs": "8d3ad6b061849c29951b65c08edff96eff0a84e44eddee61cc616ae5b929680e"
+  },
+  "claims": [
+    {
+      "claim": "refRun semantics equal MC1 Exec for the fragment (any prefix)",
+      "status": "proved",
+      "theorems": [
+        "NobleFoundation.PExpr.exec_inputs_run",
+        "NobleFoundation.exec_lowerAll_from_empty",
+        "NobleFoundation.exec_inputs_nested",
+        "NobleFoundation.exec_lowerAll",
+        "NobleFoundation.PExpr.exec_run_ref"
+      ]
+    },
+    {
+      "claim": "per-case expectations equal refRun (kernel decide) and per-case MC1 theorems",
+      "status": "proved",
+      "count": 94
+    },
+    {
+      "claim": "compiled managed-Wasm execution matches, opt off and on",
+      "status": "tested",
+      "count": 185
+    },
+    {
+      "claim": "imported fuzz-corpus programs match their Lean-checked expectations, opt off and on",
+      "status": "tested",
+      "count": 11
+    },
+    {
+      "claim": "out-of-range literals refused by the frontend",
+      "status": "tested",
+      "count": 3
+    },
+    {
+      "claim": "Rust frontend refines the transcribed literal accumulator",
+      "status": "open"
+    },
+    {
+      "claim": "noble-wasm lowering, helpers, wasm-tools, wasm-opt, V8",
+      "status": "assumed"
+    },
+    {
+      "claim": "universal backend correctness",
+      "status": "open"
+    },
+    {
+      "claim": "Mathlib .olean imports",
+      "status": "assumed",
+      "note": "downloaded cache, not rebuilt"
+    }
+  ],
+  "commands": 270
+}

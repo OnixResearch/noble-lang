@@ -1,0 +1,132 @@
+{
+  "schema": "noble-fuzz-smoke/v1",
+  "result": "passed",
+  "source_commit": "3843e9146b0c97dc597d1b1848dcc3d371a80b5d",
+  "source_tree": "ccd0364ad7affa5d26f3c4958cf0ce65475dc5c7",
+  "clean_source": true,
+  "allow_dirty": false,
+  "toolchain": {
+    "rustc": {
+      "path": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+      "version": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)"
+    },
+    "cargo": {
+      "path": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo"
+    },
+    "cxx": {
+      "path": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/g++"
+    },
+    "node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "version": "v24.13.0"
+    }
+  },
+  "dependencies": {
+    "lock_sha256": "35e10caffd14c6d1bb8c8544541a636716c3189e22df7d6f38614ce92e7e14fe",
+    "libfuzzer_sys": {
+      "version": "0.4.10",
+      "checksum": "5037190e1f70cbeef565bd267599242926f724d3b8a9f510fd7e0b540cfa4404"
+    }
+  },
+  "rustflags": "-Cpasses=sancov-module -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-pc-table -Cllvm-args=-sanitizer-coverage-trace-compares --cfg fuzzing -Cdebug-assertions -Coverflow-checks",
+  "libfuzzer_options": [
+    "-timeout=5",
+    "-rss_limit_mb=1024",
+    "-dict=crates/noble-wasm/fuzz/noble.dict"
+  ],
+  "oracle_sha256": "57b6d0954405259ad794b31a1bb08fe9a4c827d43ca5fc0b844888e16b9dafc3",
+  "targets": [
+    {
+      "target": "source",
+      "binary_sha256": "5ef620280c2660bd3cbd58d7bd4208edf6ee3c31bac2fffc83b7f5ec9dff4b21",
+      "exit": 0,
+      "signal": null,
+      "seconds": 300,
+      "seeds": {
+        "files": 86,
+        "inputs": 1337,
+        "digest": "943ffc4e3d5340c71e6c0196ff3aef3529d4af6e6bcdf2622823e558cf21c4b4"
+      },
+      "stats": {
+        "number_of_executed_units": 832090,
+        "average_exec_per_sec": 2764,
+        "new_units_added": 6299,
+        "slowest_unit_time_sec": 0,
+        "peak_rss_mb": 49,
+        "coverage_edges": 6426,
+        "features": 33051,
+        "corpus_units": 2117
+      },
+      "findings": [],
+      "command": "fuzz source"
+    }
+  ],
+  "commands": [
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 3
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 2
+    },
+    {
+      "label": "git status",
+      "exit": 0,
+      "milliseconds": 15
+    },
+    {
+      "label": "rustc --version",
+      "exit": 0,
+      "milliseconds": 8
+    },
+    {
+      "label": "fuzz build",
+      "exit": 0,
+      "milliseconds": 18876
+    },
+    {
+      "label": "git ls-files fixtures",
+      "exit": 0,
+      "milliseconds": 3
+    },
+    {
+      "label": "fuzz source",
+      "exit": 0,
+      "milliseconds": 301024
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 3
+    },
+    {
+      "label": "git rev-parse",
+      "exit": 0,
+      "milliseconds": 3
+    },
+    {
+      "label": "git status",
+      "exit": 0,
+      "milliseconds": 16
+    }
+  ],
+  "claims": {
+    "kind": "dynamic evidence: coverage-guided fuzzing for a fixed time",
+    "properties": [
+      "no panic",
+      "no Internal frontend diagnostic",
+      "no Defective or Invalid backend outcome for a prepared contract",
+      "deterministic outcomes",
+      "non-exhausted outcomes reproduced under the default budget",
+      "emitted WAT parses and the module validates"
+    ],
+    "non_claims": [
+      "A clean run is not a proof that no input violates a property.",
+      "The oracles check outcome consistency, not that any accepted program is correct.",
+      "Peak RSS is libFuzzer getrusage, which a launching process can inflate."
+    ]
+  }
+}

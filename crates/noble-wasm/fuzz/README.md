@@ -103,6 +103,42 @@ a mismatch instead of being hidden by a re-rendered source. A mismatch is shrunk
 like any other. The receipt's `imported` block states the export counts, the
 imported cases and how many reached execution in both modes.
 
+Run the merge with `-rss_limit_mb=8192`: under the smoke run's 1024 MB limit,
+libFuzzer's own outer merge process stopped itself. It held 2.9 GB while parsing
+its control file, which is not a property of any input.
+
+**One run, on clean source `3843e914`.** The `source` target ran for 300
+seconds: 832,090 executions, 6,426 coverage edges, a peak RSS of 49 MB and no
+findings ([`receipt-source-3843e914.json`](../../../verification/fuzz/receipt-source-3843e914.json)).
+
+The merge kept 1,770 units. The export
+([`differential-cases-3843e914.json`](../../../verification/fuzz/differential-cases-3843e914.json))
+imported 11 of them: 5 straight-line programs and 6 quotation programs. It skipped the
+rest:
+
+| Reason | Units |
+|---|---|
+| module or calculator profile | 1,332 |
+| outside the fragment | 275 |
+| several units | 125 |
+| empty | 10 |
+| reference refusal | 10 |
+| not UTF-8 | 5 |
+| short | 1 |
+| duplicate | 1 |
+
+[`differential-import-3843e914.json`](../../../verification/fuzz/differential-import-3843e914.json)
+is the differential receipt.
+- All 11 imported programs reached execution in both modes, 22 executions, and
+  matched their Lean-checked expectations.
+- So did the 80 seeded cases and the 3 rejection cases.
+- The stacks agree with optimisation off and on.
+- All seven mutation controls failed for their intended reasons.
+
+Coverage is therefore stated rather than implied: the corpus contributes few
+programs to this fragment, because most fuzzed subjects are not pure
+arithmetic.
+
 ## Findings
 
 | Regression | Defect | Fix |
