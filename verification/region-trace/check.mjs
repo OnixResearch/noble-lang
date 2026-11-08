@@ -1,12 +1,17 @@
 // Lean-kernel check for the region-trace relation pilot (`.cairn/changes/region-trace-relation`,
-// WIT-TRACE-01). Builds `proofs/m5/RegionTrace.lean` in an isolated project with the pinned Lean
-// toolchain and audits every inventoried theorem's statement and transitive axioms.
+// WIT-TRACE-01). Builds `proofs/m5/RegionTrace.lean` and the generated runtime fixtures
+// `proofs/m5/RegionTraceRuntime.lean` in an isolated project with the pinned Lean toolchain and
+// audits every inventoried theorem's statement and transitive axioms. The runtime fixtures must be
+// exactly what `runtime-fixtures.mjs` generates from the retained effect-protocol receipt.
 // This is a model theorem check: no emitted-step correspondence, no Wasmtime claim.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  generate, inventoryFile as runtimeInventoryFile, leanFile as runtimeFile, receiptFile,
+} from './runtime-fixtures.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
@@ -21,6 +26,7 @@ const childEnv = {
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
 const codeFile = 'proofs/m5/RegionTrace.lean';
 const inventoryFile = 'proofs/m5/region-trace-inventory.json';
+const codeFiles = [codeFile, runtimeFile];
 const standardAxioms = new Set(['propext', 'Classical.choice', 'Quot.sound']);
 let output;
 const commands = [];
@@ -34,21 +40,23 @@ function run(command, argv, cwd = root) {
   return observed.stdout ?? '';
 }
 function checkDeclarations(inventory) {
-  const text = readFileSync(join(root, codeFile), 'utf8');
-  const code = text.replace(/\/-[\s\S]*?-\//g, '').replace(/--.*$/gm, '');
-  requireThat(!/\b(?:sorry|admit|native_decide|implemented_by|unsafe|opaque|partial)\b/.test(code),
-    `${codeFile}: forbidden proof or evaluation escape hatch`);
-  requireThat(!/@\[\s*extern\b/.test(code), `${codeFile}: external implementation attribute`);
-  requireThat(!/^\s*axiom\s/m.test(code), 'model declares an axiom');
   const names = inventory.theorems.map(row => row.name);
   requireThat(names.length > 0 && new Set(names).size === names.length, 'empty/duplicate theorem inventory');
   const declared = [];
-  let namespace = '';
-  for (const line of code.split('\n')) {
-    const opened = line.match(/^namespace\s+(\S+)/);
-    if (opened) namespace = opened[1];
-    const theorem = line.match(/^\s*(?:@\[[^\]]*\]\s*)?(?:theorem|lemma)\s+(\S+)/);
-    if (theorem) declared.push(`${namespace}.${theorem[1]}`);
+  for (const file of codeFiles) {
+    const text = readFileSync(join(root, file), 'utf8');
+    const code = text.replace(/\/-[\s\S]*?-\//g, '').replace(/--.*$/gm, '');
+    requireThat(!/\b(?:sorry|admit|native_decide|implemented_by|unsafe|opaque|partial)\b/.test(code),
+      `${file}: forbidden proof or evaluation escape hatch`);
+    requireThat(!/@\[\s*extern\b/.test(code), `${file}: external implementation attribute`);
+    requireThat(!/^\s*axiom\s/m.test(code), `${file}: declares an axiom`);
+    let namespace = '';
+    for (const line of code.split('\n')) {
+      const opened = line.match(/^namespace\s+(\S+)/);
+      if (opened) namespace = opened[1];
+      const theorem = line.match(/^\s*(?:@\[[^\]]*\]\s*)?(?:theorem|lemma)\s+(\S+)/);
+      if (theorem) declared.push(`${namespace}.${theorem[1]}`);
+    }
   }
   requireThat(names.every(name => name.startsWith('RegionTrace.')), 'unrelated theorem in inventory');
   requireThat(names.length === declared.length && names.every(name => declared.includes(name)),
@@ -57,7 +65,7 @@ function checkDeclarations(inventory) {
 }
 function auditTheorems(project, inventory, names) {
   const auditFile = join(output, 'Audit.lean');
-  const lines = ['import RegionTrace', ''];
+  const lines = ['import RegionTrace', 'import RegionTraceRuntime', ''];
   const positions = {};
   for (const name of names) {
     positions[lines.length + 1] = { name, kind: 'statement' }; lines.push(`#check @${name}`);
@@ -103,7 +111,15 @@ const initial = {
   status: run(git, ['status', '--porcelain=v1', '--untracked-files=all']).trim(),
 };
 requireThat(allowDirty || initial.status === '', `source worktree dirty: ${initial.status}`);
-const inventory = JSON.parse(readFileSync(join(root, inventoryFile)));
+const generated = generate();
+requireThat(readFileSync(join(root, runtimeFile), 'utf8') === generated.lean,
+  `${runtimeFile} differs from what runtime-fixtures.mjs generates from ${receiptFile}`);
+requireThat(readFileSync(join(root, runtimeInventoryFile), 'utf8') === generated.inventory,
+  `${runtimeInventoryFile} differs from what runtime-fixtures.mjs generates`);
+const inventory = {
+  theorems: [inventoryFile, runtimeInventoryFile]
+    .flatMap(file => JSON.parse(readFileSync(join(root, file))).theorems),
+};
 const names = checkDeclarations(inventory);
 const version = run(join(leanBin, 'lean'), ['--version']).trim();
 requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
@@ -111,11 +127,12 @@ requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e
 const project = join(output, 'project');
 mkdirSync(project);
 writeFileSync(join(project, 'RegionTrace.lean'), readFileSync(join(root, codeFile)));
+writeFileSync(join(project, 'RegionTraceRuntime.lean'), readFileSync(join(root, runtimeFile)));
 writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m5/lean-toolchain')));
 writeFileSync(join(project, 'lakefile.toml'),
-  ['name = "noble_region_trace"', 'defaultTargets = ["RegionTrace"]', '',
-   '[[lean_lib]]', 'name = "RegionTrace"', ''].join('\n'));
-run(join(leanBin, 'lake'), ['build', 'RegionTrace'], project);
+  ['name = "noble_region_trace"', 'defaultTargets = ["RegionTrace", "RegionTraceRuntime"]', '',
+   '[[lean_lib]]', 'name = "RegionTrace"', '', '[[lean_lib]]', 'name = "RegionTraceRuntime"', ''].join('\n'));
+run(join(leanBin, 'lake'), ['build', 'RegionTrace', 'RegionTraceRuntime'], project);
 const theorems = auditTheorems(project, inventory, names);
 const final = {
   commit: run(git, ['rev-parse', 'HEAD']).trim(),
@@ -128,8 +145,14 @@ const bindings = {
   model: {
     lean: version,
     lean_sha256: spawnSync('sha256sum', [join(leanBin, 'lean')], { encoding: 'utf8' }).stdout.split(' ')[0],
-    sources_sha256: Object.fromEntries([codeFile, inventoryFile].map(file => [file,
-      spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
+    sources_sha256: Object.fromEntries([codeFile, inventoryFile, runtimeFile, runtimeInventoryFile]
+      .map(file => [file, spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
+  },
+  // The runtime fixtures are generated from this retained receipt of real executions. They bind
+  // the observations, not the component or engine that produced them.
+  observations: {
+    receipt: receiptFile,
+    receipt_sha256: spawnSync('sha256sum', [join(root, receiptFile)], { encoding: 'utf8' }).stdout.split(' ')[0],
   },
   component: null,
   helper: null,
@@ -142,17 +165,19 @@ const bindings = {
 const claims = {
   model_theorems: names.length,
   implementation_theorems: 0,
+  runtime_fixtures: { related: generated.related, model_gaps: generated.gaps },
   correspondence: 'none',
   liveness: 'none',
-  cancellation: 'unsupported and unmodelled',
+  cancellation: 'unmodelled: the host control exists, but the alphabet has no cancellation event',
 };
 const receipt = {
   schema: 'noble-region-trace-proof/v1', result: 'passed',
   source_commit: initial.commit, source_tree: initial.tree, clean_source: initial.status === '',
   allow_dirty: allowDirty, lean: version,
   bindings, claims,
-  sources_sha256: Object.fromEntries([codeFile, inventoryFile,
-    'verification/region-trace/check.mjs'].map(file => [file,
+  sources_sha256: Object.fromEntries([codeFile, inventoryFile, runtimeFile, runtimeInventoryFile,
+    'verification/region-trace/check.mjs', 'verification/region-trace/runtime-fixtures.mjs',
+    receiptFile].map(file => [file,
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
   theorem_count: names.length, theorems, commands,
   implementation_theorem: false,
@@ -161,7 +186,9 @@ const receipt = {
     'no Rust host or lowering claim, and no liveness claim. The host records its own ordered trace with',
     'the exact retained identity, and pairing is stated over projected source traces rather than proved',
     'for the emitted component own steps; the observed-trace lowering maps an observation, not a',
-    'correspondence.'],
+    'correspondence. The runtime fixtures are finite tests of the traces in the retained effect-protocol',
+    'receipt: each recorded observation lowers to a trace the relation accepts or, for a host retirement',
+    'before any request, refuses for want of a registration decision.'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`REGION-TRACE: ${names.length} model theorems; strict axioms accepted\n`);

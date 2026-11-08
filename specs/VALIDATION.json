@@ -1841,7 +1841,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "578c760361252d79b8bb3ea6760eac8c815c4f4b8631bd10a6037a3e9b3d9fbe"
+      "sha256": "69c1f1dacd6857e99646668df2c1d3a422ccf50771ab6fd39ed72b9130a94c39"
     },
     {
       "file": "verification/service-wire-refinement/README.md",

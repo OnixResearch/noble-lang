@@ -1,0 +1,348 @@
+{
+  "schema": "noble-region-trace-inventory/v1",
+  "scope": "Generated runtime fixtures: 18 recorded traces relate, each with a refused control, and 2 host retirements before any request are refused for want of a registration decision. Source: verification/effect-protocol/execution-3ef3f43a.json.",
+  "theorems": [
+    {
+      "name": "RegionTrace.runtime_case01_read_1_2_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-01 read-1-2 trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_1_2_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-01 read-1-2 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_3_0_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-01 read-3-0 trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_3_0_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-01 read-3-0 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_3_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-3-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_3_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-3-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_2_2_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-2-2 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_2_2_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-2-2 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_neg1_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds--1-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_neg1_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds--1-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-9223372036854775807-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-9223372036854775807-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case03_scope_exhaustion_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-03 scope-exhaustion trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case03_scope_exhaustion_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-03 scope-exhaustion trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case04_trap_after_commit_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-04 trap-after-commit trace (exit trap) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case04_trap_after_commit_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-04 trap-after-commit trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision",
+      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused because registration is not observed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_74_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-06 fuel-74 trace (exit quota-exhausted) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_74_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-06 fuel-74 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision",
+      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused because registration is not observed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_between_two_reads_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-between-two-reads trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_between_two_reads_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-between-two-reads trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_a_computing_guest_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-a-computing-guest trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_a_computing_guest_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-a-computing-guest trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_same_guest_uncancelled_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 same-guest-uncancelled trace (exit quota-exhausted) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_same_guest_uncancelled_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 same-guest-uncancelled trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_the_compiled_subject_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-the-compiled-subject trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_the_compiled_subject_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-the-compiled-subject trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case08_omitted_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-08 omitted-release trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case08_omitted_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-08 omitted-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_double_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-09 double-release trace (exit adapter-invalid) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_double_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-09 double-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_read_after_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-09 read-after-release trace (exit adapter-invalid) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_read_after_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-09 read-after-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_unmodeled_error_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-11 unmodeled-error trace (exit outside-model) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_unmodeled_error_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-11 unmodeled-error trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_short_ok_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-11 short-ok trace (exit outside-model) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_short_ok_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-11 short-ok trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ]
+}
