@@ -1361,7 +1361,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "5f7dbc84393d6a49cfb95a75c1e98fad94c4dabe22d01f8c8156154b3ac01367"
+      "sha256": "fe6f56cd9d3c55a057a3d9263ad68393b3418ce2edf44735fddeff87c0614850"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1750,6 +1750,10 @@
     {
       "file": "verification/main-gates/README.md",
       "sha256": "bbacb0c6419a8364f38b69c73545a3eba853107fa448894fb2ccdca23b37719d"
+    },
+    {
+      "file": "verification/module-root-retention/README.md",
+      "sha256": "51c2c27e963d51e02501459a188a42abb1aa27df1019aa6c69af5f6d53d8117d"
     },
     {
       "file": "verification/native-assurance.md",

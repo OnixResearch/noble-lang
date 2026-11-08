@@ -1529,11 +1529,19 @@ class SlotEngine {
     return saved?.runtime.release_saved_program(handle >>> 0) === 0;
   }
 
+  /** Whether a saved owner's Program graph enters this module's code. Compiled bodies read named
+   * Programs from module globals, an edge no cell records, so such an owner needs the module's
+   * roots and code to outlive it (OWN-CASE-06). */
+  savedOwnerReaches(module) {
+    return [...this.savedOwners.values()].some(owner => owner.moduleIds.has(module.id));
+  }
+
   sweepRetirement(module) {
     if (this.active || !(module.published || module.discardRequested)
       || module.versionOwned.size || module.compositeOwned.size
       || module.replayOwned.size) return;
     if (!module.rootsReleased) {
+      if (this.savedOwnerReaches(module)) return;
       if (module.instance.exports.release_module_roots() !== 0) {
         throw Error('backend refused module-root retirement');
       }
@@ -1554,7 +1562,7 @@ class SlotEngine {
       || this.grants.get(`discard:${request.id}`) !== true
       || module.published
       || module.replayOwned.size || module.compositeOwned.size || this.active
-      || [...this.savedOwners.values()].some(owner => owner.moduleIds.has(module.id))) {
+      || this.savedOwnerReaches(module)) {
       return slotReply('discard-refused');
     }
     module.discardRequested = true;
@@ -1579,7 +1587,7 @@ class SlotEngine {
     const module = this.retiring.get(key);
     if (!module || !module.rootsReleased || module.versionOwned.size
       || module.compositeOwned.size
-      || [...this.savedOwners.values()].some(owner => owner.moduleIds.has(module.id))
+      || this.savedOwnerReaches(module)
       || module.code_span.start !== span.start || module.code_span.length !== span.length
       || module.code_span.generation !== span.generation) {
       return slotReply('code-retirement-refused');

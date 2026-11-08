@@ -785,7 +785,11 @@ incarnation/generation 1 for every slot. Later `publish`, `rollback`, and
 `delete` retain their ordinary single-slot global epoch-CAS behavior; genesis
 does not supply a proof or independent guest authority. `invoke` uses typed inputs
 and borrowed reference bindings; an actual returned Program receives an opaque
-saved owner token, which `release-program` retires at its last owner. `discard`
+saved owner token, which `release-program` retires at its last owner. While such
+an owner's Program enters a module's code, that module keeps its module roots and
+code even after its published version is superseded, because compiled bodies read
+named definitions through module globals; the module retires once the last such
+owner is released (OWN-CASE-06). `discard`
 removes an authorized never-published install. `reflect` and `trace` observe
 the host ledger. Exact trace retention is bounded by serialized UTF-8 bytes
 (1 MiB per root and 2 MiB across a session, including replay labels), not just
