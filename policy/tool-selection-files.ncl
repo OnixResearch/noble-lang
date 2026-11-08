@@ -200,7 +200,7 @@
   "verification/worker-send/peer/Cargo.toml" = "ba48d3ca72bdbb07ff0a0302e4b47d147e10025a327b6c346d9b69da4cc57cd6",
   "crates/noble-cli/src/build.rs" = "7a6f5469fb7b397437e51a0dfff0d0df911e09f0673f7c5bb04a7f7b15690374",
   "crates/noble-cli/src/c_backend.rs" = "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
-  "crates/noble-cli/src/component.rs" = "4b44812d9ac2ec7fb1cc253e34eff03fcdb54394034a5a20787595ac4b92717d",
+  "crates/noble-cli/src/component.rs" = "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
   "crates/noble-cli/src/component/artifacts.rs" = "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
   "crates/noble-cli/src/component/report.rs" = "2ef03ca0f1e0f83d2a037fd9a1b945419974348526f7d47a9298433eafa43b01",
   "crates/noble-cli/src/core/arguments/bindings.rs" = "9ebc866815018f2ca74b15aa2e6377ce979a1912d83e0b5b90183c9400f6051a",

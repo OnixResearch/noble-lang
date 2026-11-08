@@ -19,17 +19,18 @@ const MAX_REGION_BYTES: usize = 4096;
 const KIND: ResourceKind = ResourceKind(1);
 const READ: ownership::Rights = ownership::Rights(1);
 
-/// How a bounded-region invocation ended, as far as the host can actually observe. The three
-/// abnormal classes stay distinct instead of collapsing into one `adapter-trap` label: an exhausted
-/// fuel budget is a host-imposed boundary, a guest trap is the guest's own abnormal exit, and an
-/// adapter fault (missing export, malformed payload, usage) is neither. Nothing here infers a finer
-/// guest outcome from a report.
+/// How a bounded-region invocation ended, as far as the host can actually observe. The abnormal
+/// classes stay distinct instead of collapsing into one `adapter-trap` label: an exhausted fuel
+/// budget is a host-imposed boundary, a cancellation is the host's own interruption, a guest trap
+/// is the guest's own abnormal exit, and an adapter fault (missing export, malformed payload,
+/// usage) is none of them. Nothing here infers a finer guest outcome from a report.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum ExitClass {
     Normal,
     Rejected,
     Trap,
     QuotaExhausted,
+    Cancelled,
     AdapterInvalid,
 }
 
@@ -40,15 +41,19 @@ impl ExitClass {
             Self::Rejected => "rejected",
             Self::Trap => "trap",
             Self::QuotaExhausted => "quota-exhausted",
+            Self::Cancelled => "cancelled",
             Self::AdapterInvalid => "adapter-invalid",
         }
     }
 
     /// Classify an invocation error by what it actually is. Anything that is not a Wasmtime trap is
-    /// an adapter fault, so an adapter bug can never be reported as a guest trap.
+    /// an adapter fault, so an adapter bug can never be reported as a guest trap. An interrupt is a
+    /// cancellation: epoch interruption is enabled only with `--cancel-after-reads`, and the epoch
+    /// deadline elapses only when the host cancels.
     fn of_error(error: &anyhow::Error) -> Self {
         match error.downcast_ref::<Trap>() {
             Some(Trap::OutOfFuel) => Self::QuotaExhausted,
+            Some(Trap::Interrupt) => Self::Cancelled,
             Some(_) => Self::Trap,
             None => Self::AdapterInvalid,
         }
@@ -70,6 +75,7 @@ impl ExitClass {
             Self::Normal | Self::Rejected => "omitted-release",
             Self::Trap => "trap",
             Self::QuotaExhausted => "quota-exhausted",
+            Self::Cancelled => "cancelled",
             Self::AdapterInvalid => "adapter-invalid",
         }
     }
@@ -364,6 +370,11 @@ struct Host {
     retirement_reason: Option<&'static str>,
     events: Vec<HostEvent>,
     events_truncated: bool,
+    /// The number of answered reads after which the host cancels the invocation, when requested.
+    cancel_after_reads: Option<u64>,
+    answered_reads: u64,
+    /// Set when the host has cancelled the invocation. From then on it admits no guest call.
+    cancelled: bool,
 }
 
 impl Host {
@@ -413,7 +424,30 @@ impl Host {
             retirement_reason: None,
             events: Vec::new(),
             events_truncated: false,
+            cancel_after_reads: None,
+            answered_reads: 0,
+            cancelled: false,
         })
+    }
+
+    /// Admit a guest call, unless the host has cancelled the invocation. Cancellation revokes
+    /// access immediately (RA-CLEAN-02): a call after it traps before reaching the protocol.
+    fn admit(&self) -> Result<()> {
+        if self.cancelled {
+            return Err(Trap::Interrupt.into());
+        }
+        Ok(())
+    }
+
+    /// Count an answered read, and cancel the invocation once the requested number of reads is
+    /// answered. Returns whether this answer cancelled it.
+    fn answered_read(&mut self) -> bool {
+        self.answered_reads = self.answered_reads.saturating_add(1);
+        let cancel = self.cancel_after_reads == Some(self.answered_reads);
+        if cancel {
+            self.cancelled = true;
+        }
+        cancel
     }
 
     fn record(&mut self, event: HostEvent) {
@@ -668,8 +702,8 @@ impl Host {
 
     /// The opt-in `noble-bounded-region/v2` report (EPROTO-OBS-01). Beside the v1 observations it
     /// counts guest releases, destructor releases and host retirements apart, records the
-    /// cleanup's retirement reason, classifies each refused read, counts lost owners and states
-    /// that cancellation is unsupported, because no host interruption control exists.
+    /// cleanup's retirement reason, classifies each refused read, counts lost owners and records
+    /// whether the host was asked to cancel and did.
     fn report_v2(
         &self,
         outcome: &str,
@@ -685,7 +719,16 @@ impl Host {
             ("stage", encoding::string("adapter")),
             ("outcome", encoding::string(outcome)),
             ("exit_class", encoding::string(exit.label())),
-            ("cancellation", encoding::string("unsupported")),
+            (
+                "cancellation",
+                encoding::object([
+                    (
+                        "after_reads",
+                        self.cancel_after_reads.map_or(Json::Null, Json::Number),
+                    ),
+                    ("requested", Json::Bool(self.cancelled)),
+                ]),
+            ),
             (
                 "cleanup",
                 encoding::object([
@@ -762,6 +805,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 ResourceType::host::<Region>(),
                                 |mut store, rep| {
                                     crate::safety_observe::event("guest-request");
+                                    store.data().admit()?;
                                     let identity = store.data().context.0;
                                     store.data_mut().record(HostEvent::Request {
                                         operation: Operation::Drop,
@@ -795,6 +839,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         ComponentItem::ComponentFunc(_) if function == "[method]region.read" => {
                             instance.func_new(function, |mut store, _, params, results| {
                                 crate::safety_observe::event("guest-request");
+                                store.data().admit()?;
                                 let [Val::Resource(resource), Val::S64(offset), Val::S64(length)] =
                                     params
                                 else {
@@ -812,6 +857,11 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                     .handle();
                                 let value =
                                     store.data_mut().read(region.rep(), claim, *offset, *length);
+                                if store.data_mut().answered_read() {
+                                    // The deadline elapses at once, so the guest is interrupted at
+                                    // its next function entry or loop header.
+                                    store.set_epoch_deadline(0);
+                                }
                                 let [slot] = results else {
                                     bail!("invalid region read result");
                                 };
@@ -829,6 +879,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         ComponentItem::ComponentFunc(_) if function == "release" => {
                             instance.func_new(function, |mut store, _, params, results| {
                                 crate::safety_observe::event("guest-request");
+                                store.data().admit()?;
                                 let [Val::Resource(resource)] = params else {
                                     bail!("invalid release arguments");
                                 };
@@ -938,22 +989,71 @@ fn outside_model(invocation: &Invocation, length: i64) -> bool {
         .is_none_or(|reason| !matches!(reason, "bounds-reject" | "invalid-handle"))
 }
 
-const USAGE: &str =
-    "usage: noble component read-region [--report v1|v2] COMPONENT HOST_BUFFER_HEX OFFSET LENGTH";
+const USAGE: &str = "usage: noble component read-region [--report v1|v2] [--fuel N] [--cancel-after-reads N] COMPONENT HOST_BUFFER_HEX OFFSET LENGTH";
+
+/// The fuel budget of an invocation by default, and the largest one `--fuel` accepts.
+const FUEL: u64 = 10_000_000;
+
+/// The flags of one invocation.
+#[derive(Debug, PartialEq, Eq)]
+struct Options {
+    schema: Schema,
+    fuel: u64,
+    /// Cancel the invocation once this many reads are answered (EPROTO-CASE-07).
+    cancel_after_reads: Option<u64>,
+}
+
+/// Read the leading flags, in any order, and return them with the remaining arguments. Only the
+/// v2 report can show a cancellation, so `--cancel-after-reads` requires `--report v2`.
+fn options(mut arguments: &[OsString]) -> Result<(Options, &[OsString])> {
+    let mut options = Options {
+        schema: Schema::V1,
+        fuel: FUEL,
+        cancel_after_reads: None,
+    };
+    while let [flag, value, rest @ ..] = arguments {
+        match flag.to_str() {
+            Some("--report") => options.schema = report_schema(value)?,
+            Some("--fuel") => options.fuel = fuel_budget(value)?,
+            Some("--cancel-after-reads") => options.cancel_after_reads = Some(read_count(value)?),
+            Some(_) | None => break,
+        }
+        arguments = rest;
+    }
+    if options.cancel_after_reads.is_some() && options.schema == Schema::V1 {
+        bail!("--cancel-after-reads requires --report v2; {USAGE}");
+    }
+    Ok((options, arguments))
+}
+
+fn report_schema(value: &OsString) -> Result<Schema> {
+    match value.to_str() {
+        Some("v1") => Ok(Schema::V1),
+        Some("v2") => Ok(Schema::V2),
+        _ => bail!("{USAGE}"),
+    }
+}
+
+/// An explicit fuel budget, a test knob for placing quota exhaustion (EPROTO-CASE-06).
+fn fuel_budget(value: &OsString) -> Result<u64> {
+    value
+        .to_str()
+        .and_then(|text| text.parse().ok())
+        .filter(|fuel| (1..=FUEL).contains(fuel))
+        .context(USAGE)
+}
+
+/// A positive number of answered reads.
+fn read_count(value: &OsString) -> Result<u64> {
+    value
+        .to_str()
+        .and_then(|text| text.parse::<std::num::NonZeroU64>().ok())
+        .map(std::num::NonZeroU64::get)
+        .context(USAGE)
+}
 
 fn execute(arguments: &[OsString]) -> Result<Json> {
-    let (schema, rest) = match arguments {
-        [_, _, flag, version, rest @ ..] if flag == "--report" => {
-            let schema = match version.to_str() {
-                Some("v1") => Schema::V1,
-                Some("v2") => Schema::V2,
-                _ => bail!("{USAGE}"),
-            };
-            (schema, rest)
-        }
-        [_, _, rest @ ..] => (Schema::V1, rest),
-        _ => bail!("{USAGE}"),
-    };
+    let (options, rest) = options(arguments.get(2..).context(USAGE)?)?;
     let [path, hex, offset, length] = rest else {
         bail!("{USAGE}")
     };
@@ -966,15 +1066,24 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         crate::workflow::read_bounded(path, 4_194_304, "bounded-region-component")
             .map_err(|error| anyhow::anyhow!("component input: {}", error.json().encode()))?;
     let mut config = Config::new();
-    config.wasm_component_model(true).consume_fuel(true);
+    config
+        .wasm_component_model(true)
+        .consume_fuel(true)
+        .epoch_interruption(options.cancel_after_reads.is_some());
     let engine = Engine::new(&config)?;
     let component = Component::new(&engine, component_bytes)?;
     let mut linker = Linker::new(&engine);
     link(&engine, &component, &mut linker)?;
-    let host = Host::new(bytes)?;
+    let mut host = Host::new(bytes)?;
+    host.cancel_after_reads = options.cancel_after_reads;
     let mut store = Store::new(&engine, host);
     store.limiter(|host| &mut host.limits);
-    store.set_fuel(10_000_000)?;
+    store.set_fuel(options.fuel)?;
+    if options.cancel_after_reads.is_some() {
+        // The engine's epoch is never incremented, so this deadline elapses only when the host
+        // cancels by setting it to zero.
+        store.set_epoch_deadline(1);
+    }
     let instance = linker.instantiate(&mut store, &component)?;
     let function = instance
         .get_func(&mut store, "read-region")
@@ -1039,11 +1148,17 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
             "adapter-trap".into(),
             ExitClass::of_error(&error),
             None,
-            Some(error.to_string()),
+            // v1 keeps the outermost context, as before. v2 carries the whole chain, so an untyped
+            // runtime refusal (Wasmtime's `unknown handle index` for a consumed handle) keeps its
+            // cause beside the `adapter-invalid` class.
+            Some(match options.schema {
+                Schema::V1 => error.to_string(),
+                Schema::V2 => format!("{error:#}"),
+            }),
         ),
     };
     let cleanup = store.data_mut().abnormal_exit_cleanup(exit_class);
-    Ok(match schema {
+    Ok(match options.schema {
         Schema::V1 => store.data().report(
             &outcome,
             exit_class,
@@ -1400,10 +1515,12 @@ mod ordered_trace_tests {
 #[cfg(test)]
 mod report_v2_tests {
     use super::{
-        outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent, Invocation,
-        Operation, RefusalClass, Release, ResponseKind, Schema,
+        options, outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent, Invocation,
+        Operation, Options, RefusalClass, Release, ResponseKind, Schema, FUEL,
     };
     use crate::workflow::encoding::Json;
+    use std::ffi::OsString;
+    use wasmtime::Trap;
 
     fn host(bytes: &[u8]) -> Host {
         Host::new(bytes.to_vec()).expect("host registration")
@@ -1460,7 +1577,10 @@ mod report_v2_tests {
                 report.contains(&format!(r#""retirement_reason":{reason}"#)),
                 "{report}"
             );
-            assert!(report.contains(r#""cancellation":"unsupported""#));
+            assert!(
+                report.contains(r#""cancellation":{"after_reads":null,"requested":false}"#),
+                "{report}"
+            );
             assert!(v1(subject, cleanup).contains(r#""released_owners":1"#));
         }
     }
@@ -1570,5 +1690,103 @@ mod report_v2_tests {
         assert!(!outside_model(&returned(None, Some("bounds-reject")), 2));
         assert!(!outside_model(&returned(None, Some("invalid-handle")), 2));
         assert!(outside_model(&returned(None, Some("timeout")), 2));
+    }
+
+    /// RA-CLEAN-02: the host admits every call until the requested number of reads is answered,
+    /// and none after. The refusal is an interrupt, so the exit is classified as a cancellation and
+    /// the cleanup retires the owner for that reason.
+    #[test]
+    fn cancellation_revokes_access_once_the_requested_reads_are_answered() {
+        let mut cancelled = host(b"abc");
+        cancelled.cancel_after_reads = Some(2);
+        assert!(cancelled.admit().is_ok());
+        assert!(!cancelled.answered_read());
+        assert!(cancelled.admit().is_ok(), "one answered read of two");
+        assert!(cancelled.answered_read(), "the second answer cancels");
+        let refusal = cancelled
+            .admit()
+            .expect_err("no call is admitted after cancellation");
+        assert_eq!(refusal.downcast_ref::<Trap>(), Some(&Trap::Interrupt));
+        let exit = ExitClass::of_error(&refusal);
+        assert_eq!(exit, ExitClass::Cancelled);
+        assert!(matches!(
+            cancelled.abnormal_exit_cleanup(exit),
+            CleanupObservation::Retired
+        ));
+        let encoded = cancelled
+            .report_v2(
+                "adapter-trap",
+                ExitV2::Class(exit),
+                &CleanupObservation::Retired,
+                None,
+                None,
+                None,
+            )
+            .encode();
+        assert!(encoded.contains(r#""exit_class":"cancelled""#), "{encoded}");
+        assert!(
+            encoded.contains(r#""cancellation":{"after_reads":2,"requested":true}"#),
+            "{encoded}"
+        );
+        assert!(
+            encoded.contains(r#""retirement_reason":"cancelled""#),
+            "{encoded}"
+        );
+
+        let mut unrequested = host(b"abc");
+        assert!(!unrequested.answered_read());
+        assert!(unrequested.admit().is_ok(), "no cancellation was requested");
+    }
+
+    fn parsed(arguments: &[&str]) -> anyhow::Result<(Options, usize)> {
+        let arguments: Vec<OsString> = arguments.iter().map(OsString::from).collect();
+        options(&arguments).map(|(options, rest)| (options, rest.len()))
+    }
+
+    /// The flags come in any order before the positional arguments. A zero fuel budget or read
+    /// count is refused, and a cancellation needs the v2 report, the only one that can show it.
+    #[test]
+    fn invocation_flags_bound_fuel_and_require_v2_for_cancellation() {
+        let positional = ["c.wasm", "00", "0", "0"];
+        let with = |flags: &[&str]| parsed(&[flags, &positional[..]].concat());
+        assert_eq!(
+            with(&[]).expect("defaults"),
+            (
+                Options {
+                    schema: Schema::V1,
+                    fuel: FUEL,
+                    cancel_after_reads: None
+                },
+                4
+            )
+        );
+        assert_eq!(
+            with(&[
+                "--cancel-after-reads",
+                "3",
+                "--fuel",
+                "500",
+                "--report",
+                "v2"
+            ])
+            .expect("any order"),
+            (
+                Options {
+                    schema: Schema::V2,
+                    fuel: 500,
+                    cancel_after_reads: Some(3)
+                },
+                4
+            )
+        );
+        assert!(
+            with(&["--cancel-after-reads", "1"]).is_err(),
+            "v1 cannot show it"
+        );
+        assert!(with(&["--report", "v1", "--cancel-after-reads", "1"]).is_err());
+        assert!(with(&["--report", "v2", "--cancel-after-reads", "0"]).is_err());
+        assert!(with(&["--fuel", "0"]).is_err());
+        assert!(with(&["--fuel", "10000001"]).is_err());
+        assert!(with(&["--fuel", "10000000"]).is_ok());
     }
 }

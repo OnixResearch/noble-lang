@@ -21,7 +21,7 @@ pub(crate) const USAGE: &str = "usage:
   noble component check-effect WIT WORLD WORD CLAIMED_EFFECT ...
   noble component compile WIT WORLD NEW_DIR EXPORT=SOURCE ...
   noble component compile-checked-u64 WIT WORLD NEW_DIR EXPORT=SOURCE ...
-  noble component read-region COMPONENT HOST_BUFFER_HEX OFFSET LENGTH
+  noble component read-region [--report v1|v2] [--fuel N] [--cancel-after-reads N] COMPONENT HOST_BUFFER_HEX OFFSET LENGTH
   noble component callback-owner COMPONENT MODE WIT WORLD EXPORT=SOURCE ...
   noble component read-fs COMPONENT HOST_PREOPENED_FILE READ_RIGHT WIT WORLD EXPORT=SOURCE ...
   noble component quota-core CORE_WASM EXPORT FUEL ALLOCATION_BYTES WIT WORLD EXPORT=SOURCE ...
@@ -35,7 +35,12 @@ read-region links the separate noble-test:bounded-region/bounded@1.0.0 world.
 The invoker selects at most 4096 immutable bytes as hex; the component gets
 one owned region and signed relative offset/length, never a native address.
 The report distinguishes bounds refusal, protected region reads and owner
-release. Native host/engine correspondence and general proof remain open.
+release. --report v2 also separates guest, destructor and host releases,
+classifies each refused read and reports results outside the result schema.
+--fuel sets the engine fuel (at most the default 10000000). With --report v2,
+--cancel-after-reads makes the host cancel after answering N reads: later
+calls are refused and the guest is interrupted. Native host/engine
+correspondence and general proof remain open.
 callback-owner independently rebuilds and byte-matches its selected WIT,
 world and complete Noble export-source recipe before guest invocation. The
 host selects the callback claim (authentic, retired generation, live wrong

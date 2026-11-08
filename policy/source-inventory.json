@@ -3506,54 +3506,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:6189:6199",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:7835:7843",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:8600:8617",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:8846:8853",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:9141:9151",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:9899:9909",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/artifacts.rs:1196:1198",
@@ -126704,318 +126656,6 @@
       "refinement": "not-applicable"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:10339:10346",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12387:12394",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12522:12529",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15537:15540",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21436:21443",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21975:21982",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24070:24077",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24609:24616",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25285:25292",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:26335:26351",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:28324:28355",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30327:30358",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32877:32893",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34711:34717",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36471:36478",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37327:37351",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37942:37949",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38953:38965",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:40492:42322",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42340:42809",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42827:43655",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43673:44083",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44101:44866",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44884:45489",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:45507:46625",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:46643:47489",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47823:47830",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48374:48381",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48653:49622",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49640:50461",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:50479:50889",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:51167:52951",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:52969:53365",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:54427:55948",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:56235:57205",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:57417:59492",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59690:60354",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59776:59822",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9891:9898",
-      "refinement": "open"
-    },
-    {
       "category": "generated",
       "disposition": "generated",
       "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
@@ -127125,6 +126765,606 @@
       "note": "Renewed deny-all lint fixes: ExitV2 types the v2 report's exit class; the #103 golden tests move to tests/source/positional-join.rs: declaration-only compiler kind (other); accounting only, with no body obligation.",
       "package": "noble-cli",
       "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#13}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:10292:10302",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:6582:6592",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:8228:8236",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:8993:9010",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:9239:9246",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component.rs:9534:9544",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:10265:10272",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:10713:10720",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:13036:13043",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:13171:13178",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:17047:17050",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:22946:22953",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:23485:23492",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25830:25837",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:26369:26376",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:27045:27052",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:28095:28111",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30143:30174",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32549:32580",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:35154:35170",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36988:36994",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:39494:39500",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:39536:39542",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:39733:39739",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:40490:40497",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:41721:41745",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42336:42343",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43347:43359",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:45270:47100",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47118:47587",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47605:48433",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48451:48861",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48879:49644",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49662:50267",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:50285:51403",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:51421:52267",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:52601:52608",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:53152:53159",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:53431:54400",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:54418:55239",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:55257:55667",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:55945:57729",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:57747:58143",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59281:60885",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:61172:62142",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:62354:64429",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:64627:65291",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:64713:64759",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:65562:67169",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:67362:67379",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:67619:69020",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:67758:67774",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Options as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::FUEL",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Host::admit",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Host::answered_read",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Options",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::fuel_budget",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::options",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::read_count",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_schema",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::cancellation_revokes_access_once_the_requested_reads_are_answered",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::invocation_flags_bound_fuel_and_require_v2_for_cancellation",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::parsed",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#14}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#15}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#16}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#17}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed host interruption control (--cancel-after-reads), --fuel knob and option parsing in the bounded-region adapter (EPROTO, #9): declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#18}",
       "refinement": "not-applicable"
     }
   ],
