@@ -7,7 +7,21 @@
 
 ## Phase 2: Future implementation and evidence gates (open; not undertaken here)
 
-- [ ] [serial] Execute the OWN-CASE-06 module-root retirement reproducer against the live-slot runtime. Decide between counting code-to-global edges and extending module lifetime, and record source-bound evidence. r[OWN-PKG-01] r[OWN-RECLAIM-01]
+- [x] [serial] Execute the OWN-CASE-06 module-root retirement reproducer against the live-slot runtime. Decide between counting code-to-global edges and extending module lifetime, and record source-bound evidence. r[OWN-PKG-01] r[OWN-RECLAIM-01]
+  Ticked 2026-11-08. `crates/noble-cli/tests/live_slot_module_root_retention.mjs` runs the case,
+  hosted by a second test in `live_slot_direct_quote.rs`.
+  - **Before the fix.** Superseding M's published root released M's module roots while a saved
+    `[ g ]` lived, and invoking that owner trapped: `execution-failed`, `RuntimeError: unreachable`.
+    A saved child without the named-global read, and `[ g ]` without supersession, both returned 42.
+  - **Decision: extend module lifetime to saved callers.** `sweepRetirement` keeps a module's roots
+    while `savedOwnerReaches(module)` holds; `discard` and `retireCode` already applied that
+    predicate. `releaseProgram`'s existing re-sweep retires the module after its last saved caller
+    is released.
+  - **Not done.** Code→global owner edges are not counted; the backend counters cannot express them
+    today.
+  - **Cost.** Retention grows until the saved caller is released.
+  - **Evidence.** `verification/module-root-retention/receipt.json`: the fixed CLI passes from clean
+    source `27e941a0`, and the CLI from the parent commit `3baaa029` fails at the trap.
 - [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
 - [ ] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01]
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]

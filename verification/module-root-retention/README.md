@@ -44,7 +44,8 @@ code to the globals it reads, which the backend counters cannot express today.
 ## Evidence
 
 [`receipt.mjs`](receipt.mjs) runs `crates/noble-cli/tests/live_slot_module_root_retention.mjs`
-against two CLIs. The retained run is `receipt.json`, added beside it from a clean commit; see its "source" field for
+against two CLIs. The retained run is [`receipt.json`](receipt.json), with the lane output of each CLI in
+[`fixed.stdout`](fixed.stdout) and [`prior.stdout`](prior.stdout); see its "source" field for
 the exact commit.
 
 | CLI | Observed |
