@@ -32,6 +32,8 @@ A discrepancy is shrunk by removing words while the routes still disagree in the
 
 ## Results
 
+`receipt-28f40c2c.json` is the lane's receipt from the clean commit `28f40c2c`.
+
 | Measure | Empty context | One-word contexts |
 |---|---|---|
 | program/context pairs | 2379 | 2366 |

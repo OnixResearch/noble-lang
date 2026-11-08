@@ -1,0 +1,101 @@
+{
+  "schema": "noble-principality-receipt/v1",
+  "issue": 100,
+  "source_commit": "28f40c2c19bedb22f2135b615df7b637f21cc470",
+  "source_tree": "5c9866af553527d85d57cfd2bf36a6f8ab6c0409",
+  "clean_source": true,
+  "bounds": {
+    "words": [
+      "dup",
+      "drop",
+      "swap",
+      "1",
+      "true",
+      "[ ]",
+      "[ dup ]",
+      "[ 1 ]",
+      "[ drop ]",
+      "compose",
+      "run",
+      "dip",
+      "if"
+    ],
+    "max_words": 3,
+    "max_context_words": 2,
+    "context_programs": 182,
+    "max_depth": 2,
+    "value_types": "[I64, Bool, Program([], [I64], EffSet([])), Program([I64], [I64, I64], EffSet([]))]"
+  },
+  "sources_sha256": {
+    "crates/noble-contracts/tests/source/principality.rs": "64d48958d7e499d313efbab3309f8d07e802b5e11abfa273433d6d04fe635683",
+    "crates/noble-contracts/tests/source.rs": "0de4c738e1b0ac6b99d23875a78ec45cec3d79a4fe02b5cd91b6cd317de0697b",
+    "verification/principality/run.mjs": "2b72fdabe9a883221b0010c23cbf60430c38136c0dc0b038a071beb860de3386"
+  },
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ="
+  },
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "-j",
+    "4",
+    "-p",
+    "noble-contracts",
+    "--test",
+    "source",
+    "principality::report",
+    "--",
+    "--exact",
+    "--nocapture"
+  ],
+  "report": {
+    "schema": "noble-principality-bounded/v2",
+    "words": [
+      "dup",
+      "drop",
+      "swap",
+      "1",
+      "true",
+      "[ ]",
+      "[ dup ]",
+      "[ 1 ]",
+      "[ drop ]",
+      "compose",
+      "run",
+      "dip",
+      "if"
+    ],
+    "max_words": 3,
+    "max_context_words": 2,
+    "context_programs": 182,
+    "value_types": "[I64, Bool, Program([], [I64], EffSet([])), Program([I64], [I64, I64], EffSet([]))]",
+    "max_depth": 2,
+    "input_stacks": 21,
+    "plain": {
+      "pairs": 2379,
+      "defined": 2076,
+      "comparisons": 49959,
+      "inline_accepted": 20939,
+      "call_accepted": 20939
+    },
+    "contextual": {
+      "pairs": 2366,
+      "defined": 2249,
+      "comparisons": 49686,
+      "inline_accepted": 20750,
+      "call_accepted": 20750
+    },
+    "discrepancies": 0,
+    "retained": [],
+    "claim": "bounded evidence over this universe, not a proof"
+  },
+  "non_claims": [
+    "Bounded evidence over the stated words, program length, value types and stack depth; not a proof of principality.",
+    "An interface the frontend cannot construct even at concrete inputs is outside the comparison; effects belong to #28.",
+    "Recursive definitions are out of scope until #99 lands."
+  ]
+}
