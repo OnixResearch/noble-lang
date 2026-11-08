@@ -1624,6 +1624,10 @@
       "sha256": "6d7178f2e790a535ce91cf81ed3ebb507f30dde555278539e043631a9b870bdc"
     },
     {
+      "file": "verification/effect-causes/README.md",
+      "sha256": "6064ea28f7517e9ef63ac7254cae8edd0f0ecec56e7ca1e620f88a7535ae45a5"
+    },
+    {
       "file": "verification/effect-protocol/README.md",
       "sha256": "9345d222b204db3b9a447f61888dc8bd8241384c43cbfcef549d08ca45f39832"
     },

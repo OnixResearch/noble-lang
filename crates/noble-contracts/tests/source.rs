@@ -324,6 +324,9 @@ mod lifecycle;
 #[path = "source/positional-join.rs"]
 mod positional_join;
 
+#[path = "source/causes.rs"]
+mod causes;
+
 #[path = "models/finite-bases.rs"]
 mod finite_bases;
 
