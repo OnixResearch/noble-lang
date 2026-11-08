@@ -834,6 +834,10 @@ checked nodes as fragment nodes is the one trusted translation.
 
 No snapshot or revision identity of these graphs is bound to a certificate context, and no
 analyzer, Rust, Wasm or host correspondence is claimed.
+The clean-source receipt is
+[`verification/foundation/receipts/c0b0bdf93/`](../../verification/foundation/receipts/c0b0bdf93/foundation-check.json)
+(1183 theorems, `clean_source: true`, Lean 4.35.0). The four encoded-graph theorems report
+`propext`, `Classical.choice` and `Quot.sound`, all on the allow-list.
 
 The corpus lane [`verification/numerical-certificate/`](../../verification/numerical-certificate/README.md)
 generates 24 graphs and has an untrusted analyzer propose their certificates.
