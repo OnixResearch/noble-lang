@@ -16,9 +16,12 @@
 //
 // Usage:
 //   env -i NODE verification/foundation/differential.mjs --seed N --count K \
-//     --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--allow-dirty] [--skip-checker-lanes]
+//     --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--import CASES_JSON] [--allow-dirty] \
+//     [--skip-checker-lanes]
 //   env -i NODE verification/foundation/differential.mjs --verify RECEIPT_JSON
 // Add --emi for the separately Lean-checked fixed-input if/case lane.
+// --import appends the cases `verification/fuzz/export-differential.mjs` exported from a fuzz
+// corpus (#102). Each runs its exact corpus text against the expectation of its parsed model.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -262,8 +265,9 @@ const foundationPath = option('--foundation');
 const output = option('--output');
 const allowDirty = args.includes('--allow-dirty');
 const skipLanes = args.includes('--skip-checker-lanes');
+const importPath = option('--import');
 requireThat(output && foundationPath && Number.isInteger(count) && count > 0,
-  'usage: differential.mjs --seed N --count K --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--allow-dirty] [--skip-checker-lanes]');
+  'usage: differential.mjs --seed N --count K --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--import CASES_JSON] [--allow-dirty] [--skip-checker-lanes]');
 const out = resolve(output);
 mkdirSync(out);
 const receipt = { schema: 'noble-foundation-differential/v1', profile: 'Core-Bootstrap / managed-linear-memory',
@@ -299,8 +303,27 @@ try {
   const make = generator(seed);
   const cases = [...Array.from({ length: count }, (_, i) => make(i)),
     ...rejectionCases.map((c, i) => ({ ...c, index: count + i }))];
-  for (const c of cases) { c.source = caseSource(c); c.expected = expectation(c); }
+  // Imported corpus cases follow the seeded and rejection cases. The model carries the
+  // expectation; the executed source is the corpus text itself, never a re-rendering of the model.
+  let exported = null;
+  if (importPath) {
+    exported = JSON.parse(readFileSync(importPath));
+    requireThat(exported.schema === 'noble-fuzz-differential-cases/v1', 'unexpected import schema');
+    const revive = node => Array.isArray(node) ? node.map(revive)
+      : typeof node === 'object' && node !== null
+        ? Object.fromEntries(Object.entries(node).map(([key, value]) =>
+          [key, key === 'push' || key === 'quoted' ? BigInt(value) : revive(value)]))
+        : node;
+    for (const { origin, ...model } of exported.cases) {
+      requireThat(typeof origin?.text === 'string' && /^[0-9a-f]{64}$/.test(origin.sha256 ?? ''),
+        'an imported case lacks its corpus text or digest');
+      cases.push({ ...revive(model), index: cases.length, origin });
+    }
+  }
+  for (const c of cases) { c.source = c.origin ? c.origin.text : caseSource(c); c.expected = expectation(c); }
   requireThat(cases.slice(0, count).every(c => c.expected.outcome === 'normal'), 'generator produced an unexpected refusal');
+  const imported = cases.filter(c => c.origin);
+  requireThat(imported.every(c => c.expected.outcome === 'normal'), 'an imported case is not a normal reference run');
 
   // Lean kernel check of every expectation and per-case MC1 theorem.
   const leanFile = join(out, 'Expected.lean');
@@ -334,7 +357,8 @@ try {
       const matched = agrees(c.expected, obs, decodeSigned);
       const entry = { index: c.index, kind: c.kind, mode, source: c.source.trim(), source_sha256: digest(c.source),
         expected: c.expected, observed: { outcome: obs.outcome, stack: obs.stack, diagnostic: obs.diagnostic },
-        wasm_sha256: obs.wasm_sha256 ?? null, lean_theorem: `case_${c.index}_ref`, matched };
+        wasm_sha256: obs.wasm_sha256 ?? null, lean_theorem: `case_${c.index}_ref`, matched,
+        corpus_unit: c.origin ? { unit: c.origin.unit, sha256: c.origin.sha256 } : undefined };
       if (!matched) {
         entry.shrunk = shrink(c, candidate => {
           const cand = { ...candidate, index: `shrink-${c.index}`, source: caseSource(candidate) };
@@ -346,6 +370,13 @@ try {
   }
   receipt.all_matched = receipt.cases.every(c => c.matched);
   requireThat(receipt.all_matched, `mismatch: ${show(receipt.cases.filter(c => !c.matched)).slice(0, 2000)}`);
+  receipt.imported = exported && {
+    cases_sha256: fileHash(importPath), corpus: exported.corpus, export_counts: exported.counts,
+    cases: imported.length,
+    executed_cases: imported.filter(c => ['off', 'on'].every(mode =>
+      observations.get(`${c.index}/${mode}`)?.outcome === 'normal')).length,
+    executions: receipt.cases.filter(entry => entry.corpus_unit).length,
+  };
   const optPairs = cases.filter(c => c.expected.outcome === 'normal');
   receipt.opt_on_off_same_stack = optPairs.every(c =>
     JSON.stringify(observations.get(`${c.index}/off`).stack) === JSON.stringify(observations.get(`${c.index}/on`).stack));
@@ -359,6 +390,7 @@ try {
     negative_results: cases.filter(c => c.expected.stack?.some(([t, v]) => t === 'I64' && v.startsWith('-'))).length,
     boundary_values: cases.filter(c => /9223372036854775807|-9223372036854775808/.test(c.source)).length,
     rejection_cases: rejectionCases.length,
+    imported_corpus_cases: imported.length,
   };
 
   // Mutation controls: each must disagree with the observations, and only for
@@ -433,6 +465,8 @@ try {
     { claim: 'refRun semantics equal MC1 Exec for the fragment (any prefix)', status: 'proved', theorems: theoremsUsed.slice(0, 5) },
     { claim: 'per-case expectations equal refRun (kernel decide) and per-case MC1 theorems', status: 'proved', count: cases.length },
     { claim: 'compiled managed-Wasm execution matches, opt off and on', status: 'tested', count: receipt.cases.length },
+    ...(exported ? [{ claim: 'imported fuzz-corpus programs match their Lean-checked expectations, opt off and on',
+      status: 'tested', count: imported.length }] : []),
     { claim: 'out-of-range literals refused by the frontend', status: 'tested', count: rejectionCases.length },
     { claim: 'Rust frontend refines the transcribed literal accumulator', status: 'open' },
     { claim: 'noble-wasm lowering, helpers, wasm-tools, wasm-opt, V8', status: 'assumed' },

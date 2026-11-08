@@ -66,6 +66,43 @@ with no findings.
 | `prepare_to_wasm` | 177,988 | 7,702 | 427 | 328 |
 | `wit_world` | 567,395 | 1,743 | 642 | 72 |
 
+## Feeding the semantic differential (#102)
+
+The fuzz oracles check that the frontend and backend never contradict their own
+diagnostics. The semantic differential in `verification/foundation/differential.mjs`
+compares execution with Lean-checked expectations. The export step joins them:
+
+```sh
+"$(selected node)" verification/fuzz/export-differential.mjs \
+  --corpus MINIMISED_SOURCE_CORPUS --output cases.json
+"$(selected node)" verification/foundation/differential.mjs --seed 15 --count 80 \
+  --foundation FOUNDATION_CHECK_JSON --output NEW_DIR --import cases.json
+```
+
+Minimise the `source` corpus first, with libFuzzer's `-merge=1` into an empty
+directory. The exporter keeps a corpus input only if all of these hold:
+
+- it is a single-unit Core subject (header profile 0 or 1), so it has no module,
+  calculator or host words;
+- its tokens, read by the Core lexer's rules, lie in the runner's fragment: I64
+  and Bool literals, `+ - *`, `[ … ]` blocks, `quote`, `compose` and `run`;
+- the reference run of its parsed model is normal.
+
+Every other input is counted under the reason it was skipped:
+
+- a short input or a module or calculator profile;
+- several units, or text that is not UTF-8;
+- an empty program or a program outside the fragment;
+- a reference refusal (underflow or an out-of-range literal);
+- a duplicate of an earlier program.
+
+The runner appends the kept programs to its seeded cases. Each one runs its
+**exact corpus text**, in both optimisation modes, against the Lean-checked
+expectation of its parsed model. An importer modeling error therefore shows up as
+a mismatch instead of being hidden by a re-rendered source. A mismatch is shrunk
+like any other. The receipt's `imported` block states the export counts, the
+imported cases and how many reached execution in both modes.
+
 ## Findings
 
 | Regression | Defect | Fix |
