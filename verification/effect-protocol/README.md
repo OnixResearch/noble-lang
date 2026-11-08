@@ -25,6 +25,8 @@ Every executed scenario must end with no live owner, no native pin, no lost owne
 - the generated WAT;
 - every command, with its output hashes.
 
+The retained receipt `execution-3ef3f43a.json` is that file from the clean commit `3ef3f43a`.
+
 ## Scenarios
 
 | Case | Component | Observation |
