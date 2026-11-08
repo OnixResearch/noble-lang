@@ -62,6 +62,128 @@ impl ExitClass {
             Self::Normal
         }
     }
+
+    /// Why the host's cleanup retired the owner after this exit: a normal return or a rejection
+    /// that left the owner unreleased omitted its release; any other exit is abnormal.
+    const fn retirement_reason(self) -> &'static str {
+        match self {
+            Self::Normal | Self::Rejected => "omitted-release",
+            Self::Trap => "trap",
+            Self::QuotaExhausted => "quota-exhausted",
+            Self::AdapterInvalid => "adapter-invalid",
+        }
+    }
+}
+
+/// Which report a run emits. `V1` stays the `noble-bounded-region/v1` report, byte for byte; the
+/// opt-in `V2` adds what EPROTO-OBS-01 asks of a protocol-evidence report.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Schema {
+    V1,
+    V2,
+}
+
+/// A request's operation. The v1 report spells a destructor drop like a guest release; the v2
+/// report keeps them apart.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Operation {
+    Read,
+    Release,
+    Drop,
+    HostRetire,
+}
+
+impl Operation {
+    const fn label(self, schema: Schema) -> &'static str {
+        match (self, schema) {
+            (Self::Read, _) => "region.read",
+            (Self::Release, _) | (Self::Drop, Schema::V1) => "region.release",
+            (Self::Drop, Schema::V2) => "region.drop",
+            (Self::HostRetire, _) => "host.retire",
+        }
+    }
+}
+
+/// Who committed a release. The v1 report counts the three together (F1); the v2 report apart.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Release {
+    Guest,
+    Destructor,
+    HostRetirement,
+}
+
+/// Why the host refused a read, beyond the reason the guest sees (F8). The guest keeps seeing
+/// `invalid-handle` or `bounds-reject`; only the v2 report shows the class.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum RefusalClass {
+    ForeignRepresentation,
+    NoOwner,
+    Identity,
+    Bounds,
+    ScopeExhausted,
+    Admission,
+    NativeAccess,
+    Completion,
+}
+
+impl RefusalClass {
+    const ALL: [Self; 8] = [
+        Self::ForeignRepresentation,
+        Self::NoOwner,
+        Self::Identity,
+        Self::Bounds,
+        Self::ScopeExhausted,
+        Self::Admission,
+        Self::NativeAccess,
+        Self::Completion,
+    ];
+
+    const fn label(self) -> &'static str {
+        match self {
+            Self::ForeignRepresentation => "foreign-representation",
+            Self::NoOwner => "no-owner",
+            Self::Identity => "identity",
+            Self::Bounds => "bounds",
+            Self::ScopeExhausted => "scope-exhausted",
+            Self::Admission => "admission",
+            Self::NativeAccess => "native-access",
+            Self::Completion => "completion",
+        }
+    }
+
+    const fn slot(self) -> usize {
+        match self {
+            Self::ForeignRepresentation => 0,
+            Self::NoOwner => 1,
+            Self::Identity => 2,
+            Self::Bounds => 3,
+            Self::ScopeExhausted => 4,
+            Self::Admission => 5,
+            Self::NativeAccess => 6,
+            Self::Completion => 7,
+        }
+    }
+}
+
+/// A refused read: the reason the guest sees, and the host's class for it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct Refusal {
+    reason: &'static str,
+    class: RefusalClass,
+}
+
+impl Refusal {
+    const BOUNDS: Self = Self {
+        reason: "bounds-reject",
+        class: RefusalClass::Bounds,
+    };
+
+    const fn invalid(class: RefusalClass) -> Self {
+        Self {
+            reason: "invalid-handle",
+            class,
+        }
+    }
 }
 
 /// What the host itself observed about post-exit cleanup. `Absent` is recorded where no observation
@@ -99,7 +221,7 @@ enum HostEvent {
     /// A guest-initiated request, with the exact operation, the exact resource identity and
     /// the arguments as they arrived.
     Request {
-        operation: &'static str,
+        operation: Operation,
         identity: u64,
         offset: Option<Offset>,
         length: Option<Offset>,
@@ -109,6 +231,8 @@ enum HostEvent {
         result: ResponseKind,
         bytes: Option<usize>,
         reason: Option<String>,
+        /// The host's class for a refused read, which only the v2 report shows.
+        class: Option<RefusalClass>,
     },
     /// A protected read commit: it exists only when the host actually accessed the region, and it
     /// carries the exact identity the host authorised.
@@ -142,7 +266,7 @@ impl ResponseKind {
 }
 
 impl HostEvent {
-    fn encode(&self) -> Json {
+    fn encode(&self, schema: Schema) -> Json {
         match self {
             Self::Request {
                 operation,
@@ -151,7 +275,7 @@ impl HostEvent {
                 length,
             } => encoding::object([
                 ("kind", encoding::string("request")),
-                ("operation", encoding::string(operation)),
+                ("operation", encoding::string(operation.label(schema))),
                 ("identity", Json::Number(*identity)),
                 ("offset", offset.map_or(Json::Null, Offset::encode)),
                 ("length", length.map_or(Json::Null, Offset::encode)),
@@ -160,18 +284,28 @@ impl HostEvent {
                 result,
                 bytes,
                 reason,
-            } => encoding::object([
-                ("kind", encoding::string("response")),
-                ("result", encoding::string(result.label())),
-                (
-                    "bytes",
-                    bytes.map_or(Json::Null, |count| Json::Number(count as u64)),
-                ),
-                (
-                    "reason",
-                    reason.as_deref().map_or(Json::Null, encoding::string),
-                ),
-            ]),
+                class,
+            } => {
+                let mut response = encoding::object([
+                    ("kind", encoding::string("response")),
+                    ("result", encoding::string(result.label())),
+                    (
+                        "bytes",
+                        bytes.map_or(Json::Null, |count| Json::Number(count as u64)),
+                    ),
+                    (
+                        "reason",
+                        reason.as_deref().map_or(Json::Null, encoding::string),
+                    ),
+                ]);
+                if let (Schema::V2, Json::Object(entries)) = (schema, &mut response) {
+                    entries.push((
+                        "host_class",
+                        class.map_or(Json::Null, |class| encoding::string(class.label())),
+                    ));
+                }
+                response
+            }
             Self::Commit { identity } => encoding::object([
                 ("kind", encoding::string("commit")),
                 ("identity", Json::Number(*identity)),
@@ -202,6 +336,15 @@ struct Host {
     protected_operations: u64,
     region_reads: u64,
     releases: u64,
+    guest_releases: u64,
+    destructor_releases: u64,
+    host_retirements: u64,
+    /// Reads whose completion failed or returned no owner, so the host lost the owner (F7).
+    lost_owners: u64,
+    /// Refused reads, by `RefusalClass::slot`. Counted beside the bounded trace, so a class survives
+    /// truncation.
+    refusals: [u64; 8],
+    retirement_reason: Option<&'static str>,
     events: Vec<HostEvent>,
     events_truncated: bool,
 }
@@ -245,6 +388,12 @@ impl Host {
             protected_operations: 0,
             region_reads: 0,
             releases: 0,
+            guest_releases: 0,
+            destructor_releases: 0,
+            host_retirements: 0,
+            lost_owners: 0,
+            refusals: [0; 8],
+            retirement_reason: None,
             events: Vec::new(),
             events_truncated: false,
         })
@@ -276,25 +425,31 @@ impl Host {
         length: i64,
     ) -> Result<Vec<u8>, &'static str> {
         self.record(HostEvent::Request {
-            operation: "region.read",
+            operation: Operation::Read,
             identity: claim.table.0,
             offset: Some(Offset(offset)),
             length: Some(Offset(length)),
         });
         let answered = self.read_region(rep, claim, offset, length);
+        if let Err(refusal) = &answered {
+            let count = &mut self.refusals[refusal.class.slot()];
+            *count = count.saturating_add(1);
+        }
         self.record(match &answered {
             Ok(bytes) => HostEvent::Response {
                 result: ResponseKind::Value,
                 bytes: Some(bytes.len()),
                 reason: None,
+                class: None,
             },
-            Err(reason) => HostEvent::Response {
+            Err(refusal) => HostEvent::Response {
                 result: ResponseKind::Refused,
                 bytes: None,
-                reason: Some((*reason).to_owned()),
+                reason: Some(refusal.reason.to_owned()),
+                class: Some(refusal.class),
             },
         });
-        answered
+        answered.map_err(|refusal| refusal.reason)
     }
 
     fn read_region(
@@ -303,31 +458,43 @@ impl Host {
         claim: ownership::Handle,
         offset: i64,
         length: i64,
-    ) -> Result<Vec<u8>, &'static str> {
+    ) -> Result<Vec<u8>, Refusal> {
         if rep != 1 {
-            return Err("invalid-handle");
+            return Err(Refusal::invalid(RefusalClass::ForeignRepresentation));
         }
-        let actual = self.owner.as_ref().ok_or("invalid-handle")?.handle();
+        let actual = self
+            .owner
+            .as_ref()
+            .ok_or(Refusal::invalid(RefusalClass::NoOwner))?
+            .handle();
         let required = self.required();
         self.table
             .validate(claim, required)
-            .map_err(|_| "invalid-handle")?;
+            .map_err(|_| Refusal::invalid(RefusalClass::Identity))?;
         if claim != actual {
-            return Err("invalid-handle");
+            return Err(Refusal::invalid(RefusalClass::Identity));
         }
-        let end = offset.checked_add(length).ok_or("bounds-reject")?;
-        let start = usize::try_from(offset).map_err(|_| "bounds-reject")?;
-        let count = usize::try_from(length).map_err(|_| "bounds-reject")?;
-        let finish = usize::try_from(end).map_err(|_| "bounds-reject")?;
+        let end = offset.checked_add(length).ok_or(Refusal::BOUNDS)?;
+        let start = usize::try_from(offset).map_err(|_| Refusal::BOUNDS)?;
+        let count = usize::try_from(length).map_err(|_| Refusal::BOUNDS)?;
+        let finish = usize::try_from(end).map_err(|_| Refusal::BOUNDS)?;
         if start > self.bytes.len() || finish > self.bytes.len() || count > MAX_REGION_BYTES {
-            return Err("bounds-reject");
+            return Err(Refusal::BOUNDS);
         }
-        let owner = self.owner.take().ok_or("invalid-handle")?;
+        let owner = self
+            .owner
+            .take()
+            .ok_or(Refusal::invalid(RefusalClass::NoOwner))?;
         let admitted = match self.table.begin(owner, required) {
             Ok(admitted) => admitted,
             Err(rejection) => {
+                let class = if matches!(rejection.error, ownership::Error::ScopeExhausted) {
+                    RefusalClass::ScopeExhausted
+                } else {
+                    RefusalClass::Admission
+                };
                 self.owner = Some(rejection.input);
-                return Err("invalid-handle");
+                return Err(Refusal::invalid(class));
             }
         };
         let authorized = self.table.native_access(&admitted.borrow).is_ok();
@@ -338,17 +505,20 @@ impl Host {
         } else {
             None
         };
-        let completed = self
-            .table
-            .complete(
-                admitted.borrow.scope(),
-                if authorized {
-                    ownership::Completion::Success
-                } else {
-                    ownership::Completion::DomainError
-                },
-            )
-            .map_err(|_| "invalid-handle")?;
+        let Ok(completed) = self.table.complete(
+            admitted.borrow.scope(),
+            if authorized {
+                ownership::Completion::Success
+            } else {
+                ownership::Completion::DomainError
+            },
+        ) else {
+            self.lost_owners = self.lost_owners.saturating_add(1);
+            return Err(Refusal::invalid(RefusalClass::Completion));
+        };
+        if completed.owner.is_none() {
+            self.lost_owners = self.lost_owners.saturating_add(1);
+        }
         self.owner = completed.owner;
         match output {
             Some(bytes) => {
@@ -358,11 +528,11 @@ impl Host {
                 });
                 Ok(bytes)
             }
-            None => Err("invalid-handle"),
+            None => Err(Refusal::invalid(RefusalClass::NativeAccess)),
         }
     }
 
-    fn release(&mut self, rep: u32) -> Result<()> {
+    fn release(&mut self, rep: u32, kind: Release) -> Result<()> {
         if rep != 1 {
             bail!("invalid region representation");
         }
@@ -371,6 +541,12 @@ impl Host {
         match self.table.release(owner, required) {
             Ok(_) => {
                 self.releases += 1;
+                let count = match kind {
+                    Release::Guest => &mut self.guest_releases,
+                    Release::Destructor => &mut self.destructor_releases,
+                    Release::HostRetirement => &mut self.host_retirements,
+                };
+                *count = count.saturating_add(1);
                 Ok(())
             }
             Err(rejected) => {
@@ -383,27 +559,32 @@ impl Host {
     /// Abnormal guest exit must retire its owner even if no destructor ran. A refusal is retained as
     /// an observation rather than turning the whole report into an error: the failed cleanup is the
     /// fact the caller needs, and the owner stays available for recovery.
-    fn abnormal_exit_cleanup(&mut self) -> CleanupObservation {
+    fn abnormal_exit_cleanup(&mut self, exit: ExitClass) -> CleanupObservation {
         if self.owner.is_none() {
             return CleanupObservation::AlreadyRetired;
         }
         self.record(HostEvent::Request {
-            operation: "host.retire",
+            operation: Operation::HostRetire,
             identity: self.context.0,
             offset: None,
             length: None,
         });
-        let retired = self.release(1);
+        let retired = self.release(1, Release::HostRetirement);
+        if retired.is_ok() {
+            self.retirement_reason = Some(exit.retirement_reason());
+        }
         self.record(match &retired {
             Ok(()) => HostEvent::Response {
                 result: ResponseKind::Value,
                 bytes: None,
                 reason: None,
+                class: None,
             },
             Err(error) => HostEvent::Response {
                 result: ResponseKind::Refused,
                 bytes: None,
                 reason: Some(format!("{error:#}")),
+                class: None,
             },
         });
         match retired {
@@ -454,10 +635,97 @@ impl Host {
             ("native_memory_access", Json::Bool(false)),
             (
                 "events",
-                Json::Array(self.events.iter().map(HostEvent::encode).collect()),
+                Json::Array(
+                    self.events
+                        .iter()
+                        .map(|event| event.encode(Schema::V1))
+                        .collect(),
+                ),
             ),
             ("events_truncated", Json::Bool(self.events_truncated)),
             ("released_owners", Json::Number(self.releases)),
+            ("live_owners", Json::Number(observation.live as u64)),
+            ("native_pins", Json::Number(observation.native_pins as u64)),
+        ])
+    }
+
+    /// The opt-in `noble-bounded-region/v2` report (EPROTO-OBS-01). Beside the v1 observations it
+    /// counts guest releases, destructor releases and host retirements apart, records the
+    /// cleanup's retirement reason, classifies each refused read, counts lost owners and states
+    /// that cancellation is unsupported, because no host interruption control exists.
+    fn report_v2(
+        &self,
+        outcome: &str,
+        exit_class: &'static str,
+        cleanup: &CleanupObservation,
+        fuel_remaining: Option<u64>,
+        bytes: Option<&[u8]>,
+        error: Option<&str>,
+    ) -> Json {
+        let observation = self.table.observation();
+        encoding::object([
+            ("schema", encoding::string("noble-bounded-region/v2")),
+            ("stage", encoding::string("adapter")),
+            ("outcome", encoding::string(outcome)),
+            ("exit_class", encoding::string(exit_class)),
+            ("cancellation", encoding::string("unsupported")),
+            (
+                "cleanup",
+                encoding::object([
+                    ("state", encoding::string(cleanup.label())),
+                    (
+                        "reason",
+                        cleanup.reason().map_or(Json::Null, encoding::string),
+                    ),
+                    (
+                        "retirement_reason",
+                        self.retirement_reason.map_or(Json::Null, encoding::string),
+                    ),
+                ]),
+            ),
+            (
+                "fuel_remaining",
+                fuel_remaining.map_or(Json::Null, Json::Number),
+            ),
+            (
+                "bytes_hex",
+                bytes.map_or(Json::Null, |value| encoding::string(encoding::hex(value))),
+            ),
+            ("error", error.map_or(Json::Null, encoding::string)),
+            (
+                "protected_operations",
+                Json::Number(self.protected_operations),
+            ),
+            ("region_reads", Json::Number(self.region_reads)),
+            ("native_memory_access", Json::Bool(false)),
+            (
+                "events",
+                Json::Array(
+                    self.events
+                        .iter()
+                        .map(|event| event.encode(Schema::V2))
+                        .collect(),
+                ),
+            ),
+            ("events_truncated", Json::Bool(self.events_truncated)),
+            (
+                "releases",
+                encoding::object([
+                    ("guest", Json::Number(self.guest_releases)),
+                    ("destructor", Json::Number(self.destructor_releases)),
+                    ("host_retirement", Json::Number(self.host_retirements)),
+                ]),
+            ),
+            (
+                "refusals",
+                Json::Object(
+                    RefusalClass::ALL
+                        .iter()
+                        .map(|class| (class.label(), Json::Number(self.refusals[class.slot()])))
+                        .collect(),
+                ),
+            ),
+            ("lost_owners", Json::Number(self.lost_owners)),
             ("live_owners", Json::Number(observation.live as u64)),
             ("native_pins", Json::Number(observation.native_pins as u64)),
         ])
@@ -479,13 +747,13 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                     crate::safety_observe::event("guest-request");
                                     let identity = store.data().context.0;
                                     store.data_mut().record(HostEvent::Request {
-                                        operation: "region.release",
+                                        operation: Operation::Drop,
                                         identity,
                                         offset: None,
                                         length: None,
                                     });
                                     let released = if store.data().owner.is_some() {
-                                        store.data_mut().release(rep)
+                                        store.data_mut().release(rep, Release::Destructor)
                                     } else {
                                         Ok(())
                                     };
@@ -494,11 +762,13 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                             result: ResponseKind::Value,
                                             bytes: None,
                                             reason: None,
+                                            class: None,
                                         },
                                         Err(error) => HostEvent::Response {
                                             result: ResponseKind::Refused,
                                             bytes: None,
                                             reason: Some(format!("{error:#}")),
+                                            class: None,
                                         },
                                     });
                                     released
@@ -554,22 +824,25 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 }
                                 let identity = store.data().context.0;
                                 store.data_mut().record(HostEvent::Request {
-                                    operation: "region.release",
+                                    operation: Operation::Release,
                                     identity,
                                     offset: None,
                                     length: None,
                                 });
-                                let released = store.data_mut().release(region.rep());
+                                let released =
+                                    store.data_mut().release(region.rep(), Release::Guest);
                                 store.data_mut().record(match &released {
                                     Ok(()) => HostEvent::Response {
                                         result: ResponseKind::Value,
                                         bytes: None,
                                         reason: None,
+                                        class: None,
                                     },
                                     Err(error) => HostEvent::Response {
                                         result: ResponseKind::Refused,
                                         bytes: None,
                                         reason: Some(format!("{error:#}")),
+                                        class: None,
                                     },
                                 });
                                 released
@@ -588,13 +861,13 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         crate::safety_observe::event("guest-request");
                         let identity = store.data().context.0;
                         store.data_mut().record(HostEvent::Request {
-                            operation: "region.release",
+                            operation: Operation::Drop,
                             identity,
                             offset: None,
                             length: None,
                         });
                         let released = if store.data().owner.is_some() {
-                            store.data_mut().release(rep)
+                            store.data_mut().release(rep, Release::Destructor)
                         } else {
                             Ok(())
                         };
@@ -603,11 +876,13 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 result: ResponseKind::Value,
                                 bytes: None,
                                 reason: None,
+                                class: None,
                             },
                             Err(error) => HostEvent::Response {
                                 result: ResponseKind::Refused,
                                 bytes: None,
                                 reason: Some(format!("{error:#}")),
+                                class: None,
                             },
                         });
                         released
@@ -634,9 +909,36 @@ fn parse_hex(text: &str) -> Result<Vec<u8>> {
         .collect()
 }
 
+/// Whether a returned result lies outside RegionProtocol-v1's result schema: an error other than
+/// `bounds-reject` and `invalid-handle`, or an `ok` whose length is not the requested one.
+fn outside_model(invocation: &Invocation, length: i64) -> bool {
+    if let Some(bytes) = &invocation.bytes {
+        return i64::try_from(bytes.len()).ok() != Some(length);
+    }
+    invocation
+        .reason
+        .as_deref()
+        .is_none_or(|reason| !matches!(reason, "bounds-reject" | "invalid-handle"))
+}
+
+const USAGE: &str =
+    "usage: noble component read-region [--report v1|v2] COMPONENT HOST_BUFFER_HEX OFFSET LENGTH";
+
 fn execute(arguments: &[OsString]) -> Result<Json> {
-    let [_, _, path, hex, offset, length] = arguments else {
-        bail!("usage: noble component read-region COMPONENT HOST_BUFFER_HEX OFFSET LENGTH")
+    let (schema, rest) = match arguments {
+        [_, _, flag, version, rest @ ..] if flag == "--report" => {
+            let schema = match version.to_str() {
+                Some("v1") => Schema::V1,
+                Some("v2") => Schema::V2,
+                _ => bail!("{USAGE}"),
+            };
+            (schema, rest)
+        }
+        [_, _, rest @ ..] => (Schema::V1, rest),
+        _ => bail!("{USAGE}"),
+    };
+    let [path, hex, offset, length] = rest else {
+        bail!("{USAGE}")
     };
     let path = std::path::Path::new(path);
     let hex = hex.to_str().context("buffer hex must be UTF-8")?;
@@ -706,6 +1008,9 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         }
     })();
     let fuel_remaining = store.get_fuel().ok();
+    let outside = invoked
+        .as_ref()
+        .is_ok_and(|invocation| outside_model(invocation, length));
     let (outcome, exit_class, returned, error) = match invoked {
         Ok(Invocation {
             label,
@@ -720,15 +1025,29 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
             Some(error.to_string()),
         ),
     };
-    let cleanup = store.data_mut().abnormal_exit_cleanup();
-    Ok(store.data().report(
-        &outcome,
-        exit_class,
-        &cleanup,
-        fuel_remaining,
-        returned.as_deref(),
-        error.as_deref(),
-    ))
+    let cleanup = store.data_mut().abnormal_exit_cleanup(exit_class);
+    Ok(match schema {
+        Schema::V1 => store.data().report(
+            &outcome,
+            exit_class,
+            &cleanup,
+            fuel_remaining,
+            returned.as_deref(),
+            error.as_deref(),
+        ),
+        Schema::V2 => store.data().report_v2(
+            &outcome,
+            if outside {
+                "outside-model"
+            } else {
+                exit_class.label()
+            },
+            &cleanup,
+            fuel_remaining,
+            returned.as_deref(),
+            error.as_deref(),
+        ),
+    })
 }
 
 pub(super) fn run(arguments: &[OsString]) -> std::process::ExitCode {
@@ -779,7 +1098,7 @@ mod tests {
         assert_eq!(host.owner.as_ref().unwrap().handle(), original);
         assert_eq!(host.region_reads, 1);
         assert_eq!(host.protected_operations, 1);
-        host.release(1).unwrap();
+        host.release(1, Release::Guest).unwrap();
         assert_eq!(host.releases, 1);
         assert_eq!(host.read(1, original, 0, 0), Err("invalid-handle"));
         assert_eq!(host.region_reads, 1);
@@ -792,7 +1111,7 @@ mod tests {
         assert_eq!(host.read(1, claim, 3, 0), Ok(Vec::new()));
         assert_eq!(host.read(1, claim, 4, 0), Err("bounds-reject"));
         assert_eq!(host.region_reads, 1);
-        host.release(1).unwrap();
+        host.release(1, Release::Guest).unwrap();
         assert_eq!(host.table.observation().live, 0);
     }
 
@@ -810,16 +1129,16 @@ mod tests {
         assert_eq!(second.region_reads, 0);
         assert_eq!(second.table.observation().native_pins, 0);
         assert_eq!(second.read(1, rightful, 0, 1), Ok(vec![9]));
-        second.release(1).unwrap();
+        second.release(1, Release::Guest).unwrap();
     }
 
     #[test]
     fn double_release_does_not_retire_the_owner_twice() {
         let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        host.release(1).unwrap();
+        host.release(1, Release::Guest).unwrap();
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
-        assert!(host.release(1).is_err());
+        assert!(host.release(1, Release::Guest).is_err());
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
     }
@@ -841,12 +1160,15 @@ mod tests {
     #[test]
     fn abnormal_exit_cleanup_is_observed_rather_than_propagated() {
         let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        assert_eq!(host.abnormal_exit_cleanup(), CleanupObservation::Retired);
+        assert_eq!(
+            host.abnormal_exit_cleanup(ExitClass::Trap),
+            CleanupObservation::Retired
+        );
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
         // A second pass has no retained owner left, so nothing is attributed to us.
         assert_eq!(
-            host.abnormal_exit_cleanup(),
+            host.abnormal_exit_cleanup(ExitClass::Trap),
             CleanupObservation::AlreadyRetired
         );
         assert_eq!(host.releases, 1);
@@ -859,7 +1181,7 @@ mod tests {
         let context = host.context;
         let original = host.owner.as_ref().unwrap().handle();
         host.context = ownership::Context(context.0.checked_add(1).unwrap());
-        match host.abnormal_exit_cleanup() {
+        match host.abnormal_exit_cleanup(ExitClass::Trap) {
             CleanupObservation::Failed(reason) => {
                 assert!(reason.contains("region release refused"), "{reason}");
                 assert_eq!(CleanupObservation::Failed(reason).label(), "failed");
@@ -870,7 +1192,10 @@ mod tests {
         assert_eq!(host.table.observation().live, 1);
         assert_eq!(host.owner.as_ref().unwrap().handle(), original);
         host.context = context;
-        assert_eq!(host.abnormal_exit_cleanup(), CleanupObservation::Retired);
+        assert_eq!(
+            host.abnormal_exit_cleanup(ExitClass::Trap),
+            CleanupObservation::Retired
+        );
         assert_eq!(host.releases, 1);
     }
 
@@ -882,13 +1207,13 @@ mod tests {
         let context = host.context;
         let original = host.owner.as_ref().unwrap().handle();
         host.context = ownership::Context(context.0.checked_add(1).unwrap());
-        assert!(host.release(1).is_err());
+        assert!(host.release(1, Release::Guest).is_err());
         assert_eq!(host.releases, 0);
         assert_eq!(host.table.observation().live, 1);
         assert_eq!(host.owner.as_ref().unwrap().handle(), original);
 
         host.context = context;
-        host.release(1).unwrap();
+        host.release(1, Release::Guest).unwrap();
         assert_eq!(host.releases, 1);
         assert_eq!(host.table.observation().live, 0);
     }
@@ -896,7 +1221,7 @@ mod tests {
 
 #[cfg(test)]
 mod ordered_trace_tests {
-    use super::{Host, HostEvent, ResponseKind, MAX_EVENTS};
+    use super::{Host, HostEvent, Operation, ResponseKind, Schema, MAX_EVENTS};
 
     fn host(bytes: &[u8]) -> Host {
         Host::new(bytes.to_vec()).expect("host registration")
@@ -906,7 +1231,7 @@ mod ordered_trace_tests {
         host.events
             .iter()
             .map(|event| match event {
-                HostEvent::Request { operation, .. } => operation,
+                HostEvent::Request { operation, .. } => operation.label(Schema::V1),
                 HostEvent::Response { .. } => "response",
                 HostEvent::Commit { .. } => "commit",
             })
@@ -937,7 +1262,7 @@ mod ordered_trace_tests {
         assert_eq!(
             host.events.first(),
             Some(&HostEvent::Request {
-                operation: "region.read",
+                operation: Operation::Read,
                 identity,
                 offset: Some(super::Offset(0)),
                 length: Some(super::Offset(1)),
@@ -949,6 +1274,7 @@ mod ordered_trace_tests {
                 result: ResponseKind::Value,
                 bytes: Some(1),
                 reason: None,
+                class: None,
             })
         );
         assert_eq!(identities(&host), [identity, identity]);
@@ -965,10 +1291,12 @@ mod ordered_trace_tests {
                 result,
                 bytes,
                 reason,
+                class,
             }) => {
                 assert_eq!(*result, ResponseKind::Refused);
                 assert_eq!(*bytes, None);
                 assert_eq!(reason.as_deref(), Some("bounds-reject"));
+                assert_eq!(*class, Some(super::RefusalClass::Bounds));
             }
             other => panic!("expected a refused response: {other:?}"),
         }
@@ -978,7 +1306,7 @@ mod ordered_trace_tests {
     fn host_retirement_is_its_own_request_and_never_a_guest_release() {
         let mut host = host(b"abc");
         assert_eq!(
-            host.abnormal_exit_cleanup(),
+            host.abnormal_exit_cleanup(super::ExitClass::Trap),
             super::CleanupObservation::Retired
         );
         assert_eq!(kinds(&host), ["host.retire", "response"]);
@@ -1022,7 +1350,7 @@ mod ordered_trace_tests {
                 .events
                 .first()
                 .expect("request event")
-                .encode()
+                .encode(Schema::V1)
                 .encode();
             assert_eq!(
                 request,
@@ -1049,5 +1377,174 @@ mod ordered_trace_tests {
         }
         assert!(host.events_truncated);
         assert_eq!(host.events.len(), MAX_EVENTS);
+    }
+}
+
+#[cfg(test)]
+mod report_v2_tests {
+    use super::{
+        outside_model, CleanupObservation, ExitClass, Host, HostEvent, Invocation, Operation,
+        RefusalClass, Release, ResponseKind, Schema,
+    };
+    use crate::workflow::encoding::Json;
+
+    fn host(bytes: &[u8]) -> Host {
+        Host::new(bytes.to_vec()).expect("host registration")
+    }
+
+    fn v1(host: &Host, cleanup: &CleanupObservation) -> String {
+        host.report("read", ExitClass::Normal, cleanup, Some(0), None, None)
+            .encode()
+    }
+
+    fn v2(host: &Host, cleanup: &CleanupObservation) -> String {
+        host.report_v2("read", "normal", cleanup, Some(0), None, None)
+            .encode()
+    }
+
+    /// F1 and F9: a guest release, a destructor release and a host retirement are different
+    /// commits. The v1 report counts them as one released owner; the v2 report keeps them apart and
+    /// records why the host retired the owner.
+    #[test]
+    fn v2_counts_guest_destructor_and_host_releases_apart() {
+        let mut guest = host(b"abc");
+        guest.release(1, Release::Guest).expect("guest release");
+        let mut destructor = host(b"abc");
+        destructor
+            .release(1, Release::Destructor)
+            .expect("destructor release");
+        let mut trapped = host(b"abc");
+        let trap = trapped.abnormal_exit_cleanup(ExitClass::Trap);
+        let mut omitted = host(b"abc");
+        let omission = omitted.abnormal_exit_cleanup(ExitClass::Normal);
+        let absent = CleanupObservation::AlreadyRetired;
+        for (subject, cleanup, counts, reason) in [
+            (&guest, &absent, (1, 0, 0), "null"),
+            (&destructor, &absent, (0, 1, 0), "null"),
+            (&trapped, &trap, (0, 0, 1), r#""trap""#),
+            (&omitted, &omission, (0, 0, 1), r#""omitted-release""#),
+        ] {
+            let report = v2(subject, cleanup);
+            let (guest, destructor, host) = counts;
+            assert!(
+                report.contains(&format!(
+                    r#""releases":{{"guest":{guest},"destructor":{destructor},"host_retirement":{host}}}"#
+                )),
+                "{report}"
+            );
+            assert!(
+                report.contains(&format!(r#""retirement_reason":{reason}"#)),
+                "{report}"
+            );
+            assert!(report.contains(r#""cancellation":"unsupported""#));
+            assert!(v1(subject, cleanup).contains(r#""released_owners":1"#));
+        }
+    }
+
+    /// F8: the 65th read meets the scope ceiling. The guest sees `invalid-handle`, as it does for a
+    /// forged claim, but the v2 report classifies the two refusals apart. The counts sit beside the
+    /// bounded trace, so a class survives the trace's truncation.
+    #[test]
+    fn v2_classifies_scope_exhaustion_apart_from_an_identity_refusal() {
+        let mut host = host(b"abc");
+        let claim = host.owner.as_ref().expect("owner").handle();
+        let mut forged = claim;
+        forged.slot = 42;
+        assert_eq!(host.read(1, forged, 0, 1), Err("invalid-handle"));
+        for _ in 0..64 {
+            assert_eq!(host.read(1, claim, 0, 1).expect("admitted read"), b"a");
+        }
+        assert_eq!(host.read(1, claim, 0, 1), Err("invalid-handle"));
+        assert!(host.events_truncated);
+        let report = v2(&host, &CleanupObservation::AlreadyRetired);
+        assert!(report.contains(r#""identity":1"#), "{report}");
+        assert!(report.contains(r#""scope-exhausted":1"#), "{report}");
+        assert!(report.contains(r#""region_reads":64"#), "{report}");
+        assert!(report.contains(r#""lost_owners":0"#), "{report}");
+        assert!(!v1(&host, &CleanupObservation::AlreadyRetired).contains("scope-exhausted"));
+    }
+
+    /// The v1 report keeps exactly its fields, in order, and its event encoding; only the v2 report
+    /// adds a refused read's class and spells a destructor drop apart from a guest release.
+    #[test]
+    fn v1_is_unchanged_and_v2_adds_only_its_own_fields() {
+        let refused = HostEvent::Response {
+            result: ResponseKind::Refused,
+            bytes: None,
+            reason: Some("invalid-handle".into()),
+            class: Some(RefusalClass::ScopeExhausted),
+        };
+        assert_eq!(
+            refused.encode(Schema::V1).encode(),
+            r#"{"kind":"response","result":"refused","bytes":null,"reason":"invalid-handle"}"#
+        );
+        assert_eq!(
+            refused.encode(Schema::V2).encode(),
+            r#"{"kind":"response","result":"refused","bytes":null,"reason":"invalid-handle","host_class":"scope-exhausted"}"#
+        );
+        let drop = HostEvent::Request {
+            operation: Operation::Drop,
+            identity: 7,
+            offset: None,
+            length: None,
+        };
+        assert!(drop
+            .encode(Schema::V1)
+            .encode()
+            .contains(r#""operation":"region.release""#));
+        assert!(drop
+            .encode(Schema::V2)
+            .encode()
+            .contains(r#""operation":"region.drop""#));
+        let report = host(b"abc").report(
+            "read",
+            ExitClass::Normal,
+            &CleanupObservation::AlreadyRetired,
+            Some(0),
+            None,
+            None,
+        );
+        let Json::Object(entries) = report else {
+            panic!("the v1 report is an object");
+        };
+        let names = entries.iter().map(|(name, _)| *name).collect::<Vec<_>>();
+        assert_eq!(
+            names,
+            [
+                "schema",
+                "stage",
+                "outcome",
+                "exit_class",
+                "cleanup",
+                "fuel_remaining",
+                "bytes_hex",
+                "error",
+                "protected_operations",
+                "region_reads",
+                "native_memory_access",
+                "events",
+                "events_truncated",
+                "released_owners",
+                "live_owners",
+                "native_pins",
+            ]
+        );
+    }
+
+    /// RegionProtocol-v1's result schema is `ok` bytes of the requested length, `bounds-reject` or
+    /// `invalid-handle`; anything else a guest returns lies outside the model.
+    #[test]
+    fn results_outside_the_result_schema_are_outside_the_model() {
+        let returned = |bytes: Option<Vec<u8>>, reason: Option<&str>| Invocation {
+            label: String::new(),
+            bytes,
+            reason: reason.map(String::from),
+            rejected: reason.is_some(),
+        };
+        assert!(!outside_model(&returned(Some(vec![1, 2]), None), 2));
+        assert!(outside_model(&returned(Some(vec![1, 2]), None), 3));
+        assert!(!outside_model(&returned(None, Some("bounds-reject")), 2));
+        assert!(!outside_model(&returned(None, Some("invalid-handle")), 2));
+        assert!(outside_model(&returned(None, Some("timeout")), 2));
     }
 }

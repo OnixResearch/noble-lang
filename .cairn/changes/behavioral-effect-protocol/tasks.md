@@ -8,7 +8,32 @@
 
 ## Future implementation and evidence gates (not undertaken by this change)
 
-- [ ] [serial] Introduce a new bounded-region report schema with separate release kinds, distinct trap/quota/outside-model classes and an ordered event trace; keep `noble-bounded-region/v1` receipts byte-identical. r[EPROTO-OBS-01]
+- [x] [serial] Introduce a new bounded-region report schema with separate release kinds, distinct trap/quota/outside-model classes and an ordered event trace; keep `noble-bounded-region/v1` receipts byte-identical. r[EPROTO-OBS-01]
+  Done (2026-11-08): `noble component read-region --report v2 …` emits `noble-bounded-region/v2`;
+  without the flag, or with `--report v1`, the adapter emits v1 as before. Beside the v1
+  observations, v2 carries:
+  - `releases`: `guest`, `destructor` and `host_retirement` counts (F1). A destructor drop is
+    traced as `region.drop`; v1 still spells it `region.release`.
+  - `cleanup.retirement_reason`: why the host retired the owner (F9). It is `omitted-release` after
+    a normal return or a rejection, and otherwise the abnormal exit class.
+  - `exit_class`: the v1 classes (`normal`, `rejected`, `trap`, `quota-exhausted`,
+    `adapter-invalid`), plus `outside-model` for a result outside the schema. That is an error other
+    than `bounds-reject` or `invalid-handle`, or an `ok` of another length than requested.
+  - `cancellation: "unsupported"`, because no host interruption control exists yet.
+  - Refusal classes: each refused read's `host_class` in the trace, and per-class `refusals` counts
+    that survive truncation (F8). The classes are `foreign-representation`, `no-owner`, `identity`,
+    `bounds`, `scope-exhausted`, `admission`, `native-access` and `completion`. The guest still
+    sees only `invalid-handle` or `bounds-reject`.
+  - `lost_owners` (F7). For the adapter's table T4 proves completion always returns the owner, so
+    this stays 0 unless that invariant breaks.
+
+  The v1 and v2 traces are ordered (F6). The unit tests in `bounded_region.rs` cover the three
+  release kinds and their retirement reasons, scope exhaustion against an identity refusal,
+  outside-model results, and v1's exact field order and event encoding.
+
+  Run once, not retained: the CLI built from this change compiled the host-locality fixture. Its v1
+  reports for `000102 (1,2)` and `(2,2)` are identical, field for field, to cases 0 and 2 of
+  `verification/host-locality/evidence-1bf39a52.json`.
 - [x] [serial] Build the Lean `RegionProtocol` model, prove T2/T3 for the selected subject, and relate the `ownership::Table` transitions through the existing M5 lane (T4); keep T5/T6 open until separately discharged. r[EPROTO-TRACE-01] r[EPROTO-COMPOSE-01]
   Progress (2026-10-30): T1–T3 are proved in `proofs/foundation/NobleFoundation/RegionProtocol.lean`.
   - T1: the transition table as `step`, with host assumptions A1–A6 explicit.

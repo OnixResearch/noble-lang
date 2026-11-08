@@ -125252,214 +125252,6 @@
       "disposition": "open",
       "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:14812:14819",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:16308:16324",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:18163:18194",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:20166:20197",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:22556:22572",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24280:24286",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25067:25074",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25923:25947",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:26538:26545",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:28562:30376",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30394:30847",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:30865:31677",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:31695:32073",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32091:32856",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32874:33415",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:33433:34487",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34505:35319",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36167:36174",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36446:37384",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37402:38129",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38147:38535",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38813:40587",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:40605:41001",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:5695:5702",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7447:7454",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:7582:7589",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed signed request arguments in the bounded-region trace and the callback report (#90) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/callback_owner.rs:11091:11107",
       "refinement": "open"
     },
@@ -126158,6 +125950,1070 @@
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::source::inference::operations::producer",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:11892:11899",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:12027:12034",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:15042:15045",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:20941:20948",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:21480:21487",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:23585:23592",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24124:24131",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:24800:24807",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:25850:25866",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:27839:27870",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:29842:29873",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:32392:32408",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:34226:34232",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:35986:35993",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:36842:36866",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:37457:37464",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:38468:38480",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:39995:41825",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:41843:42312",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:42330:43158",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43176:43586",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:43604:44369",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:44387:44992",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:45010:46128",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:46146:46992",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47326:47333",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:47877:47884",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:48156:49125",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49143:49964",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:49982:50392",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:50670:52454",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:52472:52868",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:53819:55340",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:55627:56597",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:56809:58884",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59082:59746",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:59168:59214",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9396:9403",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/component/bounded_region.rs:9844:9851",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Operation as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Refusal as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::RefusalClass as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Release as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::<component::bounded_region::Schema as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ExitClass::retirement_reason",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Host::report_v2",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (enum/implementation); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Operation",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Operation::label",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (implementation/struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Refusal",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Refusal::BOUNDS",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Refusal::invalid",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (enum/implementation); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::RefusalClass",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::RefusalClass::ALL",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::RefusalClass::label",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::RefusalClass::slot",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (enum); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Release",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (enum); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::Schema",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::USAGE",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::ordered_trace_tests::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::outside_model",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::host",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::results_outside_the_result_schema_are_outside_the_model",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::v1",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::v1_is_unchanged_and_v2_adds_only_its_own_fields",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::v2",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::v2_classifies_scope_exhaustion_apart_from_an_identity_refusal",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::v2_counts_guest_destructor_and_host_releases_apart",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#12}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed behavioral-effect-protocol EPROTO-OBS-01: the opt-in noble-bounded-region/v2 report adds release kinds, refusal classes, retirement reasons and outside-model classification; unit tests in the existing bounded_region modules: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#9}",
+      "refinement": "not-applicable"
     }
   ],
   "test_subjects": [
