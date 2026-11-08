@@ -641,9 +641,26 @@ returns. Resident-set growth is the only memory instrument here, because the wor
 `unsafe_code` and so no counting allocator can exist. It is also an upper bound: it includes what
 the allocator retains.
 
+### A caller's cap on validation work (2026-11-08)
+
+`schedule::check_within(checked, layout, stream, cap)` validates under a caller-selected cap.
+- **The measure.** `schedule::declared_work` sums every size validation iterates over: graph nodes,
+  the register map, the constant and slot tables, the layer ranges, the failure-suffix table and the
+  stream. It reads only lengths, so a padded declaration is counted before any of it is walked.
+- **Exhaustion.** Inputs that declare more work than the cap are refused as
+  `StreamRefusal::Exhausted { work, cap }`. Only the constant-time profile check comes first, and
+  nothing else is read. Exhaustion is therefore never success and never a verdict on the stream.
+- **Within the cap**, the result is exactly `schedule::check`'s.
+
+The controls (`tests/schedule_cost_dir/limits.rs`):
+- the declared work validates, and one unit less is exhausted;
+- a stream with a duplicated instruction, which `check` refuses as `StreamShape`, is exhausted under
+  the honest cap;
+- a declaration padded with 1000 constant rows, which `check` refuses as a declaration fault, is
+  exhausted under the honest cap;
+- a wrong operation under an unbounded cap keeps its `BodyMismatch` class.
+
 Still open from the same acceptance item:
-- Validation has no caller-selected budget and no `Exhausted` refusal class. It is bounded only by
-  the graph checker's budgets.
 - There is no decoder, so no decoding cost exists to bound.
 - One host and one run bound nothing on other hardware.
 

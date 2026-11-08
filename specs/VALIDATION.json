@@ -1773,7 +1773,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "ebbaa7f883b638aae5a5ed10281222fe9186802fe7fd9574b7b4a8d43a7a6490"
+      "sha256": "04104294335898c16c31c3cbd54fcfc61c9b046dd903c91ef02c63ab79560cf5"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",

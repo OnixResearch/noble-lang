@@ -312,6 +312,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15717 production paths = 8111 body/open + 4397 generated + 3209 structural;
 #   7230 test-only paths; 88 macro origins. Earlier header counts are historical.
+# Renewed Packed-stream validation work cap (#43) from a complete 110-unit selected collection:
+#   IR 88cccd6412138592210ea6f10652b3c55b6b2a0fb66f8fa8befa514e4eeb569d; coverage f5bd647bed280a7e4c6896812b621a79ed0d0f2f54dba7e3541a6bfa31b49012;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15720 production paths = 8114 body/open + 4397 generated + 3209 structural;
+#   7246 test-only paths; 88 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -16115,10 +16120,16 @@ let
     body "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:5781:5790" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:9596:9605" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:9754:9758" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-    body "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:4224:4255" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::layout::layer_coverage" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::layout::tests::a_duplicated_constant_row_cannot_hide_another_constant" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::layout::tests::layer_ranges_must_hold_each_layers_own_instructions" "noble-ngraph" "Renewed Packed-layout checker fixes for duplicated constant rows and uncovered layer ranges (#94, #95) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    # Renewed Packed-stream validation work cap (#43): 4 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    body "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:4737:4768" "noble-ngraph" "Renewed Packed-stream validation work cap (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble-ngraph::closure@crates/noble-ngraph/src/schedule.rs:9172:9186" "noble-ngraph" "Renewed Packed-stream validation work cap (#43) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble_ngraph::schedule::check_within" "noble-ngraph" "Renewed Packed-stream validation work cap (#43) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    body "noble_ngraph::schedule::declared_work" "noble-ngraph" "Renewed Packed-stream validation work cap (#43) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
@@ -20981,19 +20992,24 @@ let
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality.rs:665:795",
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality/acceptance.rs:3055:3064",
     "noble-ngraph::closure@crates/noble-ngraph/tests/rewrite_quality/acceptance.rs:3779:3781",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:10032:10650",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3040:3533",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3543:4069",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4079:4814",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4824:5894",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4989:5002",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5324:5334",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5904:6477",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:6487:7004",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7014:7661",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7671:8089",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8099:8717",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8727:10022",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:10084:10702",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3092:3585",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:3595:4121",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4131:4866",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:4876:5946",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5041:5054",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5376:5386",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:5956:6529",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:6539:7056",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7066:7713",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:7723:8141",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8151:8769",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_correspondence.rs:8779:10074",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/limits.rs:1040:1416",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/limits.rs:1426:1964",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/limits.rs:1974:2581",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/limits.rs:2591:3219",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/limits.rs:755:1030",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/measure.rs:2990:2993",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_cost_dir/measure.rs:5844:6116",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_guards_dir/guards.rs:1846:2527",
@@ -22498,6 +22514,17 @@ let
     "schedule_correspondence::guards::{use#8}",
     "schedule_correspondence::guards::{use#9}",
     "schedule_correspondence::interleaved",
+    "schedule_correspondence::limits",
+    "schedule_correspondence::limits::a_generous_cap_keeps_the_refusal_class",
+    "schedule_correspondence::limits::a_longer_stream_over_the_cap_is_exhausted_before_any_body",
+    "schedule_correspondence::limits::a_padded_declaration_counts_against_the_cap",
+    "schedule_correspondence::limits::one_unit_under_the_declared_work_is_exhausted",
+    "schedule_correspondence::limits::test",
+    "schedule_correspondence::limits::the_declared_work_validates",
+    "schedule_correspondence::limits::{use#0}",
+    "schedule_correspondence::limits::{use#1}",
+    "schedule_correspondence::limits::{use#2}",
+    "schedule_correspondence::limits::{use#3}",
     "schedule_correspondence::main",
     "schedule_correspondence::main::test",
     "schedule_correspondence::measure",

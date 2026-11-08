@@ -27,6 +27,8 @@ mod common;
 mod corpus;
 #[path = "schedule_lean_dir/emit.rs"]
 mod emit;
+#[path = "schedule_cost_dir/limits.rs"]
+mod limits;
 #[path = "schedule_cost_dir/measure.rs"]
 mod measure;
 #[path = "schedule_lean_dir/pairs.rs"]

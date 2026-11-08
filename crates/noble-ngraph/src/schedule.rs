@@ -21,6 +21,8 @@
 //! - **Shape.** The stream length is exactly the number of instruction-emitting nodes. That each
 //!   declared layer range holds exactly that layer's count is a declaration obligation, refused
 //!   by `layout::check` as `Declarations(LayerCoverage)`.
+//! - **A caller's cap.** [`check_within`] refuses inputs whose [`declared_work`] exceeds a cap as
+//!   `Exhausted`, before reading anything but their lengths; within the cap it is [`check`].
 //!
 //! Definition-before-use, single-writer registers and ordered output retention are *implied* by
 //! those obligations for this slice rather than checked a second time: the graph is acyclic, the
@@ -65,6 +67,14 @@ pub enum StreamRefusal {
     /// An instruction body is not the body its node supplies, or its destination is not the node's
     /// declared register.
     BodyMismatch,
+    /// The inputs declare more work than the caller's cap ([`check_within`]). Nothing after the
+    /// profile check was read, so this is not a verdict on the stream.
+    Exhausted {
+        /// The work the inputs declare ([`declared_work`]).
+        work: u64,
+        /// The caller's cap.
+        cap: u64,
+    },
 }
 
 /// The nodes that emit an instruction, in layer order then canonical order. Computed from the
@@ -177,4 +187,46 @@ pub fn check(
         }
     }
     Ok(())
+}
+
+/// The work [`check`] is bounded by: the graph's nodes, every declared table, the layer and
+/// failure-suffix entries, and the stream's instructions. Only lengths are read, so a padded
+/// declaration is counted before any of it is walked.
+#[must_use]
+pub fn declared_work(
+    checked: &crate::check::CheckedGraph,
+    layout: &crate::layout::PackedLayout,
+    ins: &[I64Instruction],
+) -> u64 {
+    [
+        checked.graph().nodes.len(),
+        layout.reg.len(),
+        layout.consts.len(),
+        layout.slot_regs.len(),
+        layout.layers.len(),
+        layout.fail_suffix_min.len(),
+        ins.len(),
+    ]
+    .into_iter()
+    .fold(0u64, |total, count| total.saturating_add(count as u64))
+}
+
+/// [`check`] under a caller's cap on [`declared_work`]. Inputs that declare more work than `cap`
+/// are refused as [`StreamRefusal::Exhausted`] before any declaration, table or body is read, so
+/// exhaustion is never success and never a verdict on the stream. Only the constant-time profile
+/// check comes first. Within the cap the result is exactly [`check`]'s.
+pub fn check_within(
+    checked: &crate::check::CheckedGraph,
+    layout: &crate::layout::PackedLayout,
+    ins: &[I64Instruction],
+    cap: u64,
+) -> Result<(), StreamRefusal> {
+    if checked.graph().profile != crate::ir::SubProfile::I64 {
+        return Err(StreamRefusal::UnsupportedProfile);
+    }
+    let work = declared_work(checked, layout, ins);
+    if work > cap {
+        return Err(StreamRefusal::Exhausted { work, cap });
+    }
+    check(checked, layout, ins)
 }
