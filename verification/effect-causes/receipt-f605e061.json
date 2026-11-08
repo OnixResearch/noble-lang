@@ -1,0 +1,726 @@
+{
+  "schema": "noble-effect-causes-receipt/v1",
+  "issue": 96,
+  "source_commit": "f605e061ff6dfc7b8ab46f6c70f6debe44be30dd",
+  "source_tree": "c1acf8e52e437f0cbeb432f3a35c536476b1386c",
+  "clean_source": true,
+  "rules": "noble-effect-causes/v1",
+  "sources_sha256": {
+    "crates/noble-contracts/tests/source/causes.rs": "5f26af9a18abae83b7b27f76360f3155ec758ecc058f0bb6cecc4cb80db78523",
+    "crates/noble-contracts/tests/source.rs": "68f6904cbf30e023fee6a45b495585a2c2a4f19c58c58d21614ba84c3def9679",
+    "verification/effect-causes/run.mjs": "d2b6b122caf28a49970515034a1b0b5c5f6a432aaceb7d0a5f730ae968836ba5"
+  },
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ="
+  },
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "-j",
+    "4",
+    "-p",
+    "noble-contracts",
+    "--test",
+    "source",
+    "causes::report",
+    "--",
+    "--exact",
+    "--nocapture"
+  ],
+  "report": {
+    "schema": "noble-effect-causes/v1",
+    "budget": 100000,
+    "fixtures": [
+      {
+        "fixture": "chain",
+        "source": "a",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "call": {
+                  "node": 0,
+                  "body": 1
+                }
+              },
+              {
+                "call": {
+                  "node": 0,
+                  "body": 2
+                }
+              },
+              {
+                "host": {
+                  "node": 1,
+                  "row": 22
+                }
+              }
+            ],
+            "call_sites": [
+              [
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 1
+                  }
+                },
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 2
+                  }
+                },
+                {
+                  "host": {
+                    "node": 1,
+                    "row": 22
+                  }
+                }
+              ]
+            ],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 24,
+            "source_identity": 2,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 25,
+            "source_identity": 1,
+            "checked": [
+              0
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 3,
+          "nodes": 3,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 3,
+          "work": 12,
+          "rounds": 4
+        }
+      },
+      {
+        "fixture": "diamond",
+        "source": "left right",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "call": {
+                  "node": 0,
+                  "body": 1
+                }
+              },
+              {
+                "call": {
+                  "node": 0,
+                  "body": 2
+                }
+              },
+              {
+                "host": {
+                  "node": 1,
+                  "row": 22
+                }
+              }
+            ],
+            "call_sites": [
+              [
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 1
+                  }
+                },
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 2
+                  }
+                },
+                {
+                  "host": {
+                    "node": 1,
+                    "row": 22
+                  }
+                }
+              ],
+              [
+                {
+                  "call": {
+                    "node": 1,
+                    "body": 3
+                  }
+                },
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 4
+                  }
+                },
+                {
+                  "host": {
+                    "node": 1,
+                    "row": 22
+                  }
+                }
+              ]
+            ],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 24,
+            "source_identity": 2,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 25,
+            "source_identity": 1,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 26,
+            "source_identity": 2,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 27,
+            "source_identity": 1,
+            "checked": [
+              0
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 5,
+          "nodes": 6,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 6,
+          "work": 24,
+          "rounds": 4
+        }
+      },
+      {
+        "fixture": "quotation-constructed",
+        "source": "[ \"a\" test.emit ] drop",
+        "flat": [],
+        "explained": [],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": []
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 2,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 2,
+          "work": 4,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "quotation-run",
+        "source": "[ \"a\" test.emit ] run",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "latent": {
+                  "node": 3,
+                  "row": 10,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 2,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 3,
+          "work": 6,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "quotation-nested-run",
+        "source": "[ [ \"a\" test.emit ] run ] run",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "latent": {
+                  "node": 5,
+                  "row": 10,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 3,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 5,
+          "work": 10,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "quotation-nested-constructed",
+        "source": "[ [ \"a\" test.emit ] ] run drop",
+        "flat": [],
+        "explained": [],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": []
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 3,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 4,
+          "work": 8,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "instantiations",
+        "source": "[ \"a\" test.emit ] apply [ ] apply",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "call": {
+                  "node": 3,
+                  "body": 1
+                }
+              },
+              {
+                "latent": {
+                  "node": 0,
+                  "row": 10,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [
+              [
+                {
+                  "call": {
+                    "node": 3,
+                    "body": 1
+                  }
+                },
+                {
+                  "latent": {
+                    "node": 0,
+                    "row": 10,
+                    "origin": "unavailable"
+                  }
+                }
+              ]
+            ],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 24,
+            "source_identity": 1,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 25,
+            "source_identity": 1,
+            "checked": []
+          }
+        ],
+        "compared": {
+          "bodies": 3,
+          "nodes": 5,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 7,
+          "work": 21,
+          "rounds": 3
+        }
+      },
+      {
+        "fixture": "composed-declared",
+        "source": "[ \"first\" test.emit test.abort ] [ \"second\" test.emit ] compose run",
+        "flat": [
+          0,
+          1
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "latent": {
+                  "node": 8,
+                  "row": 10,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [],
+            "kernel_without_it": "refused: effect 0"
+          },
+          {
+            "effect": 1,
+            "path": [
+              {
+                "latent": {
+                  "node": 8,
+                  "row": 10,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [],
+            "kernel_without_it": "refused: effect 1"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0,
+              1
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 5,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 6,
+          "work": 12,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "branch",
+        "source": "true [ \"a\" test.emit ] [ ] if",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "latent": {
+                  "node": 5,
+                  "row": 18,
+                  "origin": "unavailable"
+                }
+              }
+            ],
+            "call_sites": [],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          }
+        ],
+        "compared": {
+          "bodies": 1,
+          "nodes": 3,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 4,
+          "work": 8,
+          "rounds": 2
+        }
+      },
+      {
+        "fixture": "rebinding",
+        "source": "f h",
+        "flat": [
+          0
+        ],
+        "explained": [
+          {
+            "effect": 0,
+            "path": [
+              {
+                "call": {
+                  "node": 0,
+                  "body": 1
+                }
+              },
+              {
+                "call": {
+                  "node": 0,
+                  "body": 2
+                }
+              },
+              {
+                "host": {
+                  "node": 1,
+                  "row": 22
+                }
+              }
+            ],
+            "call_sites": [
+              [
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 1
+                  }
+                },
+                {
+                  "call": {
+                    "node": 0,
+                    "body": 2
+                  }
+                },
+                {
+                  "host": {
+                    "node": 1,
+                    "row": 22
+                  }
+                }
+              ]
+            ],
+            "kernel_without_it": "refused: effect 0"
+          }
+        ],
+        "bounds": [],
+        "bodies": [
+          {
+            "row": null,
+            "source_identity": null,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 24,
+            "source_identity": 2,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 25,
+            "source_identity": 1,
+            "checked": [
+              0
+            ]
+          },
+          {
+            "row": 26,
+            "source_identity": 4,
+            "checked": []
+          },
+          {
+            "row": 27,
+            "source_identity": 3,
+            "checked": []
+          }
+        ],
+        "compared": {
+          "bodies": 5,
+          "nodes": 5,
+          "mismatches": 0
+        },
+        "unsupported": 0,
+        "unknown": [],
+        "incomplete": 0,
+        "cost": {
+          "facts": 5,
+          "work": 20,
+          "rounds": 4
+        }
+      }
+    ],
+    "cycles": {
+      "seeded": {
+        "effects": [
+          0
+        ],
+        "rounds": 4
+      },
+      "unseeded": {
+        "effects": [],
+        "rounds": 1
+      }
+    },
+    "faults": {
+      "lost_edge_mismatches": 1,
+      "quotation_leak_mismatches": 1
+    },
+    "declared_bound": {
+      "source": "[ \"a\" test.emit ] drop",
+      "declared": [
+        0
+      ],
+      "kernel": "accepted",
+      "bound_only": [
+        0
+      ],
+      "contributors": 0
+    }
+  },
+  "non_claims": [
+    "Finite agreement with acceptance::check on these fixtures; not a soundness proof of the relation.",
+    "The report cannot accept a Program, authorize emission, narrow an admitted bound or certify a behavioural contract.",
+    "Identities are session-local; module sessions, bound adapters and live dispatch are outside the fixtures."
+  ]
+}

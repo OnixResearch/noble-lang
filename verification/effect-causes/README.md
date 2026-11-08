@@ -32,7 +32,7 @@ For each root effect, the root is resubmitted without it. The kernel must refuse
 
 ## Results
 
-All ten fixtures agree with the kernel on every body and checked node:
+`receipt-f605e061.json` is the lane's receipt from the clean commit `f605e061`. All ten fixtures agree with the kernel on every body and checked node:
 - a chain;
 - a diamond;
 - quotations constructed versus run, nested both ways;
