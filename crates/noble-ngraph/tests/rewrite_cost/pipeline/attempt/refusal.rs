@@ -18,6 +18,8 @@ pub(super) const fn certificate(value: &cert::Refusal) -> &'static str {
 pub(super) const fn layout(value: layout::Refusal) -> &'static str {
     match value {
         layout::Refusal::StaleRevision => "stale-revision",
+        layout::Refusal::StaleCompilerRevision => "stale-compiler-revision",
+        layout::Refusal::LayoutKey => "layout-key",
         layout::Refusal::RegisterMapShape => "register-map-shape",
         layout::Refusal::RegisterOutOfRange => "register-out-of-range",
         layout::Refusal::AliasedRegisters => "aliased-registers",

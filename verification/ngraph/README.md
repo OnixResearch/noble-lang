@@ -526,10 +526,18 @@ finite, specific exercised cases, not global no-work or resource-proof claims.
 
 ## The packed instruction stream itself (issue #43)
 
-`layout::check` validates a *declaration* only: register map, constant and slot tables, register
-count, layer ranges and failure-suffix minima. It never reads an instruction body, so a stream could
-name the right registers and still compute the wrong operation. `crates/noble-ngraph/src/schedule.rs`
-closes that for the total I64/Bool fragment:
+`layout::check` validates a *declaration* only: compiler revision, build key, register map, constant
+and slot tables, register count, layer ranges and failure-suffix minima.
+- **Compiler revision.** The declared revision must be the selected compiler's
+  (`Refusal::StaleCompilerRevision`).
+- **Build key.** The declared key must equal the key the checker computed for the graph,
+  `CheckedGraph::packed_layout_key`, under the selected compiler revision and layout options
+  (`Refusal::LayoutKey`). A key the layout supplies is never its own expected value, so a
+  structurally identical layout compiled for another graph is refused (#98).
+
+It never reads an instruction body, so a stream could name the right registers and still compute
+the wrong operation. `crates/noble-ngraph/src/schedule.rs` closes that for the total I64/Bool
+fragment:
 
 | Obligation | What is compared |
 |---|---|

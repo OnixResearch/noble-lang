@@ -6,8 +6,9 @@
 //! Independent validation of a declared packed layout against its graph.
 //!
 //! The scheduler stays untrusted: this module never regenerates the schedule and
-//! never reads an instruction body. It checks the declared register map, the
-//! constant and slot tables and the register count against the graph's own ops, and
+//! never reads an instruction body. It checks the declared compiler revision and build key
+//! against the selected compiler and the checker's own key for the graph, the declared register
+//! map, the constant and slot tables and the register count against the graph's own ops, and
 //! the layer ranges and failure-suffix minima against the checker's layer
 //! assignment, so a wrong declaration is refused rather than compared with another
 //! copy of itself. Each table entry must account for a distinct node, and the layer
@@ -18,6 +19,24 @@
 
 /// Layout declaration revision bound into every accepted layout.
 pub const LAYOUT_REVISION: &str = "ngraph-layout/0";
+
+/// Layout options the compiler builds every packed layout under, bound into its build key.
+const LAYOUT_OPTIONS: &str = "order=(layer,canonical);regs=dense;one-reg=last";
+
+/// `PackedLayoutKey = H(noble.ngraph.packed-layout.v0 ‖ GraphLogicalId ‖ compiler revision ‖ layout
+/// options)`: the build key every layout of the graph `graph` is declared under. It binds a layout
+/// to its graph and its compiler; it is a build key, not semantic identity.
+#[must_use]
+pub fn packed_layout_key(
+    ids: &dyn crate::identity::IdentityScheme,
+    graph: &crate::ir::Digest,
+) -> crate::ir::Digest {
+    let mut canon = crate::ir::Canon::new(ids, "noble.ngraph.packed-layout.v0");
+    canon.bytes(graph);
+    canon.str(crate::compiled::COMPILER_REVISION);
+    canon.str(LAYOUT_OPTIONS);
+    canon.finish()
+}
 
 /// The declared packed layout of one compiled graph.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -47,6 +66,11 @@ pub struct PackedLayout {
 pub enum Refusal {
     /// The layout declaration revision is not the current one.
     StaleRevision,
+    /// The declared compiler revision is not the selected compiler's.
+    StaleCompilerRevision,
+    /// The declared build key is not the checked graph's packed-layout key under the selected
+    /// compiler revision and layout options.
+    LayoutKey,
     /// The register map does not have one entry per node.
     RegisterMapShape,
     /// A declared register lies outside the declared register count.
@@ -196,7 +220,10 @@ fn layer_coverage(
     Ok(())
 }
 
-/// Validates a declared layout against the graph it claims to pack. The layer
+/// Validates a declared layout against the graph it claims to pack. The declared compiler
+/// revision must be the selected compiler's, and the declared build key must be the key the
+/// checker computed for the graph (`CheckedGraph::packed_layout_key`); a key the layout supplies
+/// is never its own expected value. The layer
 /// assignment comes from the checker, not from the scheduler: the declared layer
 /// ranges and failure-suffix minima are compared against it, never regenerated.
 ///
@@ -206,6 +233,12 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
     let graph = checked.graph();
     if layout.revision != LAYOUT_REVISION {
         return Err(Refusal::StaleRevision);
+    }
+    if layout.compiler_revision != crate::compiled::COMPILER_REVISION {
+        return Err(Refusal::StaleCompilerRevision);
+    }
+    if layout.layout_key != checked.packed_layout_key() {
+        return Err(Refusal::LayoutKey);
     }
     if layout.reg.len() != graph.nodes.len() {
         return Err(Refusal::RegisterMapShape);
@@ -345,10 +378,20 @@ mod tests {
         crate::check::CheckedGraph,
         super::PackedLayout,
     ) {
+        sample_named("layout-sample")
+    }
+
+    fn sample_named(
+        name: &str,
+    ) -> (
+        crate::ir::Graph,
+        crate::check::CheckedGraph,
+        super::PackedLayout,
+    ) {
         let scheme = TestIds;
         let mut builder = crate::ir::GraphBuilder::new(
             crate::ir::SubProfile::I64,
-            crate::ir::Subject::authored(&scheme, "layout-sample"),
+            crate::ir::Subject::authored(&scheme, name),
         );
         let input = builder.input(crate::ir::ScalarType::I64);
         let three = builder.i64_const(3);
@@ -366,6 +409,45 @@ mod tests {
         let (_graph, checked, layout) = sample();
         assert_eq!(layout.revision, super::LAYOUT_REVISION);
         assert!(super::check(&checked, &layout).is_ok());
+    }
+
+    /// #98: the declared compiler revision and build key are part of admission, and the expected
+    /// key is the checker's, never the key the layout supplies.
+    #[test]
+    fn compiler_revision_and_build_key_are_part_of_layout_admission() {
+        let (_graph, checked, layout) = sample();
+        assert_eq!(super::check(&checked, &layout), Ok(()));
+
+        let mut stale = layout.clone();
+        stale.compiler_revision = alloc::string::String::from("ngraph-layered/stale");
+        assert_eq!(
+            super::check(&checked, &stale),
+            Err(super::Refusal::StaleCompilerRevision)
+        );
+
+        let mut wrong_key = layout.clone();
+        wrong_key.layout_key[0] ^= 1;
+        assert_eq!(
+            super::check(&checked, &wrong_key),
+            Err(super::Refusal::LayoutKey)
+        );
+
+        let mut both = stale.clone();
+        both.layout_key = wrong_key.layout_key;
+        assert_eq!(
+            super::check(&checked, &both),
+            Err(super::Refusal::StaleCompilerRevision)
+        );
+
+        // A structurally identical layout compiled for another graph carries that graph's own,
+        // internally consistent key, and is refused for this one.
+        let (_other_graph, other_checked, other) = sample_named("layout-sample-other");
+        assert_ne!(other_checked.id(), checked.id());
+        assert_eq!(super::check(&other_checked, &other), Ok(()));
+        assert_eq!(
+            super::check(&checked, &other),
+            Err(super::Refusal::LayoutKey)
+        );
     }
 
     #[test]

@@ -181,6 +181,7 @@ pub struct CheckedGraph {
     slot_nodes: alloc::vec::Vec<crate::ir::NodeId>,
     param_slots: alloc::vec::Vec<u32>,
     param_layout: crate::ir::Digest,
+    packed_layout: crate::ir::Digest,
 }
 
 impl CheckedGraph {
@@ -248,6 +249,13 @@ impl CheckedGraph {
     #[must_use]
     pub const fn param_layout(&self) -> crate::ir::Digest {
         self.param_layout
+    }
+
+    /// The build key every packed layout of this graph must declare
+    /// (`crate::layout::packed_layout_key`, computed once at check).
+    #[must_use]
+    pub const fn packed_layout_key(&self) -> crate::ir::Digest {
+        self.packed_layout
     }
 
     /// crate::ir::Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
@@ -464,6 +472,7 @@ pub fn check_with(
     let id = graph.logical_id(ids);
     let param_slots = graph.param_slots();
     let param_layout = crate::snapshot::layout_key(ids, &graph);
+    let packed_layout = crate::layout::packed_layout_key(ids, &id);
     Ok(CheckedGraph {
         graph: alloc::rc::Rc::new(graph),
         id,
@@ -475,6 +484,7 @@ pub fn check_with(
         slot_nodes,
         param_slots,
         param_layout,
+        packed_layout,
     })
 }
 

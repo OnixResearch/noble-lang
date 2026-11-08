@@ -226,11 +226,7 @@ impl Compiled {
         for l in (0..layers.len()).rev() {
             fail_suffix_min[l] = fail_suffix_min[l + 1].min(fail_min_at_layer[l]);
         }
-        let mut c = crate::ir::Canon::new(ids, "noble.ngraph.packed-layout.v0");
-        c.bytes(&checked.id());
-        c.str(COMPILER_REVISION);
-        c.str("order=(layer,canonical);regs=dense;one-reg=last");
-        let layout_key = c.finish();
+        let layout_key = crate::layout::packed_layout_key(ids, &checked.id());
         let code = match g.profile {
             crate::ir::SubProfile::F32 => Code::F32 {
                 ins: fins,
@@ -271,8 +267,7 @@ impl Compiled {
         }
     }
 
-    /// `PackedLayoutKey = H(GraphLogicalId ‖ compiler rev ‖ layout options)`
-    /// (a build key, not semantic identity).
+    /// `PackedLayoutKey` (`crate::layout::packed_layout_key`): a build key, not semantic identity.
     #[must_use]
     pub const fn layout_key(&self) -> crate::ir::Digest {
         self.layout_key
