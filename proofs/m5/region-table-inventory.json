@@ -1,0 +1,187 @@
+{
+  "schema": "noble-region-table-theorem-inventory/v1",
+  "module": "proofs/m5/RegionTable.lean",
+  "namespace": "RegionTable",
+  "theorems": [
+    {
+      "name": "RegionTable.released_state",
+      "role": "record-shape",
+      "claim": "A released record is in the Retired state.",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTable.opened_handle",
+      "role": "record-shape",
+      "claim": "Opening a borrow keeps the record's handle.",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTable.returned_handle",
+      "role": "record-shape",
+      "claim": "Returning the owner keeps the record's handle.",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTable.released_handle",
+      "role": "record-shape",
+      "claim": "Releasing keeps the record's handle.",
+      "allowed_standard_axioms": []
+    },
+    {
+      "name": "RegionTable.opened_valid",
+      "role": "m5-decision",
+      "claim": "A well-formed live record opened under a nonzero serial is well formed.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.access_opened",
+      "role": "m5-decision",
+      "claim": "Access with the open borrow's serial authorizes it and leaves the opened record unchanged.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.complete_opened",
+      "role": "m5-decision",
+      "claim": "Complete with the open borrow's serial returns the owner for either outcome and leaves the live record with that serial as its last scope.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.returned_valid",
+      "role": "m5-decision",
+      "claim": "The record a returned borrow leaves is well formed.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.release_live",
+      "role": "m5-decision",
+      "claim": "Release with the registration requirement retires a well-formed live record as a local release.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.release_retired",
+      "role": "m5-decision",
+      "claim": "Release of a retired record is refused with Retired.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.begin_retired",
+      "role": "m5-decision",
+      "claim": "Begin on a retired record is refused with Retired for every serial.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.released_valid",
+      "role": "m5-decision",
+      "claim": "Releasing a well-formed record leaves a well-formed record.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.begin_fresh",
+      "role": "m5-decision",
+      "claim": "Begin with the registration requirement and a fresh serial admits a borrow on a well-formed live record and opens it under that serial.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.selected_of_records",
+      "role": "one-slot-table",
+      "claim": "A table whose records are exactly one record at slot 0 selects that record for its handle.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.commit_admitted",
+      "role": "one-slot-table",
+      "claim": "With pin room, commit of an admitted borrow on the one-slot table stores the decided record, acquires one pin and keeps the scope counter and limits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.commit_returned",
+      "role": "one-slot-table",
+      "claim": "With a pin outstanding, commit of a returned owner on the one-slot table stores the decided record, releases one pin and keeps the scope counter and limits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.commit_released",
+      "role": "one-slot-table",
+      "claim": "Commit of a local release on the one-slot table stores the decided record and keeps the pins, the scope counter and the limits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.registration_represents",
+      "role": "adapter-registration",
+      "claim": "Table::new with the adapter's limits and the model's scope limit as the scope ceiling, then register, yields the owner and a table that represents the model's initial state, and the adapter's requirement is requirementFor of the owner's handle.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.begin_exhausted",
+      "role": "table-method",
+      "claim": "At the scope ceiling, begin refuses with ScopeExhausted and returns the table unchanged.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.begin_admits",
+      "role": "table-method",
+      "claim": "Below the scope ceiling, begin on a represented live owner allocates the serial granted + 1, admits the borrow, stores the opened record and holds one pin.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.open_borrow_returns",
+      "role": "table-method",
+      "claim": "A4 for the table: on the table holding the opened record, native_access authorizes the borrow and complete returns the owner for either outcome, stores the returned record and releases the pin.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.release_table",
+      "role": "table-method",
+      "claim": "release retires a represented live owner as a local release and stores the retired record, and is refused with Retired on a retired record, returning the table unchanged.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.begin_retired_table",
+      "role": "table-method",
+      "claim": "begin on a represented retired record is refused and returns the table unchanged.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.accounting_local_releases",
+      "role": "accounting",
+      "claim": "actionReleases is the local_releases field of the extracted Decision.accounting for every decision.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.read_step",
+      "role": "model-step",
+      "claim": "Under the table's host, a read on a live owner keeps it live, grants a borrow exactly when the claim is the owner's, the range is in bounds and the scope limit is not reached, and commits no release.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.calls_refine",
+      "role": "t4-refinement",
+      "claim": "For every guest request, the adapter's table calls take a table that represents the model state to one that represents the model's next state under the table's host, accounting exactly the model's release commits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.cleanup_refines",
+      "role": "t4-refinement",
+      "claim": "The host's cleanup through release takes a represented table to one that represents the model's retired state, accounting exactly the model's retirement commits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.exec_refines",
+      "role": "t4-refinement",
+      "claim": "For every program, the adapter's table calls for the model's execution keep the table representing the reached model state and account exactly the model's release commits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.run_refines",
+      "role": "t4-refinement",
+      "claim": "For every program, the adapter's table calls for a whole run with the host's cleanup leave a table that represents the model's final state and account exactly the model's release commits.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    {
+      "name": "RegionTable.table_retires_exactly_once",
+      "role": "t4-corollary",
+      "claim": "P1 and the cleanup claim for the table: from a represented live owner, every run's table calls end with the record retired, no pin outstanding and exactly one local release accounted.",
+      "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    }
+  ]
+}
