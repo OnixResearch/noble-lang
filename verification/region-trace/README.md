@@ -115,10 +115,11 @@ though the host control now exists. The fixtures are finite tests of recorded tr
 observations, not the component or engine that produced them.
 
 `verification/region-trace/receipt.json` is the retained receipt of one run, on the clean commit
-`918db86a` with Lean 4.35.0: **68** model theorems. The reported axioms are `propext`,
+`6b4301b1` with Lean 4.35.0: **106** theorems, the 68 model theorems and 38 runtime fixtures (18
+related, each with its control, and 2 model gaps). The reported axioms are `propext`,
 `Classical.choice` and `Quot.sound`, all inside the standard allow-list. Most proofs report
-`Classical.choice` under Lean 4.35.0. The previous receipt, at `1bf39a52` under Lean 4.31.0, reported
-only `propext` and `Quot.sound`.
+`Classical.choice` under Lean 4.35.0. The receipt at `1bf39a52`, under Lean 4.31.0, reported only
+`propext` and `Quot.sound`.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
 

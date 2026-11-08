@@ -62,6 +62,11 @@
   exact decimal text and requires a release to carry none.
   `verification/host-locality/evidence-1bf39a52.json` (clean source, 11 cases) shows every case's
   read request carrying its arguments exactly.
+  Since the `noble-bounded-region/v2` report (behavioral-effect-protocol): `adapter-invalid` is
+  observed at runtime, not only in unit tests. In EPROTO-CASE-09, Wasmtime's handle table refuses a
+  consumed handle with an untyped error (`verification/effect-protocol/execution-3ef3f43a.json`).
+  The host interruption control adds `cancelled`. A refused cleanup still cannot be induced from
+  this interface, so the task stays open.
 - [ ] [serial] Add the normal-success, ordinary-error, host-refusal, trap and quota-prefix fixtures, keeping cancellation unsupported. r[WIT-TRACE-05]
   Model-level fixtures done (`fixture_*` theorems): ordinary error with a reason, host bounds refusal, trap
   after a protected copy, cleanup failure, and a quota prefix that stops before the copy, with a
@@ -70,6 +75,21 @@
   (`verification/host-locality/evidence-ddf747a0.json`: `normal`, `rejected`, `trap`,
   `quota-exhausted` with `fuel_remaining: 0`); `adapter-invalid` and a refused cleanup are not
   producible from this interface, so the task stays open rather than being ticked.
+  Runtime fixtures (2026-11-08): `proofs/m5/RegionTraceRuntime.lean` is generated from the recorded
+  traces in `verification/effect-protocol/execution-3ef3f43a.json`, and the region-trace check
+  requires it byte for byte. The receipt is `verification/region-trace/receipt.json` from the clean
+  commit `6b4301b1`, with 106 theorems.
+  - 18 recorded traces relate, each paired with a control whose unexplained read commit is refused:
+    success, ordinary errors, traps and quota exhaustion after the commit, cancellations, the
+    omitted release, the runtime-refused second calls and outside-model results.
+  - Host refusal has no runtime fixture. The only guest-reachable refusal is the 65th read, and it
+    lies beyond the host's 64-event trace bound.
+  - Two recorded traces are refused: a trap before use and quota exhaustion before the read. The host
+    retires the owner it registered, but registration is outside the observed alphabet, so no
+    decision authorises the retired identity. Closing that model gap needs either a recorded
+    registration event or registration as a premise of the relation.
+
+  The task stays open for the host-refusal trace and the registration gap.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
   Model-level controls done: substituted identity, unexplained read commit, second release, a guest
   release followed by a host retirement of the same region (refused since `atMostOnce` bounds
