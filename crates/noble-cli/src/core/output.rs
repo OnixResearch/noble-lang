@@ -261,6 +261,48 @@ impl Report {
                         None => crate::workflow::encoding::string("unavailable"),
                     },
                 ),
+                (
+                    "stack_difference",
+                    match &join.difference {
+                        Some(difference) => crate::workflow::encoding::object([
+                            (
+                                "shared_prefix",
+                                crate::workflow::encoding::Json::Number(u64::from(
+                                    difference.shared_prefix,
+                                )),
+                            ),
+                            (
+                                "position",
+                                crate::workflow::encoding::Json::Number(u64::from(
+                                    difference.position(),
+                                )),
+                            ),
+                            (
+                                "expected",
+                                crate::workflow::encoding::string(&difference.expected),
+                            ),
+                            (
+                                "actual",
+                                crate::workflow::encoding::string(&difference.actual),
+                            ),
+                            (
+                                "expected_word_or_unavailable",
+                                match difference.expected_word {
+                                    Some(word) => source_span(Some(word)),
+                                    None => crate::workflow::encoding::string("unavailable"),
+                                },
+                            ),
+                            (
+                                "actual_word_or_unavailable",
+                                match difference.actual_word {
+                                    Some(word) => source_span(Some(word)),
+                                    None => crate::workflow::encoding::string("unavailable"),
+                                },
+                            ),
+                        ]),
+                        None => crate::workflow::encoding::string("unavailable"),
+                    },
+                ),
             ]);
         }
         Self {

@@ -91,6 +91,18 @@ pub(super) fn builtin(
             .arena
             .join_stacks(input, frame.stack, call.span, meter)
             .ok();
+        let difference = state
+            .arena
+            .stack_difference(input, frame.stack, call.span, meter)
+            .ok()
+            .flatten()
+            .map(|(shared_prefix, expected, actual)| crate::StackDifference {
+                shared_prefix,
+                expected,
+                actual,
+                expected_word: Some(call.span),
+                actual_word: producer(frame, state),
+            });
         return Err(contextualize(
             error,
             definition,
@@ -98,6 +110,7 @@ pub(super) fn builtin(
             frame.caller,
             origin,
             message,
+            difference,
         ));
     }
     frame.effect = attempt!(state
@@ -195,6 +208,16 @@ pub(super) fn signed_self(
     frame.sequence.push(id);
     frame.stack = output;
     Ok(())
+}
+
+/// The span of the word that produced the current stack: the last node of the current body.
+/// At the start of a body the stack is the body's input, which no word in it produced.
+fn producer(frame: &super::Frame, state: &super::State) -> Option<crate::Span> {
+    let last = frame.sequence.last()?;
+    let body = state.bodies.get(frame.body)?;
+    body.nodes
+        .get(usize::try_from(last.0).ok()?)
+        .map(|draft| draft.span)
 }
 
 #[expect(
@@ -397,6 +420,7 @@ fn contextualize(
     caller: Option<crate::Span>,
     origin: Option<crate::Span>,
     stacks: Option<(alloc::string::String, alloc::string::String)>,
+    difference: Option<crate::StackDifference>,
 ) -> crate::Diagnostic {
     let (expected_stack, actual_stack) = match stacks {
         Some(stacks) => stacks,
@@ -434,5 +458,18 @@ fn contextualize(
             "stack-type"
         },
         value_origin: if caller.is_some() { None } else { origin },
+        // While specializing a resolved definition the words lie in another body, so, as for the
+        // value origin, only the positional difference is kept.
+        difference: difference.map(|difference| {
+            if caller.is_some() {
+                crate::StackDifference {
+                    expected_word: None,
+                    actual_word: None,
+                    ..difference
+                }
+            } else {
+                difference
+            }
+        }),
     })
 }

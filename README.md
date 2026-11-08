@@ -97,6 +97,20 @@ fields so further additive detail keeps `v1`:
 - `join`, when available, carries `failing_word`, `expected_stack`,
   `actual_stack`, `constraint` and `value_origin` (a generated span, or `null`
   when the origin is unavailable).
+- `join.stack_difference` locates a rejected stack join positionally, or is
+  `null` when the mismatch is not positional (#103). It carries:
+  - `shared_prefix`: how many positions, from the top, render the same type;
+  - `position`: the first differing position, the top being 1;
+  - `expected` and `actual`: both types at that position. A side with no
+    element there gives its remaining stack instead (`[]`, `?stack` or
+    `forall-stack`).
+  - `expected_word` and `actual_word`: the spans of the word whose input
+    interface is the expected side and of the word that produced the actual
+    stack, each `null` when unknown.
+
+  The checker's own type-reject report carries the same object as
+  `stack_difference`, with `"unavailable"` in place of `null`. The diagnostic
+  text is unchanged.
 
 Paths, spans and join stacks are bounded by the same limits that admit the
 candidate (`depth 64`, 64 KiB of generated source, 16 384 nodes); the report

@@ -193,6 +193,29 @@ fn failure_object(
                     None => Json::Null,
                 },
             ),
+            (
+                "stack_difference",
+                match &join.difference {
+                    Some(difference) => object([
+                        (
+                            "shared_prefix",
+                            Json::Number(u64::from(difference.shared_prefix)),
+                        ),
+                        ("position", Json::Number(u64::from(difference.position()))),
+                        ("expected", string(&difference.expected)),
+                        ("actual", string(&difference.actual)),
+                        (
+                            "expected_word",
+                            difference.expected_word.map_or(Json::Null, span_json),
+                        ),
+                        (
+                            "actual_word",
+                            difference.actual_word.map_or(Json::Null, span_json),
+                        ),
+                    ]),
+                    None => Json::Null,
+                },
+            ),
         ]),
         None => Json::Null,
     };
@@ -480,6 +503,13 @@ mod tests {
             actual_stack: "?stack Text".into(),
             constraint: "joining:stack",
             value_origin: Some(span),
+            difference: Some(noble_contracts::StackDifference {
+                shared_prefix: 0,
+                expected: "I64".into(),
+                actual: "Text".into(),
+                expected_word: Some(noble_contracts::Span { start: 14, end: 20 }),
+                actual_word: None,
+            }),
         });
         let error = noble_contracts::source::Error::reported(Stage::Acceptance, diagnostic);
         let report = failure_object(
@@ -497,6 +527,19 @@ mod tests {
             field(field(join, "value_origin"), "start"),
             Json::Number(11)
         ));
+        let difference = field(join, "stack_difference");
+        assert!(matches!(
+            field(difference, "shared_prefix"),
+            Json::Number(0)
+        ));
+        assert!(matches!(field(difference, "position"), Json::Number(1)));
+        assert_eq!(text(field(difference, "expected")), "I64");
+        assert_eq!(text(field(difference, "actual")), "Text");
+        assert!(matches!(
+            field(field(difference, "expected_word"), "start"),
+            Json::Number(14)
+        ));
+        assert!(matches!(field(difference, "actual_word"), Json::Null));
 
         // An unavailable origin is reported as unavailable rather than guessed.
         let diagnostic = noble_contracts::Diagnostic::new(
@@ -510,11 +553,13 @@ mod tests {
             actual_stack: "?stack".into(),
             constraint: "joining:stack",
             value_origin: None,
+            difference: None,
         });
         let error = noble_contracts::source::Error::reported(Stage::Resolve, diagnostic);
         let report = failure_object(&error, &[]);
         let join = field(&report, "join");
         assert!(matches!(field(join, "value_origin"), Json::Null));
+        assert!(matches!(field(join, "stack_difference"), Json::Null));
         assert_eq!(text(field(&report, "node_path_status")), "unmapped");
         let Json::Null = field(&report, "node_path") else {
             panic!("an unmapped failure must not claim a node path");

@@ -338,6 +338,7 @@ fn check_with_owner(
                     actual_stack: actual,
                     constraint: "eligibility:Data",
                     value_origin: None,
+                    difference: None,
                 });
             } else if let Ok(shapes) = rejection_shapes(&diagnostic, request, at) {
                 problem.message.push_str("; ");

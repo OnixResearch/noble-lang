@@ -110,6 +110,33 @@ pub struct JoinDiagnostic {
     pub actual_stack: alloc::string::String,
     pub constraint: &'static str,
     pub value_origin: Option<Span>,
+    /// Where the two stacks first differ, when the mismatch is positional.
+    pub difference: Option<StackDifference>,
+}
+
+/// Where the two sides of a rejected stack join first differ, counted from the top.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StackDifference {
+    /// The number of positions, from the top, on which both sides render the same type.
+    pub shared_prefix: u32,
+    /// The expected side's type at the first differing position. A side with no element there
+    /// contributes its remaining stack instead (`[]`, `?stack` or `forall-stack`).
+    pub expected: alloc::string::String,
+    /// The actual side's type at that position, or its remaining stack.
+    pub actual: alloc::string::String,
+    /// The word whose input interface is the expected side, when it is known.
+    pub expected_word: Option<Span>,
+    /// The word that produced the actual stack, when it is known. At the start of a body the
+    /// actual stack is the body's input and no word produced it.
+    pub actual_word: Option<Span>,
+}
+
+impl StackDifference {
+    /// The first differing position, counted from the top, which is position 1.
+    #[must_use]
+    pub const fn position(&self) -> u32 {
+        self.shared_prefix.saturating_add(1)
+    }
 }
 
 impl Diagnostic {

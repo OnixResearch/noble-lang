@@ -5082,110 +5082,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:10258:10265",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:10351:10358",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:11128:11134",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:11844:11848",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:12719:12723",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:14016:14023",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:14140:14147",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:14268:14275",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:14395:14402",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:14487:14494",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15158:15160",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15780:16940",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed editor-63-node-paths: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:16958:19470",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Renewed 2026-10-15 for issue #22 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:2980:2983",
@@ -5229,14 +5125,6 @@
       "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:6433:6440",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed editor-63-node-paths from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:9309:9316",
       "refinement": "open"
     },
     {
@@ -18685,22 +18573,6 @@
       "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/mod.rs:12771:12774",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:5157:5169",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed 2026-10-21 for the integrated live, worker, C11 and linking source after the deny-all lint clearance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:6489:6491",
       "refinement": "open"
     },
     {
@@ -126038,6 +125910,254 @@
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::layout::tests::sample_named",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:10302:10309",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:11251:11258",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:11344:11351",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:12121:12127",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:12837:12841",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:13712:13716",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15009:15016",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15133:15140",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15261:15268",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15388:15395",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:15480:15487",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:16151:16153",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:16773:17933",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/editor.rs:17951:21454",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:17263:17275",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:3605:3640",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:5616:5628",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/inference/operations.rs:6948:6950",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (function) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: every observing compiler fact (implementation) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<StackDifference as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target: declaration-only compiler kind (implementation/struct); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::StackDifference",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::StackDifference::position",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::inference::materialize::<impl inference::Arena>::stack_difference",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed #103: Arena::stack_difference, StackDifference and the source-inference producer span give a rejected stack join a positional diff; golden tests inside the existing source target from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::inference::operations::producer",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
@@ -129618,22 +129738,22 @@
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:95202:97683",
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:97046:97049",
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:98469:100414",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:11623:13852",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:11907:14136",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1258:2040",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12696:12753",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12868:12876",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13390:13446",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:14016:15031",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:16690:19451",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:19461:21235",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12980:13037",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13152:13160",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13674:13730",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:14300:15315",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:16974:19735",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:19745:21519",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:2050:4152",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:21245:23193",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:23203:24104",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:4162:6191",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:21529:23477",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:23487:24388",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:4162:6475",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:626:1226",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6318:6798",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6808:7816",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:8952:11386",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6602:7082",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:7092:8100",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:9236:11670",
     "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:2441:3176",
     "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:3186:3824",
     "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:3834:4841",
@@ -130155,6 +130275,11 @@
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:1700:2288",
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:2298:3259",
     "noble-contracts::closure@crates/noble-contracts/tests/source/lifecycle.rs:968:1690",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1020:1476",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1486:1989",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:1999:2524",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:2534:2901",
+    "noble-contracts::closure@crates/noble-contracts/tests/source/stack_difference.rs:819:821",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10032:10039",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10161:10168",
     "noble-contracts::closure@crates/noble-contracts/tests/source_proof.rs:10553:10560",
@@ -133023,6 +133148,14 @@
     "source::semantic_merge_model::tests::{use#7}",
     "source::semantic_merge_model::tests::{use#8}",
     "source::semantic_merge_model::tests::{use#9}",
+    "source::stack_difference",
+    "source::stack_difference::a_mismatch_at_the_start_of_a_body_has_no_producing_word",
+    "source::stack_difference::arity_off_by_one_differs_below_the_shared_top",
+    "source::stack_difference::difference",
+    "source::stack_difference::quotation_in_place_of_a_value_differs_below_the_shared_top",
+    "source::stack_difference::span",
+    "source::stack_difference::swapped_operands_differ_at_the_top",
+    "source::stack_difference::test",
     "source::stale_and_cross_namespace_declarations_cannot_commit",
     "source::std",
     "source::test",

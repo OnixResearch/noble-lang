@@ -145,6 +145,11 @@ fn word_and_branch_failures_report_constraints_and_honest_value_origins(
     assert!(reports[0].contains("\"actual_stack\":\"[] I64 Bool\""));
     assert!(reports[0].contains("\"source_span\":{\"start\":7,\"end\":8}"));
     assert!(reports[0].contains("\"value_origin_or_unavailable\":{\"start\":2,\"end\":6}"));
+    assert!(reports[0].contains(
+        "\"stack_difference\":{\"shared_prefix\":0,\"position\":1,\"expected\":\"I64\",\
+         \"actual\":\"Bool\",\"expected_word_or_unavailable\":{\"start\":7,\"end\":8},\
+         \"actual_word_or_unavailable\":{\"start\":2,\"end\":6}}"
+    ));
     assert!(reports[1].contains("\"word_or_join\":\"if\""));
     assert!(reports[1].contains("\"constraint\":\"branch-join\""));
     assert!(reports[1].contains("\"required_stack\":\"?stack Bool Program<"));

@@ -357,4 +357,64 @@ impl super::Arena {
         let actual = attempt!(rendering::describe(self, actual, span, meter));
         Ok((expected, actual))
     }
+
+    /// Where a rejected stack join's two sides first differ, walking both from the top: the number
+    /// of positions on which they render the same type, then each side's rendering at the first
+    /// position where they do not. A side with no element there contributes its remaining stack
+    /// instead. `None` when every position and both remaining stacks render alike, so the mismatch
+    /// is not positional. The walk is charged to the meter and stops at the stack height cap.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-maintainers; expected and actual are ordered IDs in the same term arena from the rejected stack equation."
+    )]
+    pub fn stack_difference(
+        &self,
+        expected: u32,
+        actual: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<Option<(u32, alloc::string::String, alloc::string::String)>, crate::Diagnostic>
+    {
+        let mut expected = attempt!(self.root(expected, span, meter));
+        let mut actual = attempt!(self.root(actual, span, meter));
+        let mut shared = 0_u32;
+        while shared < super::STACK_CAP {
+            attempt!(meter.charge(1, span));
+            let expected_top =
+                if let super::Term::Push(rest, top) = attempt!(self.get(expected, span)) {
+                    Some((rest, top))
+                } else {
+                    None
+                };
+            let actual_top = if let super::Term::Push(rest, top) = attempt!(self.get(actual, span))
+            {
+                Some((rest, top))
+            } else {
+                None
+            };
+            let expected_text = attempt!(rendering::describe(
+                self,
+                expected_top.map_or(expected, |(_, top)| top),
+                span,
+                meter
+            ));
+            let actual_text = attempt!(rendering::describe(
+                self,
+                actual_top.map_or(actual, |(_, top)| top),
+                span,
+                meter
+            ));
+            if expected_text != actual_text {
+                return Ok(Some((shared, expected_text, actual_text)));
+            }
+            let (Some((expected_rest, _)), Some((actual_rest, _))) = (expected_top, actual_top)
+            else {
+                return Ok(None);
+            };
+            expected = attempt!(self.root(expected_rest, span, meter));
+            actual = attempt!(self.root(actual_rest, span, meter));
+            shared = shared.saturating_add(1);
+        }
+        Ok(None)
+    }
 }
