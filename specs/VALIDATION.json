@@ -1856,6 +1856,10 @@
       "sha256": "b3b594ac7e1b5c69ff2473f3b8b54034af62a4a628e418dc5638251ad12eda56"
     },
     {
+      "file": "verification/wasm-refinement-pilot/README.md",
+      "sha256": "09bc793da7c60d9521e52daa69515053e0b70bb3f31a717d1d70b27b0019d0f4"
+    },
+    {
       "file": "verification/wi03/README.md",
       "sha256": "efdef146288c318a6adabf7d1b3c0e08c52b3d8ccbfd13a99ddb56a912d344d9"
     }

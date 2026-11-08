@@ -1,0 +1,127 @@
+{
+  "schema": "noble-wasm-pilot-inventory/v1",
+  "issue": 82,
+  "artifact": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+  "sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+  "bytes": 10474,
+  "tool": "wasm-tools 1.245.1",
+  "sections": [
+    {
+      "section": "types",
+      "bytes": 131,
+      "count": 20
+    },
+    {
+      "section": "imports",
+      "bytes": 572,
+      "count": 27
+    },
+    {
+      "section": "functions",
+      "bytes": 124,
+      "count": 123
+    },
+    {
+      "section": "globals",
+      "bytes": 24,
+      "count": 4
+    },
+    {
+      "section": "exports",
+      "bytes": 400,
+      "count": 32
+    },
+    {
+      "section": "elements",
+      "bytes": 16,
+      "count": 2
+    },
+    {
+      "section": "data count",
+      "bytes": 1,
+      "count": 1
+    },
+    {
+      "section": "code",
+      "bytes": 5929,
+      "count": 123
+    },
+    {
+      "section": "data",
+      "bytes": 31,
+      "count": 4
+    },
+    {
+      "section": "custom \"name\"",
+      "bytes": 3208,
+      "count": 1
+    }
+  ],
+  "imports": {
+    "total": 27,
+    "by_kind": {
+      "memory": 1,
+      "table": 1,
+      "global mut i32": 23,
+      "global mut i64": 2
+    }
+  },
+  "exports": 32,
+  "instruction_count": 3063,
+  "distinct_opcodes": 52,
+  "opcodes": {
+    "block": 5,
+    "br": 12,
+    "br_if": 5,
+    "call": 437,
+    "call_indirect": 1,
+    "drop": 2,
+    "else": 11,
+    "end": 236,
+    "global.get": 210,
+    "global.set": 47,
+    "i32.add": 37,
+    "i32.and": 5,
+    "i32.const": 575,
+    "i32.eq": 67,
+    "i32.eqz": 54,
+    "i32.ge_u": 11,
+    "i32.gt_u": 35,
+    "i32.le_u": 3,
+    "i32.load": 20,
+    "i32.load8_u": 1,
+    "i32.lt_s": 1,
+    "i32.lt_u": 3,
+    "i32.mul": 21,
+    "i32.ne": 26,
+    "i32.or": 27,
+    "i32.shl": 1,
+    "i32.shr_u": 1,
+    "i32.store": 22,
+    "i32.sub": 35,
+    "i32.wrap_i64": 20,
+    "i64.add": 3,
+    "i64.const": 48,
+    "i64.eq": 1,
+    "i64.extend_i32_u": 27,
+    "i64.load": 4,
+    "i64.mul": 1,
+    "i64.or": 2,
+    "i64.shl": 1,
+    "i64.shr_u": 1,
+    "i64.store": 7,
+    "i64.sub": 1,
+    "if": 226,
+    "local.get": 495,
+    "local.set": 119,
+    "loop": 5,
+    "memory.fill": 1,
+    "memory.grow": 1,
+    "memory.init": 4,
+    "memory.size": 3,
+    "return": 174,
+    "table.init": 2,
+    "unreachable": 6
+  },
+  "method": "mnemonic occurrences in the function bodies of `wasm-tools print` (flat text); `end` counts block ends, not function ends"
+}
