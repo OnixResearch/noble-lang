@@ -597,7 +597,7 @@
     },
     {
       "file": ".cairn/changes/behavioral-effect-protocol/tasks.md",
-      "sha256": "545aaf33c537527cddebbd3379d840d99c55c1eb28d45475e12e9eb1c644d216"
+      "sha256": "c816a2648503992d537496cbbdf52434e655f79e470f6a049177cd59d9833f9e"
     },
     {
       "file": ".cairn/changes/bend-qcue-scoped-adaptations/design.md",
@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "098c31feb2b0418df105b52462bb9b0b91f6977b57c2672c3c61efa129a60088"
+      "sha256": "ffc4574d941d1f7c5a722456373d7fe97f738548ffdcb99dc901aa8006f119d9"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1830,6 +1830,10 @@
     {
       "file": "verification/refinement-links/README.md",
       "sha256": "94be1aa93165bb499ecd5ecb7201dd3c33f3b9b1addc362e6353ab9026388a1d"
+    },
+    {
+      "file": "verification/region-table/README.md",
+      "sha256": "262c609bdde9d782d11f34299c4dd6f0ebe3586c2ea7b6c7b190cf2c0d5bd904"
     },
     {
       "file": "verification/region-trace/README.md",

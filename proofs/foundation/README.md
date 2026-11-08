@@ -2802,10 +2802,18 @@ protocol of `.cairn/changes/behavioral-effect-protocol`.
 `proofs/m5/RegionTrace.lean` relates target ABI steps to this protocol's source alphabet. This
 module gives that alphabet its own semantics.
 
+T4 is proved in `proofs/m5/RegionTable.lean`, through the M5 lane
+([`verification/region-table/`](../../verification/region-table/README.md)). On the pinned extraction
+of the table methods the bounded-region adapter calls, the adapter's table calls refine this model
+under the host the table induces.
+- `access` and `complete` answer `true` for that host. A4 holds for the table, so `lost` is
+  unreachable.
+- The table's scope counter is `granted`.
+- `table_retires_exactly_once` gives P1 for the table's own release accounting.
+
 Open, and deliberately not closed:
-- T4: the refinement of `ownership::Table` through the M5 lane, which lives in the separate
-  `proofs/m5` project.
-- T5: the host functions.
+- T5: the host functions, including that they follow the table call sequence T4 reads off
+  `bounded_region.rs`.
 - T6: compilation of the subject.
 - Every runtime observation: EPROTO-CASE-01…11 against real components, the report schema and the
   interruption control.

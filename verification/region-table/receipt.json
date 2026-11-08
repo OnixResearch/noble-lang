@@ -1,0 +1,792 @@
+{
+  "schema": "noble-region-table-proof/v1",
+  "source_commit": "0985ee069e7c3fef01f1a99c2078868839ca87ce",
+  "source_tree": "63d319ebeaff317a93e034fb26bb2041a46493c8",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "model_inputs": {
+    "schema": "noble-region-table-model-inputs/v1",
+    "source": "verification/m5/discovery.tar.gz",
+    "archive_sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "historical_extraction_receipt": "verification/m5/extraction.json",
+    "historical_source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+    "members": {
+      "./workspace/proofs/m3/NobleKernel.lean": {
+        "sha256": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+        "bytes": 24
+      },
+      "./workspace/proofs/m3/NobleKernel/Types.lean": {
+        "sha256": "1dc658e3196df56a7bd5535fec6e631a5c3bb205f8edb7d60456806457b33bd8",
+        "bytes": 42777
+      },
+      "./workspace/proofs/m3/NobleKernel/TypesExternal.lean": {
+        "sha256": "da81bda2798bdcabaaa2b88d276c929a2db93c56a3d9fc2888177bb73a4b9333",
+        "bytes": 1449
+      },
+      "./workspace/proofs/m3/NobleKernel/Funs.lean": {
+        "sha256": "9a79bac89999e5035da5e68320843d2a5f6965f70aad324e66951e8bbfc81b8a",
+        "bytes": 819809
+      },
+      "./workspace/proofs/m3/NobleKernel/FunsExternal.lean": {
+        "sha256": "4c1db4c216843f5c0c2b1bdd9dbd4231824d6154d6f643b00bf55cde559a7da0",
+        "bytes": 13952
+      },
+      "./workspace/proofs/m5/M5Resources.lean": {
+        "sha256": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+        "bytes": 15141
+      }
+    },
+    "scope": "Pinned historical M5 extraction of noble_kernel::resources, rebuilt from source with the RegionProtocol-v1 model for behavioral-effect-protocol T4. The six resource source files must still hold their extraction-recorded bytes, so the extracted table methods are the current ones; the bounded-region host functions (T5), guest lowering (T6), Wasmtime and the Canonical ABI are not modeled.",
+    "lean_version": "4.35.0",
+    "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "historical_resource_source_sha256": {
+      "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+      "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+      "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+      "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+      "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+      "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+    }
+  },
+  "dependencies": {
+    "aeneas": {
+      "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      "tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4"
+    },
+    "mathlib": {
+      "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+      "tree": "0db52fa68e6b0c5b917c22bc6383325391a00610"
+    },
+    "plausible": {
+      "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+      "tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89"
+    },
+    "LeanSearchClient": {
+      "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+      "tree": "bf548235194a21930a91aa9ab852dea26ca0f039"
+    },
+    "importGraph": {
+      "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+      "tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257"
+    },
+    "proofwidgets": {
+      "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+      "tree": "6f39a3ce916f1cd8c298b85695b620444719e14b"
+    },
+    "aesop": {
+      "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+      "tree": "883b9af90cca8b2d83811a507a62be85b2f3c312"
+    },
+    "Qq": {
+      "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+      "tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6"
+    },
+    "batteries": {
+      "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+      "tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b"
+    },
+    "Cli": {
+      "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+      "tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214"
+    }
+  },
+  "sources_sha256": {
+    "proofs/m5/RegionTable.lean": "9a9c80d0081bf6f8d6bc4d4e8fba44f607804e85c0e0cfacaa7345daf3b24ad2",
+    "proofs/m5/region-table-inventory.json": "93e471167a8d817320058dcaefdd8dadea39b0c3a2fc9a95c438ee84715b4220",
+    "verification/region-table/model-inputs.json": "5d64547f4843776ad1aac188785175b881d60027e2b677a3e40b9e668fba0fa6",
+    "verification/region-table/check.mjs": "da938026d003639243f7505f73dff3e9bf356ff6e440c2064e4d604d7e6cff40",
+    "proofs/foundation/NobleFoundation/RegionProtocol.lean": "5a0c34ac00347c8b00f13b06c9aa1103d202b90721d9376c56dcc1e775089a1d",
+    "crates/noble-cli/src/component/bounded_region.rs": "86dc715554c9c844c7b5c8ceba9b0e4248c7c6b5069a20692b4be396d328fcd1",
+    "proofs/m5/M5Resources.lean": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+    "proofs/m5/lake-manifest.json": "88b20dc276ffc63ed44b5963a80000ba09731ab2e88a104e9a266efda436afd3",
+    "proofs/m5/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "verification/m5/discovery.tar.gz": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "verification/m5/extraction.json": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "policy/tool-selection.json": "287f5dabebc0dc781f4af7f7edbad75df6d956a717488ef489dae1047ce65b60",
+    "proofs/m3/NobleKernel/TypesExternal.lean": "515a5ebd6d9371494ecabe8ad42d4a8c4f1d557a95ab8ebffd1bb132e1095bdd",
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+  },
+  "library_compatibility": {
+    "source": "proofs/m3/NobleKernel/TypesExternal.lean",
+    "sha256": "163bf2cbc8e3e4fb7ed5b67084092d338add367098b6d6d163491e24a6590ce1",
+    "appended_to": "NobleKernel/TypesExternal.lean"
+  },
+  "artifacts_sha256": {
+    "Audit.lean": "2bafd587c238eba84b63b3a99fdd2331a3073a4a4c16f3219046ada16e35bb54",
+    "commands/001/stdout": "05e0431eb38377d7cc1d6a225f87a2c2d45834338231f53196e6a885c46e9015",
+    "commands/001/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/001/command.json": "247dacc8257a364c5eb8c52d0653b12033feac8fd194e90234977de3b3c635ba",
+    "commands/002/stdout": "135f30232c14008c8b3f98ee0616476423196c87a6e53620981390c9f3d47749",
+    "commands/002/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/002/command.json": "7f9917639ebbc1f5e8aea763727f3614d3772fc92256318ab0debbb752ef9628",
+    "commands/003/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/command.json": "b6c15db23fa89eaca3cee163767d8dcbf09e4e0e817477d791bca1dffa189828",
+    "commands/004/stdout": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+    "commands/004/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/004/command.json": "c7b3dcf9d80f4a84d8cd8b90e027f73ddf976a205bbbe6383de2517b06a03fa2",
+    "commands/005/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/command.json": "1cf98ae3ece72dbaa5979917a54f1ade738ed2cdbf15bca01538c7c73459a1c1",
+    "commands/006/stdout": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc",
+    "commands/006/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/006/command.json": "4616f12b16544a8f55a2ce1479b806cef140f9580ff12091f9d7c393c3859883",
+    "commands/007/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/command.json": "c837ebbdc6f203d78bc8ac1c380af1f7596da90a43b0215fc79977f8c54c080a",
+    "commands/008/stdout": "90d027909d57051a62d39a286ec8c719703aa849aaed9518d958c5d31b528cba",
+    "commands/008/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/008/command.json": "c6deccdb999e137297793b17e5ed34be05ef6353865645591e1b2b1f87e86ce8",
+    "commands/009/stdout": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7",
+    "commands/009/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/009/command.json": "4120ff3908e3ea534b6a974d321bcf548d944456817f80bcb0eb81c7fff1a6c2",
+    "commands/010/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/command.json": "d8cb4814ba73ce025af56057d6acae588f0f669084d3a0846bb1ca0fba6ae2ef",
+    "commands/011/stdout": "128ac2c255c47dbb266523785fc2d3ebb5c81dcef13c1add564247baca4c5113",
+    "commands/011/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/011/command.json": "6c07bd3209dfa93821a06db3d9e6c12108d6ad42e8a17d3d14804b0f766a59b4",
+    "commands/012/stdout": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415",
+    "commands/012/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/012/command.json": "f6bdf58aaa64ea4628b12be88a12f5fa81e74fc1b6185a7be9c3afaa5be267a5",
+    "commands/013/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/command.json": "f0e5cae26607ad9907ab5c898d3b0b496dbf76a518d8f5b1cf360457a516da31",
+    "commands/014/stdout": "f96c515c4098caa75842067eb83c9162b333c162591442c7282d409de8281937",
+    "commands/014/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/014/command.json": "f002ac0aa7bd57454c8ba4fbf3e21122ec617de0c999904bbd4b39f594590d26",
+    "commands/015/stdout": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11",
+    "commands/015/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/015/command.json": "39daae89d100cee186e8913981511de47a8adf934ebc4c96d681be7e8be131cc",
+    "commands/016/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/command.json": "54180b617db835009c021d11300822a6bfe70f87634eab8c8ac4e8e3223f9c7d",
+    "commands/017/stdout": "0e3d56f3491056700a72067a846e3fcfd3bfd917dfa54caf8134daa615604596",
+    "commands/017/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/017/command.json": "4a51eedf4af9eb735b7178089e148df1ac0cc6602cb87ed7fa1baa4b3a7f7143",
+    "commands/018/stdout": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3",
+    "commands/018/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/018/command.json": "a62f86958bb041fac272aef4215c284ff42ce343b8392df06f8784fa7e6dd5bb",
+    "commands/019/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/command.json": "7df8532f5c5616ae972c313230e3229de8e8ce13758623cb41d751259459ea19",
+    "commands/020/stdout": "5adccfad412cebae4eb5d8fdfc6cdfcd56c32f0831f45ea777332fca2b2ee39c",
+    "commands/020/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/020/command.json": "29803b6cc1a80116f667d7a5d4f801bc8c7003034b051fc31547e93d818cfa3b",
+    "commands/021/stdout": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8",
+    "commands/021/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/021/command.json": "07a6dfd357833dac5a1462f5f1d629ffd8b4b72fb84021edef2f165672b19fb0",
+    "commands/022/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/command.json": "bafe799d7d9d53d42e3f427af0d144b0800a02ef5a6661ede34a8a3bf99cf2b4",
+    "commands/023/stdout": "0ea7d090a3c4382dae9626d300f1d553e59faf0a433b90be4cde468bb3959f01",
+    "commands/023/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/023/command.json": "d334582e5be21868bc80b90d4ec4e7fc52810d64a037dd9627e5282a7c32ef04",
+    "commands/024/stdout": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648",
+    "commands/024/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/024/command.json": "c4bbec3bcbccfb9c9c8c8f393e75ae5cf7db915afd6ebd9ca088984a19c4740f",
+    "commands/025/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/command.json": "9437945598c7a853de0aac99986cbb5ab5c1eb362ac7699c8a4098a5203340de",
+    "commands/026/stdout": "a1a5b11c851755e42ceda1cb2a3e57af442240b1a13f9caf36362f72cf9844d4",
+    "commands/026/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/026/command.json": "bcd321c88be585dfa643b0fe36ba6207634b4c85d60d15e2a7c387e1542559ee",
+    "commands/027/stdout": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d",
+    "commands/027/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/027/command.json": "0eb8b901a85f5979ea5b0e6c9a76c696449698990560b8b3a14da8967b43d9e7",
+    "commands/028/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/command.json": "2ff3bc5093cc8a5ac3b17c9a77c9b399da3197d879be14cf08f7c6a448a0570a",
+    "commands/029/stdout": "7b6e8026f2488f05e72ba684a06ea4bfe7b65c66424646f36ba288dbe5945092",
+    "commands/029/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/029/command.json": "54de5783aada0bab712d18569b1925d51d2e47e0065da441b8cdb6d883bf1f74",
+    "commands/030/stdout": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8",
+    "commands/030/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/030/command.json": "a2b60c0bfc1f7749f3074e68f5ea7cf2673602d05054acbf557ae44b03fd9e4e",
+    "commands/031/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/command.json": "d2337c198ab5d4c7d1cf482626c9e853102e55c9679ed4651c31a1cfd3766d7d",
+    "commands/032/stdout": "1dd1c99fa7e263b807afd92e51f3a60d3708efac930d0c4b7c9023242f2b45fa",
+    "commands/032/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/032/command.json": "ede73c06f646e0b6192e1050b270d50848b4c389fd46e381056e24675af7f14a",
+    "commands/033/stdout": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec",
+    "commands/033/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/033/command.json": "40d252f710ae3684b469994a8cc38746b74734d5c886534231819c3682356e02",
+    "commands/034/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/command.json": "3580157083efc54c4f3f1eff531676f7a9dccfe44ad83671885672b04f1d0ee7",
+    "commands/035/stdout": "3f65c88bdf1d7cff575ae61358b6dbd06b5785b39189c226cf54481dae537572",
+    "commands/035/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/035/command.json": "bbffda5985b1df95dee53e9c5de4f84b993385f757ab4e7aa670c2a7aac51777",
+    "commands/036/stdout": "5a013da3a366e569e886d9ac1c59ed2383ff4b105d20b958e790bd96cbddfe9b",
+    "commands/036/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/036/command.json": "8f1fb28efd2468c77bde83d1bf551d7419081ed7c451c1c70f7b1ec5115421d3",
+    "commands/037/stdout": "fec6b1f475638258fc6532f77d63107be77f6fa8ddb4678efe48249ae72ee609",
+    "commands/037/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/037/command.json": "21f9082c2b3fdd59e1f60d5450880ed45d33b00489b13b2576c69b00720c5d06",
+    "commands/038/stdout": "05e0431eb38377d7cc1d6a225f87a2c2d45834338231f53196e6a885c46e9015",
+    "commands/038/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/038/command.json": "247dacc8257a364c5eb8c52d0653b12033feac8fd194e90234977de3b3c635ba",
+    "commands/039/stdout": "135f30232c14008c8b3f98ee0616476423196c87a6e53620981390c9f3d47749",
+    "commands/039/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/039/command.json": "7f9917639ebbc1f5e8aea763727f3614d3772fc92256318ab0debbb752ef9628",
+    "commands/040/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/command.json": "b6c15db23fa89eaca3cee163767d8dcbf09e4e0e817477d791bca1dffa189828"
+  },
+  "generated_source_lint_warnings": [
+    "warning: NobleKernel/Funs.lean:9040:4: The declaration 'authority.permit.DebugDenial.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:9051:4: The declaration 'authority.permit.DebugDenial.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10633:4: The declaration 'authority.report.DebugBoundaryError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10644:4: The declaration 'authority.report.DebugBoundaryError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12110:4: The declaration 'contracts.DebugBehavior.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12121:4: The declaration 'contracts.DebugBehavior.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14865:4: The declaration 'resources.DebugError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14875:4: The declaration 'resources.DebugError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead."
+  ],
+  "theorem_count": 30,
+  "reused_theorem_count": 4,
+  "theorems": [
+    {
+      "name": "RegionTable.released_state",
+      "role": "record-shape",
+      "claim": "A released record is in the Retired state.",
+      "allowed_standard_axioms": [],
+      "status": "proved",
+      "statement": "RegionTable.released_state : ∀ (record : noble_kernel.resources.Snapshot), (RegionTable.released record).state = noble_kernel.resources.State.Retired",
+      "axioms": []
+    },
+    {
+      "name": "RegionTable.opened_handle",
+      "role": "record-shape",
+      "claim": "Opening a borrow keeps the record's handle.",
+      "allowed_standard_axioms": [],
+      "status": "proved",
+      "statement": "RegionTable.opened_handle : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), (RegionTable.opened record serial).handle = record.handle",
+      "axioms": []
+    },
+    {
+      "name": "RegionTable.returned_handle",
+      "role": "record-shape",
+      "claim": "Returning the owner keeps the record's handle.",
+      "allowed_standard_axioms": [],
+      "status": "proved",
+      "statement": "RegionTable.returned_handle : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), (RegionTable.returned record serial).handle = record.handle",
+      "axioms": []
+    },
+    {
+      "name": "RegionTable.released_handle",
+      "role": "record-shape",
+      "claim": "Releasing keeps the record's handle.",
+      "allowed_standard_axioms": [],
+      "status": "proved",
+      "statement": "RegionTable.released_handle : ∀ (record : noble_kernel.resources.Snapshot), (RegionTable.released record).handle = record.handle",
+      "axioms": []
+    },
+    {
+      "name": "RegionTable.opened_valid",
+      "role": "m5-decision",
+      "claim": "A well-formed live record opened under a nonzero serial is well formed.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.opened_valid : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → serial ≠ 0#u64 → M5Resources.valid (RegionTable.opened record serial) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.access_opened",
+      "role": "m5-decision",
+      "claim": "Access with the open borrow's serial authorizes it and leaves the opened record unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.access_opened : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → serial ≠ 0#u64 → M5Resources.step (RegionTable.opened record serial) record.handle (noble_kernel.resources.Event.Access serial) = Aeneas.Std.core.result.Result.Ok { record := RegionTable.opened record serial, action := noble_kernel.resources.Action.Unchanged }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.complete_opened",
+      "role": "m5-decision",
+      "claim": "Complete with the open borrow's serial returns the owner for either outcome and leaves the live record with that serial as its last scope.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.complete_opened : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → serial ≠ 0#u64 → M5Resources.step (RegionTable.opened record serial) record.handle (noble_kernel.resources.Event.Complete serial outcome) = Aeneas.Std.core.result.Result.Ok { record := RegionTable.returned record serial, action := noble_kernel.resources.Action.OwnerReturned outcome }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.returned_valid",
+      "role": "m5-decision",
+      "claim": "The record a returned borrow leaves is well formed.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.returned_valid : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → serial ≠ 0#u64 → M5Resources.valid (RegionTable.returned record serial) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.release_live",
+      "role": "m5-decision",
+      "claim": "Release with the registration requirement retires a well-formed live record as a local release.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.release_live : ∀ (record : noble_kernel.resources.Snapshot), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → M5Resources.step record record.handle (noble_kernel.resources.Event.Release (RegionTable.requirementFor record.handle)) = Aeneas.Std.core.result.Result.Ok { record := RegionTable.released record, action := noble_kernel.resources.Action.LocalRelease }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.release_retired",
+      "role": "m5-decision",
+      "claim": "Release of a retired record is refused with Retired.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.release_retired : ∀ (record : noble_kernel.resources.Snapshot), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Retired → M5Resources.step record record.handle (noble_kernel.resources.Event.Release (RegionTable.requirementFor record.handle)) = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.Retired",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.begin_retired",
+      "role": "m5-decision",
+      "claim": "Begin on a retired record is refused with Retired for every serial.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.begin_retired : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Retired → M5Resources.step record record.handle (noble_kernel.resources.Event.Begin (RegionTable.requirementFor record.handle) serial) = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.Retired",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.released_valid",
+      "role": "m5-decision",
+      "claim": "Releasing a well-formed record leaves a well-formed record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.released_valid : ∀ (record : noble_kernel.resources.Snapshot), M5Resources.valid record = true → M5Resources.valid (RegionTable.released record) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.begin_fresh",
+      "role": "m5-decision",
+      "claim": "Begin with the registration requirement and a fresh serial admits a borrow on a well-formed live record and opens it under that serial.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.begin_fresh : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → RegionTable.Fresh record serial → M5Resources.step record record.handle (noble_kernel.resources.Event.Begin (RegionTable.requirementFor record.handle) serial) = Aeneas.Std.core.result.Result.Ok { record := RegionTable.opened record serial, action := noble_kernel.resources.Action.BorrowAdmitted }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.selected_of_records",
+      "role": "one-slot-table",
+      "claim": "A table whose records are exactly one record at slot 0 selects that record for its handle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.selected_of_records : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), ↑table.records = [record] → ↑record.handle.slot = 0 → (↑table.records)[↑record.handle.slot]? = some record",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.commit_admitted",
+      "role": "one-slot-table",
+      "claim": "With pin room, commit of an admitted borrow on the one-slot table stores the decided record, acquires one pin and keeps the scope counter and limits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.commit_admitted : ∀ (table : noble_kernel.resources.table.Table) (decision : noble_kernel.resources.Decision) (record : noble_kernel.resources.Snapshot), ↑table.records = [record] → ↑decision.record.handle.slot = 0 → decision.action = noble_kernel.resources.Action.BorrowAdmitted → ↑table.pins < ↑table.limits.pins → ∃ committed, table.commit decision = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), committed) ∧ ↑committed.records = [decision.record] ∧ ↑committed.pins = ↑table.pins + 1 ∧ committed.scope = table.scope ∧ committed.limits = table.limits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.commit_returned",
+      "role": "one-slot-table",
+      "claim": "With a pin outstanding, commit of a returned owner on the one-slot table stores the decided record, releases one pin and keeps the scope counter and limits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.commit_returned : ∀ (table : noble_kernel.resources.table.Table) (decision : noble_kernel.resources.Decision) (record : noble_kernel.resources.Snapshot) (outcome : noble_kernel.resources.Completion), ↑table.records = [record] → ↑decision.record.handle.slot = 0 → decision.action = noble_kernel.resources.Action.OwnerReturned outcome → 0 < ↑table.pins → ∃ committed, table.commit decision = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), committed) ∧ ↑committed.records = [decision.record] ∧ ↑committed.pins = ↑table.pins - 1 ∧ committed.scope = table.scope ∧ committed.limits = table.limits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.commit_released",
+      "role": "one-slot-table",
+      "claim": "Commit of a local release on the one-slot table stores the decided record and keeps the pins, the scope counter and the limits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.commit_released : ∀ (table : noble_kernel.resources.table.Table) (decision : noble_kernel.resources.Decision) (record : noble_kernel.resources.Snapshot), ↑table.records = [record] → ↑decision.record.handle.slot = 0 → decision.action = noble_kernel.resources.Action.LocalRelease → ∃ committed, table.commit decision = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), committed) ∧ ↑committed.records = [decision.record] ∧ committed.pins = table.pins ∧ committed.scope = table.scope ∧ committed.limits = table.limits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.registration_represents",
+      "role": "adapter-registration",
+      "claim": "Table::new with the adapter's limits and the model's scope limit as the scope ceiling, then register, yields the owner and a table that represents the model's initial state, and the adapter's requirement is requirementFor of the owner's handle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.registration_represents : ∀ (id : noble_kernel.resources.TableId) (required : noble_kernel.resources.Requirement), ∃ table, noble_kernel.resources.table.Table.new id { slots := 1#usize, pins := 1#usize, owners_per_context := 1#usize, generations := 1#u64, scopes := 64#u64 } = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok table) ∧ ∃ owner registered record, table.register required = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok owner, registered) ∧ RegionTable.Represents owner.handle NobleFoundation.RegionProtocol.initial registered record ∧ RegionTable.requirementFor owner.handle = required",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.begin_exhausted",
+      "role": "table-method",
+      "claim": "At the scope ceiling, begin refuses with ScopeExhausted and returns the table unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.begin_exhausted : ∀ (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle s table record → NobleFoundation.RegionProtocol.scopeLimit ≤ s.granted → noble_kernel.resources.table.access.Table.begin table { handle := handle } (RegionTable.requirementFor handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err { error := noble_kernel.resources.Error.ScopeExhausted, input := { handle := handle } }, table)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.begin_admits",
+      "role": "table-method",
+      "claim": "Below the scope ceiling, begin on a represented live owner allocates the serial granted + 1, admits the borrow, stores the opened record and holds one pin.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.begin_admits : ∀ (handle : noble_kernel.resources.Handle) (granted : ℕ) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } table record → granted < NobleFoundation.RegionProtocol.scopeLimit → ∃ serial opening, noble_kernel.resources.table.access.Table.begin table { handle := handle } (RegionTable.requirementFor handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { borrow := { scope := { handle := handle, serial := serial } }, decision := { record := RegionTable.opened record serial, action := noble_kernel.resources.Action.BorrowAdmitted } }, opening) ∧ ↑serial = granted + 1 ∧ ↑opening.records = [RegionTable.opened record serial] ∧ opening.scope = serial ∧ ↑opening.pins = 1 ∧ opening.limits = table.limits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.open_borrow_returns",
+      "role": "table-method",
+      "claim": "A4 for the table: on the table holding the opened record, native_access authorizes the borrow and complete returns the owner for either outcome, stores the returned record and releases the pin.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.open_borrow_returns : ∀ (handle : noble_kernel.resources.Handle) (opening : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → record.handle = handle → ↑handle.slot = 0 → serial ≠ 0#u64 → ↑opening.records = [RegionTable.opened record serial] → ↑opening.pins = 1 → noble_kernel.resources.table.access.Table.native_access opening { scope := { handle := handle, serial := serial } } = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (RegionTable.opened record serial)) ∧ ∃ closing, noble_kernel.resources.table.access.Table.complete opening { handle := handle, serial := serial } outcome = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { owner := some { handle := handle }, decision := { record := RegionTable.returned record serial, action := noble_kernel.resources.Action.OwnerReturned outcome } }, closing) ∧ ↑closing.records = [RegionTable.returned record serial] ∧ ↑closing.pins = 0 ∧ closing.scope = opening.scope ∧ closing.limits = opening.limits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.release_table",
+      "role": "table-method",
+      "claim": "release retires a represented live owner as a local release and stores the retired record, and is refused with Retired on a retired record, returning the table unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.release_table : ∀ (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle s table record → (record.state = noble_kernel.resources.State.Live → ∃ retired, noble_kernel.resources.table.access.Table.release table { handle := handle } (RegionTable.requirementFor handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := RegionTable.released record, action := noble_kernel.resources.Action.LocalRelease }, retired) ∧ ↑retired.records = [RegionTable.released record] ∧ retired.pins = table.pins ∧ retired.scope = table.scope ∧ retired.limits = table.limits) ∧ (record.state = noble_kernel.resources.State.Retired → noble_kernel.resources.table.access.Table.release table { handle := handle } (RegionTable.requirementFor handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err { error := noble_kernel.resources.Error.Retired, input := { handle := handle } }, table))",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.begin_retired_table",
+      "role": "table-method",
+      "claim": "begin on a represented retired record is refused and returns the table unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.begin_retired_table : ∀ (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle s table record → record.state = noble_kernel.resources.State.Retired → ∃ error, noble_kernel.resources.table.access.Table.begin table { handle := handle } (RegionTable.requirementFor handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err { error := error, input := { handle := handle } }, table)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.accounting_local_releases",
+      "role": "accounting",
+      "claim": "actionReleases is the local_releases field of the extracted Decision.accounting for every decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.accounting_local_releases : ∀ (decision : noble_kernel.resources.Decision), ∃ accounting, decision.accounting = Aeneas.Std.Result.ok accounting ∧ ↑accounting.local_releases = RegionTable.actionReleases decision.action",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.read_step",
+      "role": "model-step",
+      "claim": "Under the table's host, a read on a live owner keeps it live, grants a borrow exactly when the claim is the owner's, the range is in bounds and the scope limit is not reached, and commits no release.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.read_step : ∀ (host : NobleFoundation.RegionProtocol.Host) (granted claim : ℕ) (off len : ℤ), (NobleFoundation.RegionProtocol.step (RegionTable.tableHost host) { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } (NobleFoundation.RegionProtocol.Request.read claim off len)).next = { owner := NobleFoundation.RegionProtocol.Owner.live, granted := if claim = host.owner ∧ NobleFoundation.RegionProtocol.inBounds host.region.length off len = true ∧ granted < NobleFoundation.RegionProtocol.scopeLimit then granted + 1 else granted } ∧ List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.step (RegionTable.tableHost host) { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } (NobleFoundation.RegionProtocol.Request.read claim off len)).events = 0",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.calls_refine",
+      "role": "t4-refinement",
+      "claim": "For every guest request, the adapter's table calls take a table that represents the model state to one that represents the model's next state under the table's host, accounting exactly the model's release commits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.calls_refine : ∀ (host : NobleFoundation.RegionProtocol.Host) (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (request : NobleFoundation.RegionProtocol.Request), RegionTable.Represents handle s table record → ∃ table' record', RegionTable.tableCalls host handle table request = Aeneas.Std.Result.ok (table', List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.step (RegionTable.tableHost host) s request).events) ∧ RegionTable.Represents handle (NobleFoundation.RegionProtocol.step (RegionTable.tableHost host) s request).next table' record'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.cleanup_refines",
+      "role": "t4-refinement",
+      "claim": "The host's cleanup through release takes a represented table to one that represents the model's retired state, accounting exactly the model's retirement commits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.cleanup_refines : ∀ (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle s table record → ∃ table' record', RegionTable.releaseCall table handle = Aeneas.Std.Result.ok (table', List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.retire s).1) ∧ RegionTable.Represents handle (NobleFoundation.RegionProtocol.retire s).2 table' record'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.exec_refines",
+      "role": "t4-refinement",
+      "claim": "For every program, the adapter's table calls for the model's execution keep the table representing the reached model state and account exactly the model's release commits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.exec_refines : ∀ (host : NobleFoundation.RegionProtocol.Host) (handle : noble_kernel.resources.Handle) (program : List NobleFoundation.RegionProtocol.Action) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), RegionTable.Represents handle s table record → ∃ table' record', RegionTable.tableExec host handle s table program = Aeneas.Std.Result.ok (table', List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.exec (RegionTable.tableHost host) s program).events) ∧ RegionTable.Represents handle (NobleFoundation.RegionProtocol.exec (RegionTable.tableHost host) s program).state table' record'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.run_refines",
+      "role": "t4-refinement",
+      "claim": "For every program, the adapter's table calls for a whole run with the host's cleanup leave a table that represents the model's final state and account exactly the model's release commits.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.run_refines : ∀ (host : NobleFoundation.RegionProtocol.Host) (handle : noble_kernel.resources.Handle) (s : NobleFoundation.RegionProtocol.State) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (program : List NobleFoundation.RegionProtocol.Action), RegionTable.Represents handle s table record → ∃ table' record', RegionTable.tableRun host handle s table program = Aeneas.Std.Result.ok (table', List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.run (RegionTable.tableHost host) s program).events) ∧ RegionTable.Represents handle (NobleFoundation.RegionProtocol.run (RegionTable.tableHost host) s program).final table' record'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTable.table_retires_exactly_once",
+      "role": "t4-corollary",
+      "claim": "P1 and the cleanup claim for the table: from a represented live owner, every run's table calls end with the record retired, no pin outstanding and exactly one local release accounted.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTable.table_retires_exactly_once : ∀ (host : NobleFoundation.RegionProtocol.Host) (handle : noble_kernel.resources.Handle) (granted : ℕ) (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (program : List NobleFoundation.RegionProtocol.Action), RegionTable.Represents handle { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } table record → ∃ final retiredRecord, RegionTable.tableRun host handle { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } table program = Aeneas.Std.Result.ok (final, 1) ∧ ↑final.records = [retiredRecord] ∧ retiredRecord.state = noble_kernel.resources.State.Retired ∧ ↑final.pins = 0",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.transition_refines",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.transition_refines : ∀ (record : noble_kernel.resources.Snapshot) (claim : noble_kernel.resources.Handle) (event : noble_kernel.resources.Event), noble_kernel.resources.transition.transition record claim event = Aeneas.Std.Result.ok (M5Resources.step record claim event)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.table_decide_refines",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.table_decide_refines : ∀ (table : noble_kernel.resources.table.Table) (claim : noble_kernel.resources.Handle) (event : noble_kernel.resources.Event), table.decide claim event = Aeneas.Std.Result.ok (M5Resources.tableStep table claim event)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.exactly_one_release_commit",
+      "role": "reused RegionProtocol model theorem",
+      "status": "proved",
+      "statement": "NobleFoundation.RegionProtocol.exactly_one_release_commit : ∀ (host : NobleFoundation.RegionProtocol.Host) (granted : ℕ) (program : List NobleFoundation.RegionProtocol.Action), List.countP NobleFoundation.RegionProtocol.isRelease (NobleFoundation.RegionProtocol.run host { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } program).events = if (NobleFoundation.RegionProtocol.run host { owner := NobleFoundation.RegionProtocol.Owner.live, granted := granted } program).final.owner = NobleFoundation.RegionProtocol.Owner.lost then 0 else 1",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RegionProtocol.run_final_owner",
+      "role": "reused RegionProtocol model theorem",
+      "status": "proved",
+      "statement": "NobleFoundation.RegionProtocol.run_final_owner : ∀ (host : NobleFoundation.RegionProtocol.Host) (s : NobleFoundation.RegionProtocol.State) (program : List NobleFoundation.RegionProtocol.Action), s.owner ≠ NobleFoundation.RegionProtocol.Owner.busy → (NobleFoundation.RegionProtocol.run host s program).final.owner ≠ NobleFoundation.RegionProtocol.Owner.live ∧ (NobleFoundation.RegionProtocol.run host s program).final.owner ≠ NobleFoundation.RegionProtocol.Owner.busy",
+      "axioms": [
+        "propext"
+      ]
+    }
+  ],
+  "implementation_theorem": true,
+  "correspondence": "statements name the retained generated table functions; the Charon/Aeneas translation of the bound sources is trusted, not re-run",
+  "scope": "T4: the extracted ownership::Table methods the bounded-region adapter calls (Table::new, register, begin, native_access, complete, release), sequenced as the adapter sequences them for its one-slot table, refine RegionProtocol-v1 under the host the table induces; not the Rust host functions (T5), guest lowering (T6), Wasmtime or the Canonical ABI.",
+  "assumptions": [
+    "Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.",
+    "The retained Charon/Aeneas translation is trusted to model the bound Rust sources; this lane does not re-run the translation.",
+    "The retained generated M5 sources are compiled anew, not replaced with a handwritten table; all six resource source files must retain their extraction-recorded bytes.",
+    "The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library's own definitions (VT-PIN-02 exception, #86).",
+    "The per-request table call sequence (tableCalls) is read off crates/noble-cli/src/component/bounded_region.rs; that the Rust host follows it and performs the identity and bounds checks the model states is T5 and stays open.",
+    "The model's lower oracle is the guest lowering (T6) and stays free; Wasmtime, the Canonical ABI and the CLI wrapper are not modeled."
+  ],
+  "artifact_directory": "/var/tmp/noble-lean435/lanes-t4/rt-clean",
+  "command_count": 40
+}

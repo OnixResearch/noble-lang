@@ -92,3 +92,10 @@ as two breaks `accounting_local_releases`, the release and destructor cases of `
 - **Not modeled.** Wasmtime, the Canonical ABI and the CLI wrapper.
 - **Trusted translation.** The retained Charon/Aeneas translation is trusted to model the bound Rust
   sources. The lane compiles the generated sources anew but does not re-run the translation.
+
+## Receipt
+
+[`receipt.json`](receipt.json) is the retained receipt of one run, on the clean commit `0985ee06`
+with Lean 4.35.0: **30** theorems, plus the four reused ones. The reported axioms are `propext`,
+`Classical.choice` and `Quot.sound`, all inside each theorem's allow-list. The four record-shape
+lemmas use none.
