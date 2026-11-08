@@ -1832,6 +1832,10 @@
       "sha256": "ea700340dbe0ad4214beed498bb61d27b06e603ee5d31675bbb604de69873224"
     },
     {
+      "file": "verification/principality/README.md",
+      "sha256": "bbb9693829edb34be5b0bf7d4ab4da5f215edc8ec92d4480038ed95acc9b8f6e"
+    },
+    {
       "file": "verification/program-inspection/README.md",
       "sha256": "c781be7613dcd7e9caf5313e665675f5677a6638b645f8ec7de5a74e671c9b51"
     },

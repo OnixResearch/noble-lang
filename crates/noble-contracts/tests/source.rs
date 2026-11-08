@@ -327,6 +327,9 @@ mod positional_join;
 #[path = "source/causes.rs"]
 mod causes;
 
+#[path = "source/principality.rs"]
+mod principality;
+
 #[path = "models/finite-bases.rs"]
 mod finite_bases;
 
