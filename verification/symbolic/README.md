@@ -68,3 +68,28 @@ The statuses are about the model graphs the corpus states. No source extraction,
 Rust evaluator is a subject. A refutation here replays through this lane's evaluator; the kernel and
 the Rust evaluators replay only the corpus's universe witnesses. Timings and memory are one run on one
 host, not a performance claim.
+
+## Evidence
+
+[`receipts/2026-11-09/solver.json`](receipts/2026-11-09/solver.json) is one run from the clean
+commit `d761a088`, bound to the foundation receipt `verification/foundation/receipts/cba12a925/`.
+
+| Claim | Status |
+|---|---|
+| `sharedInput`, `wrapOnlyEquivalent`, `boolOutput` | certified, by their kernel theorems; both solvers report UNSAT, which is recorded and not used |
+| `subtractionOrder`, `wrapBoundary`, `repeatedOutputs`, `negation` | refuted: every solver model replays, matching the kernel's universe verdicts |
+
+- **Mutations.** 9 of 11 are detected. The two survivors are equivalent mutants, with only UNSAT
+  answers: `wrapOnlyEquivalent` with its constant 1 flipped to 0 (`x · 0 · 0` and `x · 0 · 1` are
+  both 0), and `boolOutput` with `x + 0` turned into `x - 0`.
+- **Corrupted encodings.** All 18 fail an encoder check: 11 the concrete simulation and 7, every
+  dropped output, the claim check. In all 18 the two solvers give the same answer. In the five where
+  they agree on SAT for an agreeing pair, replay rejects every model, and no corrupted query
+  certifies.
+- **Item 5 controls.** Every binding, witness, certificate, UNKNOWN, timeout and budget control has
+  the outcome above, against its positive control.
+- **Measurements, one run.** Solver runs took 5.1 to 44.7 ms of wall time (median 12.8 ms), with
+  peak memory of 4.4 to 5.5 MB for Bitwuzla and 21 to 32 MB for Z3. Replays took 15 to 95 µs, and
+  warm cache hits took 1.3 to 32 µs, against 14 retained entries totalling 1674 bytes. On the
+  padded pairs, slicing cuts each query from 1165 to 1372 bytes down to 411 to 614, with the same
+  answers.

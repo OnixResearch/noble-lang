@@ -1,0 +1,2197 @@
+{
+  "schema": "noble-symbolic-solver-receipt/v1",
+  "claim": "untrusted SMT solving of the fixed graph pairs, with replay, kernel-certificate binding and controls; graph-model statuses, not Wasm theorems",
+  "source": {
+    "commit": "d761a088d0b165c0bd9c8f6e4d8b74c22f887af5",
+    "tree": "0d85a440b36e92ad2e149b90879f084cb0601228",
+    "clean": true,
+    "lane_sha256": "83a716e8bf9fa0539aea3877d6739fd55dddb4919971d6e47e538a9285ce6bc7",
+    "corpus_sha256": "2111d03077e847879c2bc90234887b17cbe8dec71357ca7d3461a00e7e893ff1",
+    "certified_sha256": "90164d9661cdaa441e42022c3db3273fd08d8acb286b2ce79aa3591f0be518c9",
+    "semantic_revision": "ngraph-sem/0",
+    "profile": "ngraph-i64/0",
+    "encoder": "noble-symbolic-qfbv/v1"
+  },
+  "foundation_receipt": {
+    "source_commit": "cba12a925b3ae644eb7637f9c4983b5806c4a78a",
+    "bound": true,
+    "corpus_sha256": "2111d03077e847879c2bc90234887b17cbe8dec71357ca7d3461a00e7e893ff1",
+    "certified_sha256": "90164d9661cdaa441e42022c3db3273fd08d8acb286b2ce79aa3591f0be518c9"
+  },
+  "tools": {
+    "bitwuzla": {
+      "path": "/nix/store/5i2dxw5dxqx73sb235zgb904yc3jlh49-bitwuzla-0.8.2/bin/bitwuzla",
+      "sha256": "81c9f5366b900b5abc853c4c16542d9ca35eb1eabc97e048e56fa40a5c0215dc"
+    },
+    "z3": {
+      "path": "/nix/store/qzngzax9x0f84g5iapqr3xjc4vg1a2sz-z3-4.15.8/bin/z3",
+      "sha256": "eab6da7c7964354e24bb0a29613d8ef26ba62e95e3d3d4fe57f9dfd980a9201a"
+    },
+    "time": {
+      "path": "/nix/store/mqldjw98f2f4w2glz0f12qdnvv8m4aq9-time-1.9/bin/time",
+      "sha256": "7869c0b0bd5d5657ed3eb73eded1cfe7d95f3bc484f5677cb7c1ac610c20ccee"
+    }
+  },
+  "budget": {
+    "nodes": 64,
+    "slots": 16,
+    "formula_bytes": 65536,
+    "solver_ms": 10000
+  },
+  "claims": [
+    {
+      "name": "sharedInput",
+      "pair_sha256": "857f8bc238121d65f903e8b022f0c6308bb94950208a3d643cad7814e9b1b89d",
+      "kernel_universe_verdict": "none",
+      "status": "certified",
+      "certificate": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_certified is proved in the bound foundation receipt",
+      "formula": {
+        "sliced": {
+          "bytes": 411,
+          "nodes": 6,
+          "sha256": "765b2f13643b43343f0ed894c1ed44c95727702c7d951146a9a43b8c329e0784"
+        },
+        "unsliced": {
+          "bytes": 411,
+          "nodes": 6,
+          "sha256": "765b2f13643b43343f0ed894c1ed44c95727702c7d951146a9a43b8c329e0784"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 6133446,
+          "peak_rss_kb": 5484,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 10429394,
+          "peak_rss_kb": 23156,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 5628201,
+          "peak_rss_kb": 5092,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 10056496,
+          "peak_rss_kb": 22400,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 30006,
+          "answer": "unsat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 3146,
+          "answer": "unsat"
+        }
+      ]
+    },
+    {
+      "name": "subtractionOrder",
+      "pair_sha256": "5cba58de085248a69c8b4456f2575298f8adbbf3f2faec840d31bd2f4d04530d",
+      "kernel_universe_verdict": "some 2",
+      "status": "refuted",
+      "certificate": null,
+      "formula": {
+        "sliced": {
+          "bytes": 420,
+          "nodes": 6,
+          "sha256": "c380969c329c2a251d14d93a413d653aeae6f53a11712368aed62776ce29cb8b"
+        },
+        "unsliced": {
+          "bytes": 420,
+          "nodes": 6,
+          "sha256": "c380969c329c2a251d14d93a413d653aeae6f53a11712368aed62776ce29cb8b"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 6063585,
+          "peak_rss_kb": 5196,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7ffffffffffffffe",
+            "s1": "0x7fffffffffffffff"
+          },
+          "replay_ns": 57307
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 15002360,
+          "peak_rss_kb": 31080,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff",
+            "s1": "0x0000000000000000"
+          },
+          "replay_ns": 15068
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 6805303,
+          "peak_rss_kb": 5300,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7ffffffffffffffe",
+            "s1": "0x7fffffffffffffff"
+          },
+          "replay_ns": 19367
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 17037458,
+          "peak_rss_kb": 30544,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff",
+            "s1": "0x0000000000000000"
+          },
+          "replay_ns": 19136
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 16200,
+          "answer": "sat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 2815,
+          "answer": "sat"
+        }
+      ]
+    },
+    {
+      "name": "wrapOnlyEquivalent",
+      "pair_sha256": "e25f257ddc41fbad803e981b3093948de4248296a472367fe631ef8126dfde10",
+      "kernel_universe_verdict": "none",
+      "status": "certified",
+      "certificate": "NobleFoundation.SymbolicSolver.Corpus.wrapOnlyEquivalent_certified is proved in the bound foundation receipt",
+      "formula": {
+        "sliced": {
+          "bytes": 614,
+          "nodes": 10,
+          "sha256": "505ea822ee3876cc6d45136aa75bfdea0a06ba0b8f1e9f241b3ff5cbc7a5a5f6"
+        },
+        "unsliced": {
+          "bytes": 614,
+          "nodes": 10,
+          "sha256": "505ea822ee3876cc6d45136aa75bfdea0a06ba0b8f1e9f241b3ff5cbc7a5a5f6"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 19531805,
+          "peak_rss_kb": 4400,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 41666340,
+          "peak_rss_kb": 20960,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 26843144,
+          "peak_rss_kb": 4560,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 22041139,
+          "peak_rss_kb": 22260,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 17423,
+          "answer": "unsat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 3697,
+          "answer": "unsat"
+        }
+      ]
+    },
+    {
+      "name": "wrapBoundary",
+      "pair_sha256": "a4e7515e57ebc28e197cd8320b3765ebe452f02429713e9e29ed26017273686d",
+      "kernel_universe_verdict": "some 3",
+      "status": "refuted",
+      "certificate": null,
+      "formula": {
+        "sliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "sha256": "92c61e0cfaa128e2880fc6df69a43b2a327a45200e8ef14739754c133dc10da2"
+        },
+        "unsliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "sha256": "92c61e0cfaa128e2880fc6df69a43b2a327a45200e8ef14739754c133dc10da2"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 5,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 5,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 6414872,
+          "peak_rss_kb": 5484,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x0000000000000001"
+          },
+          "replay_ns": 23574
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 11940070,
+          "peak_rss_kb": 22612,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x0000000000000001"
+          },
+          "replay_ns": 26800
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 6175735,
+          "peak_rss_kb": 5284,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x0000000000000001"
+          },
+          "replay_ns": 24906
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 12821971,
+          "peak_rss_kb": 23140,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x0000000000000001"
+          },
+          "replay_ns": 28103
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 13976,
+          "answer": "sat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 2464,
+          "answer": "sat"
+        }
+      ]
+    },
+    {
+      "name": "boolOutput",
+      "pair_sha256": "7e728a6f82274d60882b8552b5aeb44a81ac8a71e441a59dd2a4f7ef373f7ee6",
+      "kernel_universe_verdict": "none",
+      "status": "certified",
+      "certificate": "NobleFoundation.SymbolicSolver.Corpus.boolOutput_certified is proved in the bound foundation receipt",
+      "formula": {
+        "sliced": {
+          "bytes": 588,
+          "nodes": 10,
+          "sha256": "202e4f038cda2fbc8662f47d39293175b1d50696fb69ba3f3bec0cbaa40c5c0f"
+        },
+        "unsliced": {
+          "bytes": 588,
+          "nodes": 10,
+          "sha256": "202e4f038cda2fbc8662f47d39293175b1d50696fb69ba3f3bec0cbaa40c5c0f"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 12741329,
+          "peak_rss_kb": 4400,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "unsat",
+          "wall_ns": 27404686,
+          "peak_rss_kb": 22356,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 44674779,
+          "peak_rss_kb": 4500,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "unsat",
+          "wall_ns": 17298276,
+          "peak_rss_kb": 21352,
+          "status": "inconclusive",
+          "reason": "external UNSAT without an accepted proof"
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 32431,
+          "answer": "unsat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 8857,
+          "answer": "unsat"
+        }
+      ]
+    },
+    {
+      "name": "repeatedOutputs",
+      "pair_sha256": "c76659ac7a6d0da47e94d7585b7da145f056e614f6a073ce6d05651c8910b86f",
+      "kernel_universe_verdict": "some 2",
+      "status": "refuted",
+      "certificate": null,
+      "formula": {
+        "sliced": {
+          "bytes": 551,
+          "nodes": 8,
+          "sha256": "559a001b0dbed6e33fadc27fabe8e1cae18e1b5f46f4757436e2980c05c389d7"
+        },
+        "unsliced": {
+          "bytes": 551,
+          "nodes": 8,
+          "sha256": "559a001b0dbed6e33fadc27fabe8e1cae18e1b5f46f4757436e2980c05c389d7"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2,
+            3,
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2,
+            3,
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 8044321,
+          "peak_rss_kb": 4744,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7ffffffffffffffe",
+            "s1": "0x7fffffffffffffff"
+          },
+          "replay_ns": 59872
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 18275324,
+          "peak_rss_kb": 30288,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff",
+            "s1": "0x0000000000000000"
+          },
+          "replay_ns": 42038
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 8537393,
+          "peak_rss_kb": 4968,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7ffffffffffffffe",
+            "s1": "0x7fffffffffffffff"
+          },
+          "replay_ns": 94757
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 16914068,
+          "peak_rss_kb": 30540,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff",
+            "s1": "0x0000000000000000"
+          },
+          "replay_ns": 24796
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 18234,
+          "answer": "sat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 1533,
+          "answer": "sat"
+        }
+      ]
+    },
+    {
+      "name": "negation",
+      "pair_sha256": "05e2951a97cd5f1ea965cafdad1aa3e275cd2e8539e47f61ca11cc8b90e13302",
+      "kernel_universe_verdict": "some 2",
+      "status": "refuted",
+      "certificate": null,
+      "formula": {
+        "sliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "sha256": "5b2702d31d0c8ee367d3516704585710a45a4adf70db5c9eecb9c4fe1277e978"
+        },
+        "unsliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "sha256": "5b2702d31d0c8ee367d3516704585710a45a4adf70db5c9eecb9c4fe1277e978"
+        }
+      },
+      "encoder_checks": {
+        "sliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        },
+        "unsliced": {
+          "simulation_points": 6,
+          "claim_outputs": [
+            2
+          ],
+          "detected_by": [],
+          "answers": [
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat",
+            "sat/sat"
+          ]
+        }
+      },
+      "runs": [
+        {
+          "solver": "bitwuzla",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 5141651,
+          "peak_rss_kb": 5464,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff"
+          },
+          "replay_ns": 20799
+        },
+        {
+          "solver": "z3",
+          "mode": "sliced",
+          "answer": "sat",
+          "wall_ns": 16041975,
+          "peak_rss_kb": 31552,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x4000000000000001"
+          },
+          "replay_ns": 22292
+        },
+        {
+          "solver": "bitwuzla",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 5438646,
+          "peak_rss_kb": 5108,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x7fffffffffffffff"
+          },
+          "replay_ns": 16801
+        },
+        {
+          "solver": "z3",
+          "mode": "unsliced",
+          "answer": "sat",
+          "wall_ns": 25495573,
+          "peak_rss_kb": 30768,
+          "status": "refuted",
+          "reason": "model replays on the original graphs",
+          "witness": {
+            "s0": "0x4000000000000001"
+          },
+          "replay_ns": 27812
+        }
+      ],
+      "warm": [
+        {
+          "solver": "bitwuzla",
+          "cache_hit": true,
+          "lookup_ns": 7644,
+          "answer": "sat"
+        },
+        {
+          "solver": "z3",
+          "cache_hit": true,
+          "lookup_ns": 1342,
+          "answer": "sat"
+        }
+      ]
+    }
+  ],
+  "measurements": {
+    "slicing": [
+      {
+        "pair": "sharedInput",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 411,
+          "nodes": 6,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 5027106,
+              "peak_rss_kb": 5008,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 9519091,
+              "peak_rss_kb": 21576,
+              "status": "inconclusive"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1165,
+          "nodes": 22,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 5104431,
+              "peak_rss_kb": 5408,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 9796620,
+              "peak_rss_kb": 22296,
+              "status": "inconclusive"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "subtractionOrder",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 420,
+          "nodes": 6,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 5762161,
+              "peak_rss_kb": 5520,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 13686007,
+              "peak_rss_kb": 30776,
+              "status": "refuted"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1174,
+          "nodes": 22,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 6362544,
+              "peak_rss_kb": 5528,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 15319624,
+              "peak_rss_kb": 31012,
+              "status": "refuted"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "wrapOnlyEquivalent",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 614,
+          "nodes": 10,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 5511332,
+              "peak_rss_kb": 5008,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 8315428,
+              "peak_rss_kb": 23036,
+              "status": "inconclusive"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1372,
+          "nodes": 26,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 5143464,
+              "peak_rss_kb": 4952,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 9136094,
+              "peak_rss_kb": 22636,
+              "status": "inconclusive"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "wrapBoundary",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 5213144,
+              "peak_rss_kb": 5352,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 9370332,
+              "peak_rss_kb": 23380,
+              "status": "refuted"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1170,
+          "nodes": 22,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 5530388,
+              "peak_rss_kb": 4668,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 10062057,
+              "peak_rss_kb": 23000,
+              "status": "refuted"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "boolOutput",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 588,
+          "nodes": 10,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 5203746,
+              "peak_rss_kb": 5228,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 8548053,
+              "peak_rss_kb": 23136,
+              "status": "inconclusive"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1346,
+          "nodes": 26,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "wall_ns": 4640212,
+              "peak_rss_kb": 5396,
+              "status": "inconclusive"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "wall_ns": 9271287,
+              "peak_rss_kb": 22620,
+              "status": "inconclusive"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "repeatedOutputs",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 551,
+          "nodes": 8,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 6827414,
+              "peak_rss_kb": 5180,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 14913023,
+              "peak_rss_kb": 30744,
+              "status": "refuted"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1307,
+          "nodes": 24,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 6755459,
+              "peak_rss_kb": 5388,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 14542169,
+              "peak_rss_kb": 31056,
+              "status": "refuted"
+            }
+          ]
+        }
+      },
+      {
+        "pair": "negation",
+        "dead_nodes_per_graph": 8,
+        "sliced": {
+          "bytes": 416,
+          "nodes": 6,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 5827744,
+              "peak_rss_kb": 5468,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 15993144,
+              "peak_rss_kb": 31656,
+              "status": "refuted"
+            }
+          ]
+        },
+        "unsliced": {
+          "bytes": 1170,
+          "nodes": 22,
+          "runs": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "wall_ns": 5613183,
+              "peak_rss_kb": 5308,
+              "status": "refuted"
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "wall_ns": 15460658,
+              "peak_rss_kb": 31856,
+              "status": "refuted"
+            }
+          ]
+        }
+      }
+    ],
+    "warm_cache": {
+      "entries": 14,
+      "retained_bytes": 1674
+    }
+  },
+  "controls": {
+    "mutations": {
+      "total": 11,
+      "detected": 9,
+      "survivors": [
+        "wrapOnlyEquivalent: constant bit 0 flipped at 3",
+        "boolOutput: add->sub at 3"
+      ],
+      "entries": [
+        {
+          "pair": "sharedInput",
+          "mutation": "constant bit 0 flipped at 1",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 17352
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xfffffffffffffffd"
+              },
+              "replay_ns": 19336
+            }
+          ]
+        },
+        {
+          "pair": "sharedInput",
+          "mutation": "mul->add at 2",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 14216
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 15479
+            }
+          ]
+        },
+        {
+          "pair": "sharedInput",
+          "mutation": "output 2 reads node 1's value",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 15860
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xfffffffffffffffe"
+              },
+              "replay_ns": 17753
+            }
+          ]
+        },
+        {
+          "pair": "wrapOnlyEquivalent",
+          "mutation": "constant bit 0 flipped at 1",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 22782
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 24907
+            }
+          ]
+        },
+        {
+          "pair": "wrapOnlyEquivalent",
+          "mutation": "mul->add at 2",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 19447
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 22282
+            }
+          ]
+        },
+        {
+          "pair": "wrapOnlyEquivalent",
+          "mutation": "constant bit 0 flipped at 3",
+          "detected": false,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof"
+            }
+          ]
+        },
+        {
+          "pair": "wrapOnlyEquivalent",
+          "mutation": "mul->add at 4",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 16311
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 18735
+            }
+          ]
+        },
+        {
+          "pair": "wrapOnlyEquivalent",
+          "mutation": "output 4 reads node 3's value",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 17102
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0x0000000000000000"
+              },
+              "replay_ns": 20298
+            }
+          ]
+        },
+        {
+          "pair": "boolOutput",
+          "mutation": "constant bit 0 flipped at 1",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xfffffffffffffffe"
+              },
+              "replay_ns": 19707
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 17663
+            }
+          ]
+        },
+        {
+          "pair": "boolOutput",
+          "mutation": "constant bit 0 flipped at 2",
+          "detected": true,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xfffffffffffffffe"
+              },
+              "replay_ns": 16761
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "witness": {
+                "s0": "0xffffffffffffffff"
+              },
+              "replay_ns": 18345
+            }
+          ]
+        },
+        {
+          "pair": "boolOutput",
+          "mutation": "add->sub at 3",
+          "detected": false,
+          "results": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof"
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof"
+            }
+          ]
+        }
+      ]
+    },
+    "corrupted_encodings": [
+      {
+        "pair": "sharedInput",
+        "fault": "mul-as-add",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 14928
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 13295
+          }
+        ]
+      },
+      {
+        "pair": "sharedInput",
+        "fault": "constant-bit",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 15038
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 14447
+          }
+        ]
+      },
+      {
+        "pair": "sharedInput",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "subtractionOrder",
+        "fault": "sub-order",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "refuted",
+          "refuted"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x7fffffffffffffff",
+              "s1": "0x7ffffffffffffffe"
+            },
+            "replay_ns": 13154
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x0000000000000000",
+              "s1": "0x7fffffffffffffff"
+            },
+            "replay_ns": 15630
+          }
+        ]
+      },
+      {
+        "pair": "subtractionOrder",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "wrapOnlyEquivalent",
+        "fault": "mul-as-add",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 10510
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 11452
+          }
+        ]
+      },
+      {
+        "pair": "wrapOnlyEquivalent",
+        "fault": "constant-bit",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 10459
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 10891
+          }
+        ]
+      },
+      {
+        "pair": "wrapOnlyEquivalent",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "wrapBoundary",
+        "fault": "mul-as-add",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 12423
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 13125
+          }
+        ]
+      },
+      {
+        "pair": "wrapBoundary",
+        "fault": "constant-bit",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "refuted",
+          "refuted"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0xffffffffffffffff"
+            },
+            "replay_ns": 11973
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x0000000000000001"
+            },
+            "replay_ns": 13235
+          }
+        ]
+      },
+      {
+        "pair": "wrapBoundary",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "boolOutput",
+        "fault": "constant-bit",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 2,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 11041
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "inconclusive",
+            "reason": "model does not replay on the original graphs",
+            "replay_ns": 8857
+          }
+        ]
+      },
+      {
+        "pair": "boolOutput",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "repeatedOutputs",
+        "fault": "sub-order",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "refuted",
+          "refuted"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x7fffffffffffffff",
+              "s1": "0x7ffffffffffffffe"
+            },
+            "replay_ns": 16511
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x0000000000000000",
+              "s1": "0x7fffffffffffffff"
+            },
+            "replay_ns": 13666
+          }
+        ]
+      },
+      {
+        "pair": "repeatedOutputs",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "refuted",
+          "refuted"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x7ffffffffffffffe",
+              "s1": "0x7fffffffffffffff"
+            },
+            "replay_ns": 14618
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x7fffffffffffffff",
+              "s1": "0x0000000000000000"
+            },
+            "replay_ns": 14638
+          }
+        ]
+      },
+      {
+        "pair": "negation",
+        "fault": "sub-order",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      },
+      {
+        "pair": "negation",
+        "fault": "constant-bit",
+        "solvers_agree": true,
+        "answers": [
+          "sat",
+          "sat"
+        ],
+        "statuses": [
+          "refuted",
+          "refuted"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "concrete simulation"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x7fffffffffffffff"
+            },
+            "replay_ns": 12904
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "witness": {
+              "s0": "0x4000000000000001"
+            },
+            "replay_ns": 14887
+          }
+        ]
+      },
+      {
+        "pair": "negation",
+        "fault": "drop-output",
+        "solvers_agree": true,
+        "answers": [
+          "unsat",
+          "unsat"
+        ],
+        "statuses": [
+          "inconclusive",
+          "inconclusive"
+        ],
+        "models_rejected_by_replay": 0,
+        "detected_by": [
+          "claim check"
+        ],
+        "results": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof"
+          }
+        ]
+      }
+    ],
+    "bindings": [
+      {
+        "label": "bound query, the positive control",
+        "status": "refuted",
+        "reason": "model replays on the original graphs",
+        "witness": {
+          "s0": "0x7fffffffffffffff",
+          "s1": "0x0000000000000000"
+        },
+        "replay_ns": 12323
+      },
+      {
+        "label": "stale semantic revision",
+        "status": "inconclusive",
+        "reason": "query bound to other bytes or revisions"
+      },
+      {
+        "label": "other I64 profile",
+        "status": "inconclusive",
+        "reason": "query bound to other bytes or revisions"
+      },
+      {
+        "label": "other encoder",
+        "status": "inconclusive",
+        "reason": "query bound to other bytes or revisions"
+      },
+      {
+        "label": "altered pair bytes",
+        "status": "inconclusive",
+        "reason": "query bound to other bytes or revisions"
+      }
+    ],
+    "witnesses": [
+      {
+        "label": "correct, the positive control",
+        "status": "refuted",
+        "reason": "model replays on the original graphs",
+        "witness": {
+          "s0": "0x0000000000000001",
+          "s1": "0x0000000000000000"
+        },
+        "replay_ns": 3336
+      },
+      {
+        "label": "narrow value",
+        "status": "inconclusive",
+        "reason": "model rejected: malformed value for s0"
+      },
+      {
+        "label": "missing slot",
+        "status": "inconclusive",
+        "reason": "model rejected: model names [s0] are not [s0,s1]"
+      },
+      {
+        "label": "duplicate slot",
+        "status": "inconclusive",
+        "reason": "model rejected: malformed value for s0"
+      },
+      {
+        "label": "extra slot",
+        "status": "inconclusive",
+        "reason": "model rejected: model names [s0,s1,s2] are not [s0,s1]"
+      },
+      {
+        "label": "no values",
+        "status": "inconclusive",
+        "reason": "model rejected: model names [] are not [s0,s1]"
+      }
+    ],
+    "certificates": [
+      {
+        "label": "bound receipt, the positive control",
+        "certificate": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_certified is proved in the bound foundation receipt"
+      },
+      {
+        "label": "corpus bytes differ from the receipt",
+        "certificate": null
+      },
+      {
+        "label": "dirty receipt",
+        "certificate": null
+      },
+      {
+        "label": "theorem not proved",
+        "certificate": null
+      },
+      {
+        "label": "disallowed axiom",
+        "certificate": null
+      }
+    ],
+    "forced": [
+      {
+        "label": "injected UNKNOWN",
+        "answer": "unknown",
+        "status": "inconclusive",
+        "reason": "solver unknown"
+      },
+      {
+        "label": "injected solver error",
+        "answer": "error",
+        "status": "inconclusive",
+        "reason": "solver error"
+      },
+      {
+        "label": "watchdog timeout",
+        "answer": "timeout",
+        "status": "inconclusive",
+        "reason": "solver timeout"
+      }
+    ],
+    "refusals": [
+      {
+        "label": "node budget",
+        "status": "unsupported",
+        "reason": "graph exceeds 64 nodes"
+      },
+      {
+        "label": "slot budget",
+        "status": "unsupported",
+        "reason": "slot 16 exceeds the budget"
+      },
+      {
+        "label": "formula budget",
+        "status": "unsupported",
+        "reason": "formula exceeds 64 bytes"
+      },
+      {
+        "label": "forward read",
+        "status": "unsupported",
+        "reason": "node 0 reads node 1, which is not earlier"
+      },
+      {
+        "label": "arithmetic on Bool",
+        "status": "unsupported",
+        "reason": "node 2 reads a Bool"
+      }
+    ]
+  },
+  "non_claims": [
+    "statuses are about the model graphs the corpus states; no source extraction, Wasm lowering or Rust evaluator is a subject",
+    "solver UNSAT is recorded but never certifies; only the bound kernel certificates do",
+    "refuted means the model replays through this lane's evaluator on the original graphs; the kernel and the Rust evaluators replay only the universe witnesses of the corpus",
+    "timings and peak memory are one run on one host, not a performance claim"
+  ]
+}
