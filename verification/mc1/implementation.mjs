@@ -124,9 +124,10 @@ try {
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
   // The contract library grew with NamedV3 (T1/T6), the specification-quality module
   // (#65), the submission-refusal witnesses for #65 and the recheck-during-shrinking lane
-  // for #65's residual, so the strict verdict now pins 67 required theorems; the exact
-  // string keeps the verdict non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 67 required theorems; strict axioms accepted')) {
+  // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module, so the
+  // strict verdict now pins 90 required theorems; the exact string keeps the verdict
+  // non-substitutable.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 90 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);

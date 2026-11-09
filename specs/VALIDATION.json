@@ -1085,7 +1085,7 @@
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/tasks.md",
-      "sha256": "544cc407efa0ef846406ec7dafdd3ce9399fb2f94793318e3d25cc7fdd57d2dd"
+      "sha256": "c125f840649c189f03369844ab8b5b2a47a65d07c93d2029fc457788d7a77bdf"
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/design.md",

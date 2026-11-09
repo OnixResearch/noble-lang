@@ -1,6 +1,7 @@
 import NobleContracts
 import NobleContracts.NamedV3
 import NobleContracts.SpecQuality
+import NobleContracts.Wire
 import Lean
 
 open Lean Elab Command
@@ -53,7 +54,19 @@ elab "check_contract_library" : command => do
     ``NobleContracts.SpecQuality.admissible_pins_its_lengths,
     ``NobleContracts.SpecQuality.a_shrunk_assignment_never_rechecks,
     ``NobleContracts.SpecQuality.a_prefix_candidate_is_refused,
-    ``NobleContracts.SpecQuality.every_shorter_candidate_is_refused]
+    ``NobleContracts.SpecQuality.every_shorter_candidate_is_refused,
+    ``NobleContracts.Wire.exec_frame,
+    ``NobleContracts.Wire.then_left_id, ``NobleContracts.Wire.then_right_id,
+    ``NobleContracts.Wire.then_assoc, ``NobleContracts.Wire.apply_quote,
+    ``NobleContracts.Wire.apply_then, ``NobleContracts.Wire.under_fuse,
+    ``NobleContracts.Wire.pair_unpair, ``NobleContracts.Wire.unpair_pair,
+    ``NobleContracts.Wire.swap_pair_invol, ``NobleContracts.Wire.assoc_pair_iso,
+    ``NobleContracts.Wire.assoc_pair_iso_symm, ``NobleContracts.Wire.first_fuse,
+    ``NobleContracts.Wire.split_def, ``NobleContracts.Wire.fanout_def,
+    ``NobleContracts.Wire.left_beta_inl, ``NobleContracts.Wire.left_beta_inr,
+    ``NobleContracts.Wire.join_natural_inl, ``NobleContracts.Wire.join_natural_inr,
+    ``NobleContracts.Wire.if_beta_true, ``NobleContracts.Wire.if_beta_false,
+    ``NobleContracts.Wire.recipes_run_alike, ``NobleContracts.Wire.recipe_distinct]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
