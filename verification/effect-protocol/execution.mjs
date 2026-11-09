@@ -304,6 +304,11 @@ function scenario(context, {
   requireThat(report.native_memory_access === false && report.live_owners === 0
     && report.native_pins === 0 && report.lost_owners === 0,
   `${label}: an owner, pin or native access survived: ${stable(report)}`);
+  // #50: the report names the owner the host registered before guest start, and every event of
+  // this one-owner host carries exactly that identity, a host retirement included.
+  requireThat(Number.isInteger(report.registration?.identity)
+    && report.events.every(event => !('identity' in event) || event.identity === report.registration.identity),
+  `${label}: an event names an identity the host did not register: ${stable(report)}`);
   if (errorIncludes !== null) {
     requireThat(typeof report.error === 'string' && report.error.includes(errorIncludes),
       `${label}: the error does not name ${stable(errorIncludes)}: ${stable(report.error)}`);

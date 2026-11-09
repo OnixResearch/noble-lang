@@ -758,6 +758,13 @@ impl Host {
             ),
             ("region_reads", Json::Number(self.region_reads)),
             ("native_memory_access", Json::Bool(false)),
+            // The owner the host registered before guest start (A1). A host retirement is
+            // authorised by this registration, not by any guest request, so a trace in which the
+            // guest made no request still names who may be retired (#50).
+            (
+                "registration",
+                encoding::object([("identity", Json::Number(self.context.0))]),
+            ),
             (
                 "events",
                 Json::Array(
@@ -1606,6 +1613,29 @@ mod report_v2_tests {
         assert!(report.contains(r#""region_reads":64"#), "{report}");
         assert!(report.contains(r#""lost_owners":0"#), "{report}");
         assert!(!v1(&host, &CleanupObservation::AlreadyRetired).contains("scope-exhausted"));
+    }
+
+    /// #50: a guest that traps before any request leaves a trace whose only event is the host's
+    /// retirement. The v2 report names the owner the host registered before guest start, and the
+    /// retirement retires exactly that identity, so the registration, not the retirement itself,
+    /// says who may be retired. The v1 report is unchanged.
+    #[test]
+    fn v2_reports_the_registered_owner_a_retirement_retires() {
+        let mut trapped = host(b"abc");
+        let registered = trapped.context.0;
+        let cleanup = trapped.abnormal_exit_cleanup(ExitClass::Trap);
+        let report = v2(&trapped, &cleanup);
+        assert!(
+            report.contains(&format!(r#""registration":{{"identity":{registered}}}"#)),
+            "{report}"
+        );
+        assert!(
+            report.contains(&format!(
+                r#""kind":"request","operation":"host.retire","identity":{registered}"#
+            )),
+            "{report}"
+        );
+        assert!(!v1(&trapped, &cleanup).contains("registration"));
     }
 
     /// The v1 report keeps exactly its fields, in order, and its event encoding; only the v2 report

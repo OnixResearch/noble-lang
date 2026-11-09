@@ -18,7 +18,7 @@ The lane does the following:
 4. It runs every scenario as one public `noble component read-region --report v2` invocation.
 5. It checks each expected observation, then the monitor's verdicts.
 
-Every executed scenario must end with no live owner, no native pin, no lost owner and no native memory access. Unless its trace is truncated, it must also hold exactly one release commit. `NEW_EXTERNAL_DIRECTORY/execution.json` retains, for every scenario:
+Every executed scenario must end with no live owner, no native pin, no lost owner and no native memory access. Unless its trace is truncated, it must also hold exactly one release commit. Its report must name the owner the host registered before guest start (`registration.identity`), and every event must carry that identity, a host retirement included (#50). `NEW_EXTERNAL_DIRECTORY/execution.json` retains, for every scenario:
 - the full v2 report, which includes the trace prefix;
 - the monitor result;
 - the component bytes, in base64, with their hashes;
