@@ -727,7 +727,22 @@ A host/execution profile specifies handling of traps, cancellation, and resource
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: REC-05 for K-ERROR-03
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-05](../../../specs/conformance/recursion-cases.json)
+- WHEN the `runtime` procedure for case `REC-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-06 for K-ERROR-03
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-06](../../../specs/conformance/recursion-cases.json)
+- WHEN the `runtime` procedure for case `REC-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## 6. Program construction and execution
@@ -1206,7 +1221,54 @@ r[K-CHECK-02]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: REC-01 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-01](../../../specs/conformance/recursion-cases.json)
+- WHEN the `runtime` procedure for case `REC-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-02 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-02](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-03 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-03](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-04 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-04](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-05 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-05](../../../specs/conformance/recursion-cases.json)
+- WHEN the `runtime` procedure for case `REC-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-07 for K-CHECK-02
+
+- GIVEN the `Declared-Text-v1` profile and every field of `input` in [REC-07](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-CHECK-03
@@ -1536,7 +1598,22 @@ The source-name spelling of a definition is not the definition's semantic identi
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: REC-01 for K-DEF-03
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-01](../../../specs/conformance/recursion-cases.json)
+- WHEN the `runtime` procedure for case `REC-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-04 for K-DEF-03
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-04](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 # Part B — Programs as data and identity

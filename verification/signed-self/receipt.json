@@ -1,0 +1,305 @@
+{
+  "schema": "noble-signed-self-proof/v1",
+  "result": "passed",
+  "issue": 99,
+  "requirement": "K-CHECK-02",
+  "source_commit": "8b476c6378931b93f29d9f24ea624f8b3f9d2291",
+  "source_tree": "87d385da052b6131ad1ed4974a10095002ce2ca9",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "closure": [
+    "NobleM2.Candidate",
+    "NobleM2.Check",
+    "NobleM2.CheckSoundness",
+    "NobleM2.Env",
+    "NobleM2.Judgment",
+    "NobleM2.Shapes",
+    "NobleM2.SignedSelf",
+    "NobleM2.Soundness",
+    "NobleM2.Termination",
+    "NobleM2.Types",
+    "NobleM2.Words"
+  ],
+  "sources_sha256": {
+    "proofs/m3/NobleM2/Candidate.lean": "d0692965365819c785556280e3325f7072f4f90a7d064afc2dee513cb2e108b1",
+    "proofs/m3/NobleM2/Check.lean": "4d26285e65323e6bf6852fcd51095be295db4163a25ad88493576f00fdae436a",
+    "proofs/m3/NobleM2/CheckSoundness.lean": "747ff7a9d21dd666c1d3e508cbb9c2a2d97e81365125872e16549d50dc13c4fb",
+    "proofs/m3/NobleM2/Env.lean": "6e4c77a01dd7837372f9f4488d35b0dcc1d8239ab25875643f200078502ba1f8",
+    "proofs/m3/NobleM2/Judgment.lean": "89f82b515b6bb993cd42b831ce8ae0be858d35aae61d1f005bed8c52c86db7c6",
+    "proofs/m3/NobleM2/Shapes.lean": "e63ed54c2aa1fa2a6b6dfcdc1e7ca4bce3f611df05ec470ddaa58cacd0baffc5",
+    "proofs/m3/NobleM2/SignedSelf.lean": "bc7c34814b2eadb62e50bae0006cb24897cecdb6ecaa3513787328c2f183dd7b",
+    "proofs/m3/NobleM2/Soundness.lean": "3571dbf82f6c0b29e769758a764c3bcffc89c5145c111b83fa9119012c69da49",
+    "proofs/m3/NobleM2/Termination.lean": "1f642b31b3882d3bc1fa6651bd1b76a90a7e699dd1ab2b1f598d1a69fa03b885",
+    "proofs/m3/NobleM2/Types.lean": "9d5365daa56e0cc97558ee3969d56f37208cd81c2e0a27aa2dd4d94f9c36550a",
+    "proofs/m3/NobleM2/Words.lean": "25a192a88fcfd7f4b8bfb963512713b0d51f7140a5faaa91cc135a1cae0f934f",
+    "proofs/m3/signed-self-inventory.json": "d3a08859ce8cf8293854b5c56b8ff44c57407d63e4717833223d21dc66bb2b04",
+    "verification/signed-self/check.mjs": "95a410d9a08c60da89cceafd977cb2618fdbf9a69627141b32dc7aa70ae1fd8b"
+  },
+  "claims": {
+    "model_theorems": 14,
+    "strict_theorems": 10,
+    "evaluation_closed_theorems": [
+      "NobleM2.SignedSelf.forever_accepted",
+      "NobleM2.SignedSelf.forever_signed_derives",
+      "NobleM2.SignedSelf.polymorphic_ordinary_check_accepts",
+      "NobleM2.SignedSelf.monomorphic_accepted"
+    ],
+    "implementation_theorems": 0,
+    "correspondence": "none: the retained kernel extraction predates SignedSelf"
+  },
+  "theorem_count": 14,
+  "theorems": [
+    {
+      "name": "NobleM2.SignedSelf.sitesAt_iff",
+      "role": "the Bool self-site check holds exactly when every marked site invokes the owner at the owner witness",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.sitesAt_iff : ∀ {sc : NobleM2.SignedSelf.SignedCandidate} {owner : Nat} {ownerInst : NobleM2.Inst}, NobleM2.SignedSelf.sitesAt sc owner ownerInst = true ↔ ∀ (site : Nat), site ∈ sc.selfSites → sc.cand.nodes[site]? = some (NobleM2.Node.invocation owner ownerInst)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_soundness",
+      "role": "K-CHECK-02 soundness: signed acceptance implies the reference checker's well-formedness and SignedDerives: the body derives the owner's declared signature at the owner witness, with every self site at that witness",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.checkSigned_soundness : ∀ {env : NobleM2.Env} {request : NobleM2.Request} {sc : NobleM2.SignedSelf.SignedCandidate} {owner : Nat} {ownerInst : NobleM2.Inst} {checked : NobleM2.Checked}, NobleM2.SignedSelf.checkSigned env request sc owner ownerInst = NobleM2.Outcome.accepted checked → NobleM2.WellFormed request sc.cand checked ∧ NobleM2.SignedSelf.SignedDerives env request sc owner ownerInst checked.interface.effects",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_refuses_polymorphic_recursion",
+      "role": "K-CHECK-02: a self site at any witness other than the owner witness is refused",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.checkSigned_refuses_polymorphic_recursion : ∀ {env : NobleM2.Env} {request : NobleM2.Request} {sc : NobleM2.SignedSelf.SignedCandidate} {owner : Nat} {ownerInst inst : NobleM2.Inst} {site : Nat}, site ∈ sc.selfSites → sc.cand.nodes[site]? = some (NobleM2.Node.invocation owner inst) → inst ≠ ownerInst → ∀ (checked : NobleM2.Checked), NobleM2.SignedSelf.checkSigned env request sc owner ownerInst ≠ NobleM2.Outcome.accepted checked",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_refuses_a_foreign_self_site",
+      "role": "K-CHECK-02: a self site invoking another definition (mutual recursion) is refused",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.checkSigned_refuses_a_foreign_self_site : ∀ {env : NobleM2.Env} {request : NobleM2.Request} {sc : NobleM2.SignedSelf.SignedCandidate} {owner other : Nat} {ownerInst inst : NobleM2.Inst} {site : Nat}, site ∈ sc.selfSites → sc.cand.nodes[site]? = some (NobleM2.Node.invocation other inst) → other ≠ owner → ∀ (checked : NobleM2.Checked), NobleM2.SignedSelf.checkSigned env request sc owner ownerInst ≠ NobleM2.Outcome.accepted checked",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_requires_a_named_owner",
+      "role": "K-CHECK-02: an owner that is not a named definition, so has no declared signature, is refused",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.checkSigned_requires_a_named_owner : ∀ {env : NobleM2.Env} {request : NobleM2.Request} {sc : NobleM2.SignedSelf.SignedCandidate} {owner : Nat} {ownerInst : NobleM2.Inst}, env.kind owner ≠ some NobleM2.Behavior.named → ∀ (checked : NobleM2.Checked), NobleM2.SignedSelf.checkSigned env request sc owner ownerInst ≠ NobleM2.Outcome.accepted checked",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.acceptsWith_spec",
+      "role": "fixture classifier: an acceptsWith verdict is an acceptance with that interface",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.acceptsWith_spec : ∀ {outcome : NobleM2.Outcome} {stackIn stackOut : NobleM2.TyList} {effects : NobleM2.EffSet}, NobleM2.SignedSelf.acceptsWith outcome stackIn stackOut effects = true → ∃ checked, outcome = NobleM2.Outcome.accepted checked ∧ checked.interface.stackIn = stackIn ∧ checked.interface.stackOut = stackOut ∧ checked.interface.effects = effects",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.refusesNodeForm_spec",
+      "role": "fixture classifier: a refusesNodeForm verdict is the unsupported nodeForm refusal",
+      "status": "proved",
+      "statement": "@NobleM2.SignedSelf.refusesNodeForm_spec : ∀ {outcome : NobleM2.Outcome}, NobleM2.SignedSelf.refusesNodeForm outcome = true → outcome = NobleM2.Outcome.unsupported NobleM2.UnsupportedKind.nodeForm",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.forever_accepted",
+      "role": "fixture: the signed check accepts def forever [ forever ] at its declared [] -- [] ! pure",
+      "evaluation_closed": true,
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.forever_accepted : NobleM2.SignedSelf.acceptsWith (NobleM2.SignedSelf.checkSigned NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.emptyRequest NobleM2.SignedSelf.forever NobleM2.SignedSelf.ownerIndex NobleM2.SignedSelf.emptyWitness) NobleM2.TyList.nil NobleM2.TyList.nil NobleM2.EffSet.empty = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "NobleM2.SignedSelf.forever_accepted._native.native_decide.ax_1_1"
+      ],
+      "strict": false
+    },
+    {
+      "name": "NobleM2.SignedSelf.forever_signed_derives",
+      "role": "fixture: forever satisfies SignedDerives, by soundness from its acceptance",
+      "evaluation_closed": true,
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.forever_signed_derives : NobleM2.SignedSelf.SignedDerives NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.emptyRequest NobleM2.SignedSelf.forever NobleM2.SignedSelf.ownerIndex NobleM2.SignedSelf.emptyWitness NobleM2.EffSet.empty",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "NobleM2.SignedSelf.forever_accepted._native.native_decide.ax_1_1"
+      ],
+      "strict": false
+    },
+    {
+      "name": "NobleM2.SignedSelf.polymorphic_ordinary_check_accepts",
+      "role": "fixture: the ordinary reference checker types a self call that instantiates the signature differently",
+      "evaluation_closed": true,
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.polymorphic_ordinary_check_accepts : NobleM2.SignedSelf.acceptsWith (NobleM2.check NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.intRequest NobleM2.SignedSelf.polymorphic.cand) (NobleM2.TyList.cons NobleM2.Ty.i64 NobleM2.TyList.nil) (NobleM2.TyList.cons NobleM2.Ty.i64 NobleM2.TyList.nil) NobleM2.EffSet.empty = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "NobleM2.SignedSelf.polymorphic_ordinary_check_accepts._native.native_decide.ax_1_1"
+      ],
+      "strict": false
+    },
+    {
+      "name": "NobleM2.SignedSelf.polymorphic_signed_refused",
+      "role": "fixture: the signed check refuses that polymorphic self call (kernel-decided)",
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.polymorphic_signed_refused : NobleM2.SignedSelf.checkSigned NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.intRequest NobleM2.SignedSelf.polymorphic NobleM2.SignedSelf.ownerIndex NobleM2.SignedSelf.intWitness = NobleM2.Outcome.unsupported NobleM2.UnsupportedKind.nodeForm",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.monomorphic_accepted",
+      "role": "fixture: the same body with its self site at the owner witness is accepted",
+      "evaluation_closed": true,
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.monomorphic_accepted : NobleM2.SignedSelf.acceptsWith (NobleM2.SignedSelf.checkSigned NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.intRequest NobleM2.SignedSelf.monomorphic NobleM2.SignedSelf.ownerIndex NobleM2.SignedSelf.intWitness) (NobleM2.TyList.cons NobleM2.Ty.i64 NobleM2.TyList.nil) (NobleM2.TyList.cons NobleM2.Ty.i64 NobleM2.TyList.nil) NobleM2.EffSet.empty = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "NobleM2.SignedSelf.monomorphic_accepted._native.native_decide.ax_1_1"
+      ],
+      "strict": false
+    },
+    {
+      "name": "NobleM2.SignedSelf.unsigned_owner_refused",
+      "role": "fixture: a bootstrap word cannot own a self call (kernel-decided)",
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.unsigned_owner_refused : NobleM2.SignedSelf.checkSigned NobleM2.SignedSelf.ownerEnv NobleM2.SignedSelf.emptyRequest { cand := { format := 0, revision := 0, nodes := [NobleM2.Node.invocation 0 NobleM2.SignedSelf.emptyWitness], body := [0] }, selfSites := [0] } 0 NobleM2.SignedSelf.emptyWitness = NobleM2.Outcome.unsupported NobleM2.UnsupportedKind.nodeForm",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.foreign_self_site_refused",
+      "role": "fixture: a self site invoking a different named definition is refused (kernel-decided)",
+      "status": "proved",
+      "statement": "NobleM2.SignedSelf.foreign_self_site_refused : NobleM2.SignedSelf.checkSigned NobleM2.SignedSelf.twoOwnerEnv NobleM2.SignedSelf.emptyRequest NobleM2.SignedSelf.forever 24 NobleM2.SignedSelf.emptyWitness = NobleM2.Outcome.unsupported NobleM2.UnsupportedKind.nodeForm",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "strict": true
+    }
+  ],
+  "commands": [
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "build"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "$OUT/Audit.lean"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    }
+  ],
+  "scope": [
+    "The signed check over the M2 reference model: a self site is the owner invocation the kernel types it as, marked by index.",
+    "checkSigned_soundness: acceptance implies SignedDerives (the body derives the owner's declared signature at the owner witness, every self site at that witness).",
+    "Module ownership, the public checker's refusal of SignedSelf nodes and self edges through ordinary invocations are outside the model."
+  ]
+}

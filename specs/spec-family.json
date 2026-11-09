@@ -111,7 +111,8 @@
     "conformance/erlang-abstract-cases.json",
     "conformance/octet-adoption-cases.json",
     "conformance/numeric-graph-cases.json",
-    "conformance/text-byte-cursor-cases.json"
+    "conformance/text-byte-cursor-cases.json",
+    "conformance/recursion-cases.json"
   ],
   "lifecycle": ".cairn"
 }

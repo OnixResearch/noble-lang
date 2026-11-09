@@ -1,0 +1,433 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "k-check-02-signed-self-recursion-issue-99",
+  "cases": [
+    {
+      "id": "REC-01",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-CHECK-02",
+        "K-DEF-03"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]",
+          "5 count@1.down"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "normal",
+        "stack": [
+          {
+            "type": "I64",
+            "value": "0"
+          }
+        ],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-01",
+          "claim": "The signed countdown `down`, declared `S I64 -- S I64 ! pure`, links, and `5 count@1.down` returns `I64 0` as `normal` in the source-built CLI's framed Signed-Declared-Text-v1 session, with no guest requests or protected operations.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed",
+            "report_index": 1,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-02",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": [
+        "K-CHECK-02"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]",
+          "5 count@1.down",
+          "drop",
+          "module no_signature@1 [ def recur [ recur ] ]"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "resolve",
+        "outcome": "unbound-word",
+        "diagnostic": "cyclic local module definitions",
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-02",
+          "claim": "A recursive definition without a signature is refused at resolve (\"cyclic local module definitions\") before anything is published, and the session continues.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed",
+            "report_index": 3,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-03",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": [
+        "K-CHECK-02"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]",
+          "5 count@1.down",
+          "drop",
+          "module no_signature@1 [ def recur [ recur ] ]",
+          "module polymorphic@1 [ signature recur forall<S:stack> [ S -- S ! pure ] def recur [ 1 recur ] ]"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "check",
+        "outcome": "type-reject",
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-03",
+          "claim": "A self call that instantiates the declared `S -- S` at a stack one `I64` deeper is refused at check (`type-reject`) before publication: no polymorphic recursion.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed",
+            "report_index": 4,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-04",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": [
+        "K-CHECK-02",
+        "K-DEF-03"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]",
+          "5 count@1.down",
+          "drop",
+          "module no_signature@1 [ def recur [ recur ] ]",
+          "module polymorphic@1 [ signature recur forall<S:stack> [ S -- S ! pure ] def recur [ 1 recur ] ]",
+          "module mutual@1 [ signature even forall<S:stack> [ S -- S ! pure ] signature odd forall<S:stack> [ S -- S ! pure ] def even [ odd ] def odd [ even ] ]"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "resolve",
+        "outcome": "unbound-word",
+        "diagnostic": "cyclic local module definitions",
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-04",
+          "claim": "Mutual recursion between `even` and `odd` is refused at resolve; this revision permits no mutual-recursion groups.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed",
+            "report_index": 5,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-05",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-CHECK-02",
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]",
+          "5 count@1.down",
+          "drop",
+          "module no_signature@1 [ def recur [ recur ] ]",
+          "module polymorphic@1 [ signature recur forall<S:stack> [ S -- S ! pure ] def recur [ 1 recur ] ]",
+          "module mutual@1 [ signature even forall<S:stack> [ S -- S ! pure ] signature odd forall<S:stack> [ S -- S ! pure ] def even [ odd ] def odd [ even ] ]",
+          "module spin@1 [ signature forever forall<S:stack> [ S -- S ! pure ] export forever def forever [ forever ] ]",
+          "spin@1.forever"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "runtime-exhausted",
+        "quota_reason": "execution work",
+        "stack": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-05",
+          "claim": "`def forever [ forever ]` links, and running it ends `runtime-exhausted` on the `execution work` quota with an empty stack, never as `normal`. The session process exits 5.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed",
+            "report_index": 7,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-06",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module deep@1 [ signature grow forall<S:stack> [ S -- S ! pure ] export grow def grow [ grow 1 drop ] ]",
+          "deep@1.grow"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "runtime-exhausted",
+        "quota_reason": "continuation bytes",
+        "stack": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-06",
+          "claim": "`def grow [ grow 1 drop ]`, a recursion that is not in tail position, ends `runtime-exhausted` on the `continuation bytes` quota. The session process exits 5.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed-non-tail",
+            "report_index": 1,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-07",
+      "profile": "Declared-Text-v1",
+      "kind": "static",
+      "requirements": [
+        "K-CHECK-02"
+      ],
+      "input": {
+        "submissions": [
+          "module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor"
+        ]
+      },
+      "expected": {
+        "stage": "resolve",
+        "outcome": "unbound-word",
+        "diagnostic": "cyclic local module definitions",
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-07",
+          "claim": "Without `--signed-self-recursion` (Declared-Text-v1), the same signed countdown is refused at resolve: signed recursion is opt-in.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:87d385da052b6131ad1ed4974a10095002ce2ca9",
+          "configuration": {
+            "profile": "Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-8b476c63.json",
+            "receipt_sha256": "a0dbd5e4c578a002a9cca8e5e8bd68e10b62a96a0db0437b2458f1d6cd1e0229",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "ordinary",
+            "report_index": 0,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit 8b476c63; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open."
+          ]
+        }
+      ]
+    }
+  ]
+}

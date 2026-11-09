@@ -16,9 +16,9 @@
   },
   "documents": 14,
   "requirements": 556,
-  "scenarios": 223,
-  "scenarios_executed": 143,
-  "open_test_design": 196,
+  "scenarios": 230,
+  "scenarios_executed": 150,
+  "open_test_design": 193,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [],
@@ -1301,7 +1301,7 @@
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "8856654a3e645dc98a4a42af1de4ecc13f2f1ae3fcca95f0eac75aae3d73dcaa"
+      "sha256": "10fa9acdcbe9d162edba2b60e72c83ebc65efc9ee1349e0f4e75c307a2107ce7"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -1432,6 +1432,10 @@
       "sha256": "aecb5abd22516925a36f99c0c7b9afda66b686f485f0bdde99bfa5472c4c1203"
     },
     {
+      "file": "specs/conformance/recursion-cases.json",
+      "sha256": "7b7f665404ea3246f3688e34ca69d2c97b75fcfe4c039841aa428d9e07997657"
+    },
+    {
       "file": "specs/conformance/resource-cases.json",
       "sha256": "1bf524bf403a908c375bb5914fe9bf546db9b9fcffa3998b12317f70dfbca73d"
     },
@@ -1489,7 +1493,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "dc07c4fbd328c7c614394888acab4ff68da12e4f2a1dc661b3d6ab8843cc0b44"
+      "sha256": "c30a77c7f3e82e9232b01ec81620f269ee3e8f9ba105f9938446389d70cfef11"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1521,7 +1525,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "8ee94dbaa1659f2a07570d913544f3a90723fde9bf52ee80545d428a886f2319"
+      "sha256": "8bb6e4eee54de3d3e2881e7677274b7deb12420664104148938dcc724d34d66a"
     },
     {
       "file": "specs/STATUS.json",
@@ -1854,6 +1858,10 @@
     {
       "file": "verification/service-wire-refinement/README.md",
       "sha256": "dbd2852d8e18a62f16ae752612d25a1b3ef38daffcea36b80ba18ed65ea53017"
+    },
+    {
+      "file": "verification/signed-self/README.md",
+      "sha256": "e6ca13187ecf8995f9a06cd75c0b990bfe91e50cf1d703265a715886971a3bd7"
     },
     {
       "file": "verification/source-inventory.md",

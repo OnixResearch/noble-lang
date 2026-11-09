@@ -2321,8 +2321,15 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "REC-01",
+        "REC-02",
+        "REC-03",
+        "REC-04",
+        "REC-05",
+        "REC-07"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-CHECK-03",
@@ -2469,8 +2476,11 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "REC-01",
+        "REC-04"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-EFFECT-01",
@@ -2574,8 +2584,11 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "REC-05",
+        "REC-06"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-EVAL-01",
