@@ -11,9 +11,13 @@
 //! certificate fragment of `NobleFoundation.Binary32.Checker` (issue #44). `Binary32CheckerEncoded.lean`
 //! is generated from them; its header states what the kernel checks. Regenerate after a deliberate
 //! change with `cargo test -p noble-ngraph --test soft_float -- --ignored write_the_lean_file`,
-//! then rerun the foundation lane.
+//! then rerun the foundation lane. `binding` binds the two certificates to the contexts they were
+//! checked in and generates `Binary32CheckerBound.lean`.
 
-use noble_ngraph::check;
+#[path = "encoded/binding.rs"]
+mod binding;
+
+use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::format::graph;
 use noble_ngraph::ir::{Graph, Literal, Op};
 
@@ -53,11 +57,16 @@ fn node_term(op: &Op) -> String {
     }
 }
 
-/// The checked graph of one encoding, as a Lean `Graph` term.
-fn graph_term(text: &str) -> String {
+/// The checked graph of one encoding.
+fn checked(text: &str) -> CheckedGraph {
     let scheme = super::common::IDS;
     let parsed: Graph = graph::parse(&scheme, text).expect("the encoding parses");
-    let checked = check::check(&scheme, parsed).expect("the encoding checks");
+    check::check(&scheme, parsed).expect("the encoding checks")
+}
+
+/// The checked graph of one encoding, as a Lean `Graph` term.
+fn graph_term(text: &str) -> String {
+    let checked = checked(text);
     let nodes: Vec<String> = checked
         .graph()
         .nodes
@@ -106,8 +115,8 @@ and the near-overflow encoding is
 ```text
 {square}```
 
-Reading the checked `noble-ngraph` nodes as fragment nodes is the one trusted translation. Binding
-these graphs' identities into a certificate context is not done here.
+Reading the checked `noble-ngraph` nodes as fragment nodes is the one trusted translation.
+`Binary32CheckerBound` binds these graphs' identities into certificate contexts.
 -/
 
 namespace NobleFoundation.Binary32.Checker.Encoded
@@ -166,14 +175,20 @@ fn the_lean_file_is_the_real_encoding() {
 }
 
 #[test]
-#[ignore = "writes proofs/foundation/NobleFoundation/Binary32CheckerEncoded.lean; run after a deliberate change"]
+#[ignore = "writes Binary32CheckerEncoded.lean and Binary32CheckerBound.lean under proofs/foundation/NobleFoundation; run after a deliberate change"]
 fn write_the_lean_file() {
+    let directory = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../proofs/foundation/NobleFoundation"
+    );
     std::fs::write(
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../proofs/foundation/NobleFoundation/Binary32CheckerEncoded.lean"
-        ),
+        format!("{directory}/Binary32CheckerEncoded.lean"),
         lean_file(),
     )
-    .expect("generated file written");
+    .expect("encoded file written");
+    std::fs::write(
+        format!("{directory}/Binary32CheckerBound.lean"),
+        binding::lean_file(),
+    )
+    .expect("binding file written");
 }

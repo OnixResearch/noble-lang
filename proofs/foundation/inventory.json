@@ -6634,6 +6634,42 @@
       "claim": "on that encoded graph every applicable input's machine and real values are enclosed by the [1, 2^63] bounds"
     },
     {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_domains",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "the domain list the cancellation context digest covers is exactly the certificate’s declared domains"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_bound_certified",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "the cancellation certificate certifies through checkBound under the encoded graph’s own computed context: GraphLogicalId snapshot, IR revision, domain, order and model digests"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.square_domains",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "the domain list the square context digest covers is exactly the certificate’s declared domains"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.square_bound_certified",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "the near-overflow certificate over [1, 2^63] certifies through checkBound under the encoded square graph’s own computed context"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_certificate_not_applicable_to_the_square",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "control: the cancellation certificate declared for its own graph’s context is not applicable in the square’s context"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Checker.Encoded.square_certificate_not_applicable_under_another_model",
+      "phase": 2,
+      "role": "real-artifact",
+      "claim": "control: the square certificate declared against another model text is not applicable"
+    },
+    {
       "name": "NobleFoundation.ArithmeticModels.reals_claim_holds",
       "phase": 5,
       "role": "negative-control",

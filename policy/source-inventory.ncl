@@ -397,6 +397,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
 #   7652 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed issue #44 encoded certificate binding: the binding generator from a complete 110-unit selected collection:
+#   IR f0d9fe91aebeae776a2d177ce30acfa0851793eed1f508b588d258bbf2f768d2; coverage d23b55050e900b319ba9661e7b5568fae7b8ec3c1f653c9cb5241ee4c5f2711d;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
+#   7675 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -21454,11 +21459,15 @@ let
     "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:7792:8048",
     "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:8058:8340",
     "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/decimal.rs:8461:8723",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:2606:2612",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:2756:2764",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:2985:2991",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:6134:6422",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:6546:6811",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:2895:2901",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:3045:3053",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:3274:3280",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:6426:6714",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded.rs:6874:7320",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded/binding.rs:2621:2627",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded/binding.rs:3071:3079",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded/binding.rs:3200:3207",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/soft_float_dir/encoded/binding.rs:7354:7668",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11040:12711",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11297:11323",
     "noble-ngraph::closure@crates/noble-ngraph/tests/train_admission.rs:11444:11474",
@@ -23291,6 +23300,23 @@ let
     "soft_float::encoded::CANCELLATION",
     "soft_float::encoded::COMMITTED",
     "soft_float::encoded::SQUARE",
+    "soft_float::encoded::binding",
+    "soft_float::encoded::binding::BOUNDS",
+    "soft_float::encoded::binding::Bound",
+    "soft_float::encoded::binding::COMMITTED",
+    "soft_float::encoded::binding::MODEL_PATH",
+    "soft_float::encoded::binding::bound_text",
+    "soft_float::encoded::binding::context",
+    "soft_float::encoded::binding::controls_text",
+    "soft_float::encoded::binding::digest",
+    "soft_float::encoded::binding::ir_revision",
+    "soft_float::encoded::binding::lean_file",
+    "soft_float::encoded::binding::model_digest",
+    "soft_float::encoded::binding::natural",
+    "soft_float::encoded::binding::test",
+    "soft_float::encoded::binding::the_contexts_are_the_real_artifacts",
+    "soft_float::encoded::binding::{use#0}",
+    "soft_float::encoded::checked",
     "soft_float::encoded::graph_term",
     "soft_float::encoded::lean_file",
     "soft_float::encoded::node_term",
@@ -23304,6 +23330,8 @@ let
     "soft_float::encoded::{use#3}",
     "soft_float::encoded::{use#4}",
     "soft_float::encoded::{use#5}",
+    "soft_float::encoded::{use#6}",
+    "soft_float::encoded::{use#7}",
     "soft_float::main",
     "soft_float::main::test",
     "soft_float::powers_of_two_are_exact",

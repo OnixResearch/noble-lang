@@ -969,7 +969,7 @@
     },
     {
       "file": ".cairn/changes/numerical-error-certificate/tasks.md",
-      "sha256": "320954472f65f6936e01519c4aebd56e8f89db5f983c33e02d16f8196c3f810b"
+      "sha256": "54a9c8b836a5f01d3e2688fb8fda0f89bbfd9c726c24e7caab008f486856e771"
     },
     {
       "file": ".cairn/changes/optimizer-kernel-experiment/design.md",
@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "ae9517b072d01bd8005d91f9f5f60f1911b17817b522d86fd99745cc90ebaac7"
+      "sha256": "114f07419ea6f5a420253b61d606fa111e013b93cc7a24936c7a720936621fb0"
     },
     {
       "file": "proofs/m1/README.md",

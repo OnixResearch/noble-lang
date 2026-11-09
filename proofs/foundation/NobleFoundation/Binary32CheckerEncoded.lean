@@ -34,8 +34,8 @@ and the near-overflow encoding is
     out %1
 ```
 
-Reading the checked `noble-ngraph` nodes as fragment nodes is the one trusted translation. Binding
-these graphs' identities into a certificate context is not done here.
+Reading the checked `noble-ngraph` nodes as fragment nodes is the one trusted translation.
+`Binary32CheckerBound` binds these graphs' identities into certificate contexts.
 -/
 
 namespace NobleFoundation.Binary32.Checker.Encoded
