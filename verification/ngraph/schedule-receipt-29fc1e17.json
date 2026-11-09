@@ -1,0 +1,292 @@
+{
+  "schema": "noble-packed-schedule-receipt/v1",
+  "issue": 43,
+  "source_commit": "29fc1e1705bcb89e5585e0bbe6a16c359abec7f0",
+  "source_tree": "0498102d95cc8cc20de58891f639fc7da2a8c724",
+  "clean_source": true,
+  "corpus": {
+    "path": "proofs/foundation/NobleFoundation/PackedScheduleCorpus.lean",
+    "sha256": "6e05335d7552b5e911487baa9c86c139828c26d4dd2fcd4c1b7fa16a7a0bfd05",
+    "pinned_by": "the_lean_file_is_the_real_emission in crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs"
+  },
+  "foundation_receipt": {
+    "path": "verification/foundation/receipts/a41435fd2",
+    "source_commit": "a41435fd221c795ef6fd14a02c4b4293162005ab",
+    "corpus_and_model_identical": true,
+    "theorems": 23
+  },
+  "artifacts": [
+    {
+      "name": "interleaved",
+      "doc": "two branches sharing both inputs, a constant, a Bool equality and two outputs",
+      "graph": {
+        "definitions": [
+          "interleavedNodes",
+          "interleavedGraph"
+        ],
+        "sha256": "f3fee5e961f4b27d41a7b98d398614044596bcc06ea17f1bf4010a7e878063df"
+      },
+      "packed_artifact": {
+        "definitions": [
+          "interleavedRegs",
+          "interleavedOrder",
+          "interleavedInstrs",
+          "interleavedOutputs",
+          "interleavedOutRegs"
+        ],
+        "sha256": "87b0e94f7633aa45cbb58b1b6f137effca75e6cbea374864d8835a125155d996"
+      },
+      "claim": {
+        "name": "NobleFoundation.PackedScheduleCorpus.interleaved_validated",
+        "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_validated : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutputs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = true",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "semantics": {
+        "name": "NobleFoundation.PackedScheduleCorpus.interleaved_sound",
+        "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_sound : ∀ (inputs : ℕ → BitVec 64), NobleFoundation.PackedSchedule.runOutputs inputs NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = NobleFoundation.PackedSchedule.referenceOutputs NobleFoundation.PackedScheduleCorpus.interleavedGraph inputs NobleFoundation.PackedScheduleCorpus.interleavedOutputs",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "well_formed": {
+        "name": "NobleFoundation.PackedScheduleCorpus.interleaved_wellFormed",
+        "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_wellFormed : NobleFoundation.PackedSchedule.WellFormed NobleFoundation.PackedScheduleCorpus.interleavedGraph",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "refused_mutations": [
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_wrong_operation_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_wrong_operation_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setInput 1 1, NobleFoundation.PackedSchedule.Instr.setConst 2 18446744073709551613, NobleFoundation.PackedSchedule.Instr.sub 3 0 1, NobleFoundation.PackedSchedule.Instr.sub 4 1 0, NobleFoundation.PackedSchedule.Instr.mul 5 3 2, NobleFoundation.PackedSchedule.Instr.mul 6 4 2, NobleFoundation.PackedSchedule.Instr.eq 7 5 6] NobleFoundation.PackedScheduleCorpus.interleavedOutputs [7, 3] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_operands_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_operands_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setInput 1 1, NobleFoundation.PackedSchedule.Instr.setConst 2 18446744073709551613, NobleFoundation.PackedSchedule.Instr.add 3 0 1, NobleFoundation.PackedSchedule.Instr.sub 4 0 1, NobleFoundation.PackedSchedule.Instr.mul 5 3 2, NobleFoundation.PackedSchedule.Instr.mul 6 4 2, NobleFoundation.PackedSchedule.Instr.eq 7 5 6] NobleFoundation.PackedScheduleCorpus.interleavedOutputs [7, 3] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_reordered_within_layer_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_reordered_within_layer_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setInput 1 1, NobleFoundation.PackedSchedule.Instr.setConst 2 18446744073709551613, NobleFoundation.PackedSchedule.Instr.sub 4 1 0, NobleFoundation.PackedSchedule.Instr.add 3 0 1, NobleFoundation.PackedSchedule.Instr.mul 5 3 2, NobleFoundation.PackedSchedule.Instr.mul 6 4 2, NobleFoundation.PackedSchedule.Instr.eq 7 5 6] NobleFoundation.PackedScheduleCorpus.interleavedOutputs [7, 3] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_dropped_instruction_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_dropped_instruction_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setInput 1 1, NobleFoundation.PackedSchedule.Instr.setConst 2 18446744073709551613, NobleFoundation.PackedSchedule.Instr.add 3 0 1, NobleFoundation.PackedSchedule.Instr.sub 4 1 0, NobleFoundation.PackedSchedule.Instr.mul 5 3 2, NobleFoundation.PackedSchedule.Instr.mul 6 4 2] NobleFoundation.PackedScheduleCorpus.interleavedOutputs [7, 3] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_outputs_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_swapped_outputs_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.interleavedGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.interleavedRegs) NobleFoundation.PackedScheduleCorpus.interleavedOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setInput 1 1, NobleFoundation.PackedSchedule.Instr.setConst 2 18446744073709551613, NobleFoundation.PackedSchedule.Instr.add 3 0 1, NobleFoundation.PackedSchedule.Instr.sub 4 1 0, NobleFoundation.PackedSchedule.Instr.mul 5 3 2, NobleFoundation.PackedSchedule.Instr.mul 6 4 2, NobleFoundation.PackedSchedule.Instr.eq 7 5 6] NobleFoundation.PackedScheduleCorpus.interleavedOutputs [3, 7] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        }
+      ],
+      "agreeing_executions": [
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_0_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_0_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [3, 8]) NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.i64 11)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_1_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_1_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [0, 0]) NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean true), some (NobleFoundation.PackedSchedule.Val.i64 0)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_2_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_2_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [18446744073709551615, 1]) NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.i64 0)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_3_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_3_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [9223372036854775807, 9223372036854775812]) NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.i64 3)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_4_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.interleaved_execution_4_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [9223372036854775808, 18446744073709551615]) NobleFoundation.PackedScheduleCorpus.interleavedInstrs NobleFoundation.PackedScheduleCorpus.interleavedOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean true), some (NobleFoundation.PackedSchedule.Val.i64 9223372036854775807)]",
+          "axioms": [
+            "propext"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lateInput",
+      "doc": "an input created after an addition it does not feed, moved ahead of it in packed order, and a repeated output",
+      "graph": {
+        "definitions": [
+          "lateInputNodes",
+          "lateInputGraph"
+        ],
+        "sha256": "27ab6818e4322f5b14b375ad1882376693c4694021726ee9a8842d481fe72d6f"
+      },
+      "packed_artifact": {
+        "definitions": [
+          "lateInputRegs",
+          "lateInputOrder",
+          "lateInputInstrs",
+          "lateInputOutputs",
+          "lateInputOutRegs"
+        ],
+        "sha256": "339ac3de14db01e3f62130702da527e89aeb559e04e30fde9f2653ff6e0366ef"
+      },
+      "claim": {
+        "name": "NobleFoundation.PackedScheduleCorpus.lateInput_validated",
+        "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_validated : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.lateInputGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.lateInputRegs) NobleFoundation.PackedScheduleCorpus.lateInputOrder NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutputs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = true",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "semantics": {
+        "name": "NobleFoundation.PackedScheduleCorpus.lateInput_sound",
+        "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_sound : ∀ (inputs : ℕ → BitVec 64), NobleFoundation.PackedSchedule.runOutputs inputs NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = NobleFoundation.PackedSchedule.referenceOutputs NobleFoundation.PackedScheduleCorpus.lateInputGraph inputs NobleFoundation.PackedScheduleCorpus.lateInputOutputs",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "well_formed": {
+        "name": "NobleFoundation.PackedScheduleCorpus.lateInput_wellFormed",
+        "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_wellFormed : NobleFoundation.PackedSchedule.WellFormed NobleFoundation.PackedScheduleCorpus.lateInputGraph",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "refused_mutations": [
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_wrong_operation_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_wrong_operation_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.lateInputGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.lateInputRegs) NobleFoundation.PackedScheduleCorpus.lateInputOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setConst 1 5, NobleFoundation.PackedSchedule.Instr.setInput 2 1, NobleFoundation.PackedSchedule.Instr.sub 3 0 1, NobleFoundation.PackedSchedule.Instr.eq 4 3 2] NobleFoundation.PackedScheduleCorpus.lateInputOutputs [4, 4] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_dropped_instruction_refused",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_dropped_instruction_refused : NobleFoundation.PackedSchedule.validate NobleFoundation.PackedScheduleCorpus.lateInputGraph (NobleFoundation.PackedScheduleCorpus.regOfList NobleFoundation.PackedScheduleCorpus.lateInputRegs) NobleFoundation.PackedScheduleCorpus.lateInputOrder [NobleFoundation.PackedSchedule.Instr.setInput 0 0, NobleFoundation.PackedSchedule.Instr.setConst 1 5, NobleFoundation.PackedSchedule.Instr.setInput 2 1, NobleFoundation.PackedSchedule.Instr.add 3 0 1] NobleFoundation.PackedScheduleCorpus.lateInputOutputs [4, 4] = false",
+          "axioms": [
+            "propext",
+            "Quot.sound"
+          ]
+        }
+      ],
+      "agreeing_executions": [
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_0_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_0_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [3, 8]) NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean true), some (NobleFoundation.PackedSchedule.Val.boolean true)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_1_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_1_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [0, 0]) NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.boolean false)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_2_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_2_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [18446744073709551615, 1]) NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.boolean false)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_3_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_3_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [9223372036854775807, 9223372036854775812]) NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean true), some (NobleFoundation.PackedSchedule.Val.boolean true)]",
+          "axioms": [
+            "propext"
+          ]
+        },
+        {
+          "name": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_4_agrees",
+          "statement": "NobleFoundation.PackedScheduleCorpus.lateInput_execution_4_agrees : NobleFoundation.PackedSchedule.runOutputs (NobleFoundation.PackedScheduleCorpus.inputsOf [9223372036854775808, 18446744073709551615]) NobleFoundation.PackedScheduleCorpus.lateInputInstrs NobleFoundation.PackedScheduleCorpus.lateInputOutRegs = [some (NobleFoundation.PackedSchedule.Val.boolean false), some (NobleFoundation.PackedSchedule.Val.boolean false)]",
+          "axioms": [
+            "propext"
+          ]
+        }
+      ]
+    }
+  ],
+  "revisions": {
+    "exporter": {
+      "files_sha256": {
+        "crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs": "af3a11232f63777b4d16e017623b4958948a10e1087cfceeb6e0b355b4cf88fc",
+        "crates/noble-ngraph/tests/schedule_lean_dir/emit.rs": "d988e9e3dfda1f49d1490acb03c201c12b96413ddbf35f6286828c6262b9cd7e",
+        "crates/noble-ngraph/tests/schedule_correspondence.rs": "cdd7799b3fe8c54a0b97cb9f3f20866edb3854c554aaef34c037b521d5ac4c02"
+      },
+      "generated_sha256": "6e05335d7552b5e911487baa9c86c139828c26d4dd2fcd4c1b7fa16a7a0bfd05"
+    },
+    "checker": {
+      "model_sha256": {
+        "proofs/foundation/NobleFoundation/PackedSchedule.lean": "0e1db688aeec829d207fc640f06ece9cdf47dac4d2d98e1f0ea329c187de2757",
+        "proofs/foundation/NobleFoundation/FirstProjection.lean": "17073143a8a107f30b8e428f960336c78a974420e26edec80f8fdbe214e85b9f"
+      },
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c"
+    },
+    "interpreter": {
+      "packed_machine": {
+        "compiler_revision": "ngraph-layered/0",
+        "layout_revision": "ngraph-layout/0",
+        "files_sha256": {
+          "crates/noble-ngraph/src/compiled.rs": "bbd3ee0ddb95783e7d549b137a3ebc17b02806265e0b13aab60120a2cc99a31e",
+          "crates/noble-ngraph/src/schedule.rs": "4332dc8f2655c4ea37c2f8c143a3be27be970d8005447824ad49a1524d6cdf77",
+          "crates/noble-ngraph/src/layout.rs": "62058025d4bc266e0c0b82e9c59e4111c4e8421299d63cdc8d2177974ebc383d"
+        }
+      },
+      "reference": {
+        "files_sha256": {
+          "crates/noble-ngraph/src/eval.rs": "4641b787d61a61e49d5c703a50f6f295713d2d428776f4f8c9559feb2b2865f4",
+          "crates/noble-ngraph/src/sem.rs": "c8deb1b337f989e3561d68020928496c37abc71fd3bf0b995298050f457ef21c",
+          "crates/noble-ngraph/src/check.rs": "29b5a657ea6feb970e7892c32eb168a804819d47fe6187aef4557346496a7c19"
+        }
+      }
+    }
+  },
+  "premises": [
+    "The exporter is untrusted: it claims which node each instruction computes, and validate refuses a wrong claim.",
+    "The preload is trusted: the packed machine loads the slot and constant tables into their registers before the first layer, written as setInput/setConst at their packed positions.",
+    "Reading checked noble-ngraph nodes as model nodes is trusted.",
+    "Each execution row is the Rust packed machine's output at a boundary input, checked against the Rust reference interpreter before it is written; the kernel evaluates run to the same outputs."
+  ],
+  "open_edges": [
+    "No theorem relates the Rust packed executor to run: per-artifact validation does not prove the executor runs every stream as run does, and the kernel extraction that could carry it predates these sources (#97).",
+    "No decoder: an artifact enters Lean as generated text, not as decoded bytes, so no byte-level layout or stream format is bound.",
+    "Guards and failure-suffix ordering are outside the validated slice.",
+    "Validation is per artifact; nothing is claimed about the scheduler on other graphs, the host or the engine."
+  ]
+}

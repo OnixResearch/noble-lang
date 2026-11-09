@@ -703,6 +703,10 @@ node verification/ngraph/schedule-receipt.mjs \
   --foundation-receipt verification/foundation/receipts/<dir> --output NEW_EXTERNAL_FILE
 ```
 
+The retained receipt is [`schedule-receipt-29fc1e17.json`](schedule-receipt-29fc1e17.json), from the clean
+commit `29fc1e17`. It covers the two artifacts (`interleaved`, `lateInput`) and all 23 corpus theorems,
+taken from the foundation receipt of `a41435fd`. Both claims report only `propext` and `Quot.sound`.
+
 # CPU batch continuation decision (2026-11-01, issue #41)
 
 [`batch-continuation-criteria.md`](batch-continuation-criteria.md) froze the continuation rule before
