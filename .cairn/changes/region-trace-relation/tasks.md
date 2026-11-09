@@ -95,6 +95,9 @@
   forged retirement identity stays refused. The fixtures are now generated from
   `verification/effect-protocol/execution-9b1fe313.json`.
 
+  The receipt is now `verification/region-trace/receipt.json` from the clean commit `109ac318`, with 116
+  theorems.
+
   The task stays open for the host-refusal trace.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
   Model-level controls done: substituted identity, unexplained read commit, second release, a guest

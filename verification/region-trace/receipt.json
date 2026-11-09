@@ -1,8 +1,8 @@
 {
   "schema": "noble-region-trace-proof/v1",
   "result": "passed",
-  "source_commit": "6b4301b12e08632e1268861f3c7887cb00be1ef6",
-  "source_tree": "d48e4ae5e89f3b3f1e14f6b74cf3507cca6f92ef",
+  "source_commit": "109ac31888bc40643c2871abf07d4fb56d8c1988",
+  "source_tree": "02f9d7ba3ff46c6f290da694e12bd6df45add6ab",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
@@ -11,15 +11,15 @@
       "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
       "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
       "sources_sha256": {
-        "proofs/m5/RegionTrace.lean": "d07d4aab52a396fd44455facaf493eb14c98dfa00e4cab61eed4b029a31e79c6",
-        "proofs/m5/region-trace-inventory.json": "16f665b74fab9f5600dbf3e5833a01a51e2006e1e5335ccb8cb110e4d76f9f21",
-        "proofs/m5/RegionTraceRuntime.lean": "dc898b702f74394dfaa482c224caf5e3a1d7ab164d39ac35d87e0e30e7e24a69",
-        "proofs/m5/region-trace-runtime-inventory.json": "17e7f00170276c207ffddf9d12ab4f1a160ee1b4bd9cf590de28dc5b8c4effe5"
+        "proofs/m5/RegionTrace.lean": "a2d67f558e37bc45b9f25a0111532725dc4331990dde7f975ee98948d23c339e",
+        "proofs/m5/region-trace-inventory.json": "685e8a0467f9515a50169e80da31883ea5034d3073c5cda4a2e0c59567f8840e",
+        "proofs/m5/RegionTraceRuntime.lean": "f12226720f5e24d5f5c9840c774c0bc6d64a4038117956e8a1b7d1da4c88efe8",
+        "proofs/m5/region-trace-runtime-inventory.json": "cc4a26cc8dc4494adf9ef653d1eeaa4315401416506b57a3a5c30799f8998c5e"
       }
     },
     "observations": {
-      "receipt": "verification/effect-protocol/execution-3ef3f43a.json",
-      "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9"
+      "receipt": "verification/effect-protocol/execution-9b1fe313.json",
+      "receipt_sha256": "b38f9bcc3013137fa528578d503089c8b9c012583df9cbbbb1d62cdcd065e5d8"
     },
     "component": null,
     "helper": null,
@@ -27,26 +27,26 @@
     "absent_bindings_reason": "This pilot proves a relation between two handwritten alphabets. No component, lowering helper or engine instance is a subject of these theorems, so binding one would imply a correspondence this package does not establish. WIT-TRACE-06 stays open until the correspondence route has one."
   },
   "claims": {
-    "model_theorems": 106,
+    "model_theorems": 116,
     "implementation_theorems": 0,
     "runtime_fixtures": {
       "related": 18,
-      "model_gaps": 2
+      "related_under_registration": 2
     },
     "correspondence": "none",
     "liveness": "none",
     "cancellation": "unmodelled: the host control exists, but the alphabet has no cancellation event"
   },
   "sources_sha256": {
-    "proofs/m5/RegionTrace.lean": "d07d4aab52a396fd44455facaf493eb14c98dfa00e4cab61eed4b029a31e79c6",
-    "proofs/m5/region-trace-inventory.json": "16f665b74fab9f5600dbf3e5833a01a51e2006e1e5335ccb8cb110e4d76f9f21",
-    "proofs/m5/RegionTraceRuntime.lean": "dc898b702f74394dfaa482c224caf5e3a1d7ab164d39ac35d87e0e30e7e24a69",
-    "proofs/m5/region-trace-runtime-inventory.json": "17e7f00170276c207ffddf9d12ab4f1a160ee1b4bd9cf590de28dc5b8c4effe5",
-    "verification/region-trace/check.mjs": "1f8e7a4117047f902dfc513fbf4bcc4d4181b4c07c406718a3d3af15db86f818",
-    "verification/region-trace/runtime-fixtures.mjs": "54ffb868d14a28a7b16b5a8b5beb864765527541d4f738adef3a8d1d8ded7443",
-    "verification/effect-protocol/execution-3ef3f43a.json": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9"
+    "proofs/m5/RegionTrace.lean": "a2d67f558e37bc45b9f25a0111532725dc4331990dde7f975ee98948d23c339e",
+    "proofs/m5/region-trace-inventory.json": "685e8a0467f9515a50169e80da31883ea5034d3073c5cda4a2e0c59567f8840e",
+    "proofs/m5/RegionTraceRuntime.lean": "f12226720f5e24d5f5c9840c774c0bc6d64a4038117956e8a1b7d1da4c88efe8",
+    "proofs/m5/region-trace-runtime-inventory.json": "cc4a26cc8dc4494adf9ef653d1eeaa4315401416506b57a3a5c30799f8998c5e",
+    "verification/region-trace/check.mjs": "7924e4f676d332ec8da0e11c6d87736e43632384049c7debd9c3df892c6ace24",
+    "verification/region-trace/runtime-fixtures.mjs": "31f6386531f85e7de87ad528b0e33e5c897324b1d11e4d00dc99c949af122249",
+    "verification/effect-protocol/execution-9b1fe313.json": "b38f9bcc3013137fa528578d503089c8b9c012583df9cbbbb1d62cdcd065e5d8"
   },
-  "theorem_count": 106,
+  "theorem_count": 116,
   "theorems": [
     {
       "name": "RegionTrace.erase_preserves_projection",
@@ -1079,6 +1079,101 @@
       ]
     },
     {
+      "name": "RegionTrace.authorisedFrom_of_identitiesDecided",
+      "role": "#50: every commit a decision authorises stays authorised under any registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.authorisedFrom_of_identitiesDecided : ∀ (registered : List Nat) (steps : List RegionTrace.AbiStep), RegionTrace.identitiesDecided steps = true → RegionTrace.authorisedFrom registered steps = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_of_related",
+      "role": "#50: a registration premise only widens the relation; every trace related relates under any registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.relatedFrom_of_related : ∀ (registered : List Nat) (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.relatedFrom registered source target = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_authorises_an_early_retirement",
+      "role": "#50: a host retirement before any guest request relates under the registration the host reports, and is refused without it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_authorises_an_early_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 1]) = true ∧ RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 1]) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_rejects_a_forged_retirement",
+      "role": "#50 control: a retirement of an identity nobody registered or decided is refused under the registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.relatedFrom_rejects_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_read_commit",
+      "role": "#50 control: a registration does not authorise a read commit whose read was decided for another identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_does_not_authorise_a_read_commit : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 1] = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_guest_release",
+      "role": "#50 control: a registration does not authorise a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_does_not_authorise_a_guest_release : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 1] [RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 1] = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.runtime_case01_read_1_2_relates",
       "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-01 read-1-2 trace (exit normal) relates to its projection",
       "allowed_standard_axioms": [
@@ -1336,7 +1431,7 @@
     },
     {
       "name": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision",
-      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused because registration is not observed",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1344,6 +1439,38 @@
       ],
       "status": "proved",
       "statement": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision : RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case05_trap_before_use) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-05 trap-before-use trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case05_trap_before_use_relates_under_its_registration : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case05_trap_before_use) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-05 trap-before-use host did not register is refused under its registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case05_trap_before_use_refuses_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
       "axioms": [
         "propext",
         "Classical.choice",
@@ -1384,7 +1511,7 @@
     },
     {
       "name": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision",
-      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused because registration is not observed",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -1392,6 +1519,38 @@
       ],
       "status": "proved",
       "statement": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision : RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case06_fuel_73) = false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-06 fuel-73 trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_73_relates_under_its_registration : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case06_fuel_73) = true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-06 fuel-73 host did not register is refused under its registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_73_refuses_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
       "axioms": [
         "propext",
         "Classical.choice",
@@ -1735,7 +1894,7 @@
         "env",
         "lean",
         "--json",
-        "/var/tmp/noble-lean435/rtrace-clean/Audit.lean"
+        "/var/tmp/noble-lean435/rtrace-50c/Audit.lean"
       ],
       "exit": 0
     },
@@ -1774,6 +1933,6 @@
     "for the emitted component own steps; the observed-trace lowering maps an observation, not a",
     "correspondence. The runtime fixtures are finite tests of the traces in the retained effect-protocol",
     "receipt: each recorded observation lowers to a trace the relation accepts or, for a host retirement",
-    "before any request, refuses for want of a registration decision."
+    "before any request, accepts under the registration the host report names (relatedFrom)."
   ]
 }
