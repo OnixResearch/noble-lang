@@ -8,3 +8,4 @@ import NobleM2.Check
 import NobleM2.Soundness
 import NobleM2.Termination
 import NobleM2.CheckSoundness
+import NobleM2.SignedSelf

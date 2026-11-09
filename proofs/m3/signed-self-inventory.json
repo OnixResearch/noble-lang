@@ -1,0 +1,66 @@
+{
+  "schema": "noble-signed-self-inventory/v1",
+  "scope": "K-CHECK-02 (#99) reference model: the signed check over the M2 reference model, its soundness for SignedDerives, and fixtures. A model theorem: no correspondence with the extracted kernel, whose retained extraction predates SignedSelf.",
+  "theorems": [
+    {
+      "name": "NobleM2.SignedSelf.sitesAt_iff",
+      "role": "the Bool self-site check holds exactly when every marked site invokes the owner at the owner witness"
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_soundness",
+      "role": "K-CHECK-02 soundness: signed acceptance implies the reference checker's well-formedness and SignedDerives: the body derives the owner's declared signature at the owner witness, with every self site at that witness"
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_refuses_polymorphic_recursion",
+      "role": "K-CHECK-02: a self site at any witness other than the owner witness is refused"
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_refuses_a_foreign_self_site",
+      "role": "K-CHECK-02: a self site invoking another definition (mutual recursion) is refused"
+    },
+    {
+      "name": "NobleM2.SignedSelf.checkSigned_requires_a_named_owner",
+      "role": "K-CHECK-02: an owner that is not a named definition, so has no declared signature, is refused"
+    },
+    {
+      "name": "NobleM2.SignedSelf.acceptsWith_spec",
+      "role": "fixture classifier: an acceptsWith verdict is an acceptance with that interface"
+    },
+    {
+      "name": "NobleM2.SignedSelf.refusesNodeForm_spec",
+      "role": "fixture classifier: a refusesNodeForm verdict is the unsupported nodeForm refusal"
+    },
+    {
+      "name": "NobleM2.SignedSelf.forever_accepted",
+      "role": "fixture: the signed check accepts def forever [ forever ] at its declared [] -- [] ! pure",
+      "evaluation_closed": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.forever_signed_derives",
+      "role": "fixture: forever satisfies SignedDerives, by soundness from its acceptance",
+      "evaluation_closed": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.polymorphic_ordinary_check_accepts",
+      "role": "fixture: the ordinary reference checker types a self call that instantiates the signature differently",
+      "evaluation_closed": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.polymorphic_signed_refused",
+      "role": "fixture: the signed check refuses that polymorphic self call (kernel-decided)"
+    },
+    {
+      "name": "NobleM2.SignedSelf.monomorphic_accepted",
+      "role": "fixture: the same body with its self site at the owner witness is accepted",
+      "evaluation_closed": true
+    },
+    {
+      "name": "NobleM2.SignedSelf.unsigned_owner_refused",
+      "role": "fixture: a bootstrap word cannot own a self call (kernel-decided)"
+    },
+    {
+      "name": "NobleM2.SignedSelf.foreign_self_site_refused",
+      "role": "fixture: a self site invoking a different named definition is refused (kernel-decided)"
+    }
+  ]
+}

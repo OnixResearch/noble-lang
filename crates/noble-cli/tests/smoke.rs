@@ -618,6 +618,76 @@ fn certified_signed_alias_rebind_keeps_captured_old_program_and_current_new_owne
     Ok(())
 }
 
+// r[verify K-CHECK-02]
+// r[verify K-ERROR-03]
+/// #99 through the production session. In the opt-in signed profile, a recursive definition
+/// checked at its declared signature runs. A missing signature, a polymorphic self call and mutual
+/// recursion are refused before anything is published. A runaway recursion ends as a runtime
+/// quota, never as an ordinary result: in tail position on the execution-work quota, otherwise on
+/// the continuation-bytes quota. The ordinary declared profile refuses the same signed recursion.
+#[test]
+fn signed_self_recursion_runs_at_its_signature_and_a_runaway_ends_in_a_quota(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let signed = [
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+    ];
+    let countdown: &[u8] = b"module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]";
+    let sources: &[&[u8]] = &[
+        countdown,
+        b"5 count@1.down",
+        b"drop",
+        b"module no_signature@1 [ def recur [ recur ] ]",
+        b"module polymorphic@1 [ signature recur forall<S:stack> [ S -- S ! pure ] def recur [ 1 recur ] ]",
+        b"module mutual@1 [ signature even forall<S:stack> [ S -- S ! pure ] signature odd forall<S:stack> [ S -- S ! pure ] def even [ odd ] def odd [ even ] ]",
+        b"module spin@1 [ signature forever forall<S:stack> [ S -- S ! pure ] export forever def forever [ forever ] ]",
+        b"spin@1.forever",
+    ];
+    let (status, reports) = framed_declared_reports(&signed, sources)?;
+    assert_eq!(
+        status.code(),
+        Some(5),
+        "the runaway ends the session as runtime exhaustion"
+    );
+    let observed: Vec<(&str, &str)> = reports
+        .iter()
+        .map(|report| {
+            let stage = report["stage"].as_str().unwrap_or("");
+            (stage, report["outcome"].as_str().unwrap_or(""))
+        })
+        .collect();
+    assert_eq!(
+        observed,
+        [
+            ("link", "linked"),
+            ("wasm", "normal"),
+            ("wasm", "normal"),
+            ("resolve", "unbound-word"),
+            ("check", "type-reject"),
+            ("resolve", "unbound-word"),
+            ("link", "linked"),
+            ("wasm", "runtime-exhausted"),
+        ]
+    );
+    assert_eq!(reports[0]["profile"], "Signed-Declared-Text-v1");
+    assert_eq!(reports[1]["stack"][0]["value"], "0");
+    assert_eq!(reports[7]["quota_reason"], "execution work");
+    let deep: &[&[u8]] = &[
+        b"module deep@1 [ signature grow forall<S:stack> [ S -- S ! pure ] export grow def grow [ grow 1 drop ] ]",
+        b"deep@1.grow",
+    ];
+    let (status, reports) = framed_declared_reports(&signed, deep)?;
+    assert_eq!(status.code(), Some(5));
+    assert_eq!(reports[1]["outcome"], "runtime-exhausted");
+    assert_eq!(reports[1]["quota_reason"], "continuation bytes");
+    let (_, reports) = framed_declared_reports(&[], &[countdown])?;
+    assert_eq!(reports[0]["profile"], "Declared-Text-v1");
+    assert_eq!(reports[0]["stage"], "resolve");
+    assert_eq!(reports[0]["outcome"], "unbound-word");
+    Ok(())
+}
+
 #[test]
 fn retained_source_flag_rejects_nonopted_and_out_of_range_settings(
 ) -> Result<(), Box<dyn std::error::Error>> {

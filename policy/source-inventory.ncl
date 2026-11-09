@@ -367,6 +367,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15892 production paths = 8166 body/open + 4487 generated + 3239 structural;
 #   7534 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed issue #99 signed-self recursion: smoke test of K-CHECK-02 scenarios through the session from a complete 110-unit selected collection:
+#   IR 5d96dd3550f5dd6183364a89ce04b0a5c28bed1cce96af0f699d1437fc74cbd4; coverage 1bc57e875046ddc1a9cd78f3ccf225440eba52104438e3d196b400aa463decd9;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15892 production paths = 8166 body/open + 4487 generated + 3239 structural;
+#   7537 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -19957,7 +19962,9 @@ let
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:19745:21519",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:2050:4152",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:21529:23477",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:23487:24388",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:24020:26622",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:25268:25276",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:26632:27533",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:4162:6475",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:626:1226",
     "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6602:7082",
@@ -23003,6 +23010,7 @@ let
     "smoke::shell_rejects_invalid_input_without_transition_output",
     "smoke::shell_rejects_non_utf8_budget",
     "smoke::shell_rejects_non_utf8_budget::INVALID_UTF8_BYTE",
+    "smoke::signed_self_recursion_runs_at_its_signature_and_a_runaway_ends_in_a_quota",
     "smoke::std",
     "smoke::test",
     "smoke::trace_records",
