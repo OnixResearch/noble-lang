@@ -845,7 +845,7 @@
     },
     {
       "file": ".cairn/changes/live-reference-lifetimes/tasks.md",
-      "sha256": "e56e2b8a97fb289bb421f2f09586eaa22d5d715355f3fcbf3bb315a3cc90f6b8"
+      "sha256": "9b0740eb43255ffbbcab057688944729caac735f6dc56ad4193df0c87b9cf906"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
@@ -1841,7 +1841,7 @@
     },
     {
       "file": "verification/package-retention/README.md",
-      "sha256": "47d3eb5fa7d48206f079526a59f443a5cdd8ae4a99f9a586fd29e6a2355129ce"
+      "sha256": "2cc21b23e0c293fcf16430421a2ec1aa7c3873746c645fbbb18f770b7fb6bf8f"
     },
     {
       "file": "verification/principality/README.md",

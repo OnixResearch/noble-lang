@@ -45,3 +45,22 @@ The lane also runs as `cargo test -p noble-cli --test live_slot_direct_quote`, w
 it as a third test so the compiler architecture keeps its reviewed unit count.
 [`receipt.mjs`](receipt.mjs) runs it against a CLI built from a clean commit and against one built
 from the commit before the fix.
+
+## Evidence
+
+The retained run is [`receipt.json`](receipt.json), with the lane output of each CLI in
+[`fixed.stdout`](fixed.stdout) and [`prior.stdout`](prior.stdout); see its "source" field for the
+exact commit.
+
+| CLI | Observed |
+|---|---|
+| fixed, built from that clean commit | The lane passes. At quota 2, `20 O run` yields 21 after v2 is published, and M1's span retires when O is released. At quota 1, v2's publication is `retention-budget-refused` while O lives, and v2 is published, retiring M1's span, after O is released. |
+| prior, built from the commit before the fix | The quota-2 session passes, because OWN-CASE-06 already keeps M1 alive. The quota-1 session fails: v2 is `published` while O lives, so O never held v1's charge. |
+
+## Non-claims
+
+The lane covers one slot, one module, one dispatched saved static Program and one replacement.
+The package is approximated by the modules whose code the saved graph enters; table and capture
+members count only as far as that graph walk observes them. The prior binary is bound by its hash
+and its declared commit, which the receipt does not rebuild. Nothing here promotes a conformance
+case.

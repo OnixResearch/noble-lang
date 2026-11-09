@@ -1,0 +1,246 @@
+{
+  "schema": "noble-package-retention-receipt/v1",
+  "case": "LREF-CASE-03",
+  "claim": "selected host evidence for one dispatched saved result; not a proof and not a conformance promotion",
+  "source": {
+    "commit": "9a922ab9b02d11680d644f9c6bf42a24dc9a9ab8",
+    "tree": "b7b7059a0ddb9136fdf6fc192d57f917d959bc0f",
+    "clean": true,
+    "bound": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_package_retention.mjs",
+        "sha256": "3636e510e3ab351b45f0177720af6f71dced868cbbf80e497319fd8d2f683978"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+        "sha256": "8c203b3a8d1c69589e7eb246fd787473dddc1285c2ce97337c5ab74b1239b137"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "8f55ed81c5570a98789c9756fed345c707c19b38b60cb208cc9053cecf904046"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "e4a325447edcab73d8bc10592232c8a3825a52adb72283685fed234642f271ef"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "5afbf00919cdf4152d1dbb1ea148d19edb800d89e7a73743cf6219eaf647f99c"
+      }
+    ]
+  },
+  "fixed": {
+    "what": "the lane against a CLI built from the source above",
+    "binary_sha256": "eff09824816201869eb4bfcc7d9b7f7d2858721d5ccb08aae5bcbcbe18f1ac79",
+    "status": 0,
+    "observations": {
+      "replacement": [
+        {
+          "variant": "replacement",
+          "observation": "publication-while-owned",
+          "outcome": "published",
+          "stack": null,
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "replacement",
+          "observation": "run-after-replacement",
+          "outcome": "executed",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "replacement",
+          "observation": "release",
+          "outcome": "program-released",
+          "stack": null,
+          "epoch": null,
+          "diagnostic": null,
+          "retire_code_spans": [
+            {
+              "generation": 1,
+              "length": 5,
+              "start": 4
+            }
+          ]
+        },
+        {
+          "variant": "replacement",
+          "observation": "run-after-release",
+          "outcome": "refused",
+          "stack": null,
+          "epoch": null,
+          "diagnostic": "root Program differs from checked ordered type",
+          "retire_code_spans": null
+        }
+      ],
+      "charge": [
+        {
+          "variant": "charge",
+          "observation": "publication-while-owned",
+          "outcome": "retention-budget-refused",
+          "stack": null,
+          "epoch": "1",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "charge",
+          "observation": "run-while-owned",
+          "outcome": "executed",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "epoch": "1",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "charge",
+          "observation": "release",
+          "outcome": "program-released",
+          "stack": null,
+          "epoch": null,
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "charge",
+          "observation": "publication-after-release",
+          "outcome": "published",
+          "stack": null,
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": [
+            {
+              "generation": 1,
+              "length": 5,
+              "start": 4
+            }
+          ]
+        }
+      ]
+    },
+    "summary": {
+      "case": "LREF-CASE-03",
+      "replacement": {
+        "after_replacement": [
+          {
+            "kind": 1,
+            "value": "21"
+          }
+        ],
+        "retired_span": {
+          "generation": 1,
+          "length": 5,
+          "start": 4
+        },
+        "selected_binary_sha256": "eff09824816201869eb4bfcc7d9b7f7d2858721d5ccb08aae5bcbcbe18f1ac79"
+      },
+      "charge": {
+        "refused_while_owned": "retention-budget-refused",
+        "retired_span": {
+          "generation": 1,
+          "length": 5,
+          "start": 4
+        },
+        "selected_binary_sha256": "eff09824816201869eb4bfcc7d9b7f7d2858721d5ccb08aae5bcbcbe18f1ac79"
+      }
+    }
+  },
+  "prior": {
+    "what": "the same lane against a CLI built from the commit before the fix",
+    "declared_commit": "eb2d0ba0e8e757cf2f1055d683657409fb72b315",
+    "binary_sha256": "531a9d8d2a13e30309a74fc1d77a6bafa4b08f5d2774fff20c91cb63ce03ec3c",
+    "status": 1,
+    "observations": {
+      "replacement": [
+        {
+          "variant": "replacement",
+          "observation": "publication-while-owned",
+          "outcome": "published",
+          "stack": null,
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "replacement",
+          "observation": "run-after-replacement",
+          "outcome": "executed",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": []
+        },
+        {
+          "variant": "replacement",
+          "observation": "release",
+          "outcome": "program-released",
+          "stack": null,
+          "epoch": null,
+          "diagnostic": null,
+          "retire_code_spans": [
+            {
+              "generation": 1,
+              "length": 5,
+              "start": 4
+            }
+          ]
+        },
+        {
+          "variant": "replacement",
+          "observation": "run-after-release",
+          "outcome": "refused",
+          "stack": null,
+          "epoch": null,
+          "diagnostic": "root Program differs from checked ordered type",
+          "retire_code_spans": null
+        }
+      ],
+      "charge": [
+        {
+          "variant": "charge",
+          "observation": "publication-while-owned",
+          "outcome": "published",
+          "stack": null,
+          "epoch": "2",
+          "diagnostic": null,
+          "retire_code_spans": []
+        }
+      ]
+    },
+    "reproduced": {
+      "variant": "charge",
+      "observation": "publication-while-owned",
+      "outcome": "published",
+      "stack": null,
+      "epoch": "2",
+      "diagnostic": null,
+      "retire_code_spans": []
+    }
+  },
+  "non_claims": [
+    "one slot, one module, one dispatched saved static Program and one replacement; no other package member or retirement route is exercised here",
+    "the package is approximated by the modules whose code the saved graph enters, as the OWN-CASE-06 retention already does; table and capture members are covered only as far as that graph walk observes them",
+    "the prior binary is bound by its hash and the commit it was declared to be built from, which this script does not rebuild",
+    "charging every version of an entered module makes retention admission stricter: a saved result can now refuse a publication the cell-only charge admitted"
+  ]
+}
