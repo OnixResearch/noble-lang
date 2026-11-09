@@ -672,6 +672,37 @@ Still open from the same acceptance item:
 - There is no decoder, so no decoding cost exists to bound.
 - One host and one run bound nothing on other hardware.
 
+### The source-bound receipt (issue #43, item 6)
+
+[`schedule-receipt.mjs`](schedule-receipt.mjs) writes a receipt for the real packed artifacts the
+kernel validates. It reads them from the generated `PackedScheduleCorpus.lean`, which
+`the_lean_file_is_the_real_emission` pins to what `Compiled::new` emits.
+
+For each artifact the receipt binds:
+- **the graph** and **the packed artifact**, by digest of exactly the terms the kernel checked: the
+  node list and graph, then the register map, packed order, instruction stream, outputs and output
+  registers;
+- **the accepted claim** (`*_validated`), the semantic theorem (`*_sound`), well-formedness, the
+  refused mutations and the agreeing executions, with the statements and axioms a clean-source
+  foundation receipt recorded for them.
+
+**Revisions.**
+- The exporter is bound by its generator sources and the generated file.
+- The checker is bound by `PackedSchedule.lean`, `FirstProjection.lean` and the Lean executable.
+- The interpreters are bound by the packed machine's sources with its compiler and layout revisions,
+  and by the reference interpreter's sources.
+
+**Premises and edges.** The receipt states the premises (the untrusted exporter, the trusted preload
+and node reading, and the execution rows checked against the reference interpreter). It also lists
+the edges that stay open: no executor theorem, no decoder, guards and failure-suffix ordering, and
+per-artifact scope only. The foundation receipt must come from an ancestor commit whose corpus and
+checker model are byte-identical to the checkout's.
+
+```sh
+node verification/ngraph/schedule-receipt.mjs \
+  --foundation-receipt verification/foundation/receipts/<dir> --output NEW_EXTERNAL_FILE
+```
+
 # CPU batch continuation decision (2026-11-01, issue #41)
 
 [`batch-continuation-criteria.md`](batch-continuation-criteria.md) froze the continuation rule before
