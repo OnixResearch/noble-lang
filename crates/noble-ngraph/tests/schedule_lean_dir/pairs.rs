@@ -8,124 +8,65 @@
     reason = "Owner: noble-maintainers; this generator writes small fixed graph pairs as Lean text and must stop at anything outside the exported slice, so expect/assert on the fixed pairs, owner-path imports and string building are the readable form."
 )]
 //! Fixed graph pairs for the symbolic-equivalence model `NobleFoundation.SymbolicSolver` (issue #56).
-//! Each pair is built, checked and compiled by `noble-ngraph`. Both graphs run on every candidate
-//! of a declared universe, through the compiled machine and the reference interpreter, which must
-//! agree. The first candidate whose ordered outputs differ is the Rust verdict.
-//! `SymbolicPairCorpus.lean` is generated from these pairs, and there the kernel decides the
-//! model's `firstIndex` on the same checked graphs and universe. Regenerate after a deliberate
-//! change with `cargo test -p noble-ngraph --test schedule_correspondence -- --ignored
+//! Each pair (`fixtures`) is built, checked and compiled by `noble-ngraph`. Both graphs run on
+//! every candidate of a declared universe, through the compiled machine and the reference
+//! interpreter, which must agree. The first candidate whose ordered outputs differ is the Rust
+//! verdict. `SymbolicPairCorpus.lean` is generated from these pairs, and there the kernel decides
+//! the model's `firstIndex` on the same checked graphs and universe. `shrink` shrinks each refuted
+//! pair's reported candidate and generates `SymbolicShrinkCorpus.lean`. Regenerate both after a
+//! deliberate change with `cargo test -p noble-ngraph --test schedule_correspondence -- --ignored
 //! pairs::write_the_lean_file`, then rerun the foundation lane.
+
+#[path = "pairs/fixtures.rs"]
+mod fixtures;
+#[path = "pairs/shrink.rs"]
+mod shrink;
 
 use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
-use noble_ngraph::ir::{Graph, GraphBuilder, NodeId, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::sem::Value;
 
 use super::emit::{hex, node_term};
+use fixtures::{build, Fixture, FIXTURES};
 
 /// The generated file the foundation lane kernel-checks.
 const COMMITTED: &str =
     include_str!("../../../../proofs/foundation/NobleFoundation/SymbolicPairCorpus.lean");
 
-/// One graph-building step; operands name earlier steps.
-#[derive(Clone, Copy)]
-enum Step {
-    Input,
-    Const(i64),
-    Add(usize, usize),
-    Sub(usize, usize),
-    Mul(usize, usize),
-    Eq(usize, usize),
+/// Both graphs of a fixture, freshly built, checked and compiled.
+struct Admitted {
+    left: CheckedGraph,
+    left_compiled: Compiled,
+    right: CheckedGraph,
+    right_compiled: Compiled,
 }
 
-/// A fixed pair: both graphs, their shared ordered output positions, and the declared universe.
-struct Fixture {
-    name: &'static str,
-    doc: &'static str,
-    left: &'static [Step],
-    right: &'static [Step],
-    outputs: &'static [usize],
-    universe: &'static [&'static [i64]],
-}
-
-const TWO_POW_63: i64 = i64::MIN;
-
-const FIXTURES: [Fixture; 6] = [
-    Fixture {
-        name: "sharedInput",
-        doc: "a shared input read three times, `(x + x) + x` against `x · 3`: equivalent",
-        left: &[Step::Input, Step::Add(0, 0), Step::Add(1, 0)],
-        right: &[Step::Input, Step::Const(3), Step::Mul(0, 1)],
-        outputs: &[2],
-        universe: &[&[0], &[1], &[-1], &[i64::MAX], &[i64::MIN]],
-    },
-    Fixture {
-        name: "subtractionOrder",
-        doc: "`x - y` against `y - x`: refuted, first where `x ≠ y`",
-        left: &[Step::Input, Step::Input, Step::Sub(0, 1)],
-        right: &[Step::Input, Step::Input, Step::Sub(1, 0)],
-        outputs: &[2],
-        universe: &[&[0, 0], &[5, 5], &[3, 8], &[i64::MIN, 0]],
-    },
-    Fixture {
-        name: "wrapOnlyEquivalent",
-        doc: "`x · 2^63 · 2` against `x · 0 · 1`: equivalent only because arithmetic wraps at `2^64`",
-        left: &[Step::Input, Step::Const(TWO_POW_63), Step::Mul(0, 1), Step::Const(2), Step::Mul(2, 3)],
-        right: &[Step::Input, Step::Const(0), Step::Mul(0, 1), Step::Const(1), Step::Mul(2, 3)],
-        outputs: &[4],
-        universe: &[&[0], &[1], &[-1], &[i64::MAX], &[i64::MIN]],
-    },
-    Fixture {
-        name: "wrapBoundary",
-        doc: "`x · 2^63` against `x · 0`: agree on even inputs, refuted first at an odd one",
-        left: &[Step::Input, Step::Const(TWO_POW_63), Step::Mul(0, 1)],
-        right: &[Step::Input, Step::Const(0), Step::Mul(0, 1)],
-        outputs: &[2],
-        universe: &[&[0], &[2], &[i64::MIN], &[1]],
-    },
-    Fixture {
-        name: "boolOutput",
-        doc: "`x + 1 = 0` against `x + 0 = -1`, a `Bool` output: equivalent",
-        left: &[Step::Input, Step::Const(1), Step::Add(0, 1), Step::Const(0), Step::Eq(2, 3)],
-        right: &[Step::Input, Step::Const(-1), Step::Const(0), Step::Add(0, 2), Step::Eq(3, 1)],
-        outputs: &[4],
-        universe: &[&[0], &[-1], &[i64::MAX], &[i64::MIN]],
-    },
-    Fixture {
-        name: "repeatedOutputs",
-        doc: "ordered outputs `[x + y, x - y, x + y]` against `[y + x, y - x, y + x]`: the repeated sum agrees, and the difference refutes first where `x ≠ y`",
-        left: &[Step::Input, Step::Input, Step::Add(0, 1), Step::Sub(0, 1)],
-        right: &[Step::Input, Step::Input, Step::Add(1, 0), Step::Sub(1, 0)],
-        outputs: &[2, 3, 2],
-        universe: &[&[4, 4], &[i64::MAX, i64::MAX], &[1, 2]],
-    },
-];
-
-/// The graph a step list builds, with the fixture's ordered outputs.
-fn build(name: &str, steps: &[Step], outputs: &[usize]) -> Graph {
-    let scheme = super::common::IDS;
-    let mut builder = GraphBuilder::new(SubProfile::I64, Subject::authored(&scheme, name));
-    let mut ids: Vec<NodeId> = Vec::with_capacity(steps.len());
-    for step in steps {
-        #[expect(
-            tigerstyle::fragile_exhaustive_enum_match,
-            reason = "Owner: noble-maintainers; each step kind builds exactly one graph node, so a new step kind must say which node it builds."
-        )]
-        let id = match *step {
-            Step::Input => builder.input(ScalarType::I64),
-            Step::Const(value) => builder.i64_const(value),
-            Step::Add(a, b) => builder.op(Op::I64Add(ids[a], ids[b])),
-            Step::Sub(a, b) => builder.op(Op::I64Sub(ids[a], ids[b])),
-            Step::Mul(a, b) => builder.op(Op::I64Mul(ids[a], ids[b])),
-            Step::Eq(a, b) => builder.op(Op::I64Eq(ids[a], ids[b])),
-        };
-        ids.push(id);
+impl Admitted {
+    /// Builds, checks and compiles both graphs of a fixture anew.
+    fn new(fixture: &Fixture) -> Self {
+        let scheme = super::common::IDS;
+        let left = check::check(&scheme, build(fixture.name, fixture.left, fixture.outputs))
+            .expect("left checks");
+        let right = check::check(&scheme, build(fixture.name, fixture.right, fixture.outputs))
+            .expect("right checks");
+        let (left_compiled, right_compiled) = (
+            Compiled::new(&scheme, &left),
+            Compiled::new(&scheme, &right),
+        );
+        Self {
+            left,
+            left_compiled,
+            right,
+            right_compiled,
+        }
     }
-    for &output in outputs {
-        builder.output(ids[output]);
+
+    /// Whether the two graphs' ordered outputs differ at these inputs.
+    fn refutes(&self, inputs: &[i64]) -> bool {
+        outputs_at(&self.left, &self.left_compiled, inputs)
+            != outputs_at(&self.right, &self.right_compiled, inputs)
     }
-    builder.finish()
 }
 
 /// The ordered outputs of one checked graph at one input, through the compiled machine, which
@@ -164,41 +105,38 @@ fn graph_term(checked: &CheckedGraph, outputs: &[usize]) -> String {
     )
 }
 
+/// One witness's exact slot bits as a Lean list.
+fn values_term(inputs: &[i64]) -> String {
+    let bits: Vec<String> = inputs
+        .iter()
+        .map(|value| hex(value.cast_unsigned()))
+        .collect();
+    format!("[{}]", bits.join(", "))
+}
+
 /// One fixture as Lean text, with the verdict the Rust graphs give.
 fn fixture_text(fixture: &Fixture) -> String {
-    let scheme = super::common::IDS;
-    let left = check::check(&scheme, build(fixture.name, fixture.left, fixture.outputs))
-        .expect("left checks");
-    let right = check::check(&scheme, build(fixture.name, fixture.right, fixture.outputs))
-        .expect("right checks");
-    let (left_compiled, right_compiled) = (
-        Compiled::new(&scheme, &left),
-        Compiled::new(&scheme, &right),
-    );
-    let first = fixture.universe.iter().position(|inputs| {
-        outputs_at(&left, &left_compiled, inputs) != outputs_at(&right, &right_compiled, inputs)
-    });
+    let admitted = Admitted::new(fixture);
+    let first = fixture
+        .universe
+        .iter()
+        .position(|inputs| admitted.refutes(inputs));
     let candidates: Vec<String> = fixture
         .universe
         .iter()
-        .map(|inputs| {
-            let bits: Vec<String> = inputs
-                .iter()
-                .map(|value| hex(value.cast_unsigned()))
-                .collect();
-            format!("inputsOf [{}]", bits.join(", "))
-        })
+        .map(|inputs| values_term(inputs))
         .collect();
     let positions: Vec<String> = fixture.outputs.iter().map(usize::to_string).collect();
     let name = fixture.name;
     let mut text = format!(
         "/-! ## `{name}`: {doc} -/\n\n\
          def {name} : Pair :=\n  {{ left := {left},\n    right := {right},\n    outputs := [{positions}] }}\n\n\
-         def {name}Universe : List (Nat → BitVec 64) :=\n  [{candidates}]\n\n\
+         def {name}Values : List (List (BitVec 64)) :=\n  [{candidates}]\n\n\
+         def {name}Universe : List (Nat → BitVec 64) :=\n  {name}Values.map inputsOf\n\n\
          theorem {name}_first : firstIndex {name} {name}Universe = {verdict} := by\n  decide\n",
         doc = fixture.doc,
-        left = graph_term(&left, fixture.outputs),
-        right = graph_term(&right, fixture.outputs),
+        left = graph_term(&admitted.left, fixture.outputs),
+        right = graph_term(&admitted.right, fixture.outputs),
         positions = positions.join(", "),
         candidates = candidates.join(",\n   "),
         verdict = first.map_or_else(|| String::from("none"), |index| format!("some {index}")),
@@ -218,6 +156,7 @@ fn fixture_text(fixture: &Fixture) -> String {
 }
 
 const HEADER: &str = "import NobleFoundation.SymbolicSolver
+import NobleFoundation.SymbolicShrink
 import NobleFoundation.FirstProjection
 
 /-!
@@ -233,15 +172,13 @@ interpreter, which agree. It took the first candidate whose ordered outputs diff
 verdict. Here the kernel decides that the model's `firstIndex` over the same checked graphs and
 universe gives the same verdict. A pair that agrees does so on the declared universe only, and
 nothing beyond it is claimed. Reading checked nodes as model nodes is the one trusted translation.
+The shrink of each refuted pair's reported candidate is in `SymbolicShrinkCorpus`.
 -/
 
 namespace NobleFoundation.SymbolicSolver.Corpus
 
 open NobleFoundation.PackedSchedule NobleFoundation.SymbolicPair NobleFoundation.SymbolicSolver
-
-/-- The inputs a finite list of slot values denotes. -/
-def inputsOf (values : List (BitVec 64)) (slot : Nat) : BitVec 64 :=
-  values.getD slot 0
+open NobleFoundation.SymbolicShrink
 
 ";
 
@@ -265,14 +202,17 @@ fn the_lean_file_is_the_real_verdict() {
 }
 
 #[test]
-#[ignore = "writes proofs/foundation/NobleFoundation/SymbolicPairCorpus.lean; run after a deliberate change"]
+#[ignore = "writes SymbolicPairCorpus.lean and SymbolicShrinkCorpus.lean under proofs/foundation/NobleFoundation; run after a deliberate change"]
 fn write_the_lean_file() {
+    let directory = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../proofs/foundation/NobleFoundation"
+    );
+    std::fs::write(format!("{directory}/SymbolicPairCorpus.lean"), lean_file())
+        .expect("pair corpus written");
     std::fs::write(
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../proofs/foundation/NobleFoundation/SymbolicPairCorpus.lean"
-        ),
-        lean_file(),
+        format!("{directory}/SymbolicShrinkCorpus.lean"),
+        shrink::lean_file(),
     )
-    .expect("generated file written");
+    .expect("shrink corpus written");
 }

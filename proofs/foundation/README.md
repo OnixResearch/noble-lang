@@ -1934,18 +1934,66 @@ verdict (`*_first`).
 | `wrapBoundary` | `x · 2^63` against `x · 0` | refuted at candidate 3, the first odd input after `0`, `2` and `i64::MIN` |
 | `boolOutput` | `x + 1 = 0` against `x + 0 = -1` | agrees, with a `Bool` output |
 | `repeatedOutputs` | `[x + y, x - y, x + y]` against `[y + x, y - x, y + x]` | refuted at candidate 2, where only the difference differs |
+| `negation` | `0 - x` against `x + 0` | refuted at candidate 2, `-1000000007`, after agreeing at `0` and at `i64::MIN`, where `2x` wraps to zero |
 
 An agreeing pair also gets `*_agrees`, from `firstIndex_none_agrees`, on its declared universe
 only. A refuted pair gets `*_witness_refutes` for the reported candidate. Universes include the
 `i64` boundaries. `pairs::the_lean_file_is_the_real_verdict` fails when the checked graphs or the Rust
 verdicts change. Reading checked nodes as model nodes is the one trusted translation. The model
 compares both graphs at the same output positions, and the generator asserts that each checked
-graph's outputs sit there. Twelve inventoried theorems (41 for the #56 slice). The fixtures
+graph's outputs sit there. Fourteen inventoried theorems. The fixtures
 bind no encoder, formula, solver or emitted Wasm, so the open items above stand.
 The clean-source receipt is
 [`verification/foundation/receipts/3ed4c990c/`](../../verification/foundation/receipts/3ed4c990c/foundation-check.json)
 (1195 theorems, `clean_source: true`, Lean 4.35.0). The twelve pair theorems report only `propext`
-and `Quot.sound`.
+and `Quot.sound`. The `negation` pair was added with the shrink traces below.
+
+### Shrinking the reported witnesses (issue #56, acceptance item 2)
+
+`NobleFoundation/SymbolicShrink.lean` defines a shrinker over exact witness bits.
+
+**Moves.** A move replaces one slot's 64 bits with one of:
+- zero;
+- the value halved toward zero (`BitVec.sdiv`, which truncates as Rust's `i64` division does);
+- the value one step toward zero.
+
+A move equal to the value is dropped.
+
+**The shrinker.** `shrinkStep` takes the first move, slot by slot and move by move, that still
+refutes the pair, and `shrinkTrace` repeats it under explicit fuel.
+
+**General theorems.**
+- A shrink never loses the refutation (`shrinkTrace_refutes`, from `shrinkStep_refutes`).
+- Every step is a declared move (`shrinkStep_is_a_move`).
+- A witness the shrinker cannot move is a local minimum: every single-slot move agrees
+  (`shrinkStep_none_minimal`).
+
+**The generator.** `crates/noble-ngraph/tests/schedule_lean_dir/pairs/shrink.rs` shrinks each
+refuted pair's reported candidate with the same moves, in the same order.
+- It decides every candidate shrink afresh: both graphs are built, checked and compiled again, and
+  run through the compiled machine and the reference interpreter, which must agree.
+- It keeps a shrink only while it still refutes.
+- It then replays the finished trace afresh, including every single-slot move of the last
+  witness, which must agree.
+
+**What the kernel decides.** In the generated `SymbolicShrinkCorpus.lean`, for each refuted pair:
+- the model's shrinker, started at the reported candidate, produces exactly the generator's trace
+  and stops at its end (`*_shrinks_replay`);
+- every kept shrink refutes (`*_every_shrink_refutes`);
+- every single-slot move of the last one agrees (`*_shrunk_is_a_local_minimum`).
+
+| Pair | Reported candidate | Shrinks to | Kept shrinks |
+|---|---|---|---|
+| `subtractionOrder` | `(3, 8)` | `(0, 1)` | `(0, 8)`, `(0, 4)`, `(0, 2)`, `(0, 1)` |
+| `wrapBoundary` | `1` | `1` | none: `0`, the only move, agrees |
+| `repeatedOutputs` | `(1, 2)` | `(0, 1)` | `(0, 2)`, `(0, 1)` |
+| `negation` | `-1000000007` | `-1` | 29, halving through negative odd values, so truncating division is checked against Rust at each one |
+
+The minimum is local: no single-slot move of the last witness refutes. It is not a smallest
+witness over all inputs. The generator replays witnesses on the checked graphs and both Rust
+evaluators, and the kernel replays them on the model. No encoder, formula or solver is involved,
+and items 3 to 6 stay open. Seventeen inventoried theorems: five general and twelve for the four
+traces.
 
 ## Specification-quality obligations (issue #65)
 

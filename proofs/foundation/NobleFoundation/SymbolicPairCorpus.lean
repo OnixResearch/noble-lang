@@ -1,4 +1,5 @@
 import NobleFoundation.SymbolicSolver
+import NobleFoundation.SymbolicShrink
 import NobleFoundation.FirstProjection
 
 /-!
@@ -14,15 +15,13 @@ interpreter, which agree. It took the first candidate whose ordered outputs diff
 verdict. Here the kernel decides that the model's `firstIndex` over the same checked graphs and
 universe gives the same verdict. A pair that agrees does so on the declared universe only, and
 nothing beyond it is claimed. Reading checked nodes as model nodes is the one trusted translation.
+The shrink of each refuted pair's reported candidate is in `SymbolicShrinkCorpus`.
 -/
 
 namespace NobleFoundation.SymbolicSolver.Corpus
 
 open NobleFoundation.PackedSchedule NobleFoundation.SymbolicPair NobleFoundation.SymbolicSolver
-
-/-- The inputs a finite list of slot values denotes. -/
-def inputsOf (values : List (BitVec 64)) (slot : Nat) : BitVec 64 :=
-  values.getD slot 0
+open NobleFoundation.SymbolicShrink
 
 /-! ## `sharedInput`: a shared input read three times, `(x + x) + x` against `x · 3`: equivalent -/
 
@@ -31,12 +30,15 @@ def sharedInput : Pair :=
     right := FirstProjection.ofList [.input 0, .constant 0x0000000000000003, .mul 0 1] 2,
     outputs := [2] }
 
+def sharedInputValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000],
+   [0x0000000000000001],
+   [0xFFFFFFFFFFFFFFFF],
+   [0x7FFFFFFFFFFFFFFF],
+   [0x8000000000000000]]
+
 def sharedInputUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000000],
-   inputsOf [0x0000000000000001],
-   inputsOf [0xFFFFFFFFFFFFFFFF],
-   inputsOf [0x7FFFFFFFFFFFFFFF],
-   inputsOf [0x8000000000000000]]
+  sharedInputValues.map inputsOf
 
 theorem sharedInput_first : firstIndex sharedInput sharedInputUniverse = none := by
   decide
@@ -52,11 +54,14 @@ def subtractionOrder : Pair :=
     right := FirstProjection.ofList [.input 0, .input 1, .sub 1 0] 2,
     outputs := [2] }
 
+def subtractionOrderValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000, 0x0000000000000000],
+   [0x0000000000000005, 0x0000000000000005],
+   [0x0000000000000003, 0x0000000000000008],
+   [0x8000000000000000, 0x0000000000000000]]
+
 def subtractionOrderUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000000, 0x0000000000000000],
-   inputsOf [0x0000000000000005, 0x0000000000000005],
-   inputsOf [0x0000000000000003, 0x0000000000000008],
-   inputsOf [0x8000000000000000, 0x0000000000000000]]
+  subtractionOrderValues.map inputsOf
 
 theorem subtractionOrder_first : firstIndex subtractionOrder subtractionOrderUniverse = some 2 := by
   decide
@@ -72,12 +77,15 @@ def wrapOnlyEquivalent : Pair :=
     right := FirstProjection.ofList [.input 0, .constant 0x0000000000000000, .mul 0 1, .constant 0x0000000000000001, .mul 2 3] 4,
     outputs := [4] }
 
+def wrapOnlyEquivalentValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000],
+   [0x0000000000000001],
+   [0xFFFFFFFFFFFFFFFF],
+   [0x7FFFFFFFFFFFFFFF],
+   [0x8000000000000000]]
+
 def wrapOnlyEquivalentUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000000],
-   inputsOf [0x0000000000000001],
-   inputsOf [0xFFFFFFFFFFFFFFFF],
-   inputsOf [0x7FFFFFFFFFFFFFFF],
-   inputsOf [0x8000000000000000]]
+  wrapOnlyEquivalentValues.map inputsOf
 
 theorem wrapOnlyEquivalent_first : firstIndex wrapOnlyEquivalent wrapOnlyEquivalentUniverse = none := by
   decide
@@ -93,11 +101,14 @@ def wrapBoundary : Pair :=
     right := FirstProjection.ofList [.input 0, .constant 0x0000000000000000, .mul 0 1] 2,
     outputs := [2] }
 
+def wrapBoundaryValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000],
+   [0x0000000000000002],
+   [0x8000000000000000],
+   [0x0000000000000001]]
+
 def wrapBoundaryUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000000],
-   inputsOf [0x0000000000000002],
-   inputsOf [0x8000000000000000],
-   inputsOf [0x0000000000000001]]
+  wrapBoundaryValues.map inputsOf
 
 theorem wrapBoundary_first : firstIndex wrapBoundary wrapBoundaryUniverse = some 3 := by
   decide
@@ -113,11 +124,14 @@ def boolOutput : Pair :=
     right := FirstProjection.ofList [.input 0, .constant 0xFFFFFFFFFFFFFFFF, .constant 0x0000000000000000, .add 0 2, .eq 3 1] 4,
     outputs := [4] }
 
+def boolOutputValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000],
+   [0xFFFFFFFFFFFFFFFF],
+   [0x7FFFFFFFFFFFFFFF],
+   [0x8000000000000000]]
+
 def boolOutputUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000000],
-   inputsOf [0xFFFFFFFFFFFFFFFF],
-   inputsOf [0x7FFFFFFFFFFFFFFF],
-   inputsOf [0x8000000000000000]]
+  boolOutputValues.map inputsOf
 
 theorem boolOutput_first : firstIndex boolOutput boolOutputUniverse = none := by
   decide
@@ -133,16 +147,42 @@ def repeatedOutputs : Pair :=
     right := FirstProjection.ofList [.input 0, .input 1, .add 1 0, .sub 1 0] 2,
     outputs := [2, 3, 2] }
 
+def repeatedOutputsValues : List (List (BitVec 64)) :=
+  [[0x0000000000000004, 0x0000000000000004],
+   [0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF],
+   [0x0000000000000001, 0x0000000000000002]]
+
 def repeatedOutputsUniverse : List (Nat → BitVec 64) :=
-  [inputsOf [0x0000000000000004, 0x0000000000000004],
-   inputsOf [0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF],
-   inputsOf [0x0000000000000001, 0x0000000000000002]]
+  repeatedOutputsValues.map inputsOf
 
 theorem repeatedOutputs_first : firstIndex repeatedOutputs repeatedOutputsUniverse = some 2 := by
   decide
 
 /-- The reported candidate really refutes the pair. -/
 theorem repeatedOutputs_witness_refutes : refuted repeatedOutputs (repeatedOutputsUniverse[2]'(by decide)) = true := by
+  decide
+
+/-! ## `negation`: `0 - x` against `x + 0`: equal only where `2x` wraps to zero, at `0` and `i64::MIN`; refuted first at a large negative input, whose shrink halves toward zero -/
+
+def negation : Pair :=
+  { left := FirstProjection.ofList [.input 0, .constant 0x0000000000000000, .sub 1 0] 2,
+    right := FirstProjection.ofList [.input 0, .constant 0x0000000000000000, .add 0 1] 2,
+    outputs := [2] }
+
+def negationValues : List (List (BitVec 64)) :=
+  [[0x0000000000000000],
+   [0x8000000000000000],
+   [0xFFFFFFFFC46535F9],
+   [0x0000000000000001]]
+
+def negationUniverse : List (Nat → BitVec 64) :=
+  negationValues.map inputsOf
+
+theorem negation_first : firstIndex negation negationUniverse = some 2 := by
+  decide
+
+/-- The reported candidate really refutes the pair. -/
+theorem negation_witness_refutes : refuted negation (negationUniverse[2]'(by decide)) = true := by
   decide
 
 end NobleFoundation.SymbolicSolver.Corpus

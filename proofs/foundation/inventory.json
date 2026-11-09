@@ -2974,6 +2974,36 @@
       "claim": "Encoded witnesses replay their candidate and a corrupted one does not, on the input-dependent pair."
     },
     {
+      "name": "NobleFoundation.SymbolicShrink.shrinkStep_refutes",
+      "phase": 2,
+      "role": "symbolic-shrink",
+      "claim": "A shrink step keeps the refutation: the move it takes still refutes the pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicShrink.shrinkStep_is_a_move",
+      "phase": 2,
+      "role": "symbolic-shrink",
+      "claim": "A shrink step is one of the declared single-slot moves of the witness: zero, the value halved toward zero, or the value one step toward zero."
+    },
+    {
+      "name": "NobleFoundation.SymbolicShrink.shrinkStep_none_minimal",
+      "phase": 2,
+      "role": "symbolic-shrink",
+      "claim": "A witness the shrinker cannot move is a local minimum: every single-slot move agrees with the pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicShrink.shrinkTrace_head",
+      "phase": 2,
+      "role": "symbolic-shrink",
+      "claim": "A shrink trace starts at its witness."
+    },
+    {
+      "name": "NobleFoundation.SymbolicShrink.shrinkTrace_refutes",
+      "phase": 2,
+      "role": "symbolic-shrink",
+      "claim": "Shrinking never loses the refutation: from a refuting witness, every element of the trace refutes the pair."
+    },
+    {
       "name": "NobleFoundation.Certificate.stale_revision_refused",
       "phase": 2,
       "role": "certificate",
@@ -4016,6 +4046,90 @@
       "phase": 1,
       "role": "negative-control",
       "claim": "the reported candidate really refutes the repeatedOutputs pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_first",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "on the checked noble-ngraph pair 0 - x against x + 0: equal only where 2x wraps to zero, at 0 and i64::MIN; refuted first at a large negative input, whose shrink halves toward zero, the model's firstIndex over the declared universe is some 2, the verdict the compiled and reference Rust evaluations give"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the reported candidate really refutes the negation pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_shrinks_replay",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the model's shrinker, started at the reported subtractionOrder candidate, replays the generator's shrink trace, each step decided afresh on newly checked and compiled graphs, exactly and stops at its end"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_every_shrink_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "every kept shrink of the reported subtractionOrder candidate still refutes the pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_shrunk_is_a_local_minimum",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every single-slot move of the last subtractionOrder shrink agrees with the pair: a local minimum, not a smallest witness over all inputs"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_shrinks_replay",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the model's shrinker, started at the reported wrapBoundary candidate, replays the generator's shrink trace, each step decided afresh on newly checked and compiled graphs, exactly and stops at its end"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_every_shrink_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "every kept shrink of the reported wrapBoundary candidate still refutes the pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_shrunk_is_a_local_minimum",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every single-slot move of the last wrapBoundary shrink agrees with the pair: a local minimum, not a smallest witness over all inputs"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_shrinks_replay",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the model's shrinker, started at the reported repeatedOutputs candidate, replays the generator's shrink trace, each step decided afresh on newly checked and compiled graphs, exactly and stops at its end"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_every_shrink_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "every kept shrink of the reported repeatedOutputs candidate still refutes the pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_shrunk_is_a_local_minimum",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every single-slot move of the last repeatedOutputs shrink agrees with the pair: a local minimum, not a smallest witness over all inputs"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_shrinks_replay",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the model's shrinker, started at the reported negation candidate, replays the generator's shrink trace, each step decided afresh on newly checked and compiled graphs, exactly and stops at its end"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_every_shrink_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "every kept shrink of the reported negation candidate still refutes the pair"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_shrunk_is_a_local_minimum",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every single-slot move of the last negation shrink agrees with the pair: a local minimum, not a smallest witness over all inputs"
     },
     {
       "name": "NobleFoundation.evalBatch_is_the_ordered_map",
