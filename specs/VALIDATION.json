@@ -1353,7 +1353,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "bdb5f4e9b6a63a1cdc8aeeae19d39c76bee7b2bdebf6d45fe3c52342d14788ce"
+      "sha256": "df73539c53c98d332ba62f199ae455003d553ce36b4449856d8aa62a3e73be2f"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1878,6 +1878,10 @@
     {
       "file": "verification/stage2-guard-deadline/README.md",
       "sha256": "f3de7e20bd52be044e215306ee57663995afe354be3f859112b77a368b201c89"
+    },
+    {
+      "file": "verification/symbolic/README.md",
+      "sha256": "af5080f43c76afc5bcd20c8432ead3c4e0d53ea2a69cf7e9943cd301ba650ad2"
     },
     {
       "file": "verification/tool-selection.md",

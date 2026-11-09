@@ -2074,9 +2074,9 @@ over the model's graph semantics: `I64` arithmetic wraps at `2^64` (`BitVec 64`)
 | operations | `input`, `constant`, `add`, `sub`, `mul` and `eq` over `I64` and `Bool` |
 | outside | `F32`, guards, effects, the encoder `extract/symbolic.rs`, any formula or solver, emitted Wasm and the Rust evaluators' correspondence with the model |
 
-These certificates are about the model's graphs. They say nothing about the encoder, and items 4 to 6
-stay open: encoder-level corruption, stale or malformed inputs and UNKNOWN or timeout handling, and the
-measurements. Eight inventoried theorems.
+These certificates are about the model's graphs. They say nothing about the encoder. The untrusted
+solver lane for items 4 to 6, which certifies only through these theorems, is
+[`verification/symbolic/`](../../verification/symbolic/README.md). Eight inventoried theorems.
 The clean-source receipt is
 [`verification/foundation/receipts/cba12a925/`](../../verification/foundation/receipts/cba12a925/foundation-check.json)
 (1231 theorems, `clean_source: true`, Lean 4.35.0).
