@@ -1705,6 +1705,9 @@ register (`Refusal::OneRegisterHeld`). The model's `countReservesOne` replaces `
 and `highestRegister` is gone. `exampleLayout_accepted` still holds for the real declaration. The
 F32 `AffineOperand::One` layout and the I64 sample are regression tests in
 `crates/noble-ngraph/src/layout.rs` that fail on the old checker.
+The clean-source receipt is
+[verification/foundation/receipts/d04076daf/](../../verification/foundation/receipts/d04076daf/foundation-check.json)
+(1217 theorems, `clean_source: true`, Lean 4.35.0).
 
 **Correction (2026-11-07, issues #94 and #95).** The model and the Rust checker both
 accepted two forged declarations:
