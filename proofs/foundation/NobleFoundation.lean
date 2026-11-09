@@ -28,6 +28,7 @@ import NobleFoundation.SymbolicSolver
 import NobleFoundation.SymbolicShrink
 import NobleFoundation.SymbolicPairCorpus
 import NobleFoundation.SymbolicShrinkCorpus
+import NobleFoundation.SymbolicPairCertified
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
 import NobleFoundation.PackedLayout

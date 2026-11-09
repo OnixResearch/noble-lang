@@ -4150,6 +4150,54 @@
       "claim": "every single-slot move of the last negation shrink agrees with the pair: a local minimum, not a smallest witness over all inputs"
     },
     {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "strict-kernel certified: the checked noble-ngraph pair (x + x) + x against x · 3 agrees on every input, a graph-model theorem"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapOnlyEquivalent_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "strict-kernel certified: the checked pair x · 2^63 · 2 against x · 0 · 1 agrees on every input, because arithmetic wraps at 2^64"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.boolOutput_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "strict-kernel certified: the checked pair x + 1 = 0 against x + 0 = -1 agrees on every input, a Bool output"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.not_certifiable_of_refuted",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "a pair with a refuting input has no certificate for every input"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refuted subtractionOrder pair has no certificate, from its kernel-checked witness"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refuted wrapBoundary pair has no certificate, from its kernel-checked witness"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refuted repeatedOutputs pair has no certificate, from its kernel-checked witness"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refuted negation pair has no certificate, from its kernel-checked witness"
+    },
+    {
       "name": "NobleFoundation.evalBatch_is_the_ordered_map",
       "phase": 3,
       "role": "independent-row-batch",

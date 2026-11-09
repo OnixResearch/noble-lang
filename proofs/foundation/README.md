@@ -2043,6 +2043,41 @@ The clean-source receipt is
 (1214 theorems, `clean_source: true`, Lean 4.35.0). The seventeen shrink theorems and the two
 `negation` pair theorems report only `propext` and `Quot.sound`.
 
+### Strict-kernel certified pairs (issue #56, acceptance item 3)
+
+`NobleFoundation/SymbolicPairCertified.lean` certifies the three agreeing fixed pairs for **every**
+input, not only on their declared universes. Each statement is `∀ inputs, agreesOn pair inputs`
+over the model's graph semantics: `I64` arithmetic wraps at `2^64` (`BitVec 64`), and comparison is
+`Bool` equality.
+- **Proofs.** The proofs unfold the model and close with `bv_omega`, whose proof terms the kernel
+  checks. No `native_decide`, `bv_decide` or other native evaluation is used, and every theorem
+  reports only `propext` and `Quot.sound`.
+- **Controls.** The four refuted pairs cannot be certified: `*_not_certifiable` derives the negation
+  from each pair's kernel-checked refuting witness (`not_certifiable_of_refuted`).
+
+**Trust inventory.**
+
+| Step | Status |
+|---|---|
+| `noble-ngraph` parses, checks and compiles each pair; the compiled machine and the reference interpreter agree on the universe | Rust, executed by the generator; not proved |
+| reading checked `noble-ngraph` nodes as model nodes (`pairs.rs`) | **trusted**, the one translation; pinned by `the_lean_file_is_the_real_verdict` |
+| the model's graph semantics (`PackedSchedule.value`) | the definition every statement is about |
+| `bv_omega`, `omega` and `simp` | proof search only: the kernel checks their terms |
+| the foundation lane's isolated build and axiom audit | the gate that accepts the theorems |
+
+**Coverage inventory.**
+
+| Pair | Status |
+|---|---|
+| `sharedInput`, `wrapOnlyEquivalent`, `boolOutput` | **certified** for every input (graph-model theorems) |
+| `subtractionOrder`, `wrapBoundary`, `repeatedOutputs`, `negation` | **refuted**, with a kernel-replayed witness, its shrink trace and a non-certifiability control |
+| operations | `input`, `constant`, `add`, `sub`, `mul` and `eq` over `I64` and `Bool` |
+| outside | `F32`, guards, effects, the encoder `extract/symbolic.rs`, any formula or solver, emitted Wasm and the Rust evaluators' correspondence with the model |
+
+These certificates are about the model's graphs. They say nothing about the encoder, and items 4 to 6
+stay open: encoder-level corruption, stale or malformed inputs and UNKNOWN or timeout handling, and the
+measurements. Eight inventoried theorems.
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained
