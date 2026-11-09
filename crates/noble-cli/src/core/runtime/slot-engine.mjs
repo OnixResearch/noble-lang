@@ -2050,9 +2050,16 @@ class SlotEngine {
     }
     // All graph and capture observations must finish before saveProgramGraph
     // acquires a backend root and charges the registry's retained versions.
+    // LREF-PKG-01: the owner retains the package of every version whose module
+    // code it reaches (the roots it keeps alive), not only versions it reaches as
+    // cells, so each such version stays charged until the owner is released.
+    const charged = new Set(graph.versions);
+    for (const [cell, version] of this.versions) {
+      if (graph.moduleIds.has(this.handles.get(cell)?.moduleId)) charged.add(version);
+    }
     this.saving = { runtime, index, expectedHandle: handle };
     let registryOwner;
-    try { registryOwner = this.registry.saveProgramGraph(handle, graph.versions); }
+    try { registryOwner = this.registry.saveProgramGraph(handle, [...charged]); }
     finally { this.saving = null; }
     this.savedCells.set(handle, { runtime, count: (prior?.count ?? 0) + 1 });
     const token = `program-${++this.nextSavedOwner}`;

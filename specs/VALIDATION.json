@@ -1361,7 +1361,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "dcaec4eab7fb8007366d51fb6483dc416a9915cbfffad84c8eecdf388cc0b7c7"
+      "sha256": "9f81c7d0f33e45841cea9f7905372880efad76468dd6c15f345caa3c12e4a463"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1838,6 +1838,10 @@
     {
       "file": "verification/owi/README.md",
       "sha256": "ea700340dbe0ad4214beed498bb61d27b06e603ee5d31675bbb604de69873224"
+    },
+    {
+      "file": "verification/package-retention/README.md",
+      "sha256": "47d3eb5fa7d48206f079526a59f443a5cdd8ae4a99f9a586fd29e6a2355129ce"
     },
     {
       "file": "verification/principality/README.md",

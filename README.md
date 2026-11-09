@@ -803,7 +803,10 @@ saved owner token, which `release-program` retires at its last owner. While such
 an owner's Program enters a module's code, that module keeps its module roots and
 code even after its published version is superseded, because compiled bodies read
 named definitions through module globals; the module retires once the last such
-owner is released (OWN-CASE-06). `discard`
+owner is released (OWN-CASE-06). Such an owner is also charged against the
+retained-version quota for every version of the modules it enters, not only for
+versions it holds as cells, so a saved result keeps its version's whole package
+charged until it is released (LREF-CASE-03). `discard`
 removes an authorized never-published install. `reflect` and `trace` observe
 the host ledger. Exact trace retention is bounded by serialized UTF-8 bytes
 (1 MiB per root and 2 MiB across a session, including replay labels), not just
