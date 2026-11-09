@@ -36,6 +36,15 @@ Every query also passes two checks that do not trust the formula.
 - **Claim check.** The outputs the query's claim compares are read back from its text and must be the
   pair's listed outputs.
 
+## Witness file
+
+The lane also writes every distinct solver model of a corpus pair, from the claims and the corrupted
+encodings, to a witness file, one line each: `refutes` for a model that replayed on the original
+graphs, `rejects` for one that did not. The receipt records the file's SHA-256 and line counts.
+`crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs` decides every line again on both Rust
+graph evaluators and generates `proofs/foundation/NobleFoundation/SymbolicSolverReplay.lean`, where
+the kernel decides it on the model.
+
 ## Controls
 
 - **Seeded mutations** of each certified pair's right graph: an operation, an operand order, a

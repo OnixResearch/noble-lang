@@ -25,9 +25,15 @@
  * unsliced, solver time and peak memory per run, warm cache hits, and replay cost, reported
  * separately.
  *
+ * Every distinct solver model is also written, one per line, to a witness file: `refutes` for a
+ * model that replays on the original graphs, `rejects` for one that does not. The receipt records
+ * the file's SHA-256, and `crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs` replays
+ * each line through both Rust graph evaluators and generates `SymbolicSolverReplay.lean`, where the
+ * kernel decides each line again.
+ *
  * Usage (pinned Node, env -i, from a clean checkout):
  *   node verification/symbolic/solver.mjs --bitwuzla BIN --z3 BIN --time GNU_TIME
- *     --foundation-receipt DIR --output NEW_FILE
+ *     --foundation-receipt DIR --output NEW_FILE --witnesses NEW_FILE
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -56,7 +62,7 @@ const elapsed = started => Number(process.hrtime.bigint() - started);
 class Unsupported extends Error {}
 
 function options() {
-  const wanted = ['--bitwuzla', '--z3', '--time', '--foundation-receipt', '--output'];
+  const wanted = ['--bitwuzla', '--z3', '--time', '--foundation-receipt', '--output', '--witnesses'];
   const argv = process.argv.slice(2);
   assert.equal(argv.length, wanted.length * 2, `usage: solver.mjs ${wanted.map(flag => `${flag} V`).join(' ')}`);
   const out = {};
@@ -65,8 +71,10 @@ function options() {
     out[argv[index]] = argv[index + 1];
   }
   for (const key of ['--bitwuzla', '--z3', '--time']) assert.ok(path.isAbsolute(out[key]), `${key} must be absolute`);
-  assert.ok(!fs.existsSync(out['--output']), 'the output must not exist');
-  assert.ok(!path.resolve(out['--output']).startsWith(ROOT + path.sep), 'the output must be outside the repository');
+  for (const key of ['--output', '--witnesses']) {
+    assert.ok(!fs.existsSync(out[key]), `${key} must not exist`);
+    assert.ok(!path.resolve(out[key]).startsWith(ROOT + path.sep), `${key} must be outside the repository`);
+  }
   return out;
 }
 
@@ -284,8 +292,8 @@ function outcome(pair, query, expected, answer, certificate) {
     const started = process.hrtime.bigint();
     const replays = refutes(pair, answer.slots);
     const replay_ns = elapsed(started);
-    if (!replays) return { status: 'inconclusive', reason: 'model does not replay on the original graphs', replay_ns };
     const witness = Object.fromEntries([...answer.slots].map(([slot, bits]) => [`s${slot}`, `0x${hex16(bits)}`]));
+    if (!replays) return { status: 'inconclusive', reason: 'model does not replay on the original graphs', model: witness, replay_ns };
     return { status: 'refuted', reason: 'model replays on the original graphs', witness, replay_ns };
   }
   if (answer.answer === 'unsat') return { status: 'inconclusive', reason: 'external UNSAT without an accepted proof' };
@@ -534,6 +542,26 @@ function main() {
     const real = fs.realpathSync(tools[name]);
     return { path: tools[name], sha256: sha(fs.readFileSync(real)) };
   };
+  // Every distinct model of the corpus pairs, from the claims and the corrupted encodings, in run
+  // order: `refutes` when it replayed on the original graphs, `rejects` when it did not.
+  const witnessLines = [];
+  const record = (kind, pair, slots) => {
+    const line = `${kind} ${pair} ${Object.entries(slots).map(([name, bits]) => `${name}=${bits}`).join(' ')}`;
+    if (!witnessLines.includes(line)) witnessLines.push(line);
+  };
+  for (const claim of claims) {
+    for (const run of claim.runs) if (run.witness) record('refutes', claim.name, run.witness);
+  }
+  for (const entry of corrupted) {
+    for (const result of entry.results) {
+      if (result.witness) record('refutes', entry.pair, result.witness);
+      if (result.model) record('rejects', entry.pair, result.model);
+    }
+  }
+  const witnessText = ['# noble-symbolic-witnesses/v1: distinct solver models for the fixed graph pairs,',
+    '# written by verification/symbolic/solver.mjs; refutes = replayed on the original graphs, rejects = did not',
+    ...witnessLines, ''].join('\n');
+  fs.writeFileSync(flags['--witnesses'], witnessText, { flag: 'wx' });
   const receipt = {
     schema: 'noble-symbolic-solver-receipt/v1',
     claim: 'untrusted SMT solving of the fixed graph pairs, with replay, kernel-certificate binding and controls; graph-model statuses, not Wasm theorems',
@@ -543,6 +571,8 @@ function main() {
     tools: { bitwuzla: tool('bitwuzla'), z3: tool('z3'), time: tool('time') },
     budget: BUDGET,
     claims,
+    witnesses: { sha256: sha(witnessText), refutes: witnessLines.filter(line => line.startsWith('refutes')).length,
+      rejects: witnessLines.filter(line => line.startsWith('rejects')).length },
     measurements: { slicing, warm_cache: { entries: cache.size, retained_bytes: cacheRetainedBytes } },
     controls: {
       mutations: { total: mutations.length, detected: mutations.filter(entry => entry.detected).length,
