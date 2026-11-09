@@ -79,7 +79,8 @@ GAPPA="$(nix build --no-link --print-out-paths --impure --expr \
 node verification/numerical-certificate/gappa.mjs --gappa "$GAPPA" --output NEW_EXTERNAL_FILE
 ```
 
-Measured with Gappa 1.6.1:
+The receipt is [`receipts/2026-11-08/gappa.json`](receipts/2026-11-08/gappa.json), from the clean commit
+`91303c14`, with `holds: true` (Gappa 1.6.1).
 
 | | |
 |---|---|

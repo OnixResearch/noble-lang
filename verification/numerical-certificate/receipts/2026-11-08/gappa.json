@@ -1,0 +1,466 @@
+{
+  "schema": "noble-numerical-certificate-gappa/v1",
+  "issue": 44,
+  "measured_on": "2026-11-09",
+  "host": "Linux 6.18.60 x86_64",
+  "node": "v24.13.0",
+  "source_commit": "91303c148888757b3381fc39dab29dac8d7d9bd4",
+  "source_tree": "ff391cee45447358505b3a5855d22d0069ed55e1",
+  "clean_source": true,
+  "holds": true,
+  "checks": {
+    "corpus_is_the_kernel_checked_corpus": true,
+    "gappa_bounds_every_graph": true,
+    "every_gappa_bound_covers_the_observed_error": true
+  },
+  "harness": {
+    "verification/numerical-certificate/gappa.mjs": "fef911648dcde9d8c1b790b4215a5e3ab4f4d5f75ba1b8b42fd72df8f8b8674a",
+    "verification/numerical-certificate/corpus.mjs": "388f1dc0395553412072cddf88b923addf2400e3b7aa844500dac740208be7ad"
+  },
+  "analyzer": {
+    "name": "Gappa",
+    "version": "Gappa 1.6.1",
+    "binary_sha256": "1d6a2f507e5d3d71e4bb4c80af2ee00b64cc9026d8d272e0dfc240e53e036b93",
+    "source": "nixpkgs as locked by the repository flake (nixpkgs follows octet/nixpkgs)",
+    "model": "float<ieee_32, ne> on every operation; inputs rnd(X) with X in the declared domain; no hints; the output's machine-minus-real error is enclosed"
+  },
+  "corpus": {
+    "path": "verification/numerical-certificate/corpus.lean",
+    "sha256": "9ec794e56aa9c8a507e4029a14697f78e9373c26dd5f94f108ff595b4f3ed798",
+    "seed": "44",
+    "graphs": 24,
+    "discarded_for_overflow_reach": 2
+  },
+  "comparison": {
+    "graphs_bounded_by_gappa": 24,
+    "certified_over_gappa": {
+      "graphs": 23,
+      "min": 1.158823538703077,
+      "lower_quartile": 1.3644317263792023,
+      "median": 1.6562501452863274,
+      "upper_quartile": 2.9090910982494553,
+      "max": 5.5821215689504425e+135
+    },
+    "gappa_median_ms": 15.7196,
+    "gappa_max_ms": 56.113276,
+    "kernel_per_check_ms": 100.39583333333333,
+    "kernel_cost_source": "verification/numerical-certificate/receipts/2026-10-30/lane.json",
+    "per_graph": [
+      {
+        "graph": 0,
+        "nodes": 9,
+        "operations": 7,
+        "certified_output_bound": 5.3644201081230805e-17,
+        "gappa_exit": 0,
+        "gappa_median_ms": 3.887017,
+        "worst_observed_output_error": 7.250662714675076e-18,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "71807085483/9903520314283042199192993792",
+          "35903542745/4951760157141521099596496896"
+        ],
+        "gappa_output_bound": 7.25066271499827e-18,
+        "certified_over_gappa": 7.39852385772486,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 1,
+        "nodes": 7,
+        "operations": 3,
+        "certified_output_bound": 65536,
+        "gappa_exit": 0,
+        "gappa_median_ms": 9.04149,
+        "worst_observed_output_error": 5.659799424266695e-73,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/1766847064778384329583297500742918515827483896875618958121606201292619776",
+          "-1/1852673427797059126777135760139006525652319754650249024631321344126610074238976"
+        ],
+        "gappa_output_bound": 5.659799424266695e-73,
+        "certified_over_gappa": 1.157920892373162e+77,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 2,
+        "nodes": 8,
+        "operations": 6,
+        "certified_output_bound": 2.562999944721875e-7,
+        "gappa_exit": 0,
+        "gappa_median_ms": 14.117627,
+        "worst_observed_output_error": 1.0036515756452083e-7,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-3/16777216",
+          "3/16777216"
+        ],
+        "gappa_output_bound": 1.7881393432617188e-7,
+        "certified_over_gappa": 1.4333334560195652,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 3,
+        "nodes": 9,
+        "operations": 6,
+        "certified_output_bound": 0.0000010728837125384454,
+        "gappa_exit": 0,
+        "gappa_median_ms": 22.977096,
+        "worst_observed_output_error": 2.384185791015625e-7,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-13/16777216",
+          "13/16777216"
+        ],
+        "gappa_output_bound": 7.748603820800781e-7,
+        "certified_over_gappa": 1.3846155221645697,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 4,
+        "nodes": 4,
+        "operations": 3,
+        "certified_output_bound": 2.3841858620698986e-7,
+        "gappa_exit": 0,
+        "gappa_median_ms": 6.117989,
+        "worst_observed_output_error": 5.949168979668684e-8,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/8388608",
+          "1/8388608"
+        ],
+        "gappa_output_bound": 1.1920928955078125e-7,
+        "certified_over_gappa": 2.0000000596046448,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 5,
+        "nodes": 10,
+        "operations": 8,
+        "certified_output_bound": 5.477676278037963e-44,
+        "gappa_exit": 0,
+        "gappa_median_ms": 32.110067,
+        "worst_observed_output_error": 2.1295186860407132e-44,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-59559117/1496577676626844588240573268701473812127674924007424",
+          "59559117/1496577676626844588240573268701473812127674924007424"
+        ],
+        "gappa_output_bound": 3.979687652046304e-44,
+        "certified_over_gappa": 1.3764085920716447,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 6,
+        "nodes": 13,
+        "operations": 7,
+        "certified_output_bound": 3.169126783910412e+29,
+        "gappa_exit": 0,
+        "gappa_median_ms": 4.606826,
+        "worst_observed_output_error": 1.8133887294213253e+24,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "1813385270657429941518336",
+          "1813388729421943762059264"
+        ],
+        "gappa_output_bound": 1.8133887294219438e+24,
+        "certified_over_gappa": 174762.6822915481,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 7,
+        "nodes": 8,
+        "operations": 6,
+        "certified_output_bound": 0.0000043272977787723164,
+        "gappa_exit": 0,
+        "gappa_median_ms": 29.880127,
+        "worst_observed_output_error": 0.0000010132789611816406,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-9/4194304",
+          "9/4194304"
+        ],
+        "gappa_output_bound": 0.0000021457672119140625,
+        "certified_over_gappa": 2.016666931410649,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 8,
+        "nodes": 11,
+        "operations": 7,
+        "certified_output_bound": 0.000006318092900414762,
+        "gappa_exit": 0,
+        "gappa_median_ms": 29.714006,
+        "worst_observed_output_error": 0.0000018542632460594177,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/262144",
+          "1/262144"
+        ],
+        "gappa_output_bound": 0.000003814697265625,
+        "certified_over_gappa": 1.6562501452863274,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 9,
+        "nodes": 8,
+        "operations": 5,
+        "certified_output_bound": 1310.7200781250015,
+        "gappa_exit": 0,
+        "gappa_median_ms": 5.1636,
+        "worst_observed_output_error": 450.55999755859375,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "7381975/16384",
+          "7381975/16384"
+        ],
+        "gappa_output_bound": 450.55999755859375,
+        "certified_over_gappa": 2.9090910982494553,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 10,
+        "nodes": 4,
+        "operations": 2,
+        "certified_output_bound": 4.624284936448091e-44,
+        "gappa_exit": 0,
+        "gappa_median_ms": 6.175737,
+        "worst_observed_output_error": 5.659799424266695e-73,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-576460752303423489/25711008708143844408671393477458601640355247900524685364822016",
+          "1/44601490397061246283071436545296723011960832"
+        ],
+        "gappa_output_bound": 2.2420775429197073e-44,
+        "certified_over_gappa": 2.062500001862645,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 11,
+        "nodes": 11,
+        "operations": 5,
+        "certified_output_bound": 72057594037927940,
+        "gappa_exit": 0,
+        "gappa_median_ms": 10.509603,
+        "worst_observed_output_error": 0,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "0",
+          "0"
+        ],
+        "gappa_output_bound": 0,
+        "certified_over_gappa": null,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 12,
+        "nodes": 6,
+        "operations": 4,
+        "certified_output_bound": 3.4868724441140117e-8,
+        "gappa_exit": 0,
+        "gappa_median_ms": 8.443079,
+        "worst_observed_output_error": 1.6754004354651226e-8,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-241364800330793/9444732965739290427392",
+          "241364800330793/9444732965739290427392"
+        ],
+        "gappa_output_bound": 2.5555492273454665e-8,
+        "certified_over_gappa": 1.3644317263792023,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 13,
+        "nodes": 9,
+        "operations": 7,
+        "certified_output_bound": 0.0000013637544360989392,
+        "gappa_exit": 0,
+        "gappa_median_ms": 17.060684,
+        "worst_observed_output_error": 3.506017886012458e-7,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1261646631/1125899906842624",
+          "1261646631/1125899906842624"
+        ],
+        "gappa_output_bound": 0.000001120567310941567,
+        "certified_over_gappa": 1.2170214343956116,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 14,
+        "nodes": 4,
+        "operations": 2,
+        "certified_output_bound": 5.521115993707445e-44,
+        "gappa_exit": 0,
+        "gappa_median_ms": 7.357463,
+        "worst_observed_output_error": 4.594190603923024e-44,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-17/356811923176489970264571492362373784095686656",
+          "17/356811923176489970264571492362373784095686656"
+        ],
+        "gappa_output_bound": 4.764414778704378e-44,
+        "certified_over_gappa": 1.158823538703077,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 15,
+        "nodes": 7,
+        "operations": 4,
+        "certified_output_bound": 3.5762788996862625e-7,
+        "gappa_exit": 0,
+        "gappa_median_ms": 15.7196,
+        "worst_observed_output_error": 5.952653481244852e-8,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-3/16777216",
+          "3/16777216"
+        ],
+        "gappa_output_bound": 1.7881393432617188e-7,
+        "certified_over_gappa": 2.0000001192092918,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 16,
+        "nodes": 5,
+        "operations": 4,
+        "certified_output_bound": 6.437302531026082e-8,
+        "gappa_exit": 0,
+        "gappa_median_ms": 12.843969,
+        "worst_observed_output_error": 1.4890716215631983e-8,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-7130317/140737488355328",
+          "7130317/140737488355328"
+        ],
+        "gappa_output_bound": 5.06639494801675e-8,
+        "certified_over_gappa": 1.2705883763653238,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 17,
+        "nodes": 12,
+        "operations": 7,
+        "certified_output_bound": 1.401341270322127e-45,
+        "gappa_exit": 0,
+        "gappa_median_ms": 22.74458,
+        "worst_observed_output_error": 5.147557589468029e-85,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/803469022129495137770981046170581301261101496891396417650688",
+          "0"
+        ],
+        "gappa_output_bound": 1.2446030555722283e-60,
+        "certified_over_gappa": 1125934300135424,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 18,
+        "nodes": 8,
+        "operations": 6,
+        "certified_output_bound": 4.888327456620507e-9,
+        "gappa_exit": 0,
+        "gappa_median_ms": 18.436483,
+        "worst_observed_output_error": 1.995489608822761e-9,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1133754251594249173/309485009821345068724781056",
+          "1133754251594249173/309485009821345068724781056"
+        ],
+        "gappa_output_bound": 3.6633575637434786e-9,
+        "certified_over_gappa": 1.3343844742322306,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 19,
+        "nodes": 11,
+        "operations": 8,
+        "certified_output_bound": 0.0001844019049124273,
+        "gappa_exit": 0,
+        "gappa_median_ms": 22.778373,
+        "worst_observed_output_error": 0.000054722455814726345,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1941/16777216",
+          "1941/16777216"
+        ],
+        "gappa_output_bound": 0.0001156926155090332,
+        "certified_over_gappa": 1.5938952032597908,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 20,
+        "nodes": 5,
+        "operations": 3,
+        "certified_output_bound": 0.0000014901161549119024,
+        "gappa_exit": 0,
+        "gappa_median_ms": 6.111347,
+        "worst_observed_output_error": 4.76837158203125e-7,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/1048576",
+          "1/1048576"
+        ],
+        "gappa_output_bound": 9.5367431640625e-7,
+        "certified_over_gappa": 1.562500037252903,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 21,
+        "nodes": 14,
+        "operations": 9,
+        "certified_output_bound": 3.218651233538617e-7,
+        "gappa_exit": 0,
+        "gappa_median_ms": 56.113276,
+        "worst_observed_output_error": 1.3439884227750554e-7,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-1/4194304",
+          "1/4194304"
+        ],
+        "gappa_output_bound": 2.384185791015625e-7,
+        "certified_over_gappa": 1.3500001743435956,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 22,
+        "nodes": 7,
+        "operations": 5,
+        "certified_output_bound": 7.006492321624085e-46,
+        "gappa_exit": 0,
+        "gappa_median_ms": 16.728401,
+        "worst_observed_output_error": 2.263919769706678e-72,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-576460752303423491/254629497041810760783555711051172270131433549208242031329517556169297662470417088272924672",
+          "-576460752303423487/266998379490113760299377713271194014325338065294581596243380200977777465722580068752870260867072"
+        ],
+        "gappa_output_bound": 2.263919769706678e-72,
+        "certified_over_gappa": 3.094850098213451e+26,
+        "gappa_covers_observed": true
+      },
+      {
+        "graph": 23,
+        "nodes": 12,
+        "operations": 9,
+        "certified_output_bound": 8.94069698276212e-8,
+        "gappa_exit": 0,
+        "gappa_median_ms": 28.158028,
+        "worst_observed_output_error": 1.6016664761464807e-143,
+        "gappa_bounded": true,
+        "gappa_enclosure": [
+          "-25/1560874275157996115690798614896583152874299071332485575429578479812685869409882810060153051531745985579913465560703311447723987839644142653145088",
+          "0"
+        ],
+        "gappa_output_bound": 1.6016664761464807e-143,
+        "certified_over_gappa": 5.5821215689504425e+135,
+        "gappa_covers_observed": true
+      }
+    ]
+  },
+  "non_claims": [
+    "Gappa is an untrusted analyzer here: its enclosures are not checked by the Lean kernel, and no Gappa-generated proof is used.",
+    "The comparison is secondary evidence about bound quality and cost; a sound bound is established only by the kernel-checked certificate.",
+    "Gappa's ieee_32 format has no overflow; the corpus already excludes graphs whose reach meets the 2^127 overflow test.",
+    "Gappa run time includes process start-up; the kernel cost is the corpus lane's per-check figure, which includes elaboration. They measure different work.",
+    "FPTaylor and Daisy are not packaged in the pinned nixpkgs and are not compared."
+  ]
+}
