@@ -165,7 +165,7 @@ const bindings = {
 const claims = {
   model_theorems: names.length,
   implementation_theorems: 0,
-  runtime_fixtures: { related: generated.related, model_gaps: generated.gaps },
+  runtime_fixtures: { related: generated.related, related_under_registration: generated.registered },
   correspondence: 'none',
   liveness: 'none',
   cancellation: 'unmodelled: the host control exists, but the alphabet has no cancellation event',
@@ -188,7 +188,7 @@ const receipt = {
     'for the emitted component own steps; the observed-trace lowering maps an observation, not a',
     'correspondence. The runtime fixtures are finite tests of the traces in the retained effect-protocol',
     'receipt: each recorded observation lowers to a trace the relation accepts or, for a host retirement',
-    'before any request, refuses for want of a registration decision.'],
+    'before any request, accepts under the registration the host report names (relatedFrom).'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`REGION-TRACE: ${names.length} model theorems; strict axioms accepted\n`);

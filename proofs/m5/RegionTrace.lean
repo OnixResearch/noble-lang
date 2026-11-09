@@ -995,4 +995,94 @@ theorem related_rejects_substituted_response_value :
       (lower observedReadAndRelease) = false := by
   decide
 
+/-! ## Registration as a premise (#50)
+
+The host registers one owner before guest start (A1). On an abnormal exit it retires that owner, and
+the retirement is authorised by the registration, not by a guest request. A trace in which the guest
+made no request, such as a trap before use or a quota exhausted before the read, therefore has no
+decision for its retired identity, and `related` refuses it. Taking that identity from the retirement
+itself would let a forged retirement relate.
+
+The v2 report names the registered identity (`registration.identity`). `relatedFrom registered` takes
+it as a premise and lets it authorise a host retirement only. A read commit, a guest release and a
+destructor release still need a decision, so a registration cannot stand in for one. `related` is
+unchanged and implies `relatedFrom` under every registration. -/
+
+/-- Commit authority under a registration premise: a decision or a registration authorises a host
+retirement, and only a decision authorises any other commit. -/
+def authorisedFrom (registered : List Nat) (steps : List AbiStep) : Bool :=
+  steps.all fun step =>
+    match step with
+    | .cleanup .hostRetire identity =>
+        (decisions steps).contains identity || registered.contains identity
+    | .cleanup _ identity => (decisions steps).contains identity
+    | _ => true
+
+/-- Target well-formedness under a registration premise. -/
+def wellFormedFrom (registered : List Nat) (steps : List AbiStep) : Bool :=
+  authorisedFrom registered steps && readCommitsExplained steps && atMostOnce steps
+
+/-- The relation under a registration premise. -/
+def relatedFrom (registered : List Nat) (source : List SourceEvent) (target : List AbiStep) : Bool :=
+  (source == target.filterMap projectStep) && wellFormedFrom registered target
+
+/-- Every commit a decision authorises stays authorised under any registration. -/
+theorem authorisedFrom_of_identitiesDecided (registered : List Nat) (steps : List AbiStep)
+    (hdecided : identitiesDecided steps = true) : authorisedFrom registered steps = true := by
+  simp only [identitiesDecided, List.all_eq_true] at hdecided
+  simp only [authorisedFrom, List.all_eq_true]
+  intro step hmem
+  cases step with
+  | cleanup kind identity =>
+      have hcommit : identity ∈ commitIdentities steps :=
+        List.mem_filterMap.mpr ⟨.cleanup kind identity, hmem, rfl⟩
+      have hcontains := hdecided identity hcommit
+      have hin : identity ∈ decisions steps := by simpa using hcontains
+      cases kind <;> simp [hin]
+  | importCrossing => rfl
+  | hostDecision => rfl
+  | protectedCopy => rfl
+  | returned => rfl
+  | normalReturn => rfl
+  | abnormalExit => rfl
+  | handleTableIndex => rfl
+  | storeBookkeeping => rfl
+
+/-- A registration only widens the relation: every trace `related` relates is related under any
+registration. -/
+theorem relatedFrom_of_related (registered : List Nat) (source : List SourceEvent)
+    (target : List AbiStep) (hrelated : related source target = true) :
+    relatedFrom registered source target = true := by
+  simp only [related, wellFormed, Bool.and_eq_true] at hrelated
+  obtain ⟨hprojection, ⟨hdecided, hexplained⟩, honce⟩ := hrelated
+  simp only [relatedFrom, wellFormedFrom, Bool.and_eq_true]
+  exact ⟨hprojection, ⟨authorisedFrom_of_identitiesDecided registered target hdecided, hexplained⟩,
+    honce⟩
+
+/-- The gap closed: a host retirement before any guest request relates under the registration the
+host reports, and stays refused without it. -/
+theorem registration_authorises_an_early_retirement :
+    relatedFrom [1] [.commit .hostRetire 1] (lower [.hostRetirement 1]) = true ∧
+      related [.commit .hostRetire 1] (lower [.hostRetirement 1]) = false := by
+  decide
+
+/-- A retirement of an identity nobody registered or decided is refused: the registration is a
+premise, never taken from the retirement. -/
+theorem relatedFrom_rejects_a_forged_retirement :
+    relatedFrom [1] [.commit .hostRetire 2] (lower [.hostRetirement 2]) = false := by
+  decide
+
+/-- A registration does not authorise a read commit: the commit still needs the decision of its own
+read, here made for another identity. -/
+theorem registration_does_not_authorise_a_read_commit :
+    relatedFrom [1] [.req .regionRead 0 1, .commit (.regionRead 0 1) 1]
+      [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 5, .protectedCopy 1,
+       .cleanup (.regionRead 0 1) 1] = false := by
+  decide
+
+/-- Nor does it authorise a guest release. -/
+theorem registration_does_not_authorise_a_guest_release :
+    relatedFrom [1] [.commit .guestRelease 1] [.cleanup .guestRelease 1] = false := by
+  decide
+
 end RegionTrace

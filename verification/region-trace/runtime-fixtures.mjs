@@ -13,8 +13,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
-export const receiptFile = 'verification/effect-protocol/execution-3ef3f43a.json';
-const receiptSha256 = 'd1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9';
+export const receiptFile = 'verification/effect-protocol/execution-9b1fe313.json';
+const receiptSha256 = 'b38f9bcc3013137fa528578d503089c8b9c012583df9cbbbb1d62cdcd065e5d8';
 export const leanFile = 'proofs/m5/RegionTraceRuntime.lean';
 export const inventoryFile = 'proofs/m5/region-trace-runtime-inventory.json';
 const axioms = ['propext', 'Classical.choice', 'Quot.sound'];
@@ -107,6 +107,20 @@ function wellFormed(observed) {
     && observed.filter(event => event.type === 'retire').length <= 1;
 }
 
+// RegionTrace.wellFormedFrom [registered]: as `wellFormed`, except that the owner the host
+// registered before guest start also authorises a host retirement, and nothing else.
+function wellFormedFrom(observed, registered) {
+  const decided = observed.filter(event => event.type === 'request').map(event => event.identity);
+  const crossings = observed.filter(event => event.type === 'request' && event.op === 'regionRead')
+    .map(event => `${event.offset},${event.length}`);
+  return observed.filter(event => event.type === 'commit').every(event => decided.includes(event.identity))
+    && observed.filter(event => event.type === 'retire')
+      .every(event => decided.includes(event.identity) || event.identity === registered)
+    && observed.filter(event => event.type === 'commit')
+      .every(event => crossings.includes(`${event.start},${event.length}`))
+    && observed.filter(event => event.type === 'retire').length <= 1;
+}
+
 const int = text => (text.startsWith('-') ? `(${text})` : text);
 const option = (value, render) => (value === null ? 'none' : `(some ${render(value)})`);
 const string = text => {
@@ -149,12 +163,15 @@ export function generate() {
   const sections = [];
   const theorems = [];
   let related = 0;
-  let gaps = 0;
+  let registered = 0;
   for (const row of rows) {
     const name = fixtureName(row);
     const observed = observe(row);
     const source = project(observed);
     const label = `${row.id} ${row.variant}`;
+    const owner = natural(row.observed.registration?.identity);
+    requireThat(observed.every(event => event.type === 'response' || event.identity === owner),
+      `${label}: an event names an identity other than the registered owner ${owner}`);
     const exit = row.observed.exit_class;
     const truncated = row.observed.events_truncated ? ', its trace truncated at the host\'s 64-event bound' : '';
     sections.push(`/-- ${label}: exit \`${exit}\`${truncated}. -/\ndef ${name} : List ObservedEvent :=\n  ${list(observed.map(leanObserved), '  ')}`);
@@ -175,14 +192,29 @@ export function generate() {
           allowed_standard_axioms: axioms });
       related += 1;
     } else {
-      // The model gap: a host retirement before any guest request has no decision step.
+      // A host retirement before any guest request: no decision step authorises it, so `related`
+      // refuses it, and the registration the host reports does.
       requireThat(observed.length === 1 && observed[0].type === 'retire',
         `${label}: refused by the relation for an unexpected reason`);
-      sections.push(`/-- Model gap: the host retires the owner it registered, but registration is outside the\nobserved alphabet, so no decision authorises the retirement and \`identitiesDecided\` refuses it. -/\ntheorem ${name}_is_refused_without_a_registration_decision :\n    related\n      ${list(source.map(leanSource), '      ')}\n      (lower ${name}) = false := by\n  decide`);
-      theorems.push({ name: `RegionTrace.${name}_is_refused_without_a_registration_decision`,
-        role: `WIT-TRACE-05 model gap: the recorded ${label} trace, a host retirement before any guest request, is refused because registration is not observed`,
-        allowed_standard_axioms: axioms });
-      gaps += 1;
+      requireThat(wellFormedFrom(observed, owner), `${label}: refused even under its registration`);
+      const forgedIdentity = String(BigInt(owner) + 1n);
+      const forgedRetirement = [{ type: 'retire', identity: forgedIdentity }];
+      requireThat(!wellFormedFrom(forgedRetirement, owner), `${label}: a forged retirement is not refused`);
+      sections.push(`/-- Without a registration premise, no decision authorises the retirement and
+\`identitiesDecided\` refuses it. -/\ntheorem ${name}_is_refused_without_a_registration_decision :\n    related\n      ${list(source.map(leanSource), '      ')}\n      (lower ${name}) = false := by\n  decide`);
+      sections.push(`/-- Under the registration the host reports (\`registration.identity\` ${owner}), the retirement relates. -/\ntheorem ${name}_relates_under_its_registration :\n    relatedFrom [${owner}]\n      ${list(source.map(leanSource), '      ')}\n      (lower ${name}) = true := by\n  decide`);
+      sections.push(`/-- Control: a retirement of an identity the host did not register is refused under the same premise. -/\ntheorem ${name}_refuses_a_forged_retirement :\n    relatedFrom [${owner}]\n      ${list(project(forgedRetirement).map(leanSource), '      ')}\n      (lower ${list(forgedRetirement.map(leanObserved), '      ')}) = false := by\n  decide`);
+      theorems.push(
+        { name: `RegionTrace.${name}_is_refused_without_a_registration_decision`,
+          role: `WIT-TRACE-05: without a registration premise, the recorded ${label} trace, a host retirement before any guest request, is refused`,
+          allowed_standard_axioms: axioms },
+        { name: `RegionTrace.${name}_relates_under_its_registration`,
+          role: `WIT-TRACE-05 runtime fixture (#50): the recorded ${label} trace relates under the registration its report names`,
+          allowed_standard_axioms: axioms },
+        { name: `RegionTrace.${name}_refuses_a_forged_retirement`,
+          role: `WIT-TRACE-02 control (#50): a retirement of an identity the ${label} host did not register is refused under its registration`,
+          allowed_standard_axioms: axioms });
+      registered += 1;
     }
   }
   const lean = `import RegionTrace
@@ -197,9 +229,10 @@ Do not edit by hand: the region-trace check regenerates this file and requires i
 
 Each \`def\` is one executed case's recorded \`noble-bounded-region/v2\` trace, written as
 \`ObservedEvent\`s in the host's order. A fixture that relates is paired with a control that appends a
-read commit no crossing explains, which the relation must refuse. ${gaps} traces, a host retirement before
-any guest request, are refused: registration is outside the observed alphabet, so nothing decides
-the retired identity. They are pinned as the model gap they are.
+read commit no crossing explains, which the relation must refuse. ${registered} traces, a host retirement
+before any guest request, have no decision for the retired identity, so \`related\` refuses them. They
+relate under the registration premise (\`relatedFrom\`) with the identity the host's report names as
+registered, never one taken from the retirement, and a forged retirement identity stays refused.
 
 These are finite tests of recorded traces. The exit class is outside \`ObservedEvent\`, so a trap, a
 quota exhaustion and a cancellation that leave the same events lower to the same trace. No
@@ -214,10 +247,10 @@ end RegionTrace
 `;
   const inventory = {
     schema: 'noble-region-trace-inventory/v1',
-    scope: `Generated runtime fixtures: ${related} recorded traces relate, each with a refused control, and ${gaps} host retirements before any request are refused for want of a registration decision. Source: ${receiptFile}.`,
+    scope: `Generated runtime fixtures: ${related} recorded traces relate, each with a refused control, and ${registered} host retirements before any request relate under the registration their reports name, each with a refused forged retirement. Source: ${receiptFile}.`,
     theorems,
   };
-  return { lean, inventory: `${JSON.stringify(inventory, null, 2)}\n`, related, gaps };
+  return { lean, inventory: `${JSON.stringify(inventory, null, 2)}\n`, related, registered };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -230,5 +263,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     writeFileSync(join(root, leanFile), generated.lean);
     writeFileSync(join(root, inventoryFile), generated.inventory);
   }
-  process.stdout.write(`runtime fixtures: ${generated.related} related, ${generated.gaps} model gaps\n`);
+  process.stdout.write(`runtime fixtures: ${generated.related} related, ${generated.registered} related under registration\n`);
 }

@@ -1,6 +1,6 @@
 {
   "schema": "noble-region-trace-inventory/v1",
-  "scope": "Generated runtime fixtures: 18 recorded traces relate, each with a refused control, and 2 host retirements before any request are refused for want of a registration decision. Source: verification/effect-protocol/execution-3ef3f43a.json.",
+  "scope": "Generated runtime fixtures: 18 recorded traces relate, each with a refused control, and 2 host retirements before any request relate under the registration their reports name, each with a refused forged retirement. Source: verification/effect-protocol/execution-9b1fe313.json.",
   "theorems": [
     {
       "name": "RegionTrace.runtime_case01_read_1_2_relates",
@@ -148,7 +148,25 @@
     },
     {
       "name": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision",
-      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused because registration is not observed",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-05 trap-before-use trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-05 trap-before-use host did not register is refused under its registration",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -175,7 +193,25 @@
     },
     {
       "name": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision",
-      "role": "WIT-TRACE-05 model gap: the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused because registration is not observed",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-06 fuel-73 trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-06 fuel-73 host did not register is refused under its registration",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",

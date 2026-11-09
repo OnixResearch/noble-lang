@@ -89,7 +89,13 @@
     decision authorises the retired identity. Closing that model gap needs either a recorded
     registration event or registration as a premise of the relation.
 
-  The task stays open for the host-refusal trace and the registration gap.
+  Registration gap closed (2026-11-08, #50): the v2 report names the registered owner
+  (`registration.identity`), and `relatedFrom` takes it as a premise that authorises a host
+  retirement and nothing else. The two traces relate under it, `related` still refuses them, and a
+  forged retirement identity stays refused. The fixtures are now generated from
+  `verification/effect-protocol/execution-9b1fe313.json`.
+
+  The task stays open for the host-refusal trace.
 - [ ] [serial] Add the negative controls for swapped requests, substituted responses and resources, an erased denial, a missing protected commit and host cleanup disguised as a guest release. r[WIT-TRACE-02] r[WIT-TRACE-03]
   Model-level controls done: substituted identity, unexplained read commit, second release, a guest
   release followed by a host retirement of the same region (refused since `atMostOnce` bounds

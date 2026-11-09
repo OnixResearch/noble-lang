@@ -613,6 +613,60 @@
         "Classical.choice",
         "Quot.sound"
       ]
+    },
+    {
+      "name": "RegionTrace.authorisedFrom_of_identitiesDecided",
+      "role": "#50: every commit a decision authorises stays authorised under any registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_of_related",
+      "role": "#50: a registration premise only widens the relation; every trace related relates under any registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_authorises_an_early_retirement",
+      "role": "#50: a host retirement before any guest request relates under the registration the host reports, and is refused without it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_rejects_a_forged_retirement",
+      "role": "#50 control: a retirement of an identity nobody registered or decided is refused under the registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_read_commit",
+      "role": "#50 control: a registration does not authorise a read commit whose read was decided for another identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_guest_release",
+      "role": "#50 control: a registration does not authorise a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
     }
   ]
 }
