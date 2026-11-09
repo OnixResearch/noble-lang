@@ -32,7 +32,7 @@ A discrepancy is shrunk by removing words while the routes still disagree in the
 
 ## Results
 
-`receipt-28f40c2c.json` is the lane's receipt from the clean commit `28f40c2c`.
+`receipt-28f40c2c.json` is the lane's receipt from the clean commit `28f40c2c`. `receipt-a1b2b39c.json`, from the clean commit `a1b2b39c`, retains this report unchanged together with the signed report below (receipt schema v2).
 
 | Measure | Empty context | One-word contexts |
 |---|---|---|
@@ -79,6 +79,8 @@ Each body is declared as `module m@1 [ signature p … export p def p [ BODY ] ]
 | declared instances of an accepted signature | 150, all accepted |
 | refusals at signatures that are not instances | 347 |
 | discrepancies | 0 |
+
+These counts are from `receipt-a1b2b39c.json`.
 
 **Control.** `a_narrowed_signature_is_caught` declares `dup [ p ] drop` at `S I64 I64 -- S I64 I64 I64`. That is an instance of `S I64 -- S I64 I64`, where the body is also accepted. The control judges the narrow definition's calls against the general signature. It catches the `Bool I64` stack, which only the general signature accepts, and agrees wherever the top two values are `I64`. A frontend that fixed the row's top value would produce exactly this. The 347 refusals show that the instance closure is not vacuous.
 
