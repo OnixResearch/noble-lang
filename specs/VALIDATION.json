@@ -1025,7 +1025,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "b2235c5a754de83b13906680682be263187a89d8a6f94bfec9fa29def4fcc1a2"
+      "sha256": "2a8b6f4efd090ebef4d97b6bfa3044a87e8dbdd6301b5303a710913cdee15e64"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -1841,7 +1841,7 @@
     },
     {
       "file": "verification/ownership-cases/README.md",
-      "sha256": "e1b2a85e28c72d360ce9cccd2f91fc3ba588895c85ef3101611a62ccb4b58db8"
+      "sha256": "04b8066c21cedb0651fe47c8a12cf2dd5b4ec076bfa7e273c80b5bb9d9046e4e"
     },
     {
       "file": "verification/package-retention/README.md",

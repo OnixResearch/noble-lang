@@ -30,7 +30,7 @@ root should end the session is the poison-or-continue decision that
 
 ## Evidence
 
-[`receipt.mjs`](receipt.mjs) runs both lanes against one CLI built from a clean commit.
+[`receipt.mjs`](receipt.mjs) runs both lanes against one CLI built from a clean commit. The retained run is [`receipt.json`](receipt.json), with the lanes' output in [`lane-1.stdout`](lane-1.stdout) and [`lane-2.stdout`](lane-2.stdout), from the clean commit `dd96f88c`. Every case passed as described above, and the left-deep chain was refused at its fifth compose.
 
 ## Non-claims
 

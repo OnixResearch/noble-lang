@@ -1,0 +1,110 @@
+{
+  "schema": "noble-ownership-cases-receipt/v1",
+  "cases": [
+    "OWN-CASE-01",
+    "OWN-CASE-02",
+    "OWN-CASE-03"
+  ],
+  "claim": "selected host evidence for three ownership cases on one CLI; not a proof, not a registration and not a promotion",
+  "source": {
+    "commit": "dd96f88cb00e10d9c20be01d016314951efe7cad",
+    "tree": "e1cdf801e1be9e0636ff0e9415f22ed011cc53ed",
+    "clean": true,
+    "bound": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_direct_quote.mjs",
+        "sha256": "f7e4127df2351be72a78a90f3c10d6d9ad6db16016fc017fd9ba502a720f8839"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+        "sha256": "0cf42cfe71cb8b904d3adfb4b332ed1993cacd38949376ee04463a85d7152afc"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+        "sha256": "354d2a3d99de3af20c9113acb6ac1491a389b0e0d5a22670781ee4e8b095a88a"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "8f55ed81c5570a98789c9756fed345c707c19b38b60cb208cc9053cecf904046"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "e4a325447edcab73d8bc10592232c8a3825a52adb72283685fed234642f271ef"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "5afbf00919cdf4152d1dbb1ea148d19edb800d89e7a73743cf6219eaf647f99c"
+      }
+    ]
+  },
+  "cli_sha256": "0f138e164fbdebb4ff84497943171ac7d89cf3b15f17bb13b5cf139843002f15",
+  "OWN-CASE-01": {
+    "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs",
+    "observed": "checked direct quote retained, ran with 20 to yield 25, released and retired"
+  },
+  "OWN-CASE-02": [
+    {
+      "order": "A-then-B",
+      "owners": [
+        "program-1",
+        "program-2"
+      ],
+      "survivor": [
+        {
+          "kind": 1,
+          "value": "42"
+        }
+      ],
+      "exit": 0,
+      "selected_binary_sha256": "0f138e164fbdebb4ff84497943171ac7d89cf3b15f17bb13b5cf139843002f15"
+    },
+    {
+      "order": "B-then-A",
+      "owners": [
+        "program-2",
+        "program-1"
+      ],
+      "survivor": [
+        {
+          "kind": 1,
+          "value": "42"
+        }
+      ],
+      "exit": 0,
+      "selected_binary_sha256": "0f138e164fbdebb4ff84497943171ac7d89cf3b15f17bb13b5cf139843002f15"
+    }
+  ],
+  "OWN-CASE-03": {
+    "balanced": {
+      "leaves": 8,
+      "intermediates": 7,
+      "released_before_root": 14,
+      "before": [
+        {
+          "kind": 1,
+          "value": "8"
+        }
+      ],
+      "after": [
+        {
+          "kind": 1,
+          "value": "8"
+        }
+      ],
+      "exit": 0,
+      "selected_binary_sha256": "0f138e164fbdebb4ff84497943171ac7d89cf3b15f17bb13b5cf139843002f15"
+    },
+    "left_deep": {
+      "refused_at_compose": 5,
+      "diagnostic": "Error: checked captured values exceed bounded exact trace representation",
+      "session_state": "terminated-after-guest-failure",
+      "exit": 2,
+      "selected_binary_sha256": "0f138e164fbdebb4ff84497943171ac7d89cf3b15f17bb13b5cf139843002f15"
+    }
+  },
+  "non_claims": [
+    "OWN-CASE-03 runs a balanced 8-leaf tree of one static leaf Program; the left- and right-deep 8-leaf trees and trees of captured leaves exceed the host bound on observing an anonymous saved Program, which refuses the save and terminates the session",
+    "storage reclamation is observed only through owners being refused after release and the root running alike; no live-cell count is exposed",
+    "OWN-CASE-04, 05 and 07 are not executed here, and no OWN-CASE design is registered in conformance"
+  ]
+}

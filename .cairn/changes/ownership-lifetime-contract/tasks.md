@@ -24,7 +24,8 @@
     source `27e941a0`, and the CLI from the parent commit `3baaa029` fails at the trap.
 - [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
   Progress (2026-11-09): OWN-CASE-01 to 03 run on the live-slot runtime; see
-  `verification/ownership-cases/`. OWN-CASE-01 is the direct quote of `live_slot_direct_quote.mjs`.
+  `verification/ownership-cases/receipt.json`, from clean source `dd96f88c`. OWN-CASE-01 is the
+  direct quote of `live_slot_direct_quote.mjs`.
   `live_slot_ownership_cases.mjs` runs OWN-CASE-02 in both release orders and OWN-CASE-03 as a
   balanced 8-leaf tree, whose root gives the same result after the 14 other owners are released.
   The left- and right-deep 8-leaf trees cannot run as designed. The host bounds its observation of
