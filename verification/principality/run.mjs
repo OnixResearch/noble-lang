@@ -1,6 +1,7 @@
 // Run the #100 bounded principality differential (`crates/noble-contracts/tests/source/principality.rs`)
-// offline from a clean checkout. Retain its report with the source and toolchain revisions. The report is
-// bounded evidence over the stated universe, not a proof of principality.
+// and its signed-recursion part (`principality/signed.rs`) offline from a clean checkout. Retain both
+// reports with the source and toolchain revisions. They are bounded evidence over the stated universes,
+// not a proof of principality.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -10,7 +11,9 @@ import { selectedVendor } from '../selected-vendor.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const moduleFile = 'crates/noble-contracts/tests/source/principality.rs';
+const signedFile = 'crates/noble-contracts/tests/source/principality/signed.rs';
 const marker = 'NOBLE-PRINCIPALITY-REPORT ';
+const signedMarker = 'NOBLE-PRINCIPALITY-SIGNED-REPORT ';
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
 
@@ -48,6 +51,31 @@ function check(report) {
   requireThat(/not a proof/.test(report.claim), 'the report does not state its bounded claim');
 }
 
+// The properties the signed part states: every body was declared at every signature, and every
+// accepted declaration was called at every input stack; the calls agree with the declared signatures;
+// every declared instance of an accepted signature accepts the body too; and refusals exist at the
+// signatures that are not instances, so the closure is not vacuous.
+function checkSigned(report) {
+  requireThat(report.schema === 'noble-principality-signed/v1', `unexpected signed schema ${report.schema}`);
+  const { counts } = report;
+  requireThat(counts.pairs === counts.bodies * report.signatures.length, 'a body/signature pair is missing');
+  requireThat(counts.comparisons === counts.accepted * report.input_stacks, 'a signed call comparison is missing');
+  requireThat(counts.expected_accepted === counts.call_accepted,
+    'the calls and the declared signatures accepted different counts');
+  requireThat(counts.instance_checks > 0 && counts.instance_accepted === counts.instance_checks,
+    'a declared instance refused an accepted body');
+  requireThat(counts.non_instance_refusals > 0, 'the instance closure is vacuous');
+  requireThat(report.discrepancies === 0 && report.retained.length === 0,
+    'a signed definition disagrees with its declared signature');
+  requireThat(/not a proof/.test(report.claim), 'the signed report does not state its bounded claim');
+}
+
+function reportLine(stdout, prefix) {
+  const lines = stdout.split('\n').filter(line => line.startsWith(prefix));
+  requireThat(lines.length === 1, `expected one ${prefix.trim()} line, found ${lines.length}`);
+  return JSON.parse(lines[0].slice(prefix.length));
+}
+
 function main() {
   const [requested] = process.argv.slice(2);
   requireThat(requested, 'usage: SELECTED_NODE verification/principality/run.mjs NEW_EXTERNAL_DIRECTORY');
@@ -77,21 +105,25 @@ function main() {
   const before = state();
   requireThat(before.status === '', `the source worktree is dirty:\n${before.status}`);
   const argv = ['test', '--locked', '--offline', '-j', '4', '-p', 'noble-contracts', '--test', 'source',
-    'principality::report', '--', '--exact', '--nocapture'];
+    '--', 'principality::report', 'principality::signed::report', '--exact', '--nocapture'];
   const stdout = run(join(rustBin, 'cargo'), argv, env);
-  const lines = stdout.split('\n').filter(line => line.startsWith(marker));
-  requireThat(lines.length === 1, `expected one report line, found ${lines.length}`);
-  const report = JSON.parse(lines[0].slice(marker.length));
+  const report = reportLine(stdout, marker);
+  const signed = reportLine(stdout, signedMarker);
   check(report);
+  checkSigned(signed);
   requireThat(JSON.stringify(state()) === JSON.stringify(before), 'the source changed during the run');
   const receipt = {
-    schema: 'noble-principality-receipt/v1', issue: 100,
+    schema: 'noble-principality-receipt/v2', issue: 100,
     source_commit: before.commit, source_tree: before.tree, clean_source: true,
     bounds: {
       words: report.words, max_words: report.max_words, max_context_words: report.max_context_words,
       context_programs: report.context_programs, max_depth: report.max_depth, value_types: report.value_types,
     },
-    sources_sha256: Object.fromEntries([moduleFile, 'crates/noble-contracts/tests/source.rs',
+    signed_bounds: {
+      self_words: signed.self_words, max_body_words: signed.max_body_words, signatures: signed.signatures,
+      instance_edges: signed.instance_edges, max_depth: signed.max_depth, value_types: signed.value_types,
+    },
+    sources_sha256: Object.fromEntries([moduleFile, signedFile, 'crates/noble-contracts/tests/source.rs',
       'verification/principality/run.mjs'].map(file => [file, digest(readFileSync(join(root, file)))])),
     toolchain: {
       cargo: run(join(rustBin, 'cargo'), ['--version'], env).trim(),
@@ -100,16 +132,18 @@ function main() {
     },
     command: ['cargo', ...argv],
     report,
+    signed_report: signed,
     non_claims: [
       'Bounded evidence over the stated words, program length, value types and stack depth; not a proof of principality.',
       'An interface the frontend cannot construct even at concrete inputs is outside the comparison; effects belong to #28.',
-      'Recursive definitions are out of scope until #99 lands.',
+      'Signed recursive definitions are judged against their declared signatures, at declared signatures over I64 and Bool only; unsigned recursion stays refused and is not compared.',
     ],
   };
   const path = join(out, 'receipt.json');
   writeFileSync(path, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
   console.log(JSON.stringify({ result: 'passed', receipt: path, source_commit: before.commit,
     programs: report.plain.pairs, comparisons: report.plain.comparisons + report.contextual.comparisons,
+    signed_pairs: signed.counts.pairs, signed_comparisons: signed.counts.comparisons,
     receipt_sha256: digest(readFileSync(path)) }));
 }
 

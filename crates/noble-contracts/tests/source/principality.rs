@@ -16,6 +16,11 @@
 //! Every acceptance on either side has passed the kernel. This is bounded evidence over the stated
 //! universe, not a proof. An interface the frontend cannot construct even at concrete inputs is
 //! outside it, and so are effects, which #28's oracle covers.
+//!
+//! `signed` extends the differential to signature-checked recursive definitions (#99).
+
+#[path = "principality/signed.rs"]
+mod signed;
 
 /// The words a generated program, and a context, are built from: stack operations, literals,
 /// quotation literals, composition, running a quotation, `dip` and branches.
