@@ -7,3 +7,6 @@ target
 proofs/m1/NobleKernel.lean
 proofs/m1/translation.json
 __pycache__/
+# Temporary authorities of crates/noble-cli/tests/live_slot_resource_ref_cli.mjs; a lane that
+# dies before close or abort leaves one behind.
+crates/noble-cli/tests/live_slot_resource_ref_authority-*/
