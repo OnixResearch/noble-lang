@@ -76,7 +76,21 @@
     "crates/noble-wasm/runtime/operations.wat",
     "crates/noble-wasm/runtime/reflection.wat",
     "crates/noble-wasm/runtime/source.wat",
-    "crates/noble-wasm/runtime/experiment.wat"
+    "crates/noble-wasm/runtime/experiment.wat",
+    "crates/noble-wasm/runtime/calculator-linear-address.wat",
+    "crates/noble-wasm/runtime/calculator.wat",
+    "crates/noble-wasm/runtime/core-live-owners.wat",
+    "crates/noble-wasm/runtime/i64-less.wat",
+    "crates/noble-wasm/runtime/linear-address.wat",
+    "crates/noble-wasm/runtime/live-accounting.wat",
+    "crates/noble-wasm/runtime/live-borrows.wat",
+    "crates/noble-wasm/runtime/live-linear-storage.wat",
+    "crates/noble-wasm/runtime/live-source.wat",
+    "crates/noble-wasm/runtime/live-stack.wat",
+    "crates/noble-wasm/runtime/resource.wat",
+    "crates/noble-wasm/runtime/text-byte.wat",
+    "crates/noble-wasm/runtime/worker-input.wat",
+    "crates/noble-wasm/runtime/worker-interruption.wat"
   ],
   "feature_policy": {
     "gc": "required-for-wasm-gc; probed-separately-for-every-worker",

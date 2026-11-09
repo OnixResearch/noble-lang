@@ -8,6 +8,12 @@
 ## Future implementation and evidence gates (not undertaken by this change)
 
 - [ ] [serial] Correct the stale `runtime_assets` helper list in a separate change, then add policy pins for the CLI, helpers, Lean binary and library, and a new build report schema that keeps `noble-mc2-build/v1` receipts unchanged. r[ACORR-ENV-01]
+  Progress (2026-11-09): the stale list is corrected outside this change. `runtime_assets` in
+  `crates/noble-cli/src/core/runtime/config.json` now declares all 25 helpers in
+  `crates/noble-wasm/runtime/`, and `tools/m3-wasm-policy.mjs` accepts any explicit, unique list
+  instead of exactly 11. The M3 harness, which had failed at its source snapshot since the helper
+  set grew, completes `eligible-for-selection` on the corrected tree. The policy pins for the CLI,
+  helpers and Lean binary and library, and the new build report schema, remain open.
 - [ ] [serial] Implement the opt-in PAA-1 consumer by joining Route A comparison with Route B evidence/subject binding, comparing subject and wrapper bytes, instantiating only the compared buffers, and refusing with distinct codes before instantiation. r[ACORR-ENV-01] r[ACORR-CACHE-01]
 - [ ] [serial] Build the independent negative-preparation script, then execute ACORR-CASE-01…12 against a frozen consumer with immutable receipts. r[ACORR-CTRL-01]
 - [ ] [serial] Pursue O1–O7 separately (PO-17/18 slices, optimizer, PO-21 C6, the PO-20 erasure theorem, PO-16 refinement); never close them from hashes, tests or extraction success. Extend the envelope for the #7 named-call profile only after its dependency-closure design is accepted. r[ACORR-TB-01]

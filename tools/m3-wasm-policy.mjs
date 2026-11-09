@@ -59,8 +59,9 @@ export function validateConfig(config) {
   }
   requireCondition(config.tools.node.v8 && config.nixpkgs?.revision && config.nixpkgs?.nar_hash,
     'missing engine or nixpkgs revision');
-  requireCondition(config.runtime_assets?.length === 11 && new Set(config.runtime_assets).size === 11
-    && config.runtime_assets.every(file => /^crates\/noble-wasm\/runtime\/[a-z-]+\.wat$/.test(file)),
+  requireCondition(config.runtime_assets?.length > 0
+    && new Set(config.runtime_assets).size === config.runtime_assets.length
+    && config.runtime_assets.every(file => /^crates\/noble-wasm\/runtime\/[a-z0-9-]+\.wat$/.test(file)),
   'runtime assets must be declared explicitly');
   requireCondition(config.proof_status === 'open', 'the harness cannot claim a backend proof');
   return config;
