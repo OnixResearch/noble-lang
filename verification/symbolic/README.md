@@ -81,7 +81,9 @@ host, not a performance claim.
 ## Evidence
 
 [`receipts/2026-11-09/solver.json`](receipts/2026-11-09/solver.json) is one run from the clean
-commit `d761a088`, bound to the foundation receipt `verification/foundation/receipts/cba12a925/`.
+commit `014f373f`, bound to the foundation receipt `verification/foundation/receipts/cba12a925/`.
+Its witness file is [`receipts/2026-11-09/witnesses.txt`](receipts/2026-11-09/witnesses.txt): 12
+refuting and 8 rejected models.
 
 | Claim | Status |
 |---|---|
@@ -97,8 +99,8 @@ commit `d761a088`, bound to the foundation receipt `verification/foundation/rece
   certifies.
 - **Item 5 controls.** Every binding, witness, certificate, UNKNOWN, timeout and budget control has
   the outcome above, against its positive control.
-- **Measurements, one run.** Solver runs took 5.1 to 44.7 ms of wall time (median 12.8 ms), with
-  peak memory of 4.4 to 5.5 MB for Bitwuzla and 21 to 32 MB for Z3. Replays took 15 to 95 µs, and
-  warm cache hits took 1.3 to 32 µs, against 14 retained entries totalling 1674 bytes. On the
+- **Measurements, one run.** Solver runs took 4.5 to 18.7 ms of wall time (median 8.2 ms), with
+  peak memory of 4.7 to 5.5 MB for Bitwuzla and 22 to 32 MB for Z3. Replays took 17 to 59 µs, and
+  warm cache hits took 1.2 to 28 µs, against 14 retained entries totalling 1674 bytes. On the
   padded pairs, slicing cuts each query from 1165 to 1372 bytes down to 411 to 614, with the same
   answers.

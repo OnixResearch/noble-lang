@@ -2,10 +2,10 @@
   "schema": "noble-symbolic-solver-receipt/v1",
   "claim": "untrusted SMT solving of the fixed graph pairs, with replay, kernel-certificate binding and controls; graph-model statuses, not Wasm theorems",
   "source": {
-    "commit": "d761a088d0b165c0bd9c8f6e4d8b74c22f887af5",
-    "tree": "0d85a440b36e92ad2e149b90879f084cb0601228",
+    "commit": "014f373ff7261237f7ba4dafa47a639e8aacd39e",
+    "tree": "4ea1d47d2dd907603f9e0bf9b5006bf7e1cc2d04",
     "clean": true,
-    "lane_sha256": "83a716e8bf9fa0539aea3877d6739fd55dddb4919971d6e47e538a9285ce6bc7",
+    "lane_sha256": "ca31e7d64266134a55756205b51fa3227d9775d3273def54c3881bad747bac37",
     "corpus_sha256": "2111d03077e847879c2bc90234887b17cbe8dec71357ca7d3461a00e7e893ff1",
     "certified_sha256": "90164d9661cdaa441e42022c3db3273fd08d8acb286b2ce79aa3591f0be518c9",
     "semantic_revision": "ngraph-sem/0",
@@ -90,8 +90,8 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 6133446,
-          "peak_rss_kb": 5484,
+          "wall_ns": 5728591,
+          "peak_rss_kb": 4996,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -99,8 +99,8 @@
           "solver": "z3",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 10429394,
-          "peak_rss_kb": 23156,
+          "wall_ns": 9093462,
+          "peak_rss_kb": 23136,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -108,8 +108,8 @@
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 5628201,
-          "peak_rss_kb": 5092,
+          "wall_ns": 4738570,
+          "peak_rss_kb": 5384,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -117,8 +117,8 @@
           "solver": "z3",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 10056496,
-          "peak_rss_kb": 22400,
+          "wall_ns": 9678366,
+          "peak_rss_kb": 22820,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         }
@@ -127,13 +127,13 @@
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 30006,
+          "lookup_ns": 27932,
           "answer": "unsat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 3146,
+          "lookup_ns": 4088,
           "answer": "unsat"
         }
       ]
@@ -193,70 +193,70 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 6063585,
-          "peak_rss_kb": 5196,
+          "wall_ns": 6255686,
+          "peak_rss_kb": 5364,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7ffffffffffffffe",
             "s1": "0x7fffffffffffffff"
           },
-          "replay_ns": 57307
+          "replay_ns": 57979
         },
         {
           "solver": "z3",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 15002360,
-          "peak_rss_kb": 31080,
+          "wall_ns": 13732215,
+          "peak_rss_kb": 31612,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff",
             "s1": "0x0000000000000000"
           },
-          "replay_ns": 15068
+          "replay_ns": 21481
         },
         {
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 6805303,
-          "peak_rss_kb": 5300,
+          "wall_ns": 7595672,
+          "peak_rss_kb": 5256,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7ffffffffffffffe",
             "s1": "0x7fffffffffffffff"
           },
-          "replay_ns": 19367
+          "replay_ns": 17362
         },
         {
           "solver": "z3",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 17037458,
-          "peak_rss_kb": 30544,
+          "wall_ns": 16952236,
+          "peak_rss_kb": 31036,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff",
             "s1": "0x0000000000000000"
           },
-          "replay_ns": 19136
+          "replay_ns": 17844
         }
       ],
       "warm": [
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 16200,
+          "lookup_ns": 9066,
           "answer": "sat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 2815,
+          "lookup_ns": 2215,
           "answer": "sat"
         }
       ]
@@ -312,8 +312,8 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 19531805,
-          "peak_rss_kb": 4400,
+          "wall_ns": 5428750,
+          "peak_rss_kb": 5140,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -321,8 +321,8 @@
           "solver": "z3",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 41666340,
-          "peak_rss_kb": 20960,
+          "wall_ns": 8906603,
+          "peak_rss_kb": 23048,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -330,8 +330,8 @@
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 26843144,
-          "peak_rss_kb": 4560,
+          "wall_ns": 4546691,
+          "peak_rss_kb": 5268,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -339,8 +339,8 @@
           "solver": "z3",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 22041139,
-          "peak_rss_kb": 22260,
+          "wall_ns": 8198178,
+          "peak_rss_kb": 23148,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         }
@@ -349,13 +349,13 @@
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 17423,
+          "lookup_ns": 13325,
           "answer": "unsat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 3697,
+          "lookup_ns": 2295,
           "answer": "unsat"
         }
       ]
@@ -413,66 +413,66 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 6414872,
-          "peak_rss_kb": 5484,
+          "wall_ns": 5782632,
+          "peak_rss_kb": 5532,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x0000000000000001"
           },
-          "replay_ns": 23574
+          "replay_ns": 21350
         },
         {
           "solver": "z3",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 11940070,
-          "peak_rss_kb": 22612,
+          "wall_ns": 9768083,
+          "peak_rss_kb": 23220,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x0000000000000001"
           },
-          "replay_ns": 26800
+          "replay_ns": 23264
         },
         {
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 6175735,
-          "peak_rss_kb": 5284,
+          "wall_ns": 6549576,
+          "peak_rss_kb": 5488,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x0000000000000001"
           },
-          "replay_ns": 24906
+          "replay_ns": 21750
         },
         {
           "solver": "z3",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 12821971,
-          "peak_rss_kb": 23140,
+          "wall_ns": 10243603,
+          "peak_rss_kb": 23360,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x0000000000000001"
           },
-          "replay_ns": 28103
+          "replay_ns": 26279
         }
       ],
       "warm": [
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 13976,
+          "lookup_ns": 13906,
           "answer": "sat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 2464,
+          "lookup_ns": 3016,
           "answer": "sat"
         }
       ]
@@ -528,8 +528,8 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 12741329,
-          "peak_rss_kb": 4400,
+          "wall_ns": 4787051,
+          "peak_rss_kb": 5200,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -537,8 +537,8 @@
           "solver": "z3",
           "mode": "sliced",
           "answer": "unsat",
-          "wall_ns": 27404686,
-          "peak_rss_kb": 22356,
+          "wall_ns": 9382332,
+          "peak_rss_kb": 22652,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -546,8 +546,8 @@
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 44674779,
-          "peak_rss_kb": 4500,
+          "wall_ns": 4915591,
+          "peak_rss_kb": 4724,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         },
@@ -555,8 +555,8 @@
           "solver": "z3",
           "mode": "unsliced",
           "answer": "unsat",
-          "wall_ns": 17298276,
-          "peak_rss_kb": 21352,
+          "wall_ns": 8753015,
+          "peak_rss_kb": 22284,
           "status": "inconclusive",
           "reason": "external UNSAT without an accepted proof"
         }
@@ -565,13 +565,13 @@
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 32431,
+          "lookup_ns": 25828,
           "answer": "unsat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 8857,
+          "lookup_ns": 7123,
           "answer": "unsat"
         }
       ]
@@ -635,70 +635,70 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 8044321,
-          "peak_rss_kb": 4744,
+          "wall_ns": 7248202,
+          "peak_rss_kb": 4960,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7ffffffffffffffe",
             "s1": "0x7fffffffffffffff"
           },
-          "replay_ns": 59872
+          "replay_ns": 58830
         },
         {
           "solver": "z3",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 18275324,
-          "peak_rss_kb": 30288,
+          "wall_ns": 15333500,
+          "peak_rss_kb": 30760,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff",
             "s1": "0x0000000000000000"
           },
-          "replay_ns": 42038
+          "replay_ns": 33041
         },
         {
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 8537393,
-          "peak_rss_kb": 4968,
+          "wall_ns": 6597104,
+          "peak_rss_kb": 5400,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7ffffffffffffffe",
             "s1": "0x7fffffffffffffff"
           },
-          "replay_ns": 94757
+          "replay_ns": 28784
         },
         {
           "solver": "z3",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 16914068,
-          "peak_rss_kb": 30540,
+          "wall_ns": 15655431,
+          "peak_rss_kb": 31364,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff",
             "s1": "0x0000000000000000"
           },
-          "replay_ns": 24796
+          "replay_ns": 27692
         }
       ],
       "warm": [
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 18234,
+          "lookup_ns": 18865,
           "answer": "sat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 1533,
+          "lookup_ns": 1613,
           "answer": "sat"
         }
       ]
@@ -758,71 +758,76 @@
           "solver": "bitwuzla",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 5141651,
-          "peak_rss_kb": 5464,
+          "wall_ns": 5617393,
+          "peak_rss_kb": 5468,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff"
           },
-          "replay_ns": 20799
+          "replay_ns": 20629
         },
         {
           "solver": "z3",
           "mode": "sliced",
           "answer": "sat",
-          "wall_ns": 16041975,
-          "peak_rss_kb": 31552,
+          "wall_ns": 18716685,
+          "peak_rss_kb": 31480,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x4000000000000001"
           },
-          "replay_ns": 22292
+          "replay_ns": 24085
         },
         {
           "solver": "bitwuzla",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 5438646,
-          "peak_rss_kb": 5108,
+          "wall_ns": 5701541,
+          "peak_rss_kb": 5404,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x7fffffffffffffff"
           },
-          "replay_ns": 16801
+          "replay_ns": 17132
         },
         {
           "solver": "z3",
           "mode": "unsliced",
           "answer": "sat",
-          "wall_ns": 25495573,
-          "peak_rss_kb": 30768,
+          "wall_ns": 18266723,
+          "peak_rss_kb": 31024,
           "status": "refuted",
           "reason": "model replays on the original graphs",
           "witness": {
             "s0": "0x4000000000000001"
           },
-          "replay_ns": 27812
+          "replay_ns": 27050
         }
       ],
       "warm": [
         {
           "solver": "bitwuzla",
           "cache_hit": true,
-          "lookup_ns": 7644,
+          "lookup_ns": 7043,
           "answer": "sat"
         },
         {
           "solver": "z3",
           "cache_hit": true,
-          "lookup_ns": 1342,
+          "lookup_ns": 1162,
           "answer": "sat"
         }
       ]
     }
   ],
+  "witnesses": {
+    "sha256": "3e8e7f2e2dd2b866a06b8b15f46a6be46a9f196a48f5471aa33100546cb1035d",
+    "refutes": 12,
+    "rejects": 8
+  },
   "measurements": {
     "slicing": [
       {
@@ -835,15 +840,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 5027106,
-              "peak_rss_kb": 5008,
+              "wall_ns": 5304778,
+              "peak_rss_kb": 4736,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 9519091,
-              "peak_rss_kb": 21576,
+              "wall_ns": 8974249,
+              "peak_rss_kb": 23124,
               "status": "inconclusive"
             }
           ]
@@ -855,15 +860,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 5104431,
-              "peak_rss_kb": 5408,
+              "wall_ns": 4450361,
+              "peak_rss_kb": 5512,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 9796620,
-              "peak_rss_kb": 22296,
+              "wall_ns": 8687363,
+              "peak_rss_kb": 23164,
               "status": "inconclusive"
             }
           ]
@@ -879,15 +884,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 5762161,
-              "peak_rss_kb": 5520,
+              "wall_ns": 5132136,
+              "peak_rss_kb": 5708,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 13686007,
-              "peak_rss_kb": 30776,
+              "wall_ns": 13650743,
+              "peak_rss_kb": 31340,
               "status": "refuted"
             }
           ]
@@ -899,15 +904,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 6362544,
-              "peak_rss_kb": 5528,
+              "wall_ns": 6036095,
+              "peak_rss_kb": 5752,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 15319624,
-              "peak_rss_kb": 31012,
+              "wall_ns": 14336405,
+              "peak_rss_kb": 31308,
               "status": "refuted"
             }
           ]
@@ -923,15 +928,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 5511332,
-              "peak_rss_kb": 5008,
+              "wall_ns": 5611162,
+              "peak_rss_kb": 5416,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 8315428,
-              "peak_rss_kb": 23036,
+              "wall_ns": 10023170,
+              "peak_rss_kb": 22304,
               "status": "inconclusive"
             }
           ]
@@ -943,15 +948,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 5143464,
-              "peak_rss_kb": 4952,
+              "wall_ns": 4911573,
+              "peak_rss_kb": 5396,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 9136094,
-              "peak_rss_kb": 22636,
+              "wall_ns": 9143666,
+              "peak_rss_kb": 22844,
               "status": "inconclusive"
             }
           ]
@@ -967,15 +972,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 5213144,
-              "peak_rss_kb": 5352,
+              "wall_ns": 5804583,
+              "peak_rss_kb": 5384,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 9370332,
-              "peak_rss_kb": 23380,
+              "wall_ns": 11748587,
+              "peak_rss_kb": 22612,
               "status": "refuted"
             }
           ]
@@ -987,15 +992,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 5530388,
-              "peak_rss_kb": 4668,
+              "wall_ns": 6657197,
+              "peak_rss_kb": 5220,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 10062057,
-              "peak_rss_kb": 23000,
+              "wall_ns": 12742976,
+              "peak_rss_kb": 23348,
               "status": "refuted"
             }
           ]
@@ -1011,15 +1016,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 5203746,
-              "peak_rss_kb": 5228,
+              "wall_ns": 6179214,
+              "peak_rss_kb": 5000,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 8548053,
-              "peak_rss_kb": 23136,
+              "wall_ns": 10573419,
+              "peak_rss_kb": 22332,
               "status": "inconclusive"
             }
           ]
@@ -1031,15 +1036,15 @@
             {
               "solver": "bitwuzla",
               "answer": "unsat",
-              "wall_ns": 4640212,
-              "peak_rss_kb": 5396,
+              "wall_ns": 5503219,
+              "peak_rss_kb": 5036,
               "status": "inconclusive"
             },
             {
               "solver": "z3",
               "answer": "unsat",
-              "wall_ns": 9271287,
-              "peak_rss_kb": 22620,
+              "wall_ns": 9434920,
+              "peak_rss_kb": 22924,
               "status": "inconclusive"
             }
           ]
@@ -1055,15 +1060,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 6827414,
-              "peak_rss_kb": 5180,
+              "wall_ns": 6231872,
+              "peak_rss_kb": 5292,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 14913023,
-              "peak_rss_kb": 30744,
+              "wall_ns": 17474402,
+              "peak_rss_kb": 31056,
               "status": "refuted"
             }
           ]
@@ -1075,15 +1080,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 6755459,
-              "peak_rss_kb": 5388,
+              "wall_ns": 8432777,
+              "peak_rss_kb": 5116,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 14542169,
-              "peak_rss_kb": 31056,
+              "wall_ns": 17657254,
+              "peak_rss_kb": 30800,
               "status": "refuted"
             }
           ]
@@ -1099,15 +1104,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 5827744,
-              "peak_rss_kb": 5468,
+              "wall_ns": 7608435,
+              "peak_rss_kb": 5260,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 15993144,
-              "peak_rss_kb": 31656,
+              "wall_ns": 20896069,
+              "peak_rss_kb": 31080,
               "status": "refuted"
             }
           ]
@@ -1119,15 +1124,15 @@
             {
               "solver": "bitwuzla",
               "answer": "sat",
-              "wall_ns": 5613183,
-              "peak_rss_kb": 5308,
+              "wall_ns": 7196536,
+              "peak_rss_kb": 5100,
               "status": "refuted"
             },
             {
               "solver": "z3",
               "answer": "sat",
-              "wall_ns": 15460658,
-              "peak_rss_kb": 31856,
+              "wall_ns": 19746641,
+              "peak_rss_kb": 31308,
               "status": "refuted"
             }
           ]
@@ -1161,7 +1166,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 17352
+              "replay_ns": 21029
             },
             {
               "solver": "z3",
@@ -1171,7 +1176,7 @@
               "witness": {
                 "s0": "0xfffffffffffffffd"
               },
-              "replay_ns": 19336
+              "replay_ns": 20619
             }
           ]
         },
@@ -1188,7 +1193,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 14216
+              "replay_ns": 13666
             },
             {
               "solver": "z3",
@@ -1198,7 +1203,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 15479
+              "replay_ns": 15719
             }
           ]
         },
@@ -1215,7 +1220,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 15860
+              "replay_ns": 16170
             },
             {
               "solver": "z3",
@@ -1225,7 +1230,7 @@
               "witness": {
                 "s0": "0xfffffffffffffffe"
               },
-              "replay_ns": 17753
+              "replay_ns": 16971
             }
           ]
         },
@@ -1242,7 +1247,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 22782
+              "replay_ns": 19977
             },
             {
               "solver": "z3",
@@ -1252,7 +1257,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 24907
+              "replay_ns": 21039
             }
           ]
         },
@@ -1269,7 +1274,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 19447
+              "replay_ns": 16712
             },
             {
               "solver": "z3",
@@ -1279,7 +1284,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 22282
+              "replay_ns": 15640
             }
           ]
         },
@@ -1315,7 +1320,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 16311
+              "replay_ns": 16170
             },
             {
               "solver": "z3",
@@ -1325,7 +1330,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 18735
+              "replay_ns": 14317
             }
           ]
         },
@@ -1342,7 +1347,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 17102
+              "replay_ns": 14307
             },
             {
               "solver": "z3",
@@ -1352,7 +1357,7 @@
               "witness": {
                 "s0": "0x0000000000000000"
               },
-              "replay_ns": 20298
+              "replay_ns": 12002
             }
           ]
         },
@@ -1369,7 +1374,7 @@
               "witness": {
                 "s0": "0xfffffffffffffffe"
               },
-              "replay_ns": 19707
+              "replay_ns": 13034
             },
             {
               "solver": "z3",
@@ -1379,7 +1384,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 17663
+              "replay_ns": 17593
             }
           ]
         },
@@ -1396,7 +1401,7 @@
               "witness": {
                 "s0": "0xfffffffffffffffe"
               },
-              "replay_ns": 16761
+              "replay_ns": 13435
             },
             {
               "solver": "z3",
@@ -1406,7 +1411,7 @@
               "witness": {
                 "s0": "0xffffffffffffffff"
               },
-              "replay_ns": 18345
+              "replay_ns": 15048
             }
           ]
         },
@@ -1454,14 +1459,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 14928
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 11021
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 13295
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 16520
           }
         ]
       },
@@ -1487,14 +1498,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 15038
+            "model": {
+              "s0": "0xffffffffffffffff"
+            },
+            "replay_ns": 18835
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 14447
+            "model": {
+              "s0": "0xfffffffffffffffd"
+            },
+            "replay_ns": 20719
           }
         ]
       },
@@ -1555,7 +1572,7 @@
               "s0": "0x7fffffffffffffff",
               "s1": "0x7ffffffffffffffe"
             },
-            "replay_ns": 13154
+            "replay_ns": 17683
           },
           {
             "solver": "z3",
@@ -1566,7 +1583,7 @@
               "s0": "0x0000000000000000",
               "s1": "0x7fffffffffffffff"
             },
-            "replay_ns": 15630
+            "replay_ns": 15880
           }
         ]
       },
@@ -1623,14 +1640,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 10510
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 12614
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 11452
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 10800
           }
         ]
       },
@@ -1656,14 +1679,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 10459
+            "model": {
+              "s0": "0xffffffffffffffff"
+            },
+            "replay_ns": 12724
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 10891
+            "model": {
+              "s0": "0xffffffffffffffff"
+            },
+            "replay_ns": 11892
           }
         ]
       },
@@ -1720,14 +1749,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 12423
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 11882
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 13125
+            "model": {
+              "s0": "0x0000000000000000"
+            },
+            "replay_ns": 9497
           }
         ]
       },
@@ -1756,7 +1791,7 @@
             "witness": {
               "s0": "0xffffffffffffffff"
             },
-            "replay_ns": 11973
+            "replay_ns": 12023
           },
           {
             "solver": "z3",
@@ -1766,7 +1801,7 @@
             "witness": {
               "s0": "0x0000000000000001"
             },
-            "replay_ns": 13235
+            "replay_ns": 13605
           }
         ]
       },
@@ -1823,14 +1858,20 @@
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 11041
+            "model": {
+              "s0": "0xfffffffffffffffd"
+            },
+            "replay_ns": 15569
           },
           {
             "solver": "z3",
             "answer": "sat",
             "status": "inconclusive",
             "reason": "model does not replay on the original graphs",
-            "replay_ns": 8857
+            "model": {
+              "s0": "0x0000000000000001"
+            },
+            "replay_ns": 12073
           }
         ]
       },
@@ -1891,7 +1932,7 @@
               "s0": "0x7fffffffffffffff",
               "s1": "0x7ffffffffffffffe"
             },
-            "replay_ns": 16511
+            "replay_ns": 15068
           },
           {
             "solver": "z3",
@@ -1902,7 +1943,7 @@
               "s0": "0x0000000000000000",
               "s1": "0x7fffffffffffffff"
             },
-            "replay_ns": 13666
+            "replay_ns": 16150
           }
         ]
       },
@@ -1932,7 +1973,7 @@
               "s0": "0x7ffffffffffffffe",
               "s1": "0x7fffffffffffffff"
             },
-            "replay_ns": 14618
+            "replay_ns": 16571
           },
           {
             "solver": "z3",
@@ -1943,7 +1984,7 @@
               "s0": "0x7fffffffffffffff",
               "s1": "0x0000000000000000"
             },
-            "replay_ns": 14638
+            "replay_ns": 13426
           }
         ]
       },
@@ -2003,7 +2044,7 @@
             "witness": {
               "s0": "0x7fffffffffffffff"
             },
-            "replay_ns": 12904
+            "replay_ns": 14517
           },
           {
             "solver": "z3",
@@ -2013,7 +2054,7 @@
             "witness": {
               "s0": "0x4000000000000001"
             },
-            "replay_ns": 14887
+            "replay_ns": 12734
           }
         ]
       },
@@ -2058,7 +2099,7 @@
           "s0": "0x7fffffffffffffff",
           "s1": "0x0000000000000000"
         },
-        "replay_ns": 12323
+        "replay_ns": 13535
       },
       {
         "label": "stale semantic revision",
@@ -2090,7 +2131,7 @@
           "s0": "0x0000000000000001",
           "s1": "0x0000000000000000"
         },
-        "replay_ns": 3336
+        "replay_ns": 3998
       },
       {
         "label": "narrow value",
