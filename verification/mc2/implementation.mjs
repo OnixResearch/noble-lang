@@ -114,7 +114,7 @@ try {
   const verdictLine = proof.split('\n').find(line => line.startsWith('MC2-GATE '));
   if (!verdictLine) throw Error('missing MC2-GATE verdict');
   const verdict = JSON.parse(verdictLine.slice('MC2-GATE '.length));
-  if (verdict.result !== 'passed' || verdict.required_theorems !== 35 || verdict.required_definitions !== 6
+  if (verdict.result !== 'passed' || verdict.required_theorems !== 42 || verdict.required_definitions !== 6
     || verdict.guard_templates !== 3 || verdict.extracted_correspondence !== 'separate-required-MC2ExtractionGate') {
     throw Error(`unexpected semantic certificate verdict: ${verdictLine}`);
   }

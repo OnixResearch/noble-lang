@@ -1,3 +1,4 @@
 import NobleCertificates.Model
 import NobleCertificates.Guards
+import NobleCertificates.GuardLink
 import NobleCertificates.Rules

@@ -38,6 +38,14 @@ private def requiredTheorems : List Name := [
   ``NobleCertificates.guardProgram_exec_iff,
   ``NobleCertificates.sourceWrapperProgram_refines,
   ``NobleCertificates.liveWrapperProgram_refines,
+  -- C1 at model level: each recognized precondition means its template's precondition
+  ``NobleCertificates.ltI64Max_link,
+  ``NobleCertificates.eqI64Literal_link,
+  ``NobleCertificates.eqI64Literal_link_swapped,
+  ``NobleCertificates.neI64Min_link,
+  ``NobleCertificates.neI64Min_link_swapped,
+  ``NobleCertificates.recognized_link,
+  ``NobleCertificates.le_spelling_is_not_ltI64Max,
   -- finite rule set: per-rule soundness
   ``NobleCertificates.admitLean_sound,
   ``NobleCertificates.compose_sound,

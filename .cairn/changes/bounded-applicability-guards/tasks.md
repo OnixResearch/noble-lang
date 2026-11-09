@@ -9,6 +9,15 @@
 ## Future implementation and evidence gates (not undertaken by this change)
 
 - [ ] [serial] Prove C1 recognizer-link theorems for the three v1 templates and `NonEmptyList` over the reviewed MC1 `Holds`, and an extracted-Rust correspondence for `templates_of`; record them as scoped PO-21 evidence only. r[GUARD-CORR-01]
+  Progress (2026-11-09): C1 is proved at model level for the three v1 templates.
+  `proofs/mc2/NobleCertificates/GuardLink.lean` proves `Holds e [.i64 x] [] params ↔
+  GuardPrecondition t x` for each of the five spellings `recognize` accepts: `(lt x0 i64::MAX)`,
+  `(eq x0 k)` and `(eq k x0)`, and `(not (eq x0 i64::MIN))` and its swap. `recognized_link`
+  covers every v1 template, and a control shows the refused `(le x0 i64::MAX)` holds at
+  `i64::MAX`, where `ltI64Max`'s precondition fails. `MC2Gate.lean` pins the seven theorems
+  under the strict axioms, 42 in all. Still open: C1 for `NonEmptyList`, which waits for the
+  v2 template set, and the extracted correspondence for `templates_of`, which needs a proved
+  link from the `Prepared` arena to MC1 terms.
 - [ ] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
 - [ ] [serial] Register and execute GUARD-CASE-01…12 against frozen executables, retaining stacks, identities, counters and refusal stages; keep exhaustion/trap distinct from rejection. r[GUARD-BIND-01] r[GUARD-CORR-01]
 - [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
