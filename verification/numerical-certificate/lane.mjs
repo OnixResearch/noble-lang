@@ -17,6 +17,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ZERO, ETA, buildCorpus, budgetOf, cmp, floatOf, leanCorpus, max, mul, rat, splitMix64, toNumber } from './corpus.mjs';
 
 const argv = process.argv.slice(2);
 const value = (name) => {
@@ -32,177 +33,6 @@ const GRAPHS = Number(value('--graphs'));
 const SAMPLES = Number(value('--samples'));
 const SEED = BigInt(value('--seed'));
 const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex');
-
-// ---------- deterministic generator ----------
-const MASK = (1n << 64n) - 1n;
-let state = SEED;
-function next() {
-  state = (state + 0x9e3779b97f4a7c15n) & MASK;
-  let z = state;
-  z = ((z ^ (z >> 30n)) * 0xbf58476d1ce4e5b9n) & MASK;
-  z = ((z ^ (z >> 27n)) * 0x94d049bb133111ebn) & MASK;
-  return z ^ (z >> 31n);
-}
-const below = (n) => Number(next() % BigInt(n));
-const fraction = () => Number(next() >> 11n) / 2 ** 53;
-
-// ---------- exact rationals ----------
-const gcd = (a, b) => {
-  let x = a < 0n ? -a : a;
-  let y = b < 0n ? -b : b;
-  while (y) [x, y] = [y, x % y];
-  return x;
-};
-const rat = (n, d = 1n) => {
-  if (d === 0n) throw new Error('zero denominator');
-  if (d < 0n) [n, d] = [-n, -d];
-  const g = gcd(n, d) || 1n;
-  return { n: n / g, d: d / g };
-};
-const add = (a, b) => rat(a.n * b.d + b.n * a.d, a.d * b.d);
-const sub = (a, b) => rat(a.n * b.d - b.n * a.d, a.d * b.d);
-const mul = (a, b) => rat(a.n * b.n, a.d * b.d);
-const neg = (a) => ({ n: -a.n, d: a.d });
-const abs = (a) => (a.n < 0n ? neg(a) : a);
-const cmp = (a, b) => {
-  const left = a.n * b.d;
-  const right = b.n * a.d;
-  return left < right ? -1 : left > right ? 1 : 0;
-};
-const max = (a, b) => (cmp(a, b) >= 0 ? a : b);
-const min = (a, b) => (cmp(a, b) <= 0 ? a : b);
-const pow2 = (k) => (k >= 0 ? rat(1n << BigInt(k)) : rat(1n, 1n << BigInt(-k)));
-const toNumber = (a) => {
-  // Scaled division keeps precision for tiny and huge values.
-  const shift = BigInt(Math.max(0, a.d.toString(2).length - a.n.toString(2).length + 64));
-  return Number((a.n << shift) / a.d) / 2 ** Number(shift);
-};
-const ZERO = rat(0n);
-const UNIT = pow2(-24);
-const ETA = pow2(-150);
-const LIMIT = pow2(127);
-
-// ---------- binary32 encodings ----------
-const view = new DataView(new ArrayBuffer(4));
-const floatOf = (bits) => {
-  view.setUint32(0, bits);
-  return view.getFloat32(0);
-};
-const bitsOf = (x) => {
-  view.setFloat32(0, x);
-  return view.getUint32(0);
-};
-function exactValue(bits) {
-  const exponent = (bits >>> 23) & 0xff;
-  const fractionBits = bits & 0x7fffff;
-  if (exponent === 255) throw new Error(`non-finite bits ${bits.toString(16)}`);
-  const [m, e] = exponent === 0 ? [fractionBits, -149] : [fractionBits + 0x800000, exponent - 150];
-  const v = mul(rat(BigInt(m)), pow2(e));
-  return bits >>> 31 ? neg(v) : v;
-}
-
-// Domains as binary32 endpoints: ordinary, signed, cancelling, subnormal, large and decimal values.
-const DOMAINS = [
-  [1, 2], [-3, 5], [-1, 1], [2 ** -130, 2 ** -120], [2 ** 60, 2 ** 62], [Math.fround(0.1), Math.fround(0.3)],
-].map(([lo, hi]) => ({ lo: bitsOf(Math.fround(lo)), hi: bitsOf(Math.fround(hi)) }));
-const CONSTANTS = [1.5, -1, Math.fround(0.1), 3, -2.5, 2 ** -140, 2 ** 40, -0.375].map((x) => bitsOf(Math.fround(x)));
-
-function generate() {
-  const inputs = 1 + below(3);
-  const domains = Array.from({ length: inputs }, () => DOMAINS[below(DOMAINS.length)]);
-  const nodes = Array.from({ length: inputs }, (_, index) => ({ kind: 'input', index }));
-  const operations = 2 + below(8);
-  for (let k = 0; k < operations; k++) {
-    if (below(4) === 0) nodes.push({ kind: 'const', bits: CONSTANTS[below(CONSTANTS.length)] });
-    const pick = () => (below(4) === 0 ? below(nodes.length) : nodes.length - 1 - below(Math.min(3, nodes.length)));
-    nodes.push({ kind: below(2) ? 'add' : 'mul', left: pick(), right: pick() });
-  }
-  return { domains, nodes, output: nodes.length - 1 };
-}
-
-// ---------- the untrusted analyzer: the checker's rules, in exact rationals ----------
-const magnitudeOf = (lo, hi) => max(abs(lo), abs(hi));
-function analyze(graph) {
-  const bounds = [];
-  let reachMax = ZERO;
-  for (const node of graph.nodes) {
-    if (node.kind === 'input') {
-      const domain = graph.domains[node.index];
-      bounds.push({ lo: exactValue(domain.lo), hi: exactValue(domain.hi), error: ZERO });
-    } else if (node.kind === 'const') {
-      const v = exactValue(node.bits);
-      bounds.push({ lo: v, hi: v, error: ZERO });
-    } else {
-      const a = bounds[node.left];
-      const b = bounds[node.right];
-      if (node.kind === 'add') {
-        const reach = magnitudeOf(add(sub(a.lo, a.error), sub(b.lo, b.error)), add(add(a.hi, a.error), add(b.hi, b.error)));
-        reachMax = max(reachMax, reach);
-        bounds.push({
-          lo: add(a.lo, b.lo), hi: add(a.hi, b.hi),
-          error: add(add(add(a.error, b.error), mul(UNIT, reach)), ETA), reach,
-        });
-      } else {
-        const products = [mul(a.lo, b.lo), mul(a.lo, b.hi), mul(a.hi, b.lo), mul(a.hi, b.hi)];
-        const ma = magnitudeOf(a.lo, a.hi);
-        const mb = magnitudeOf(b.lo, b.hi);
-        const reach = mul(add(ma, a.error), add(mb, b.error));
-        reachMax = max(reachMax, reach);
-        bounds.push({
-          lo: products.reduce(min), hi: products.reduce(max),
-          error: add(add(add(mul(a.error, add(mb, b.error)), mul(ma, b.error)), mul(UNIT, reach)), ETA), reach,
-        });
-      }
-    }
-  }
-  return { bounds, certifiable: cmp(reachMax, LIMIT) < 0 };
-}
-
-// ---------- the Lean corpus ----------
-const leanRat = (q) => (q.d === 1n ? `(${q.n} : ℚ)` : `((${q.n} : ℚ) / ${q.d})`);
-const hex32 = (bits) => `0x${bits.toString(16).toUpperCase().padStart(8, '0')}`;
-const leanNode = (node) => {
-  if (node.kind === 'input') return `.input ${node.index}`;
-  if (node.kind === 'const') return `.const ${hex32(node.bits)}`;
-  return `.${node.kind} ${node.left} ${node.right}`;
-};
-function leanCorpus(corpus, budgetBits) {
-  const lines = [
-    '/-',
-    '  Generated by verification/numerical-certificate/lane.mjs (issue #44); do not edit.',
-    '  Every certificate is the untrusted analyzer\'s proposal. The kernel accepts each one and refuses',
-    '  its weakened copy, whose output error bound is halved.',
-    '-/',
-    'import NobleFoundation.Binary32Checker',
-    'open NobleFoundation.Binary32.Checker',
-    'namespace NobleCertificateCorpus',
-    '',
-    `def budget : Budget := { nodes := 64, bits := ${budgetBits} }`,
-    '',
-    'def halveAt : Nat → List NodeBound → List NodeBound',
-    '  | _, [] => []',
-    '  | 0, bound :: rest => { bound with error := bound.error / 2 } :: rest',
-    '  | k + 1, bound :: rest => bound :: halveAt k rest',
-    '',
-  ];
-  corpus.forEach(({ graph, analysis }, index) => {
-    lines.push(`def graph${index} : Graph :=`);
-    lines.push(`  { nodes := [${graph.nodes.map(leanNode).join(', ')}], outputs := [${graph.output}] }`);
-    lines.push(`def certificate${index} : Certificate :=`);
-    lines.push(`  { domains := [${graph.domains.map((d) => `{ lo := ${leanRat(exactValue(d.lo))}, hi := ${leanRat(exactValue(d.hi))}, inputError := 0 }`).join(',\n      ')}],`);
-    lines.push(`    bounds := [${analysis.bounds.map((b) => `{ lo := ${leanRat(b.lo)}, hi := ${leanRat(b.hi)}, error := ${leanRat(b.error)} }`).join(',\n      ')}] }`);
-    lines.push('set_option maxRecDepth 100000 in');
-    lines.push(`theorem certified${index} : check budget graph${index} certificate${index} = .certified := by`);
-    lines.push('  decide +kernel');
-    lines.push('set_option maxRecDepth 100000 in');
-    lines.push(`theorem weakened${index} : check budget graph${index}`);
-    lines.push(`    { certificate${index} with bounds := halveAt ${graph.output} certificate${index}.bounds } = .unknown ${graph.output} := by`);
-    lines.push('  decide +kernel');
-    lines.push('');
-  });
-  lines.push('end NobleCertificateCorpus', '');
-  return lines.join('\n');
-}
 
 // ---------- independent expected values ----------
 // Expected values never touch the analyzer's float32 decoder or rational arithmetic: inputs, constants
@@ -233,7 +63,7 @@ function sampleInputs(graph, sampleIndex) {
     const hi = floatOf(domain.hi);
     if (sampleIndex === 0) return lo;
     if (sampleIndex === 1) return hi;
-    const x = Math.fround(lo + (hi - lo) * fraction());
+    const x = Math.fround(lo + (hi - lo) * stream.fraction());
     return x < lo ? lo : x > hi ? hi : x;
   });
 }
@@ -270,17 +100,9 @@ function sample(graph, analysis, inputs) {
 }
 
 // ---------- run ----------
-const corpus = [];
-let discarded = 0;
-while (corpus.length < GRAPHS) {
-  const graph = generate();
-  const analysis = analyze(graph);
-  if (analysis.certifiable) corpus.push({ graph, analysis });
-  else discarded++;
-}
-const bitLength = (q) => Math.max((q.n < 0n ? -q.n : q.n).toString(2).length, q.d.toString(2).length);
-const maxBits = Math.max(...corpus.flatMap(({ analysis }) => analysis.bounds.flatMap((b) => [b.lo, b.hi, b.error].map(bitLength))));
-const budgetBits = 64 * Math.ceil((maxBits + 1) / 64);
+const stream = splitMix64(SEED);
+const { corpus, discarded } = buildCorpus(stream, GRAPHS);
+const { maxBits, budgetBits } = budgetOf(corpus);
 const leanText = leanCorpus(corpus, budgetBits);
 fs.mkdirSync(path.dirname(corpusPath), { recursive: true });
 fs.writeFileSync(corpusPath, leanText);
@@ -383,7 +205,7 @@ const receipt = {
     'Sampling is secondary evidence: a sound certificate is established by the kernel check, not by the absence of sampled violations.',
     'The machine values sampled here are the host\'s binary32 arithmetic, not the Lean model; their agreement with the model is not claimed by this lane.',
     'The corpus is Lean model graphs, not encoded noble-ngraph graphs; no Rust or Wasm evaluator is exercised.',
-    'Bound quality is measured for the checker\'s own rules on this corpus only; no comparison with an external analyzer such as Daisy or FPTaylor is made.',
+    'Bound quality is measured for the checker\'s own rules on this corpus only; the external-analyzer comparison is gappa.mjs.',
   ],
 };
 fs.writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`);

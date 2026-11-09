@@ -59,6 +59,46 @@ The receipt is [`receipts/2026-10-30/lane.json`](receipts/2026-10-30/lane.json),
   float32 decoder and rationals. On the same corpus, it gave identical worst errors and exact-output
   counts for all 24 graphs.
 
+## External analyzer comparison (Gappa)
+
+[`gappa.mjs`](gappa.mjs) compares the certified output bounds with Gappa, an external analyzer that is
+untrusted here, on the same corpus. [`corpus.mjs`](corpus.mjs) holds the corpus generator and analyzer
+that both lanes share. The comparison lane regenerates the 24 graphs and requires them to rebuild
+`corpus.lean` byte for byte.
+
+For each graph it writes a Gappa script with binary32 round-to-nearest-even arithmetic
+(`float<ieee_32, ne>`). Each input is `rnd(X)` with `X` in the domain, so it ranges over exactly the
+binary32 values the certificate admits. The machine chain rounds every operation; the real chain
+computes exactly from the same inputs. Gappa then encloses the output's machine-minus-real error,
+with no hints. Gappa comes from the nixpkgs the repository flake locks (`nixpkgs` follows
+`octet/nixpkgs`):
+
+```sh
+GAPPA="$(nix build --no-link --print-out-paths --impure --expr \
+  '(builtins.getFlake "git+file://'"$PWD"'?rev='"$(git rev-parse HEAD)"'").inputs.nixpkgs.legacyPackages.x86_64-linux.gappa')/bin/gappa"
+node verification/numerical-certificate/gappa.mjs --gappa "$GAPPA" --output NEW_EXTERNAL_FILE
+```
+
+Measured with Gappa 1.6.1:
+
+| | |
+|---|---|
+| graphs Gappa bounds | all 24; every Gappa bound covers the worst output error the corpus lane observed |
+| certified bound over Gappa's bound | min **1.16**, quartiles 1.36 / **1.66** / 2.91 over 23 graphs, max about `5.6·10^135` |
+| exact output | graph `11`: Gappa proves the output exact (`[0, 0]`), where the certificate allows `7.2·10^16` |
+| cost | Gappa median **16 ms** per graph, including process start-up, against about 100 ms per kernel check |
+
+- **Most graphs.** In 17 of the 23, the certificates are within 1.16 to 2.91 times Gappa's enclosures.
+  Graph `0` is at 7.4.
+- **Mixed magnitudes.** The five large ratios (graphs `1`, `6`, `17`, `22`, `23`) all combine the
+  subnormal domain with ordinary or large magnitudes. There the checker propagates interval reach over
+  the whole domain. In four of them (`1`, `6`, `22`, `23`), Gappa's bound matches the worst observed
+  error to six significant digits. Other graphs that mix the subnormal domain with ordinary magnitudes
+  stay within 2.1.
+- **Different guarantees.** Gappa's bounds are untrusted and not kernel-checked here. The certificates
+  are the proof, so tighter Gappa bounds suggest where the checker's rules lose precision, not that
+  a certificate is wrong.
+
 ## Non-claims
 
 - **Binding is identity equality, not derivation.** [`Binary32Binding.lean`](../../proofs/foundation/NobleFoundation/Binary32Binding.lean)
@@ -81,5 +121,5 @@ The receipt is [`receipts/2026-10-30/lane.json`](receipts/2026-10-30/lane.json),
   claimed here.
 - The corpus is Lean model graphs. No encoded `noble-ngraph` graph, Rust or Wasm evaluator is
   exercised.
-- Bound quality is measured for the checker's own rules on this corpus. No external analyzer, such as
-  FPTaylor or Daisy, is compared.
+- The external-analyzer comparison uses Gappa only; FPTaylor and Daisy are not packaged in the pinned
+  nixpkgs. Gappa's enclosures are not kernel-checked here.
