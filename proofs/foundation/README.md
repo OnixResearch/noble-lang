@@ -1994,6 +1994,10 @@ witness over all inputs. The generator replays witnesses on the checked graphs a
 evaluators, and the kernel replays them on the model. No encoder, formula or solver is involved,
 and items 3 to 6 stay open. Seventeen inventoried theorems: five general and twelve for the four
 traces.
+The clean-source receipt is
+[`verification/foundation/receipts/3b1569628/`](../../verification/foundation/receipts/3b1569628/foundation-check.json)
+(1214 theorems, `clean_source: true`, Lean 4.35.0). The seventeen shrink theorems and the two
+`negation` pair theorems report only `propext` and `Quot.sound`.
 
 ## Specification-quality obligations (issue #65)
 
