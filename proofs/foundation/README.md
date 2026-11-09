@@ -1670,9 +1670,12 @@ a revision, a declared register count, one declared register per node, the const
 and interface-slot tables, one instruction range per layer, the failure-suffix
 prefix minima and the acceptance conjunction of those obligations.
 
-Proved: an inflated register count is refused (`count_inflated_refused`) while a count
-one above the highest declared register's count is accepted
-(`count_one_above_is_accepted`); a missing,
+Proved: the declared register count is one register per node plus the constant-one
+register, the last, which no node holds. An inflated count, a count without that register and
+a node holding it are each refused (`count_inflated_refused`,
+`count_without_one_register_refused`, `one_register_held_refused`), the compiler's count is
+accepted (`count_reserving_one_is_accepted`), and acceptance keeps every node's register below
+the reserved one (`accepted_reserves_one_register`); a missing,
 out-of-range or shared register is refused (`missing_register_refused`,
 `out_of_range_refused`, `alias_refused`); a constant table with the wrong entry count
 is refused (`constant_count_refused`), and so is one that names an entry twice
@@ -1685,6 +1688,23 @@ from the graph's own prefix minima is refused (`fail_suffix_mismatch_refused`); 
 acceptance implies a register per node, non-aliasing, distinct constant entries and
 coverage (`accepted_implies_registers`, `accepted_implies_distinct`,
 `accepted_implies_constants_distinct`, `accepted_implies_coverage`).
+
+**Correction (2026-11-08, issue #104).** The model and the Rust checker let the count sit
+either one or two above the highest declared register (`regs - (highest + 1) ≤ 1`). Two forged
+declarations therefore passed:
+
+- **A count without the constant-one register.** `regs` one short keeps every node's register in
+  range, but drops the register `AffineOperand::One` reads as exact `1.0`.
+- **A node holding that register.** Giving the last register to a node keeps the count, but the
+  declaration then has no free register for `One`.
+
+The layout options in the build key already declare `regs=dense;one-reg=last`, and
+`Compiled::new` always emits `regs = non-guard nodes + 1` with the last register free. The Rust
+check now requires exactly that count (`Refusal::RegisterCount`) and refuses a node at the last
+register (`Refusal::OneRegisterHeld`). The model's `countReservesOne` replaces `countWithinOne`,
+and `highestRegister` is gone. `exampleLayout_accepted` still holds for the real declaration. The
+F32 `AffineOperand::One` layout and the I64 sample are regression tests in
+`crates/noble-ngraph/src/layout.rs` that fail on the old checker.
 
 **Correction (2026-11-07, issues #94 and #95).** The model and the Rust checker both
 accepted two forged declarations:

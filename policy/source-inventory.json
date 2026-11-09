@@ -125508,118 +125508,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:11261:11270",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:11419:11423",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:12312:12316",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:16836:17052",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:17233:18586",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:18604:21534",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:18730:18760",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:21843:22880",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:21961:21991",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:23087:24143",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:24433:25581",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:24562:24592",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:6121:6153",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:6962:6971",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Renewed #98: CheckedGraph::packed_layout_key and layout::packed_layout_key bind a packed layout's compiler revision and build key; one regression in the existing layout tests from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::check::CheckedGraph::packed_layout_key",
@@ -127368,6 +127256,134 @@
       "package": "noble-cli",
       "qualified_path": "noble::component::bounded_region::report_v2_tests::{use#18}",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:11741:11747",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:12107:12111",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:13000:13004",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:17524:17740",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:17921:19274",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:19292:22531",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:19418:19448",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:22840:23877",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:22958:22988",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:24084:25140",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:25430:26578",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:25559:25589",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:26887:28032",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:6391:6423",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/layout.rs:7232:7241",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed issue #104 constant-one register reservation in layout::check from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::layout::tests::f32_affine_one_requires_a_distinct_reserved_register",
+      "refinement": "open"
     }
   ],
   "test_subjects": [

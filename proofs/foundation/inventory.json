@@ -3127,13 +3127,25 @@
       "name": "NobleFoundation.PackedLayout.count_inflated_refused",
       "phase": 2,
       "role": "packed-layout",
-      "claim": "A declared register count more than one above the highest declared register's count is refused."
+      "claim": "A declared register count above one register per node plus the constant-one register is refused."
     },
     {
-      "name": "NobleFoundation.PackedLayout.count_one_above_is_accepted",
+      "name": "NobleFoundation.PackedLayout.count_without_one_register_refused",
       "phase": 2,
       "role": "packed-layout",
-      "claim": "A declared register count exactly one above the highest declared register's count is accepted."
+      "claim": "A declared register count without the constant-one register is refused, although every node register stays inside it (issue #104)."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.one_register_held_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A node that declares the constant-one register, the last declared register, is refused (issue #104)."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.count_reserving_one_is_accepted",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The count the compiler declares, one register per node plus a constant-one register no node holds, is accepted."
     },
     {
       "name": "NobleFoundation.PackedLayout.missing_register_refused",
@@ -3218,6 +3230,12 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "An accepted layout's layer ranges tile the instruction stream: each holds exactly its layer's instruction nodes and the last ends at the instruction count."
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.accepted_reserves_one_register",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "An accepted layout declares one register per node plus the constant-one register, and every node register lies below it (issue #104)."
     },
     {
       "name": "NobleFoundation.PackedLayout.exampleLayout_accepted",

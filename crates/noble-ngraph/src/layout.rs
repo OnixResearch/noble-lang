@@ -77,8 +77,12 @@ pub enum Refusal {
     RegisterOutOfRange,
     /// Two distinct non-guard nodes share a register.
     AliasedRegisters,
-    /// The declared register count sits more than one above the highest register.
+    /// The declared register count is not one register per non-guard node plus the constant-one
+    /// register: a count without the constant-one register, or with headroom beyond it.
     RegisterCount,
+    /// A node holds the constant-one register, the last declared register, which
+    /// `AffineOperand::One` reads as exact `1.0` (issue #104).
+    OneRegisterHeld,
     /// A constant register does not name exactly one constant node's bits.
     ConstantTable,
     /// A slot register does not name exactly one interface input node.
@@ -244,15 +248,18 @@ pub fn check(checked: &crate::check::CheckedGraph, layout: &PackedLayout) -> Res
         return Err(Refusal::RegisterMapShape);
     }
     let highest = register_map(graph, layout)?;
-    // The declared count may sit one above the highest declared register (the
-    // scheduler reserves one register), but no further: an inflated count is a
-    // wrong declaration rather than capacity headroom.
-    if layout
-        .regs
-        .saturating_sub(highest.map_or(0, |current| current.saturating_add(1)))
-        > 1
-    {
+    // The layout options bind `regs=dense;one-reg=last`: one register per non-guard node, then
+    // the constant-one register that `AffineOperand::One` reads, which is the last and which no
+    // node holds (issue #104). A count without it, or with headroom beyond it, is a wrong
+    // declaration. With every node's register distinct and below the count, refusing a node at
+    // the last register leaves the nodes exactly the registers below it.
+    let held = graph.nodes.iter().filter(|node| !guard(&node.op)).count();
+    let one = u32::try_from(held).map_err(|_| Refusal::RegisterCount)?;
+    if one.checked_add(1) != Some(layout.regs) {
         return Err(Refusal::RegisterCount);
+    }
+    if highest.is_some_and(|register| register >= one) {
+        return Err(Refusal::OneRegisterHeld);
     }
     let mut constants = table_counts(graph, layout, |op| match op {
         crate::ir::Op::Const(lit) => Some(constant_bits(*lit)),
@@ -489,6 +496,12 @@ mod tests {
         wrong_count.regs = layout.regs.saturating_add(2);
         assert_eq!(check(&wrong_count), Err(super::Refusal::RegisterCount));
 
+        // A count one short keeps every node's register in range but drops the constant-one
+        // register (issue #104).
+        let mut without_one = layout.clone();
+        without_one.regs = layout.regs.saturating_sub(1);
+        assert_eq!(check(&without_one), Err(super::Refusal::RegisterCount));
+
         // Declaring the sample's real guard a register is refused by the guard rule.
         let mut guard_register = layout.clone();
         let guard_index = graph
@@ -608,5 +621,39 @@ mod tests {
         shifted.layers[previous].1 = shifted.layers[previous].1.saturating_add(1);
         shifted.layers[index].0 = shifted.layers[index].0.saturating_add(1);
         assert_eq!(check(&shifted), Err(super::Refusal::LayerCoverage));
+    }
+
+    /// `AffineOperand::One` reads the last register as exact `1.0` (issue #104). The compiler
+    /// reserves it after one register per node; a declaration without it, or one that gives it to
+    /// a node, is refused, so an accepted layout always has the register the instruction reads.
+    #[test]
+    fn f32_affine_one_requires_a_distinct_reserved_register() {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::F32,
+            crate::ir::Subject::authored(&scheme, "affine-one-register"),
+        );
+        let affine = builder.affine(0.0, &[(2.0, crate::ir::AffineOperand::One)]);
+        builder.output(affine);
+        let checked =
+            crate::check::check(&scheme, builder.finish()).expect("the affine graph checks");
+        let layout = crate::compiled::Compiled::new(&scheme, &checked).packed_layout();
+        assert_eq!(layout.reg, alloc::vec![0]);
+        assert_eq!(layout.regs, 2);
+        assert_eq!(super::check(&checked, &layout), Ok(()));
+
+        let mut without_one = layout.clone();
+        without_one.regs = 1;
+        assert_eq!(
+            super::check(&checked, &without_one),
+            Err(super::Refusal::RegisterCount)
+        );
+
+        let mut one_held = layout.clone();
+        one_held.reg[0] = 1;
+        assert_eq!(
+            super::check(&checked, &one_held),
+            Err(super::Refusal::OneRegisterHeld)
+        );
     }
 }

@@ -24,6 +24,7 @@ pub(super) const fn layout(value: layout::Refusal) -> &'static str {
         layout::Refusal::RegisterOutOfRange => "register-out-of-range",
         layout::Refusal::AliasedRegisters => "aliased-registers",
         layout::Refusal::RegisterCount => "register-count",
+        layout::Refusal::OneRegisterHeld => "one-register-held",
         layout::Refusal::ConstantTable => "constant-table",
         layout::Refusal::SlotTable => "slot-table",
         layout::Refusal::GuardRegister => "guard-register",

@@ -7,9 +7,12 @@ tables, one instruction range per layer, the failure-suffix prefix minima and a 
 key — and validates it against the graph the checker produced. This file models the *declared
 tables and the obligations*, not the Rust bytes, and proves:
 
-* an inflated register count is refused (`count_inflated_refused`): the count may sit one
-  above the highest declared register but no further (`count_one_above_is_accepted`), and with
-  no declared register it may be at most one;
+* the declared register count is one register per node plus the constant-one register, the
+  last, which no node declares (issue #104): an inflated count, a count without that register
+  and a node holding it are each refused (`count_inflated_refused`,
+  `count_without_one_register_refused`, `one_register_held_refused`), the compiler's count is
+  accepted (`count_reserving_one_is_accepted`), and an accepted layout keeps every node's
+  register below the reserved one (`accepted_reserves_one_register`);
 * a missing register, an out-of-range register and a shared register are each refused
   (`missing_register_refused`, `out_of_range_refused`, `alias_refused`);
 * the constant table must have one entry per constant node (`constant_count_refused`), no entry
@@ -82,21 +85,14 @@ def distinctRegisters (graph : Graph) (layout : Layout) : Bool :=
         | some left, some right => left != right
         | _, _ => true
 
-/-- The highest register any node declares, if any node declares one. -/
-def highestRegister (graph : Graph) (layout : Layout) : Option Nat :=
-  (List.range graph.arity).foldl (fun highest index =>
-    match layout.reg index, highest with
-    | some register, some best => some (max register best)
-    | some register, none => some register
-    | none, best => best) none
-
-/-- The declared count sits at most one above the highest declared register, which leaves the
-scheduler its one reserved register; with no declared register the count is at most one. This is
-the Rust `layout::check` rule `regs - (highest + 1) ≤ 1`. -/
-def countWithinOne (graph : Graph) (layout : Layout) : Bool :=
-  match highestRegister graph layout with
-  | some highest => decide (layout.regs ≤ highest + 2)
-  | none => decide (layout.regs ≤ 1)
+/-- The declared count is one register per node plus the constant-one register, which is the
+last and which no node declares. This is the Rust `layout::check` rule for the
+`regs=dense;one-reg=last` layout options (issue #104); the fragment has no guard nodes, so every
+node holds a register. With distinct registers below the count, it leaves the nodes exactly the
+registers below the last. -/
+def countReservesOne (graph : Graph) (layout : Layout) : Bool :=
+  decide (layout.regs = graph.arity + 1) &&
+    (List.range graph.arity).all fun index => layout.reg index != some graph.arity
 
 /-- How many nodes declare the given register. -/
 def registerCount (graph : Graph) (layout : Layout) (register : Nat) : Nat :=
@@ -203,7 +199,7 @@ def obligations (graph : Graph) (layerCount : Nat) (fails : Node → Bool)
   [decide (layout.revision = revision),
     (List.range graph.arity).all (declares layout),
     distinctRegisters graph layout,
-    countWithinOne graph layout,
+    countReservesOne graph layout,
     layout.consts.all (constantEntryOk graph layout),
     constantCountOk graph layout,
     constantsDistinctOk layout,
@@ -220,21 +216,42 @@ def accepted (graph : Graph) (layerCount : Nat) (fails : Node → Bool) (layerOf
 
 /-! ### Refusals -/
 
-/-- An inflated declared count is refused: the count may sit one above the highest declared
-register, but a declaration two above it is a wrong declaration rather than headroom. -/
-theorem count_inflated_refused (graph : Graph) (layout : Layout) (highest : Nat)
-    (hhighest : highestRegister graph layout = some highest)
-    (hinflated : layout.regs = highest + 3) :
-    countWithinOne graph layout = false := by
-  simp [countWithinOne, hhighest, hinflated]
+/-- An inflated declared count is refused: headroom beyond the constant-one register is a wrong
+declaration rather than capacity. -/
+theorem count_inflated_refused (graph : Graph) (layout : Layout)
+    (hinflated : graph.arity + 1 < layout.regs) :
+    countReservesOne graph layout = false := by
+  simp only [countReservesOne, Bool.and_eq_false_iff, decide_eq_false_iff_not]
+  left
+  omega
 
-/-- The count one above the highest declared register's count, which keeps the scheduler's
-reserved register, is accepted. -/
-theorem count_one_above_is_accepted (graph : Graph) (layout : Layout) (highest : Nat)
-    (hhighest : highestRegister graph layout = some highest)
-    (hcount : layout.regs = highest + 2) :
-    countWithinOne graph layout = true := by
-  simp [countWithinOne, hhighest, hcount]
+/-- A count without the constant-one register is refused, although every node's register stays
+inside it (issue #104). -/
+theorem count_without_one_register_refused (graph : Graph) (layout : Layout)
+    (hmissing : layout.regs = graph.arity) :
+    countReservesOne graph layout = false := by
+  simp only [countReservesOne, Bool.and_eq_false_iff, decide_eq_false_iff_not]
+  left
+  omega
+
+/-- A node that declares the constant-one register is refused (issue #104). -/
+theorem one_register_held_refused (graph : Graph) (layout : Layout) (index : Nat)
+    (hin : index < graph.arity) (hheld : layout.reg index = some graph.arity) :
+    countReservesOne graph layout = false := by
+  simp only [countReservesOne, Bool.and_eq_false_iff]
+  right
+  rw [List.all_eq_false]
+  exact ⟨index, List.mem_range.mpr hin, by simp [hheld]⟩
+
+/-- The count the compiler declares, one register per node plus the constant-one register that
+no node holds, is accepted. -/
+theorem count_reserving_one_is_accepted (graph : Graph) (layout : Layout)
+    (hcount : layout.regs = graph.arity + 1)
+    (hfree : ∀ index < graph.arity, layout.reg index ≠ some graph.arity) :
+    countReservesOne graph layout = true := by
+  simp only [countReservesOne, Bool.and_eq_true, decide_eq_true_eq, List.all_eq_true,
+    List.mem_range, bne_iff_ne, ne_eq]
+  exact ⟨hcount, fun index hin => hfree index hin⟩
 
 /-- A node declared without a register is refused. -/
 theorem missing_register_refused (layout : Layout) (index : Nat)
@@ -446,6 +463,35 @@ theorem accepted_implies_coverage (graph : Graph) (layerCount : Nat) (fails : No
     simp
   have hcoverage := haccepted (coverageOk graph layerOf layout) hmem
   simpa only [id_eq] using hcoverage
+
+/-- An accepted layout reserves the last register for the constant one: the count is one per
+node plus one, and every node's register lies below it (issue #104). -/
+theorem accepted_reserves_one_register (graph : Graph) (layerCount : Nat)
+    (fails : Node → Bool) (layerOf : Nat → Nat) (layout : Layout)
+    (haccepted : accepted graph layerCount fails layerOf layout = true) :
+    layout.regs = graph.arity + 1 ∧
+      ∀ index < graph.arity, ∀ register, layout.reg index = some register →
+        register < graph.arity := by
+  unfold accepted at haccepted
+  rw [List.all_eq_true] at haccepted
+  have hcountMem : countReservesOne graph layout ∈
+      obligations graph layerCount fails layerOf layout := by
+    unfold obligations
+    simp
+  have hdeclaresMem : (List.range graph.arity).all (declares layout) ∈
+      obligations graph layerCount fails layerOf layout := by
+    unfold obligations
+    exact List.mem_cons_of_mem _ List.mem_cons_self
+  have hcount := haccepted _ hcountMem
+  have hdeclares := haccepted _ hdeclaresMem
+  simp only [id_eq, countReservesOne, Bool.and_eq_true, decide_eq_true_eq, List.all_eq_true,
+    List.mem_range, bne_iff_ne, ne_eq] at hcount hdeclares
+  obtain ⟨hregs, hfree⟩ := hcount
+  refine ⟨hregs, fun index hin register hreg => ?_⟩
+  have hdeclared := hdeclares index hin
+  simp only [declares, hreg, decide_eq_true_eq] at hdeclared
+  have hne : register ≠ graph.arity := fun hsame => hfree index hin (by rw [hreg, hsame])
+  omega
 
 /-! ### A real layout is accepted -/
 
