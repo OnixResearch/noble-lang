@@ -2,7 +2,7 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "b357ebd7eb39e23772bfea989783cbc8896bec32e3b8a0476cb9735741de32d1",
+    "sha256": "263d5a696735f443ebeabaa7194450177da35e80058cf67523a56a0aedc67958",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
       "sha256": "98cc360fc506ed092b62ef232a19cc9a6ef61805e9d9f2d8c467bea714735129"
@@ -15,9 +15,9 @@
     "node_api": "24.3.0"
   },
   "documents": 14,
-  "requirements": 556,
-  "scenarios": 230,
-  "scenarios_executed": 150,
+  "requirements": 560,
+  "scenarios": 241,
+  "scenarios_executed": 161,
   "open_test_design": 193,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -536,6 +536,26 @@
       "sha256": "90b2fbc7ac19a1c7d6062fedcf7ec4333183d71eed33c12b3f1994b492636d47"
     },
     {
+      "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/design.md",
+      "sha256": "306dc0081538d30ba799ace06d06bbc7e795f429a4651371dc1fe48f5a0cbdf1"
+    },
+    {
+      "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/proposal.md",
+      "sha256": "0a1656da1ebcb29b5ad27f5f61c44b0b980323b453b89d3dd99cc7dc72674c9c"
+    },
+    {
+      "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/specs/program-contracts/spec.md",
+      "sha256": "2ae000cf3abc52aa84a2829bd1bf870e78c9a6e6120d6113e07835576fdd81aa"
+    },
+    {
+      "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/specs/resource-adapters/spec.md",
+      "sha256": "4823770af7b376fa5caeeeda24c231b0a5bba965b7bba160df801db186446930"
+    },
+    {
+      "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/tasks.md",
+      "sha256": "8ca3c2bc9b6f87c4c27403794d623eec339baf174ffa8fc3eb464b959a629a76"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -578,26 +598,6 @@
     {
       "file": ".cairn/changes/artifact-correspondence-extension/tasks.md",
       "sha256": "e70bc32978280eba922148e07b1365fbdbb53af05363e0df0de55bcd0e8ccd1d"
-    },
-    {
-      "file": ".cairn/changes/behavioral-effect-protocol/design.md",
-      "sha256": "306dc0081538d30ba799ace06d06bbc7e795f429a4651371dc1fe48f5a0cbdf1"
-    },
-    {
-      "file": ".cairn/changes/behavioral-effect-protocol/proposal.md",
-      "sha256": "0a1656da1ebcb29b5ad27f5f61c44b0b980323b453b89d3dd99cc7dc72674c9c"
-    },
-    {
-      "file": ".cairn/changes/behavioral-effect-protocol/specs/program-contracts/spec.md",
-      "sha256": "2ae000cf3abc52aa84a2829bd1bf870e78c9a6e6120d6113e07835576fdd81aa"
-    },
-    {
-      "file": ".cairn/changes/behavioral-effect-protocol/specs/resource-adapters/spec.md",
-      "sha256": "4823770af7b376fa5caeeeda24c231b0a5bba965b7bba160df801db186446930"
-    },
-    {
-      "file": ".cairn/changes/behavioral-effect-protocol/tasks.md",
-      "sha256": "8ca3c2bc9b6f87c4c27403794d623eec339baf174ffa8fc3eb464b959a629a76"
     },
     {
       "file": ".cairn/changes/bend-qcue-scoped-adaptations/design.md",
@@ -1305,11 +1305,11 @@
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
-      "sha256": "386fc50b02eccc94c4990fe7791e4cae434d11470b54aeac7a571152c7c9ccce"
+      "sha256": "574068e3d4427c9a84d33b6185b4f3856ae9f8e08134a775dd8f95693974e243"
     },
     {
       "file": ".cairn/specs/resource-adapters/spec.md",
-      "sha256": "a4142106b04959479436a1cd773b46b21e22eab0b101ad49907bbb815d08a3be"
+      "sha256": "7345344c1b1c2fa38ba83644d2f834098f9e69f5856f3fceac6652bea23983b7"
     },
     {
       "file": ".cairn/specs/safety/spec.md",
@@ -1404,6 +1404,10 @@
       "sha256": "39f3317a56ddec2a9ccee5cabb0bd267b01a18cfff850be097f05768cb9c50b1"
     },
     {
+      "file": "specs/conformance/effect-protocol-cases.json",
+      "sha256": "37f580f1a84e8d30fa8f34c357a2de8f8080ea78842020360444c0beaf1610f5"
+    },
+    {
       "file": "specs/conformance/erlang-abstract-cases.json",
       "sha256": "7e0daf547a964834603e81d3c7087b241b1031c3163b20b1e5acf13a136bec01"
     },
@@ -1485,7 +1489,7 @@
     },
     {
       "file": "specs/PROGRAM-CONTRACTS.md",
-      "sha256": "dcd6842e3019432b507b10e3651c94aa07dc6d1a99bbcff5ab3931f53daacd82"
+      "sha256": "e4639f1dce40fd5d2f4f626e6c95a90d538f5b57efe6b3f4dff37210c07edcd6"
     },
     {
       "file": "specs/README.md",
@@ -1493,11 +1497,11 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "c30a77c7f3e82e9232b01ec81620f269ee3e8f9ba105f9938446389d70cfef11"
+      "sha256": "8dfadeb09a6dee95964db3440e1de3ac3aed8bbedacde32921d74b962f229522"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
-      "sha256": "dbdbe49ca7f81d1084dd21fc28a05828b5378545fe3587576a91e120c0a36d2b"
+      "sha256": "c1c3d3287601a47e6aa924fd01d2682edfb2823e1bc200543ee6dd336e301472"
     },
     {
       "file": "specs/REVIEW-RESOLUTION.md",
@@ -1525,7 +1529,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "8bb6e4eee54de3d3e2881e7677274b7deb12420664104148938dcc724d34d66a"
+      "sha256": "c80bcfb6dcf2044b1f992624cd6077fc80cbaa9e96c47096bf80293b9c729e06"
     },
     {
       "file": "specs/STATUS.json",
@@ -1633,7 +1637,7 @@
     },
     {
       "file": "verification/effect-protocol/README.md",
-      "sha256": "9345d222b204db3b9a447f61888dc8bd8241384c43cbfcef549d08ca45f39832"
+      "sha256": "f7b5c703f2f3cd2e1ebd579eda4e9a4923b808aa5817e46d730f322bb11292c4"
     },
     {
       "file": "verification/extraction.md",

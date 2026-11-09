@@ -120,6 +120,7 @@ const ROUTES = {
   DX: ['semantic-test', 'policy-test', 'review'],
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
   FXORACLE: ['experiment-test', 'correspondence', 'review'],
+  EPROTO: ['boundary-test', 'model-proof', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.

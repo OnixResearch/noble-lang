@@ -650,3 +650,78 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the cooperative native driver, bounded external blocking work and the declared fuel, epoch or deadline progress-control budget
 - WHEN runnable guest work exhausts fuel or receives a host-driven epoch interrupt, or an invocation deadline expires while native work remains active
 - THEN guest access is revoked independently of native completion, retained pins remain charged until actual stop and settlement, and measured progress is not promoted to a wall-clock, fairness or eventual-cleanup guarantee
+
+### Requirement: EPROTO-OBS-01
+r[EPROTO-OBS-01]
+
+**EPROTO-OBS-01.**
+
+Before any `RegionProtocol-v1` runtime observation counts as protocol evidence, the bounded-region host report MUST be a new schema version that keeps the existing `noble-bounded-region/v1` receipts unchanged.
+
+The new report MUST:
+- separately count guest releases, destructor releases and host retirements, with abnormal cleanup recording its retirement reason;
+- classify guest trap, quota exhaustion, scope exhaustion, cancellation and outside-model responses distinctly (as H-OUTCOME-01 requires), instead of a single `adapter-trap` or `invalid-handle`;
+- report any owner or native pin that remains after cleanup;
+- record an ordered event trace of requests, responses and committed effects up to the abort point.
+
+Cancellation claims additionally require a real host interruption control that revokes guest access immediately. Until that control exists, cancellation remains unsupported. A finite monitored trace is evidence about that execution only and MUST NOT be reported as a universal protocol proof.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: EPROTO-CASE-03 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-03](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-04 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-04](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-05 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-05](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-06 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-06](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-07 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-07](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-08 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-08](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: EPROTO-CASE-11 for EPROTO-OBS-01
+
+- GIVEN the `Effect-Protocol-Draft` profile and every field of `input` in [EPROTO-CASE-11](../../../specs/conformance/effect-protocol-cases.json)
+- WHEN the `adapter` procedure for case `EPROTO-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `EPROTO-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

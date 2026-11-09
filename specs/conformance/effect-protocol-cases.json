@@ -1,0 +1,1267 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "behavioral-effect-protocol-eproto-cases-issue-9",
+  "cases": [
+    {
+      "id": "EPROTO-CASE-01",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-SCOPE-01",
+        "EPROTO-TRACE-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "read-1-2": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          },
+          "read-3-0": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "3",
+            "length": "0",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "normal",
+        "variants": {
+          "read-1-2": {
+            "outcome": "read",
+            "exit_class": "normal",
+            "bytes_hex": "0102",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "monitor_verdicts": []
+          },
+          "read-3-0": {
+            "outcome": "read",
+            "exit_class": "normal",
+            "bytes_hex": "",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-01",
+          "claim": "The compiled subject `region.read swap regions.release` reads `0102` at offset 1 length 2, and the empty slice at offset 3 length 0, from the host region `000102`. Each v2 report is `read` with exit class `normal`: one region-read commit, one guest release, no host retirement, and no monitor violation.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "read-1-2",
+              "read-3-0"
+            ],
+            "command_ids": [
+              "048",
+              "049"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-02",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-SCOPE-01",
+        "EPROTO-TRACE-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "bounds-3-1": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "3",
+            "length": "1",
+            "flags": []
+          },
+          "bounds-2-2": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "2",
+            "length": "2",
+            "flags": []
+          },
+          "bounds--1-1": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "-1",
+            "length": "1",
+            "flags": []
+          },
+          "bounds-9223372036854775807-1": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "9223372036854775807",
+            "length": "1",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "rejected",
+        "variants": {
+          "bounds-3-1": {
+            "outcome": "bounds-reject",
+            "exit_class": "rejected",
+            "bytes_hex": null,
+            "trace": [
+              "region.read",
+              "response:refused",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "refusals.bounds": 1,
+            "monitor_verdicts": []
+          },
+          "bounds-2-2": {
+            "outcome": "bounds-reject",
+            "exit_class": "rejected",
+            "bytes_hex": null,
+            "trace": [
+              "region.read",
+              "response:refused",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "refusals.bounds": 1,
+            "monitor_verdicts": []
+          },
+          "bounds--1-1": {
+            "outcome": "bounds-reject",
+            "exit_class": "rejected",
+            "bytes_hex": null,
+            "trace": [
+              "region.read",
+              "response:refused",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "refusals.bounds": 1,
+            "monitor_verdicts": []
+          },
+          "bounds-9223372036854775807-1": {
+            "outcome": "bounds-reject",
+            "exit_class": "rejected",
+            "bytes_hex": null,
+            "trace": [
+              "region.read",
+              "response:refused",
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "refusals.bounds": 1,
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-02",
+          "claim": "The same compiled subject refuses (3,1), (2,2), (-1,1) and (i64::MAX,1) with `bounds-reject` and exit class `rejected`: no region-read commit, one bounds refusal, and one guest release.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "bounds-3-1",
+              "bounds-2-2",
+              "bounds--1-1",
+              "bounds-9223372036854775807-1"
+            ],
+            "command_ids": [
+              "050",
+              "051",
+              "052",
+              "053"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-03",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "scope-exhaustion": {
+            "kind": "hostile-component",
+            "component": "scope-exhaustion",
+            "host_buffer_hex": "000102",
+            "offset": "0",
+            "length": "1",
+            "flags": []
+          },
+          "forged-and-cross-host-claims": {
+            "kind": "direct-host-fixture",
+            "tests": [
+              "tests::invalid_claims_and_boundaries_do_not_read_or_consume_region",
+              "tests::same_slot_and_generation_from_another_live_invocation_cannot_cross",
+              "report_v2_tests::v2_classifies_scope_exhaustion_apart_from_an_identity_refusal",
+              "report_v2_tests::results_outside_the_result_schema_are_outside_the_model",
+              "report_v2_tests::cancellation_revokes_access_once_the_requested_reads_are_answered"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "rejected",
+        "variants": {
+          "scope-exhaustion": {
+            "outcome": "invalid-handle",
+            "exit_class": "rejected",
+            "region_reads": 64,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "refusals.scope-exhausted": 1,
+            "refusals.identity": 0,
+            "refusals.bounds": 0,
+            "monitor_verdicts": [
+              "truncated"
+            ]
+          },
+          "forged-and-cross-host-claims": {
+            "tests_passed": [
+              "tests::invalid_claims_and_boundaries_do_not_read_or_consume_region",
+              "tests::same_slot_and_generation_from_another_live_invocation_cannot_cross",
+              "report_v2_tests::v2_classifies_scope_exhaustion_apart_from_an_identity_refusal",
+              "report_v2_tests::results_outside_the_result_schema_are_outside_the_model",
+              "report_v2_tests::cancellation_revokes_access_once_the_requested_reads_are_answered"
+            ]
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-03",
+          "claim": "A hostile component gets 64 region-read commits, and its 65th read is refused `invalid-handle` and counted as scope exhaustion, apart from identity and bounds refusals. The host bounds the trace at 64 events, and the monitor reports `truncated`. Direct host fixtures refuse forged and cross-host claims without reading or consuming the region.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "scope-exhaustion",
+              "forged-and-cross-host-claims"
+            ],
+            "command_ids": [
+              "054",
+              "055"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output.",
+            "The forged and cross-host claims are fixture-level host tests, not guest-reachable.",
+            "The native-access refusal is not exercised: Host::read passes native_access only the borrow begin has just opened, which T4 proves is authorized (open_borrow_returns)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-04",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "trap-after-commit": {
+            "kind": "hostile-component",
+            "component": "trap-after-commit",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "trap",
+        "variants": {
+          "trap-after-commit": {
+            "outcome": "adapter-trap",
+            "exit_class": "trap",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "trap",
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-04",
+          "claim": "A hostile component that reads (1,2) and then executes `unreachable` keeps the request, region-read commit and response as its prefix. The host retires the owner once for reason `trap`, and the exit class is `trap`.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "trap-after-commit"
+            ],
+            "command_ids": [
+              "056"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-05",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "trap-before-use": {
+            "kind": "hostile-component",
+            "component": "trap-before-use",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "trap",
+        "variants": {
+          "trap-before-use": {
+            "outcome": "adapter-trap",
+            "exit_class": "trap",
+            "trace": [
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "trap",
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-05",
+          "claim": "A hostile component that traps before any import call leaves an empty guest prefix. The host retires the owner once for reason `trap`, and no region is read.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "trap-before-use"
+            ],
+            "command_ids": [
+              "057"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-06",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "fuel-74": {
+            "kind": "compiled-noble-subject-fuel-knob",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": [
+              "--fuel",
+              "74"
+            ]
+          },
+          "fuel-73": {
+            "kind": "compiled-noble-subject-fuel-knob",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": [
+              "--fuel",
+              "73"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "quota-exhausted",
+        "variants": {
+          "fuel-74": {
+            "outcome": "adapter-trap",
+            "exit_class": "quota-exhausted",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "quota-exhausted",
+            "monitor_verdicts": []
+          },
+          "fuel-73": {
+            "outcome": "adapter-trap",
+            "exit_class": "quota-exhausted",
+            "trace": [
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "quota-exhausted",
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-06",
+          "claim": "The compiled subject with `--fuel 74`, the smallest fuel that admits the first read, exhausts its quota after the region-read commit and before the release; with `--fuel 73` it does so before the read. Both are classified `quota-exhausted`, distinct from `trap`, and the host retires the owner once for that reason.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "fuel-74",
+              "fuel-73"
+            ],
+            "command_ids": [
+              "082",
+              "083"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-07",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "cancel-between-two-reads": {
+            "kind": "hostile-component",
+            "component": "read-twice",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": [
+              "--cancel-after-reads",
+              "1"
+            ]
+          },
+          "cancel-a-computing-guest": {
+            "kind": "hostile-component",
+            "component": "read-then-spin",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": [
+              "--cancel-after-reads",
+              "1"
+            ]
+          },
+          "same-guest-uncancelled": {
+            "kind": "hostile-component",
+            "component": "read-then-spin",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          },
+          "cancel-the-compiled-subject": {
+            "kind": "compiled-noble-subject",
+            "component": "compiled-subject",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": [
+              "--cancel-after-reads",
+              "1"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "cancelled",
+        "variants": {
+          "cancel-between-two-reads": {
+            "outcome": "adapter-trap",
+            "exit_class": "cancelled",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "cancelled",
+            "cancellation": {
+              "after_reads": 1,
+              "requested": true
+            },
+            "monitor_verdicts": []
+          },
+          "cancel-a-computing-guest": {
+            "outcome": "adapter-trap",
+            "exit_class": "cancelled",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "cancelled",
+            "monitor_verdicts": []
+          },
+          "same-guest-uncancelled": {
+            "outcome": "adapter-trap",
+            "exit_class": "quota-exhausted",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "quota-exhausted",
+            "cancellation": {
+              "after_reads": null,
+              "requested": false
+            },
+            "monitor_verdicts": []
+          },
+          "cancel-the-compiled-subject": {
+            "outcome": "adapter-trap",
+            "exit_class": "cancelled",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "region_reads": 1,
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "cancelled",
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-07",
+          "claim": "With the host interruption control `--cancel-after-reads 1`, a guest reading twice, a computing guest and the compiled subject are each cancelled after the first region-read commit: exit class `cancelled`, retirement reason `cancelled`, prefix preserved. The same computing guest without the control exhausts its quota instead, so the cancellation is the control's doing.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "cancel-between-two-reads",
+              "cancel-a-computing-guest",
+              "same-guest-uncancelled",
+              "cancel-the-compiled-subject"
+            ],
+            "command_ids": [
+              "084",
+              "085",
+              "086",
+              "087"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-08",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-COMPOSE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "omitted-release": {
+            "kind": "hostile-component",
+            "component": "omitted-release",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "normal",
+        "variants": {
+          "omitted-release": {
+            "outcome": "read",
+            "exit_class": "normal",
+            "bytes_hex": "0102",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "host.retire",
+              "response:value"
+            ],
+            "releases": {
+              "guest": 0,
+              "destructor": 0,
+              "host_retirement": 1
+            },
+            "retirement_reason": "omitted-release",
+            "monitor_verdicts": [
+              "omitted-release"
+            ]
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-08",
+          "claim": "A hostile component that returns its read without releasing gets outcome `read`. The host retires the owner for reason `omitted-release`, not as a guest release, and the monitor reports `omitted-release`.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "omitted-release"
+            ],
+            "command_ids": [
+              "088"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-09",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-COMPOSE-01",
+        "EPROTO-TRACE-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "double-release": {
+            "kind": "hostile-component",
+            "component": "double-release",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          },
+          "read-after-release": {
+            "kind": "hostile-component",
+            "component": "read-after-release",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "adapter-invalid",
+        "variants": {
+          "double-release": {
+            "outcome": "adapter-trap",
+            "exit_class": "adapter-invalid",
+            "trace": [
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "cleanup_state": "already-retired",
+            "error_includes": "unknown handle index",
+            "monitor_verdicts": []
+          },
+          "read-after-release": {
+            "outcome": "adapter-trap",
+            "exit_class": "adapter-invalid",
+            "trace": [
+              "region.release",
+              "response:value"
+            ],
+            "region_reads": 0,
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "cleanup_state": "already-retired",
+            "error_includes": "unknown handle index",
+            "monitor_verdicts": []
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-09",
+          "claim": "A hostile component that releases twice, or reads after its release, has the second call refused by Wasmtime's handle table (`unknown handle index`) before it reaches the host. The exit class is `adapter-invalid`, with exactly one release commit and no read after it.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "double-release",
+              "read-after-release"
+            ],
+            "command_ids": [
+              "089",
+              "090"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output.",
+            "The design expected a trap at the second call; Wasmtime reports an untyped error instead, so the adapter classifies the exit `adapter-invalid`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-10",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "static",
+      "requirements": [
+        "EPROTO-COMPOSE-01"
+      ],
+      "input": {
+        "harness": "component-check",
+        "variants": {
+          "release-then-read": {
+            "source": "[ [ regions.release ] dip ] dip region.read\n"
+          },
+          "reordered-words": {
+            "source": "regions.release region.read\n"
+          }
+        }
+      },
+      "expected": {
+        "stage": "check",
+        "outcome": "error",
+        "diagnostic_code": "component-check",
+        "component_emitted": false,
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "release-then-read": {
+            "outcome": "error",
+            "diagnostic_code": "component-check",
+            "component_emitted": false
+          },
+          "reordered-words": {
+            "outcome": "error",
+            "diagnostic_code": "component-check",
+            "component_emitted": false
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-10",
+          "claim": "The out-of-order sources `[ [ regions.release ] dip ] dip region.read` and `regions.release region.read` are refused at component check (`component-check`); no component and no output directory are produced.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "release-then-read",
+              "reordered-words"
+            ],
+            "command_ids": [
+              "091",
+              "092"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "A check-time refusal: no guest runs, so there are no guest requests or protected operations."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EPROTO-CASE-11",
+      "profile": "Effect-Protocol-Draft",
+      "kind": "adapter",
+      "requirements": [
+        "EPROTO-TRACE-01",
+        "EPROTO-OBS-01"
+      ],
+      "input": {
+        "harness": "bounded-region-protocol",
+        "world": "noble-test:bounded-region/bounded@1.0.0",
+        "host_route": "noble component read-region",
+        "variants": {
+          "unmodeled-error": {
+            "kind": "hostile-component",
+            "component": "unmodeled-error",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          },
+          "short-ok": {
+            "kind": "hostile-component",
+            "component": "short-ok",
+            "host_buffer_hex": "000102",
+            "offset": "1",
+            "length": "2",
+            "flags": []
+          }
+        }
+      },
+      "expected": {
+        "stage": "adapter",
+        "outcome": "outside-model",
+        "variants": {
+          "unmodeled-error": {
+            "outcome": "timeout",
+            "exit_class": "outside-model",
+            "trace": [
+              "region.release",
+              "response:value"
+            ],
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "monitor_verdicts": [
+              "outside-model"
+            ]
+          },
+          "short-ok": {
+            "outcome": "read",
+            "exit_class": "outside-model",
+            "bytes_hex": "01",
+            "trace": [
+              "region.read",
+              "commit",
+              "response:value",
+              "region.release",
+              "response:value"
+            ],
+            "releases": {
+              "guest": 1,
+              "destructor": 0,
+              "host_retirement": 0
+            },
+            "monitor_verdicts": [
+              "outside-model"
+            ]
+          }
+        }
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-11",
+          "claim": "Hostile components returning `err(\"timeout\")`, or a one-byte `ok` for a two-byte read, are classified `outside-model`, and the monitor reports `outside-model` instead of a protocol claim.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-3ef3f43a.json",
+            "receipt_sha256": "d1c0a904b391639335f18b5a21f853ded83470ff27b746595ef55b7d485c5cc9",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "unmodeled-error",
+              "short-ok"
+            ],
+            "command_ids": [
+              "093",
+              "094"
+            ]
+          },
+          "assumptions": [
+            "Executions through `noble component read-region` of the CLI built from the clean commit 3ef3f43a, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output.",
+            "Host-produced unmodeled responses are covered only by monitor controls at the trace level: the audited host cannot produce them (A3), and no modified host is built."
+          ]
+        }
+      ]
+    }
+  ]
+}

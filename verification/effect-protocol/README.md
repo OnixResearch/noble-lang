@@ -26,6 +26,9 @@ Every executed scenario must end with no live owner, no native pin, no lost owne
 - every command, with its output hashes.
 
 The retained receipt `execution-3ef3f43a.json` is that file from the clean commit `3ef3f43a`.
+The executed scenarios are registered as `specs/conformance/effect-protocol-cases.json`, bound to that receipt by SHA-256. The canonical EPROTO requirements, promoted when the `behavioral-effect-protocol` change was archived, link them. Two variants stay unregistered and are named in their cases' assumptions:
+- case 03's `native_access` refusal, which is not exercised;
+- case 11's host-produced unmodeled responses, which are covered only at the trace level.
 
 ## Scenarios
 

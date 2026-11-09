@@ -1656,6 +1656,79 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "EPROTO-COMPOSE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "EPROTO-CASE-08",
+        "EPROTO-CASE-09",
+        "EPROTO-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EPROTO-OBS-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "EPROTO-CASE-03",
+        "EPROTO-CASE-04",
+        "EPROTO-CASE-05",
+        "EPROTO-CASE-06",
+        "EPROTO-CASE-07",
+        "EPROTO-CASE-08",
+        "EPROTO-CASE-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EPROTO-SCOPE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "EPROTO-CASE-01",
+        "EPROTO-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EPROTO-TRACE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "EPROTO-CASE-01",
+        "EPROTO-CASE-02",
+        "EPROTO-CASE-03",
+        "EPROTO-CASE-04",
+        "EPROTO-CASE-05",
+        "EPROTO-CASE-06",
+        "EPROTO-CASE-07",
+        "EPROTO-CASE-09",
+        "EPROTO-CASE-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "EV-BIND-01",
       "document": "../.cairn/specs/evidence/spec.md",
       "document_id": "SPEC-EV001",
