@@ -852,6 +852,10 @@ a declared domain list or the model changes. The digests use the tests’ identi
 deterministic but not cryptographic: a stale or mismatched context is detected, a forged one is not
 ruled out. No analyzer, Rust, Wasm or host correspondence is claimed.
 The clean-source receipt is
+[`verification/foundation/receipts/a41435fd2/`](../../verification/foundation/receipts/a41435fd2/foundation-check.json)
+(1223 theorems, `clean_source: true`, Lean 4.35.0); its recorded statements of the two
+`*_bound_certified` theorems carry the computed contexts.
+The clean-source receipt is
 [`verification/foundation/receipts/c0b0bdf93/`](../../verification/foundation/receipts/c0b0bdf93/foundation-check.json)
 (1183 theorems, `clean_source: true`, Lean 4.35.0). The four encoded-graph theorems report
 `propext`, `Classical.choice` and `Quot.sound`, all on the allow-list.
