@@ -10,7 +10,8 @@
 //! definition through its module's global must survive that module's supersession, and the module
 //! retires only after the owner is released (OWN-CASE-06). A Program saved from a slot dispatch
 //! keeps, and is charged for, its version's package across replacement (LREF-CASE-03).
-//! Behavioral evidence, not a proof.
+//! Shared and composed owners keep their Programs alive until their own release (OWN-CASE-02,
+//! OWN-CASE-03). Behavioral evidence, not a proof.
 
 #[test]
 fn direct_quote_owner_can_run_and_release_without_retaining_code() {
@@ -67,6 +68,26 @@ fn a_dispatched_result_keeps_and_is_charged_for_its_package() {
     assert!(
         output.status.success(),
         "checked CLI package retention witness failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn shared_and_composed_owners_outlive_each_other() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_ownership_cases.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 ownership case child");
+    assert!(
+        output.status.success(),
+        "checked CLI ownership cases failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );

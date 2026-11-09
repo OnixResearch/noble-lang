@@ -407,6 +407,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
 #   7677 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed OWN-CASE-02/03 add a fourth test to live_slot_direct_quote.rs and the ownership-cases lane from a complete 110-unit selected collection:
+#   IR 7d3b7d423a6692ef10b38cdfd7702233ef036a868f3e3a5c58d186bfe896838f; coverage 573ec63f6856bddefad3a59b6347d8a148dab23ed7afa49192a2139d184c62a9;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
+#   7677 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,

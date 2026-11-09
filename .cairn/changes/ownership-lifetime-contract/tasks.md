@@ -23,6 +23,18 @@
   - **Evidence.** `verification/module-root-retention/receipt.json`: the fixed CLI passes from clean
     source `27e941a0`, and the CLI from the parent commit `3baaa029` fails at the trap.
 - [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
+  Progress (2026-11-09): OWN-CASE-01 to 03 run on the live-slot runtime; see
+  `verification/ownership-cases/`. OWN-CASE-01 is the direct quote of `live_slot_direct_quote.mjs`.
+  `live_slot_ownership_cases.mjs` runs OWN-CASE-02 in both release orders and OWN-CASE-03 as a
+  balanced 8-leaf tree, whose root gives the same result after the 14 other owners are released.
+  The left- and right-deep 8-leaf trees cannot run as designed. The host bounds its observation of
+  an anonymous saved Program at 1000 bytes and 64 nodes, so it refuses a chain's fifth compose (the
+  second with captured leaves) and the session ends with `terminated-after-guest-failure`.
+  Still open:
+  - registration in a reviewed conformance change;
+  - OWN-CASE-04's borrow variants, which need a `borrow` word;
+  - OWN-CASE-05, which needs a root that traps after saving;
+  - OWN-CASE-07, which needs a runtime that rebinds a retained name.
 - [ ] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01]
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): in the small-step model `proofs/foundation/NobleFoundation/Effects.lean`,
