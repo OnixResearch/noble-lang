@@ -412,6 +412,16 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
 #   7677 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed the solver-replay generator adds pairs/replay.rs to the schedule_correspondence test target from a complete 110-unit selected collection:
+#   IR 66248a54ce7ff93d227231d0224ae5c74000a836005516961ec02637e540896c; coverage 9bace54df04f4dff3657c7a4b7b5e3b959cbb24eb3b73108ee6689bd68cf45b5;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
+#   7702 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed the solver-replay generator's rustfmt change in pairs/replay.rs shifts its closure spans; renew the schedule_correspondence test subjects from a complete 110-unit selected collection:
+#   IR 4fba99b1cb95acad282f6a1b57b2411a8fe2a46323cc3e71b8ddeae3d47e9e78; coverage 371e0a49affe647fc9091d6c944a2f41dd85ba98c414cb5643f2d9028038effa;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15896 production paths = 8168 body/open + 4489 generated + 3239 structural;
+#   7702 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -19194,6 +19204,7 @@ let
     "live_slot_direct_quote::direct_quote_owner_can_run_and_release_without_retaining_code",
     "live_slot_direct_quote::main",
     "live_slot_direct_quote::main::test",
+    "live_slot_direct_quote::shared_and_composed_owners_outlive_each_other",
     "live_slot_direct_quote::std",
     "live_slot_direct_quote::test",
     "live_slot_direct_quote::{use#0}",
@@ -19922,9 +19933,10 @@ let
     "noble-cli::closure@crates/noble-cli/tests/live_slot_capture_legacy.rs:440:1140",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_cas_policy.rs:351:1011",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_coherent_maps.rs:665:1302",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:1555:2212",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2222:2871",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:869:1545",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:1664:2321",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2331:2980",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2990:3613",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:978:1654",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_late_control.rs:440:1114",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_quota_replay.rs:521:1150",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_relocation_witness.rs:604:1243",
@@ -21422,16 +21434,20 @@ let
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs:9066:9369",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs:9500:9763",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/emit.rs:6445:6452",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:3243:3251",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:3910:3918",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4137:4143",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4458:4465",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4789:4797",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4914:4922",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:5805:5807",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:5830:5837",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:8103:8419",
-    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:8575:8997",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:3377:3385",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4044:4052",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4271:4277",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4592:4599",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:4923:4931",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:5048:5056",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:5939:5941",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:5964:5971",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:8237:8553",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs.rs:8736:9309",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs:1857:1865",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs:3303:3309",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs:4221:4227",
+    "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/replay.rs:6955:7274",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/shrink.rs:2180:2196",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/shrink.rs:2240:2256",
     "noble-ngraph::closure@crates/noble-ngraph/tests/schedule_lean_dir/pairs/shrink.rs:2844:2855",
@@ -22981,6 +22997,25 @@ let
     "schedule_correspondence::pairs::graph_term",
     "schedule_correspondence::pairs::lean_file",
     "schedule_correspondence::pairs::outputs_at",
+    "schedule_correspondence::pairs::replay",
+    "schedule_correspondence::pairs::replay::COMMITTED",
+    "schedule_correspondence::pairs::replay::HEADER",
+    "schedule_correspondence::pairs::replay::Line",
+    "schedule_correspondence::pairs::replay::MAX_SLOTS",
+    "schedule_correspondence::pairs::replay::WITNESSES",
+    "schedule_correspondence::pairs::replay::group_text",
+    "schedule_correspondence::pairs::replay::lean_file",
+    "schedule_correspondence::pairs::replay::lines",
+    "schedule_correspondence::pairs::replay::parse",
+    "schedule_correspondence::pairs::replay::slot_word",
+    "schedule_correspondence::pairs::replay::test",
+    "schedule_correspondence::pairs::replay::the_lean_file_matches_the_witnesses",
+    "schedule_correspondence::pairs::replay::{use#0}",
+    "schedule_correspondence::pairs::replay::{use#1}",
+    "schedule_correspondence::pairs::replay::{use#2}",
+    "schedule_correspondence::pairs::replay::{use#3}",
+    "schedule_correspondence::pairs::replay::{use#4}",
+    "schedule_correspondence::pairs::replay::{use#5}",
     "schedule_correspondence::pairs::shrink",
     "schedule_correspondence::pairs::shrink::COMMITTED",
     "schedule_correspondence::pairs::shrink::HEADER",

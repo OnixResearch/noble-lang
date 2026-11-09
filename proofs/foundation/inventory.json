@@ -4198,6 +4198,54 @@
       "claim": "the refuted negation pair has no certificate, from its kernel-checked witness"
     },
     {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.sharedInput_rejected_models_agree",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every solver model of a corrupted encoding that the lane rejected for the checked pair sharedInput, replayed on both Rust graph evaluators, agrees on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.subtractionOrder_solver_models_refute",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every untrusted solver model that refuted the checked pair subtractionOrder, replayed on both Rust graph evaluators, refutes it on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapOnlyEquivalent_rejected_models_agree",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every solver model of a corrupted encoding that the lane rejected for the checked pair wrapOnlyEquivalent, replayed on both Rust graph evaluators, agrees on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_solver_models_refute",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every untrusted solver model that refuted the checked pair wrapBoundary, replayed on both Rust graph evaluators, refutes it on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.wrapBoundary_rejected_models_agree",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every solver model of a corrupted encoding that the lane rejected for the checked pair wrapBoundary, replayed on both Rust graph evaluators, agrees on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.boolOutput_rejected_models_agree",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every solver model of a corrupted encoding that the lane rejected for the checked pair boolOutput, replayed on both Rust graph evaluators, agrees on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.repeatedOutputs_solver_models_refute",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every untrusted solver model that refuted the checked pair repeatedOutputs, replayed on both Rust graph evaluators, refutes it on the model"
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.Corpus.negation_solver_models_refute",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "every untrusted solver model that refuted the checked pair negation, replayed on both Rust graph evaluators, refutes it on the model"
+    },
+    {
       "name": "NobleFoundation.evalBatch_is_the_ordered_map",
       "phase": 3,
       "role": "independent-row-batch",

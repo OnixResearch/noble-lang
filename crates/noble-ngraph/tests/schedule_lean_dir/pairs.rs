@@ -13,12 +13,15 @@
 //! interpreter, which must agree. The first candidate whose ordered outputs differ is the Rust
 //! verdict. `SymbolicPairCorpus.lean` is generated from these pairs, and there the kernel decides
 //! the model's `firstIndex` on the same checked graphs and universe. `shrink` shrinks each refuted
-//! pair's reported candidate and generates `SymbolicShrinkCorpus.lean`. Regenerate both after a
-//! deliberate change with `cargo test -p noble-ngraph --test schedule_correspondence -- --ignored
+//! pair's reported candidate and generates `SymbolicShrinkCorpus.lean`. `replay` replays the solver
+//! lane's models and generates `SymbolicSolverReplay.lean`. Regenerate all three after a deliberate
+//! change with `cargo test -p noble-ngraph --test schedule_correspondence -- --ignored
 //! pairs::write_the_lean_file`, then rerun the foundation lane.
 
 #[path = "pairs/fixtures.rs"]
 mod fixtures;
+#[path = "pairs/replay.rs"]
+mod replay;
 #[path = "pairs/shrink.rs"]
 mod shrink;
 
@@ -202,7 +205,7 @@ fn the_lean_file_is_the_real_verdict() {
 }
 
 #[test]
-#[ignore = "writes SymbolicPairCorpus.lean and SymbolicShrinkCorpus.lean under proofs/foundation/NobleFoundation; run after a deliberate change"]
+#[ignore = "writes SymbolicPairCorpus.lean, SymbolicShrinkCorpus.lean and SymbolicSolverReplay.lean under proofs/foundation/NobleFoundation; run after a deliberate change"]
 fn write_the_lean_file() {
     let directory = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -215,4 +218,9 @@ fn write_the_lean_file() {
         shrink::lean_file(),
     )
     .expect("shrink corpus written");
+    std::fs::write(
+        format!("{directory}/SymbolicSolverReplay.lean"),
+        replay::lean_file(),
+    )
+    .expect("solver replay written");
 }
