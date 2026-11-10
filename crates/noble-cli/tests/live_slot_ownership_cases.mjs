@@ -11,10 +11,14 @@ import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_
 //       of an anonymous saved Program is bounded (1000 bytes, 64 nodes), so a left-deep chain is
 //       refused at its fifth compose: the refusal is `execution-failed` with that diagnostic, and
 //       the session terminates, as every failed root does in this profile.
+//   cross-module: a Program saved by one installed module is duplicated by a second one; both
+//       owners must run the original Program and release independently (issue #106).
 const binary = process.argv[2];
 const P = 'Program<I64,I64,pure>';
-const sources = { dupper: '[ 1 + ] dup', leaf: 'drop [ 1 + ]', composer: 'compose', runner: 'run' };
-const installs = [['dupper', []], ['leaf', ['I64']], ['composer', [P, P]], ['runner', ['I64', P]]];
+const sources = { dupper: '[ 1 + ] dup', leaf: 'drop [ 1 + ]', composer: 'compose', runner: 'run',
+  maker: '[ 1 + ]', passer: 'dup' };
+const installs = [['dupper', []], ['leaf', ['I64']], ['composer', [P, P]], ['runner', ['I64', P]],
+  ['maker', []], ['passer', [P]]];
 const program = owner => ({ kind: 'program', owner });
 const i64 = value => ({ kind: 'i64', value: String(value) });
 
@@ -116,11 +120,34 @@ async function deepChain() {
   });
 }
 
+async function crossModuleAlias() {
+  return session('cross-module-saved-alias', async ({ issue, run }) => {
+    const made = await issue({ operation: 'invoke', id: 'maker', inputs: [], refs: [] }, 'executed');
+    assert.equal(made.stack.length, 1);
+    const original = made.stack[0].owner;
+    const passed = await issue({ operation: 'invoke', id: 'passer',
+      inputs: [program(original)], refs: [] }, 'executed');
+    assert.equal(passed.stack.length, 2);
+    assert.notEqual(passed.stack[0].owner, passed.stack[1].owner, 'each duplicate gets its own owner');
+    for (const row of passed.stack) {
+      assert.deepEqual(expectOutcome(await run(row.owner, 41), 'executed').stack, [{ kind: 1, value: '42' }]);
+    }
+    await issue({ operation: 'release-program', owner: passed.stack[0].owner }, 'program-released');
+    assert.deepEqual(expectOutcome(await run(passed.stack[1].owner, 41), 'executed').stack, [{ kind: 1, value: '42' }]);
+    await issue({ operation: 'release-program', owner: passed.stack[1].owner }, 'program-released');
+    await issue({ operation: 'release-program', owner: original }, 'program-released');
+    assert.ok(refused(await run(passed.stack[1].owner, 41)), 'a released duplicate is refused');
+    return { owners: [original, ...passed.stack.map(row => row.owner)] };
+  });
+}
+
 const cases = {
   'OWN-CASE-02': [await sharedDuplicates('A-then-B'), await sharedDuplicates('B-then-A')],
+  'cross-module-alias': await crossModuleAlias(),
   'OWN-CASE-03': { balanced: await balancedTree(), left_deep: await deepChain() },
 };
 for (const row of cases['OWN-CASE-02']) assert.equal(row.exit, 0);
+assert.equal(cases['cross-module-alias'].exit, 0);
 assert.equal(cases['OWN-CASE-03'].balanced.exit, 0);
 assert.equal(cases['OWN-CASE-03'].left_deep.refused_at_compose, 5);
 assert.equal(cases['OWN-CASE-03'].left_deep.exit, 2, 'a failed root terminates the session');

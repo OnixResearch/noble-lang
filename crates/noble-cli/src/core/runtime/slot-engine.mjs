@@ -96,6 +96,10 @@ class SlotEngine {
     this.traceFailure = null;
     this.poisoned = false;
     this.proposalInspectionFailed = false;
+    // Every module instance this engine admitted. A saved Program cell lives in the session's
+    // shared backend memory, so any of these instances may legitimately observe and re-save it;
+    // a runtime outside the set is the untrusted boundary the saved-owner check refuses.
+    this.runtimes = new Set();
   }
 
   close() { this.active = null; }
@@ -505,6 +509,7 @@ class SlotEngine {
       for (const metadata of [origin, request.program_metadata, request.target_metadata,
         request.selected_target, request.code_span]) freeze(metadata);
     }
+    this.runtimes.add(instance.exports);
     for (const program of pinned) this.handles.set(program, { instance, moduleId: request.id });
     this.modules.set(request.id, { ...request, token, handle, instance, pinned,
       artifactSha256: compiled.digest, installed: true, checkedEntries,
@@ -2016,7 +2021,7 @@ class SlotEngine {
       if (this.nativeCoreOwner) graph.moduleIds.add(this.nativeCoreOwner.id);
     }
     const prior = this.savedCells.get(handle);
-    if (prior && prior.runtime !== runtime) {
+    if (prior && !this.runtimes.has(runtime)) {
       this.poisoned = true;
       throw Error('saved backend Program owner crossed an untrusted runtime boundary');
     }
