@@ -3,43 +3,19 @@
  "status": "implementation-observation-not-case-evidence",
  "case": "CALC-08",
  "binary": {
-  "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
-  "source_id": "origin/main 44329dc (release snapshot noble-44329dc-release)"
+  "sha256": "479b4c976d988b59c0169717f3e3d0d96bc740682062b9742cf4cc4c86ddf84f",
+  "source_id": "53c89e0d301bfa8a7ed6a439d9624bc49446659a"
  },
  "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
  "receipts": [
   {
-   "sha256": "d2821027b5703bdac802e9a7061405b04d9be253e920b54cbfdcf8029784c057",
-   "plan_sha256": "083d057b38ac38e0666138949ead1a0028bc027b8ef2e1f4672b216579d3d658",
-   "runner_sha256": "11324703e31fc22db1cfab08c1478c126bddb5336d961ed9a37e161847abf560",
-   "node": "v24.13.0",
-   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
-   "configuration": {
-    "concurrency": 4,
-    "memory_max": "2G",
-    "timeout_s": 7200
-   }
-  },
-  {
-   "sha256": "9743600e1bfb64221d345088d3fb62fe81ee6a9c606926405dc57af59498558f",
+   "sha256": "79bab393f1e2b1c7f3e96f227e11c6662c0f0c9c91cc8edf0469fa94cb302d54",
    "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
    "runner_sha256": "1e4dbdbf28c996b4f16d9004757d5a7d977c9fd56fa7ed3fe266ad374d605720",
    "node": "v24.13.0",
-   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+   "repository_head": "53c89e0d301bfa8a7ed6a439d9624bc49446659a",
    "configuration": {
-    "concurrency": 1,
-    "memory_max": "2G",
-    "timeout_s": 7200
-   }
-  },
-  {
-   "sha256": "1673b422c9a68c46f43ab28af04ed0ec6aec255819c3f3466394b89975f14ce9",
-   "plan_sha256": "0ea647720cc1cc465420dbb605588685521f8bb9479f615b4c07d94c3e956d0a",
-   "runner_sha256": "74624a2ee879b046246a50c636f70b140ad1bd385b1c4581de9570622c4cef64",
-   "node": "v24.13.0",
-   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
-   "configuration": {
-    "concurrency": 3,
+    "concurrency": 4,
     "memory_max": "2G",
     "timeout_s": 7200
    }
@@ -102,8 +78,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 2336.2,
-   "max_rss_kib": 213828,
+   "wall_s": 192.3,
+   "max_rss_kib": 368544,
    "resource_limit_lines": 2,
    "matched_plan": true
   },
@@ -155,8 +131,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 4205.7,
-   "max_rss_kib": 207596,
+   "wall_s": 186.1,
+   "max_rss_kib": 395600,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -202,8 +178,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 3310.5,
-   "max_rss_kib": 207784,
+   "wall_s": 324.1,
+   "max_rss_kib": 403004,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -248,8 +224,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 3873.1,
-   "max_rss_kib": 224796,
+   "wall_s": 338.4,
+   "max_rss_kib": 407852,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -291,8 +267,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 453.1,
-   "max_rss_kib": 195396,
+   "wall_s": 73.1,
+   "max_rss_kib": 277912,
    "resource_limit_lines": 2,
    "matched_plan": true
   },
@@ -335,15 +311,15 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1192.7,
-   "max_rss_kib": 202796,
+   "wall_s": 188.3,
+   "max_rss_kib": 356828,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
   {
    "id": "input-bytes/N",
    "category": "InputBytes",
-   "receipt": 1,
+   "receipt": 0,
    "argv": [
     "noble",
     "calculator",
@@ -378,8 +354,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1900.9,
-   "max_rss_kib": 225164,
+   "wall_s": 284.1,
+   "max_rss_kib": 411336,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -422,8 +398,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1157.2,
-   "max_rss_kib": 212096,
+   "wall_s": 196.4,
+   "max_rss_kib": 352356,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -465,8 +441,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1551,
-   "max_rss_kib": 204556,
+   "wall_s": 284.5,
+   "max_rss_kib": 401740,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -509,8 +485,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1095.8,
-   "max_rss_kib": 211572,
+   "wall_s": 192.9,
+   "max_rss_kib": 356796,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -552,8 +528,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1213.7,
-   "max_rss_kib": 216964,
+   "wall_s": 239.7,
+   "max_rss_kib": 367312,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -596,8 +572,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1040.1,
-   "max_rss_kib": 215936,
+   "wall_s": 187.2,
+   "max_rss_kib": 349964,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -639,8 +615,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 1002.4,
-   "max_rss_kib": 208152,
+   "wall_s": 195,
+   "max_rss_kib": 355808,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -683,8 +659,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 919.7,
-   "max_rss_kib": 206416,
+   "wall_s": 252.8,
+   "max_rss_kib": 404020,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -727,8 +703,8 @@
    "status": 1,
    "signal": null,
    "timed_out": false,
-   "wall_s": 919.6,
-   "max_rss_kib": 212928,
+   "wall_s": 266.7,
+   "max_rss_kib": 389212,
    "resource_limit_lines": 1,
    "matched_plan": true
   },
@@ -770,8 +746,8 @@
    "status": 0,
    "signal": null,
    "timed_out": false,
-   "wall_s": 963.9,
-   "max_rss_kib": 207528,
+   "wall_s": 266.3,
+   "max_rss_kib": 361112,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
@@ -806,19 +782,16 @@
     }
    ],
    "stdout_lines": [
-    "7",
     "7"
    ],
-   "stderr_lines": [
-    "HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight"
-   ],
-   "status": 1,
-   "signal": null,
+   "stderr_lines": [],
+   "status": null,
+   "signal": "SIGTERM",
    "timed_out": false,
-   "wall_s": 564.5,
-   "max_rss_kib": 209700,
+   "wall_s": 199.2,
+   "max_rss_kib": null,
    "resource_limit_lines": 0,
-   "matched_plan": true
+   "matched_plan": false
   },
   {
    "id": "control/replay-work",
@@ -851,19 +824,16 @@
     }
    ],
    "stdout_lines": [
-    "7",
     "7"
    ],
-   "stderr_lines": [
-    "HostLimit ReplayWork [0,65401) provenance=host-replay-preflight"
-   ],
-   "status": 1,
-   "signal": null,
+   "stderr_lines": [],
+   "status": null,
+   "signal": "SIGTERM",
    "timed_out": false,
-   "wall_s": 518.9,
-   "max_rss_kib": 215100,
+   "wall_s": 179.3,
+   "max_rss_kib": null,
    "resource_limit_lines": 0,
-   "matched_plan": true
+   "matched_plan": false
   },
   {
    "id": "control/worker-killed",
@@ -887,25 +857,26 @@
     }
    ],
    "stdout_lines": [
-    "7",
-    "3",
     "7"
    ],
    "stderr_lines": [
-    "noble: engine worker cleanup failed: Broken pipe (os error 32)"
+    {
+     "bytes": 83,
+     "prefix": "noble calculator: calculator restore fai"
+    }
    ],
-   "status": 0,
+   "status": 2,
    "signal": null,
    "timed_out": false,
-   "wall_s": 995.4,
-   "max_rss_kib": 211764,
+   "wall_s": 134.1,
+   "max_rss_kib": 318604,
    "resource_limit_lines": 0,
    "matched_plan": false
   },
   {
    "id": "control/host-timeout",
    "category": "host-timeout",
-   "receipt": 2,
+   "receipt": 0,
    "argv": [
     "noble",
     "calculator"
@@ -930,7 +901,7 @@
   {
    "id": "control/transport-limit",
    "category": "transport-limit",
-   "receipt": 2,
+   "receipt": 0,
    "argv": [
     "noble",
     "calculator"
@@ -956,15 +927,15 @@
    "status": 2,
    "signal": null,
    "timed_out": false,
-   "wall_s": 3,
-   "max_rss_kib": 104628,
+   "wall_s": 2.1,
+   "max_rss_kib": 113284,
    "resource_limit_lines": 0,
    "matched_plan": true
   },
   {
    "id": "control/memory-cap",
    "category": "host-memory-limit",
-   "receipt": 2,
+   "receipt": 0,
    "argv": [
     "noble",
     "calculator"
@@ -977,14 +948,16 @@
    "stdin_sha256": "37f671841d9da909c96d5e754e2277fc4c0435b209972f21350ecc9281c6e63e",
    "expected": [],
    "stdout_lines": [],
-   "stderr_lines": [],
-   "status": null,
-   "signal": "SIGTERM",
+   "stderr_lines": [
+    "noble calculator: engine worker closed its reply stream"
+   ],
+   "status": 2,
+   "signal": null,
    "timed_out": false,
-   "wall_s": 2.3,
-   "max_rss_kib": null,
+   "wall_s": 0.1,
+   "max_rss_kib": 73764,
    "resource_limit_lines": 0,
-   "matched_plan": true
+   "matched_plan": false
   }
  ]
 }

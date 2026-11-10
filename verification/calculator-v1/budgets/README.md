@@ -128,3 +128,29 @@ runtime observations; no CALC case state changed.
   memory-capped scope, and host replay/transport preflight. They do not
   enumerate every native failure.
 - Nothing here proves the accounting, exact arithmetic or the conversions.
+
+### 2026-11-10 rerun on this tree
+
+One run of the same plan against a release build of `53c89e0d` (`noble-cli`, `--no-default-features`, sha256 `479b4c97…df84`), 22 sessions at concurrency 4, 1,103 s of wall time in total.
+
+Every one of the seven category brackets produced its planned boundary:
+- N succeeded and N−1 refused with the category named (`ResourceLimit <Category>`, exit 1);
+- the follow-up line still saw the state from before the refusal;
+- `input-bytes` refused even the setup line at N−2.
+
+Peak RSS per session was 278–411 MiB under the 2 GiB cap; the slowest session was `call-depth/N` at 338 s.
+
+**Four controls no longer match the plan, and none was rewritten to match.**
+
+| Control | Plan expects | This tree | What it means |
+|---|---|---|---|
+| `control/history-bytes` | `HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight`, then `7` | only `7`; no diagnostic, no recorded exit | the host-replay preflight no longer fires on the committed-session path |
+| `control/replay-work` | `HostLimit ReplayWork [0,65401) provenance=host-replay-preflight`, then `7` | only `7`; no diagnostic, no recorded exit | same preflight, same drift |
+| `control/worker-killed` | `7`, no diagnostic | `7`, then `calculator restore failed: invalid bounded …`, exit 2 | a killed worker now ends in a restore refusal; recovery after a kill does not hold on this tree |
+| `control/memory-cap` | no output (a kill) | `engine worker closed its reply stream`, exit 2 | the 2 GiB cap now surfaces as a closed worker rather than a kill |
+
+The seven-category evidence above is valid. **None of the four mismatched controls printed a `ResourceLimit`**, so the clause that independent native, transport and host failures never masquerade as one still holds; what drifted is the specific diagnostic each control records.
+
+- `control/history-bytes` and `control/replay-work` are `44329dc`-only: #17 replaced replay with a committed session and restore, so the host-replay preflight they exercised cannot fire on this tree. The plan needs a tree-version qualifier for them, not a new expected message.
+- `control/worker-killed` and `control/memory-cap` now surface as `calculator restore failed …` and `engine worker closed its reply stream`, both exit 2. Their expected rows describe the `44329dc` shape: silent recovery, and a kill with no output.
+- `control/transport-limit` (exit 2, `TransportLimit InputFrameBytes`), the forced timeout and the `call-depth` follow-up still behave as planned.

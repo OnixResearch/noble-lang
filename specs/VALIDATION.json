@@ -685,7 +685,7 @@
     },
     {
       "file": ".cairn/changes/calculator-v1/tasks.md",
-      "sha256": "29a81f836010f8d7ed13fbfee10cd9d17efb8ebfd5b4fc99af5f6b9724568603"
+      "sha256": "b2be14b8255fa01873f8418d1b49be404c9687f64f19828695edc7a87cda6fff"
     },
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/design.md",
@@ -1569,7 +1569,7 @@
     },
     {
       "file": "verification/calculator-v1/budgets/README.md",
-      "sha256": "a3050a8a3994487da107116a55822f818e1d20b20c0f1c2a56aa167aa4fae5e6"
+      "sha256": "689eb6cf66904f045e56d7ef6617e508a73cf91989141672a994530ec28a84ab"
     },
     {
       "file": "verification/calculator-v1/calc-10-11-design.md",
