@@ -134,3 +134,7 @@ owi validate /tmp/owi-emit/engine/module-1.wasm            # exit 30, decoder re
 `noble` requires the pinned `wasm-tools 1.245.1` and `binaryen 125` binaries from
 `policy/tool-selection.json` to be present and realpath-identical; missing or
 incompatible tools fail closed with `incompatible wasm_tools`, as intended.
+
+The retained run is
+[`receipts/2026-11-09/patched.json`](receipts/2026-11-09/patched.json), from the clean commit
+`5f883144`: unpatched `30/0/30`, patched `0/0/0` for reproducer, control and subject.

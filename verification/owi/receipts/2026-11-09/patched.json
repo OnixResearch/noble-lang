@@ -1,0 +1,89 @@
+{
+  "schema": "noble-owi-patch-receipt/v1",
+  "claim": "the forked Owi decodes `memory.init`; the committed #57 artifacts validate instead of failing to decode",
+  "source": {
+    "commit": "5f8831449b2e52a1cccf88ccfa27fdf9fdec62a9",
+    "tree": "221369166c68eac93e5a5281168e4119d32e4e54",
+    "clean": true,
+    "lane_sha256": "61d28d0a36b31e174558c4ce18d4e9bb8e761ca48a109b33c476dfda8651c62e",
+    "patch_sha256": "2ccf72c0e7a05b9c812797e24749c39bee781c243c0e8b8ab2012db1d34e58ca"
+  },
+  "fork": {
+    "repository": "OnixResearch/owi",
+    "branch": "noble/memory-init-decode",
+    "commit": "44eadcdc3b924515f2ea7c1cdbae3638cb4816fd",
+    "upstream_rev_patched": "07b96ef58021810352caceffbadf2d614785bb0d",
+    "upstream_head_still_buggy": "88e3713bb69f14eee96ba89928be797bb842469d"
+  },
+  "packages": {
+    "unpatched": {
+      "path": "/nix/store/kaxwx2rpfx720y472028vi0sfmkffb4g-ocaml5.3.0-owi-0.2-unstable-2026-01-29/bin/owi",
+      "realpath": "/nix/store/kaxwx2rpfx720y472028vi0sfmkffb4g-ocaml5.3.0-owi-0.2-unstable-2026-01-29/bin/owi",
+      "sha256": "b87da3478549a2fe372639432719025a8ec8a1a6793c99e6f2feee91c7fc8fa9",
+      "name": "kaxwx2rpfx720y472028vi0sfmkffb4g-ocaml5.3.0-owi-0.2-unstable-2026-01-29"
+    },
+    "patched": {
+      "path": "/nix/store/3xnd672i20hvk7jsgqvhjm33ibh9y7gb-ocaml5.3.0-owi-0.2-unstable-2026-01-29/bin/owi",
+      "realpath": "/nix/store/3xnd672i20hvk7jsgqvhjm33ibh9y7gb-ocaml5.3.0-owi-0.2-unstable-2026-01-29/bin/owi",
+      "sha256": "dab1b259759b466f84c7c6e6802d08fa294b46181b07dc3d158481c4c4202bb9",
+      "name": "3xnd672i20hvk7jsgqvhjm33ibh9y7gb-ocaml5.3.0-owi-0.2-unstable-2026-01-29"
+    }
+  },
+  "results": {
+    "unpatched": {
+      "reproducer": {
+        "artifact": "verification/owi/receipts/2026-10-26/reproducer-memory-init.wasm",
+        "artifact_sha256": "9ce5514e95e89e0e6631f4aee0f1f8e84ece651e73778220fe4b29b0880aa648",
+        "exit": 30,
+        "message": "owi: [ERROR] data count section required (got B instead)",
+        "elapsed_ns": 48916743
+      },
+      "control": {
+        "artifact": "verification/owi/receipts/2026-10-26/control-passive-data-only.wasm",
+        "artifact_sha256": "3957c12f67c54be22003851c3f7fcc885d378824d0a2a4a1b54745857a61cbe5",
+        "exit": 0,
+        "message": "",
+        "elapsed_ns": 50641822
+      },
+      "subject": {
+        "artifact": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+        "artifact_sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+        "exit": 30,
+        "message": "owi: [ERROR] data count section required (got \\016 instead)",
+        "elapsed_ns": 45839971
+      }
+    },
+    "patched": {
+      "reproducer": {
+        "artifact": "verification/owi/receipts/2026-10-26/reproducer-memory-init.wasm",
+        "artifact_sha256": "9ce5514e95e89e0e6631f4aee0f1f8e84ece651e73778220fe4b29b0880aa648",
+        "exit": 0,
+        "message": "",
+        "elapsed_ns": 52370559
+      },
+      "control": {
+        "artifact": "verification/owi/receipts/2026-10-26/control-passive-data-only.wasm",
+        "artifact_sha256": "3957c12f67c54be22003851c3f7fcc885d378824d0a2a4a1b54745857a61cbe5",
+        "exit": 0,
+        "message": "",
+        "elapsed_ns": 49916814
+      },
+      "subject": {
+        "artifact": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+        "artifact_sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+        "exit": 0,
+        "message": "",
+        "elapsed_ns": 47910589
+      }
+    }
+  },
+  "symbolic_allocation": {
+    "exit": 49,
+    "message": "owi: [ERROR] unknown module noble"
+  },
+  "non_claims": [
+    "validation is not execution: the fix makes the decoder read the module, and nothing here runs the symbolic lane",
+    "the patched package is built from the pinned nixpkgs source with this patch, not from the fork checkout; the fork commit is the same four-line change",
+    "owi remains an untrusted downstream tool: no proof authority and no source-to-Wasm claim"
+  ]
+}
