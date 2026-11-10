@@ -400,6 +400,7 @@ Report values are typed strings. An `F32` value is its exact binary32 encoding,
 `"f32:nan"`; `I64` and `Bool` values render as `"i64:<decimal>"` and
 `"bool:true"` or `"bool:false"`. An unknown, duplicated, missing or
 inapplicable flag is a usage error. Run `noble --help` for the complete usage.
+
 For example, to extract `x·x + y·y` from Core source and evaluate it:
 
 ```sh
@@ -424,6 +425,23 @@ printf '%s\n' noble-ngraph-vectors/0 'types i64 i64' 'v 3 4' > squares.vectors
 {"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","snapshot":null}
 {"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["i64:25"]}
 ```
+
+### Graph literal modes (`noble-graph-literal-modes/v1`)
+
+Graph and vector files carry `F32` literals in one of two implemented modes. Both are part of
+`ngraph-i64/0`'s file formats; the third row is the mode issue #40 asks for and is **not
+implemented**, so `0.1` is refused today.
+
+| Mode | Syntax | Exact `0.5` | `0.1` | Refusal codes |
+|---|---|---|---|---|
+| `exact-decimal` | a decimal literal that denotes a binary32 value exactly: at most 112 significant digits and an exponent in `[-149, 38]` | accepted | refused | `E-LITERAL-INEXACT` |
+| `exact-bits` | `0x` followed by one to eight hex digits | n/a (the bits are the value) | n/a | `E-LITERAL-NONFINITE` if the bits are `nan`/`inf`; syntax error otherwise |
+| `rne-decimal` (proposed, #40) | a decimal literal rounded once, ties to even, into binary32 | accepted | accepted as `0x3dcccccd` | range and tie behaviour still to be specified |
+
+The exact modes are unchanged by #40. Adding `rne-decimal` changes no existing diagnostic: text that
+the exact mode refuses would be accepted only when the caller selects the new mode, and every other
+input keeps its current code. A leading `+` is a syntax error in both modes, and `nan`/`inf` literals
+are refused because non-finite encodings do not pass the checker.
 
 The written graph file is:
 
