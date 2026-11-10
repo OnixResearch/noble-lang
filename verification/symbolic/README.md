@@ -104,3 +104,35 @@ refuting and 8 rejected models.
   warm cache hits took 1.2 to 28 µs, against 14 retained entries totalling 1674 bytes. On the
   padded pairs, slicing cuts each query from 1165 to 1372 bytes down to 411 to 614, with the same
   answers.
+
+## Source-backed endpoint pairs
+
+[`endpoints.mjs`](endpoints.mjs) starts from Noble source with the interface `I64 I64 -- I64 ! {}`
+instead of from graphs, and gives each side a real Wasm endpoint.
+- **Endpoint.** The selected CLI compiles the source with its ordinary source compiler and runs it on
+  V8 (`noble worker scalar`), reporting the executed value, the module's SHA-256, and zero guest or
+  protected requests.
+- **Graph.** For the same source, `noble ngraph extract` builds the graph and `noble ngraph eval`
+  evaluates it with both the reference interpreter and the packed machine.
+
+For every candidate of a fixed universe the lane requires
+`endpoint = packed graph = reference graph`, so a pair's refutation or agreement is the same whether
+it is decided on the endpoints or on the graphs.
+
+| Pair | Sources | Verdict on the universe |
+|---|---|---|
+| `sourceCommutativeAdd` | `+` against `swap +` | agree on all eight candidates |
+| `sourceSubOrder` | `-` against `swap -` | refute at the first candidate, `1 - 2` against `2 - 1` |
+
+The universe includes both wrap boundaries, `i64::MIN` and `i64::MAX`, and mixed signs.
+
+**Controls.** A mutated endpoint (`*`) changes the observations. One side's graph disagrees with the
+other side's endpoint somewhere. A checked source outside the interface is `interface-reject` and
+compiles no module, and an ill-typed source is `type-reject`.
+
+## Non-claims
+
+Endpoint agreement is on one fixed universe of eight candidates per pair, not a proof for every
+input. Each endpoint is the CLI's own compiled module run on V8, identified by its SHA-256; no second
+Wasm engine or independent implementation is compared. Whether extraction preserves the ordinary
+observation remains NG-PO-A, not a result of this lane.
