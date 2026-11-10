@@ -2097,6 +2097,9 @@ refutation, `rejects` for a model of a corrupted encoding that did not replay.
 
 The models are the solvers', so nothing here certifies a pair, and no encoder is a subject. Eight
 inventoried theorems, each depending only on `propext`.
+The clean-source receipt is
+[`verification/foundation/receipts/73cec09e8/`](../../verification/foundation/receipts/73cec09e8/foundation-check.json)
+(1239 theorems, `clean_source: true`, Lean 4.35.0).
 
 ## Specification-quality obligations (issue #65)
 
