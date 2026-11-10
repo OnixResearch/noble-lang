@@ -83,7 +83,7 @@
     "Cargo.toml": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
     "crates/noble-cli/Cargo.toml": "6cf3abb55e6346755a3b7d915e643c4590db1e9e6085b35565c5d8c412b6add1",
     "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
-    "crates/noble-cli/src/build.rs": "7a6f5469fb7b397437e51a0dfff0d0df911e09f0673f7c5bb04a7f7b15690374",
+    "crates/noble-cli/src/build.rs": "c22dd1afe42eda738fd8ede5f6b8a5bfb43ec178d0aed6bbf629f28079a2db13",
     "crates/noble-cli/src/c_backend.rs": "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
     "crates/noble-cli/src/component.rs": "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
     "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",

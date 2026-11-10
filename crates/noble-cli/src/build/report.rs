@@ -4,6 +4,7 @@
 //! exit mapping and the shared `Failure` carrier owns diagnostic rendering.
 
 mod release;
+pub(super) mod toolchain;
 
 /// The consumer-selected policy revision this build checks evidence against.
 pub(super) const POLICY_REVISION: u32 = 1;
@@ -77,6 +78,10 @@ pub(super) fn artifact_correspondence(
 }
 
 pub(super) struct Document {
+    /// Set only by `--report-schema v2`; v1 output keeps its exact field set.
+    pub(super) schema_v2: bool,
+    /// Present exactly when `schema_v2` is set.
+    pub(super) selected_toolchain: Option<toolchain::Selected>,
     pub(super) outcome: crate::workflow::output::Outcome,
     pub(super) require_proof: bool,
     pub(super) source_path: std::string::String,
@@ -118,6 +123,8 @@ impl Document {
 
     pub(super) fn new() -> Self {
         Self {
+            schema_v2: false,
+            selected_toolchain: None,
             outcome: crate::workflow::output::Outcome::NotRun,
             require_proof: false,
             source_path: std::string::String::new(),
@@ -146,10 +153,14 @@ impl Document {
     }
 
     pub(super) fn json(&self) -> crate::workflow::encoding::Json {
-        crate::workflow::encoding::object([
+        let base = crate::workflow::encoding::object([
             (
                 "schema",
-                crate::workflow::encoding::string("noble-mc2-build/v1"),
+                crate::workflow::encoding::string(if self.schema_v2 {
+                    "noble-mc2-build/v2"
+                } else {
+                    "noble-mc2-build/v1"
+                }),
             ),
             ("command", crate::workflow::encoding::string("build")),
             // Assembly loads the inert module; no guest body or host import
@@ -275,7 +286,17 @@ impl Document {
                 "emitted",
                 crate::workflow::encoding::optional_string(self.emitted.as_deref()),
             ),
-        ])
+        ]);
+        // A v1 report keeps its exact field set; v2 appends the caller-selected binding.
+        match base {
+            crate::workflow::encoding::Json::Object(mut entries) => {
+                if let Some(selected) = &self.selected_toolchain {
+                    entries.push(("selected_toolchain", selected.json()));
+                }
+                crate::workflow::encoding::Json::Object(entries)
+            }
+            _ => crate::workflow::encoding::Json::Null,
+        }
     }
 }
 
@@ -289,3 +310,34 @@ const NON_CLAIMS: [&str; 8] = [
     "verified backend correspondence is not claimed",
     "general termination and whole-language preservation remain open",
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::{toolchain::Selected, Document};
+
+    fn selected() -> Selected {
+        Selected {
+            lean_sha256: "00".into(),
+            lean_version: "v",
+            lean_commit: "c",
+            library_sha256: "11".into(),
+            library_files: 2,
+            library_bytes: 9,
+        }
+    }
+
+    #[test]
+    fn v1_omits_the_binding_and_v2_appends_it() {
+        let v1 = Document::new().json().encode();
+        assert!(v1.contains("\"noble-mc2-build/v1\""));
+        assert!(!v1.contains("selected_toolchain"));
+        let mut v2 = Document::new();
+        v2.schema_v2 = true;
+        v2.selected_toolchain = Some(selected());
+        let text = v2.json().encode();
+        assert!(text.contains("\"noble-mc2-build/v2\""));
+        assert!(text.contains("\"selected_toolchain\""));
+        assert!(text.contains("\"library_tree\""));
+        assert!(text.contains("\"files\":2"));
+    }
+}

@@ -1,0 +1,283 @@
+//! Caller-selected build toolchain binding (`noble-mc2-build/v2`).
+//!
+//! The v1 report binds the Lean producer and consumer recheck through
+//! [`super::Document::toolchain`](super::Document), but not the frozen Lean
+//! binary or the contract library it compiled against. `--report-schema v2`
+//! additionally binds both, digests taken here from the exact paths the
+//! caller selected: the binary's bytes and every file of the library tree,
+//! sorted by relative path. Nothing is inferred from the Lean version string,
+//! and v1 reports never carry these fields.
+
+use std::io::Read;
+
+/// The most library files one binding may cover; the contract library is far
+/// smaller, and a caller pointing at a huge tree is refused rather than read.
+const MAX_FILES: usize = 8192;
+
+/// The most bytes one binding may read from the library tree.
+const MAX_BYTES: u64 = 1 << 31;
+
+/// A selected Lean binary and contract library tree, bound by digest.
+pub(crate) struct Selected {
+    pub(super) lean_sha256: std::string::String,
+    pub(super) lean_version: &'static str,
+    pub(super) lean_commit: &'static str,
+    pub(super) library_sha256: std::string::String,
+    pub(super) library_files: u64,
+    pub(super) library_bytes: u64,
+}
+
+impl Selected {
+    pub(super) fn json(&self) -> crate::workflow::encoding::Json {
+        crate::workflow::encoding::object([
+            (
+                "lean",
+                crate::workflow::encoding::object([
+                    (
+                        "binary_sha256",
+                        crate::workflow::encoding::string(&self.lean_sha256),
+                    ),
+                    (
+                        "version",
+                        crate::workflow::encoding::string(self.lean_version),
+                    ),
+                    (
+                        "commit",
+                        crate::workflow::encoding::string(self.lean_commit),
+                    ),
+                    (
+                        "basis",
+                        crate::workflow::encoding::string(
+                            "SHA-256 of the exact --lean-binary bytes; version and commit are the selected sandbox pins, not read from the binary",
+                        ),
+                    ),
+                ]),
+            ),
+            (
+                "library_tree",
+                crate::workflow::encoding::object([
+                    (
+                        "sha256",
+                        crate::workflow::encoding::string(&self.library_sha256),
+                    ),
+                    (
+                        "files",
+                        crate::workflow::encoding::Json::Number(self.library_files),
+                    ),
+                    (
+                        "bytes",
+                        crate::workflow::encoding::Json::Number(self.library_bytes),
+                    ),
+                    (
+                        "basis",
+                        crate::workflow::encoding::string(
+                            "BLAKE3 over each file's relative path length, path, content length and content, in sorted path order",
+                        ),
+                    ),
+                ]),
+            ),
+        ])
+    }
+}
+
+fn refused(message: std::string::String) -> crate::workflow::output::Failure {
+    crate::workflow::output::Failure::unsupported("toolchain-binding", message)
+}
+
+fn read_bounded(
+    path: &std::path::Path,
+) -> Result<std::vec::Vec<u8>, crate::workflow::output::Failure> {
+    let mut file = std::fs::File::open(path)
+        .map_err(|error| refused(std::format!("cannot open {}: {error}", path.display())))?;
+    let mut bytes = std::vec::Vec::new();
+    file.read_to_end(&mut bytes)
+        .map_err(|error| refused(std::format!("cannot read {}: {error}", path.display())))?;
+    Ok(bytes)
+}
+
+/// Every regular file under `root`, as sorted `(relative, absolute)` pairs.
+fn walk(
+    root: &std::path::Path,
+) -> Result<
+    std::vec::Vec<(std::string::String, std::path::PathBuf)>,
+    crate::workflow::output::Failure,
+> {
+    let mut found = std::vec::Vec::new();
+    let mut pending = std::vec![root.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        let entries = std::fs::read_dir(&directory).map_err(|error| {
+            refused(std::format!("cannot list {}: {error}", directory.display()))
+        })?;
+        for entry in entries {
+            let entry = entry.map_err(|error| {
+                refused(std::format!("cannot list {}: {error}", directory.display()))
+            })?;
+            let path = entry.path();
+            let kind = entry.file_type().map_err(|error| {
+                refused(std::format!("cannot stat {}: {error}", path.display()))
+            })?;
+            if kind.is_symlink() {
+                return Err(refused(std::format!(
+                    "library tree must not contain symlinks: {}",
+                    path.display()
+                )));
+            }
+            if kind.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if !kind.is_file() {
+                return Err(refused(std::format!(
+                    "library tree must contain regular files only: {}",
+                    path.display()
+                )));
+            }
+            let Ok(stripped) = path.strip_prefix(root) else {
+                return Err(refused(std::format!(
+                    "library file escapes its root: {}",
+                    path.display()
+                )));
+            };
+            let relative = stripped.to_string_lossy();
+            if relative.is_empty() {
+                return Err(refused(std::format!(
+                    "library file escapes its root: {}",
+                    path.display()
+                )));
+            }
+            found.push((relative.into_owned(), path));
+        }
+    }
+    found.sort_by(|left, right| left.0.cmp(&right.0));
+    Ok(found)
+}
+
+/// Bind one Lean binary and one contract library tree.
+///
+/// # Errors
+/// `toolchain-binding` when a path is missing, unreadable, a symlink, not a
+/// regular file, escapes its root, or exceeds the file or byte bound.
+pub(crate) fn select(
+    lean_binary: &std::path::Path,
+    library_tree: &std::path::Path,
+) -> Result<Selected, crate::workflow::output::Failure> {
+    let metadata = std::fs::symlink_metadata(lean_binary).map_err(|error| {
+        refused(std::format!(
+            "cannot stat --lean-binary {}: {error}",
+            lean_binary.display()
+        ))
+    })?;
+    if !metadata.file_type().is_file() {
+        return Err(refused(std::format!(
+            "--lean-binary must be a regular file: {}",
+            lean_binary.display()
+        )));
+    }
+    let library_root = std::fs::symlink_metadata(library_tree).map_err(|error| {
+        refused(std::format!(
+            "cannot stat --library-tree {}: {error}",
+            library_tree.display()
+        ))
+    })?;
+    if !library_root.file_type().is_dir() {
+        return Err(refused(std::format!(
+            "--library-tree must be a directory: {}",
+            library_tree.display()
+        )));
+    }
+    let files = attempt!(walk(library_tree));
+    if files.len() > MAX_FILES {
+        return Err(refused(std::format!(
+            "library tree has {} files, over the {MAX_FILES} bound",
+            files.len()
+        )));
+    }
+    let mut hasher = blake3::Hasher::new();
+    let mut total: u64 = 0;
+    // The loop allocates nothing: the byte bound is flagged and reported after it, so the only
+    // allocation on the refusal path happens once and outside the hot loop.
+    let mut over_limit = false;
+    for (relative, path) in &files {
+        if total > MAX_BYTES {
+            over_limit = true;
+            break;
+        }
+        let bytes = attempt!(read_bounded(path));
+        total = total.saturating_add(bytes.len() as u64);
+        hasher.update(&(relative.len() as u64).to_le_bytes());
+        hasher.update(relative.as_bytes());
+        hasher.update(&(bytes.len() as u64).to_le_bytes());
+        hasher.update(&bytes);
+    }
+    if over_limit {
+        return Err(refused(std::format!(
+            "library tree exceeds the {MAX_BYTES}-byte bound"
+        )));
+    }
+    let binary = attempt!(read_bounded(lean_binary));
+    let selected = Selected {
+        lean_sha256: crate::workflow::intrinsic::sha256(&binary),
+        lean_version: crate::sandbox::PIN,
+        lean_commit: crate::sandbox::COMMIT,
+        library_sha256: hasher.finalize().to_hex().to_string(),
+        library_files: files.len() as u64,
+        library_bytes: total,
+    };
+    Ok(selected)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::select;
+
+    #[test]
+    fn a_tree_binding_is_order_independent_and_content_sensitive() {
+        let root = std::env::temp_dir().join(format!("noble-toolchain-{}", std::process::id()));
+        let library = root.join("lib");
+        std::fs::create_dir_all(library.join("sub")).expect("create tree");
+        let lean = root.join("lean");
+        std::fs::write(&lean, b"binary").expect("write binary");
+        std::fs::write(library.join("a.olean"), b"alpha").expect("write a");
+        std::fs::write(library.join("sub/b.olean"), b"beta").expect("write b");
+        let result = select(&lean, &library);
+        assert!(result.is_ok(), "select first");
+        let Ok(first) = result else { return };
+        assert_eq!(first.library_files, 2);
+        assert_eq!(first.library_bytes, 9);
+        let result = select(&lean, &library);
+        assert!(result.is_ok(), "select again");
+        let Ok(again) = result else { return };
+        assert_eq!(first.library_sha256, again.library_sha256);
+        assert_eq!(first.lean_sha256, again.lean_sha256);
+        std::fs::write(library.join("sub/b.olean"), b"gamma").expect("rewrite b");
+        let result = select(&lean, &library);
+        assert!(result.is_ok(), "select changed");
+        let Ok(changed) = result else { return };
+        assert_ne!(first.library_sha256, changed.library_sha256);
+        assert_eq!(first.lean_sha256, changed.lean_sha256);
+        std::fs::write(&lean, b"other").expect("rewrite binary");
+        let result = select(&lean, &library);
+        assert!(result.is_ok(), "select replaced");
+        let Ok(replaced) = result else { return };
+        assert_ne!(first.lean_sha256, replaced.lean_sha256);
+        std::fs::remove_dir_all(&root).expect("clean up");
+    }
+
+    #[test]
+    fn a_symlink_in_the_tree_is_refused() {
+        let root =
+            std::env::temp_dir().join(format!("noble-toolchain-link-{}", std::process::id()));
+        let library = root.join("lib");
+        std::fs::create_dir_all(&library).expect("create tree");
+        let lean = root.join("lean");
+        std::fs::write(&lean, b"binary").expect("write binary");
+        std::fs::write(root.join("target"), b"x").expect("write target");
+        std::os::unix::fs::symlink(root.join("target"), library.join("link.olean"))
+            .expect("symlink");
+        let result = select(&lean, &library);
+        assert!(result.is_err(), "symlink is refused");
+        let Err(refused) = result else { return };
+        assert!(refused.message.contains("symlinks"), "{}", refused.message);
+        std::fs::remove_dir_all(&root).expect("clean up");
+    }
+}

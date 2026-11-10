@@ -16,6 +16,7 @@ mod report;
 pub const USAGE: &str = "usage:
   noble build --require-proof SOURCE --contract FILE [--proof FILE | --refutation FILE]
               [--out NEW_DIR] [--timeout-ms N]
+              [--report-schema v2 --lean-binary PATH --library-tree DIR]
   noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON
   noble companions
 
@@ -45,7 +46,11 @@ disproved, unknown, timeout, unsupported, error and not-run all block release
 and remain distinguishable in the report; tests and review records never satisfy
 a required proof. `--out` creates a new directory (never overwriting) and writes
 report.json, wrapper.noble, contract.noble, artifact.wat, artifact.wasm and
-proof.lean when present. The emitted Wasm is build/loading evidence (PO-17/18),
+proof.lean when present. `--report-schema v2` additionally binds the selected toolchain in the
+report: the exact --lean-binary bytes (SHA-256, with the pinned version and commit recorded beside
+them) and the contract library tree (BLAKE3 over every file's relative path and content in sorted
+order). v2 requires both paths and passing either without v2 is a usage error; without the flag the
+report keeps the noble-mc2-build/v1 schema and its exact field set. The emitted Wasm is build/loading evidence (PO-17/18),
 never a verified backend correspondence. Exit status follows VC-TOOL-02:
 proved 0, disproved 1, error 2, unknown 3, unsupported 4, timeout 124, not-run 0.";
 
@@ -70,6 +75,18 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     report.source_path = options.source.to_string_lossy().into_owned();
     report.contract_path = options.contract.to_string_lossy().into_owned();
     report.timeout_ms = options.timeout_ms;
+    report.schema_v2 = options.schema_v2;
+    // v2 binds the exact Lean binary and contract library the caller froze; the parser already
+    // refuses v2 without both paths, and v1 without them.
+    if let (Some(lean_binary), Some(library_tree)) = (&options.lean_binary, &options.library_tree) {
+        match report::toolchain::select(lean_binary, library_tree) {
+            Ok(selected) => report.selected_toolchain = Some(selected),
+            Err(error) => {
+                report.fail(error);
+                return print_report(&report);
+            }
+        }
+    }
     let products = match execute(&options, &mut report) {
         Ok(products) => Some(products),
         Err(error) => {

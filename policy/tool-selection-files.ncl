@@ -198,7 +198,7 @@
   "nix/vendor-only.nix" = "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
   "verification/worker-send/peer/Cargo.lock" = "91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2",
   "verification/worker-send/peer/Cargo.toml" = "ba48d3ca72bdbb07ff0a0302e4b47d147e10025a327b6c346d9b69da4cc57cd6",
-  "crates/noble-cli/src/build.rs" = "7a6f5469fb7b397437e51a0dfff0d0df911e09f0673f7c5bb04a7f7b15690374",
+  "crates/noble-cli/src/build.rs" = "c22dd1afe42eda738fd8ede5f6b8a5bfb43ec178d0aed6bbf629f28079a2db13",
   "crates/noble-cli/src/c_backend.rs" = "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
   "crates/noble-cli/src/component.rs" = "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
   "crates/noble-cli/src/component/artifacts.rs" = "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
