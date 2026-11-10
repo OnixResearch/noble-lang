@@ -136,3 +136,8 @@ Endpoint agreement is on one fixed universe of eight candidates per pair, not a 
 input. Each endpoint is the CLI's own compiled module run on V8, identified by its SHA-256; no second
 Wasm engine or independent implementation is compared. Whether extraction preserves the ordinary
 observation remains NG-PO-A, not a result of this lane.
+
+The retained run is
+[`receipts/2026-11-09/endpoints.json`](receipts/2026-11-09/endpoints.json), from the clean commit
+`4cd732c5`: `+` against `swap +` agrees on all eight candidates, and `-` against `swap -` refutes at
+the first, on the endpoints and on both graph evaluators.
