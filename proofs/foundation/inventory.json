@@ -5038,6 +5038,60 @@
       "claim": "accepted finite exact imports have the decimal's exact rational value when the explicit sign premise holds"
     },
     {
+      "name": "NobleFoundation.Binary32.DecimalImport.digitsValue_snoc",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "appending one decimal digit multiplies the spelling value by ten and adds that digit"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.digitsValue_nil",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the empty digit sequence has value zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_nonneg",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "a nonnegative exponent reads the spelling as digit value times ten to the exponent, over one"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_neg",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "a negative exponent reads the spelling as the digit value over ten to the negated exponent"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.zeroOf_false",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the positive signed zero is the all-zero encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.zeroOf_true",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the negative signed zero is the sign bit alone"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.signedMagnitude_false",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "without a sign the magnitude is the plain binary32 encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_zero_magnitude",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "a zero digit value rounds to the signed zero of the spelling"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_empty_digits",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "an empty digit sequence rounds to the signed zero of the spelling"
+    },
+    {
       "name": "NobleFoundation.Binary32.DecimalImport.negative_zero_fixture",
       "phase": 1,
       "role": "fixture",

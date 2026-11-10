@@ -1085,6 +1085,21 @@ Open, and deliberately not closed by this model:
 - syntax validation, significant-digit and exponent/resource bounds, and a
   general exact-import implementation correspondence in `sem.rs` beyond the
   boundary rows above;
+
+**Spelling algebra for those open lemmas.** `NobleFoundation/DecimalImportSpec.lean` proves the
+facts the universal range and round-trip lemmas need, without new definitions:
+- `digitsValue_snoc`: appending a digit multiplies the value by ten and adds it;
+- `decimalRatio_nonneg` and `decimalRatio_neg`: the two ratio branches, each with its exponent
+  condition as an explicit premise (the identity does not hold across `e = -1`, where the
+  denominator is `10` and the next exponent's is `1`);
+- `rne_zero_magnitude` and `rne_empty_digits`: a zero digit value rounds to the spelling's own
+  signed zero, with `zeroOf_false`/`zeroOf_true` pinning both encodings;
+- `signedMagnitude_false`: an unsigned magnitude is the plain encoding.
+
+The round-trip lemma itself (`rne (spellingOf b) = b` for a finite binary32 `b`) still needs a
+decimal spelling of `m · 5^149`, and the range lemma at `2^128 − 2^103` needs the scaled branch of
+`roundPositive`. Both remain open; this module is the shared algebra they will consume.
+
 - whether overflow returns infinity or a checked error, and the versioned
   public mode/signature/error table;
 - finite-decimal provenance, serialization, graph identity, and executable
