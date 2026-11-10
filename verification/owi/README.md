@@ -16,6 +16,28 @@ Per issue #57, a reproducible compatibility blocker that documents why the lane
 cannot start is a valid outcome. No counterexample was found, no wrapper was
 built and no `certified`/`replayed counterexample` status is claimed.
 
+## Update (2026-11-09): the decoder is fixed in a fork
+
+The blocker is a four-line decoder defect, so it is carried rather than waited on.
+
+- **Fork.** [`OnixResearch/owi`](https://github.com/OnixResearch/owi), branch
+  `noble/memory-init-decode`, commit `44eadcdc`: `memory.init` is `0xFC 8 dataidx memidx`, and the
+  decoder read a third, zero byte, which consumed the next instruction's opcode. Wasm 2.0 spells
+  memidx as the single byte `0x00`; 3.0 permits other indices, so dropping the extra read is correct
+  for both.
+- **Patch over the pin.** [`nix/owi-memory-init-decode.patch`](../../nix/owi-memory-init-decode.patch)
+  is the same change, applied to the pinned nixpkgs source with `overrideAttrs`, as the Aeneas and
+  Octet patches are. `verification/owi/patched.mjs` records the comparison on the committed
+  artifacts.
+- **Observed.** Unpatched, `owi validate` refuses the reproducer and the real emitted subject with
+  `data count section required` (exit 30) and accepts the control. Patched, all three validate with
+  exit 0 and no diagnostic.
+- **What is still open.** `owi sym` now reaches module instantiation and stops at
+  `unknown module noble`: the lane needs a bounded host-module wrapper for `noble`'s memory, table
+  and globals, plus the entry point and quota bridge this record already lists. That is Noble-side
+  work, no longer an upstream block. The no-go above still describes what was executed before the
+  fix: nothing was run symbolically then, and nothing is claimed now beyond validation.
+
 ## Pinned toolchain and subject
 
 | Item | Value |
