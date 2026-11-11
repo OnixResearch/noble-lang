@@ -369,4 +369,46 @@ def stepList : List (AgentKind × Operands) → Option (List (AgentKind × Opera
         (stepList rest).map (fun rest' => (kind, ops) :: rest')
 
 
+/-- A step preserves the number of nodes: firing rewrites one node in place and every other node is
+carried through unchanged, so a step can never drop an agent. -/
+theorem stepList_length : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → nodes'.length = nodes.length := by
+  intro nodes
+  induction nodes with
+  | nil =>
+      intro nodes' h
+      simp [stepList] at h
+  | cons node rest ih =>
+      intro nodes' h
+      obtain ⟨kind, ops⟩ := node
+      unfold stepList at h
+      by_cases hred : kind.isArithmetic && fireable ops
+      · rw [if_pos hred] at h
+        cases hfire : fire kind ops with
+        | some p =>
+            obtain ⟨ops', _v⟩ := p
+            rw [hfire] at h
+            simp only [Option.some.injEq] at h
+            subst h
+            simp
+        | none =>
+            rw [hfire] at h
+            cases hrest : stepList rest with
+            | none => rw [hrest] at h; simp at h
+            | some t =>
+                rw [hrest] at h
+                have ht : t.length = rest.length := ih t hrest
+                simp only [Option.map_some, Option.some.injEq] at h
+                subst h
+                simp [ht]
+      · rw [if_neg hred] at h
+        cases hrest : stepList rest with
+        | none => rw [hrest] at h; simp at h
+        | some t =>
+            rw [hrest] at h
+            have ht : t.length = rest.length := ih t hrest
+            simp only [Option.map_some, Option.some.injEq] at h
+            subst h
+            simp [ht]
+
 end NobleM2.InteractionNet
