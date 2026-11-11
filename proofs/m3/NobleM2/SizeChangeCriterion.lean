@@ -77,4 +77,60 @@ theorem splitSites_no_shared : certifiedAll splitSites = false := by
 theorem splitSites_closure_criterion : ∀ g, Closure splitSites g → HasStrict g :=
   closure_criterion_of_sites splitSites_each
 
+/-! ## Refutation: per-member strict edges do not imply termination -/
+
+/-- Site 0 decreases exactly measure 0. -/
+theorem splitSites_zero_iff (i : Fin 2) : splitSites 0 i = .decrease ↔ i = 0 := by
+  cases i using Fin.cases with
+  | zero => simp [splitSites]
+  | succ j => simp [splitSites]
+
+/-- Site 1 decreases exactly measure 1. -/
+theorem splitSites_one_iff (i : Fin 2) : splitSites 1 i = .decrease ↔ i = 1 := by
+  cases i using Fin.cases with
+  | zero => simp [splitSites]
+  | succ j => simp [splitSites]
+
+/-- A definitional parity predicate, so that `evenFor (t + 1)` reduces without arithmetic. -/
+def evenFor : Nat → Bool
+  | 0 => true
+  | t + 1 => !evenFor t
+
+/-- Even steps choose site 0, odd steps site 1. -/
+def cycleChoose (t : Nat) : Fin 2 := if evenFor t then 0 else 1
+
+/-- Even steps show measure 0 at 2 and drop it to 0; odd steps show measure 1 at 2 and drop it to
+0. The other measure is unconstrained at each step, which is exactly what `unknown` permits. -/
+def cycleState (t : Nat) (i : Fin 2) : Nat :=
+  if evenFor t then (if i = 0 then 2 else 0) else (if i = 0 then 0 else 2)
+
+/-- The alternating run respects every relation `splitSites` declares. -/
+theorem cycle_respects (t : Nat) (i : Fin 2) :
+    splitSites (cycleChoose t) i = .decrease → cycleState (t + 1) i < cycleState t i := by
+  intro h
+  cases hp : evenFor t
+  · have hc : cycleChoose t = 1 := by simp [cycleChoose, hp]
+    rw [hc] at h
+    have hi : i = 1 := splitSites_one_iff i |>.mp h
+    subst hi
+    simp [cycleState, hp, evenFor]
+  · have hc : cycleChoose t = 0 := by simp [cycleChoose, hp]
+    rw [hc] at h
+    have hi : i = 0 := splitSites_zero_iff i |>.mp h
+    subst hi
+    simp [cycleState, hp, evenFor]
+
+/-- **The run exists**: an infinite execution of `splitSites`, although every closure member has a
+strict edge. -/
+def cycleRun : Run 2 2 splitSites where
+  choose := cycleChoose
+  state := cycleState
+  respects := cycle_respects
+
+/-- **The per-member criterion is unsound in this model**: it accepts a family that has a run. -/
+theorem closure_criterion_unsound :
+    ∀ g, Closure splitSites g → HasStrict g ∧ Nonempty (Run 2 2 splitSites) := by
+  intro g member
+  exact ⟨splitSites_closure_criterion g member, ⟨cycleRun⟩⟩
+
 end NobleM2.SizeChange
