@@ -28,6 +28,7 @@ import NobleM2.SizeChangeClosureSound
 import NobleM2.SizeChangeMatrix
 import NobleM2.SizeChangeMatrixEnumeration
 import NobleM2.SizeChangeMatrixPigeonhole
+import NobleM2.SizeChangeMatrixDecEq
 import NobleM2.SizeChangeMatrixSemantics
 import NobleM2.SizeChangeMatrixStrict
 import NobleM2.SizeChangeMatrixPath
