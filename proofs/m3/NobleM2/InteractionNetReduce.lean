@@ -283,4 +283,65 @@ theorem pushNode_length : ∀ (nodes : List Operands) (index : Nat) (secondPort 
           subst hupd
           simp [pushNode_length rest n secondPort v t hrest]
 
+/-- Unwinding accounting for one reduction: rewrites performed and bytes retained, against declared
+caps. Every charge is non-wrapping: a charge that would exceed its cap is refused, never truncated. -/
+structure Budget where
+  /-- Rewrites performed so far. -/
+  rewrites : Nat
+  /-- Bytes retained so far. -/
+  bytes : Nat
+  /-- Declared rewrite cap. -/
+  maxRewrites : Nat
+  /-- Declared retained-byte cap. -/
+  maxBytes : Nat
+
+/-- Charge one rewrite, refusing at the cap. -/
+def Budget.rewrite (b : Budget) : Option Budget :=
+  if b.rewrites < b.maxRewrites then some { b with rewrites := b.rewrites + 1 } else none
+
+/-- Charge retained bytes, refusing when the charge would cross the cap. Charges before growth. -/
+def Budget.retain (b : Budget) (n : Nat) : Option Budget :=
+  if b.bytes + n ≤ b.maxBytes then some { b with bytes := b.bytes + n } else none
+
+/-- A rewrite charge succeeds exactly below the cap. -/
+theorem rewrite_succeeds_iff (b : Budget) :
+    (b.rewrite).isSome ↔ b.rewrites < b.maxRewrites := by
+  unfold Budget.rewrite
+  split <;> simp_all
+
+/-- Rewrites never exceed their cap. -/
+theorem rewrite_bounded {b b' : Budget} (h : b.rewrite = some b') :
+    b'.rewrites ≤ b'.maxRewrites := by
+  unfold Budget.rewrite at h
+  split at h
+  · injection h with hb
+    subst hb
+    simp
+    omega
+  · simp at h
+
+/-- A byte charge succeeds exactly when it fits, and then fits afterwards. -/
+theorem retain_succeeds_iff (b : Budget) (n : Nat) :
+    (b.retain n).isSome ↔ b.bytes + n ≤ b.maxBytes := by
+  unfold Budget.retain
+  split <;> simp_all
+
+/-- Retained bytes never exceed their cap. -/
+theorem retain_bounded {b b' : Budget} {n : Nat} (h : b.retain n = some b') :
+    b'.bytes ≤ b'.maxBytes := by
+  unfold Budget.retain at h
+  split at h
+  · injection h with hb
+    subst hb
+    simpa using ‹b.bytes + n ≤ b.maxBytes›
+  · simp at h
+
+/-- A charge over the cap is a refusal, not a truncated charge. -/
+theorem retain_refuses_over_cap {b : Budget} {n : Nat} (h : b.maxBytes < b.bytes + n) :
+    b.retain n = none := by
+  unfold Budget.retain
+  split
+  · omega
+  · rfl
+
 end NobleM2.InteractionNet
