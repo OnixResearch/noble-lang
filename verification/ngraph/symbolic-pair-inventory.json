@@ -86,5 +86,41 @@
       }
     ],
     "summary": "all_declared_mutations_are_caught"
+  },
+  "hazards": {
+    "statement": "Acceptance item 5: hazards that must not produce certified or replayed-counterexample status.",
+    "covered": [
+      {
+        "hazard": "altered witness bytes",
+        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
+        "theorem": "corrupted_witness_shifts_bits"
+      },
+      {
+        "hazard": "replay of an encoded witness",
+        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
+        "theorem": "decode_encode_replays"
+      },
+      {
+        "hazard": "no witness found is not agreement",
+        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
+        "theorem": "firstIndex_none_agrees"
+      },
+      {
+        "hazard": "shrink replay refutes every step",
+        "module": "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean",
+        "theorem": "subtractionOrder_every_shrink_refutes"
+      },
+      {
+        "hazard": "shrunk witness is a local minimum",
+        "module": "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean",
+        "theorem": "subtractionOrder_shrunk_is_a_local_minimum"
+      }
+    ],
+    "open": [
+      "stale semantic revision",
+      "malformed certificate",
+      "forced UNKNOWN distinct from refusal",
+      "timeout and exhausted budget statuses"
+    ]
   }
 }

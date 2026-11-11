@@ -33,6 +33,16 @@ const inspect = (inventory, readText) => {
       problems.push('mutation battery covers fewer than the four named fault places');
     }
   }
+  if (inventory.hazards) {
+    const cache = new Map();
+    for (const entry of inventory.hazards.covered) {
+      const source = cache.get(entry.module) ?? readText(entry.module);
+      cache.set(entry.module, source);
+      if (!source.includes(`theorem ${entry.theorem}`)) {
+        problems.push(`hazard ${entry.hazard}: missing theorem ${entry.theorem}`);
+      }
+    }
+  }
   return problems;
 };
 
@@ -69,6 +79,8 @@ const report = {
   mutation_module_sha256: inventory.mutations
     ? createHash('sha256').update(readText(inventory.mutations.module)).digest('hex')
     : null,
+  hazards_covered: inventory.hazards ? inventory.hazards.covered.map((h) => h.hazard) : [],
+  hazards_open: inventory.hazards ? inventory.hazards.open : [],
   trusted_steps: inventory.trusted_steps.length,
   problems
 };
