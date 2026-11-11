@@ -344,71 +344,109 @@ theorem retain_refuses_over_cap {b : Budget} {n : Nat} (h : b.maxBytes < b.bytes
   · omega
   · rfl
 
-/-- A node is reducible when it is an arithmetic agent with both operand stacks non-empty. The kind
-matters: `fireable` alone would call a value agent reducible. -/
-def reducible (node : AgentKind × Operands) : Bool :=
-  node.1.isArithmetic && fireable node.2
 
-/-- Reducibility is exactly arithmetic plus ready stacks. -/
-theorem reducible_iff (kind : AgentKind) (ops : Operands) :
-    reducible (kind, ops) = true ↔
-      (kind.isArithmetic = true ∧ ops.first ≠ [] ∧ ops.second ≠ []) := by
-  unfold reducible
-  rw [Bool.and_eq_true, fireable_iff]
+/-- Step one node: fire it if arithmetic and both stacks are ready. -/
+def stepNode : AgentKind × Operands → Option (AgentKind × Operands)
+  | (kind, ops) =>
+      match fire kind ops with
+      | some (ops', _v) => some (kind, ops')
+      | none => none
 
-/-- Fire the first reducible node; `none` when none is reducible. Both non-firing branches
-keep the node, so a step never drops an agent from the list. -/
+/-- A node is reducible exactly when stepping it does something. -/
+def reducible (node : AgentKind × Operands) : Bool := (stepNode node).isSome
+
+/-- Reducibility is arithmetic plus ready stacks, by the firing condition. -/
+theorem reducible_iff (kind : AgentKind) (hk : kind.isArithmetic = true) (ops : Operands) :
+    reducible (kind, ops) = true ↔ (ops.first ≠ [] ∧ ops.second ≠ []) := by
+  unfold reducible stepNode
+  cases hfire : fire kind ops with
+  | none =>
+      constructor
+      · intro h
+        simp [hfire] at h
+      · intro hf
+        have hsome := (fire_arithmetic_iff kind hk ops).mpr hf
+        rw [hfire] at hsome
+        simp at hsome
+  | some p =>
+      constructor
+      · intro _
+        have hsome : (fire kind ops).isSome := by rw [hfire]; rfl
+        exact (fire_arithmetic_iff kind hk ops).mp hsome
+      · intro _
+        show (match fire kind ops with
+          | some (ops', _v) => some (kind, ops')
+          | none => none).isSome = true
+        rw [hfire]
+        rfl
+
+/-- Step the first reducible node; `none` when none is reducible. -/
 def stepList : List (AgentKind × Operands) → Option (List (AgentKind × Operands))
   | [] => none
-  | (kind, ops) :: rest =>
-      if kind.isArithmetic && fireable ops then
-        match fire kind ops with
-        | some (ops', _v) => some ((kind, ops') :: rest)
-        | none => (stepList rest).map (fun rest' => (kind, ops) :: rest')
-      else
-        (stepList rest).map (fun rest' => (kind, ops) :: rest')
+  | node :: rest =>
+      match stepNode node with
+      | some node' => some (node' :: rest)
+      | none => (stepList rest).map (fun rest' => node :: rest')
 
-
-/-- A step preserves the number of nodes: firing rewrites one node in place and every other node is
-carried through unchanged, so a step can never drop an agent. -/
+/-- A step preserves the node count. -/
 theorem stepList_length : ∀ (nodes nodes' : List (AgentKind × Operands)),
     stepList nodes = some nodes' → nodes'.length = nodes.length := by
   intro nodes
   induction nodes with
-  | nil =>
-      intro nodes' h
-      simp [stepList] at h
+  | nil => intro nodes' h; simp [stepList] at h
   | cons node rest ih =>
       intro nodes' h
-      obtain ⟨kind, ops⟩ := node
       unfold stepList at h
-      by_cases hred : kind.isArithmetic && fireable ops
-      · rw [if_pos hred] at h
-        cases hfire : fire kind ops with
-        | some p =>
-            obtain ⟨ops', _v⟩ := p
-            rw [hfire] at h
-            simp only [Option.some.injEq] at h
-            subst h
-            simp
-        | none =>
-            rw [hfire] at h
-            cases hrest : stepList rest with
-            | none => rw [hrest] at h; simp at h
-            | some t =>
-                rw [hrest] at h
-                have ht : t.length = rest.length := ih t hrest
-                simp only [Option.map_some, Option.some.injEq] at h
-                subst h
-                simp [ht]
-      · rw [if_neg hred] at h
-        cases hrest : stepList rest with
-        | none => rw [hrest] at h; simp at h
-        | some t =>
-            rw [hrest] at h
-            have ht : t.length = rest.length := ih t hrest
-            simp only [Option.map_some, Option.some.injEq] at h
-            subst h
-            simp [ht]
+      cases hstep : stepNode node with
+      | some node' =>
+          rw [hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          simp
+      | none =>
+          rw [hstep] at h
+          cases hrest : stepList rest with
+          | none => rw [hrest] at h; simp at h
+          | some t =>
+              rw [hrest] at h
+              have ht : t.length = rest.length := ih t hrest
+              simp only [Option.map_some, Option.some.injEq] at h
+              subst h
+              simp [ht]
+
+/-- A step refuses exactly when no node is reducible. -/
+theorem stepList_none_iff : ∀ (nodes : List (AgentKind × Operands)),
+    stepList nodes = none ↔ ∀ node ∈ nodes, reducible node = false := by
+  intro nodes
+  induction nodes with
+  | nil => simp [stepList]
+  | cons node rest ih =>
+      cases hstep : stepNode node with
+      | some node' =>
+          have hval : stepList (node :: rest) = some (node' :: rest) := by
+            simp [stepList, hstep]
+          have hred : reducible node = true := by simp [reducible, hstep]
+          rw [hval]
+          simp only [reduceCtorEq, false_iff]
+          intro hall
+          have hfalse := hall node (by simp)
+          rw [hred] at hfalse
+          simp at hfalse
+      | none =>
+          have hval : stepList (node :: rest) = (stepList rest).map (fun rest' => node :: rest') := by
+            simp [stepList, hstep]
+          have hnode : reducible node = false := by simp [reducible, hstep]
+          rw [hval]
+          have hmap : ((stepList rest).map (fun rest' => node :: rest') = none)
+              ↔ stepList rest = none := by
+            cases stepList rest <;> simp
+          rw [hmap, ih]
+          constructor
+          · intro hall n hn
+            rcases List.mem_cons.mp hn with rfl | hmem
+            · exact hnode
+            · exact hall n hmem
+          · intro hall n hmem
+            exact hall n (by simp [hmem])
 
 end NobleM2.InteractionNet
