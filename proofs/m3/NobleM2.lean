@@ -31,6 +31,7 @@ import NobleM2.SizeChangeMatrixJoinFold
 import NobleM2.SizeChangeMatrixExponent
 import NobleM2.SizeChangeMatrixPeriod
 import NobleM2.SizeChangeMatrixShortening
+import NobleM2.SizeChangeMatrixPathProduct
 import NobleM2.SizeChangeFixtures
 import NobleM2.SizeChangeExact
 import NobleM2.SizeChangeMatrixEnumeration
