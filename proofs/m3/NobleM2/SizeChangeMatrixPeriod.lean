@@ -80,4 +80,18 @@ theorem power_idempotent {n : Nat} {g : MGraph n} {a d : Nat} (hd : 0 < d)
       _ ≤ a * d := Nat.mul_le_mul_left a hd1
   exact power_iterate h a (a * d) hge
 
+/-- **An idempotent matrix represents all its positive powers.** -/
+theorem idempotent_power_stable {n : Nat} {x : MGraph n} (h : composeMatrix x x = x) :
+    ∀ k, 1 ≤ k → powerMatrix k x = x := by
+  intro k _
+  have hp1 : powerMatrix 1 x = x := composeMatrix_id_right x
+  have hrec : powerMatrix 1 x = composeMatrix (powerMatrix 1 x) (powerMatrix 1 x) := by
+    rw [hp1]
+    exact h.symm
+  have hiter := power_iterate hrec (k - 1) 1 (Nat.le_refl 1)
+  rw [Nat.mul_one] at hiter
+  have hk : 1 + (k - 1) = k := by omega
+  rw [hk] at hiter
+  rw [hiter, hp1]
+
 end NobleM2.SizeChange
