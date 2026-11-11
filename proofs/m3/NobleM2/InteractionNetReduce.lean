@@ -744,4 +744,57 @@ theorem applyPlan_length : ∀ (ks : List Nat) (nodes nodes' : List (AgentKind �
           rw [ih next nodes' h]
           exact fireAt_length k nodes next hfire
 
+/-- In-place firing never increases the number of reducible nodes, at any index. -/
+theorem fireAt_reducibleCount_le : ∀ (k : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    fireAt k nodes = some nodes' → reducibleCount nodes' ≤ reducibleCount nodes := by
+  intro k
+  induction k with
+  | zero =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          cases hstep : stepNode node with
+          | none => simp [fireAt, hstep] at h
+          | some node' =>
+              have hred : reducible node = true := reducible_of_stepNode _ _ hstep
+              simp [fireAt, hstep] at h
+              obtain ⟨_, rfl⟩ := h
+              unfold reducibleCount
+              rw [hred]
+              have hle : (if reducible node' then 1 else 0) ≤ 1 := by
+                split <;> simp
+              exact Nat.add_le_add_right hle _
+  | succ k ih =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          cases hrec : fireAt k rest with
+          | none => simp [fireAt, hrec] at h
+          | some rest' =>
+              simp [fireAt, hrec] at h
+              obtain ⟨_, rfl⟩ := h
+              unfold reducibleCount
+              exact Nat.add_le_add_left (ih rest rest' hrec) _
+
+/-- No plan, in any index order, increases the reducible-node count. -/
+theorem applyPlan_reducibleCount_le : ∀ (ks : List Nat) (nodes nodes' : List (AgentKind × Operands)),
+    applyPlan nodes ks = some nodes' → reducibleCount nodes' ≤ reducibleCount nodes := by
+  intro ks
+  induction ks with
+  | nil =>
+      intro nodes nodes' h
+      simp [applyPlan] at h
+      obtain rfl := h
+      exact Nat.le_refl _
+  | cons k ks ih =>
+      intro nodes nodes' h
+      unfold applyPlan at h
+      cases hfire : fireAt k nodes with
+      | none => rw [hfire] at h; simp at h
+      | some next =>
+          rw [hfire] at h
+          exact Nat.le_trans (ih next nodes' h) (fireAt_reducibleCount_le k nodes next hfire)
+
 end NobleM2.InteractionNet
