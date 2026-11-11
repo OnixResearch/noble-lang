@@ -1,7 +1,19 @@
-# I64 interaction-net contract: candidate revision 2
+# I64 interaction-net contract: revision 2, selected
 
-Status: **candidate for selection under #37**. Not selected; dependent issues must not treat it as
-selected. It exists so the selection is a decision over a written rule set rather than an impression.
+Status: **selected for #37**. The four semantic questions left open in the candidate are decided
+below, each with the reason that decided it. Dependent issues (#105, #107, #108, #109, #110, #112–#115)
+may now reference revision 2 by name; they must still say which parts of it they implement, and no
+proof is claimed by this document — `InteractionNet.lean` remains a structural validator and
+reduction semantics are not implemented.
+
+## The four decisions
+
+| Question | Decision | Reason |
+|---|---|---|
+| Operand stacks LIFO or FIFO | **LIFO** | "deeper operand first" must be a property of the stack, not of source order; FIFO would revive the counterexample that an identity agent reorders operands |
+| `Erase` eager or only on a value | **only on a value** | eager erase would drop a pending computation, which no budget or read-back check could detect afterwards |
+| Does `Eq` share the I64 value domain | **yes, as 0/1** | a second wire domain reintroduces revision 1's principal-port rule; encoding `Bool` as `I64 0/1` keeps one value type on every wire and is checkable in read-back |
+| Fanout synchronous or lazy | **lazy** | a synchronous copy is a global barrier: it changes the progress bound and forbids interleaving with reduction, which revision 2 would otherwise allow |
 
 ## What revision 1 gets wrong
 
