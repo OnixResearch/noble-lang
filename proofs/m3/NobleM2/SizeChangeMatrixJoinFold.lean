@@ -66,4 +66,32 @@ theorem join_fold_zip {β : Type} (f g : β → Rel4) :
       rw [join_swap]
       rw [join_fold_zip f g rest]
 
+/-- A fold of `unknown` joins is `unknown`. -/
+theorem fold_unknown {β : Type} :
+    ∀ (l : List β), l.foldr (fun _ acc => Rel4.unknown.join acc) Rel4.unknown = Rel4.unknown
+  | [] => rfl
+  | _ :: rest => by
+      rw [List.foldr_cons, fold_unknown rest]
+      rfl
+
+/-- **The double fold commutes**: joining over two indices in either order gives the same value. -/
+theorem fold_join_comm {α β : Type} (F : α → β → Rel4) :
+    ∀ (l₁ : List α) (l₂ : List β),
+      (l₁.foldr (fun a acc => (l₂.foldr (fun b acc' => (F a b).join acc') .unknown).join acc) .unknown)
+        = l₂.foldr
+            (fun b acc => (l₁.foldr (fun a acc' => (F a b).join acc') .unknown).join acc) .unknown
+  | [], l₂ => by
+      show Rel4.unknown = l₂.foldr (fun b acc => Rel4.unknown.join acc) Rel4.unknown
+      rw [fold_unknown l₂]
+  | a :: rest, l₂ => by
+      show (l₂.foldr (fun b acc => (F a b).join acc) .unknown).join
+          (rest.foldr (fun r acc => (l₂.foldr (fun b acc' => (F r b).join acc') .unknown).join acc)
+            .unknown)
+        = l₂.foldr
+            (fun b acc => ((F a b).join
+              (rest.foldr (fun r acc' => (F r b).join acc') .unknown)).join acc) .unknown
+      rw [fold_join_comm F rest l₂]
+      exact join_fold_zip (fun b => F a b)
+        (fun b => rest.foldr (fun r acc => (F r b).join acc) .unknown) l₂
+
 end NobleM2.SizeChange
