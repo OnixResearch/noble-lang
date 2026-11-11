@@ -94,4 +94,24 @@ theorem matrixProduct_shorten {n : Nat} (l : List (MGraph n))
   obtain ⟨i, j, hij, hj, heq⟩ := hasRepeatPrefix_sound (hasRepeatPrefix_true l hlong)
   exact matrixProduct_shorten_of_repeat l hij hj heq
 
+/-- **Every product has a short representative**: no longer than the matrix enumeration, obtained by
+iterating the replacement lemma. -/
+theorem matrixProduct_short_representative {n : Nat} (l : List (MGraph n)) :
+    ∃ l' : List (MGraph n),
+      l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
+  have key : ∀ m : Nat, ∀ (l : List (MGraph n)), l.length = m →
+      ∃ l' : List (MGraph n),
+        l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
+    intro m
+    induction m using Nat.strongRecOn with
+    | ind m ih =>
+        intro l hl
+        by_cases hshort : l.length ≤ (matrixAux n).length
+        · exact ⟨l, hshort, rfl⟩
+        · have hlong : (matrixAux n).length + 1 ≤ l.length := by omega
+          obtain ⟨l', hl', heq⟩ := matrixProduct_shorten l hlong
+          obtain ⟨l'', h2, h3⟩ := ih l'.length (by omega) l' rfl
+          exact ⟨l'', h2, h3.trans heq⟩
+  exact key l.length l rfl
+
 end NobleM2.SizeChange
