@@ -100,4 +100,62 @@ def composeMatrix {n : Nat} (g h : MGraph n) : MGraph n :=
   fun i k => (List.finRange n).foldr (fun j acc => Rel4.join (g i j |>.compose (h j k)) acc) .unknown
 
 
+/-- A fold over joins of all-`unknown` entries is `unknown`. -/
+theorem foldr_join_unknown_of_all_unknown {α : Type} (f : α → Rel4) :
+    ∀ (l : List α), (∀ x ∈ l, f x = .unknown) →
+      l.foldr (fun x acc => (f x).join acc) .unknown = .unknown
+  | [], _ => rfl
+  | x :: rest, h => by
+      rw [List.foldr_cons]
+      have hx : f x = .unknown := h x (by simp)
+      have hr : rest.foldr (fun y a => (f y).join a) .unknown = .unknown :=
+        foldr_join_unknown_of_all_unknown f rest (fun y hy => h y (by simp [hy]))
+      rw [hx, hr]
+      rfl
+
+/-- `unknown` is neutral for `join` on the left. -/
+theorem join_unknown_left (r : Rel4) : Rel4.unknown.join r = r := by
+  cases r <;> rfl
+
+/-- A fold over joins with a single non-`unknown` entry equals that entry. -/
+theorem foldr_join_of_single {α : Type} [DecidableEq α] (f : α → Rel4) (x : α) :
+    ∀ (l : List α), x ∈ l → (∀ y ∈ l, y ≠ x → f y = .unknown) →
+      l.foldr (fun y acc => (f y).join acc) .unknown = f x
+  | [], hx, _ => absurd hx (by simp)
+  | y :: rest, hx, h => by
+      rw [List.foldr_cons]
+      by_cases hyx : y = x
+      · cases hyx
+        by_cases hxr : x ∈ rest
+        · have hr := foldr_join_of_single f x rest hxr (fun z hz hzx => h z (by simp [hz]) hzx)
+          rw [hr]
+          cases (f x) <;> rfl
+        · have hr : rest.foldr (fun z a => (f z).join a) .unknown = .unknown :=
+            foldr_join_unknown_of_all_unknown f rest
+              (fun z hz => h z (by simp [hz]) (fun hzx => hxr (hzx ▸ hz)))
+          rw [hr]
+          exact Rel4.join_unknown (f x)
+      · have hxr : x ∈ rest := by
+          rcases List.mem_cons.mp hx with hyx' | hxr
+          · exact absurd hyx'.symm hyx
+          · exact hxr
+        have hr := foldr_join_of_single f x rest hxr (fun z hz hzx => h z (by simp [hz]) hzx)
+        rw [hr, h y (by simp) hyx]
+        exact join_unknown_left (f x)
+
+/-- The identity matrix is a right unit for the product. -/
+theorem composeMatrix_id_right {n : Nat} (g : MGraph n) : composeMatrix g idMatrix = g := by
+  funext i k
+  have hunit : (g i k).compose (idMatrix k k) = g i k := by
+    have hid : idMatrix k k = (Rel4.same : Rel4) := by simp [idMatrix]
+    rw [hid]
+    cases (g i k) <;> rfl
+  have hsingle := foldr_join_of_single (fun j => (g i j).compose (idMatrix j k)) k
+    (List.finRange n) (List.mem_finRange k)
+    (fun y _ hyk => by
+      have hid : idMatrix y k = (Rel4.unknown : Rel4) := by simp [idMatrix, hyk]
+      rw [hid]
+      cases (g i y) <;> rfl)
+  simpa [composeMatrix, hunit] using hsingle
+
 end NobleM2.SizeChange
