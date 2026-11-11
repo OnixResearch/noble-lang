@@ -1227,4 +1227,41 @@ theorem run_within_declared_space {c : NetCertificate} {fuel : Nat}
   have hdecl := (checkCertificate_sound hcheck).2.2
   omega
 
+/-- Acceptance is exactly the three conditions, in both directions: the checker neither misses a
+violation nor refuses a well-formed certificate. -/
+theorem checkCertificate_iff (c : NetCertificate) :
+    checkCertificate c = true ↔ c.revision = certificateRevision ∧
+      c.netLength = c.nodes.length ∧ spacePotential c.nodes ≤ c.declaredSpace := by
+  constructor
+  · exact checkCertificate_sound
+  · intro h
+    unfold checkCertificate
+    simp [h.1, h.2.1, h.2.2]
+
+/-- Control: a certificate written for a different revision is refused. -/
+theorem checkCertificate_refuses_wrong_revision (c : NetCertificate)
+    (h : c.revision ≠ certificateRevision) : checkCertificate c = false := by
+  cases hcheck : checkCertificate c with
+  | false => rfl
+  | true =>
+      have hs := checkCertificate_sound hcheck
+      exact absurd hs.1 h
+
+/-- Control: a certificate claiming a node count the net does not have is refused. -/
+theorem checkCertificate_refuses_wrong_count (c : NetCertificate)
+    (h : c.netLength ≠ c.nodes.length) : checkCertificate c = false := by
+  cases hcheck : checkCertificate c with
+  | false => rfl
+  | true =>
+      have hs := checkCertificate_sound hcheck
+      exact absurd hs.2.1 h
+
+/-- The checker accepts a concrete certificate: one empty-stack agent declaring one cell. This is
+the acceptance side of the battery - refusal theorems alone would be satisfied by a checker that
+rejects everything. -/
+theorem certificate_accepts_small_net :
+    checkCertificate
+        { revision := 1, nodes := [(.add, ⟨[], []⟩)], netLength := 1, declaredSpace := 1 } = true :=
+  rfl
+
 end NobleM2.InteractionNet
