@@ -85,4 +85,48 @@ theorem fire_consumes_heads {kind : AgentKind} (hk : kind.isArithmetic = true)
     ∃ v : Value, fire kind ⟨a :: as, b :: bs⟩ = some (⟨as, bs⟩, v) := by
   cases kind <;> simp_all [AgentKind.isArithmetic, fire]
 
+/-- A fanout firing copies one value to its two auxiliary ports. -/
+def fireFanout (v : Value) : List Value := [v, v]
+
+/-- Both copies are the original value: fanout duplicates, it does not transform. -/
+theorem fireFanout_copies (v : Value) : ∀ x ∈ fireFanout v, x = v := by
+  intro x hx
+  simpa [fireFanout] using hx
+
+/-- An erase firing consumes one value and produces none. -/
+def fireErase (_v : Value) : List Value := []
+
+theorem fireErase_empty (v : Value) : fireErase v = [] := rfl
+
+/-- Net change in the number of live values caused by one firing of each agent kind. Arithmetic
+consumes two and produces one; fanout consumes one and produces two; erase consumes one and produces
+none; a value or boundary agent is not a firing. -/
+def valueDelta : AgentKind → Int
+  | .add => -1
+  | .sub => -1
+  | .mul => -1
+  | .eq => -1
+  | .fanout => 1
+  | .erase => -1
+  | .value => 0
+  | .input => 0
+  | .output => 0
+
+/-- Every arithmetic firing reduces the value count by one. -/
+theorem valueDelta_arithmetic (kind : AgentKind) (hk : kind.isArithmetic = true) :
+    valueDelta kind = -1 := by
+  cases kind <;> simp_all [AgentKind.isArithmetic, valueDelta]
+
+/-- Fanout is the only rule that increases the value count. -/
+theorem valueDelta_fanout : valueDelta .fanout = 1 := rfl
+
+/-- Erase reduces the value count by one. -/
+theorem valueDelta_erase : valueDelta .erase = -1 := rfl
+
+/-- A fanout is the only rule with a positive delta, and an arithmetic agent is never it. -/
+theorem arithmetic_delta_not_positive (kind : AgentKind) (hk : kind.isArithmetic = true) :
+    valueDelta kind ≤ 0 := by
+  rw [valueDelta_arithmetic kind hk]
+  decide
+
 end NobleM2.InteractionNet
