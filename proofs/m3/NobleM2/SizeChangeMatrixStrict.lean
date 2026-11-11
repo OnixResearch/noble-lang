@@ -24,8 +24,10 @@ namespace Rel4
 theorem join_eq_strict (r s : Rel4) : r.join s = .strict ↔ r = .strict ∨ s = .strict := by
   cases r <;> cases s <;> simp [Rel4.join]
 
-/-- A composition is strict exactly when one side is. -/
-theorem compose_eq_strict (r s : Rel4) : r.compose s = .strict ↔ r = .strict ∨ s = .strict := by
+/-- A composition is strict exactly when one side is strict and the other is known. -/
+theorem compose_eq_strict (r s : Rel4) :
+    r.compose s = .strict ↔
+      (r = .strict ∧ s ≠ .unknown) ∨ (s = .strict ∧ r ≠ .unknown) := by
   cases r <;> cases s <;> simp [Rel4.compose]
 
 end Rel4

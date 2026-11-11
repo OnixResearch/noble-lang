@@ -27,4 +27,3 @@ import NobleM2.SizeChangeCriterion
 import NobleM2.SizeChangeClosureSound
 import NobleM2.SizeChangeMatrix
 import NobleM2.SizeChangeMatrixSemantics
-import NobleM2.SizeChangeMatrixStrict

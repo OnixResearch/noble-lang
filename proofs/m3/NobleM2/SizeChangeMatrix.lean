@@ -48,13 +48,14 @@ namespace Rel4
 
 /-- Sequential composition of size-change relations. -/
 def compose : Rel4 → Rel4 → Rel4
+  | .unknown, _ => .unknown
+  | _, .unknown => .unknown
   | .strict, _ => .strict
   | _, .strict => .strict
   | .nonIncrease, .same => .nonIncrease
   | .same, .nonIncrease => .nonIncrease
   | .nonIncrease, .nonIncrease => .nonIncrease
   | .same, .same => .same
-  | _, _ => .unknown
 
 /-- Joining two parallel paths keeps the more informative relation. -/
 def join : Rel4 → Rel4 → Rel4
@@ -70,11 +71,12 @@ def join : Rel4 → Rel4 → Rel4
 theorem compose_self (r : Rel4) : r.compose r = r := by
   cases r <;> rfl
 
-/-- A strict relation absorbs any composition on either side. -/
-theorem compose_strict_left (r : Rel4) : Rel4.strict.compose r = .strict := rfl
+/-- A strict relation absorbs composition on either side, provided the other factor is known. -/
+theorem compose_strict_left {r : Rel4} (h : r ≠ .unknown) : Rel4.strict.compose r = .strict := by
+  cases r <;> simp_all [Rel4.compose]
 
-theorem compose_strict_right (r : Rel4) : r.compose .strict = .strict := by
-  cases r <;> rfl
+theorem compose_strict_right {r : Rel4} (h : r ≠ .unknown) : r.compose .strict = .strict := by
+  cases r <;> simp_all [Rel4.compose]
 
 /-- Joining with `unknown` changes nothing: it is the bottom of the information order. -/
 theorem join_unknown (r : Rel4) : r.join .unknown = r := by
