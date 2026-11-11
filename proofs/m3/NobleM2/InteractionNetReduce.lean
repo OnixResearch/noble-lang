@@ -344,4 +344,29 @@ theorem retain_refuses_over_cap {b : Budget} {n : Nat} (h : b.maxBytes < b.bytes
   · omega
   · rfl
 
+/-- A node is reducible when it is an arithmetic agent with both operand stacks non-empty. The kind
+matters: `fireable` alone would call a value agent reducible. -/
+def reducible (node : AgentKind × Operands) : Bool :=
+  node.1.isArithmetic && fireable node.2
+
+/-- Reducibility is exactly arithmetic plus ready stacks. -/
+theorem reducible_iff (kind : AgentKind) (ops : Operands) :
+    reducible (kind, ops) = true ↔
+      (kind.isArithmetic = true ∧ ops.first ≠ [] ∧ ops.second ≠ []) := by
+  unfold reducible
+  rw [Bool.and_eq_true, fireable_iff]
+
+/-- Fire the first reducible node; `none` when none is reducible. Both non-firing branches
+keep the node, so a step never drops an agent from the list. -/
+def stepList : List (AgentKind × Operands) → Option (List (AgentKind × Operands))
+  | [] => none
+  | (kind, ops) :: rest =>
+      if kind.isArithmetic && fireable ops then
+        match fire kind ops with
+        | some (ops', _v) => some ((kind, ops') :: rest)
+        | none => (stepList rest).map (fun rest' => (kind, ops) :: rest')
+      else
+        (stepList rest).map (fun rest' => (kind, ops) :: rest')
+
+
 end NobleM2.InteractionNet
