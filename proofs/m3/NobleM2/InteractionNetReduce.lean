@@ -797,4 +797,50 @@ theorem applyPlan_reducibleCount_le : ∀ (ks : List Nat) (nodes nodes' : List (
           rw [hfire] at h
           exact Nat.le_trans (ih next nodes' h) (fireAt_reducibleCount_le k nodes next hfire)
 
+
+/-- The node named by an index, or nothing when the index is out of range. -/
+def nthNode : Nat → List (AgentKind × Operands) → Option (AgentKind × Operands)
+  | 0, [] => none
+  | 0, node :: _ => some node
+  | _ + 1, [] => none
+  | k + 1, _ :: rest => nthNode k rest
+
+/-- A plan step refuses exactly when the index is out of range or the node it names cannot fire.
+This is what lets a checker accept a plan without trusting its producer: refusal is a fact about the
+named node, not about the schedule. -/
+theorem fireAt_none_iff : ∀ (k : Nat) (nodes : List (AgentKind × Operands)),
+    fireAt k nodes = none ↔
+      nthNode k nodes = none ∨ ∃ node, nthNode k nodes = some node ∧ reducible node = false := by
+  intro k
+  induction k with
+  | zero =>
+      intro nodes
+      cases nodes with
+      | nil => simp [fireAt, nthNode]
+      | cons node rest =>
+          cases hstep : stepNode node with
+          | none => simp [fireAt, nthNode, reducible, hstep]
+          | some node' => simp [fireAt, nthNode, reducible, hstep]
+  | succ k ih =>
+      intro nodes
+      cases nodes with
+      | nil => simp [fireAt, nthNode]
+      | cons node rest =>
+          have hget : nthNode (k + 1) (node :: rest) = nthNode k rest := by simp [nthNode]
+          rw [hget]
+          cases hrec : fireAt k rest with
+          | none =>
+              have hyes : nthNode k rest = none ∨
+                  ∃ node, nthNode k rest = some node ∧ reducible node = false := (ih rest).mp hrec
+              simp [fireAt, hrec]
+              simpa using hyes
+          | some rest' =>
+              have hne : ¬ (nthNode k rest = none ∨
+                  ∃ node, nthNode k rest = some node ∧ reducible node = false) := by
+                intro h
+                rw [(ih rest).mpr h] at hrec
+                simp at hrec
+              simp [fireAt, hrec]
+              simpa using hne
+
 end NobleM2.InteractionNet
