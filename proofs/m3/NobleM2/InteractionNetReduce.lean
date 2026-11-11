@@ -1093,4 +1093,90 @@ theorem stepList_spacePotential_le : ∀ (nodes nodes' : List (AgentKind × Oper
           unfold spacePotential
           exact Nat.add_le_add_left (ih t hrest) _
 
+/-- Values waiting on the net's ports, summed over nodes. -/
+def stackValues : List (AgentKind × Operands) → Nat
+  | [] => 0
+  | (_, ops) :: rest => ops.first.length + ops.second.length + stackValues rest
+
+/-- A step cannot increase the waiting-value count: the fired node loses exactly the two values it
+consumed, and every other node is carried through. -/
+theorem stepList_stackValues_le : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → stackValues nodes' ≤ stackValues nodes := by
+  intro nodes
+  induction nodes with
+  | nil =>
+      intro nodes' h
+      simp [stepList] at h
+  | cons node rest ih =>
+      intro nodes' h
+      obtain ⟨kind, ops⟩ := node
+      cases hstep : stepNode (kind, ops) with
+      | some node' =>
+          obtain ⟨ops', v, hshape, hfire⟩ := stepNode_some_fire hstep
+          subst hshape
+          have hl := fire_ops_lengths hfire
+          have hval : stepList ((kind, ops) :: rest) = some ((kind, ops') :: rest) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          unfold stackValues
+          omega
+      | none =>
+          have hval : stepList ((kind, ops) :: rest) =
+              (stepList rest).map (fun r => (kind, ops) :: r) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          have hmap : ((stepList rest).map (fun r => (kind, ops) :: r) = some nodes')
+              ↔ ∃ t, stepList rest = some t ∧ nodes' = (kind, ops) :: t := by
+            cases stepList rest with
+            | none => simp
+            | some t => simp [eq_comm]
+          obtain ⟨t, hrest, rfl⟩ := hmap.mp h
+          unfold stackValues
+          exact Nat.add_le_add_left (ih t hrest) _
+
+/-- Whole-run space bound: a run of any length cannot exceed the net's initial space potential. -/
+theorem run_spacePotential_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    run fuel nodes = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes nodes' h
+      simp [run_zero] at h
+  | succ fuel ih =>
+      intro nodes nodes' h
+      unfold run at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact Nat.le_refl _
+      | some next =>
+          rw [hstep] at h
+          exact Nat.le_trans (ih next nodes' h) (stepList_spacePotential_le nodes next hstep)
+
+/-- Whole-run waiting-value bound: a run of any length cannot exceed the net's initial waiting
+value count. -/
+theorem run_stackValues_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    run fuel nodes = some nodes' → stackValues nodes' ≤ stackValues nodes := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes nodes' h
+      simp [run_zero] at h
+  | succ fuel ih =>
+      intro nodes nodes' h
+      unfold run at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact Nat.le_refl _
+      | some next =>
+          rw [hstep] at h
+          exact Nat.le_trans (ih next nodes' h) (stepList_stackValues_le nodes next hstep)
+
 end NobleM2.InteractionNet
