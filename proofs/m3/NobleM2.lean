@@ -29,6 +29,7 @@ import NobleM2.SizeChangeMatrix
 import NobleM2.SizeChangeMatrixAssoc
 import NobleM2.SizeChangeMatrixJoinFold
 import NobleM2.SizeChangeMatrixExponent
+import NobleM2.SizeChangeMatrixPeriod
 import NobleM2.SizeChangeMatrixEnumeration
 import NobleM2.SizeChangeMatrixPigeonhole
 import NobleM2.SizeChangeMatrixDecEq
