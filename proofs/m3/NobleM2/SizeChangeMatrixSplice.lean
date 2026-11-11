@@ -38,4 +38,12 @@ theorem splice_length_lt {n : Nat} (l : List (MGraph n)) {i j : Nat}
   rw [List.length_append, List.length_take, List.length_drop]
   omega
 
+/-- **The replacement lemma**: a path whose two prefixes share a product has a strictly shorter path
+with the same product. -/
+theorem matrixProduct_shorten_of_repeat {n : Nat} (l : List (MGraph n)) {i j : Nat}
+    (hij : i < j) (hj : j ≤ l.length)
+    (h : matrixProduct (l.take i) = matrixProduct (l.take j)) :
+    ∃ l' : List (MGraph n), l'.length < l.length ∧ matrixProduct l' = matrixProduct l :=
+  ⟨l.take i ++ l.drop j, splice_length_lt l hij hj, matrixProduct_splice l h⟩
+
 end NobleM2.SizeChange
