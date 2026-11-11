@@ -529,4 +529,80 @@ theorem run_some_all_irreducible {fuel : Nat} {nodes nodes' : List (AgentKind ×
     (h : run fuel nodes = some nodes') : ∀ node ∈ nodes', reducible node = false :=
   (stepList_none_iff nodes').mp (run_some_stuck fuel h)
 
+/-- A run that also reports how many interaction steps it took. -/
+def runCount : Nat → List (AgentKind × Operands) →
+    Option (Nat × List (AgentKind × Operands))
+  | 0, _ => none
+  | fuel + 1, nodes =>
+      match stepList nodes with
+      | some nodes' =>
+          match runCount fuel nodes' with
+          | some (k, final) => some (k + 1, final)
+          | none => none
+      | none => some (0, nodes)
+
+/-- The counted run's step count never exceeds the fuel. -/
+theorem runCount_steps_le : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
+    {k : Nat} {final : List (AgentKind × Operands)},
+    runCount fuel nodes = some (k, final) → k ≤ fuel := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes k final h
+      simp [runCount] at h
+  | succ fuel ih =>
+      intro nodes k final h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨hk, _⟩ := h
+          subst hk
+          exact Nat.zero_le _
+      | some next =>
+          cases hrc : runCount fuel next with
+          | none => simp [runCount, hstep, hrc] at h
+          | some p =>
+              obtain ⟨k', final'⟩ := p
+              simp [runCount, hstep, hrc] at h
+              obtain ⟨hk, _⟩ := h
+              subst hk
+              exact Nat.succ_le_succ (ih hrc)
+
+/-- The counted run computes the same final net as `run`. -/
+theorem runCount_snd_run : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
+    {k : Nat} {final : List (AgentKind × Operands)},
+    runCount fuel nodes = some (k, final) → run fuel nodes = some final := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes k final h
+      simp [runCount] at h
+  | succ fuel ih =>
+      intro nodes k final h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨_, hnodes⟩ := h
+          subst hnodes
+          exact run_stuck hstep
+      | some next =>
+          cases hrc : runCount fuel next with
+          | none => simp [runCount, hstep, hrc] at h
+          | some p =>
+              obtain ⟨k', final'⟩ := p
+              simp [runCount, hstep, hrc] at h
+              obtain ⟨_, hfinal⟩ := h
+              subst hfinal
+              have := ih hrc
+              unfold run
+              rw [hstep]
+              exact this
+
+/-- The counted run preserves the node population: the reported interaction count bounds the work
+done, not the number of live nodes. -/
+theorem runCount_length {fuel : Nat} {nodes : List (AgentKind × Operands)} {k : Nat}
+    {final : List (AgentKind × Operands)}
+    (h : runCount fuel nodes = some (k, final)) : final.length = nodes.length :=
+  run_length fuel nodes final (runCount_snd_run fuel h)
+
 end NobleM2.InteractionNet
