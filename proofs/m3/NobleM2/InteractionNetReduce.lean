@@ -662,4 +662,86 @@ theorem stepList_reducibleCount_le : ∀ (nodes nodes' : List (AgentKind × Oper
           unfold reducibleCount
           exact Nat.add_le_add_left (ih t hrest) _
 
+/-- Fire the node at index `k`, in place: the rest of the net is untouched. Refuses when that node
+cannot fire or the index is out of range. -/
+def fireAt (k : Nat) : List (AgentKind × Operands) → Option (List (AgentKind × Operands))
+  | [] => none
+  | node :: rest =>
+      match k with
+      | 0 =>
+          match stepNode node with
+          | some node' => some (node' :: rest)
+          | none => none
+      | k + 1 =>
+          match fireAt k rest with
+          | some rest' => some (node :: rest')
+          | none => none
+
+/-- Firing at index zero agrees with the abstract step whenever the head is the reducible node. The
+abstract reducer skips an irreducible head; an in-place plan at index zero refuses instead. -/
+theorem fireAt_zero_of_reducible (node : AgentKind × Operands)
+    (rest : List (AgentKind × Operands)) (h : reducible node = true) :
+    fireAt 0 (node :: rest) = stepList (node :: rest) := by
+  cases hstep : stepNode node with
+  | none =>
+      rw [reducible, hstep] at h
+      simp at h
+  | some node' => simp [fireAt, stepList, hstep]
+/-- An in-place firing preserves the node count: one node is rewritten where it stands. -/
+theorem fireAt_length : ∀ (k : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    fireAt k nodes = some nodes' → nodes'.length = nodes.length := by
+  intro k
+  induction k with
+  | zero =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          cases hstep : stepNode node with
+          | none => simp [fireAt, hstep] at h
+          | some node' =>
+              simp [fireAt, hstep] at h
+              obtain ⟨_, rfl⟩ := h
+              rfl
+  | succ k ih =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          cases hrec : fireAt k rest with
+          | none => simp [fireAt, hrec] at h
+          | some rest' =>
+              simp [fireAt, hrec] at h
+              obtain ⟨_, rfl⟩ := h
+              simp [ih rest rest' hrec]
+
+/-- A plan is a list of node indices fired in order. -/
+def applyPlan : List (AgentKind × Operands) → List Nat → Option (List (AgentKind × Operands))
+  | nodes, [] => some nodes
+  | nodes, k :: ks =>
+      match fireAt k nodes with
+      | some nodes' => applyPlan nodes' ks
+      | none => none
+
+/-- Every plan, whatever its index order, preserves the node count: in-place rewriting agrees with
+abstract reduction on the size invariant. -/
+theorem applyPlan_length : ∀ (ks : List Nat) (nodes nodes' : List (AgentKind × Operands)),
+    applyPlan nodes ks = some nodes' → nodes'.length = nodes.length := by
+  intro ks
+  induction ks with
+  | nil =>
+      intro nodes nodes' h
+      simp [applyPlan] at h
+      obtain rfl := h
+      rfl
+  | cons k ks ih =>
+      intro nodes nodes' h
+      unfold applyPlan at h
+      cases hfire : fireAt k nodes with
+      | none => rw [hfire] at h; simp at h
+      | some next =>
+          rw [hfire] at h
+          rw [ih next nodes' h]
+          exact fireAt_length k nodes next hfire
+
 end NobleM2.InteractionNet
