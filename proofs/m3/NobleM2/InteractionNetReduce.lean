@@ -243,4 +243,44 @@ theorem deliverOutput_fireable (m : Machine) (v : Value) :
     anyFireable (m.deliverOutput v).nodes = anyFireable m.nodes := by
   rw [deliverOutput_nodes]
 
+
+/-- Push a delivered value onto one operand stack of a node, LIFO. -/
+def Operands.push (ops : Operands) (secondPort : Bool) (v : Value) : Operands :=
+  match secondPort with
+  | true => { ops with second := v :: ops.second }
+  | false => { ops with first := v :: ops.first }
+
+theorem push_first_head (ops : Operands) (v : Value) :
+    (ops.push false v).first = v :: ops.first := rfl
+
+theorem push_second_head (ops : Operands) (v : Value) :
+    (ops.push true v).second = v :: ops.second := rfl
+
+/-- Deliver to the node at an index; `none` when the index is out of range. -/
+def pushNode : List Operands → Nat → Bool → Value → Option (List Operands)
+  | [], _, _, _ => none
+  | ops :: rest, 0, secondPort, v => some (ops.push secondPort v :: rest)
+  | ops :: rest, n + 1, secondPort, v =>
+      (pushNode rest n secondPort v).map (fun updated => ops :: updated)
+
+/-- A successful delivery preserves the node count. -/
+theorem pushNode_length : ∀ (nodes : List Operands) (index : Nat) (secondPort : Bool)
+    (v : Value) (updated : List Operands),
+    pushNode nodes index secondPort v = some updated → updated.length = nodes.length
+  | [], _, _, _, updated, h => by simp [pushNode] at h
+  | ops :: rest, 0, _, _, updated, h => by
+      simp only [pushNode] at h
+      injection h with hupd
+      subst hupd
+      simp
+  | ops :: rest, n + 1, secondPort, v, updated, h => by
+      simp only [pushNode] at h
+      cases hrest : pushNode rest n secondPort v with
+      | none => rw [hrest] at h; simp at h
+      | some t =>
+          rw [hrest] at h
+          injection h with hupd
+          subst hupd
+          simp [pushNode_length rest n secondPort v t hrest]
+
 end NobleM2.InteractionNet
