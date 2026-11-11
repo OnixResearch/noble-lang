@@ -449,4 +449,57 @@ theorem stepList_none_iff : ∀ (nodes : List (AgentKind × Operands)),
           · intro hall n hmem
             exact hall n (by simp [hmem])
 
+/-- Run the reducer for at most `fuel` steps. `some nodes` is a stuck (complete) net; `none` means
+the fuel ran out with work remaining. -/
+def run : Nat → List (AgentKind × Operands) → Option (List (AgentKind × Operands))
+  | 0, _ => none
+  | fuel + 1, nodes =>
+      match stepList nodes with
+      | some nodes' => run fuel nodes'
+      | none => some nodes
+
+/-- With no fuel, nothing happens. -/
+theorem run_zero (nodes : List (AgentKind × Operands)) : run 0 nodes = none := rfl
+
+/-- A stuck net is a completed run, whatever fuel remains. -/
+theorem run_stuck {nodes : List (AgentKind × Operands)} {fuel : Nat}
+    (h : stepList nodes = none) : run (fuel + 1) nodes = some nodes := by
+  unfold run
+  rw [h]
+
+/-- A completed run preserves the node count: steps never add or drop agents. -/
+theorem run_length : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    run fuel nodes = some nodes' → nodes'.length = nodes.length := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes nodes' h
+      simp [run_zero] at h
+  | succ fuel ih =>
+      intro nodes nodes' h
+      unfold run at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          simp
+      | some next =>
+          rw [hstep] at h
+          have hnext : next.length = nodes.length := stepList_length nodes next hstep
+          rw [ih next nodes' h]
+          exact hnext
+
+/-- A run that returns `none` had work remaining at the last step: every unit of fuel was spent
+stepping. -/
+theorem run_none_step {nodes : List (AgentKind × Operands)} {fuel : Nat}
+    (h : run (fuel + 1) nodes = none) :
+    ∃ nodes', stepList nodes = some nodes' ∧ run fuel nodes' = none := by
+  unfold run at h
+  cases hstep : stepList nodes with
+  | none => rw [hstep] at h; simp at h
+  | some nodes' =>
+      rw [hstep] at h
+      exact ⟨nodes', rfl, h⟩
+
 end NobleM2.InteractionNet
