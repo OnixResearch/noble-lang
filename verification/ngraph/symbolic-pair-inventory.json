@@ -3,15 +3,43 @@
   "module": "proofs/foundation/NobleFoundation/SymbolicPairCertified.lean",
   "statement": "Strict-kernel certified graph pairs for issue #56, acceptance item 3.",
   "covered_pairs": [
-    { "pair": "sharedInput", "family": "shared inputs", "theorem": "sharedInput_certified" },
-    { "pair": "wrapOnlyEquivalent", "family": "wraparound boundary", "theorem": "wrapOnlyEquivalent_certified" },
-    { "pair": "boolOutput", "family": "Bool outputs", "theorem": "boolOutput_certified" }
+    {
+      "pair": "sharedInput",
+      "family": "shared inputs",
+      "theorem": "sharedInput_certified"
+    },
+    {
+      "pair": "wrapOnlyEquivalent",
+      "family": "wraparound boundary",
+      "theorem": "wrapOnlyEquivalent_certified"
+    },
+    {
+      "pair": "boolOutput",
+      "family": "Bool outputs",
+      "theorem": "boolOutput_certified"
+    }
   ],
   "refuted_pairs": [
-    { "pair": "subtractionOrder", "family": "subtraction order", "theorem": "subtractionOrder_not_certifiable" },
-    { "pair": "wrapBoundary", "family": "wraparound boundary", "theorem": "wrapBoundary_not_certifiable" },
-    { "pair": "repeatedOutputs", "family": "repeated/multiple outputs", "theorem": "repeatedOutputs_not_certifiable" },
-    { "pair": "negation", "family": "negation", "theorem": "negation_not_certifiable" }
+    {
+      "pair": "subtractionOrder",
+      "family": "subtraction order",
+      "theorem": "subtractionOrder_not_certifiable"
+    },
+    {
+      "pair": "wrapBoundary",
+      "family": "wraparound boundary",
+      "theorem": "wrapBoundary_not_certifiable"
+    },
+    {
+      "pair": "repeatedOutputs",
+      "family": "repeated/multiple outputs",
+      "theorem": "repeatedOutputs_not_certifiable"
+    },
+    {
+      "pair": "negation",
+      "family": "negation",
+      "theorem": "negation_not_certifiable"
+    }
   ],
   "trusted_steps": [
     {
@@ -27,5 +55,36 @@
     "emitted Wasm",
     "Rust evaluator"
   ],
-  "non_certification": "A refuted pair's negation comes from a kernel-checked witness; refusal means this method established no agreement, not that the graphs disagree for all inputs."
+  "non_certification": "A refuted pair's negation comes from a kernel-checked witness; refusal means this method established no agreement, not that the graphs disagree for all inputs.",
+  "mutations": {
+    "module": "proofs/foundation/NobleFoundation/SymbolicMutations.lean",
+    "statement": "Seeded single-fault variants that the retained expectations must catch (acceptance item 4).",
+    "caught": [
+      {
+        "fault": "operation",
+        "theorem": "wrong_op_is_caught"
+      },
+      {
+        "fault": "operand",
+        "theorem": "wrong_operand_is_caught"
+      },
+      {
+        "fault": "constant",
+        "theorem": "wrong_constant_is_caught"
+      },
+      {
+        "fault": "ordered output list",
+        "theorem": "wrong_output_order_is_caught"
+      },
+      {
+        "fault": "encoding: shifted slots with matching decoder",
+        "theorem": "shifted_encoding_is_caught"
+      },
+      {
+        "fault": "verdict: output-blind first-result inspection",
+        "theorem": "output_blind_verdict_is_caught"
+      }
+    ],
+    "summary": "all_declared_mutations_are_caught"
+  }
 }
