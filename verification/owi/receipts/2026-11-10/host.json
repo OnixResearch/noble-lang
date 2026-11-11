@@ -1,0 +1,222 @@
+{
+  "schema": "noble-owi-host-receipt/v1",
+  "claim": "the committed stub satisfies the committed subject's noble imports by name, kind, limits and global types",
+  "source": {
+    "commit": "36fe625a86bf676b7b20f2ef11256db81477d9ee",
+    "tree": "8ad0b9172a0972705ae602179e3853aa1393ea35",
+    "clean": true,
+    "lane_sha256": "801158e7d4a9b2363b4362a8d64d2aa4f035be0d0e8ebfacf25adaf801ad33dc"
+  },
+  "stub": {
+    "path": "verification/owi/host/noble-host.wat",
+    "sha256": "8950b093fd2d0a6832c34b717d030d2b190a357151bcbd75b5f53efc91a57d33"
+  },
+  "subject": {
+    "path": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+    "sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+    "dump": "verification/owi/receipts/2026-10-26/subject-imports-exports.txt",
+    "dump_sha256": "e440692978a9d0bf1e7dd1d172ea94f47b99560a87cbb7a373013781f0cf722f"
+  },
+  "imports": [
+    {
+      "name": "memory",
+      "kind": "memory",
+      "limits": [
+        16,
+        16
+      ],
+      "global": null
+    },
+    {
+      "name": "table",
+      "kind": "table",
+      "limits": [
+        16384,
+        16384
+      ],
+      "global": null
+    },
+    {
+      "name": "failure",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "quota_reason",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "phase",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "heap_cursor",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "heap_baseline",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "allocation_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "recipe_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "depth_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "operand_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "continuation_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "step_limit",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "allocation_peak",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "operand_peak",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "continuation_peak",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "steps",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "quote_invocations",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "sp",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "cp",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "observed_program",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "recipe_count",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "reflection_steps",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "rp",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "generation",
+      "kind": "global",
+      "limits": null,
+      "global": "i32"
+    },
+    {
+      "name": "allocated_total",
+      "kind": "global",
+      "limits": null,
+      "global": "i64"
+    },
+    {
+      "name": "released_total",
+      "kind": "global",
+      "limits": null,
+      "global": "i64"
+    }
+  ],
+  "observed": {
+    "problems": [],
+    "memory": [
+      [
+        16,
+        16
+      ]
+    ],
+    "table": [
+      [
+        16384,
+        16384
+      ]
+    ],
+    "globals": {
+      "i32": 23,
+      "i64": 2
+    }
+  },
+  "control": {
+    "removed": "step_limit",
+    "problems": [
+      "global count 24 is not 25",
+      "i32 globals 22 are not 23",
+      "missing exports: global:step_limit"
+    ]
+  },
+  "non_claims": [
+    "a faithful host module is not a faithful runtime: the globals start at zero and no host function exists because the subject imports none",
+    "symbolic execution still needs the engine to link the stub with the subject; this lane only proves the interface matches",
+    "no Owi counterexample, witness or claim is produced here"
+  ]
+}

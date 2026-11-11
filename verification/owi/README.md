@@ -143,6 +143,6 @@ The retained run is
 
 `host/noble-host.wat` is the host module a live subject imports. The committed subject imports one memory (`16 16`), one table (`16384 16384 funcref`) and twenty-five mutable globals from `noble` — twenty-three `i32` counters and pointers, two `i64` byte totals — and no host function, so a pure-data module satisfies it.
 
-`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. A control removes one global and requires a refusal. The run is retained in `receipts/2026-11-10/`; the receipt is added with the evidence commit.
+`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. A control removes one global and requires a refusal. The run is retained as [`receipts/2026-11-10/host.json`](receipts/2026-11-10/host.json), from the clean commit `36fe625a`: 27 imports matched, 23 `i32` and 2 `i64` globals, and the control refused.
 
 A faithful host module is not a faithful runtime: every global starts at zero and there is no host function to call. Whether the engine can link the stub with the subject for `owi sym` is the next step, and it is engine-side, not an interface question.
