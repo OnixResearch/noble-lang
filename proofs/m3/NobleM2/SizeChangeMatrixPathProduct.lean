@@ -34,4 +34,15 @@ theorem matrixProduct_stepList {n : Nat} (step : Nat → MGraph n) :
       rw [matrixProduct_stepList step k (t + 1)]
 
 
+/-- A one-matrix product is that matrix. -/
+theorem matrixProduct_singleton {n : Nat} (g : MGraph n) : matrixProduct [g] = g := by
+  show composeMatrix g idMatrix = g
+  exact composeMatrix_id_right g
+
+/-- **The three product lines agree**: a constant step list's product is the repeated power. -/
+theorem matrixProduct_stepList_const {n : Nat} (g : MGraph n) (k : Nat) :
+    matrixProduct (stepList (fun _ => g) k 0) = powerMatrix k g := by
+  rw [matrixProduct_stepList]
+  exact pathMatrix_const g k 0
+
 end NobleM2.SizeChange
