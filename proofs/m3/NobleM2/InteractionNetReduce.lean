@@ -605,4 +605,12 @@ theorem runCount_length {fuel : Nat} {nodes : List (AgentKind × Operands)} {k :
     (h : runCount fuel nodes = some (k, final)) : final.length = nodes.length :=
   run_length fuel nodes final (runCount_snd_run fuel h)
 
+/-- A single fully-fed add agent fires once and is then stuck: one interaction, and the agent
+survives with empty stacks. -/
+theorem runCount_single_add (a b : BitVec 64) :
+    runCount 2 [(.add, ⟨[a], [b]⟩)] = some (1, [(.add, ⟨[], []⟩)]) := rfl
+
+/-- A net whose head is a value agent does not fire; the run completes in zero interactions. -/
+theorem runCount_value_head_stuck : runCount 3 [(.value, ⟨[7], []⟩)] = some (0, [(.value, ⟨[7], []⟩)]) := rfl
+
 end NobleM2.InteractionNet
