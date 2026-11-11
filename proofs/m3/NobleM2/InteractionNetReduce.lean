@@ -173,4 +173,37 @@ theorem anyFireable_cons_true {ops : Operands} {nodes : List Operands}
   rw [anyFireable, List.any_cons, h]
   simp
 
+/-- Read-back of boundary outputs: the complete vector in order, or a refusal. -/
+def readBack (expected : Nat) (values : List Value) : Option (List Value) :=
+  if values.length = expected then some values else none
+
+/-- Read-back succeeds exactly when the count matches the declared boundary. -/
+theorem readBack_complete_iff (expected : Nat) (values : List Value) :
+    (readBack expected values).isSome ↔ values.length = expected := by
+  unfold readBack
+  split <;> simp_all
+
+/-- On success the output is the observed values themselves: read-back never reorders. -/
+theorem readBack_order {expected : Nat} {values out : List Value}
+    (h : readBack expected values = some out) : out = values := by
+  unfold readBack at h
+  split at h
+  · injection h with hout
+    exact hout.symm
+  · simp at h
+
+/-- **No partial success**: an incomplete read-back is a refusal, not a prefix. -/
+theorem readBack_refuses_incomplete {expected : Nat} {values : List Value}
+    (h : values.length < expected) : readBack expected values = none := by
+  unfold readBack
+  split
+  · omega
+  · rfl
+
+/-- Read-back never invents or drops a value. -/
+theorem readBack_length {expected : Nat} {values out : List Value}
+    (h : readBack expected values = some out) : out.length = expected := by
+  have hlen := (readBack_complete_iff expected values).mp (h ▸ Option.isSome_some)
+  simpa [readBack_order h] using hlen
+
 end NobleM2.InteractionNet
