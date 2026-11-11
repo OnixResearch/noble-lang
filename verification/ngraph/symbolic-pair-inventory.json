@@ -1,0 +1,31 @@
+{
+  "revision": 1,
+  "module": "proofs/foundation/NobleFoundation/SymbolicPairCertified.lean",
+  "statement": "Strict-kernel certified graph pairs for issue #56, acceptance item 3.",
+  "covered_pairs": [
+    { "pair": "sharedInput", "family": "shared inputs", "theorem": "sharedInput_certified" },
+    { "pair": "wrapOnlyEquivalent", "family": "wraparound boundary", "theorem": "wrapOnlyEquivalent_certified" },
+    { "pair": "boolOutput", "family": "Bool outputs", "theorem": "boolOutput_certified" }
+  ],
+  "refuted_pairs": [
+    { "pair": "subtractionOrder", "family": "subtraction order", "theorem": "subtractionOrder_not_certifiable" },
+    { "pair": "wrapBoundary", "family": "wraparound boundary", "theorem": "wrapBoundary_not_certifiable" },
+    { "pair": "repeatedOutputs", "family": "repeated/multiple outputs", "theorem": "repeatedOutputs_not_certifiable" },
+    { "pair": "negation", "family": "negation", "theorem": "negation_not_certifiable" }
+  ],
+  "trusted_steps": [
+    {
+      "step": "generator reads checked noble-ngraph nodes as model nodes",
+      "why_not_checked_here": "the reading is the corpus generator's, recorded as the corpus statement",
+      "bounded_by": "verification/ngraph/README.md corpus decision record"
+    }
+  ],
+  "not_subjects": [
+    "extract/symbolic.rs encoder",
+    "SMT formula construction",
+    "solver invocation and results",
+    "emitted Wasm",
+    "Rust evaluator"
+  ],
+  "non_certification": "A refuted pair's negation comes from a kernel-checked witness; refusal means this method established no agreement, not that the graphs disagree for all inputs."
+}
