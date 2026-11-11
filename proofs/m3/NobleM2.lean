@@ -33,6 +33,7 @@ import NobleM2.SizeChangeMatrixPeriod
 import NobleM2.SizeChangeMatrixShortening
 import NobleM2.SizeChangeMatrixPathProduct
 import NobleM2.SizeChangeMatrixMonotone
+import NobleM2.SizeChangeMatrixPrefix
 import NobleM2.SizeChangeFixtures
 import NobleM2.SizeChangeExact
 import NobleM2.SizeChangeMatrixEnumeration
