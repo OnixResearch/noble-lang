@@ -89,4 +89,32 @@ def matrixAux (n : Nat) : List (MGraph n) := funAux n (funAux n Rel4.all)
 theorem matrixAux_complete {n : Nat} (g : MGraph n) : g ∈ matrixAux n :=
   funAux_complete (fun f => funAux_complete Rel4.mem_all n f) n g
 
+/-- A fold whose entries all have the same length multiplies that length. -/
+theorem foldr_length_const {α β : Type} (g : α → List β) (m : Nat) (hm : ∀ a, (g a).length = m) :
+    ∀ (l : List α), (l.foldr (fun a acc => g a ++ acc) []).length = l.length * m
+  | [] => by simp
+  | c :: rest => by
+      rw [List.foldr_cons, List.length_append, hm c, foldr_length_const g m hm rest,
+        List.length_cons, Nat.succ_mul]
+      omega
+
+/-- The enumeration has `codomain.length ^ k` elements. -/
+theorem funAux_length {α : Type} (codomain : List α) :
+    ∀ k, (funAux k codomain).length = codomain.length ^ k
+  | 0 => rfl
+  | k + 1 => by
+      simp only [funAux]
+      rw [foldr_length_const
+            (fun a => (funAux k codomain).map (fun g : Fin k → α => (Fin.cases a g : Fin (k + 1) → α)))
+            ((funAux k codomain).length) (fun a => by simp) codomain,
+        funAux_length codomain k, Nat.pow_succ]
+      exact Nat.mul_comm _ _
+
+/-- The relation enumeration has four entries. -/
+theorem Rel4.all_length : Rel4.all.length = 4 := rfl
+
+/-- The matrix enumeration has `(4 ^ n) ^ n` elements. -/
+theorem matrixAux_length (n : Nat) : (matrixAux n).length = (4 ^ n) ^ n := by
+  simp only [matrixAux, funAux_length, Rel4.all_length]
+
 end NobleM2.SizeChange
