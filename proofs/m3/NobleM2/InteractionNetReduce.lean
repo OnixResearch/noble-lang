@@ -843,4 +843,66 @@ theorem fireAt_none_iff : ∀ (k : Nat) (nodes : List (AgentKind × Operands)),
               simp [fireAt, hrec]
               simpa using hne
 
+/-- A step that also reports the value it produced. -/
+def stepNodeValue : AgentKind × Operands → Option ((AgentKind × Operands) × BitVec 64)
+  | (kind, ops) =>
+      match fire kind ops with
+      | some (ops', v) => some ((kind, ops'), v)
+      | none => none
+
+/-- Reporting the value does not change the step: the same node is rewritten. -/
+theorem stepNodeValue_stepNode {node node' : AgentKind × Operands} {v : BitVec 64}
+    (h : stepNodeValue node = some (node', v)) : stepNode node = some node' := by
+  obtain ⟨kind, ops⟩ := node
+  simp only [stepNodeValue, stepNode] at h ⊢
+  cases hfire : fire kind ops with
+  | none => rw [hfire] at h; simp at h
+  | some p =>
+      rw [hfire] at h
+      obtain ⟨ops', w⟩ := p
+      simp only [Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, _⟩ := h
+      rfl
+
+/-- Fire the node at index `k`, reporting the produced value. -/
+def fireAtValue (k : Nat) (nodes : List (AgentKind × Operands)) :
+    Option (List (AgentKind × Operands) × BitVec 64) :=
+  match nthNode k nodes with
+  | none => none
+  | some node =>
+      match stepNodeValue node with
+      | none => none
+      | some (_node', v) =>
+          match fireAt k nodes with
+          | some nodes' => some (nodes', v)
+          | none => none
+
+/-- The value-reporting plan step agrees with the plain one on the net it produces. -/
+theorem fireAtValue_fireAt {k : Nat} {nodes nodes' : List (AgentKind × Operands)}
+    {v : BitVec 64} (h : fireAtValue k nodes = some (nodes', v)) :
+    fireAt k nodes = some nodes' := by
+  cases hn : nthNode k nodes with
+  | none =>
+      have hnone : fireAtValue k nodes = none := by simp [fireAtValue, hn]
+      rw [hnone] at h
+      simp at h
+  | some node =>
+      cases hv : stepNodeValue node with
+      | none =>
+          have hnone : fireAtValue k nodes = none := by simp [fireAtValue, hn, hv]
+          rw [hnone] at h
+          simp at h
+      | some p =>
+          cases hf : fireAt k nodes with
+          | none =>
+              have hnone : fireAtValue k nodes = none := by simp [fireAtValue, hn, hv, hf]
+              rw [hnone] at h
+              simp at h
+          | some r =>
+              have hsome : fireAtValue k nodes = some (r, p.2) := by
+                simp [fireAtValue, hn, hv, hf]
+              rw [hsome] at h
+              simp only [Option.some.injEq, Prod.mk.injEq] at h
+              exact congrArg some h.1
+
 end NobleM2.InteractionNet
