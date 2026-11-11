@@ -32,3 +32,4 @@ import NobleM2.SizeChangeMatrixPath
 import NobleM2.SizeChangeMatrixCycle
 import NobleM2.SizeChangeMatrixExtract
 import NobleM2.SizeChangeMatrixPreserve
+import NobleM2.SizeChangeCallGraph
