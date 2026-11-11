@@ -84,6 +84,13 @@ theorem checked_family_certified {k n : Nat} {argsOf : Fin k → Args n} {i : Fi
   exact List.any_eq_true.mpr ⟨i, List.mem_finRange i,
     List.all_eq_true.mpr (fun s _ => by simp [graphOf, Arg.classify, h s])⟩
 
+/-- **End to end.** Checked arguments, the shared criterion and the run model compose: a family
+whose arguments all classify as decreasing at one measure admits no infinite run. -/
+theorem checked_family_terminates {k n : Nat} {argsOf : Fin k → Args n} {i : Fin n}
+    (h : ∀ s, (argsOf s) i = .predOfSame) :
+    ∀ _run : Run k n (fun s => graphOf (argsOf s)), False :=
+  certifiedAll_terminates (checked_family_certified h)
+
 /-! ## Fixtures -/
 
 /-- The classic tail call: measure `0` is passed as its predecessor. -/
