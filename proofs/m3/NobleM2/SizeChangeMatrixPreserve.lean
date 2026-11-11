@@ -150,4 +150,31 @@ theorem pathMatrix_shift {n : Nat} {step : Nat → MGraph n} {p : Nat}
       have harith : t + p + 1 = (t + 1) + p := by omega
       rw [harith, ih (t + 1)]
 
+/-- Under a periodic sequence, every block of `p` steps has the same product. -/
+theorem pathMatrix_period_blocks {n : Nat} {step : Nat → MGraph n} {p : Nat}
+    (hper : ∀ t, step (t + p) = step t) (m : Nat) :
+    pathMatrix p step (m * p) = pathMatrix p step 0 := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+      have harith : (m + 1) * p = m * p + p := by rw [Nat.add_mul, Nat.one_mul]
+      rw [harith, pathMatrix_shift hper p (m * p)]
+      exact ih
+
+/-- **A periodic cycle terminates**: if the product over one period is strict on the diagonal at
+`i`, no infinite run of the periodic sequence exists - each block drops the measure. -/
+theorem periodic_cycle_terminates {n : Nat} {step : Nat → MGraph n} {p : Nat} {i : Fin n}
+    (hper : ∀ t, step (t + p) = step t)
+    (hprod : pathMatrix p step 0 i i = .strict)
+    (state : Nat → Fin n → Nat)
+    (sat : ∀ t, MatrixSatisfies (step t) (state t) (state (t + 1))) : False := by
+  apply no_decreasing_chain (fun m => state (m * p) i)
+  intro m
+  have hblock := matrixSatisfies_path step state sat p (m * p)
+  rw [pathMatrix_period_blocks hper m] at hblock
+  have hdrop : state (m * p + p) i < state (m * p) i := MatrixSatisfies.strict hblock hprod
+  have harith : (m + 1) * p = m * p + p := by rw [Nat.add_mul, Nat.one_mul]
+  rw [harith]
+  exact hdrop
+
 end NobleM2.SizeChange
