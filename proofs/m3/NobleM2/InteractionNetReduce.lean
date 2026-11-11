@@ -1022,4 +1022,75 @@ theorem nonarithmetic_multiplicities (v : Value) :
   · rfl
   · rfl
 
+/-- Space potential: one storage cell per node plus one per waiting value. A node's own weight is
+the constant one, so a declared node-storage weight of one cell is dominated by construction. -/
+def spacePotential : List (AgentKind × Operands) → Nat
+  | [] => 0
+  | (_, ops) :: rest =>
+      (1 + ops.first.length + ops.second.length) + spacePotential rest
+
+/-- The space potential dominates node storage: at least one cell per node. -/
+theorem spacePotential_ge_length : ∀ (nodes : List (AgentKind × Operands)),
+    spacePotential nodes ≥ nodes.length := by
+  intro nodes
+  induction nodes with
+  | nil => simp [spacePotential]
+  | cons node rest ih =>
+      obtain ⟨kind, ops⟩ := node
+      unfold spacePotential
+      simp only [List.length_cons]
+      omega
+
+/-- A successful step on a named node rewrites that node in place, with the value the rule
+computed. -/
+theorem stepNode_some_fire {kind : AgentKind} {ops : Operands} {node' : AgentKind × Operands}
+    (h : stepNode (kind, ops) = some node') :
+    ∃ ops' v, node' = (kind, ops') ∧ fire kind ops = some (ops', v) := by
+  simp only [stepNode] at h
+  cases hfire : fire kind ops with
+  | none => rw [hfire] at h; simp at h
+  | some p =>
+      obtain ⟨ops2, v⟩ := p
+      rw [hfire] at h
+      simp only [Option.some.injEq] at h
+      exact ⟨ops2, v, h.symm, rfl⟩
+
+/-- A step rewrites one node in place: firing cannot increase the space potential, and in fact
+drops it by the two values consumed. -/
+theorem stepList_spacePotential_le : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+  intro nodes
+  induction nodes with
+  | nil =>
+      intro nodes' h
+      simp [stepList] at h
+  | cons node rest ih =>
+      intro nodes' h
+      obtain ⟨kind, ops⟩ := node
+      cases hstep : stepNode (kind, ops) with
+      | some node' =>
+          obtain ⟨ops', v, hshape, hfire⟩ := stepNode_some_fire hstep
+          subst hshape
+          have hl := fire_ops_lengths hfire
+          have hval : stepList ((kind, ops) :: rest) = some ((kind, ops') :: rest) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          unfold spacePotential
+          omega
+      | none =>
+          have hval : stepList ((kind, ops) :: rest) =
+              (stepList rest).map (fun r => (kind, ops) :: r) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          have hmap : ((stepList rest).map (fun r => (kind, ops) :: r) = some nodes')
+              ↔ ∃ t, stepList rest = some t ∧ nodes' = (kind, ops) :: t := by
+            cases stepList rest with
+            | none => simp
+            | some t => simp [eq_comm]
+          obtain ⟨t, hrest, rfl⟩ := hmap.mp h
+          unfold spacePotential
+          exact Nat.add_le_add_left (ih t hrest) _
+
 end NobleM2.InteractionNet
