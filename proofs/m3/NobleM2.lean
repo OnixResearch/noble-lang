@@ -12,3 +12,4 @@ import NobleM2.SignedSelf
 import NobleM2.SizeChange
 import NobleM2.SizeChangeSites
 import NobleM2.SizeChangeClosure
+import NobleM2.SizeChangeChecker
