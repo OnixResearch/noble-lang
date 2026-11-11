@@ -905,4 +905,73 @@ theorem fireAtValue_fireAt {k : Nat} {nodes nodes' : List (AgentKind × Operands
               simp only [Option.some.injEq, Prod.mk.injEq] at h
               exact congrArg some h.1
 
+/-- A plan that reports every value it produces, in order. -/
+def applyPlanValues : List (AgentKind × Operands) → List Nat →
+    Option (List (BitVec 64) × List (AgentKind × Operands))
+  | nodes, [] => some ([], nodes)
+  | nodes, k :: ks =>
+      match fireAtValue k nodes with
+      | some (nodes', v) =>
+          match applyPlanValues nodes' ks with
+          | some (vs, final) => some (v :: vs, final)
+          | none => none
+      | none => none
+
+/-- The value log records one value per firing, so its length is bounded by the plan length. -/
+theorem applyPlanValues_length : ∀ (ks : List Nat) (nodes : List (AgentKind × Operands))
+    (vs : List (BitVec 64)) (final : List (AgentKind × Operands)),
+    applyPlanValues nodes ks = some (vs, final) → vs.length ≤ ks.length := by
+  intro ks
+  induction ks with
+  | nil =>
+      intro nodes vs final h
+      simp [applyPlanValues] at h
+      obtain ⟨rfl, _⟩ := h
+      simp
+  | cons k ks ih =>
+      intro nodes vs final h
+      cases hfire : fireAtValue k nodes with
+      | none => simp [applyPlanValues, hfire] at h
+      | some p =>
+          obtain ⟨next, v⟩ := p
+          simp only [applyPlanValues, hfire] at h
+          cases hrec : applyPlanValues next ks with
+          | none => simp [hrec] at h
+          | some q =>
+              obtain ⟨vs', final'⟩ := q
+              simp only [hrec, Option.some.injEq, Prod.mk.injEq] at h
+              obtain ⟨rfl, _⟩ := h
+              simp only [List.length_cons]
+              exact Nat.succ_le_succ (ih next vs' final' hrec)
+
+/-- The value-logging plan produces exactly the net the plain plan produces. -/
+theorem applyPlanValues_applyPlan : ∀ (ks : List Nat) (nodes : List (AgentKind × Operands))
+    (vs : List (BitVec 64)) (final : List (AgentKind × Operands)),
+    applyPlanValues nodes ks = some (vs, final) → applyPlan nodes ks = some final := by
+  intro ks
+  induction ks with
+  | nil =>
+      intro nodes vs final h
+      simp [applyPlanValues] at h
+      obtain ⟨_, rfl⟩ := h
+      simp [applyPlan]
+  | cons k ks ih =>
+      intro nodes vs final h
+      cases hfire : fireAtValue k nodes with
+      | none => simp [applyPlanValues, hfire] at h
+      | some p =>
+          obtain ⟨next, v⟩ := p
+          simp only [applyPlanValues, hfire] at h
+          cases hrec : applyPlanValues next ks with
+          | none => simp [hrec] at h
+          | some q =>
+              obtain ⟨vs', final'⟩ := q
+              simp only [hrec, Option.some.injEq, Prod.mk.injEq] at h
+              obtain ⟨_, hfinal⟩ := h
+              subst hfinal
+              have hstep : fireAt k nodes = some next := fireAtValue_fireAt hfire
+              unfold applyPlan
+              rw [hstep]
+              exact ih next vs' final' hrec
+
 end NobleM2.InteractionNet
