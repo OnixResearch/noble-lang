@@ -94,4 +94,23 @@ theorem idempotent_power_stable {n : Nat} {x : MGraph n} (h : composeMatrix x x 
   rw [hk] at hiter
   rw [hiter, hp1]
 
+/-- **One representative per idempotent**: a nodup list of positive powers of an idempotent matrix
+has at most one element. -/
+theorem idempotent_power_nodup_length {n : Nat} {x : MGraph n} (h : composeMatrix x x = x) :
+    ∀ (l : List Nat), (∀ k ∈ l, 1 ≤ k) →
+      (l.map (fun k => powerMatrix k x)).Nodup → l.length ≤ 1
+  | [], _, _ => by simp
+  | [_], _, _ => by simp
+  | a :: b :: rest, hpos, hnd => by
+      exfalso
+      have ha : powerMatrix a x = x := idempotent_power_stable h a (hpos a (by simp))
+      have hb : powerMatrix b x = x := idempotent_power_stable h b (hpos b (by simp))
+      rw [List.map_cons, List.nodup_cons] at hnd
+      have hhead : powerMatrix a x ∉ (b :: rest).map (fun k => powerMatrix k x) := hnd.1
+      apply hhead
+      rw [ha]
+      have hbmem : powerMatrix b x ∈ (b :: rest).map (fun k => powerMatrix k x) :=
+        List.mem_map.mpr ⟨b, by simp, rfl⟩
+      simp [hb]
+
 end NobleM2.SizeChange
