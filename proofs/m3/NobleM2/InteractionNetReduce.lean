@@ -1179,4 +1179,52 @@ theorem run_stackValues_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind ×
           rw [hstep] at h
           exact Nat.le_trans (ih next nodes' h) (stepList_stackValues_le nodes next hstep)
 
+/-- The certificate revision this checker accepts. -/
+def certificateRevision : Nat := 1
+
+/-- A bounded certificate over a net: the revision it is written for, the net it binds, the node
+count it claims, and the space it declares. -/
+structure NetCertificate where
+  /-- Certificate format revision. -/
+  revision : Nat
+  /-- The net the certificate is about. -/
+  nodes : List (AgentKind × Operands)
+  /-- Node count the certificate claims. -/
+  netLength : Nat
+  /-- Space the certificate declares sufficient. -/
+  declaredSpace : Nat
+
+/-- Accept a certificate only when it is written for this revision, its claimed node count is the
+net's actual count, and its declared space dominates the net's space potential. -/
+def checkCertificate (c : NetCertificate) : Bool :=
+  (c.revision == certificateRevision) && (c.netLength == c.nodes.length) &&
+    decide (spacePotential c.nodes ≤ c.declaredSpace)
+
+/-- A checked certificate says exactly what it claims: the revision matches, the node count is the
+net's, and the declared space dominates the potential. -/
+theorem checkCertificate_sound {c : NetCertificate} (h : checkCertificate c = true) :
+    c.revision = certificateRevision ∧ c.netLength = c.nodes.length ∧
+      spacePotential c.nodes ≤ c.declaredSpace := by
+  unfold checkCertificate at h
+  simp only [Bool.and_eq_true, beq_iff_eq, decide_eq_true_eq] at h
+  exact ⟨h.1.1, h.1.2, h.2⟩
+
+/-- The control: a declared space smaller than the net's potential is refused rather than
+accepted with a warning. -/
+theorem checkCertificate_refuses_undersized (c : NetCertificate)
+    (h : spacePotential c.nodes > c.declaredSpace) : checkCertificate c = false := by
+  have hnot : ¬ (spacePotential c.nodes ≤ c.declaredSpace) := Nat.not_le.mpr h
+  unfold checkCertificate
+  simp [hnot]
+
+/-- A checked certificate bounds every completed run of its net: the run cannot use more space than
+the certificate declared. -/
+theorem run_within_declared_space {c : NetCertificate} {fuel : Nat}
+    {nodes' : List (AgentKind × Operands)}
+    (hcheck : checkCertificate c = true) (hrun : run fuel c.nodes = some nodes') :
+    spacePotential nodes' ≤ c.declaredSpace := by
+  have hbound := run_spacePotential_le fuel c.nodes nodes' hrun
+  have hdecl := (checkCertificate_sound hcheck).2.2
+  omega
+
 end NobleM2.InteractionNet
