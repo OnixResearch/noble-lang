@@ -158,4 +158,25 @@ theorem composeMatrix_id_right {n : Nat} (g : MGraph n) : composeMatrix g idMatr
       cases (g i y) <;> rfl)
   simpa [composeMatrix, hunit] using hsingle
 
+/-- Composing with `same` on the left changes nothing. -/
+theorem same_compose_left (r : Rel4) : Rel4.same.compose r = r := by
+  cases r <;> rfl
+
+/-- The identity matrix is a left unit for the product. -/
+theorem composeMatrix_id_left {n : Nat} (g : MGraph n) : composeMatrix idMatrix g = g := by
+  funext i k
+  have hunit : (idMatrix i i).compose (g i k) = g i k := by
+    have hid : idMatrix i i = (Rel4.same : Rel4) := by simp [idMatrix]
+    rw [hid]
+    exact same_compose_left (g i k)
+  have hsingle := foldr_join_of_single (fun j => (idMatrix i j).compose (g j k)) i
+    (List.finRange n) (List.mem_finRange i)
+    (fun y _ hyi => by
+      have hid : idMatrix i y = (Rel4.unknown : Rel4) := by
+        have hiy : ¬ i = y := fun h => hyi h.symm
+        simp [idMatrix, hiy]
+      rw [hid]
+      rfl)
+  simpa [composeMatrix, hunit] using hsingle
+
 end NobleM2.SizeChange
