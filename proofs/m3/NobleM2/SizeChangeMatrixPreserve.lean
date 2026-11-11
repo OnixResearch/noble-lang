@@ -111,4 +111,29 @@ theorem power_cycle_terminates {n : Nat} {g : MGraph n} {k : Nat} {i : Fin n}
   rw [harith]
   exact hdrop
 
+/-- The product of the first `k` matrices, starting at step `t`. -/
+def pathMatrix {n : Nat} : Nat → (Nat → MGraph n) → Nat → MGraph n
+  | 0, _, _ => idMatrix
+  | k + 1, step, t => composeMatrix (step t) (pathMatrix k step (t + 1))
+
+/-- The constant sequence recovers the `k`-fold product. -/
+theorem pathMatrix_const {n : Nat} (g : MGraph n) :
+    ∀ (k t : Nat), pathMatrix k (fun _ => g) t = powerMatrix k g
+  | 0, _ => rfl
+  | k + 1, _ => by
+      simp only [pathMatrix, powerMatrix]
+      rw [pathMatrix_const g k]
+
+/-- **A run satisfies every prefix product**: the relation after `k` steps of a varying sequence. -/
+theorem matrixSatisfies_path {n : Nat} (step : Nat → MGraph n) (state : Nat → Fin n → Nat)
+    (sat : ∀ t, MatrixSatisfies (step t) (state t) (state (t + 1))) :
+    ∀ (k t : Nat), MatrixSatisfies (pathMatrix k step t) (state t) (state (t + k))
+  | 0, t => matrixSatisfies_id (state t)
+  | k + 1, t => by
+      have hstep : MatrixSatisfies (step t) (state t) (state (t + 1)) := sat t
+      have hrest : MatrixSatisfies (pathMatrix k step (t + 1)) (state (t + 1)) (state (t + 1 + k)) :=
+        matrixSatisfies_path step state sat k (t + 1)
+      have hcomp := matrixSatisfies_compose hstep hrest
+      simpa [pathMatrix, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hcomp
+
 end NobleM2.SizeChange
