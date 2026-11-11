@@ -86,6 +86,34 @@ theorem join_unknown (r : Rel4) : r.join .unknown = r := by
 theorem join_comm_strict (r : Rel4) : Rel4.strict.join r = r.join .strict := by
   cases r <;> rfl
 
+
+/-- Joining is associative. -/
+theorem join_assoc (a b c : Rel4) : (a.join b).join c = a.join (b.join c) := by
+  cases a <;> cases b <;> cases c <;> rfl
+
+/-- Joining is commutative. -/
+theorem join_comm (a b : Rel4) : a.join b = b.join a := by
+  cases a <;> cases b <;> rfl
+
+/-- Joining is idempotent. -/
+theorem join_idem (a : Rel4) : a.join a = a := by
+  cases a <;> rfl
+
+/-- `unknown` is neutral for joining on either side. -/
+theorem join_unknown_right (a : Rel4) : a.join .unknown = a := by
+  cases a <;> rfl
+
+
+/-- Joining before composition distributes over the left factor. -/
+theorem compose_join_left (a b c : Rel4) :
+    (a.join b).compose c = (a.compose c).join (b.compose c) := by
+  cases a <;> cases b <;> cases c <;> rfl
+
+/-- Joining before composition distributes over the right factor. -/
+theorem compose_join_right (a b c : Rel4) :
+    a.compose (b.join c) = (a.compose b).join (a.compose c) := by
+  cases a <;> cases b <;> cases c <;> rfl
+
 end Rel4
 
 /-- A matrix call graph: entry `(i, j)` relates the old value of measure `i` to the new value of
