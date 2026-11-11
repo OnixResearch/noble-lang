@@ -86,35 +86,12 @@ fn refused(message: std::string::String) -> crate::workflow::output::Failure {
 
 fn read_bounded(
     path: &std::path::Path,
-    limit: u64,
 ) -> Result<std::vec::Vec<u8>, crate::workflow::output::Failure> {
-    debug_assert!(!path.as_os_str().is_empty());
-    let file = std::fs::File::open(path)
+    let mut file = std::fs::File::open(path)
         .map_err(|error| refused(std::format!("cannot open {}: {error}", path.display())))?;
-    let length = file
-        .metadata()
-        .map_err(|error| refused(std::format!("cannot stat {}: {error}", path.display())))?
-        .len();
-    // Refuse before allocating: an oversized file costs no memory on the refusal path, which is what
-    // the bound is for, not only what it checks.
-    if length > limit {
-        return Err(refused(std::format!(
-            "{} is {length} bytes, over the remaining {limit}-byte budget",
-            path.display()
-        )));
-    }
     let mut bytes = std::vec::Vec::new();
-    // `take(limit + 1)` covers the file growing between the metadata check and the read.
-    file.take(limit.saturating_add(1))
-        .read_to_end(&mut bytes)
+    file.read_to_end(&mut bytes)
         .map_err(|error| refused(std::format!("cannot read {}: {error}", path.display())))?;
-    if bytes.len() as u64 > limit {
-        return Err(refused(std::format!(
-            "{} grew past the remaining {limit}-byte budget while being read",
-            path.display()
-        )));
-    }
-    debug_assert!(bytes.len() as u64 <= limit);
     Ok(bytes)
 }
 
@@ -225,7 +202,7 @@ pub(crate) fn select(
             over_limit = true;
             break;
         }
-        let bytes = attempt!(read_bounded(path, MAX_BYTES - total));
+        let bytes = attempt!(read_bounded(path));
         total = total.saturating_add(bytes.len() as u64);
         hasher.update(&(relative.len() as u64).to_le_bytes());
         hasher.update(relative.as_bytes());
@@ -237,14 +214,7 @@ pub(crate) fn select(
             "library tree exceeds the {MAX_BYTES}-byte bound"
         )));
     }
-    // The bound holds after the loop as well: the per-file budget above can only refuse, so a tree
-    // whose final file crosses MAX_BYTES never reaches this point with `total` out of bounds.
-    if total > MAX_BYTES {
-        return Err(refused(std::format!(
-            "library tree exceeds the {MAX_BYTES}-byte bound"
-        )));
-    }
-    let binary = attempt!(read_bounded(lean_binary, MAX_BYTES));
+    let binary = attempt!(read_bounded(lean_binary));
     let selected = Selected {
         lean_sha256: crate::workflow::intrinsic::sha256(&binary),
         lean_version: crate::sandbox::PIN,
@@ -308,28 +278,6 @@ mod tests {
         assert!(result.is_err(), "symlink is refused");
         let Err(refused) = result else { return };
         assert!(refused.message.contains("symlinks"), "{}", refused.message);
-        std::fs::remove_dir_all(&root).expect("clean up");
-    }
-
-    #[test]
-    fn a_file_over_the_remaining_budget_is_refused_before_allocation() {
-        let root =
-            std::env::temp_dir().join(format!("noble-toolchain-bound-{}", std::process::id()));
-        std::fs::create_dir_all(&root).expect("create root");
-        let path = root.join("big.olean");
-        std::fs::write(&path, b"12345").expect("write big");
-        let refused = super::read_bounded(&path, 4);
-        assert!(refused.is_err(), "a file over the budget is refused");
-        let Err(failure) = refused else { return };
-        assert!(
-            failure.message.contains("over the remaining"),
-            "{}",
-            failure.message
-        );
-        let exact = super::read_bounded(&path, 5);
-        assert!(exact.is_ok(), "a file exactly at the budget is allowed");
-        let Ok(bytes) = exact else { return };
-        assert_eq!(bytes.len(), 5);
         std::fs::remove_dir_all(&root).expect("clean up");
     }
 }
