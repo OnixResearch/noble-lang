@@ -26,3 +26,4 @@ import NobleM2.SizeChangeIdempotent
 import NobleM2.SizeChangeCriterion
 import NobleM2.SizeChangeClosureSound
 import NobleM2.SizeChangeMatrix
+import NobleM2.SizeChangeMatrixSemantics
