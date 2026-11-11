@@ -20,3 +20,4 @@ import NobleM2.SizeChangeEnumeration
 import NobleM2.SizeChangeUniverse
 import NobleM2.SizeChangeDecEq
 import NobleM2.SizeChangeBounded
+import NobleM2.SizeChangeCounting
