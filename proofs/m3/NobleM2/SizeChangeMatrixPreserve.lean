@@ -136,4 +136,18 @@ theorem matrixSatisfies_path {n : Nat} (step : Nat → MGraph n) (state : Nat �
       have hcomp := matrixSatisfies_compose hstep hrest
       simpa [pathMatrix, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hcomp
 
+/-- A periodic step sequence makes the path product blind to the start offset by one period. -/
+theorem pathMatrix_shift {n : Nat} {step : Nat → MGraph n} {p : Nat}
+    (hper : ∀ t, step (t + p) = step t) :
+    ∀ (k t : Nat), pathMatrix k step (t + p) = pathMatrix k step t := by
+  intro k
+  induction k with
+  | zero => intro t; rfl
+  | succ k ih =>
+      intro t
+      simp only [pathMatrix]
+      rw [hper t]
+      have harith : t + p + 1 = (t + 1) + p := by omega
+      rw [harith, ih (t + 1)]
+
 end NobleM2.SizeChange
