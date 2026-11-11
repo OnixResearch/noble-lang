@@ -502,4 +502,31 @@ theorem run_none_step {nodes : List (AgentKind × Operands)} {fuel : Nat}
       rw [hstep] at h
       exact ⟨nodes', rfl, h⟩
 
+/-- A successful run ends on a stuck net: the reducer stops only when no node is reducible. -/
+theorem run_some_stuck : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
+    {nodes' : List (AgentKind × Operands)},
+    run fuel nodes = some nodes' → stepList nodes' = none := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes nodes' h
+      simp [run_zero] at h
+  | succ fuel ih =>
+      intro nodes nodes' h
+      unfold run at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact hstep
+      | some next =>
+          rw [hstep] at h
+          exact ih h
+
+/-- A successful run is complete: every node is irreducible at the end. -/
+theorem run_some_all_irreducible {fuel : Nat} {nodes nodes' : List (AgentKind × Operands)}
+    (h : run fuel nodes = some nodes') : ∀ node ∈ nodes', reducible node = false :=
+  (stepList_none_iff nodes').mp (run_some_stuck fuel h)
+
 end NobleM2.InteractionNet
