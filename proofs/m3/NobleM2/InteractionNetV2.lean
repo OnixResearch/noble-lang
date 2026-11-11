@@ -158,4 +158,69 @@ theorem unique_incidence_two_ends {wires : List Wire} {w : Wire}
     incidence wires w.1 + incidence wires w.2 = 2 := by
   rw [uniqueIncidence_left huniq hmem, uniqueIncidence_right huniq hmem]
 
+/-- A revision-2 net: agent kinds, wires, and ordered boundary positions by agent index. -/
+structure Net where
+  /-- Agent kinds, indexed by position. -/
+  agents : List AgentKind
+  /-- Wires between ports. -/
+  wires : List Wire
+  /-- Boundary inputs, in declared order. -/
+  inputs : List Nat
+  /-- Boundary outputs, in declared order. -/
+  outputs : List Nat
+
+/-- The kind at an agent index, if any. -/
+def Net.kindAt (net : Net) (i : Nat) : Option AgentKind := net.agents[i]?
+
+/-- Strictly increasing, so boundary positions can be matched to a declared order. -/
+def strictlyIncreasing : List Nat → Bool
+  | [] => true
+  | [_] => true
+  | a :: b :: rest => (a < b) && strictlyIncreasing (b :: rest)
+
+/-- Every input is an input agent, every output an output agent, and both lists ascend. -/
+def boundaryOk (net : Net) : Bool :=
+  (net.inputs.all fun i => net.kindAt i == some .input)
+    && (net.outputs.all fun i => net.kindAt i == some .output)
+    && strictlyIncreasing net.inputs
+    && strictlyIncreasing net.outputs
+
+/-- A scan of mapped values decides each entry against one target. -/
+theorem all_beq_map {α β : Type} [BEq β] [LawfulBEq β] {l : List α} {f : α → β} {x : β}
+    (h : l.all (fun y => f y == x) = true) : ∀ y ∈ l, f y = x := by
+  intro y hy
+  have := List.all_eq_true.mp h y hy
+  simpa using this
+
+theorem boundaryOk_parts {net : Net} (h : boundaryOk net = true) :
+    net.inputs.all (fun i => net.kindAt i == some .input) = true
+      ∧ net.outputs.all (fun i => net.kindAt i == some .output) = true
+      ∧ strictlyIncreasing net.inputs = true
+      ∧ strictlyIncreasing net.outputs = true := by
+  unfold boundaryOk at h
+  rw [Bool.and_eq_true, Bool.and_eq_true, Bool.and_eq_true] at h
+  exact ⟨h.1.1.1, h.1.1.2, h.1.2, h.2⟩
+
+theorem boundary_input_kind {net : Net} (h : boundaryOk net = true) {i : Nat}
+    (hi : i ∈ net.inputs) : net.kindAt i = some .input := by
+  have hin := (boundaryOk_parts h).1
+  exact all_beq_map hin i hi
+
+theorem boundary_output_kind {net : Net} (h : boundaryOk net = true) {i : Nat}
+    (hi : i ∈ net.outputs) : net.kindAt i = some .output := by
+  have hout := (boundaryOk_parts h).2.1
+  exact all_beq_map hout i hi
+
+/-- Ascending boundary positions satisfy the adjacent order. -/
+theorem strictlyIncreasing_head {a b : Nat} {rest : List Nat}
+    (h : strictlyIncreasing (a :: b :: rest) = true) : a < b := by
+  rw [strictlyIncreasing] at h
+  rw [Bool.and_eq_true] at h
+  simpa using h.1
+
+/-- A boundary position list with two adjacent entries declares the first before the second. -/
+theorem boundary_inputs_ordered {net : Net} (h : boundaryOk net = true) :
+    strictlyIncreasing net.inputs = true :=
+  (boundaryOk_parts h).2.2.1
+
 end NobleM2.InteractionNet
