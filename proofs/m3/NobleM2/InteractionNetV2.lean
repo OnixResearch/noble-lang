@@ -77,4 +77,47 @@ theorem fanout_has_two_copies : AgentKind.fanout.auxiliaryPorts = 2 := rfl
 has no separate Boolean agent kind for it. -/
 theorem eq_shares_the_value_domain : AgentKind.eq.isArithmetic = true := rfl
 
+/-- A port of a net: the agent's index and its slot, `none` for the principal. -/
+abbrev Port := Nat × Option Nat
+
+/-- A wire joins two ports. Revision 2 allows auxiliary-to-auxiliary value wires. -/
+abbrev Wire := Port × Port
+
+/-- How many wires touch a port, counting both ends. -/
+def incidence : List Wire → Port → Nat
+  | [], _ => 0
+  | (a, b) :: rest, p =>
+      (if a = p then 1 else 0) + (if b = p then 1 else 0) + incidence rest p
+
+theorem incidence_nil (p : Port) : incidence [] p = 0 := rfl
+
+theorem incidence_cons (w : Wire) (rest : List Wire) (p : Port) :
+    incidence (w :: rest) p
+      = (if w.1 = p then 1 else 0) + (if w.2 = p then 1 else 0) + incidence rest p := rfl
+
+/-- A port's incidence never exceeds the number of wires: each wire contributes at most two. -/
+theorem incidence_le_two_mul_length (wires : List Wire) (p : Port) :
+    incidence wires p ≤ 2 * wires.length := by
+  induction wires with
+  | nil => simp [incidence]
+  | cons w rest ih =>
+      rw [incidence_cons]
+      have hlen : (w :: rest).length = rest.length + 1 := rfl
+      rw [hlen]
+      split <;> split <;> omega
+
+/-- A port touched by a wire is touched at least once. -/
+theorem incidence_pos_of_mem {wires : List Wire} {w : Wire} (hmem : w ∈ wires)
+    {p : Port} (hp : w.1 = p ∨ w.2 = p) : 0 < incidence wires p := by
+  induction wires with
+  | nil => simp at hmem
+  | cons v rest ih =>
+      rw [incidence_cons]
+      rcases List.mem_cons.mp hmem with rfl | hrest
+      · rcases hp with _ | _
+        · split <;> omega
+        · split <;> omega
+      · have := ih hrest
+        omega
+
 end NobleM2.InteractionNet
