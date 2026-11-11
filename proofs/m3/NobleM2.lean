@@ -9,3 +9,4 @@ import NobleM2.Soundness
 import NobleM2.Termination
 import NobleM2.CheckSoundness
 import NobleM2.SignedSelf
+import NobleM2.SizeChange
