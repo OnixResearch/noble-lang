@@ -35,6 +35,7 @@ import NobleM2.SizeChangeMatrixPathProduct
 import NobleM2.SizeChangeMatrixMonotone
 import NobleM2.SizeChangeMatrixPrefix
 import NobleM2.SizeChangeMatrixSplice
+import NobleM2.SizeChangeMatrixScan
 import NobleM2.SizeChangeFixtures
 import NobleM2.SizeChangeExact
 import NobleM2.SizeChangeMatrixEnumeration
