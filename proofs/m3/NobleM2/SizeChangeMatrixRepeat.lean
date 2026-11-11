@@ -41,4 +41,57 @@ theorem repeatSearch_complete {n : Nat} {g : MGraph n} {i j : Fin ((matrixAux n)
   simp only [Bool.and_eq_true, decide_eq_true_eq]
   exact ⟨hlt, heq⟩
 
+/-- Membership in a false `any` means the predicate fails everywhere. -/
+theorem any_eq_false_of_eq_false {α : Type} {p : α → Bool} {l : List α}
+    (h : l.any p = false) : ∀ x ∈ l, p x = false := by
+  induction l with
+  | nil => intro x hx; simp at hx
+  | cons a rest ih =>
+      intro x hx
+      rw [List.any_cons] at h
+      have hboth := Bool.or_eq_false_iff.mp h
+      rcases List.mem_cons.mp hx with rfl | hrest
+      · exact hboth.1
+      · exact ih hboth.2 x hrest
+
+/-- A false scan means the powers are injective over the scanned positions. -/
+theorem repeatSearch_false_injective {n : Nat} {g : MGraph n}
+    (h : repeatSearch n g = false) :
+    ∀ i j : Fin ((matrixAux n).length + 1),
+      powerMatrix i.val g = powerMatrix j.val g → i = j := by
+  intro i j heq
+  apply Fin.ext
+  by_cases hlt : i.val < j.val
+  · exfalso
+    have hrow := any_eq_false_of_eq_false h i (List.mem_finRange i)
+    have hall := any_eq_false_of_eq_false hrow j (List.mem_finRange j)
+    have htrue : ((i.val < j.val) && decide (powerMatrix i.val g = powerMatrix j.val g)) = true := by
+      simp [hlt, heq]
+    rw [htrue] at hall
+    exact absurd hall (by simp)
+  · by_cases heqval : i.val = j.val
+    · exact heqval
+    · exfalso
+      have hgt : j.val < i.val := by omega
+      have hrow := any_eq_false_of_eq_false h j (List.mem_finRange j)
+      have hall := any_eq_false_of_eq_false hrow i (List.mem_finRange i)
+      have htrue : ((j.val < i.val) && decide (powerMatrix j.val g = powerMatrix i.val g)) = true := by
+        simp [hgt, heq.symm]
+      rw [htrue] at hall
+      exact absurd hall (by simp)
+
+/-- **The scan always succeeds**: the powers cannot all be distinct. -/
+theorem repeatSearch_true {n : Nat} (g : MGraph n) : repeatSearch n g = true := by
+  cases h : repeatSearch n g with
+  | false =>
+      have hinj := repeatSearch_false_injective h
+      exact absurd hinj (matrix_sequence_not_injective (fun i => powerMatrix i.val g))
+  | true => rfl
+
+/-- Consequently two positions with equal powers exist, explicitly. -/
+theorem repeatSearch_witness {n : Nat} (g : MGraph n) :
+    ∃ i j : Fin ((matrixAux n).length + 1),
+      i.val < j.val ∧ powerMatrix i.val g = powerMatrix j.val g :=
+  repeatSearch_sound (repeatSearch_true g)
+
 end NobleM2.SizeChange
