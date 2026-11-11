@@ -1264,4 +1264,67 @@ theorem certificate_accepts_small_net :
         { revision := 1, nodes := [(.add, ⟨[], []⟩)], netLength := 1, declaredSpace := 1 } = true :=
   rfl
 
+/-- In-place firing cannot increase the space potential, at any index. -/
+theorem fireAt_spacePotential_le : ∀ (k : Nat) (nodes nodes' : List (AgentKind × Operands)),
+    fireAt k nodes = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+  intro k
+  induction k with
+  | zero =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          obtain ⟨kind, ops⟩ := node
+          cases hstep : stepNode (kind, ops) with
+          | none => simp [fireAt, hstep] at h
+          | some node' =>
+              obtain ⟨ops', v, hshape, hfire⟩ := stepNode_some_fire hstep
+              subst hshape
+              have hl := fire_ops_lengths hfire
+              simp [fireAt, hstep] at h
+              obtain ⟨_, rfl⟩ := h
+              unfold spacePotential
+              omega
+  | succ k ih =>
+      intro nodes nodes' h
+      cases nodes with
+      | nil => simp [fireAt] at h
+      | cons node rest =>
+          obtain ⟨kind, ops⟩ := node
+          cases hrec : fireAt k rest with
+          | none => simp [fireAt, hrec] at h
+          | some rest' =>
+              simp [fireAt, hrec] at h
+              obtain ⟨_, rfl⟩ := h
+              unfold spacePotential
+              exact Nat.add_le_add_left (ih rest rest' hrec) _
+
+/-- No plan, in any index order, increases the space potential. -/
+theorem applyPlan_spacePotential_le : ∀ (ks : List Nat) (nodes nodes' : List (AgentKind × Operands)),
+    applyPlan nodes ks = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+  intro ks
+  induction ks with
+  | nil =>
+      intro nodes nodes' h
+      simp [applyPlan] at h
+      obtain rfl := h
+      exact Nat.le_refl _
+  | cons k ks ih =>
+      intro nodes nodes' h
+      unfold applyPlan at h
+      cases hfire : fireAt k nodes with
+      | none => rw [hfire] at h; simp at h
+      | some next =>
+          rw [hfire] at h
+          exact Nat.le_trans (ih next nodes' h) (fireAt_spacePotential_le k nodes next hfire)
+
+/-- A checked certificate bounds any completed plan over its net, in any index order. -/
+theorem plan_within_declared_space {c : NetCertificate} {ks : List Nat}
+    {nodes' : List (AgentKind × Operands)}
+    (hcheck : checkCertificate c = true) (hplan : applyPlan c.nodes ks = some nodes') :
+    spacePotential nodes' ≤ c.declaredSpace := by
+  have hbound := applyPlan_spacePotential_le ks c.nodes nodes' hplan
+  have hdecl := (checkCertificate_sound hcheck).2.2
+  omega
+
 end NobleM2.InteractionNet
