@@ -120,4 +120,42 @@ theorem incidence_pos_of_mem {wires : List Wire} {w : Wire} (hmem : w ∈ wires)
       · have := ih hrest
         omega
 
+/-- A set of wires is reciprocal when every wire's reverse is present. -/
+def reciprocal (wires : List Wire) : Bool :=
+  wires.all fun w => wires.any fun v => decide (v = (w.2, w.1))
+
+/-- Reciprocity gives the reverse wire. -/
+theorem reciprocal_reverse {wires : List Wire} {w : Wire} (h : reciprocal wires = true)
+    (hmem : w ∈ wires) : (w.2, w.1) ∈ wires := by
+  have hall := List.all_eq_true.mp h w hmem
+  obtain ⟨v, hv, hve⟩ := List.any_eq_true.mp hall
+  rw [decide_eq_true_eq] at hve
+  rw [← hve]
+  exact hv
+
+/-- Every wired port is touched exactly twice: once by its own wire, once by the reciprocal. -/
+def uniqueIncidence (wires : List Wire) : Bool :=
+  wires.all fun w => (incidence wires w.1 == 1) && (incidence wires w.2 == 1)
+
+/-- Unique incidence pins the count at one per wire end. -/
+theorem uniqueIncidence_left {wires : List Wire} {w : Wire}
+    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.1 = 1 := by
+  have hall := List.all_eq_true.mp h w hmem
+  rw [Bool.and_eq_true] at hall
+  simpa using hall.1
+
+theorem uniqueIncidence_right {wires : List Wire} {w : Wire}
+    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.2 = 1 := by
+  have hall := List.all_eq_true.mp h w hmem
+  rw [Bool.and_eq_true] at hall
+  simpa using hall.2
+
+/-- Under unique incidence both ends of a wire are touched exactly once, so a wire accounts for two
+port ends. Reciprocity is not needed for this count; it is needed to know the `1` at each end is the
+reverse wire rather than a second wire to the same port. -/
+theorem unique_incidence_two_ends {wires : List Wire} {w : Wire}
+    (huniq : uniqueIncidence wires = true) (hmem : w ∈ wires) :
+    incidence wires w.1 + incidence wires w.2 = 2 := by
+  rw [uniqueIncidence_left huniq hmem, uniqueIncidence_right huniq hmem]
+
 end NobleM2.InteractionNet
