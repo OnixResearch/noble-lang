@@ -129,4 +129,48 @@ theorem arithmetic_delta_not_positive (kind : AgentKind) (hk : kind.isArithmetic
   rw [valueDelta_arithmetic kind hk]
   decide
 
+/-- A node is fireable when both operand stacks are non-empty. -/
+def fireable (ops : Operands) : Bool :=
+  !ops.first.isEmpty && !ops.second.isEmpty
+
+/-- The worklist scan: is any node fireable? -/
+def anyFireable (nodes : List Operands) : Bool :=
+  nodes.any fireable
+
+/-- The scan's decision matches the stacks. -/
+theorem fireable_iff (ops : Operands) :
+    fireable ops = true ↔ (ops.first ≠ [] ∧ ops.second ≠ []) := by
+  obtain ⟨first, second⟩ := ops
+  cases first <;> cases second <;> simp [fireable]
+
+/-- The scan is true exactly when some node is fireable. -/
+theorem anyFireable_iff (nodes : List Operands) :
+    anyFireable nodes = true ↔ ∃ ops ∈ nodes, fireable ops = true := by
+  unfold anyFireable
+  exact List.any_eq_true
+
+/-- **Progress**: if a fireable node exists, the scan finds one, so the reducer never stalls while
+work remains. -/
+theorem anyFireable_of_mem {nodes : List Operands} {ops : Operands}
+    (hmem : ops ∈ nodes) (h : fireable ops = true) : anyFireable nodes = true := by
+  unfold anyFireable
+  induction nodes with
+  | nil => simp at hmem
+  | cons head rest ih =>
+      rw [List.any_cons]
+      rcases List.mem_cons.mp hmem with rfl | hrest
+      · rw [h]
+        simp
+      · rw [ih hrest]
+        simp
+
+/-- A scan over an empty node list finds nothing to do. -/
+theorem anyFireable_nil : anyFireable [] = false := rfl
+
+/-- Stacking a fireable node first makes the scan true immediately. -/
+theorem anyFireable_cons_true {ops : Operands} {nodes : List Operands}
+    (h : fireable ops = true) : anyFireable (ops :: nodes) = true := by
+  rw [anyFireable, List.any_cons, h]
+  simp
+
 end NobleM2.InteractionNet
