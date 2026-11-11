@@ -69,4 +69,46 @@ theorem matrixSatisfies_compose {n : Nat} {g h : MGraph n} {s t u : Fin n → Na
     fun hni => compose_nonIncrease_steps hni hg hh,
     fun hsm => compose_same_steps hsm hg hh⟩
 
+/-- The `k`-fold product of a graph with itself. -/
+def powerMatrix {n : Nat} : Nat → MGraph n → MGraph n
+  | 0, _ => idMatrix
+  | k + 1, g => composeMatrix g (powerMatrix k g)
+
+/-- The identity matrix is satisfied by any state paired with itself. -/
+theorem matrixSatisfies_id {n : Nat} (s : Fin n → Nat) : MatrixSatisfies (idMatrix : MGraph n) s s := by
+  intro i j hknown
+  have hij : i = j := by
+    by_cases h : i = j
+    · exact h
+    · exfalso
+      have : idMatrix i j = (Rel4.unknown : Rel4) := by simp [idMatrix, h]
+      exact hknown this
+  subst hij
+  simp [idMatrix]
+
+/-- A run satisfying every step of `g` satisfies each iterate of the product. -/
+theorem matrixSatisfies_power {n : Nat} (g : MGraph n) (state : Nat → Fin n → Nat)
+    (sat : ∀ t, MatrixSatisfies g (state t) (state (t + 1))) :
+    ∀ (k t : Nat), MatrixSatisfies (powerMatrix k g) (state t) (state (t + k))
+  | 0, t => matrixSatisfies_id (state t)
+  | k + 1, t => by
+      have hstep : MatrixSatisfies g (state t) (state (t + 1)) := sat t
+      have hrest : MatrixSatisfies (powerMatrix k g) (state (t + 1)) (state (t + 1 + k)) :=
+        matrixSatisfies_power g state sat k (t + 1)
+      have hcomp := matrixSatisfies_compose hstep hrest
+      simpa [powerMatrix, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hcomp
+
+/-- **A strict `k`-fold product forbids infinite runs**: each block of `k` steps drops the measure,
+so the states at multiples of `k` form a strictly decreasing chain. -/
+theorem power_cycle_terminates {n : Nat} {g : MGraph n} {k : Nat} {i : Fin n}
+    (hprod : powerMatrix k g i i = .strict) (state : Nat → Fin n → Nat)
+    (sat : ∀ t, MatrixSatisfies g (state t) (state (t + 1))) : False := by
+  apply no_decreasing_chain (fun m => state (m * k) i)
+  intro m
+  have hblock := matrixSatisfies_power g state sat k (m * k)
+  have hdrop : state (m * k + k) i < state (m * k) i := MatrixSatisfies.strict hblock hprod
+  have harith : (m + 1) * k = m * k + k := by rw [Nat.add_mul, Nat.one_mul]
+  rw [harith]
+  exact hdrop
+
 end NobleM2.SizeChange
