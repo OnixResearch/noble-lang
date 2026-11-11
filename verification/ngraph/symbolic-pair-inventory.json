@@ -114,13 +114,53 @@
         "hazard": "shrunk witness is a local minimum",
         "module": "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean",
         "theorem": "subtractionOrder_shrunk_is_a_local_minimum"
+      },
+      {
+        "hazard": "stale semantic revision",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "stale_revision_refused"
+      },
+      {
+        "hazard": "malformed certificate",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "malformed_certificate_refused"
+      },
+      {
+        "hazard": "forced UNKNOWN distinct from refusal",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "timeout_is_unknown"
+      },
+      {
+        "hazard": "forced UNKNOWN is not certification",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "unknown_is_not_certified"
+      },
+      {
+        "hazard": "timeout and exhausted budget statuses",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "exhausted_budget_refused"
+      },
+      {
+        "hazard": "corrupted encoding refuses",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "corrupted_encoding_refused"
+      },
+      {
+        "hazard": "acceptance control: a clean query certifies",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "clean_query_certifies"
       }
     ],
-    "open": [
-      "stale semantic revision",
-      "malformed certificate",
-      "forced UNKNOWN distinct from refusal",
-      "timeout and exhausted budget statuses"
-    ]
+    "open": [],
+    "verdicts": {
+      "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+      "statuses": [
+        "certified",
+        "counterexample",
+        "unknown",
+        "refused"
+      ],
+      "note": "refused means this method established no result; unknown means the query did not finish; neither asserts agreement or disagreement"
+    }
   }
 }
