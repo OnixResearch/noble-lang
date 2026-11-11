@@ -22,3 +22,4 @@ import NobleM2.SizeChangeDecEq
 import NobleM2.SizeChangeBounded
 import NobleM2.SizeChangeCounting
 import NobleM2.SizeChangeRepeat
+import NobleM2.SizeChangeIdempotent
