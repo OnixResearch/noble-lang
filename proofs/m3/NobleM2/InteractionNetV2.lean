@@ -223,4 +223,60 @@ theorem boundary_inputs_ordered {net : Net} (h : boundaryOk net = true) :
     strictlyIncreasing net.inputs = true :=
   (boundaryOk_parts h).2.2.1
 
+/-- Kinds whose principal port carries a value at admission. -/
+def AgentKind.isValueSource : AgentKind → Bool
+  | .value => true
+  | .input => true
+  | _ => false
+
+/-- The wires whose principal end is a value source: what a reducer's worklist starts from. -/
+def activePairs (net : Net) : List Wire :=
+  net.wires.filter fun w =>
+    match net.kindAt w.1.1 with
+    | some k => k.isValueSource && w.1.2.isNone
+    | none => false
+
+/-- Every wire in the inventory really is a value arriving at a principal port. -/
+theorem activePairs_mem {net : Net} {w : Wire} (hmem : w ∈ activePairs net) :
+    ∃ k, net.kindAt w.1.1 = some k ∧ k.isValueSource = true ∧ w.1.2 = none := by
+  unfold activePairs at hmem
+  rw [List.mem_filter] at hmem
+  obtain ⟨hw, hpred⟩ := hmem
+  cases hk : net.kindAt w.1.1 with
+  | none => rw [hk] at hpred; simp at hpred
+  | some k =>
+      rw [hk] at hpred
+      rw [Bool.and_eq_true] at hpred
+      exact ⟨k, rfl, hpred.1, by simpa using hpred.2⟩
+
+/-- A filtered list is no longer than its source. -/
+theorem filter_length_le {α : Type} (p : α → Bool) :
+    ∀ (l : List α), (l.filter p).length ≤ l.length
+  | [] => by simp
+  | a :: rest => by
+      have ih := filter_length_le p rest
+      cases hp : p a with
+      | true =>
+          simp [hp]
+          omega
+      | false =>
+          simp [hp]
+          omega
+
+/-- The worklist never exceeds the wire count. -/
+theorem activePairs_length_le (net : Net) : (activePairs net).length ≤ net.wires.length :=
+  filter_length_le _ net.wires
+
+/-- Size limits for admission, charged before growth. -/
+def withinLimits (net : Net) (maxAgents maxWires : Nat) : Bool :=
+  (decide (net.agents.length ≤ maxAgents)) && decide (net.wires.length ≤ maxWires)
+
+/-- Validation yields the bounds it claims. -/
+theorem withinLimits_bounds {net : Net} {maxAgents maxWires : Nat}
+    (h : withinLimits net maxAgents maxWires = true) :
+    net.agents.length ≤ maxAgents ∧ net.wires.length ≤ maxWires := by
+  unfold withinLimits at h
+  rw [Bool.and_eq_true] at h
+  exact ⟨of_decide_eq_true h.1, of_decide_eq_true h.2⟩
+
 end NobleM2.InteractionNet
