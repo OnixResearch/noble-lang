@@ -77,6 +77,18 @@ theorem splitSites_no_shared : certifiedAll splitSites = false := by
 theorem splitSites_closure_criterion : ∀ g, Closure splitSites g → HasStrict g :=
   closure_criterion_of_sites splitSites_each
 
+/-!
+## Consequence for the model
+
+`Graph n = Fin n → Rel` records one relation per measure: it says whether each measure drops, stays or
+is unknown between two calls. It does **not** record a relation between two different measures, so the
+condition the classical criterion needs - a strict edge lying *on a cycle* - cannot even be stated in
+this type. The counterexample below shows the weaker premise is unsound, so the conclusion is
+structural rather than a missing lemma: a sound criterion requires `Fin n → Fin n → Rel` (a relation
+for each pair of measures), and the SCC argument over that matrix is not attempted in this project.
+-/
+
+
 /-! ## Refutation: per-member strict edges do not imply termination -/
 
 /-- Site 0 decreases exactly measure 0. -/
