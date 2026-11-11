@@ -1012,4 +1012,14 @@ theorem timePotential_obligation (kind : AgentKind) (hk : kind.isArithmetic = tr
   simp only [timePotential, hk, ite_true]
   omega
 
+/-- The non-arithmetic rules move the waiting-value count in opposite directions, so a potential
+must treat them differently: erasure emits nothing, fanout emits two copies of the value it
+consumes. These multiplicities are what a local obligation for either rule has to charge; the
+reducer itself currently fires neither, so no obligation over `stepNode` exists for them yet. -/
+theorem nonarithmetic_multiplicities (v : Value) :
+    (fireErase v).length = 0 ∧ (fireFanout v).length = 2 := by
+  constructor
+  · rfl
+  · rfl
+
 end NobleM2.InteractionNet
