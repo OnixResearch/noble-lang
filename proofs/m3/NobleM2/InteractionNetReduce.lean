@@ -613,4 +613,53 @@ theorem runCount_single_add (a b : BitVec 64) :
 /-- A net whose head is a value agent does not fire; the run completes in zero interactions. -/
 theorem runCount_value_head_stuck : runCount 3 [(.value, ⟨[7], []⟩)] = some (0, [(.value, ⟨[7], []⟩)]) := rfl
 
+/-- Number of reducible nodes in a net. -/
+def reducibleCount : List (AgentKind × Operands) → Nat
+  | [] => 0
+  | node :: rest => (if reducible node then 1 else 0) + reducibleCount rest
+
+/-- A node that steps is reducible: reducibility is the step being possible. -/
+theorem reducible_of_stepNode (node node' : AgentKind × Operands)
+    (h : stepNode node = some node') : reducible node = true := by
+  simp [reducible, h]
+
+/-- A step never increases the number of reducible nodes: the fired node may stop being reducible,
+and every other node is carried through unchanged. -/
+theorem stepList_reducibleCount_le : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → reducibleCount nodes' ≤ reducibleCount nodes := by
+  intro nodes
+  induction nodes with
+  | nil =>
+      intro nodes' h
+      simp [stepList] at h
+  | cons node rest ih =>
+      intro nodes' h
+      obtain ⟨kind, ops⟩ := node
+      cases hstep : stepNode (kind, ops) with
+      | some node' =>
+          have hred : reducible (kind, ops) = true := reducible_of_stepNode _ _ hstep
+          have hval : stepList ((kind, ops) :: rest) = some (node' :: rest) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          unfold reducibleCount
+          rw [hred]
+          have hle : (if reducible node' then 1 else 0) ≤ 1 := by
+            split <;> simp
+          exact Nat.add_le_add_right hle _
+      | none =>
+          have hval : stepList ((kind, ops) :: rest) =
+              (stepList rest).map (fun r => (kind, ops) :: r) := by
+            simp [stepList, hstep]
+          rw [hval] at h
+          have hmap : ((stepList rest).map (fun r => (kind, ops) :: r) = some nodes')
+              ↔ ∃ t, stepList rest = some t ∧ nodes' = (kind, ops) :: t := by
+            cases stepList rest with
+            | none => simp
+            | some t => simp [eq_comm]
+          obtain ⟨t, hrest, rfl⟩ := hmap.mp h
+          unfold reducibleCount
+          exact Nat.add_le_add_left (ih t hrest) _
+
 end NobleM2.InteractionNet
