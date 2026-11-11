@@ -30,3 +30,4 @@ import NobleM2.SizeChangeMatrixSemantics
 import NobleM2.SizeChangeMatrixStrict
 import NobleM2.SizeChangeMatrixPath
 import NobleM2.SizeChangeMatrixCycle
+import NobleM2.SizeChangeMatrixExtract
