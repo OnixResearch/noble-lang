@@ -53,4 +53,31 @@ theorem power_recurrence {n : Nat} {g : MGraph n} {a d : Nat}
     simp only [powerMatrix]
     rw [ih]
 
+/-- **Iterating the recurrence**: every exponent congruent to `m` modulo `d` has the same power. -/
+theorem power_iterate {n : Nat} {g : MGraph n} {a d : Nat}
+    (h : powerMatrix a g = composeMatrix (powerMatrix a g) (powerMatrix d g)) :
+    ∀ (k m : Nat), a ≤ m → powerMatrix (m + k * d) g = powerMatrix m g := by
+  intro k
+  induction k with
+  | zero => intro m _; simp
+  | succ k ih =>
+      intro m hm
+      have harith : m + (k + 1) * d = (m + k * d) + d := by
+        rw [Nat.succ_mul]
+        omega
+      rw [harith]
+      rw [← power_recurrence h (m + k * d) (by omega)]
+      exact ih m hm
+
+/-- **An idempotent power exists**: `power (a * d)` is its own square. -/
+theorem power_idempotent {n : Nat} {g : MGraph n} {a d : Nat} (hd : 0 < d)
+    (h : powerMatrix a g = composeMatrix (powerMatrix a g) (powerMatrix d g)) :
+    composeMatrix (powerMatrix (a * d) g) (powerMatrix (a * d) g) = powerMatrix (a * d) g := by
+  rw [← powerMatrix_add]
+  have hge : a ≤ a * d := by
+    have hd1 : 1 ≤ d := hd
+    calc a = a * 1 := (Nat.mul_one a).symm
+      _ ≤ a * d := Nat.mul_le_mul_left a hd1
+  exact power_iterate h a (a * d) hge
+
 end NobleM2.SizeChange
