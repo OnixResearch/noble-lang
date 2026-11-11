@@ -127386,46 +127386,6 @@
       "refinement": "not-applicable"
     },
     {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:3548:3555",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:3716:3723",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4243:4250",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4417:4424",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4616:4623",
-      "refinement": "open"
-    },
-    {
       "category": "structural",
       "disposition": "structural",
       "note": "Renewed the build report gains an opt-in v2 schema with a toolchain binding module: declaration-only compiler kind (module); accounting only, with no body obligation.",
@@ -127692,42 +127652,106 @@
     {
       "category": "generated",
       "disposition": "generated",
-      "note": "Renewed the build report gains an opt-in v2 schema: toolchain binding module under build/report, plus its USAGE and tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:10420:11267",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:11723:12570",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:12588:13522",
       "refinement": "not-applicable"
     },
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema: toolchain binding module under build/report, plus its USAGE and tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:5871:5884",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:3609:3616",
       "refinement": "open"
     },
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema: toolchain binding module under build/report, plus its USAGE and tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:6363:6370",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:3744:3751",
       "refinement": "open"
     },
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed the build report gains an opt-in v2 schema: toolchain binding module under build/report, plus its USAGE and tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:6772:6779",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4395:4402",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:5172:5179",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:5346:5353",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:5545:5552",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:6800:6813",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:7292:7299",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:7701:7708",
       "refinement": "open"
     },
     {
       "category": "generated",
       "disposition": "generated",
-      "note": "Renewed the build report gains an opt-in v2 schema: toolchain binding module under build/report, plus its USAGE and tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:8672:10402",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:9975:11705",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed re-land the #111 toolchain bound with renewed inventory from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::build::report::toolchain::tests::a_file_over_the_remaining_budget_is_refused_before_allocation",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
