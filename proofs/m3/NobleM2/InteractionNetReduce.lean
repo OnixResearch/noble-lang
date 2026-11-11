@@ -974,4 +974,42 @@ theorem applyPlanValues_applyPlan : ∀ (ks : List Nat) (nodes : List (AgentKind
               rw [hstep]
               exact ih next vs' final' hrec
 
+/-- Time potential: the work still available at a node, counted as the values waiting on its two
+ports. A node with empty ports has no work left. -/
+def timePotential : AgentKind × Operands → Nat
+  | (kind, ops) =>
+      if kind.isArithmetic then ops.first.length + ops.second.length else 0
+
+/-- Firing consumes exactly one value from each port. -/
+theorem fire_ops_lengths {kind : AgentKind} {ops ops' : Operands} {v : BitVec 64}
+    (h : fire kind ops = some (ops', v)) :
+    ops'.first.length + ops'.second.length + 2 = ops.first.length + ops.second.length := by
+  cases ops with
+  | mk first second =>
+      cases first with
+      | nil => simp [fire] at h
+      | cons a as =>
+          cases second with
+          | nil => simp [fire] at h
+          | cons b bs =>
+              cases kind with
+              | add => (simp only [fire, Option.some.injEq, Prod.mk.injEq] at h; obtain ⟨h1, _⟩ := h; subst h1; simp <;> omega)
+              | sub => (simp only [fire, Option.some.injEq, Prod.mk.injEq] at h; obtain ⟨h1, _⟩ := h; subst h1; simp <;> omega)
+              | mul => (simp only [fire, Option.some.injEq, Prod.mk.injEq] at h; obtain ⟨h1, _⟩ := h; subst h1; simp <;> omega)
+              | eq => (simp only [fire, Option.some.injEq, Prod.mk.injEq] at h; obtain ⟨h1, _⟩ := h; subst h1; simp <;> omega)
+              | value => simp [fire] at h
+              | fanout => simp [fire] at h
+              | erase => simp [fire] at h
+              | input => simp [fire] at h
+              | output => simp [fire] at h
+
+/-- The local time obligation for one arithmetic rule instance: the potential at the node before
+firing covers the charge of one interaction plus the potential after firing. -/
+theorem timePotential_obligation (kind : AgentKind) (hk : kind.isArithmetic = true)
+    (ops ops' : Operands) (v : BitVec 64) (h : fire kind ops = some (ops', v)) :
+    timePotential (kind, ops) ≥ 1 + timePotential (kind, ops') := by
+  have hlen := fire_ops_lengths h
+  simp only [timePotential, hk, ite_true]
+  omega
+
 end NobleM2.InteractionNet
