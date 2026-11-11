@@ -94,4 +94,13 @@ theorem fold_join_comm {α β : Type} (F : α → β → Rel4) :
       exact join_fold_zip (fun b => F a b)
         (fun b => rest.foldr (fun r acc => (F r b).join acc) .unknown) l₂
 
+/-- **Matrix products associate**: `(g ∘ h) ∘ k = g ∘ (h ∘ k)`. -/
+theorem composeMatrix_assoc {n : Nat} (g h k : MGraph n) :
+    composeMatrix (composeMatrix g h) k = composeMatrix g (composeMatrix h k) := by
+  funext i l
+  simp only [composeMatrix]
+  simp only [compose_fold_join_left, compose_fold_join_right, Rel4.compose_assoc]
+  exact fold_join_comm (fun r m => (g i m).compose ((h m r).compose (k r l)))
+    (List.finRange n) (List.finRange n)
+
 end NobleM2.SizeChange
