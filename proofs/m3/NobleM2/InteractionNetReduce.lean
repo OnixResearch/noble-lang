@@ -206,4 +206,41 @@ theorem readBack_length {expected : Nat} {values out : List Value}
   have hlen := (readBack_complete_iff expected values).mp (h ▸ Option.isSome_some)
   simpa [readBack_order h] using hlen
 
+/-- Reducer state: the operand stacks of every arithmetic node and the outputs observed so far. -/
+structure Machine where
+  /-- Operand stacks, one entry per arithmetic node. -/
+  nodes : List Operands
+  /-- Outputs observed in boundary order. -/
+  outputs : List Value
+
+/-- Deliver a fired value to a boundary output: the value is appended, so the observation order is
+the delivery order. -/
+def Machine.deliverOutput (m : Machine) (v : Value) : Machine :=
+  { m with outputs := m.outputs ++ [v] }
+
+theorem deliverOutput_outputs (m : Machine) (v : Value) :
+    (m.deliverOutput v).outputs = m.outputs ++ [v] := rfl
+
+/-- Delivery to an output adds exactly one observation. -/
+theorem deliverOutput_length (m : Machine) (v : Value) :
+    (m.deliverOutput v).outputs.length = m.outputs.length + 1 := by
+  rw [deliverOutput_outputs, List.length_append]
+  rfl
+
+/-- Delivery preserves the observations already made and their order. -/
+theorem deliverOutput_prefix (m : Machine) (v : Value) :
+    ∀ x ∈ m.outputs, x ∈ (m.deliverOutput v).outputs := by
+  intro x hx
+  rw [deliverOutput_outputs]
+  exact List.mem_append.mpr (Or.inl hx)
+
+/-- Delivery does not disturb the operand stacks. -/
+theorem deliverOutput_nodes (m : Machine) (v : Value) :
+    (m.deliverOutput v).nodes = m.nodes := rfl
+
+/-- Observing a value cannot reduce the set of fireable nodes. -/
+theorem deliverOutput_fireable (m : Machine) (v : Value) :
+    anyFireable (m.deliverOutput v).nodes = anyFireable m.nodes := by
+  rw [deliverOutput_nodes]
+
 end NobleM2.InteractionNet
