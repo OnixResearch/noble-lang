@@ -3,8 +3,9 @@ import NobleM2.SizeChangeCriterion
 /-!
 # The checker's verdict is exact (issue #101)
 
-Criterion one asks the checker to report **either** a closure showing termination **or** the
-offending cycle - never an inconclusive third answer. The two halves are already proved separately
+Criterion one asks the checker to report **either** a shared decreasing measure **or** the fact that
+no measure decreases at every site - never an inconclusive third answer. (It does not report a call
+cycle; nothing in the criterion constructs one.) The two halves are already proved separately
 (`certifiedAll_sound`, and `certifiedAll_refusal` for the refusal direction); this packages them as
 an equivalence, so a caller may read the Bool as the proposition without qualification.
 

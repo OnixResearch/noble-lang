@@ -10,9 +10,9 @@ positions with equal powers. A checker finds them by scanning the first `(4 ^ n)
 - `repeatSearch_sound`: a true result names such a pair;
 - `repeatSearch_complete`: a known pair certifies the scan.
 
-What is *not* proved is the direction a checker needs in practice — that the scan is always true,
-because the powers cannot all be distinct (`matrix_sequence_not_injective`). That needs the converse
-of `List.any_eq_false` composed with the trichotomy of `Nat` on indices, and is the next lemma.
+The direction a checker needs in practice — that the scan is always true, because the powers cannot
+all be distinct (`matrix_sequence_not_injective`) — is `repeatSearch_true` below: the converse of
+`List.any_eq_false` composed with the trichotomy of `Nat` on indices.
 -/
 
 namespace NobleM2.SizeChange

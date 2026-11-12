@@ -9,13 +9,17 @@ required verdict, so the checker's behaviour is a theorem rather than a sample r
 | Fixture | Stated at | Verdict |
 |---|---|---|
 | structural list recursion | argument layer, passed as its predecessor | accepted |
-| countdown under a guard | relation layer, strictly decreasing | accepted |
-| non-decreasing self-call | relation layer, passed through | refused, cycle named |
-| wrapping `I64` arithmetic as a measure | argument layer, unclassifiable | refused, cycle named |
+| countdown | relation layer, strictly decreasing | accepted |
+| non-decreasing self-call | relation layer, passed through | refused, no shared measure |
+| wrapping `I64` arithmetic as a measure | argument layer, unclassifiable | refused, no shared measure |
 
 Wrapping arithmetic may *increase* a value, so accepting it would be unsound; the checker classifies
 the argument as `unknown` and refuses. Both refusals are `certifiedAll_refusal` instances, so the
-offending cycle is named rather than the verdict being a bare `false`.
+verdict states what failed - no measure decreases at every site - rather than being a bare `false`.
+
+The guard of the countdown case is not part of the model: the relation layer records that the counter
+strictly decreases, and the positivity premise `0 < value` that justifies that classification is a
+front-end obligation (`SizeChangeChecker`).
 -/
 
 namespace NobleM2.SizeChange
@@ -29,7 +33,7 @@ theorem listRecursionFixture_accepted :
     show listRecursionArgs _ 0 = .predOfSame
     simp [listRecursionArgs])
 
-/-- **Fixture 2**: a countdown counter under a guard. -/
+/-- **Fixture 2**: a countdown counter, modelled at the relation layer as a strict decrease. -/
 def countdownFixture : Sites 1 1 := fun _ _ => .decrease
 
 theorem countdownFixture_accepted : certifiedAll countdownFixture = true := by
@@ -42,8 +46,8 @@ def nonDecreasingFixture : Sites 1 1 := fun _ _ => .equal
 
 theorem nonDecreasingFixture_refused : certifiedAll nonDecreasingFixture = false := by decide
 
-/-- Its refusal names the cycle: no measure decreases at every site. -/
-theorem nonDecreasingFixture_cycle :
+/-- Its refusal states what is proved: no measure decreases at every site. It exhibits no cycle. -/
+theorem nonDecreasingFixture_no_shared :
     ¬ ∃ i, ∀ s, nonDecreasingFixture s i = .decrease :=
   certifiedAll_refusal nonDecreasingFixture_refused
 
@@ -60,8 +64,8 @@ theorem wrappingFixture_refused :
       have := hi 0
       simp [graphOf, wrappingArgs, Arg.classify] at this
 
-/-- Its refusal names the cycle as well. -/
-theorem wrappingFixture_cycle :
+/-- Its refusal states the same property: no measure decreases at every site. -/
+theorem wrappingFixture_no_shared :
     ¬ ∃ i, ∀ s, graphOf (wrappingArgs s) i = .decrease :=
   certifiedAll_refusal wrappingFixture_refused
 

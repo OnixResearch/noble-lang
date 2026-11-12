@@ -1121,15 +1121,25 @@ see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
 ## Termination evidence (opt-in)
 
 `proofs/m3/NobleM2/SizeChange*.lean` specify an optional size-change checker for
-signature-checked recursive definitions: it builds call graphs from the arguments a definition
-passes to itself under explicit guards, and reports either a shared decreasing measure that shows
-termination or the offending call cycle.
+signature-checked recursive definitions: it classifies the arguments a definition passes at each of
+its self-call sites, turns them into a call graph, and reports a shared decreasing measure.
 
-The verdict is exact (`certifiedAll_iff_shared`), a refusal names a cycle, and acceptance is a
-Lean-checked certificate. **A refusal means "not shown terminating", not "diverges"**: the analysis
-is deliberately incomplete, so a non-decreasing self-call, a measure passed through unchanged, or
-wrapping `I64` arithmetic used as a measure are all refused without any claim that the program
-loops.
+The verdict is exact (`certifiedAll_iff_shared`) and acceptance is a Lean-checked certificate, but
+the certificate is about the *classified relations*, not about an execution: the termination
+theorems rule out infinite runs that respect those relations. They do not evaluate arguments, and
+the classifier's `decrease` claim needs the site's positivity guard (`0 < value`) while `Sites` and
+`Run` have no guard at all, so nothing here proves that a guarded call actually drops. Supplying
+that connection is the front end's obligation.
+
+A refusal states exactly what failed: no measure decreases at every site. It does not name a call
+cycle. **A refusal means "not shown terminating", not "diverges"**: the analysis is deliberately
+incomplete, so a non-decreasing self-call, a measure passed through unchanged, or wrapping `I64`
+arithmetic used as a measure are all refused without any claim that the program loops.
+
+The matrix and call-program lane (`SizeChangeMatrix*`, `SizeChangeCallProgram`) proves termination
+only for runs whose node sequence is periodic, with the period and a strict diagonal of the period
+product supplied as hypotheses. Periodicity is not derived from the call graph, so that lane is not
+a termination proof for a program either.
 
 There is no CLI integration yet; the specification, decision procedure and conformance fixtures are
 in `proofs/m3`.

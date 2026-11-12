@@ -7,12 +7,12 @@ A checker cannot visit an infinite closure, so it visits the first `bound + 1` p
 asks whether one of them decreases. This module defines that search and proves it **sound**: a true
 result names a power within the bound that really decreases.
 
-What is deliberately absent is **completeness** - that some bound (in particular one expressible as
-`n * n` over `3 ^ n` graphs) always finds a decreasing power whenever one exists. That is the
-pigeonhole step, and it needs counting lemmas the project's Mathlib-free closure does not provide:
-core has `List.Nodup`, `List.Sublist` and `List.Sublist.length_le`, but no `Nodup.length_le` and no
-`List.nodup_map_iff`, and `Fin m` has no `Fintype` to decide an existential over indices. Until that
-is built, the search is sound but not guaranteed to terminate with the right answer.
+Completeness needs no counting argument in this algebra: the first power of a graph is the graph
+itself, because the identity graph is a unit and every relation is transitive. So `decreasesWithin n 0
+g i` already decides whether `g` decreases measure `i` (`decreasesWithin_complete_zero`), and every
+larger bound inherits the verdict by `decreasesWithin_mono`. No `n * n` bound is needed here; the
+pigeonhole lemmas in `SizeChangeCounting` and `SizeChangeRepeat` concern the enumeration of graphs,
+not the power search.
 -/
 
 namespace NobleM2.SizeChange
@@ -35,6 +35,26 @@ theorem decreasesWithin_mono {n bound bound' : Nat} {g : Graph n} {i : Fin n}
   obtain ⟨j, hj, hdec⟩ := decreasesWithin_sound h
   refine List.any_eq_true.mpr ⟨⟨j, by omega⟩, List.mem_finRange _, ?_⟩
   simpa using hdec
+
+/-- The first power of a graph is the graph: the identity graph is a unit and every relation is
+transitive. -/
+theorem power_one_apply {n : Nat} (g : Graph n) (i : Fin n) : power 1 g i = g i := by
+  cases h : g i <;> simp [power, composeGraph, idGraph, h, Rel.compose]
+
+/-- At bound zero the search already reads the graph itself. -/
+theorem decreasesWithin_zero {n : Nat} (g : Graph n) (i : Fin n) :
+    decreasesWithin n 0 g i = (g i == .decrease) := by
+  have hlist : List.finRange (0 + 1) = [(0 : Fin 1)] := rfl
+  show (List.finRange (0 + 1)).any (fun j => power (j + 1) g i == .decrease) = _
+  rw [hlist]
+  simp only [List.any_cons, List.any_nil, Bool.or_false, Fin.val_zero, Nat.zero_add]
+  rw [power_one_apply]
+
+/-- **Completeness at the first power**: the search decides without any counting bound, so a
+decreasing power is found exactly when the graph itself decreases that measure. -/
+theorem decreasesWithin_complete_zero {n : Nat} (g : Graph n) (i : Fin n) :
+    decreasesWithin n 0 g i = true ↔ g i = .decrease := by
+  rw [decreasesWithin_zero, beq_iff_eq]
 
 /-! ## Fixtures -/
 

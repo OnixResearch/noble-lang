@@ -9,12 +9,14 @@ exponent. This is the core of the idempotent-power step.
 - `nat_le_induction`: induction from a lower bound, proved here because the core has no
   `Nat.le_induction` (that lemma is a library one);
 - `power_shift_usable`: the repetition in the factorised form the iteration consumes;
-- `power_recurrence`: `power m = power (m + d)` for every `m ≥ a`.
+- `power_recurrence`: `power m = power (m + d)` for every `m ≥ a`;
+- `power_iterate`: every exponent congruent to `m` modulo `d` has the same power;
+- `power_idempotent`: the power at `a * d` is its own square (with `0 < a`, `0 < d`);
+- `idempotent_power_stable` / `idempotent_power_nodup_length`: an idempotent matrix represents all
+  its positive powers, so a nodup list of them has at most one element.
 
 Inducting from the bound means no exponent is decomposed, which is what made the earlier attempts
 fail in a core without `nth_rewrite` or `conv`.
-
-The iteration and the idempotent power are the next steps and are not proved here.
 -/
 
 namespace NobleM2.SizeChange
@@ -69,8 +71,11 @@ theorem power_iterate {n : Nat} {g : MGraph n} {a d : Nat}
       rw [← power_recurrence h (m + k * d) (by omega)]
       exact ih m hm
 
-/-- **An idempotent power exists**: `power (a * d)` is its own square. -/
-theorem power_idempotent {n : Nat} {g : MGraph n} {a d : Nat} (hd : 0 < d)
+/-- **An idempotent power exists**: `power (a * d)` is its own square. The `0 < a` hypothesis is
+needed for the statement to have content: at `a = 0` the exponent is `0`, the conclusion is
+`composeMatrix idMatrix idMatrix = idMatrix`, and `composeMatrix_id_left` proves it without using
+the repetition hypothesis at all. -/
+theorem power_idempotent {n : Nat} {g : MGraph n} {a d : Nat} (_ha : 0 < a) (hd : 0 < d)
     (h : powerMatrix a g = composeMatrix (powerMatrix a g) (powerMatrix d g)) :
     composeMatrix (powerMatrix (a * d) g) (powerMatrix (a * d) g) = powerMatrix (a * d) g := by
   rw [← powerMatrix_add]

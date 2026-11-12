@@ -3,11 +3,13 @@ import NobleM2.SizeChangePowers
 /-!
 # Refusal is tight for stalling families (issue #101)
 
-The criterion refuses a family whose sites all pass every measure through. A refusal is only
-honest if it is not vacuous: this module exhibits a real run of exactly such a family - a run that
-stalls, so no measure ever drops - and proves the criterion rejects it. Together those two facts say
-the refusal corresponds to a genuine non-terminating execution rather than to a failure to find a
-proof.
+The criterion refuses a **nonempty** family whose sites all pass every measure through. (An empty
+family is accepted: it has no calls, so the `all` over its sites is vacuously true. The `NeZero k`
+hypothesis below is what excludes that boundary, and `allEqual_no_sites_accepted` records it.) A
+refusal is only honest if it is not vacuous: this module exhibits a real run of exactly such a
+family - a run that stalls, so no measure ever drops - and proves the criterion rejects it. Together
+those two facts say the refusal corresponds to a genuine non-terminating execution rather than to a
+failure to find a proof.
 
 What this does *not* establish is the converse for every family: that whenever the criterion
 refuses, some run fails to terminate. That is the general soundness and completeness question and it
@@ -41,6 +43,12 @@ def stalledRun {k n : Nat} [NeZero k] {sites : Sites k n} (h : ∀ s i, sites s 
 theorem allEqual_refused_and_stalls {k n : Nat} [NeZero k] {sites : Sites k n}
     (h : ∀ s i, sites s i = .equal) : certifiedAll sites = false ∧ Nonempty (Run k n sites) :=
   ⟨allEqual_refused h, ⟨stalledRun h⟩⟩
+
+/-- The empty family has no call site, and the criterion accepts it: the refusal above genuinely
+needs a site, so its `NeZero` hypothesis is not decoration. -/
+theorem allEqual_no_sites_accepted :
+    certifiedAll (fun (_ : Fin 0) (_ : Fin 1) => (Rel.equal : Rel)) = true := by
+  decide
 
 /-! ## Fixtures -/
 

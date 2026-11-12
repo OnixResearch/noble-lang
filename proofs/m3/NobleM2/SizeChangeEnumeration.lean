@@ -8,10 +8,10 @@ The bound argument needs a finite enumeration of `Graph n = Fin n → Rel`. This
 extends a list of functions on `Fin n` to all functions on `Fin (n + 1)` by fixing the new argument
 to each relation in turn.
 
-`graphsAux_length` counts the result: three times the previous count. The completeness direction -
-that every function appears in the list - is not proved here; it needs the three-way case split on
-the new argument and is the next step. Without it the enumeration is a candidate, not yet a proof
-that the search space is exhausted.
+`graphsAux_length` counts the result: three times the previous count, so `3 ^ n` functions.
+Completeness - that every function appears in the list - is `graphsAux_complete` below, by the
+three-way case split on the new argument through `mem_succ_of_mem`. The enumeration therefore
+exhausts the search space.
 -/
 
 namespace NobleM2.SizeChange

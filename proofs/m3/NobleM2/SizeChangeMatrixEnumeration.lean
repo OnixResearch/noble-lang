@@ -3,13 +3,13 @@ import NobleM2.SizeChangeMatrix
 /-!
 # Enumerating matrix space (issue #101)
 
-The `n * n` bound needs a finite enumeration of matrices, as the vector lane's bound needed one for
+A composite search needs a finite enumeration of matrices, as the vector lane's bound needed one for
 `Fin n → Rel`. The construction is generalised over the codomain: `funAux k codomain` lists every
 `Fin k → α` built from a complete enumeration of `α`, and applying it twice enumerates
 `MGraph n = Fin n → Fin n → Rel4`.
 
-Completeness is the point: an enumeration is a proof that the search space is exhausted. The count
-(`(4 ^ n) ^ n`) is the next step and is not proved here.
+Completeness is the point: an enumeration is a proof that the search space is exhausted
+(`matrixAux_complete`), and `matrixAux_length` counts it: `(4 ^ n) ^ n`.
 -/
 
 namespace NobleM2.SizeChange

@@ -5,18 +5,23 @@ import NobleM2.SizeChangeClosureSound
 
 The vector type `Graph n = Fin n → Rel` cannot express the classical criterion: it records one
 relation per measure and no relation between two measures, so "a strict edge on a cycle" has no
-referent. `SizeChangeCriterion` proves the consequence - the per-member premise is unsound there.
+referent (a cycle through two different measures is unrepresentable). `SizeChangeCriterion` proves
+the consequence - the per-member premise is unsound for the vector lane's `Run`, because that model
+constrains only `.decrease` steps and the lane has no relation meaning "does not increase".
 
 This module starts the redesign additively: nothing above changes meaning, and the matrix lane lives
-on its own. It fixes the type and the algebra; the criterion and its SCC argument are the next step.
+on its own. It fixes the type and the algebra; the criterion and its SCC argument are not attempted
+here.
 
 ## Why four relations
 
 The classical criterion separates *strict* from *non-strict* edges: a cycle is only useful if some
 edge on it is strict, and non-increasing edges are what let a path close without progress. With only
-`{decrease, equal, unknown}` there is no way to say "does not increase", so a cycle of `unknown`
-edges - the counterexample in `SizeChangeCriterion` - cannot be distinguished from a cycle of
-non-increasing ones. Hence four:
+`{decrease, equal, unknown}` there is no way to say "does not increase": `unknown` permits a rise, and
+the alternating family of `SizeChangeCriterion.alternate_criterion_unsound` is accepted there
+although it runs, precisely because its `equal` steps are unconstrained by `Run`. A matrix entry can
+say `nonIncrease` or `same`, and `MatrixSatisfies` gives those relations meaning on a step. Hence
+four:
 
 | Relation | Meaning |
 |---|---|
@@ -26,8 +31,10 @@ non-increasing ones. Hence four:
 | `unknown` | nothing known |
 
 Composition follows the usual size-change table (transitive closure of the four relations);
-`Rel4.join` picks the more informative of two parallel paths, so a matrix product over a finite
-index set is defined without choice.
+`Rel4.join` takes the least upper bound of two parallel paths in the order
+`unknown < same < nonIncrease < strict` (larger means less informative), so a matrix product over a
+finite index set is defined without choice. The join is sound but coarse: `same` joined with
+`nonIncrease` is `nonIncrease`, which loses the equality (`join_loses_same`).
 -/
 
 namespace NobleM2.SizeChange
@@ -57,7 +64,8 @@ def compose : Rel4 → Rel4 → Rel4
   | .nonIncrease, .nonIncrease => .nonIncrease
   | .same, .same => .same
 
-/-- Joining two parallel paths keeps the more informative relation. -/
+/-- Joining two parallel paths returns a relation both imply: the least upper bound in
+`unknown < same < nonIncrease < strict` (larger is less informative). -/
 def join : Rel4 → Rel4 → Rel4
   | .strict, _ => .strict
   | _, .strict => .strict
@@ -70,6 +78,11 @@ def join : Rel4 → Rel4 → Rel4
 /-- Every relation composes with itself to itself, as usual for transitive relations. -/
 theorem compose_self (r : Rel4) : r.compose r = r := by
   cases r <;> rfl
+
+/-- The join is coarse, not informative: `same` and `nonIncrease` are different relations, and their
+join is the weaker one. A matrix entry therefore cannot record "equal on one path, non-increasing on
+another" -- only the common consequence. -/
+theorem join_loses_same : Rel4.same.join .nonIncrease = .nonIncrease := rfl
 
 /-- A strict relation absorbs composition on either side, provided the other factor is known. -/
 theorem compose_strict_left {r : Rel4} (h : r ≠ .unknown) : Rel4.strict.compose r = .strict := by

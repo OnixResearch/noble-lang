@@ -3,30 +3,26 @@ import NobleM2.SizeChangeCriterion
 /-!
 # Soundness of a uniform closure measure (issue #101)
 
-The closure criterion asks that every closure member carry *some* strict edge. That is not enough for
-termination by itself - the strict edges could sit at different measures on different members, which
-is exactly what the cycle argument has to rule out.
+The general closure criterion asks that every closure member carry *some* strict edge. That is not
+enough for termination in this model: the strict edge may sit at a different measure on different
+members, and `Run` constrains only `.decrease` steps, so a composed member that is `equal` at a
+measure permits that measure to rise again. `SizeChangeCriterion` refutes the per-member premise with
+such a family.
 
 What is enough, and is proved here: a **fixed** measure decreases at every closure member. Then
 whichever site a run chooses, that step's graph is a closure member, so the measure drops, and no
-infinite run exists. This condition sits strictly between the shared-measure criterion (which asks
-it of the sites only) and the general closure criterion:
+infinite run exists.
 
-- `closure_decreases_at` lifts "this measure decreases at every site" to every closure member;
-- `closure_uniform_terminates` is the soundness theorem for the uniform premise;
-- `splitSites_no_uniform` shows the separated family has no uniform measure, so uniformity is not a
-  consequence of the general criterion - the gap the cycle argument must close.
+- `closure_uniform_terminates` is the soundness theorem for that premise;
+- `closure_uniform_iff_sites` shows the premise is exactly the sites' shared-measure criterion:
+  every site is a closure member, so nothing is gained by moving the quantifier to the closure. A
+  stronger criterion therefore has to add a semantic condition on non-strict steps, not more
+  composition;
+- `splitSites_no_uniform` exhibits a family with no uniform measure, so the uniform premise is not
+  a consequence of the separated-decrease shape of a family.
 -/
 
 namespace NobleM2.SizeChange
-
-/-- A measure decreasing at every site decreases at every closure member. -/
-theorem closure_decreases_at {k n : Nat} {sites : Sites k n} {i : Fin n}
-    (h : ∀ s, sites s i = .decrease) : ∀ g, Closure sites g → g i = .decrease := by
-  intro g member
-  induction member with
-  | site s => exact h s
-  | compose _ _ left _ => exact composeGraph_decrease_left left
 
 /-- **Soundness for a uniform closure measure**: no run respects it. -/
 theorem closure_uniform_terminates {k n : Nat} {sites : Sites k n} {i : Fin n}
@@ -36,14 +32,20 @@ theorem closure_uniform_terminates {k n : Nat} {sites : Sites k n} {i : Fin n}
   intro t
   exact run.respects t i (h (sites (run.choose t)) (.site (run.choose t)))
 
-/-- The uniform premise follows from a site family whose shared measure decreases everywhere. -/
-theorem uniform_of_sites_uniform {k n : Nat} {sites : Sites k n} {i : Fin n}
-    (h : ∀ s, sites s i = .decrease) : ∀ g, Closure sites g → g i = .decrease :=
-  closure_decreases_at h
+/-- **The uniform premise is the shared-measure criterion**: quantifying over closure members adds
+nothing, because every site is a member and every member's decrease follows from the sites'. -/
+theorem closure_uniform_iff_sites {k n : Nat} (sites : Sites k n) :
+    (∃ i, ∀ g, Closure sites g → g i = .decrease) ↔ (∃ i, ∀ s, sites s i = .decrease) := by
+  constructor
+  · rintro ⟨i, h⟩
+    exact ⟨i, fun s => h (sites s) (.site s)⟩
+  · rintro ⟨i, h⟩
+    exact ⟨i, closure_decreases_at h⟩
 
 /-! ## The separated family has no uniform measure -/
 
-/-- No measure decreases at every member of `splitSites`'s closure. -/
+/-- No measure decreases at every member of `splitSites`'s closure: site 0 is `unknown` at measure
+1, so the site itself refutes measure 1, and site 1 refutes measure 0. -/
 theorem splitSites_no_uniform :
     ¬ ∀ g, Closure splitSites g → g (1 : Fin 2) = .decrease := by
   intro h
