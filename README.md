@@ -138,6 +138,15 @@ The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 incompatible tools produce an explicit refusal. The development shell alone
 does not install these runtime tools.
 
+**Host-local Wasmtime source.** `flake.nix` sets
+`selectedWasmtimeSource = builtins.path { path = /nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source; … }`,
+and `crates/noble-cli/Cargo.toml` and `crates/noble-wasm/Cargo.toml` declare
+`wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", … }`.
+No flake input or fetcher produces that store path, so evaluation and the crate
+build both require a host that already has it. On any other machine flake
+evaluation fails at `builtins.path` and the path dependency cannot resolve;
+supply the reviewed source closure at that path (or change the pin and both
+manifests together) before building.
 
 ### Independent Mathlib comparison for implemented I64 arithmetic
 
@@ -761,8 +770,11 @@ Six additional execution records (03/04/05/09/11/12) retain the preliminary
 candidate. The final integrated-source cold-review receipt and bounded terminal
 receipt bind the exact case records, source freeze and measurement packet;
 proof remains open.
-CASE-02 alone remains `absent/not-run/open/unassessed` with `evidence: []`:
-complete zero-use capability closure is missing (637 relevant unknowns). The
+CASE-02 alone remains `absent/not-run/open/unassessed`: complete zero-use
+capability closure is missing (637 relevant unknowns). Its only recorded
+evidence is the static crate-boundary gate
+[verification/ngraph-purity/observation.json](verification/ngraph-purity/observation.json),
+which is supporting evidence and does not discharge the case. The
 [lifecycle evidence record](verification/numeric-graph-v1/README.md) gives the
 exact library mappings, supplemental runtime bounds and current selected-tool
 boundary. The eight-case historical acceptance and six additional finite
@@ -774,9 +786,11 @@ Injected `IdentityScheme`/`IdentityHasher` implementations and caller-owned
 destruction are not made effect-free by it. A retained hostile consumer
 returned `I64(7)` while recording 42 reads and 42 writes in the injected hasher
 callbacks; this is callback-effect evidence, not a semantic observer control or
-a destructor measurement. CASE-02 still requires the selected
+destructor measurement. CASE-02 still requires the selected
 compiler-authenticated complete capability closure and remains
-`absent/not-run/open/unassessed` with `evidence: []`.
+`absent/not-run/open/unassessed`. The static boundary gate is supporting
+evidence, not closure, and its receipt lists 23 library sources while
+`crates/noble-ngraph/src` now holds 27, so its scan and source count are stale.
 
 **CPU follow-on (2026-10-16).** A source-pinned comparison of the existing CPU
 workloads motivated removing per-instruction table copies and repeated derivative

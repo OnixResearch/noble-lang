@@ -145,7 +145,7 @@
         {
           "kind": "test",
           "subject": "TEXT-02",
-          "claim": "The compiled CLI child `session --declared-modules --text-byte-cursor` reports profile Declared-Text-v1, outcome normal, zero guest requests, zero ambient fallback calls, and preserves the original immutable Text handle at `\"ab\" 0 text.byte`. Twelve real-source combined-profile checks in crates/noble-wasm/tests/declared_text.rs cover sources epochs, source-bound signed folds and nominal results, signed I64 order kept out of ordinary declared modules, lexical parameters and quotation, fail-closed local reuse/discard/capture/duplicate names, ordinary declared modules not acquiring the byte cursor, nominal signature owner binding and exact named digit ownership.",
+          "claim": "The compiled CLI child `session --declared-modules --text-byte-cursor` reports profile Declared-Text-v1, outcome normal, zero guest requests, zero ambient fallback calls, and preserves the original immutable Text handle at `\"ab\" 0 text.byte`; that is the only combined-profile vector retained in the observation, and it matches the declared `\"ab\"@0 -> 97`. Eight `#[test]` functions in crates/noble-wasm/tests/declared_text.rs cover sources epochs, source-bound signed folds and nominal results, signed I64 order kept out of ordinary declared modules, lexical parameters and quotation, fail-closed local reuse/discard/capture/duplicate names, ordinary declared modules not acquiring the byte cursor, nominal signature owner binding and exact named digit ownership. The case's second declared vector, `\"Aé\"@2 -> 169`, is bound by `declared_text_reads_multibyte_vector` in crates/noble-cli/tests/smoke.rs, which runs `\"A\\xc3\\xa9\" 2 text.byte` through the combined `--declared-modules --text-byte-cursor` framed session and asserts profile `Declared-Text-v1`, outcome `normal` and stack `[\"Aé\", \"169\"]`.",
           "revision": "0.1.0-draft.5",
           "source_revision": "sha256:3d0c08be31d768ef4d837c6ecf83e16fd4ffab075d9dfcf24d8a3cb186961b10",
           "result": "passed",
@@ -161,6 +161,7 @@
           },
           "assumptions": [
             "Finite compiled managed-Wasm observations of 25 children, not source-bound, MA1 or CALC acceptance.",
+            "The receipt records `source_bound: false`, and its `source_revision` is the hash of the recorded executable, not of a source tree.",
             "The combined profile keeps the declared-module discipline stated by DX-TEXT-01; no universal refinement is claimed."
           ]
         }

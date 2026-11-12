@@ -35,7 +35,7 @@ Draft.4 adopts ND-21 through ND-25: whole-project Aeneas-first Rust, mandatory k
 
 ## First-class verification follow-up
 
-Draft.5 adopts ND-26 through ND-30. SPEC-V002 now requires typed contract inputs, first-class companions, checked composition, runtime family instantiation, and explicit applicability checks. MC1/MC2 and PO-19 through PO-21 track implementation and proof work separately. The new contract scenarios remain unexecuted.
+Draft.5 adopts ND-26 through ND-30. SPEC-V002 now requires typed contract inputs, first-class companions, checked composition, runtime family instantiation, and explicit applicability checks. MC1/MC2 and PO-19 through PO-21 track implementation and proof work separately. At draft.5 the new contract scenarios remained unexecuted; the current ledger records CONTRACT-17/18/19/21/22/25 `implemented/passed` and CONTRACT-24 `partial/passed` with proof open, while CONTRACT-20 and CONTRACT-23 remain absent/not-run.
 
 ## Not closed by this revision
 

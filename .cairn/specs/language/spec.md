@@ -2586,9 +2586,9 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 #### Scenario: WORKER-12 source-bound denial adapter
 
-- GIVEN the existing unexecuted [WORKER-12](../../../specs/conformance/worker-cases.json) design, the exact checked `ledger@1.capture` source fixture and separately host-selected bound adapter identity/slot described in the [WORKER-12 adapter design](../../archive/2026-10-21-worker-code-export-bound-effect/design.md)
+- GIVEN the executed [WORKER-12](../../../specs/conformance/worker-cases.json) case and its separately retained [acceptance receipt](../../../verification/worker12/acceptance.json), the exact checked `ledger@1.capture` source fixture and separately host-selected bound adapter identity/slot described in the [WORKER-12 adapter design](../../archive/2026-10-21-worker-code-export-bound-effect/design.md)
 - WHEN an independently checked `I64 -- I64 ! test.code-export` Program invokes its bound operation in a real generated Core guest linked to the deny-only import
-- THEN exactly one real host request is counted, zero protected operations and capture publications occur, the generated execution remains denied even if the host reports success, and forged or unregistered bindings are rejected before guest execution; WORKER-12's absent/not-run/open/unassessed state does not change without its separately retained component scenario evidence
+- THEN exactly one real host request is counted, zero protected operations and capture publications occur, the generated execution remains denied even if the host reports success, and forged or unregistered bindings are rejected before guest execution; WORKER-12 stays `implemented/passed/open/explicit` on that retained evidence, and this scenario design adds no evidence of its own
 
 ### Requirement: H-HOST-03
 r[H-HOST-03]

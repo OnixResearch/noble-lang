@@ -1,6 +1,7 @@
 # Region table refinement (`behavioral-effect-protocol` T4)
 
-Lean-kernel check for obligation T4 of `.cairn/changes/behavioral-effect-protocol`: the
+Lean-kernel check for obligation T4 of the change now archived at
+`.cairn/archive/2026-11-08-behavioral-effect-protocol`: the
 `ownership::Table` transitions the bounded-region adapter uses refine `RegionProtocol-v1`.
 
 The lane builds `proofs/m5/RegionTable.lean` in an isolated project with the pinned Lean toolchain,

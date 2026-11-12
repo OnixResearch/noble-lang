@@ -1,6 +1,7 @@
 # Live-dispatch host-lane recon (VC-LIVE-03)
 
-Read-only reconnaissance for `.cairn/changes/root-pinned-live-dispatch` task
+Read-only reconnaissance for the task in the change now archived at
+`.cairn/archive/2026-10-27-root-pinned-live-dispatch/`
 `r[VC-LIVE-03]`: whether an interface-compatible two-version fixture — one version
 emitting a distinguished event in the caller, the later one emitting the same
 event in the callee — can be bound to an **existing** host observation, as the
@@ -58,7 +59,7 @@ invoke/bootstrap:
 3. **denied dispatch or effect before the event**: with the effect grant withheld
    for the emitting slot, the dispatch is refused *and* no `effect` row exists, so
    no event-count conclusion applies; the spec's own clause
-   (`.cairn/changes/root-pinned-live-dispatch/specs/live-dispatch-reference/spec.md:29-40`)
+   (`.cairn/archive/2026-10-27-root-pinned-live-dispatch/specs/verification/spec.md:29-40`)
    forbids counting that run.
 4. **abnormal prefix**: a stopped execution keeps the committed `effect` rows and
    is presented as a prefix, never as rollback.

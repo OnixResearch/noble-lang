@@ -7,7 +7,7 @@
 ## Phase 2: Independent comparison and receipts
 
 - [x] [serial] Write \`verification/service-ref/cases.mjs\` as an independent decoder from the Lean model and generate the case file: 269 cases covering the alphabet edges, name lengths 0/1/32/33, wire lengths 64/65, configured depths 0/1/4/5, truncation at every offset, appended bytes, one-byte substitutions and seeded generated values. r[VC-REF-02]
-- [x] [serial] Compare the Rust codec against that case file in \`crates/noble-kernel/tests/service_ref_differential.rs\`, asserting the one documented bracket-scan divergence rather than pinning it as agreement. r[VC-REF-02]
+- [x] [serial] Compare the Rust codec against that case file in `crates/noble-kernel/tests/m7-dataspace.rs` (moved there from the earlier `service_ref_differential.rs`, as the retained receipt's `lane_file` records), asserting the one documented bracket-scan divergence rather than pinning it as agreement. r[VC-REF-02]
 - [x] [serial] Retain \`verification/service-ref/differential.json\`: clean commit, \`rustc 1.96.0-nightly\`, host \`Linux 6.18.54 x86_64\`, the case-file and lane digests, the coverage counts and the open Rust-to-model edge. r[VC-REF-03]
 
 - [x] [serial] Correct the model's depth scan to a balanced one after a finite Lean-generated corpus comparison disagreed with the codec on one stray-opener input, realign \`verification/service-ref/cases.mjs\` and replace the recorded divergence with three \`control-\` cases that a counting-only scan would decide differently; receipt \`verification/foundation/receipts/134b215c5/\` records 454 theorems with \`clean_source: true\`. r[VC-REF-02]
