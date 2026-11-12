@@ -8,9 +8,12 @@
     tigerstyle::underscore_in_module_filename,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
-//! Design D3 (NGRAPH-CASE-14): every identity, observation and training
-//! result that the pre-cutover experiment recorded at 66eb7cd is reproduced
-//! byte for byte by `noble-ngraph` with the injected BLAKE3 scheme. The
+//! Design D3 (NGRAPH-CASE-14): every observation, campaign and training result
+//! that the pre-cutover experiment recorded at 66eb7cd, and every *authored*
+//! identity, is reproduced byte for byte by `noble-ngraph` with the injected
+//! BLAKE3 scheme. The four extracted identities (I1-I4) were re-recorded when
+//! the subject identity began hashing the submission environment and each
+//! body's text-literal bytes, so those eight values differ from 66eb7cd; the
 //! authored identities are also cross-checked against the Phase B receipt
 //! (`verification/ngraph/phase-b-core.json`).
 
