@@ -33,6 +33,40 @@ fn stated(info: &str) -> Result<&str, String> {
     }
 }
 
+/// The exact constraint a rejected example states, from its `constraint=`
+/// attribute. A rejection example must name it: the outcome class alone is
+/// satisfied by an unrelated refusal.
+fn stated_constraint(info: &str) -> Result<Option<&str>, String> {
+    let mut found: Option<&str> = None;
+    for part in info.split_whitespace() {
+        if let Some(value) = part.strip_prefix("constraint=") {
+            found = Some(value);
+        }
+    }
+    Ok(found)
+}
+
+/// The constraint's declared vocabulary name, without its payload.
+const fn constraint_name(constraint: &noble_kernel::untrusted::Constraint) -> &'static str {
+    match constraint {
+        noble_kernel::untrusted::Constraint::StackJoin => "StackJoin",
+        noble_kernel::untrusted::Constraint::StackOrder => "StackOrder",
+        noble_kernel::untrusted::Constraint::EffectInclusion(_) => "EffectInclusion",
+        noble_kernel::untrusted::Constraint::Eligibility(_) => "Eligibility",
+        noble_kernel::untrusted::Constraint::UnknownEffect(_) => "UnknownEffect",
+        noble_kernel::untrusted::Constraint::InstantiationKind => "InstantiationKind",
+        noble_kernel::untrusted::Constraint::InstantiationArity => "InstantiationArity",
+        noble_kernel::untrusted::Constraint::MalformedReference(_) => "MalformedReference",
+        noble_kernel::untrusted::Constraint::UnknownDefinition(_) => "UnknownDefinition",
+        noble_kernel::untrusted::Constraint::InvalidType => "InvalidType",
+        noble_kernel::untrusted::Constraint::InvalidContract => "InvalidContract",
+        noble_kernel::untrusted::Constraint::PrivateDefinition(_) => "PrivateDefinition",
+        noble_kernel::untrusted::Constraint::CyclicWitness => "CyclicWitness",
+        noble_kernel::untrusted::Constraint::BorrowProvenance => "BorrowProvenance",
+        noble_kernel::untrusted::Constraint::SlotSite => "SlotSite",
+    }
+}
+
 const fn outcome_name(outcome: &noble_kernel::untrusted::Outcome) -> &'static str {
     match outcome {
         noble_kernel::untrusted::Outcome::Accepted(_) => "accepted",
@@ -111,6 +145,7 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
             continue;
         }
         let expected = stated(&block.info)?;
+        let expected_constraint = stated_constraint(&block.info)?;
         let parsed = json::parse(&block.body).map_err(|problem| {
             format!(
                 "{}:{}: JSON parse: {problem}",
@@ -130,6 +165,31 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
                 block.file.display(),
                 block.line
             ));
+        }
+        if expected == "invalid" {
+            let stated_name = expected_constraint.ok_or_else(|| {
+                format!(
+                    "{}:{}: a rejection example must name its `constraint=`",
+                    block.file.display(),
+                    block.line
+                )
+            })?;
+            let noble_kernel::untrusted::Outcome::Invalid(diagnostic) = &outcome else {
+                return Err(format!(
+                    "{}:{}: expected an invalid outcome carrying a constraint",
+                    block.file.display(),
+                    block.line
+                ));
+            };
+            let actual_name = constraint_name(&diagnostic.constraint);
+            if actual_name != stated_name {
+                return Err(format!(
+                    "{}:{}: example states constraint={stated_name}, checker returned {actual_name} ({:?})",
+                    block.file.display(),
+                    block.line,
+                    diagnostic.constraint
+                ));
+            }
         }
         executed += 1;
         for node in &example.candidate.nodes {

@@ -115,7 +115,11 @@ stays unexecuted.
 
 Format: the fence header is `noble-check expect=<outcome>` with `<outcome>`
 one of `accepted`, `invalid`, `unsupported`, `exhausted`, `internal-failure`.
-The body is one JSON object with `request` and `candidate` fields:
+A rejection must also state `constraint=<name>`, the diagnostic constraint
+kind the checker must return (`StackJoin`, `StackOrder`, `EffectInclusion`,
+`Eligibility`, …); the suite compares that name, so a rejection refused by a
+different premise fails the example. The body is one JSON object with
+`request` and `candidate` fields:
 
 - `request.expected` holds `in`/`out` stacks and `allowed_effects` as above;
   `request.limits` is optional (defaults: bytes 65536, nodes 256, depth 32,
@@ -162,7 +166,7 @@ The body is one JSON object with `request` and `candidate` fields:
   "body":[0,1]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"i64":1},"inst":{"v0":[]}},
@@ -171,15 +175,16 @@ The body is one JSON object with `request` and `candidate` fields:
   "body":[0,1,2]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=EffectInclusion
 {"request":{"expected":{"in":[],"out":[{"program":{"in":[],"out":[{"unit":{}}],"effects":[]}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
+   {"kind":"literal","lit":{"text":"x"},"inst":{"v0":[]}},
    {"kind":"invocation","def":"test.emit","inst":{"v0":[]}},
-   {"kind":"quotation","body":[0],"inst":{"v0":[],"v1":[],"v2":[{"unit":{}}],"v3":[]}}],
-  "body":[1]}}
+   {"kind":"quotation","body":[0,1],"inst":{"v0":[],"v1":[],"v2":[{"unit":{}}],"v3":[]}}],
+  "body":[2]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=Eligibility
 {"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[{"resource":"test.counter"},{"resource":"test.counter"}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"dup","inst":{"v0":[],"v1":{"resource":"test.counter"}}}],
