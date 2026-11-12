@@ -8,7 +8,9 @@ Since the `numeric-graph-v1` change, the graph library is the `no_std` crate [no
 
 [rewrite-quality-v1.txt](rewrite-quality-v1.txt) is the frozen optimization-quality corpus for the
 certified graph rewrites of `crates/noble-ngraph/src/cert.rs`: its schema is
-`noble-rewrite-quality/v1`, it binds the three rules it exercises and declares, per fixture, the
+`noble-rewrite-quality/v1`, it binds the one rule its proposers emit (`fold-add-constants`; the
+identity rules are recorded only by `cert::emit`, which no proposer here uses, and the acceptance
+test requires the bound set to equal the emitted set) and declares, per fixture, the
 residual property its result must reach (`no-foldable-sites`). Its seven raw-graph fixtures name
 independent and chained opportunities, ordered outputs, shared operands, an `i64::MAX + 1` wrapping
 boundary and a constant in the right operand. Names are not executable-coverage evidence: the v2
