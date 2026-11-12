@@ -1238,6 +1238,7 @@
     "held_gaps": {
       "NGRAPH-CASE-02": "Complete forbidden-capability-use=0 closure is missing: 637 relevant unknowns remain; no_std, dependency inspection, a static source-text boundary scan, an ordinary source-only collection or artifact integrity verification is not compiler-authenticated caller/callback closure."
     },
+    "evidence_gaps": "../verification/postpromotion-evidence-gap-20261112.json",
     "selected_tool_boundary": {
       "scope": "Complete 88-unit ordinary source-only collection and actual permanent-wrapper artifact consumer; not authenticated-origin or Architecture PASS.",
       "source_only_index": "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/trait-resolver-r8-source-only-final-index.json",
