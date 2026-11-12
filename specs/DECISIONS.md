@@ -175,7 +175,7 @@ neither project supplies Noble acceptance evidence or a runtime dependency.
 | ID | Decision | Consequence |
 |---|---|---|
 | ND-59 | Freeze human-owned pure MC2 law intent before candidate edits and check exact proof, prepared candidate and artifact independently at an optional release gate | VC-OWNER-01/CONTRACT-16 are new, unexecuted release-policy scope; MC2's completed proof/admission controls and ordinary proof-free execution remain unchanged |
-| ND-60 | Define the four Result conveniences as ordinary selected-arm variant programs | DX-04 remains unexecuted; concrete generic schema/module signatures and resource-positive behavior need separate gates, not a new IO monad |
+| ND-60 | Define the four Result conveniences as ordinary selected-arm variant programs | DX-04 is `implemented/passed` with proof open; concrete generic schema/module signatures and resource-positive behavior still need separate gates, not a new IO monad |
 | ND-61 | Measure type-directed finite ADT, ANF and call lowering only after M3 on selected managed-memory Wasm | ADAPT-17 is not M3's completed comparison, an unconditional backend theorem, a speed claim, or evidence for WIT resource ownership |
 | ND-62 | Defer an independent bounded resource-free pure fork/join trial until language gates | ADAPT-18 cannot rewrite M6 ordered imports or treat copyable channels, aliased arrays, noncancelling timeouts, fail-stop OOM, foreign C/JS or GPU scheduling as task ownership |
 | ND-63 | Borrow qcue's independent bounded finite-model and preservation-test methods for the optional owner-law research lane | DX-13 remains a design review; no CUE dependency, live refinement, higher-rank/impredicative types, proof-time native execution or second proof kernel; model agreement never grants proof/release |
@@ -195,8 +195,11 @@ metamorphic checks against a separately checked proof/admission gate.
 | ND-65 | Restrict predicative Type0 universals to independently checked `PureTyCode` and dependent Eq over total eligible values | No `Type0:Type0`, unrestricted Lean `Type`, resource laundering, runtime dependent `Program` or implicit proof-to-authority conversion |
 | ND-66 | Check Noble proof terms against exact claims via independent strict Lean, and reuse existing Charon → Aeneas → Lean for eventual actual Rust implementation refinement | Aeneas does not parse/check Noble source; source/claim translation correctness and actual Rust correspondence remain separately open; Bend2/Eurydice/Scylla are not proof dependencies |
 
-The [new active change](../.cairn/changes/intrinsic-noble-proofs/proposal.md) and
-CONTRACT-17–25 are spec-only unexecuted designs. For an owner-law release,
+The [new active change](../.cairn/changes/intrinsic-noble-proofs/proposal.md)
+covers CONTRACT-17–25. CONTRACT-17/18/19/21/22/25 are `implemented/passed`,
+CONTRACT-24 is `partial/passed`, and CONTRACT-20/23 remain
+`absent/not-run/open/unassessed`; every passed row keeps proof open, so none is
+a spec-only design and none is a proof claim. For an owner-law release,
 candidate-authored module contracts do not replace the pre-frozen independent
 VC-OWNER-01 law. The new change does not close or edit the active Bend/qcue
 change or alter older MC1/MC2 receipts.

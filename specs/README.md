@@ -221,7 +221,7 @@ proof gates; neither the native receipt nor the task-core audit closes them.
 1. Require a WasmGC/managed-linear-memory comparison without selecting either backend.
 2. Add native-boundary review, scoped Miri checks, and explicit decoding stages. Zerocopy remains optional.
 3. Clarify branch joins, Rust domain types, resource cleanup, contract snapshots, and mandatory admission checks.
-4. Add [adaptation scenario designs](conformance/adaptation-cases.json). Their ledger now records the scoped M3 execution of ADAPT-08/09/10/12; the remaining designs are unexecuted. [Source provenance](SOURCES.md) records the study and adoption boundary.
+4. Add [adaptation scenario designs](conformance/adaptation-cases.json). At draft.3 their ledger recorded the scoped M3 execution of ADAPT-08/09/10/12 and the remaining designs as unexecuted; the current ledger records 13 ADAPT cases `implemented/passed` with proof open or not-applicable, and ADAPT-02, ADAPT-03, ADAPT-16, ADAPT-17 and ADAPT-18 remain absent or not-run. [Source provenance](SOURCES.md) records the study and adoption boundary.
 
 ## Authority rule
 
