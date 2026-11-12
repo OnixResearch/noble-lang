@@ -452,12 +452,6 @@ pub fn check_with(
             _ => {}
         }
     }
-    budget(
-        crate::diag::BudgetKind::GraphBytes,
-        budgets.graph_bytes,
-        retained_bytes(&graph),
-    )?;
-
     check_topology(&graph)?;
     let slot_nodes = check_slots(&graph)?;
     let types = check_types(&graph)?;
@@ -468,6 +462,11 @@ pub fn check_with(
         crate::diag::BudgetKind::Layers,
         budgets.layers,
         u64::from(layers),
+    )?;
+    budget(
+        crate::diag::BudgetKind::GraphBytes,
+        budgets.graph_bytes,
+        retained_bytes(&graph),
     )?;
     let id = graph.logical_id(ids);
     let param_slots = graph.param_slots();
@@ -1177,4 +1176,73 @@ pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
         }
     }
     memo.get(&root).copied()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::diag::{Code, Malformed};
+
+    struct TestHasher(u64);
+
+    impl crate::identity::IdentityHasher for TestHasher {
+        fn update(&mut self, bytes: &[u8]) {
+            for &byte in bytes {
+                self.0 = self.0.wrapping_mul(31).wrapping_add(u64::from(byte));
+            }
+        }
+
+        fn finish(self: alloc::boxed::Box<Self>) -> crate::ir::Digest {
+            let mut digest = [0u8; 32];
+            digest[..8].copy_from_slice(&self.0.to_le_bytes());
+            digest
+        }
+    }
+
+    struct TestIds;
+
+    impl crate::identity::IdentityScheme for TestIds {
+        fn name(&self) -> &'static str {
+            "test"
+        }
+
+        fn start(&self) -> alloc::boxed::Box<dyn crate::identity::IdentityHasher + '_> {
+            alloc::boxed::Box::new(TestHasher(0))
+        }
+    }
+
+    /// A graph whose only addition names a node that does not exist: a topology refusal
+    /// that makes the graph malformed.
+    fn unknown_operand() -> crate::ir::Graph {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "stage-order"),
+        );
+        let missing = builder.op(crate::ir::Op::I64Add(
+            crate::ir::NodeId(9),
+            crate::ir::NodeId(9),
+        ));
+        builder.output(missing);
+        builder.finish()
+    }
+
+    #[test]
+    fn a_malformed_graph_is_refused_before_the_retained_byte_budget() {
+        let scheme = TestIds;
+        let budgets = crate::check::Budgets {
+            graph_bytes: 0,
+            ..crate::check::Budgets::default()
+        };
+        let refusal = super::check_with(&scheme, unknown_operand(), &budgets)
+            .expect_err("a graph naming a missing node is refused");
+        assert_eq!(
+            refusal.code,
+            Code::GraphMalformed(Malformed::UnknownNode),
+            "{refusal}"
+        );
+        assert!(
+            refusal.budget.is_none(),
+            "a topology refusal is not a budget refusal: {refusal}"
+        );
+    }
 }
