@@ -127722,54 +127722,6 @@
       "refinement": "open"
     },
     {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19097:19605",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19623:22013",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:22439:24982",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:26847:27232",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:27250:27685",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:27703:28218",
-      "refinement": "not-applicable"
-    },
-    {
       "category": "body",
       "disposition": "open",
       "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -127831,6 +127783,110 @@
       "note": "Renewed renewal after issue 108 guarded rewrite premise (guard_pins_zero and its tests) from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::cert::tests::guarded_step",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19307:19815",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19833:22223",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:22649:25192",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28080:28470",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28488:28928",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28946:29471",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:29488:29964",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:29981:30980",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:30998:31536",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_fact_is_stale",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_guard_comes_after_the_node",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_result_is_substituted",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::cert::tests::guarded_with",
       "refinement": "open"
     }
   ],
