@@ -1,4 +1,74 @@
 #[test]
+fn slot_reuse_requires_finalization_of_the_previous_task() -> Result<(), String> {
+    // Two slots: a one-slot table refuses a second admission through the
+    // reservation check, so the finalized-slot rule can only be observed here.
+    let mut table = crate::support::table()?;
+    let first = crate::support::accepted(table.admit(crate::support::request(), ()))?;
+    let second = crate::support::accepted(table.admit(crate::support::request(), ()))?;
+    let first_slot = first.task.handle().slot;
+    let second_handle = second.task.handle();
+    let second_slot = second_handle.slot;
+    assert_eq!(
+        table.snapshot(first_slot),
+        Some(first.decision.record),
+        "the second admission does not overwrite the first live record"
+    );
+    assert_ne!(first_slot, second_slot, "each admission takes its own slot");
+
+    // Both records are live and unfinalized: the table must refuse rather
+    // than overwrite either one's pins and reservation.
+    let full = table
+        .admit(crate::support::request(), ())
+        .err()
+        .ok_or("a full table of unfinalized tasks admitted a third task")?;
+    assert_eq!(full.error, noble_kernel::async_tasks::Error::TaskCapacity);
+
+    // Finalize the second task only. Its slot becomes reusable; the first
+    // live record must be left exactly as admitted.
+    let second_generation = second_handle.generation;
+    crate::support::accepted(table.cancel(second.task, crate::support::request().context))?;
+    crate::support::accepted(table.native_stopped(second.callback))?;
+    crate::support::accepted(table.complete(
+        second.callback,
+        noble_kernel::async_tasks::Outcome::Success,
+        crate::support::completion(),
+    ))?;
+    crate::support::accepted(table.settle_pins(second.callback, 3))?;
+    crate::support::accepted(table.cleanup(
+        second_handle,
+        noble_kernel::async_tasks::Obligations {
+            inputs: 7,
+            results: 0,
+            buffers: 5,
+        },
+    ))?;
+    crate::support::accepted(table.finish(second_handle))?;
+
+    let reused = crate::support::accepted(table.admit(crate::support::request(), ()))?;
+    assert_eq!(
+        reused.task.handle().slot,
+        second_slot,
+        "the finalized slot is the one reused"
+    );
+    assert_ne!(
+        reused.task.handle().generation,
+        second_generation,
+        "reuse starts a new generation"
+    );
+    assert_eq!(
+        table.snapshot(first_slot),
+        Some(first.decision.record),
+        "the live task's record is not overwritten"
+    );
+    crate::support::accepted(table.complete(
+        first.callback,
+        noble_kernel::async_tasks::Outcome::Success,
+        crate::support::completion(),
+    ))?;
+    Ok(())
+}
+
+#[test]
 fn terminal_slot_reuse_rejects_stale_native_events() -> Result<(), String> {
     let mut bound = crate::support::limits();
     bound.tasks = 1;

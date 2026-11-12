@@ -1,6 +1,46 @@
 //! Checkpoint transitions preserve consumed authority and carried quota reservations.
 
 #[test]
+fn backwards_time_with_a_fresh_sequence_is_refused() -> Result<(), String> {
+    let mut fixture = super::super::support::fixture()?;
+    // A fresh sequence number alone cannot make a backwards snapshot fresh:
+    // the time check refuses it while the sequence check would pass.
+    assert_eq!(
+        fixture
+            .table
+            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
+                sequence: 4,
+                now: 49,
+            }),
+        Err(noble_kernel::authority::SetupError::StaleCheckpoint),
+        "a time step below the current checkpoint is refused"
+    );
+    // The refused call did not move the table: the same instant with a fresh
+    // sequence is still accepted, and the table then holds sequence 4.
+    assert_eq!(
+        fixture
+            .table
+            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
+                sequence: 4,
+                now: 50,
+            }),
+        Ok(()),
+        "an equal instant with a fresh sequence advances the checkpoint"
+    );
+    assert_eq!(
+        fixture
+            .table
+            .advance_from_trusted_host(noble_kernel::authority::Checkpoint {
+                sequence: 4,
+                now: 51,
+            }),
+        Err(noble_kernel::authority::SetupError::StaleCheckpoint),
+        "a reused sequence is refused after the advance"
+    );
+    Ok(())
+}
+
+#[test]
 fn advance_invalidates_stale_facts_without_restoring_authority() -> Result<(), String> {
     // A stale checkpoint is refused as stale facts rather than as capacity, and the refusal neither
     // resurrects the consumed witness nor adds a protected execution. The fresh snapshot then has to

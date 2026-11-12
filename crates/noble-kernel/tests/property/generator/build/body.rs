@@ -4,6 +4,8 @@ pub(super) struct Frame {
     pub ids: Vec<noble_kernel::untrusted::NodeId>,
     pub now: Vec<noble_kernel::types::Ty>,
     pub latent: Vec<u32>,
+    /// Word definitions invoked by this body and its nested quotations.
+    pub words: Vec<u32>,
     depth: u64,
     remaining: u64,
 }
@@ -29,6 +31,7 @@ impl Frame {
             now,
             // Every pool word and eliminator adds at most the single emit identity.
             latent: Vec::with_capacity(count),
+            words: Vec::with_capacity(count),
             depth,
             remaining: steps,
         })
@@ -45,6 +48,7 @@ impl Frame {
                 self.ids.push(arena.word(def, bindings)?);
                 self.now = next;
                 self.latent.extend(add);
+                self.words.push(def);
                 return Ok(());
             }
         }
@@ -83,6 +87,7 @@ impl Frame {
                 effects: &claimed,
             },
         )?);
+        self.words.extend(child.words);
         self.now.reserve(1);
         self.now
             .push(noble_kernel::types::Ty::program(start, child.now, set));
@@ -123,11 +128,12 @@ pub(super) fn build(
         current.remaining -= 1;
         if current.depth > 0 && rng.below(11) == 0 {
             let which = rng.below(3);
-            let (ids, next, add) =
+            let (ids, next, add, word) =
                 crate::gen::eliminators::build(rng, arena, current.now.clone(), which)?;
             current.ids.extend(ids);
             current.now = next;
             current.latent.extend(add);
+            current.words.push(word);
             continue;
         }
         if current.depth > 0 && rng.below(5) == 0 {

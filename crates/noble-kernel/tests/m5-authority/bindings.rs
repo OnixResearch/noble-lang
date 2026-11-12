@@ -2,6 +2,57 @@
 mod cases;
 
 #[test]
+fn grant_without_execute_right_mints_no_witness() -> Result<(), String> {
+    let mut fixture = crate::support::fixture()?;
+    let granted = fixture
+        .facts
+        .grant
+        .clone()
+        .ok_or("the fixture states a grant")?;
+    // Every other premise is intact; only the execute bit is missing.
+    fixture.facts.grant = Some(noble_kernel::authority::Grant {
+        rights: 0,
+        ..granted.clone()
+    });
+    assert_eq!(
+        fixture.table.decide(&fixture.plan, &fixture.facts),
+        noble_kernel::authority::Decision::Deny(noble_kernel::authority::Denial::MissingRights)
+    );
+    match fixture
+        .table
+        .authorize_from_trusted_host(fixture.plan.clone(), &fixture.facts)
+    {
+        noble_kernel::authority::Authorization::Denied(rejection) => {
+            assert_eq!(
+                rejection.receipt().description().denial,
+                Some(noble_kernel::authority::Denial::MissingRights)
+            );
+            assert_eq!(
+                rejection.receipt().description().claim,
+                noble_kernel::authority::ReceiptClaim::Denial
+            );
+        }
+        other @ (noble_kernel::authority::Authorization::Authorized(_)
+        | noble_kernel::authority::Authorization::Preflight(_)) => {
+            return Err(format!(
+                "a grant without EXECUTE_RIGHT authorized: {other:?}"
+            ));
+        }
+    }
+    assert_eq!(fixture.table.counters().witnesses_created, 0);
+    assert_eq!(fixture.table.counters().witness_consumptions, 0);
+    assert_eq!(fixture.table.counters().attempts_admitted, 0);
+    // Restoring the execute bit is the only change the same facts need.
+    fixture.facts.grant = Some(granted);
+    let witness = crate::support::authorized(&mut fixture)?;
+    assert_eq!(
+        witness.claim().rights,
+        noble_kernel::authority::EXECUTE_RIGHT
+    );
+    Ok(())
+}
+
+#[test]
 fn octet02_every_binding_and_required_current_fact_is_checked() -> Result<(), String> {
     for case in cases::ALL {
         match rejects_mutation(case) {

@@ -38,6 +38,7 @@ mod programs;
 mod sums;
 
 const DUP: noble_kernel::contracts::Definition = noble_kernel::contracts::Definition(0);
+const DROP: noble_kernel::contracts::Definition = noble_kernel::contracts::Definition(1);
 const ADD: noble_kernel::contracts::Definition = noble_kernel::contracts::Definition(4);
 const RUN: noble_kernel::contracts::Definition = noble_kernel::contracts::Definition(10);
 const TEST_EMIT: noble_kernel::contracts::Definition = noble_kernel::contracts::Definition(22);

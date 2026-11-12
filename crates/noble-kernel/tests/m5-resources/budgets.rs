@@ -1,4 +1,44 @@
 #[test]
+fn registration_enforces_the_per_context_owner_quota() -> Result<(), String> {
+    let mut policy = crate::support::limits();
+    policy.owners_per_context = 2;
+    let mut table = crate::support::accepted(noble_kernel::resources::Table::new(
+        noble_kernel::resources::TableId(1),
+        policy,
+    ))?;
+    let first =
+        crate::support::accepted(table.register(crate::support::required(crate::support::SENDER)))?;
+    let second =
+        crate::support::accepted(table.register(crate::support::required(crate::support::SENDER)))?;
+    // The context is now at its quota: the next owner of that context is
+    // refused by registration itself, before any slot is consumed.
+    assert_eq!(
+        crate::support::rejected(table.register(crate::support::required(crate::support::SENDER)))?,
+        noble_kernel::resources::Error::ContextCapacity
+    );
+    // The quota is per context, so another context still registers.
+    let elsewhere = crate::support::accepted(
+        table.register(crate::support::required(crate::support::RECEIVER)),
+    )?;
+    assert_eq!(table.observation().live, 3);
+    // Releasing one sender frees exactly one place in its context.
+    crate::support::accepted(
+        table.release(first, crate::support::required(crate::support::SENDER)),
+    )?;
+    let third =
+        crate::support::accepted(table.register(crate::support::required(crate::support::SENDER)))?;
+    for (owner, context) in [
+        (second, crate::support::SENDER),
+        (third, crate::support::SENDER),
+        (elsewhere, crate::support::RECEIVER),
+    ] {
+        crate::support::accepted(table.release(owner, crate::support::required(context)))?;
+    }
+    assert_eq!(table.observation().live, 0);
+    Ok(())
+}
+
+#[test]
 fn receiver_capacity_preflight_rejects_the_whole_transfer() -> Result<(), String> {
     let mut policy = crate::support::limits();
     policy.owners_per_context = 2;

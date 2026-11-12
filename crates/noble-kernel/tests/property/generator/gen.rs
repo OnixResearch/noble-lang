@@ -16,14 +16,12 @@ mod types;
 pub struct Case {
     pub request: noble_kernel::untrusted::Request,
     pub candidate: noble_kernel::untrusted::Candidate,
+    /// Every word definition this case's bodies invoke, in derivation order.
+    pub words: Vec<u32>,
+    /// Whether a post-generation knob changed a claim. A corrupted case's
+    /// generated witnesses are no longer the ones the checker decides.
+    pub is_corrupted: bool,
 }
-
-/// Firing evidence for `case`, `if`, and `list.case`, respectively.
-pub static ELIMINATORS: [std::sync::atomic::AtomicU64; 3] = [
-    std::sync::atomic::AtomicU64::new(0),
-    std::sync::atomic::AtomicU64::new(0),
-    std::sync::atomic::AtomicU64::new(0),
-];
 
 /// Bootstrap plus fixture definition 23, producing the opaque resource.
 pub fn environment() -> Result<noble_kernel::contracts::Env, String> {
@@ -143,10 +141,16 @@ pub fn case(rng: &mut crate::rng::Stream) -> Result<crate::gen::Case, String> {
         nodes: arena.nodes,
         body: frame.ids,
     };
-    if rng.below(100) < crate::gen::KNOB_CHANCE {
+    let is_corrupted = rng.below(100) < crate::gen::KNOB_CHANCE;
+    if is_corrupted {
         crate::knobs::apply(rng, &mut request, &mut candidate)?;
     }
-    Ok(crate::gen::Case { request, candidate })
+    Ok(crate::gen::Case {
+        request,
+        candidate,
+        words: frame.words,
+        is_corrupted,
+    })
 }
 
 fn allowed_effects(rng: &mut crate::rng::Stream, latent: &[u32]) -> Vec<u32> {

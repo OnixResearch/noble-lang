@@ -9,8 +9,16 @@ the suite). Fence format and defaults are defined in
 [m2-fragment.md](m2-fragment.md) "Executed documentation examples"; all
 examples below use the supported `noble-candidate/v1` revision. Each
 positive example is one invocation of the word against a request that
-matches its documented contract; each rejection names the constraint it
-trips.
+matches its documented contract.
+
+What the check enforces for a rejection: the fence must state both
+`expect=invalid` and `constraint=<name>`, and the name must equal the
+checker's diagnostic constraint kind (`StackJoin`, `StackOrder`,
+`EffectInclusion`, `Eligibility`, …; payloads such as the effect identity
+are not part of the name). The outcome class alone is not evidence — a
+rejection refused by an unrelated premise fails the suite here, which is
+how the empty-effect-bound example below came to fail with `StackJoin`
+until its quotation was given a body that reaches the inclusion rule.
 
 ## Positive example per word
 
@@ -196,28 +204,28 @@ trips.
 
 ## Rejection example per constrained word
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=Eligibility
 {"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[{"resource":"test.counter"},{"resource":"test.counter"}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"dup","inst":{"v0":[],"v1":{"resource":"test.counter"}}}],
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=Eligibility
 {"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"drop","inst":{"v0":[],"v1":{"resource":"test.counter"}}}],
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=Eligibility
 {"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[{"resource":"test.counter"}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"quote","inst":{"v0":[],"v1":{"resource":"test.counter"},"v2":[{"resource":"test.counter"}]}}],
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{"in":[{"i64":{}},{"program":{"in":[],"out":[{"unit":{}}],"effects":[]}}],
  "out":[{"unit":{}},{"i64":{}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
@@ -225,7 +233,7 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{
    "in":[{"program":{"in":[],"out":[{"i64":{}}],"effects":[]}},
          {"program":{"in":[{"i64":{}}],"out":[{"unit":{}}],"effects":[]}}],
@@ -235,7 +243,7 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{"in":[{"program":{"in":[],"out":[{"unit":{}}],"effects":[]}}],
  "out":[{"unit":{}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
@@ -243,7 +251,7 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{
    "in":[{"sum":[{"i64":{}},{"bool":{}}]},
          {"program":{"in":[{"i64":{}}],"out":[{"unit":{}}],"effects":[]}},
@@ -254,7 +262,7 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=EffectInclusion
 {"request":{"expected":{
    "in":[{"bool":{}},
          {"program":{"in":[],"out":[{"unit":{}}],"effects":["test.emit"]}},
@@ -265,7 +273,7 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{
    "in":[{"list":{"i64":{}}},
          {"program":{"in":[],"out":[{"unit":{}}],"effects":[]}},
@@ -276,14 +284,14 @@ trips.
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=EffectInclusion
 {"request":{"expected":{"in":[{"text":{}}],"out":[{"unit":{}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"test.emit","inst":{"v0":[]}}],
   "body":[0]}}
 ```
 
-```noble-check expect=invalid
+```noble-check expect=invalid constraint=StackJoin
 {"request":{"expected":{"in":[{"i64":{}},{"i64":{}}],"out":[{"bool":{}}],"allowed_effects":[]}},
  "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"i64":1},"inst":{"v0":[]}},
