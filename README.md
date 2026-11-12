@@ -415,14 +415,14 @@ printf '%s\n' noble-ngraph-vectors/0 'types i64 i64' 'v 3 4' > squares.vectors
 `extract` publishes `squares.ngraph` and prints (all three commands exit 0):
 
 ```text
-{"schema":"noble-ngraph-report/v1","command":"extract","stage":"extraction","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","profile":"ngraph-i64/0","subject":"extracted 4a6f0f48eef6c936b33e1c5cbf1f12d2dd21dbcc230d9f01abac87168a79c357 closure 1","closure":[1],"inputs":["i64","i64"],"params":0,"outputs":["i64"],"live_nodes":5,"layers":3,"facts":0,"param_layout":"8cfa89c77cf14c664ffde4385e05ffe779538cacd3583d91e36c57a702330a3c","work_units":8,"expanded_nodes":5,"pruned_nodes":0,"inline_depth":1}
+{"schema":"noble-ngraph-report/v1","command":"extract","stage":"extraction","outcome":"normal","code":null,"site":null,"graph":"1a20caef79e18c3c21163a43ffa710876013dc566d1c6995780d09935adc83b3","profile":"ngraph-i64/0","subject":"extracted 9b727651a1fe1eafb4f2eeec045c889cd48be2a931dd9828ab4be173ed59aab7 closure 1","closure":[1],"inputs":["i64","i64"],"params":0,"outputs":["i64"],"live_nodes":5,"layers":3,"facts":0,"param_layout":"8cfa89c77cf14c664ffde4385e05ffe779538cacd3583d91e36c57a702330a3c","work_units":8,"expanded_nodes":5,"pruned_nodes":0,"inline_depth":1}
 ```
 
 `check` prints the same fields without the four extraction counters, and
 `eval` prints a header and one line per vector:
 
 ```text
-{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","snapshot":null}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"1a20caef79e18c3c21163a43ffa710876013dc566d1c6995780d09935adc83b3","snapshot":null}
 {"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["i64:25"]}
 ```
 
