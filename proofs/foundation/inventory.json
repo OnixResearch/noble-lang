@@ -3274,6 +3274,18 @@
       "claim": "A stale revision token refuses decoding before any step is inspected."
     },
     {
+      "name": "NobleFoundation.CertificateCodec.chunk_count_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A chunk list whose length differs from the declared step count refuses."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.dropped_chunk_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A chunk dropped in transit refuses instead of shortening the derivation."
+    },
+    {
       "name": "NobleFoundation.CertificateCodec.acceptance_preserved_by_codec",
       "phase": 2,
       "role": "certificate-codec",

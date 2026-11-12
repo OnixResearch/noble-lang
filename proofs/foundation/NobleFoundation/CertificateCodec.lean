@@ -9,7 +9,9 @@ does and does not buy:
   all (`decode_encode_replays`), so acceptance is invariant under a transport round trip
   (`acceptance_preserved_by_codec`);
 * every step occupies exactly seven tokens (`encodeStep_length`), so a short tail is refused
-  rather than silently shortened;
+  rather than silently shortened, and the envelope carries the declared step count, so a
+  chunk removed in transit refuses (`dropped_chunk_refused`) instead of shortening the
+  derivation;
 * a rule token outside the modelled set refuses decoding, so the codec cannot smuggle a rule
   the checker does not know past the envelope;
 * the encoded revision token is exactly what the decoder re-checks, so a stale token is
@@ -77,10 +79,15 @@ def decodeSteps : List (List String) → Option (List Step)
       | some step, some tail => some (step :: tail)
       | _, _ => none
 
-/-- Decode a whole envelope, re-checking the revision token. -/
-def decode (revisionToken : String) (chunks : List (List String)) : Option Derivation :=
+/-- Decode a whole envelope, re-checking the revision token and the declared step count
+before any step is decoded. A chunk list whose length differs from the declared count is
+refused, so dropping a chunk cannot shorten the derivation. -/
+def decode (revisionToken : String) (declaredSteps : Nat) (chunks : List (List String)) :
+    Option Derivation :=
   if revisionToken = revision then
-    (decodeSteps chunks).map (fun steps => ⟨revisionToken, steps⟩)
+    if chunks.length = declaredSteps then
+      (decodeSteps chunks).map (fun steps => ⟨revisionToken, steps⟩)
+    else none
   else none
 
 /-! ### The step round trip -/
@@ -102,7 +109,8 @@ theorem decode_encode_step_replays (step : Step) (hrule : step.rule ≤ 2) :
 /-- Decoding an encoded derivation returns the derivation itself. -/
 theorem decode_encode_replays (derivation : Derivation) (hrev : derivation.revision = revision)
     (hall : ∀ step ∈ derivation.steps, step.rule ≤ 2) :
-    decode derivation.revision (encodeSteps derivation) = some derivation := by
+    decode derivation.revision derivation.steps.length (encodeSteps derivation) =
+      some derivation := by
   have hsteps : ∀ (steps : List Step), (∀ member ∈ steps, member.rule ≤ 2) →
       decodeSteps (steps.map encodeStep) = some steps := by
     intro steps hallSteps
@@ -114,8 +122,12 @@ theorem decode_encode_replays (derivation : Derivation) (hrev : derivation.revis
         unfold decodeSteps
         rw [decode_encode_step_replays step hstep]
         rw [ih (fun member hmem => hallSteps member (List.mem_cons_of_mem step hmem))]
-  simp only [decode, encodeSteps]
-  rw [ite_eq_left hrev, hsteps derivation.steps hall]
+  have hcount : (encodeSteps derivation).length = derivation.steps.length := by
+    simp [encodeSteps]
+  unfold decode
+  rw [ite_eq_left hrev, ite_eq_left hcount]
+  rw [show encodeSteps derivation = derivation.steps.map encodeStep from rfl]
+  rw [hsteps derivation.steps hall]
   rfl
 
 /-! ### Refusals -/
@@ -137,10 +149,27 @@ theorem unknown_rule_token_refused (rule index first second firstBits secondBits
   simp [decodeStep, hdecode, hrule]
 
 /-- A stale revision token refuses decoding before any step is inspected. -/
-theorem stale_revision_token_refused (tokens : List (List String)) (token : String)
-    (hstale : token ≠ revision) :
-    decode token tokens = none := by
+theorem stale_revision_token_refused (tokens : List (List String)) (declaredSteps : Nat)
+    (token : String) (hstale : token ≠ revision) :
+    decode token declaredSteps tokens = none := by
   simp [decode, hstale]
+
+/-- A chunk list whose length differs from the declared step count refuses, whatever its
+chunks contain. -/
+theorem chunk_count_refused (token : String) (declaredSteps : Nat) (chunks : List (List String))
+    (hcount : chunks.length ≠ declaredSteps) : decode token declaredSteps chunks = none := by
+  by_cases hrev : token = revision
+  · rw [decode, ite_eq_left hrev]
+    simp [hcount]
+  · rw [decode, ite_eq_right hrev]
+
+/-- Dropping a chunk refuses rather than shortening the derivation: the encoded count is
+the derivation's own step count, and a shorter chunk list disagrees with it. -/
+theorem dropped_chunk_refused (derivation : Derivation) (chunks : List (List String))
+    (hchunks : chunks.length < derivation.steps.length) :
+    decode revision derivation.steps.length chunks = none := by
+  apply chunk_count_refused
+  exact Nat.ne_of_lt hchunks
 
 /-! ### Acceptance is invariant under transport -/
 
@@ -149,7 +178,8 @@ derivation, not about the envelope that carried it. -/
 theorem acceptance_preserved_by_codec (graph : NobleFoundation.PackedSchedule.Graph)
     (derivation : Derivation) (hrev : derivation.revision = revision)
     (hall : ∀ step ∈ derivation.steps, step.rule ≤ 2) :
-    (decode derivation.revision (encodeSteps derivation)).map (accepted graph) =
+    (decode derivation.revision derivation.steps.length (encodeSteps derivation)).map
+        (accepted graph) =
       some (accepted graph derivation) := by
   rw [decode_encode_replays derivation hrev hall]
   rfl
