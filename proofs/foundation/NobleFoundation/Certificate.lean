@@ -11,7 +11,9 @@ file models that *format* and proves what its acceptance does and does not buy:
 * a step is accepted only when the graph's own node shapes and constant bits match
   the declared ones *and* the claim passes the graph checker, so acceptance of a
   derived certificate implies the rule theorem for its fold step
-  (`accepted_fold_step_denotes`);
+  (`accepted_fold_step_denotes`); an identity step is canonical only when its
+  declared bits are the graph's exact zero (rule 1) or one (rule 2), both declared
+  bit fields agree and the claimed constant is zero (`bitsMatch`);
 * replaying every accepted fold in order, while leaving identity steps untouched,
   preserves every node denotation (`accepted_endpoint_equivalence`); the step
   premises in this model are checked against the original graph, as in `cert.rs`;
@@ -69,12 +71,20 @@ def strictlyIncreasing : List Step → Bool
   | only :: next :: rest => (only.index < next.index) && strictlyIncreasing (next :: rest)
 
 /-- The declared constant bits of a step match the graph's own literal, for the
-operand the rule consumed. Structural: it never recomputes the claim. -/
+operand the rule consumed, and identity steps declare the canonical zero claim: rule
+1 needs the consumed constant to be the graph's exact zero, both declared bit fields
+equal to it and a claimed zero; rule 2 needs the consumed constant to be the graph's
+exact one, both declared bit fields equal to it and a claimed zero. Structural: it
+never recomputes the claim. -/
 def bitsMatch (graph : Graph) (step : Step) : Bool :=
   match step.rule, graph.node step.first, graph.node step.second with
   | 0, .constant x, .constant y => decide (x = step.firstBits ∧ y = step.secondBits)
-  | 1, .constant x, _ => decide (x = 0 ∧ step.firstBits = step.secondBits)
-  | 2, _, .constant y => decide (y = 1 ∧ step.firstBits = step.secondBits)
+  | 1, .constant x, _ =>
+      decide (x = 0 ∧ step.firstBits = x ∧ step.secondBits = step.firstBits ∧
+        step.claimed = 0)
+  | 2, _, .constant y =>
+      decide (y = 1 ∧ step.secondBits = y ∧ step.firstBits = step.secondBits ∧
+        step.claimed = 0)
   | _, _, _ => false
 
 /-- Acceptance of one step: known rule identity, declared bits equal to the graph's
@@ -150,6 +160,92 @@ theorem unknown_rule_refused (graph : Graph) (step : Step) (hrule : decodeStep s
   unfold stepAccepted
   rw [hrule]
   simp
+
+/-! ### Canonical identity steps
+
+Rules 1 and 2 are identity rules: they consume an exact zero or one and claim the same
+value the node already had. `bitsMatch` compares the declared bits with the graph's own
+literal, requires the two declared bit fields to agree, and requires a claimed zero, so
+a step that declares other bits, disagrees with itself or claims a value cannot be
+accepted. -/
+
+/-- Every accepted `0 + x` step declares the graph's zero in both bit fields and claims
+zero. -/
+theorem neutral_add_left_bits_canonical (graph : Graph) (step : Step)
+    (hrule : step.rule = 1) (haccepted : stepAccepted graph step = true) :
+    step.firstBits = 0 ∧ step.secondBits = step.firstBits ∧ step.claimed = 0 := by
+  unfold stepAccepted at haccepted
+  rw [Bool.and_eq_true] at haccepted
+  obtain ⟨hbits, _⟩ := haccepted
+  cases hfirst : graph.node step.first <;> cases hsecond : graph.node step.second <;>
+    simp_all [bitsMatch]
+
+/-- Every accepted `x * 1` step declares the graph's one in both bit fields and claims
+zero. -/
+theorem neutral_mul_right_bits_canonical (graph : Graph) (step : Step)
+    (hrule : step.rule = 2) (haccepted : stepAccepted graph step = true) :
+    step.secondBits = 1 ∧ step.firstBits = step.secondBits ∧ step.claimed = 0 := by
+  unfold stepAccepted at haccepted
+  rw [Bool.and_eq_true] at haccepted
+  obtain ⟨hbits, _⟩ := haccepted
+  cases hfirst : graph.node step.first <;> cases hsecond : graph.node step.second <;>
+    simp_all [bitsMatch]
+
+/-- A graph with an exact zero and an exact one, so both identity rules have a site. -/
+def identityGraph : Graph where
+  arity := 5
+  output := 4
+  node := fun index =>
+    if index = 0 then .constant 0
+    else if index = 1 then .input 0
+    else if index = 2 then .add 0 1
+    else if index = 3 then .constant 1
+    else .mul 1 3
+
+/-- `0 + x`: the declared first bits are the graph's zero, both bit fields agree and
+the claim is zero. -/
+theorem neutral_add_left_step_accepted :
+    stepAccepted identityGraph ⟨1, 2, 0, 1, 0, 0, 0⟩ = true := by
+  decide
+
+/-- `x * 1`: the declared second bits are the graph's one, both bit fields agree and
+the claim is zero. -/
+theorem neutral_mul_right_step_accepted :
+    stepAccepted identityGraph ⟨2, 4, 1, 3, 1, 1, 0⟩ = true := by
+  decide
+
+/-- The declared zero is compared with the graph's literal: a step that declares five
+at a graph zero is refused. -/
+theorem neutral_add_left_bits_refused :
+    stepAccepted identityGraph ⟨1, 2, 0, 1, 5, 5, 0⟩ = false := by
+  decide
+
+/-- The two declared bit fields must agree; a second field that differs from the first
+is refused. -/
+theorem neutral_add_left_second_bits_refused :
+    stepAccepted identityGraph ⟨1, 2, 0, 1, 0, 1, 0⟩ = false := by
+  decide
+
+/-- An identity step must claim zero; a nonzero claim is refused even when the bits
+match the graph. -/
+theorem neutral_add_left_claim_refused :
+    stepAccepted identityGraph ⟨1, 2, 0, 1, 0, 0, 7⟩ = false := by
+  decide
+
+/-- The multiply identity compares its declared second bits with the graph's one. -/
+theorem neutral_mul_right_bits_refused :
+    stepAccepted identityGraph ⟨2, 4, 1, 3, 1, 9, 0⟩ = false := by
+  decide
+
+/-- The multiply identity's two declared bit fields must agree. -/
+theorem neutral_mul_right_first_bits_refused :
+    stepAccepted identityGraph ⟨2, 4, 1, 3, 9, 1, 0⟩ = false := by
+  decide
+
+/-- The multiply identity must claim zero. -/
+theorem neutral_mul_right_claim_refused :
+    stepAccepted identityGraph ⟨2, 4, 1, 3, 1, 1, 2⟩ = false := by
+  decide
 
 /-- A stale revision kills acceptance even when every step would be accepted. -/
 theorem stale_revision_kills_acceptance (graph : Graph) (steps : List Step) :

@@ -3124,6 +3124,66 @@
       "claim": "A step with an unknown rule identity cannot be accepted."
     },
     {
+      "name": "NobleFoundation.Certificate.neutral_add_left_bits_canonical",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted 0 + x step declares the graph's zero in both bit fields and claims zero."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_bits_canonical",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted x * 1 step declares the graph's one in both bit fields and claims zero."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_step_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The canonical 0 + x step on the identity fixture is accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_step_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The canonical x * 1 step on the identity fixture is accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step that declares five at the graph's zero is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_second_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step whose two declared bit fields differ is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_claim_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step that claims a nonzero constant is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step whose declared second bits are not the graph's one is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_first_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step whose two declared bit fields differ is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_claim_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step that claims a nonzero constant is refused."
+    },
+    {
       "name": "NobleFoundation.Certificate.stale_revision_kills_acceptance",
       "phase": 2,
       "role": "certificate",
