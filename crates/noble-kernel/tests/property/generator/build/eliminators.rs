@@ -17,7 +17,7 @@ pub(super) type Fragment = (
 /// Both quotations retain their original claimed interface and effect bounds.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; build validates the eliminator selector and propagates arena/branch failures while constructing both claimed quotation interfaces; the independent oracle checks their semantics."
+    reason = "Owner: noble-maintainers; build selects the discriminator and propagates arena/branch failures while constructing both claimed quotation interfaces; the independent oracle checks their semantics."
 )]
 pub(super) fn build(
     rng: &mut crate::rng::Stream,
