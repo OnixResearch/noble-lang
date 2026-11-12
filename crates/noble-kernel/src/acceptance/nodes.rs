@@ -49,14 +49,15 @@ pub(super) fn node_of(
     }
 }
 
-/// Whether every type this node's witness would copy fits the local node cap.
+/// Whether every type this node's witness would copy fits the copy cap.
 ///
-/// `Ty::size` walks borrowed nodes and fails closed past `TYPE_NODE_CAP`, so
-/// this reads the witness without copying it and refuses exactly the shapes a
-/// structural copy could not survive.
+/// `Ty::physical_nodes` walks borrowed nodes and fails closed past
+/// `PHYSICAL_NODE_CAP`, so this reads the witness without copying it and
+/// refuses exactly the shapes a structural copy could not survive. It is a
+/// copy bound, not a typing bound: `Ty::size` keeps its declared meaning.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; is_within_copy_bound accepts every binding whose measured size is available and reports false for an oversized witness; the measurement itself is the fail-closed bound."
+    reason = "Owner: noble-maintainers; is_within_copy_bound accepts every binding whose physical measurement is available and reports false for a witness past the copy cap; the measurement itself is the fail-closed bound."
 )]
 fn is_within_copy_bound(node: &crate::untrusted::Node) -> bool {
     let inst = match node {
@@ -70,7 +71,7 @@ fn is_within_copy_bound(node: &crate::untrusted::Node) -> bool {
     let mut is_bounded = true;
     while index < inst.bindings.len() && is_bounded {
         is_bounded = match &inst.bindings[index] {
-            crate::words::Binding::Value(ty) => ty.size().is_some(),
+            crate::words::Binding::Value(ty) => ty.physical_nodes().is_some(),
             crate::words::Binding::Stack(stack) => stack_is_measurable(stack.as_slice()),
             crate::words::Binding::Effect(_) | crate::words::Binding::Ref(_) => true,
         };
@@ -83,7 +84,7 @@ fn stack_is_measurable(stack: &[crate::types::Ty]) -> bool {
     let mut index = 0;
     let mut is_measurable = true;
     while index < stack.len() && is_measurable {
-        is_measurable = stack[index].size().is_some();
+        is_measurable = stack[index].physical_nodes().is_some();
         index += 1;
     }
     is_measurable

@@ -9,17 +9,26 @@
 
 mod data;
 mod impls;
+mod physical;
 mod size;
 
 /// Local bound for one type walk; beyond it the predicate fails closed.
 const WORK_CAP: usize = 512;
 
-/// Most nodes one declared type may hold.
+/// Most owned nodes one structural copy of a type may allocate.
 ///
-/// The kernel validates and measures every borrowed type against this local
-/// cap, so a size read, an eligibility read and an exact comparison all finish
-/// in bounded time, and a refused value is never copied node by node.
-pub(crate) const TYPE_NODE_CAP: u32 = 512;
+/// This is the copy guard, not a typing limit: `Ty::size` stays the declared
+/// logical size the kernel charges and its consumers read. A generic
+/// descriptor stores its arguments and a descriptor built from copies of them,
+/// so owned nodes double per nesting layer while the logical size grows by one
+/// — the quantity that makes substitution exponential.
+///
+/// The cap matches the node bound the contract layer already enforces:
+/// noble-contracts refuses an inferred representation above 4096 nodes
+/// (`TYPE_NODE_CAP` in its inference) before admission, so nothing that layer
+/// can hand the kernel is refused here, and a representation larger than it
+/// admits is refused before its copy exists.
+pub(crate) const PHYSICAL_NODE_CAP: u32 = 4096;
 
 /// Stable identity of a resource kind supplied by the environment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -294,7 +303,6 @@ impl Ty {
         let mut walk = size::Walk {
             todo: alloc::vec::Vec::with_capacity(8),
             sizes: alloc::vec::Vec::with_capacity(8),
-            visited: 0,
         };
         walk.todo.push((self, false));
         let mut outcome = size::Step::Continue;
