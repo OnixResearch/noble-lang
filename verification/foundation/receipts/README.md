@@ -483,3 +483,12 @@ theorems with `clean_source: true` and axiom sets inside the allow-list, includi
 The receipt is evidence for that commit and tree only. The binding identities are compared, not
 derived: how each digest is computed, and whether it names the graph it claims to, is outside the
 model and stays open.
+
+## f8555afa3 — the merged review fixes
+
+`f8555afa3/` records the clean run of `verification/foundation/ci.sh` at the merged review fixes.
+Every stage reported 0 (`overall=0`): the check, the claims audit and its comparison with the
+retained `claims.json`, the Phase 3 slice with its helper-transcription pin, the differential,
+EMI, linking and host-locality lanes and their verifiers; the stale-receipt control refused, as
+required. The check audits 1293 inventoried theorems with `clean_source: true` under Lean 4.35.0.
+The receipt is evidence for that commit and tree only.
