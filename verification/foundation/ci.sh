@@ -32,7 +32,12 @@ stage() {
   return $rc
 }
 stage check env -i "$node" verification/foundation/check.mjs --output "$out/check" || status=1
-stage claims env -i "$node" verification/foundation/claims.mjs > "$out/claims.json" || status=1
+# The claims audit's JSON is its stdout, so this stage captures it directly
+# rather than through `stage`, which would send it to claims.log.
+env -i "$node" verification/foundation/claims.mjs > "$out/claims.json" 2> "$out/claims.log"
+claims_rc=$?
+echo "claims=$claims_rc" >> "$out/summary.txt"
+[ "$claims_rc" -eq 0 ] || status=1
 # The retained audit is the committed claims.json. A regenerated audit that differs
 # means the tables and the retained result have drifted, which is a failure even when
 # both audits individually pass.
