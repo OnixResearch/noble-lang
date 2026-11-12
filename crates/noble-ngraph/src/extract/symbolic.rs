@@ -65,6 +65,10 @@ impl Recipe {
     }
 
     /// Moves this recipe's children into `work`, leaving the slots empty.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the traversal worklist must grow as the chain is unlinked"
+    )]
     fn unlink(&mut self, work: &mut alloc::vec::Vec<alloc::rc::Rc<Recipe>>) {
         if let Recipe::Compose { left, right, .. } = self {
             work.extend(left.take());
@@ -1109,18 +1113,16 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
 
 #[cfg(test)]
 mod tests {
-    use super::{Recipe, Sym};
-
     /// A left-heavy composition chain `levels` deep, sharing one quotation on
     /// every right-hand side: exactly the shape `dup compose` grows.
-    fn chain(levels: u32) -> (alloc::rc::Rc<Recipe>, alloc::rc::Rc<Recipe>) {
-        let leaf = alloc::rc::Rc::new(Recipe::Quotation {
+    fn chain(levels: u32) -> (alloc::rc::Rc<super::Recipe>, alloc::rc::Rc<super::Recipe>) {
+        let leaf = alloc::rc::Rc::new(super::Recipe::Quotation {
             body: 0,
             node: noble_kernel::untrusted::NodeId(0),
         });
-        let mut recipe = alloc::rc::Rc::new(Recipe::Capture(Sym::Unit));
+        let mut recipe = alloc::rc::Rc::new(super::Recipe::Capture(super::Sym::Unit));
         for depth in 1..=levels {
-            recipe = alloc::rc::Rc::new(Recipe::Compose {
+            recipe = alloc::rc::Rc::new(super::Recipe::Compose {
                 left: Some(recipe),
                 right: Some(leaf.clone()),
                 depth,
