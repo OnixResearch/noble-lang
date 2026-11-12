@@ -10,7 +10,7 @@
     "assumed": 0,
     "open": 28
   },
-  "inventoried_theorems": 1276,
+  "inventoried_theorems": 1293,
   "receipts_checked": 83,
   "document_only_names": {
     "acceptLiteral": "Phase-1 literal-acceptance specification function, transcribed and proved through accumulate_eq_acceptLiteral",
