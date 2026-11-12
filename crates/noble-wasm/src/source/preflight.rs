@@ -442,4 +442,27 @@ mod row_cap_tests {
             "a full-definition declared-text module must be admitted, not refused by the row cap"
         );
     }
+
+    /// Boundary control: one row over the profile's definition limit is still
+    /// refused, so the widened cap cannot be read as "any size is accepted".
+    #[test]
+    fn declared_text_module_above_the_definition_cap_is_refused() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 262_144,
+            depth: 64,
+            work: 512_000_000,
+        };
+        let retained = RetainedSourceLimit::new(65_536).expect("valid retained source cap");
+        let session = ModuleSession::new_declared_text(&[], false, retained)
+            .unwrap_or_else(|_| panic!("selected source profile"));
+        let Err(error) = session.prepare(&bulk_module(DEFINITION_LIMIT + 1), &[], limits) else {
+            panic!("a module above the definition cap was accepted");
+        };
+        let message = error.diagnostic().message.clone();
+        assert!(
+            message.contains("definition"),
+            "the refusal must name the definition cap: {message}"
+        );
+    }
 }
