@@ -1,6 +1,7 @@
 # noble-ngraph identity record (numeric-graph-v1 design D3). Written once by the
 # pre-cutover noble-ngraph-experiment at 66eb7cd; only these comment lines were
-# added afterwards. Reproduce in a detached worktree at 66eb7cd:
+# added afterwards, except the four extracted rows below. Reproduce in a
+# detached worktree at 66eb7cd:
 #   1. make `fn facts_digest` in crates/noble-ngraph-experiment/src/train.rs `pub`;
 #   2. add a test that writes the lines below to $RECORD_OUT, then run
 #      RECORD_OUT=<file> cargo test --release -p noble-ngraph-experiment --test <name>
@@ -20,6 +21,13 @@
 #     trained 500 steps from the seed: data digest, initial and final snapshot ids,
 #     adam/0 state digest and provenance.facts.
 #   b5 losses H count first last: H = BLAKE3 over every loss (binary64 LE bits).
+#
+# The extracted rows I1-I4 were re-recorded after the 2026-11 review: the
+# subject identity of an extracted graph now hashes the submission environment
+# and each body's text-literal bytes (`Subject::derive` input in
+# `extract::admission::subject_of`), so the four extracted GraphLogicalIds and
+# their fact-binding digests differ from 66eb7cd. Authored identities are
+# unaffected and still reproduce byte for byte.
 graph F1 6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661 a4847a4429bf0da5a2076517ea2877b0d76d97ee12be45a45e1ee89f1c8ec7ce
 graph F2 66784231cce52b3e97027e221d3e2aad4d91f9d8871169700e1c3f5a896d5b51 ccc3bccd03da8ff7963543c2cdf70fa7cbccc809b7862f21aa6bd26238a49774
 graph MSE 50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0 29560e3a637956c979f465327784ed4dd4af410dd9235ec175f76dc1d011386e
@@ -47,10 +55,10 @@ graph random-5 f314b55eb24eaa138051860be922715949825e9075030f966145f2cf93c95a17 
 graph random-6 a7649d2302cecb77d060f9c7dffc64d918a0eec2479f2a1d6221b3651bafde2a c3df50f8831ee7b10de3736e918e53245c3c8f02049fe3b986a6ba8e41bb65d2
 graph random-7 1f4ac5351b920fe8a883ca8da56c001d753b661e58a868fb9de55c7dd1340ed8 4126982b64b699ba5804c4cb99f9c86ffd5fe135de5339e14e5323ae97d72637
 graph random-8 8d25353558279d55b2f0462228f0fab363de0ff40761d5df7f46ae52f6e0725c 50146ce326366b789e481e3d57d39ac394a81a48bd05c47f74d00d46d148febf
-graph I1 75b70f84b6d265c4c1e016f5bf7ab88c2280456f15390bdb539e39cd24e6a1d9 a0ba42f9a385fde4fe9970a3db1940030659184361a889d90ab12ebdc9429868
-graph I2 ce1e156093d799d06933b01f7d6d00edca94ac7475d5553796357f08e820e452 b8363d8e6e8487857b1d1360dda90e68753c7eca6ac69651efa08aa192343c3c
-graph I3 179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304 1fbcaa17860e5437d3f4448eb1bfa24d96d8d4bf60fa95eb2acaa4d57ccb813d
-graph I4 ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333 6bb36775c1b24c118d30c35b2a775c590083d955e6abd1b9738c2855ea5b5592
+graph I1 5c7637d0d49326014db01591fb0585f60a741f8da033e4f19535a00b3818c6e3 adc568d8fcdb0f34a3b9d017b66004c45f6fb9b66c36ccf66e2978bbae5243f0
+graph I2 adcb5aa438fdc5ce54b522cec14d9aaf4b77172f6769a3c1cfc40db12bf5d815 8c8445cb468301fe1bc155dd893f60b5e454e087c38b7231554b64312998aa3a
+graph I3 1a20caef79e18c3c21163a43ffa710876013dc566d1c6995780d09935adc83b3 d28c99651d3d11775c6ac6b303454e02c28f5ed3a4898cab54802d1913835c21
+graph I4 b8ef1952ea075517a22c839ac5583446c5a702602fe96961b7ac7fb360bbfb3b 34a4a52179fb31ae8633f39e02b1a3341d335a00698ff5745160bfc8c74d14f1
 vector reassociation: affine(-0; 2^24·x, 1·y, 1·z) = 2^24 (not 2^24+2) => Normal[f32:0x4b800000]
 vector reassociation (constant-one operands): affine(-0; 2^24·1, 1·1, 1·1) = 2^24 => Normal[f32:0x4b800000]
 vector FMA detection: rn(rn(a·b)+c) = +0 with a=b=1+2^-12, c=-(1+2^-11) (fused: 2^-24) => Normal[f32:0x00000000]
