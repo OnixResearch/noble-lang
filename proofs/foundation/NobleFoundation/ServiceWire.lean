@@ -304,14 +304,16 @@ theorem depth_configuration_precedes_schema :
       ∧ decode (encode [99, 108, 111, 99, 107] true) 5 = .depthLimit := by
   decide
 
-/-- The depth scan is balanced, so a closing byte below zero depth never reduces it: the input with
-one stray opener inside the pronunciation of the name and one after the record is a schema failure
-at depth 2, not a depth failure. The finite Rust comparison below found the first, counting-only
-scan disagreeing with the codec here, so the scan was corrected rather than the finding being
-dropped. -/
-theorem unbalanced_closers_do_not_count_toward_the_depth :
-    decode [60, 115, 101, 114, 118, 105, 99, 101, 32, 34, 60, 97, 34, 32, 35, 116, 62, 60] 2
-      = .schema := by
+/-- The depth scan is saturating, so a closing byte at depth zero leaves the current depth there
+instead of going negative: a stray closer before a canonical record does not reduce the reached
+depth, and the record after it still reaches depth one. The stray byte makes the input a schema
+failure at the configured depth one, not a depth failure. The finite Rust comparison below found
+the first, counting-only scan disagreeing with the codec here, so the scan was corrected rather
+than the finding being dropped. -/
+theorem closers_below_zero_depth_do_not_reduce_the_reached_depth :
+    maxDepthReached ([62] ++ encode [97] true) = 1
+      ∧ depthExceeds 1 ([62] ++ encode [97] true) = false
+      ∧ decode ([62] ++ encode [97] true) 1 = .schema := by
   decide
 
 /-- The depth scan is decided before the schema match: five *nested* openers are a

@@ -4,10 +4,15 @@ import NobleContracts.NamedSubject
   Conditional normal-return linking model for one same-artifact NamedV1 call.
 
   The executable-facing part is deliberately a model, not a theorem about
-  `noble-wasm`, the Wasm loader, or arbitrary host contexts.  It records the
+  `noble-wasm`, the Wasm loader, or arbitrary host contexts. It records the
   operand/continuation ABI, exact embedded definition identity, and the
   exclusive-engine/no-protected-state-mutation premises needed to connect a
-  finite runtime path to the pinned NamedV1 normal-return semantics.
+  finite runtime path to the pinned NamedV1 normal-return semantics. The
+  horizontal link theorem is *conditional*: the runtime-to-source
+  correspondence (every `runtimeRepresents` boundary, every `RuntimeRun`
+  segment, the closure/ownership/artifact/body/interface equalities and the
+  `lowerScalarCode` maps) is assumed, not derived, and no lemma relates
+  `RuntimeStep` to NamedV1 steps.
 -/
 
 namespace NobleFoundation.LinkBoundary
@@ -548,10 +553,6 @@ theorem pilot_caller_binding_closure
       (pilotCallerBinding artifact root environment).closureRank := by
   exact pilot_closure
 
-theorem wrong_return_target_refused :
-    (⟨17, 3⟩ : ContinuationSlot) ≠ ⟨18, 3⟩ := by
-  decide
-
 structure EngineAuthority where
   engineOwner : Nat
   callerOwner : Nat
@@ -561,7 +562,9 @@ structure EngineAuthority where
   importedGlobalsOwner : Nat
 
 /-- The caller, callee, private imported memory, table and globals are all
-owned by this engine for the modeled interval. -/
+    owned by this engine for the modeled interval. This record is an
+    independent premise bundle, not a field of `EngineState`: no theorem derives
+    it from runtime state, and `horizontal_runtime_link` takes it as a premise. -/
 def ExclusiveEngineOwnership (authority : EngineAuthority) : Prop :=
   authority.callerOwner = authority.engineOwner ∧
   authority.calleeOwner = authority.engineOwner ∧
@@ -615,6 +618,20 @@ theorem return_target_exact
     dispatchNext (afterCalleeDispatch state caller) = some (caller, state) := by
   constructor <;> simp [dispatchNext, scheduleNamedCall, enqueueOne,
     afterCalleeDispatch]
+
+/-- **A different continuation slot is not the exact return target.** The
+    immediate-return mutant that dispatches the caller instead of the callee is
+    refused: the first dispatch of a scheduled call selects the callee slot, so
+    for distinct caller and callee slots it cannot equal the caller. -/
+theorem wrong_return_target_refused (state : EngineState) (caller callee : ContinuationSlot)
+    (distinct : caller ≠ callee) :
+    dispatchNext (scheduleNamedCall state caller callee) ≠
+      some (caller, afterCalleeDispatch state caller) := by
+  intro immediate
+  have selected := (return_target_exact state caller callee).1
+  rw [selected] at immediate
+  have equal : callee = caller := congrArg Prod.fst (Option.some.inj immediate)
+  exact distinct equal.symm
 
 def decodeCell (cell : OperandCell) : Option NobleContracts.NamedV1.Value :=
   if cell.tag == i64Tag then some (.i64 cell.payload)
@@ -908,7 +925,22 @@ proofs and boundary representations. The call protocol enqueues caller then
 callee, dispatches the exact embedded callee key, and after its normal return
 dispatches the exact caller continuation. The theorem is conditional on the
 same-artifact table binding, imported-state exclusive ownership, and segment
-mapping premises; it is not a lowering or loader theorem. -/
+mapping premises; it is not a lowering or loader theorem.
+
+What is *assumed*, and not proved here: the four `runtimeRepresents` boundaries,
+the three `RuntimeRun` segments (including the post-call one), the closure and
+body/interface equalities, the exclusive-engine authority record and its
+same-artifact table bindings, and the `lowerScalarCode` maps. No lemma relates
+`RuntimeStep` to NamedV1 steps, so this is a composition of two independent
+models under a correspondence premise.
+
+The modelled return slot is `(rootIndex, environment)`
+(`bindingContinuation`). The emitter instead enqueues `(function, env)` for an
+inline continuation or `(function + 1, env)` for the callee entry. `rootIndex`
+is the binding's root/table index and this model does not relate it to the
+emitted function numbering, nor does it model inline continuation bodies: the
+post-call segment is the free `hpostRuntime` premise. That emitter alignment
+remains open. -/
 theorem horizontal_runtime_link
     {env : NobleContracts.NamedV1.Environment} {pre post : List NobleContracts.NamedV1.Op}
     {use : NobleContracts.NamedV1.Use} {entry : NobleContracts.NamedV1.Entry}

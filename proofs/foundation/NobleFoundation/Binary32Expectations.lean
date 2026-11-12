@@ -25,7 +25,7 @@ def retained : List (String × Bits × Bits × Bits) := [
   ("add", 0x3F800000, 0x33800000, 0x3F800000),
   ("add", 0x3F800000, 0x34000000, 0x3F800001),
   ("add", 0x3F800001, 0x33800000, 0x3F800002),
-  ("add", 0x3F800000, 0x34300000, 0x3F800001),
+  ("add", 0x3F800000, 0x34400000, 0x3F800002),
   -- Cancellation.
   ("sub", 0x3F800001, 0x3F800000, 0x34000000),
   ("sub", 0x3F800000, 0x3F800000, 0x00000000),
@@ -68,12 +68,21 @@ theorem retained_expectations_checked :
     retained.all (fun entry => apply entry.1 entry.2.1 entry.2.2.1 == entry.2.2.2) = true := by
   decide
 
-/-- A halfway tie between two representable neighbours rounds to even: adding
-`2^-24` to `1.0` keeps `1.0`, while adding `3 * 2^-25` moves to the next
-representable value. -/
+/-- Halfway ties round to even. `1.0 + 2^-24` is exactly halfway to `1 + 2^-23`
+and stays at `1.0`. `1.0 + 3 * 2^-24` is exactly halfway between `1 + 2^-23`
+(odd mantissa) and `1 + 2^-22` (even mantissa), so ties-to-even takes the even
+upper neighbour `0x3F800002`; truncating the exact quotient — what a
+round-toward-zero rule does — would give the odd lower neighbour
+`0x3F800001`. The `scaledValue` conjuncts pin the exact scaled operands and the
+two neighbours, so this expectation distinguishes the tie rule from truncation
+rather than accepting either. -/
 theorem halfway_ties_round_to_even :
     add 0x3F800000 0x33800000 = 0x3F800000
-    ∧ add 0x3F800000 0x34300000 = 0x3F800001 := by
+    ∧ add 0x3F800000 0x34400000 = 0x3F800002
+    ∧ scaledValue 0x33800000 = (2 ^ 23, -47)
+    ∧ scaledValue 0x34400000 = (3 * 2 ^ 22, -46)
+    ∧ scaledValue 0x3F800001 = (2 ^ 23 + 1, -23)
+    ∧ scaledValue 0x3F800002 = (2 ^ 23 + 2, -23) := by
   decide
 
 /-- Signed-zero rules of the model: addition of two negative zeros is negative,

@@ -21,7 +21,11 @@ inductive BranchKind where
 def selectedOps (left : Bool) (p q : List AOp) : List AOp :=
   if left then p else q
 
-/-- Visit counts indexed by branch: the untaken branch has zero visits. -/
+/-- The declared visit-count projection of the selector: index 0 for the left/first branch and
+    index 1 for the right/second. This is a selector-bookkeeping function, not an execution trace:
+    it is definitionally fixed by `left`, so it cannot witness nonexecution. Nonexecution of the
+    untaken body is `exec_branchCode_selected`, which proves that only the selected body's lowered
+    code is executed. -/
 def branchVisits (left : Bool) : List Nat :=
   [if left then 1 else 0, if left then 0 else 1]
 
@@ -157,7 +161,9 @@ theorem exec_branchCode_untaken (kind : BranchKind) (left : Bool)
       zs hinput pre t]
   rw [selectedOps_untaken]
 
-/-- Exact visit counts: one selected visit and zero untaken visits. -/
+/-- The declared projection has one selected and one untaken entry. This is a definitional
+    unfolding of `branchVisits`, recorded for the EMI lane's selector observation; it is not the
+    nonexecution evidence. -/
 theorem branchVisits_selected (left : Bool) :
     branchVisits left = if left then [1, 0] else [0, 1] := by
   cases left <;> rfl

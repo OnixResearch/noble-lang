@@ -940,12 +940,15 @@ theorem no_set_union_rule :
         (run fixtureHost initial [.call (.read 7 0 1), .call .release]).events := by
   decide
 
-/-- **The monitor rejects the violations it names**: a double release, an `ok` after release, an
-unsolicited response, a commit without its request, a commit for a forged or out-of-bounds read, an
-`ok` of the wrong length, an `ok` without its commit and a second response. -/
+/-- **The monitor rejects the violations it names**: a double release, an `ok` after release (with a
+pending, committed read, so only the released flag refuses it), an unsolicited response, a commit
+without its request, a commit for a forged or out-of-bounds read, an `ok` of the wrong length, an
+`ok` without its commit and a second response. -/
 theorem monitor_rejects_violations :
     monitor fixtureHost Mon.start [.req .release, .commit .guestRelease, .req .release, .commit .guestRelease] = none ∧
-      monitor fixtureHost Mon.start [.req .release, .commit .guestRelease, .req (.read 7 0 1), .resp (.ok [0])] = none ∧
+      monitor fixtureHost Mon.start
+        [.req (.read 7 0 1), .commit (.regionRead 0 1), .commit .guestRelease, .resp (.ok [0])] = none ∧
+      watch fixtureHost ⟨true, some (.read 7 0 1), true⟩ (.resp (.ok [0])) = none ∧
       monitor fixtureHost Mon.start [.resp .boundsReject] = none ∧
       monitor fixtureHost Mon.start [.commit (.regionRead 0 1)] = none ∧
       monitor fixtureHost Mon.start [.req (.read 8 0 1), .commit (.regionRead 0 1)] = none ∧

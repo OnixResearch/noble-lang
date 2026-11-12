@@ -130,6 +130,12 @@ def operandSlot (net : Net) (candidate : Port) : Option Nat :=
 input/operand links are checked by their semantic slot; all other principal /
 auxiliary links use the declared interaction-net shape and reject auxiliary /
 auxiliary links.
+
+The ordered check compares the input's source slot with the consumer's operand index for
+equality, so this contract represents interfaces of at most two inputs that feed operands: an
+input slot of 2 or more can never equal operand slot 0 or 1 (`third_input_cannot_feed_an_operand`).
+A wider interface needs a per-node operand-order obligation (the two operand sources ordered by
+their source slots), which this per-edge equality cannot state; that case is outside the model.
 -/
 def roleCompatible (net : Net) (left right : Port) : Bool :=
   match inputSlot net left, operandSlot net right with
@@ -316,6 +322,17 @@ def wrongOutputOrder : Net where
   wiring := twoOutputNet.wiring
   boundary := [port 4 0, port 3 0]
 
+/-- A net whose third interface input (slot 2) feeds the subtraction's left operand. Every other
+    obligation is the accepted fixture's, so only the input/operand slot equality can refuse it. -/
+def thirdInputOperand : Net where
+  version := contractVersion
+  agents := [.input 2, .input 1, .sub, .output]
+  wiring :=
+    [ (port 0 0, port 2 1), (port 2 1, port 0 0)
+    , (port 1 0, port 2 2), (port 2 2, port 1 0)
+    , (port 2 0, port 3 0), (port 3 0, port 2 0) ]
+  boundary := [port 3 0]
+
 /-- The compiled deeper-minus-top net is accepted by the structural validator. -/
 theorem deeper_minus_top_is_accepted : validate deeperMinusTop = true := by
   decide
@@ -340,6 +357,13 @@ theorem two_output_boundary_is_accepted : validate twoOutputNet = true := by
 otherwise unchanged.
 -/
 theorem wrong_output_order_is_rejected : validate wrongOutputOrder = false := by
+  decide
+
+/-- **An input slot of 2 or more cannot feed an operand under this contract.** The same wiring is
+    the accepted `x - y` net with input slot 0 replaced by slot 2; the edge check refuses it,
+    because the input's source slot must equal the operand index (0 or 1). This records the
+    interface restriction of the per-edge equality rather than claiming broader coverage. -/
+theorem third_input_cannot_feed_an_operand : validate thirdInputOperand = false := by
   decide
 
 end NobleFoundation.InteractionNet

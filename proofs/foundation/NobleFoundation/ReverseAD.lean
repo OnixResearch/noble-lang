@@ -418,20 +418,11 @@ theorem exampleGraph_adjointDot :
     value, valuesUpTo, evalStep]
   try norm_num
 
-/-- Updating an adjoint by overwriting instead of accumulating the repeated operand's two
-contributions pairs to `4` on the same fixture, where the sweep pairs to `8`: the fixture
-discriminates the update rule rather than agreeing with anything. -/
-def overwritingAdjoints : Nat → ℝ :=
-  fun operand =>
-    if operand = 0 then 8 else if operand = 1 then 8 else if operand = 2 then 4 else 1
-
-/-- The overwriting update pairs to `4` on the fixture's second slot. -/
-theorem the_overwriting_update_pairs_to_four :
-    adjointDot exampleGraph overwritingAdjoints (fun slot => if slot = 2 then 1 else 0) = 4 := by
-  simp [adjointDot, exampleGraph, overwritingAdjoints]
-
-/-- The sweep pairs to `8` on the same slot, so the two updates are told apart rather than both
-being accepted. -/
+/-- The sweep pairs to `8` on the fixture's second slot. The overwriting and
+    repeated-operand-counted-once mutants, which pair to `4` there, are computed and checked in
+    `ReverseADMutations.lean` (`slotGraph_overwrite_caught` and
+    `slotGraph_repeatedCountedOnce_caught`); this theorem states the reference side of that
+    comparison rather than a hand-written mutant vector. -/
 theorem the_sweep_pairs_to_eight_on_the_second_slot :
     adjointDot exampleGraph
         (adjointAfter exampleGraph exampleGraphValues

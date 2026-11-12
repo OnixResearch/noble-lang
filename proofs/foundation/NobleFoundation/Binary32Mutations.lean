@@ -117,12 +117,14 @@ theorem positive_zero_collapse_is_caught :
     addPositiveZeros 0x80000000 0x80000000 ≠ add 0x80000000 0x80000000 := by
   decide
 
-/-- Variant 3 is caught: the smallest subnormal is retained by the reference and
-flushed to zero by the variant. -/
+/-- Variant 3 is caught: the reference retains subnormal results — the smallest
+subnormal from `1 * 2^-149` and `0x007FFFFF` from the normal-boundary
+subtraction — and the flush variant replaces each with a signed zero. -/
 theorem flush_to_zero_is_caught :
-    flushSubnormal 0x00000001 ≠ 0x00000001
+    flushSubnormal (mul 0x00000001 0x3F800000) ≠ mul 0x00000001 0x3F800000
     ∧ mul 0x00000001 0x3F800000 = 0x00000001
-    ∧ flushSubnormal 0x007FFFFF ≠ 0x007FFFFF := by
+    ∧ flushSubnormal (sub 0x00800000 0x00000001) ≠ sub 0x00800000 0x00000001
+    ∧ sub 0x00800000 0x00000001 = 0x007FFFFF := by
   decide
 
 /-- Variant 4 is caught: the reference separates the two zero signs and two
@@ -154,7 +156,7 @@ retained expectation, and no variant escapes. -/
 theorem all_declared_mutations_are_caught :
     (addTiesAway 0x3F800000 0x33800000 != add 0x3F800000 0x33800000)
     && (addPositiveZeros 0x80000000 0x80000000 != add 0x80000000 0x80000000)
-    && (flushSubnormal 0x00000001 != 0x00000001)
+    && (flushSubnormal (sub 0x00800000 0x00000001) != 0x007FFFFF)
     && (obsEqIgnoringZeroSign 0x00000000 0x80000000)
     && (!obsEq 0x00000000 0x80000000)
     && (subReversed 0x3F800001 0x3F800000 != sub 0x3F800001 0x3F800000)

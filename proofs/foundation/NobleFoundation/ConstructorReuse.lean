@@ -12,9 +12,10 @@
   the targets of that root's fields, but it does not recurse through those
   targets. Reuse overwrites one address only after the old cell is present and
   the requested size matches. The root at that address is treated as having
-  consumed the old value and now observing the replacement. A uniqueness
-  premise is required by the contract theorem; the shared-root fixture shows
-  why the same overwrite is not safe for two aliases.
+  consumed the old value and now observing the replacement. The contract
+  theorem's uniqueness premise is what makes "exactly one root occurrence
+  observes the replacement" true; the shared-root fixture shows that with two
+  aliases the same overwrite changes both occurrences.
 
   Resource movement is not an operation in this model. Eligibility of a
   replacement cell means that every payload in its fields is duplicable, so a
@@ -75,6 +76,36 @@ def reachableFrom (heap : Heap) (roots : List Ref) (reference : Ref) : Prop :=
 def unique (roots : List Ref) (reference : Ref) : Prop :=
   roots.count reference = 1
 
+/-- The root occurrences whose observed cell differs between two heaps. -/
+def changedRoots (heap updated : Heap) (roots : List Ref) : List Ref :=
+  roots.filter fun reference => decide (observe updated reference ≠ observe heap reference)
+
+private theorem filter_beq_eq_singleton (roots : List Ref) (reference : Ref)
+    (hcount : roots.count reference = 1) :
+    roots.filter (fun root => root == reference) = [reference] := by
+  have hmem : reference ∈ roots := by
+    rw [← List.count_pos_iff]
+    omega
+  have hlen : (roots.filter (fun root => root == reference)).length = 1 := by
+    rw [← List.count_eq_length_filter]
+    exact hcount
+  have hall : ∀ root ∈ roots.filter (fun root => root == reference), root = reference := by
+    intro root member
+    exact beq_iff_eq.mp (List.mem_filter.mp member).2
+  match hlist : roots.filter (fun root => root == reference) with
+  | [] =>
+      rw [hlist] at hlen
+      simp at hlen
+  | head :: rest =>
+      have hhead : head = reference := hall head (by rw [hlist]; simp)
+      subst hhead
+      have hrest : rest = [] := by
+        have empty : rest.length = 0 := by
+          rw [hlist] at hlen
+          simpa using hlen
+        exact List.eq_nil_of_length_eq_zero empty
+      rw [hrest]
+
 /-- A cell whose size agrees with the number of fields is initialized for this
     model. -/
 def initialized (cell : Cell) : Prop :=
@@ -119,21 +150,55 @@ theorem reuseStep_refuses_size_mismatch (heap : Heap) (reference : Ref)
     reuseStep heap reference newCell = none := by
   simp [reuseStep, hold, hmismatch]
 
-/-- With one owner, consuming the old value and observing the replacement at
-    the same address leaves every other root's cell unchanged. -/
+/-- With one owner, consuming the old value and observing the replacement at the
+    same address changes exactly the one root occurrence that names it, and
+    leaves every other root's cell unchanged. The uniqueness premise is used in
+    `filter_beq_eq_singleton`: without it the changed occurrence list can hold
+    two entries, as `shared_alias_control` shows. When the replacement is the
+    old cell itself nothing changes, so the count claim is conditional on the
+    cells differing. -/
 theorem reuseStep_replaces_unique_root (heap : Heap) (roots : List Ref)
     (reference : Ref) (oldCell newCell : Cell)
-    (_hunique : unique roots reference)
+    (hunique : unique roots reference)
     (hold : observe heap reference = some oldCell)
     (hsize : oldCell.size = newCell.size) :
     ∃ updated,
       reuseStep heap reference newCell = some updated ∧
         observe updated reference = some newCell ∧
+        (newCell ≠ oldCell → changedRoots heap updated roots = [reference]) ∧
         ∀ other, other ∈ roots → other ≠ reference →
           observe updated other = observe heap other := by
-  refine ⟨updateHeap heap reference newCell, ?_, ?_, ?_⟩
+  refine ⟨updateHeap heap reference newCell, ?_, ?_, ?_, ?_⟩
   · exact reuseStep_success heap reference oldCell newCell hold hsize
   · simp [observe, updateHeap]
+  · intro hnew
+    have hpred : ∀ root ∈ roots,
+        decide (observe (updateHeap heap reference newCell) root ≠ observe heap root)
+          = (root == reference) := by
+      intro root member
+      by_cases same : root = reference
+      · have updated : observe (updateHeap heap reference newCell) root = some newCell := by
+          simp [observe, updateHeap, same]
+        have holdAt : observe heap root = some oldCell := by
+          rw [same]
+          exact hold
+        have differs : decide (observe (updateHeap heap reference newCell) root
+            ≠ observe heap root) = true := by
+          rw [updated, holdAt, decide_eq_true_eq]
+          intro sameCell
+          exact hnew (Option.some.inj sameCell)
+        have self : (root == reference) = true := beq_iff_eq.mpr same
+        rw [differs, self]
+      · have agrees : observe (updateHeap heap reference newCell) root = observe heap root := by
+          simp [observe, updateHeap, same]
+        have equal : decide (observe (updateHeap heap reference newCell) root
+            ≠ observe heap root) = false := by
+          simp [agrees]
+        have distinct : (root == reference) = false := beq_eq_false_iff_ne.mpr same
+        rw [equal, distinct]
+    unfold changedRoots
+    rw [List.filter_congr hpred]
+    exact filter_beq_eq_singleton roots reference hunique
   · intro other _ hother
     simp [observe, updateHeap, hother]
 
@@ -230,17 +295,18 @@ def aliasHeap : Heap :=
 
 def aliasRoots : List Ref := [aliasReference, aliasReference]
 
-/-- Whether the second root's observed cell changes after the overwrite. -/
-def aliasOtherChanged : Bool :=
+/-- The root occurrences whose observed cell changes after the overwrite. -/
+def aliasChangedRoots : List Ref :=
   match reuseStep aliasHeap aliasReference aliasNewCell with
-  | some updated =>
-      decide (observedAt updated aliasRoots 1 ≠ observedAt aliasHeap aliasRoots 1)
-  | none => false
+  | some updated => changedRoots aliasHeap updated aliasRoots
+  | none => []
 
-/-- Shared aliases are refused by the uniqueness contract: an overwrite at the
-    shared address changes the other root's observed value. -/
+/-- **Shared aliases are not refused by the overwrite**: the step succeeds and
+    changes both root occurrences' observed cell, so the reuse contract's
+    uniqueness premise is load-bearing rather than decorative. -/
 theorem shared_alias_control :
-    aliasRoots.count aliasReference = 2 ∧ aliasOtherChanged = true := by
+    aliasRoots.count aliasReference = 2 ∧
+      aliasChangedRoots = [aliasReference, aliasReference] := by
   decide
 
 end NobleFoundation.ConstructorReuse

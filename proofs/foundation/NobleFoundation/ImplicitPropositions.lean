@@ -17,6 +17,12 @@ modelled. This file models it, so that:
   because substituting metas before removing binders rebases twice; the
   composition law is what makes the correct order expressible.
 
+Level occurrences are not only binder indices: `Code.var` inside a
+`SortT.value` and inside an `Eq` code is a binder level too, and the checker's
+`replace_prop` shifts or replaces it in both modes. `Code.shift`,
+`SortT.shift` and `PropT.shift` therefore rewrite those variables as well, and
+the level sets include them.
+
 Tags: symbols below 16 name constructors and a level `ℓ` is symbol `16 + ℓ`,
 exactly as `Code.enc` and `Val.enc` already do. Sorts use 9, 10, 11 and
 propositions 12, 13, 15, so no tag can collide with a level.
@@ -55,6 +61,39 @@ def SortT.enc : SortT → Tm
   | .value c => .app (.sym 10) c.enc
   | .premise => .sym 11
 
+/-- Rebase the variable levels inside a code: the checker's `Code::Variable`
+case. Non-variable code is untouched and a code meta is never a level. -/
+def codeShift (f : Nat → Nat) : Code → Code
+  | .unit => .unit
+  | .bool => .bool
+  | .i64 => .i64
+  | .text => .text
+  | .var level => .var (f level)
+  | .pair left right => .pair (codeShift f left) (codeShift f right)
+  | .sum left right => .sum (codeShift f left) (codeShift f right)
+  | .list item => .list (codeShift f item)
+  | .mvar n => .mvar n
+
+/-- The variable-level occurrences of a code. -/
+def codeLevels : Code → Finset Nat
+  | .var level => {level}
+  | .pair left right => codeLevels left ∪ codeLevels right
+  | .sum left right => codeLevels left ∪ codeLevels right
+  | .list item => codeLevels item
+  | _ => ∅
+
+/-- Rebase the code a value sort carries. -/
+def SortT.shift (f : Nat → Nat) : SortT → SortT
+  | .type0 => .type0
+  | .value c => .value (codeShift f c)
+  | .premise => .premise
+
+/-- The variable-level occurrences of a sort. -/
+def SortT.levels : SortT → Finset Nat
+  | .type0 => ∅
+  | .value c => codeLevels c
+  | .premise => ∅
+
 def PropT.enc : PropT → Tm
   | .pi ℓ s body => .app (.app (.sym 12) (.app (.sym (16 + ℓ)) s.enc)) body.enc
   | .piPremise ℓ s premise body =>
@@ -62,19 +101,20 @@ def PropT.enc : PropT → Tm
   | .eq c lo hi =>
       .app (.app (.sym 15) c.enc) (.app (.sym (16 + lo)) (.sym (16 + hi)))
 
-/-- The level occurrences of a proposition: binder levels, `Eq` levels, and
-the premise's own. -/
+/-- The level occurrences of a proposition: binder levels, `Eq` levels, and the
+variable levels inside the codes a `value` sort or an `Eq` carries. -/
 def PropT.levels : PropT → Finset Nat
-  | .pi ℓ _ body => insert ℓ body.levels
-  | .piPremise ℓ _ premise body => insert ℓ (premise.levels ∪ body.levels)
-  | .eq _ lo hi => {lo, hi}
+  | .pi ℓ s body => insert ℓ (s.levels ∪ body.levels)
+  | .piPremise ℓ s premise body => insert ℓ (s.levels ∪ premise.levels ∪ body.levels)
+  | .eq c lo hi => insert lo (insert hi (codeLevels c))
 
 /-- Capture-avoiding rebasing: apply `f` to every level occurrence. This is
 the checker's `replace_prop` once a binder is removed. -/
 def PropT.shift (f : Nat → Nat) : PropT → PropT
-  | .pi ℓ s body => .pi (f ℓ) s (body.shift f)
-  | .piPremise ℓ s premise body => .piPremise (f ℓ) s (premise.shift f) (body.shift f)
-  | .eq c lo hi => .eq c (f lo) (f hi)
+  | .pi ℓ s body => .pi (f ℓ) (s.shift f) (body.shift f)
+  | .piPremise ℓ s premise body =>
+      .piPremise (f ℓ) (s.shift f) (premise.shift f) (body.shift f)
+  | .eq c lo hi => .eq (codeShift f c) (f lo) (f hi)
 
 /-- The head symbol of an encoded term, if it is a symbol application. -/
 def headSym : Tm → Option Nat
@@ -135,32 +175,96 @@ theorem PropT.enc_injective : Function.Injective PropT.enc := by
 
 /-- Two rebasings compose: shifting by `f` and then by `g` is shifting by
 `g ∘ f`. This is the law the checker's regression exercises. -/
+theorem codeShift_comp (c : Code) (f g : Nat → Nat) :
+    codeShift g (codeShift f c) = codeShift (fun ℓ => g (f ℓ)) c := by
+  induction c with
+  | unit => rfl
+  | bool => rfl
+  | i64 => rfl
+  | text => rfl
+  | var level => rfl
+  | pair left right leftIH rightIH => simp only [codeShift, leftIH, rightIH]
+  | sum left right leftIH rightIH => simp only [codeShift, leftIH, rightIH]
+  | list item ih => simp only [codeShift, ih]
+  | mvar n => rfl
+
+theorem codeShift_id (c : Code) : codeShift id c = c := by
+  induction c with
+  | unit => rfl
+  | bool => rfl
+  | i64 => rfl
+  | text => rfl
+  | var level => rfl
+  | pair left right leftIH rightIH => simp only [codeShift, leftIH, rightIH]
+  | sum left right leftIH rightIH => simp only [codeShift, leftIH, rightIH]
+  | list item ih => simp only [codeShift, ih]
+  | mvar n => rfl
+
+theorem codeLevels_shift (c : Code) (f : Nat → Nat) :
+    codeLevels (codeShift f c) = (codeLevels c).image f := by
+  induction c with
+  | unit => simp [codeShift, codeLevels]
+  | bool => simp [codeShift, codeLevels]
+  | i64 => simp [codeShift, codeLevels]
+  | text => simp [codeShift, codeLevels]
+  | var level => simp [codeShift, codeLevels]
+  | pair left right leftIH rightIH =>
+      simp only [codeShift, codeLevels, leftIH, rightIH, Finset.image_union]
+  | sum left right leftIH rightIH =>
+      simp only [codeShift, codeLevels, leftIH, rightIH, Finset.image_union]
+  | list item ih => simp only [codeShift, codeLevels, ih]
+  | mvar n => simp [codeShift, codeLevels]
+
+theorem SortT.shift_comp (s : SortT) (f g : Nat → Nat) :
+    (s.shift f).shift g = s.shift (fun ℓ => g (f ℓ)) := by
+  cases s with
+  | type0 => rfl
+  | value c => simp only [SortT.shift, codeShift_comp]
+  | premise => rfl
+
+theorem SortT.shift_id (s : SortT) : s.shift id = s := by
+  cases s with
+  | type0 => rfl
+  | value c => simp only [SortT.shift, codeShift_id]
+  | premise => rfl
+
+theorem SortT.levels_shift (s : SortT) (f : Nat → Nat) :
+    (s.shift f).levels = s.levels.image f := by
+  cases s with
+  | type0 => simp [SortT.shift, SortT.levels]
+  | value c => simp only [SortT.shift, SortT.levels, codeLevels_shift]
+  | premise => simp [SortT.shift, SortT.levels]
+
+/-- Two rebasings compose: shifting by `f` and then by `g` is shifting by
+`g ∘ f`. This is the law the checker's regression exercises. -/
 theorem PropT.shift_comp (p : PropT) (f g : Nat → Nat) :
     (p.shift f).shift g = p.shift (fun ℓ => g (f ℓ)) := by
   induction p with
-  | pi ℓ s body ih => simp only [PropT.shift, ih]
+  | pi ℓ s body ih => simp only [PropT.shift, ih, SortT.shift_comp]
   | piPremise ℓ s premise body ihp ihb =>
-      simp only [PropT.shift, ihp, ihb]
-  | eq c lo hi => simp only [PropT.shift]
+      simp only [PropT.shift, ihp, ihb, SortT.shift_comp]
+  | eq c lo hi => simp only [PropT.shift, codeShift_comp]
 
 /-- Rebasal by the identity changes nothing. -/
 theorem PropT.shift_id (p : PropT) : p.shift id = p := by
   induction p with
-  | pi ℓ s body ih => simp [PropT.shift, ih]
-  | piPremise ℓ s premise body ihp ihb => simp [PropT.shift, ihp, ihb]
-  | eq c lo hi => simp [PropT.shift]
+  | pi ℓ s body ih => simp [PropT.shift, ih, SortT.shift_id]
+  | piPremise ℓ s premise body ihp ihb =>
+      simp [PropT.shift, ihp, ihb, SortT.shift_id]
+  | eq c lo hi => simp [PropT.shift, codeShift_id]
 
 /-- Rebasing acts on exactly the level occurrences, and on nothing else. -/
 theorem PropT.levels_shift (p : PropT) (f : Nat → Nat) :
     (p.shift f).levels = p.levels.image f := by
   induction p with
   | pi ℓ s body ih =>
-      simp only [PropT.shift, PropT.levels, ih, Finset.image_insert]
-  | piPremise ℓ s premise body ihp ihb =>
-      simp only [PropT.shift, PropT.levels, ihp, ihb, Finset.image_insert,
+      simp only [PropT.shift, PropT.levels, ih, SortT.levels_shift, Finset.image_insert,
         Finset.image_union]
+  | piPremise ℓ s premise body ihp ihb =>
+      simp only [PropT.shift, PropT.levels, ihp, ihb, SortT.levels_shift,
+        Finset.image_insert, Finset.image_union]
   | eq c lo hi =>
-      simp only [PropT.shift, PropT.levels, Finset.image_insert, Finset.image_singleton]
+      simp only [PropT.shift, PropT.levels, codeLevels_shift, Finset.image_insert]
 
 /-- An encoded proposition is never a metavariable, so no code meta or value
 meta can be solved by a proposition and no proposition can hide a meta. -/
@@ -199,6 +303,18 @@ example : p2.levels = {1, 2} := by decide
 
 /-- Rebasing P2 by predecessor maps its levels, and nothing else. -/
 example : (p2.shift Nat.pred).levels = {0, 1} := by decide
+
+/-- Rebasing moves the code variables too: after taking the predecessor, `Var 0` names the
+`Value` binder. The previous model left `Var 1` here, which then named the `Value` binder itself —
+the reviewer's counterexample, and the reason `replace_prop` shifts `Code::Variable`. -/
+example : p2.shift Nat.pred =
+    .pi 0 .type0 (.pi 1 (.value (.var 0)) (.eq (.var 0) 1 1)) := by decide
+
+/-- An `Eq` code's variable level is a level occurrence, collected with the `Eq` indices. -/
+example : (PropT.eq (.var 4) 5 6).levels = {4, 5, 6} := by decide
+
+/-- Rebasing an `Eq` shifts the code's variable along with the two indices. -/
+example : (PropT.eq (.var 4) 5 6).shift Nat.succ = .eq (.var 5) 6 7 := by decide
 
 /-- A premise proposition is a proposition, never a metavariable. -/
 example : (PropT.eq (.list .unit) 0 0).enc ≠ .mvar 0 := PropT.enc_ne_mvar _ 0
