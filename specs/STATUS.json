@@ -1219,10 +1219,18 @@
       "execution": "not-run",
       "proof": "open",
       "trust": "unassessed",
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "NGRAPH-CASE-02",
+          "result": "insufficient",
+          "receipt": "../verification/ngraph-purity/observation.json",
+          "scope": "Static crate-boundary gate only: supporting evidence that does not discharge NGRAPH-CASE-02. The receipt lists 23 library sources while crates/noble-ngraph/src holds 27, so its scan and source count are stale."
+        }
+      ]
     },
     "held_gaps": {
-      "NGRAPH-CASE-02": "Complete forbidden-capability-use=0 closure is missing: 637 relevant unknowns remain; no_std, dependency inspection, an ordinary source-only collection or artifact integrity verification is not compiler-authenticated caller/callback closure."
+      "NGRAPH-CASE-02": "Complete forbidden-capability-use=0 closure is missing: 637 relevant unknowns remain; no_std, dependency inspection, a static source-text boundary scan, an ordinary source-only collection or artifact integrity verification is not compiler-authenticated caller/callback closure."
     },
     "selected_tool_boundary": {
       "scope": "Complete 88-unit ordinary source-only collection and actual permanent-wrapper artifact consumer; not authenticated-origin or Architecture PASS.",

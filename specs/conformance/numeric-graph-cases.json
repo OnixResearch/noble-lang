@@ -177,23 +177,24 @@
         "identity_hash_injected": true
       },
       "state": {
-        "implementation": "implemented",
-        "execution": "passed",
+        "implementation": "absent",
+        "execution": "not-run",
         "proof": "open",
-        "trust": "explicit"
+        "trust": "unassessed"
       },
       "evidence": [
         {
           "kind": "test",
           "subject": "NGRAPH-CASE-02",
-          "claim": "verification/ngraph-purity/gate.mjs checks the crate boundary statically: src/lib.rs declares `#![no_std]` unconditionally, the manifest and the offline workspace metadata both resolve exactly noble-contracts and noble-kernel as normal dependencies with no build dependencies, none of 23 library sources contains a std filesystem/network/process/environment/time/concurrency surface, `extern \"C\"` or an unsafe block, and src/identity.rs declares the injected `IdentityHasher` trait object without selecting DefaultHasher, RandomState, SipHasher or std::collections::hash_map.",
+          "claim": "Supporting boundary evidence only: verification/ngraph-purity/gate.mjs passes five static checks over the declared crate: src/lib.rs declares `#![no_std]` unconditionally, the manifest and the offline workspace metadata both resolve exactly noble-contracts and noble-kernel as normal dependencies with no build dependencies, none of the scanned library sources contains a std filesystem/network/process/environment/time/concurrency surface, `extern \"C\"` or an unsafe block, and src/identity.rs declares the injected `IdentityHasher` trait object without selecting DefaultHasher, RandomState, SipHasher or std::collections::hash_map. This evidence does not discharge NGRAPH-CASE-02: `#![no_std]` is a crate/build constraint rather than a transitive purity guarantee, and a source-text scan is not the selected compiler-authenticated complete caller/callback capability closure.",
           "revision": "0.1.0-draft.5",
           "source_revision": "sha256:f0d249761a50b9bca1665f1756b87bddec5fc020d33a225a2a0e2bb66defa6f0",
-          "result": "passed",
+          "result": "insufficient",
           "configuration": {
-            "receipt": "verification/ngraph-purity/observation.json",
+            "receipt": "../../verification/ngraph-purity/observation.json",
             "manifest_sha256": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
             "source_files": 23,
+            "current_library_sources": 27,
             "checks": [
               "crate-attribute-no-std",
               "normal-dependencies",
@@ -203,7 +204,8 @@
             ]
           },
           "assumptions": [
-            "Static boundary checks over declared sources and metadata, not a proof of source purity, native-assurance receipt or Octet architecture admission.",
+            "Static boundary checks over declared sources and metadata, not a proof of source purity, native-assurance receipt or Octet architecture admission, and not an execution of the capability claim.",
+            "The receipt's source list and digest cover the 23 library sources present when it was recorded; crates/noble-ngraph/src now holds 27 .rs files, so the scan does not cover batch.rs, cert.rs, layout.rs or schedule.rs and its count is stale.",
             "Forbidden-capability scanning matches literal source needles; an obfuscated alias could evade a textual scan, which is why no proof claim is made."
           ]
         }

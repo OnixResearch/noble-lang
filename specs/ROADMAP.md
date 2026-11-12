@@ -120,7 +120,9 @@ execution records (03/04/05/09/11/12) retain their historical preliminary
 packet and carry a fresh full-source safety observation for the final
 candidate; the exact integrated-source cold-review and bounded terminal
 receipts bind their disposition. Their proofs stay open. CASE-02 remains
-`absent/not-run/open/unassessed` with empty evidence: 637 relevant compiler
+`absent/not-run/open/unassessed`; its only recorded evidence is the static
+crate-boundary gate (`../verification/ngraph-purity/observation.json`), which is
+supporting evidence and not closure: 637 relevant compiler
 unknowns remain, and ordinary source-only coverage plus artifact-integrity
 verification do not establish authenticated caller/callback capability
 closure. The current selected-tool r8 record covers all 88 ordinary source-only
