@@ -280,7 +280,7 @@ function check(options) {
   return result.status === 'fail' ? 1 : 0;
 }
 
-function parseArguments(argv) {
+export function parseArguments(argv) {
   const options = { command: argv[0], margins: DEFAULT_MARGINS, vectors: [], traces: [], jobs: 1 };
   for (let at = 1; at < argv.length; at += 1) {
     const word = argv[at];
@@ -293,8 +293,14 @@ function parseArguments(argv) {
     else if (word === '--noble') options.noble = value();
     else if (word === '--out') options.out = value();
     else if (word === '--vector') options.vectors.push(value());
-    else if (word === '--jobs') options.jobs = Math.max(1, Math.min(3, Number(value())));
-    else if (word.startsWith('--')) throw new Error(`unknown option ${word}`);
+    else if (word === '--jobs') {
+      const raw = value();
+      const jobs = Number(raw);
+      // A non-numeric or fractional count silently ran no worker and reported a
+      // pass; only a positive integer is a job count.
+      if (!Number.isInteger(jobs) || jobs < 1) throw new Error(`--jobs must be a positive integer, not ${raw}`);
+      options.jobs = Math.min(3, jobs);
+    } else if (word.startsWith('--')) throw new Error(`unknown option ${word}`);
     else options.traces.push(word);
   }
   return options;

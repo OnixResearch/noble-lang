@@ -2,8 +2,13 @@
 // No calculator execution; the full-chain run is `calculator-headroom.mjs run`.
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_MARGINS, evaluate, environmentShare, parseMargin, parseTrace, sessions,
+  DEFAULT_MARGINS, evaluate, environmentShare, parseArguments, parseMargin, parseTrace, sessions,
 } from './calculator-headroom.mjs';
 
 const caps = {
@@ -103,4 +108,21 @@ test('environment share isolates the per-body allowance of the tightest compile'
   assert.equal(share.environment, 360);
   assert.equal(share.worst.headroom, 50_000_000);
   assert.equal(share.worst.headroom_without_per_body_scans, 50_000_200);
+});
+
+test('--jobs accepts only a positive integer and caps the worker count', () => {
+  assert.equal(parseArguments(['run', '--jobs', '2']).jobs, 2);
+  assert.equal(parseArguments(['run', '--jobs', '9']).jobs, 3);
+  for (const raw of ['x', '0', '-1', '1.5', '', 'NaN'])
+    assert.throws(() => parseArguments(['run', '--jobs', raw]), /--jobs must be a positive integer/);
+});
+
+test('run with a non-numeric --jobs is a usage error, not a zero-compile pass', () => {
+  const out = join(mkdtempSync(join(tmpdir(), 'noble-headroom-')), 'out');
+  const observed = spawnSync(process.execPath,
+    [join(dirname(fileURLToPath(import.meta.url)), 'calculator-headroom.mjs'),
+      'run', '--noble', '/nonexistent/noble', '--out', out, '--jobs', 'x'], { encoding: 'utf8' });
+  assert.equal(observed.status, 2);
+  assert.match(observed.stderr, /--jobs must be a positive integer, not x/);
+  assert.equal(existsSync(out), false, 'a usage error must not leave a partial output directory');
 });
