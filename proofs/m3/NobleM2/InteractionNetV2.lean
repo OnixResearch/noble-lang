@@ -13,8 +13,10 @@ The three decisions that shape the table are recorded here as theorems rather th
   auxiliary-to-auxiliary value wires are permitted;
 - there is **one value domain**: `Eq` produces `I64` 0/1, so no second wire type exists.
 
-What is not here: wire incidence, boundary order, active-pair inventory or size limits. Those are the
-validator's checks and are the next unit; reduction is not modelled at all.
+The vocabulary's checks are here one at a time — wire incidence, the reciprocal-pair and unique
+incidence predicates, boundary order, the active-pair inventory and the admission size limits — but
+nothing here combines them into a whole-net admission decision: a caller has to apply them together.
+No reduction is modelled in this file; `InteractionNetReduce` holds the revision-2 rule and reducer.
 -/
 
 namespace NobleM2.InteractionNet
@@ -133,30 +135,48 @@ theorem reciprocal_reverse {wires : List Wire} {w : Wire} (h : reciprocal wires 
   rw [← hve]
   exact hv
 
-/-- Every wired port is touched exactly twice: once by its own wire, once by the reciprocal. -/
+/-- Every wired port is touched exactly twice: once by its own wire and once by the reciprocal, so
+each port belongs to one wire of the net. This is the check that pairs with `reciprocal`: on a
+reciprocal wire list it accepts exactly the lists in which no port is wired twice, and a wire list
+that is not reciprocal has each end touched once and is refused. -/
 def uniqueIncidence (wires : List Wire) : Bool :=
-  wires.all fun w => (incidence wires w.1 == 1) && (incidence wires w.2 == 1)
+  wires.all fun w => (incidence wires w.1 == 2) && (incidence wires w.2 == 2)
 
-/-- Unique incidence pins the count at one per wire end. -/
+/-- Unique incidence pins the touch count at two per wire end. -/
 theorem uniqueIncidence_left {wires : List Wire} {w : Wire}
-    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.1 = 1 := by
+    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.1 = 2 := by
   have hall := List.all_eq_true.mp h w hmem
   rw [Bool.and_eq_true] at hall
   simpa using hall.1
 
 theorem uniqueIncidence_right {wires : List Wire} {w : Wire}
-    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.2 = 1 := by
+    (h : uniqueIncidence wires = true) (hmem : w ∈ wires) : incidence wires w.2 = 2 := by
   have hall := List.all_eq_true.mp h w hmem
   rw [Bool.and_eq_true] at hall
   simpa using hall.2
 
-/-- Under unique incidence both ends of a wire are touched exactly once, so a wire accounts for two
-port ends. Reciprocity is not needed for this count; it is needed to know the `1` at each end is the
-reverse wire rather than a second wire to the same port. -/
+/-- Under unique incidence each end of a wire is touched twice — once by the wire itself and once by
+its reciprocal — so the two ends account for four end-occurrences. Reciprocity is what makes those
+two touches the reverse wire rather than a second wire to the same port. -/
 theorem unique_incidence_two_ends {wires : List Wire} {w : Wire}
     (huniq : uniqueIncidence wires = true) (hmem : w ∈ wires) :
-    incidence wires w.1 + incidence wires w.2 = 2 := by
+    incidence wires w.1 + incidence wires w.2 = 4 := by
   rw [uniqueIncidence_left huniq hmem, uniqueIncidence_right huniq hmem]
+
+/-- The two checks are consistent: one wire between two distinct ports, listed in both directions,
+is reciprocal and has unique incidence. This is the shape an admitted net has. -/
+theorem reciprocal_unique_accepts_wire :
+    reciprocal [((0, some 1), (1, some 0)), ((1, some 0), (0, some 1))] = true ∧
+      uniqueIncidence [((0, some 1), (1, some 0)), ((1, some 0), (0, some 1))] = true :=
+  ⟨by decide, by decide⟩
+
+/-- The acceptance theorem above is not vacuous: together the two checks do not accept only the empty
+wire list, which is what they would do if `uniqueIncidence` asked for a single touch per end. -/
+theorem reciprocal_unique_accepts_more_than_empty :
+    ¬ ∀ ws : List Wire, reciprocal ws = true → uniqueIncidence ws = true → ws = [] := by
+  intro h
+  have hnil := h _ reciprocal_unique_accepts_wire.1 reciprocal_unique_accepts_wire.2
+  exact absurd hnil (by decide)
 
 /-- A revision-2 net: agent kinds, wires, and ordered boundary positions by agent index. -/
 structure Net where
@@ -229,7 +249,8 @@ def AgentKind.isValueSource : AgentKind → Bool
   | .input => true
   | _ => false
 
-/-- The wires whose principal end is a value source: what a reducer's worklist starts from. -/
+/-- The wires whose principal end is a value source: what a delivery-capable reducer's worklist
+would start from. -/
 def activePairs (net : Net) : List Wire :=
   net.wires.filter fun w =>
     match net.kindAt w.1.1 with
@@ -267,7 +288,8 @@ theorem filter_length_le {α : Type} (p : α → Bool) :
 theorem activePairs_length_le (net : Net) : (activePairs net).length ≤ net.wires.length :=
   filter_length_le _ net.wires
 
-/-- Size limits for admission, charged before growth. -/
+/-- The admission size limits: an agent cap and a wire cap, each checked against the net's current
+count. -/
 def withinLimits (net : Net) (maxAgents maxWires : Nat) : Bool :=
   (decide (net.agents.length ≤ maxAgents)) && decide (net.wires.length ≤ maxWires)
 

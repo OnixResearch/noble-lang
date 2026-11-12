@@ -2,9 +2,10 @@
 
 Status: **selected for #37**. The four semantic questions left open in the candidate are decided
 below, each with the reason that decided it. Dependent issues (#105, #107, #108, #109, #110, #112–#115)
-may now reference revision 2 by name; they must still say which parts of it they implement, and no
-proof is claimed by this document — `InteractionNet.lean` remains a structural validator and
-reduction semantics are not implemented.
+may now reference revision 2 by name; they must still say which parts of it they implement. This
+document claims no proof of its own: the vocabulary is `proofs/m3/NobleM2/InteractionNetV2.lean` and
+the local rule and stack reducer are `proofs/m3/NobleM2/InteractionNetReduce.lean`, with the limits
+stated at the end of this document.
 
 ## The four decisions
 
@@ -48,8 +49,8 @@ therefore **legal** — this is fix 3.
 
 1. **Arithmetic fires on operands, not principals.** A binary agent with a value on *both* operand
    stacks reduces and pushes its result onto its result wire. `Add` and `Mul` are
-   wrapping I64 operations with no overflow-mode dependence; `Eq` yields `Bool`; `Sub` is
-   `first - second` in **port order**, never in source order — this is fix 2.
+   wrapping I64 operations with no overflow-mode dependence; `Eq` yields I64 `0`/`1` in the single
+   value domain; `Sub` is `first - second` in **port order**, never in source order — this is fix 2.
 2. **Deeper operand first** is a property of each operand *stack*: values pushed later are consumed
    first (LIFO). Because order comes from the port and the stack discipline, an identity agent on a
    wire cannot reorder anything.
@@ -66,15 +67,17 @@ therefore **legal** — this is fix 3.
 - the ordered output vector equals the checked graph's declared outputs, under exact wrapping I64;
 - no active-pair count grows without a charged rewrite (progress bound, #37 item 5).
 
-## What needs ratification before this is selected
+## What the local model covers
 
-| Question | Candidate answer | Why it matters |
-|---|---|---|
-| Are operand stacks LIFO or FIFO? | LIFO | determines whether "deeper operand first" is a stack law or a source-order rule; FIFO would revive counterexample 2 |
-| Does `Erase` fire eagerly or only when its wire carries a value? | only on a value | eager erase would silently drop a pending computation |
-| Are `Eq` results `Bool` values on the same wires as I64? | yes, one value domain | otherwise `Eq` needs a second wire type and revision 1's principal rule reappears |
-| Is fanout synchronous (both copies before either is consumed)? | no, lazy | synchronous copying forces a barrier and changes the progress bound |
-
-Selecting revision 2 (or amending these four answers) is the decision #105, #107–#110 and #112–#115
-are waiting on. Nothing here is claimed as proved; `InteractionNet.lean` remains a structural
-validator, and reduction semantics are not implemented.
+`proofs/m3/NobleM2/InteractionNetReduce.lean` models the rule of point 1 for the four arithmetic
+agents (`fire`, `stepNode`) and states the fanout and erase effects of points 3 and 4 as formulas it
+never fires; point 2 is a property of the operand stacks in the type. It does **not** model delivery:
+a firing drops the value it computes instead of pushing it onto its result wire, so no agent's result
+reaches another agent's operand stack. Points 3, 4 and 5 are decisions about the contract, not
+behaviours of a whole-net run, and `readBack` models only the count check of point 5 — it does not
+check that any agent is left holding a consumable value. Of the invariants above, the model proves
+that the waiting-value count does not grow (`stepList_stackValues_le`) and that no step increases the
+space potential (`stepList_spacePotential_le`); the multiset invariant, the read-back-against-graph
+invariant and a charged rewrite bound need delivery, a bound graph and per-step charging, none of
+which the model has. `proofs/foundation/NobleFoundation/InteractionNet.lean` remains the revision-1
+structural validator.
