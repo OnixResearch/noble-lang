@@ -24,6 +24,10 @@
 #   `noble-wasm`'s wat must be present. The user cargo home works; a partial
 #   registry fails before compiling and reads as a missed refusal.)
 #   CARGO_HOME="$HOME/.cargo"
+#   (A user cargo config that injects linker flags, such as
+#   `-C link-arg=-fuse-ld=mold`, also fails the scratch link and reads as a
+#   missed refusal; clear it with RUSTFLAGS= and
+#   CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS= for this run.)
 #
 # Mutations (each a separate cell, per the M1 control-matrix convention):
 # The expected check is the strict tier's (the m3 root builds); the case list
