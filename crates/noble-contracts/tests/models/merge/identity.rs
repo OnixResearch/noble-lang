@@ -9,6 +9,10 @@
     reason = "Owner: noble-maintainers; the test-only model modules import their sibling relation, identity and fixture types directly so the bounded model stays readable"
 )]
 use super::model::{Op, Program};
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; a pure length-delimited fold over the program's fields; the model tests that call it assert the identities it separates."
+)]
 pub(super) fn subject_hash(program: &Program) -> u64 {
     let mut hash = 0xcbf2_9ce4_8422_2325u64;
     // Every field is length-delimited: an op list, a capture list and a callee

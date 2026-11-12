@@ -289,45 +289,5 @@ fn release_requires_a_matching_subject() -> Result<(), String> {
     Ok(())
 }
 
-#[test]
-fn identity_rules_restate_a_premise_and_refuse_a_duplicate() -> Result<(), String> {
-    use noble_contracts::companion::RuleId;
-    // `admit-lean`, `guard`, `project` and `invoke` transport an existing
-    // theorem; they never mint a second entry for the same contract, claim and
-    // subject, so the only sound replay result is `DuplicateEntry`.
-    for (contract_bytes, proof, rules) in [
-        (
-            INCREMENT,
-            PROOF,
-            &[RuleId::AdmitLeanV1, RuleId::ProjectV1, RuleId::InvokeV1][..],
-        ),
-        (
-            GUARDED,
-            GUARDED_PROOF,
-            &[
-                RuleId::AdmitLeanV1,
-                RuleId::GuardV1,
-                RuleId::ProjectV1,
-                RuleId::InvokeV1,
-            ][..],
-        ),
-    ] {
-        let contract = prepared(contract_bytes)?;
-        let mut core = noble_contracts::companion::Core::new(LIMITS);
-        let (admission, subject) = proved_evidence(&mut core, &contract, proof)?;
-        let evidence = admission.evidence.ok_or("proved without evidence")?;
-        // The transport rules compare against the retained subject, which
-        // `bind` returns after checking the observation applies.
-        let retained = core
-            .bind(evidence, &subject)
-            .map_err(|error| format!("bind: {error:?}"))?;
-        for rule in rules {
-            assert_eq!(
-                core.replay(&derivation(*rule, &admission, &retained, vec![evidence])?),
-                Err(noble_contracts::companion::Refusal::DuplicateEntry),
-                "{rule:?} restates the premise instead of minting"
-            );
-        }
-    }
-    Ok(())
-}
+#[path = "companion/transport.rs"]
+mod transport;

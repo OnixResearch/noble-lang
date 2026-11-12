@@ -245,7 +245,7 @@ fn generic_definitions_check_open_constraints_without_execution() -> Result<(), 
     // A refused preparation must not move the counter; the successful commit
     // below would otherwise land two generations ahead.
     define(&mut session, b"def accepted [ 3 + ]")?;
-    assert_eq!(session.generation(), generation + 1);
+    assert_eq!(Some(session.generation()), generation.checked_add(1));
     Ok(())
 }
 
