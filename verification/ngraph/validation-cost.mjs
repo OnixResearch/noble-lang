@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectedVendor } from '../selected-vendor.mjs';
+import { harnessBinding } from './harness-binding.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const validatorFiles = Object.freeze(['crates/noble-ngraph/src/layout.rs', 'crates/noble-ngraph/src/schedule.rs']);
@@ -129,7 +130,7 @@ function main() {
     schema: 'noble-ngraph-validation-cost/v1', result: 'measured',
     source_commit: commit, source_tree: tree, clean_source: status === '', baseline_commit: baseline,
     baseline_scope: `the current source with ${validatorFiles.join(' and ')} replaced by the baseline commit's`,
-    harness: { path: harness, sha256: sha256(fs.readFileSync(path.join(root, harness))) },
+    harness: harnessBinding(root, commit, harness, git),
     toolchain: { rustc: tools.version, vendor_nar_hash: tools.vendor.narHash },
     command: ['cargo', ...commandArgs],
     variants, median_speedup: speedup,
