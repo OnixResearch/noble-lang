@@ -471,9 +471,12 @@
           cargo build --locked --offline -p noble-cli --bin noble --no-default-features
           cargo clippy --locked --offline -p noble-cli --all-targets --no-default-features -- -D warnings
           NOBLE_CALCULATOR_ASSEMBLER="$CARGO_TARGET_DIR/debug/noble" \
-            node --test crates/noble-cli/src/core/runtime/engine-assets.test.mjs \
-              crates/noble-cli/src/core/runtime/engine-calculator.test.mjs > "$out/calculator-engine.log"
-          grep -Fxq 'ℹ skipped 0' "$out/calculator-engine.log"
+            node --test --test-reporter=tap crates/noble-cli/src/core/runtime/engine-assets.test.mjs \
+              crates/noble-cli/src/core/runtime/engine-calculator.test.mjs > "$out/calculator-engine.log" 2>&1 \
+            || { cat "$out/calculator-engine.log"; exit 1; }
+          # The sandbox's stderr is a terminal, so the default reporter colours its
+          # summary lines; TAP never does, and its summary line is exact.
+          grep -Fxq '# skipped 0' "$out/calculator-engine.log" || { cat "$out/calculator-engine.log"; exit 1; }
           printf '%s\n' 'shipped CLI: no-default-features build and clippy passed; calculator Node suites ran without skips' > "$out/validated.txt"
         '';
         verification-self-tests = mkCheck "noble-verification-self-tests" [
