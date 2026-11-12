@@ -43,7 +43,9 @@ export function monitor(report) {
       pending = event;
       committed = false;
     } else if (event.kind === 'commit') {
-      if (pending?.operation !== 'region.read') flag('unsolicited-commit', index);
+      // P3: every protected commit is immediately preceded by its read
+      // request, so one read request authorises exactly one commit.
+      if (pending?.operation !== 'region.read' || committed) flag('unsolicited-commit', index);
       committed = true;
     } else if (event.kind === 'response') {
       if (pending === null) {
