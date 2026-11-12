@@ -1232,7 +1232,7 @@ records 108 independent cases generated from the model, of which 15 accepted and
 6 rejected cases are driven through the actual acceptance machine
 (`noble_kernel::acceptance::check`) over the unary `dup`/`drop` fragment, and 87
 are model-only. A test-local shadow checker agrees with every expectation and
-each of seven declared mutations (duplicating or releasing a must-use resource,
+each of six declared mutations (duplicating or releasing a must-use resource,
 drops one operand during `swap`, consuming a quoted operand, ignoring branch
 accounting, permitting an error return with an outstanding operand) is caught by
 at least one retained expectation. The model-only controls include a branch
@@ -1320,7 +1320,7 @@ witness and registers exactly one not-yet-started attempt
 checkpoint quota bound and attempt/charge accounting
 (`admission_preserves_alignment`, `admission_preserves_uniqueness`,
 `admission_preserves_quota`, `admission_preserves_attempts_charged`); any finite
-serialized prefix keeps alignment (`acquirePrefix_preserves_alignment`); an
+serialized prefix keeps alignment (`prefix_preserves_alignment`); an
 altered requested plan, revoked or stale facts, or an already started attempt
 mint nothing (`altered_plan_cannot_mint`, `stale_facts_cannot_mint`,
 `started_attempt_cannot_start_again`). Four mutation models break the
@@ -1696,9 +1696,12 @@ Open, and deliberately not closed:
   other result (`Refusal::ResultMismatch`), but that fix is implementation
   evidence rather than a Lean correspondence result;
 - `crates/noble-ngraph/tests/cert_differential.rs` executes both endpoints of
-  single-step folds on the compiled and reference evaluators; no multi-step
-  simplification is admitted, and its expectations are computed in Rust rather
-  than kernel-checked;
+  single-step folds and of a three-step certificate (two independent folds and a
+  recorded identity) on the compiled and reference evaluators; no dependent
+  multi-step simplification is admitted beyond that, corrupting any step after the
+  first is refused, including the identity step's operand order and, under the
+  canonical-bits rule, its declared bits and claim, and its expectations are
+  computed in Rust rather than kernel-checked;
 - substitution/transitivity closure, a full e-graph, guard/failure-preserving
   rewrites and `F32` laws are outside phase 1; value preservation says nothing
   about fuel, allocation, cancellation behaviour or recipe identity;
@@ -1806,7 +1809,8 @@ it refused the compiler's own parameter layouts.
 `NobleFoundation/CertificateCodec.lean` models a token codec for the same
 `ngraph-cert/0` derivation: one seven-token chunk per step, a rule token that must
 decode through the modelled rule set, decimal bit tokens that must stay inside the
-64-bit range, and a revision token the decoder re-checks before any step.
+64-bit range, a declared step count and a revision token the decoder re-checks
+before any step.
 
 Proved: decoding an encoded step returns the same step (`decode_encode_step_replays`)
 and decoding an encoded derivation returns the derivation itself
@@ -1815,10 +1819,13 @@ and decoding an encoded derivation returns the derivation itself
 (`encodeStep_length`), so a six-token tail is refused (`truncated_step_refused`);
 an unknown rule token refuses the step (`unknown_rule_token_refused`); and a stale
 revision token refuses decoding before any step is inspected
-(`stale_revision_token_refused`).
+(`stale_revision_token_refused`). The envelope's declared step count is checked
+before decoding (`chunk_count_refused`), so a chunk removed in transit refuses
+(`dropped_chunk_refused`) instead of decoding into a shorter derivation.
 
-The clean-source kernel check is retained at `verification/foundation/receipts/26fca0806/`
-(381 theorems, `clean_source: true`, every axiom set inside the allow-list).
+The seven earlier theorems were retained at `verification/foundation/receipts/26fca0806/`
+(381 theorems, `clean_source: true`, every axiom set inside the allow-list); the
+two count theorems are newer than that receipt.
 
 Not claimed: tokens are modelled as strings and no byte-level envelope is modelled,
 so nothing here binds the `serde`/binary bytes the Rust encoder writes; envelope
@@ -1830,8 +1837,10 @@ digests, replay-budget accounting and the identity rules are out of scope.
 `crates/noble-ngraph/src/cert.rs` emits: the revision, the declared step bound, the
 ordered step list (rule identity, rewritten node, ordered operands, declared
 constant bits, claimed value), the decode of rule identities to the graph
-checker's claims, the structural bit comparison against the graph, and acceptance
-of a whole derivation.
+checker's claims, the structural bit comparison against the graph — which for the
+identity rules requires the declared bits to be the graph's exact zero or one, the
+two declared bit fields to agree and the claim to be zero — and acceptance of a
+whole derivation.
 
 Proved: a certificate naming another revision is refused
 (`stale_revision_refused`) and that refusal kills acceptance even when every step
@@ -1847,12 +1856,22 @@ order while leaving identity steps unchanged, and the endpoint theorem
 (`accepted_endpoint_equivalence`) proves agreement of every node denotation
 under an accepted derivation whose premises are checked against the original
 graph. The two-independent-fold fixture and substituted-result control are
-`multiFold_endpoint` and `substituted_result_differs`. Thirteen inventoried
-theorems; receipt
+`multiFold_endpoint` and `substituted_result_differs`. The identity fixture's two
+canonical steps are accepted (`neutral_add_left_step_accepted`,
+`neutral_mul_right_step_accepted`), every accepted `0 + x` step declares the graph's
+zero in both bit fields and claims zero (`neutral_add_left_bits_canonical`), every
+accepted `x * 1` step does the same with the graph's one
+(`neutral_mul_right_bits_canonical`), and a step that declares other bits, disagrees
+with itself or claims a nonzero constant is refused
+(`neutral_add_left_bits_refused`, `neutral_add_left_second_bits_refused`,
+`neutral_add_left_claim_refused`, `neutral_mul_right_bits_refused`,
+`neutral_mul_right_first_bits_refused`, `neutral_mul_right_claim_refused`).
+Twenty-three inventoried theorems; the thirteen earlier ones are retained at
 [`verification/foundation/receipts/50ec19885/`](../../verification/foundation/receipts/50ec19885/foundation-check.json)
 (594 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`). The first seven were first retained at
-`d67efd4a2` (374 theorems).
+`implementation_theorem: false`), and the first seven were first retained at
+`d67efd4a2` (374 theorems). The ten canonical-bits theorems are newer than that
+receipt.
 
 Open, and deliberately not closed:
 
@@ -2120,7 +2139,10 @@ The models are the solvers', so nothing here certifies a pair, and no encoder is
 inventoried theorems, each depending only on `propext`.
 The clean-source receipt is
 [`verification/foundation/receipts/73cec09e8/`](../../verification/foundation/receipts/73cec09e8/foundation-check.json)
-(1239 theorems, `clean_source: true`, Lean 4.35.0).
+(1239 theorems, `clean_source: true`, Lean 4.35.0). Its `source_commit` field
+names `68d4f355`, the amended-away first version of the evidence commit that no
+ref contains; its proof sources are byte-identical to `73cec09e`'s, so the
+directory is named for the reachable commit that retains those bytes.
 
 ## Specification-quality obligations (issue #65)
 
