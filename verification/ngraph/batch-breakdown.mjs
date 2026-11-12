@@ -2,12 +2,12 @@
 // entry point. It runs one ignored release harness
 // (crates/noble-ngraph/tests/batch_rows/breakdown.rs) over an archived copy of the committed source
 // with the pinned toolchain and reviewed vendor. Reporting only: no timing threshold is asserted.
-import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectedVendor } from '../selected-vendor.mjs';
+import { harnessBinding } from './harness-binding.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const harness = 'crates/noble-ngraph/tests/batch_rows/breakdown.rs';
@@ -16,7 +16,6 @@ const commandArgs = Object.freeze([
   '--', '--ignored', '--nocapture', '--exact', 'breakdown::cold_staging_and_bytes',
 ]);
 const requireThat = (condition, message) => { if (!condition) throw new Error(message); };
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const git = fs.realpathSync('/run/current-system/sw/bin/git');
 const tar = fs.realpathSync('/run/current-system/sw/bin/tar');
 
@@ -31,9 +30,9 @@ function parseArgs(argv) {
   return options;
 }
 
-function gitText(argv) {
+function gitText(argv, options = {}) {
   const result = spawnSync(git, argv, {
-    cwd: root, encoding: 'utf8', maxBuffer: 1024 * 1024 * 1024,
+    cwd: root, encoding: options.encoding ?? 'utf8', maxBuffer: 1024 * 1024 * 1024,
     env: { PATH: path.dirname(git), HOME: '/nonexistent', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' },
   });
   requireThat(result.status === 0, `git ${argv.join(' ')} failed: ${result.stderr}`);
@@ -106,7 +105,7 @@ function main() {
   const receipt = {
     schema: 'noble-ngraph-batch-breakdown/v1', issue: 41, result: 'measured',
     source_commit: commit, source_tree: tree, clean_source: status === '',
-    harness: { path: harness, sha256: sha256(fs.readFileSync(path.join(root, harness))) },
+    harness: harnessBinding(root, commit, harness, git),
     toolchain: { rustc: tools.version, vendor_nar_hash: tools.vendor.narHash },
     command: ['cargo', ...commandArgs],
     workload: 'the measure.rs graph: two I64 inputs, add, mul, mul, sub, eq; two outputs; rows cycle the seven i64 boundary values',

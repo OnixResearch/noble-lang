@@ -8,8 +8,8 @@ every family, control, gate, and refusal, with the command and its
 outcome. Baseline tree at first recording: `c668dac` (kernel v1
 `53f2fcf`, re-extraction `be7d986`, package `50807a9`, proof-root
 commits through `c668dac`); the matrix below was re-run on the final
-tree with the v1 proof root building (strict tier) and the v1 refusal
-matrices in place.
+tree with the v1 proof root building (the gate's build-or-fail tier) and the
+v1 refusal matrices in place.
 Kernel-gate evidence for tasks 2.1–2.4 lives in
 [m3-kernel-gates.md](m3-kernel-gates.md); every row below marked
 "re-run" was executed again on this tree while writing this document.
@@ -116,22 +116,35 @@ What the M3 acceptance sequence claims, and what it does not:
 | per-word doc-example coverage assertion | done (task 3.2, evidence below) |
 | DX-01 rejection-family controls | done (task 3.3, evidence below) |
 
-## Task 6.1 evidence: the m3 gates on the final tree (strict tier)
+## Task 6.1 evidence: the m3 gates on the final tree (single tier)
 
 `verification/m3-proof-gate.sh` and `verification/m3-coverage-gate.sh`
-succeed the M2 gates (never weakening them). Each has two tiers: the
-strict tier runs the full battery against `proofs/m3` (the v1
-required-theorem inventory — the theorem contract of
-[m3-proof-evidence.md](m3-proof-evidence.md) §6, enumerated in the gate
-itself — the per-name axiom policy, semantic subject binding;
-the coverage battery over `verification/m3-coverage.json` with the
-`m3-coverage-join.mjs` join tool, whose citation partition routes each
-citation namespace to the checker whose import surface can see it); the
-handoff tier remains as the M2-floor mode for a root that does not
-build, and is not engaged on this tree.
+succeed the M2 gates (never weakening them). Each gate has a single tier:
+the root must build. A `lake build` failure is a `FAIL BUILD` in
+either gate, with no handoff mode that could pass a proof tree that does
+not compile.
 
-Both gates pass in the strict tier on the final tree (pinned lean
-4.31.0), each with the whole battery green:
+The proof gate runs the v1 required-theorem inventory — the theorem
+contract of [m3-proof-evidence.md](m3-proof-evidence.md) §6, enumerated
+in the gate itself — the per-name axiom policy and semantic subject
+binding. Beyond that list it enumerates every theorem the m3 sources
+declare, module by module (every `.lean` file under `NobleM2/` and
+`NobleM3/` plus the two roots; a module no checker imports is an
+error), and audits each declared theorem's transitive axioms under the
+same policy, so a new theorem or module is covered without editing the
+gate. Proof holes are found by a comment- and literal-aware construct
+scan (`verification/lean-source-scan.mjs`: `sorry`, `admit`, an
+`axiom` declaration, `debug.skipKernelTC`, `addDecl`). The coverage
+gate runs the `verification/m3-coverage.json` battery with the
+`m3-coverage-join.mjs` join tool, whose citation partition routes each
+citation namespace to the checker whose import surface can see it.
+
+The transcript below was recorded with the previous two-tier gate on lean
+4.31.0, so its check names are historical: `NO-SORRY` is now
+`NO-PROOF-HOLE`, the `REQUIRED-THEOREMS` check also audits every
+declared theorem, and the final line no longer names a tier. The current
+gates pass on the current tree; re-record this section when the retained
+run is refreshed.
 
 ```console
 $ verification/m3-proof-gate.sh
@@ -193,8 +206,16 @@ mutation passed:
 Each matrix runs the positive baseline and then mutated scratch copies
 (proof-root and crate copies share the lake package cache through hard
 links; the repository tree is never touched). Every mutation must be
-refused at its named check; the six proof-gate mutations and the six
-coverage-gate mutations are all refused, and the baselines stay green.
+refused at its named check. The current proof matrix has nine cells: the
+six below plus `broken-build` refused at `BUILD`, `admit-tactic` and
+`local-axiom` refused at `NO-PROOF-HOLE` (an `admit` and a local
+`axiom` compile, so only the construct scan can refuse them). The current
+coverage matrix has ten cells. Both matrices refuse every cell and keep
+their baselines green.
+
+The transcript below was recorded with the previous gate, so its
+`NO-SORRY` cell name is historical: that check is now `NO-PROOF-HOLE`
+and the matrix has the three extra cells named above.
 
 ```console
 $ verification/m3-proof-gate-refusals.sh      # exit 0
@@ -257,10 +278,10 @@ lean 4.31.0 on PATH for the proof gates). Sequence and outcomes:
 | M2 floor | `verification/m2-coverage-gate.sh` | PASS (all checks), total=515 open=0 |
 | M2 floor | `verification/m2-proof-gate-refusals.sh` | baseline passes, four mutations refused |
 | M2 floor | `verification/m2-coverage-refusals.sh` | five mutations refused |
-| v1 gate | `verification/m3-proof-gate.sh` | PASS (strict tier, all checks) |
+| v1 gate | `verification/m3-proof-gate.sh` | PASS (all checks), recorded with the previous gate, whose final line named a strict tier |
 | v1 gate | `verification/m3-coverage-gate.sh` | PASS (all checks), total=515 open=0 |
-| v1 refusals | `verification/m3-proof-gate-refusals.sh` | six mutations refused |
-| v1 refusals | `verification/m3-coverage-refusals.sh` | six mutations refused |
+| v1 refusals | `verification/m3-proof-gate-refusals.sh` | six mutations refused, recorded with the previous gate; the current matrix has nine |
+| v1 refusals | `verification/m3-coverage-refusals.sh` | six mutations refused, recorded with the previous gate; the current matrix has ten |
 | Extraction | the regeneration loop from `proofs/m2/NobleKernel.lean`'s header | charon exit 0, aeneas exit 0, emitted `Types.lean`/`Funs.lean` byte-identical to the checked-in root ([m3-extraction-probe.md](m3-extraction-probe.md)) |
 
 The M1 reference evidence (the fifteen-phase acceptance run retained

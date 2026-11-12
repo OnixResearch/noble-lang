@@ -36,7 +36,7 @@ function outputDirectory(requested) {
 // The properties the receipt states: every generated program was compared at every input stack, and
 // every short program in every one-word context; no pair disagreed with its definition; and the two
 // routes accepted equally often.
-function check(report) {
+export function check(report) {
   requireThat(report.schema === 'noble-principality-bounded/v2', `unexpected schema ${report.schema}`);
   const { plain, contextual } = report;
   requireThat(plain.comparisons === plain.pairs * report.input_stacks, 'a plain comparison is missing');
@@ -45,7 +45,9 @@ function check(report) {
   requireThat(contextual.comparisons === contextual.pairs * report.input_stacks,
     'a contextual comparison is missing');
   for (const tally of [plain, contextual]) {
+    // A run that accepted nothing (or refused everything) compares nothing;
     requireThat(tally.inline_accepted === tally.call_accepted, 'the two routes accepted different counts');
+    requireThat(tally.inline_accepted > 0, 'the run accepted no program; the comparison is vacuous');
   }
   requireThat(report.discrepancies === 0 && report.retained.length === 0, 'a program disagrees with its definition');
   requireThat(/not a proof/.test(report.claim), 'the report does not state its bounded claim');
@@ -55,7 +57,7 @@ function check(report) {
 // accepted declaration was called at every input stack; the calls agree with the declared signatures;
 // every declared instance of an accepted signature accepts the body too; and refusals exist at the
 // signatures that are not instances, so the closure is not vacuous.
-function checkSigned(report) {
+export function checkSigned(report) {
   requireThat(report.schema === 'noble-principality-signed/v1', `unexpected signed schema ${report.schema}`);
   const { counts } = report;
   requireThat(counts.pairs === counts.bodies * report.signatures.length, 'a body/signature pair is missing');
@@ -147,9 +149,11 @@ function main() {
     receipt_sha256: digest(readFileSync(path)) }));
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(`[principality] FAIL ${error.message}`);
-  process.exitCode = 1;
+if (import.meta.main) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`[principality] FAIL ${error.message}`);
+    process.exitCode = 1;
+  }
 }

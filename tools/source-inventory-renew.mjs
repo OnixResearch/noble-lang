@@ -6,7 +6,9 @@
 // facts alone: `generated` only when every observing fact is macro-expanded,
 // `structural` only when every authored fact is a declaration-only item kind,
 // otherwise an authored `body` with OPEN extraction and refinement. A reviewed
-// `generated` row that gained an authored fact becomes an OPEN body.
+// `generated` row that gained an authored fact becomes an OPEN body, and so
+// does a reviewed `structural` row that is now observed as an authored
+// function body: the source-coverage comparator refuses that combination.
 // `test_subjects` and `macro_origins` become the exact observed sets.
 // Dependency edges and tools are never renewed here: a difference refuses.
 // The result is accounting, not proof, refinement, or architecture acceptance;
@@ -74,6 +76,11 @@ function main() {
   };
   const allExpanded = rows => rows.every(row => row.from_expansion === true);
   const kindsOf = rows => sorted(new Set(rows.map(row => row.item_kind)));
+  // A reviewed structural declaration that the compiler now reports as an
+  // authored function body is not a declaration-only row any more;
+  // `nix/source-inventory.nix` refuses it, so renewal reclassifies it.
+  const authoredFunctionBody = rows =>
+    rows.some(row => row.from_expansion !== true && row.item_kind === 'function');
   const classify = rows => {
     if (allExpanded(rows)) return 'generated';
     const authored = rows.filter(row => row.from_expansion !== true);
@@ -119,6 +126,10 @@ function main() {
     if (category === 'generated' && !allExpanded(rows)) {
       nextCategory = 'body';
       note = nickelString(`Renewed ${label}: a reviewed generated path now has an authored compiler fact (${kindsOf(rows).join('/')}); extraction and refinement remain open.`);
+      reclassified.push({ qualified_path: qualified, from: category, to: nextCategory });
+    } else if (category === 'structural' && authoredFunctionBody(rows)) {
+      nextCategory = 'body';
+      note = nickelString(`Renewed ${label}: a reviewed structural path is observed as an authored function body (${kindsOf(rows).join('/')}); extraction and refinement remain open.`);
       reclassified.push({ qualified_path: qualified, from: category, to: nextCategory });
     }
     let owner = JSON.parse(quotedPackage);
@@ -174,6 +185,12 @@ function main() {
     `#   cargo graph ${inventory.generated_by.cargo_graph_id}; collector policy ${inventory.generated_by.policy_blake3}.`,
     `#   ${counts.body + counts.generated + counts.structural} production paths = ${counts.body} body/open + ${counts.generated} generated + ${counts.structural} structural;`,
     `#   ${testNames.length} test-only paths; ${new Set(inventory.macro_origins).size} macro origins. Earlier header counts are historical.`);
+  // The report is the renewal's only record; refuse an unwritable path
+  // before the policy is replaced, so a refused report never leaves a
+  // rewritten policy behind.
+  const reportPath = path.resolve(reportFile);
+  assert.ok(fs.existsSync(path.dirname(reportPath)), `report directory not found: ${path.dirname(reportPath)}`);
+  assert.ok(!fs.existsSync(reportPath), `report path already exists: ${reportPath}`);
   fs.writeFileSync(policyFile, output.join('\n'));
 
   const report = {

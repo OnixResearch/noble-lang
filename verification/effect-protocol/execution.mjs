@@ -377,6 +377,7 @@ function monitorControls(base) {
     ['uncommitted-read', 'uncommitted-read', [readRequest, readResponse, ...release]],
     ['unanswered-request', 'unanswered-request', [readRequest, commit, ...release]],
     ['unsolicited-commit', 'unsolicited-commit', [commit, readRequest, commit, readResponse, ...release]],
+    ['double-commit', 'unsolicited-commit', [readRequest, commit, commit, readResponse, ...release]],
     ['release-count', 'release-count', [readRequest, commit, readResponse]],
   ];
   requireThat(monitor(base).codes.length === 0, 'the monitor flags the unmutated EPROTO-CASE-01 trace');

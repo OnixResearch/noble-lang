@@ -3,10 +3,9 @@
 #
 # Runs the positive baseline (verification/m3-coverage-gate.sh), then
 # mutated scratch copies. Record mutations edit a scratch copy of
-# verification/m3-coverage.json (the m3 gate passes the record through to
-# the delegated M2 battery, where the join/citation checks run); the
-# module mutation edits a hard-linked scratch copy of the m3 proof root
-# and is refused by the kernel binding. The repository tree is never
+# verification/m3-coverage.json (the gate runs the join, environment-binding
+# and strength checks against the proofs/m3 root); the module mutations edit a
+# hard-linked scratch copy of the m3 proof root. The repository tree is never
 # touched.
 #
 # Usage (from any directory; the pinned Lean must be first on PATH; bun
@@ -121,9 +120,8 @@ run_case() {
   unclassified-def)
     fresh_copy "$copy"
     # A plausible new generated function spliced into the m3 root's
-    # generated Funs.lean: the generated surface changes, so the kernel
-    # binding refuses (the join-level UNCLASSIFIED check engages the same
-    # way once the strict tier runs the join on this root).
+    # generated Funs.lean: the generated surface grows past the reviewed
+    # record, so the join reports the extra definition as unclassified.
     local last_end
     last_end="$(awk '/^end noble_kernel$/ { n = NR } END { print n }' \
       "$PROOF_ROOT/NobleKernel/Funs.lean")"

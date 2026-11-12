@@ -246,9 +246,14 @@ follow-up work with no proof obligation open in the tasks.
   `CoverageWords`, `Rules`, `RefinementWords`, `Refinement`.
 
 The required-theorem name list for the gate (the contract with M3DxGates).
-The gate enumerates exactly this list; the split below is the axiom policy
-each name is held to, and it was verified name by name
-(`verification/m3-proof-gate.sh` strict tier, 2026-09-19):
+The gate requires every name of this list and, beyond it, enumerates every
+theorem the m3 sources declare — module by module, from the .lean files under
+`NobleM2/` and `NobleM3/` plus the two roots, so a new theorem or module is
+audited without editing the gate and a module no checker imports is an error.
+The split below is the axiom policy each listed name is held to (the
+enumerated theorems are held to the same policy); the listed names were
+verified name by name on 2026-09-19 with the then two-tier
+`verification/m3-proof-gate.sh`, which now has one tier:
 
 - strict (trifecta only): `NobleM2.{applyScheme_ok, applyScheme_ok_resolves,
   resolve_resolvesTo, followFrom_chain, resolveOne_position,
