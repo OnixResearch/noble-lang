@@ -501,7 +501,8 @@ What the new crate changes in the failing checks:
 
 `f531623` merges `feat/issue-14-ngraph-core` `3e471ea`. It adds the
 workspace member `crates/noble-ngraph-experiment`, receipts under
-`verification/ngraph/` and updates to `.cairn/changes/numeric-graph-profile/`.
+`verification/ngraph/` and updates to the change now archived at
+`.cairn/archive/2026-10-16-numeric-graph-profile/`.
 It changes no `noble-kernel`, `noble-contracts`, `noble-wasm` or `noble-cli`
 source. Three integration commits follow:
 
@@ -563,7 +564,8 @@ results above still apply.
   classification (one README sentence).
 - `33d4d87`: merge of `feat/issue-14-ngraph-core` `233429d`, the Phase C1
   Wasm/V8 receipt. It changes only
-  `.cairn/changes/numeric-graph-profile/{design,tasks}.md`,
+  `.cairn/archive/2026-10-16-numeric-graph-profile/{design,tasks}.md` (then
+  under `.cairn/changes/`),
   `verification/ngraph/README.md` and the new
   `verification/ngraph/phase-c-l1.json`.
 - The commit that adds this list. The doc-sensitive gates (`documents`,
