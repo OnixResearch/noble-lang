@@ -35,6 +35,15 @@ function sameSlotJSON(left, right) {
   return canonicalSlotJSON(left) === canonicalSlotJSON(right);
 }
 
+// Authority grants live in two disjoint namespaces. A slot-scoped grant is
+// keyed by its slot and a nominal-scoped grant by its nominal, so an identifier
+// shared between a slot and a nominal never conflates the two decisions.
+function slotGrantKey(scoped) {
+  return typeof scoped.nominalId === 'string'
+    ? `nominal:${scoped.operation}:${scoped.nominalId}`
+    : `slot:${scoped.operation}:${scoped.slotId}`;
+}
+
 class SlotEngine {
   constructor(selection, baseAbi, config) {
     if (config.slot_mode !== true || config.in_process_live === true
@@ -123,11 +132,15 @@ class SlotEngine {
     if (request.operation === 'policy') {
       const grant = request.grant;
       const id = grant?.slotId ?? grant?.nominalId;
+      // The reported receipt scope stays `operation:id`, while the authority
+      // decision is keyed by the one scope the grant names.
       scope = `${grant?.operation}:${id}`;
+      const key = grant !== null && typeof grant === 'object' ? slotGrantKey(grant) : '';
       if (grant?.allowed !== false || typeof grant.operation !== 'string'
         || typeof id !== 'string' || (grant.slotId !== undefined && grant.nominalId !== undefined)
-        || !this.grants.has(scope)) throw Error('unapproved control mutation');
-      this.grants.set(scope, false);
+        || grant.operation === 'effect' && grant.nominalId !== undefined
+        || !this.grants.has(key)) throw Error('unapproved control mutation');
+      this.grants.set(key, false);
       result = slotReply('policy-updated');
     } else if (request.operation === 'publish' || request.operation === 'rollback') {
       if (typeof request.slot !== 'string' || typeof request.id !== 'string'
@@ -240,12 +253,18 @@ class SlotEngine {
         || typeof (grant.slotId ?? grant.nominalId) !== 'string') {
         return slotReply('authority-refused');
       }
-      grants.set(`${grant.operation}:${grant.slotId ?? grant.nominalId}`, grant.allowed);
+      // Slot-scoped and nominal-scoped authority are separate namespaces: only a
+      // slot-scoped `effect` may authorize a protected effect, so a nominal that
+      // happens to share a slot's identifier can never widen it.
+      if (grant.operation === 'effect' && grant.nominalId !== undefined) {
+        return slotReply('authority-refused');
+      }
+      grants.set(slotGrantKey(grant), grant.allowed);
     }
     this.sources = sources;
     this.grants = grants;
     this.registry = new SlotRegistry({ quota: authority.quota, knownEffects: authority.effects,
-      authorize: event => this.grants.get(`${event.operation}:${event.slotId ?? event.nominalId}`) === true,
+      authorize: event => this.grants.get(slotGrantKey(event)) === true,
       traceAdmission: (bytes, rows) => this.traceBytes + bytes
         + (this.replaying ? rows * REPLAY_TRACE_BYTES : 0) <= GLOBAL_TRACE_BYTES,
       performEffect: (effect, text) => {
@@ -1564,7 +1583,7 @@ class SlotEngine {
   discard(request) {
     const module = this.modules.get(request.id);
     if (!module || module.host_owner !== request.host_owner
-      || this.grants.get(`discard:${request.id}`) !== true
+      || this.grants.get(slotGrantKey({ operation: 'discard', slotId: request.id })) !== true
       || module.published
       || module.replayOwned.size || module.compositeOwned.size || this.active
       || this.savedOwnerReaches(module)) {
@@ -2341,16 +2360,25 @@ class SlotEngine {
     }
     if (request.operation === 'reflect') {
       const module = this.modules.get(request.id);
-      if (!module) return slotReply('unadmitted-site');
-      return slotReply('reflected', { site: this.registry.reflectSite(module.token, request.site) });
+      if (!module) return slotReply('unadmitted-site', { id: request.id });
+      // An unknown site is a read-only query miss, exactly like an unknown
+      // module: it is refused without poisoning the session.
+      const site = this.registry.reflectSite(module.token, request.site);
+      if (site === null) return slotReply('unadmitted-site', { id: request.id, site_id: request.site });
+      return slotReply('reflected', { site });
     }
     if (request.operation === 'trace') return slotReply('trace-observed', { trace: this.trace });
     if (request.operation === 'policy') {
       const grant = request.grant;
       if (!grant || typeof grant.operation !== 'string'
         || typeof (grant.slotId ?? grant.nominalId) !== 'string'
+        || (grant.slotId !== undefined && grant.nominalId !== undefined)
         || typeof grant.allowed !== 'boolean') return slotReply('policy-refused');
-      this.grants.set(`${grant.operation}:${grant.slotId ?? grant.nominalId}`, grant.allowed);
+      const key = slotGrantKey(grant);
+      // A runtime policy may restate a selected authority scope, never add one;
+      // the host separately refuses any decision that would widen the file.
+      if (!this.grants.has(key)) return slotReply('policy-refused');
+      this.grants.set(key, grant.allowed);
       return slotReply('policy-updated');
     }
     if (request.operation === 'register-resource') {
@@ -2381,23 +2409,32 @@ class SlotEngine {
       const effects = recorded.trace.filter(row => row.operation === 'effect');
       this.replaying = { effects, index: 0 };
       let actual;
+      // The nested invocation reports the receipts of controls it committed;
+      // every replay reply must carry them where the host reads receipts, or an
+      // applied operator change loses its acknowledgement and the host has to
+      // poison a session whose mutation already committed.
+      let committedControls = [];
       try {
         actual = this.invoke({ ...request, id: recorded.id, record: false,
           _frozen_snapshot: recorded.snapshot });
+        committedControls = Array.isArray(actual.control_events) ? actual.control_events : [];
+        delete actual.control_events;
         if (this.replaying.index !== effects.length) {
           return slotReply('replay-diverged', {
             diagnostic: 'scripted effect sequence ended before all recorded requests were consumed',
-            actual,
+            actual, control_events: committedControls,
           });
         }
       } finally { this.replaying = false; }
-      if (actual.outcome !== 'executed') return slotReply('replay-refused', { actual });
+      if (actual.outcome !== 'executed') {
+        return slotReply('replay-refused', { actual, control_events: committedControls });
+      }
       const matched = sameSlotJSON(actual.request_trace, recorded.trace)
         && sameSlotJSON(actual.stack, recorded.stack);
       return slotReply(matched ? 'replay-matched' : 'replay-diverged',
         { token: request.token, actual_trace: actual.request_trace,
           actual_stack: actual.stack, guest_requests: actual.guest_requests,
-          scripted_operations: effects.length });
+          scripted_operations: effects.length, control_events: committedControls });
     }
     return slotReply('unsupported-slot-command');
   }
