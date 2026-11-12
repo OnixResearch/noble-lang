@@ -2,16 +2,20 @@
 //!
 //! The walk is spelled as a state machine (`Walk` threaded through
 //! `walk_step`) so no loop body returns early.
+//!
+//! The work stack holds borrowed nodes. A walk that owned its queue had to
+//! deep-copy every subtree to reach its children, which made one size read
+//! quadratic in the tree depth and let a candidate inside its declared limits
+//! spend unbounded work. Nothing here clones a node.
 
 /// One size walk's threaded state.
-///
-/// The work stack holds owned nodes: references into the tree under walk
-/// cannot be carried across the owned size stack Aeneas interprets.
-pub(super) struct Walk {
+pub(super) struct Walk<'a> {
     /// Nodes still to visit, with their expansion markers.
-    pub(super) todo: alloc::vec::Vec<(crate::types::Ty, bool)>,
+    pub(super) todo: alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
     /// Sizes already computed, in visit order.
     pub(super) sizes: alloc::vec::Vec<u32>,
+    /// Nodes already expanded, so one walk visits at most `TYPE_NODE_CAP`.
+    pub(super) visited: u32,
 }
 
 /// One size-walk step's outcome.
@@ -25,7 +29,7 @@ pub(super) enum Step {
 }
 
 /// Run one size-walk step, returning the updated state and its outcome.
-pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
+pub(super) fn walk_step(mut walk: Walk<'_>) -> (Walk<'_>, Step) {
     match walk.todo.pop() {
         None => (walk, Step::Done),
         Some((node, expanded)) => {
@@ -33,7 +37,7 @@ pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
                 return (walk, Step::Failed);
             }
             if expanded {
-                let (next_sizes, total) = take_sizes(walk.sizes, count_children(&node));
+                let (next_sizes, total) = take_sizes(walk.sizes, count_children(node));
                 walk.sizes = next_sizes;
                 match total {
                     Some(total) => {
@@ -43,7 +47,11 @@ pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
                     None => (walk, Step::Failed),
                 }
             } else {
-                let (todo, sizes) = queue_children(&node, walk.todo, walk.sizes);
+                walk.visited = walk.visited.saturating_add(1);
+                if walk.visited > super::TYPE_NODE_CAP {
+                    return (walk, Step::Failed);
+                }
+                let (todo, sizes) = queue_children(node, walk.todo, walk.sizes);
                 walk.todo = todo;
                 walk.sizes = sizes;
                 (walk, Step::Continue)
@@ -64,9 +72,14 @@ const fn count_children(node: &crate::types::Ty) -> usize {
             crate::types::NominalShape::Opaque(_) => 1,
             crate::types::NominalShape::Variant(_, _) => 2,
         },
+        // A generic descriptor holds both its argument array and a descriptor
+        // built from copies of those arguments, so its child count includes
+        // both. Counting only the descriptor would under-report a nested
+        // generic value by two nodes per level, exactly the growth that makes
+        // substitution exponential.
         crate::types::Ty::GenericNominal(_, _, shape) => match &**shape {
-            crate::types::NominalShape::Variant(_, _) => 2,
-            crate::types::NominalShape::Opaque(_) => 1,
+            crate::types::NominalShape::Variant(_, _) => 4,
+            crate::types::NominalShape::Opaque(_) => 3,
         },
         crate::types::Ty::List(_) => 1,
         crate::types::Ty::Program(stack_in, stack_out, _)
@@ -119,65 +132,67 @@ fn take_sizes(
 /// Queue one unexpanded node: its expansion marker and its children in order,
 /// or its unit size when it holds no children.
 ///
-/// The queue holds owned nodes: a reference into the tree under walk cannot be
-/// carried across the owned size stack Aeneas interprets.
+/// Each child is queued by reference: the tree under walk is only read, so the
+/// walk neither copies a subtree nor needs a copy to reach a later sibling.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; queue_children records one for leaves and queues the exact constructor children with length-bounded indexing; walk_step handles the work bound and missing-size failures without assertions."
 )]
-fn queue_children(
-    node: &crate::types::Ty,
-    mut todo: alloc::vec::Vec<(crate::types::Ty, bool)>,
+fn queue_children<'a>(
+    node: &'a crate::types::Ty,
+    mut todo: alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
     mut sizes: alloc::vec::Vec<u32>,
 ) -> (
-    alloc::vec::Vec<(crate::types::Ty, bool)>,
+    alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
     alloc::vec::Vec<u32>,
 ) {
     match node {
         crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
-            todo.push((node.clone(), true));
-            todo.push(((**left).clone(), false));
-            todo.push(((**right).clone(), false));
+            todo.push((node, true));
+            todo.push((left, false));
+            todo.push((right, false));
         }
         crate::types::Ty::List(item) => {
-            todo.push((node.clone(), true));
-            todo.push(((**item).clone(), false));
+            todo.push((node, true));
+            todo.push((item, false));
         }
         crate::types::Ty::Program(stack_in, stack_out, _)
         | crate::types::Ty::LiveRef(stack_in, stack_out, _) => {
-            todo.push((node.clone(), true));
+            todo.push((node, true));
             let mut index = 0;
             while index < stack_in.len() {
-                todo.push((stack_in[index].clone(), false));
+                todo.push((&stack_in[index], false));
                 index += 1;
             }
             index = 0;
             while index < stack_out.len() {
-                todo.push((stack_out[index].clone(), false));
+                todo.push((&stack_out[index], false));
                 index += 1;
             }
         }
         crate::types::Ty::Nominal(_, shape) => {
-            todo.push((node.clone(), true));
+            todo.push((node, true));
             match &**shape {
                 crate::types::NominalShape::Opaque(representation) => {
-                    todo.push(((**representation).clone(), false));
+                    todo.push((representation, false));
                 }
                 crate::types::NominalShape::Variant(left, right) => {
-                    todo.push(((**left).clone(), false));
-                    todo.push(((**right).clone(), false));
+                    todo.push((left, false));
+                    todo.push((right, false));
                 }
             }
         }
-        crate::types::Ty::GenericNominal(_, _, shape) => {
-            todo.push((node.clone(), true));
+        crate::types::Ty::GenericNominal(_, args, shape) => {
+            todo.push((node, true));
+            todo.push((&args[0], false));
+            todo.push((&args[1], false));
             match &**shape {
                 crate::types::NominalShape::Variant(left, right) => {
-                    todo.push(((**left).clone(), false));
-                    todo.push(((**right).clone(), false));
+                    todo.push((left, false));
+                    todo.push((right, false));
                 }
                 crate::types::NominalShape::Opaque(representation) => {
-                    todo.push(((**representation).clone(), false));
+                    todo.push((representation, false));
                 }
             }
         }

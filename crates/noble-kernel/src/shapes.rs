@@ -2,7 +2,9 @@
 //!
 //! Scheme stacks hold *patterns*: constructor trees that may mention value,
 //! stack, or effect variables at their leaves. Validation is one bounded,
-//! iterative walk; no operation recurses.
+//! iterative walk on borrowed nodes. Equality is iterative too; `Clone` and
+//! `Debug` are structural and recurse, so a pattern is only copied once its
+//! depth is bounded.
 
 mod impls;
 

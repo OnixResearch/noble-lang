@@ -3,16 +3,22 @@
 impl super::Ty {
     /// A resource anywhere inside a payload makes the whole value ineligible,
     /// including through `Pair`, `Sum`, and `List` alternatives.
+    ///
+    /// The walk borrows its pending nodes: eligibility never copies the
+    /// payload it inspects, so an ineligible value is rejected without first
+    /// duplicating it.
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
         reason = "Owner: noble-maintainers; each Ty constructor must explicitly declare whether Data eligibility inspects children, accepts directly or rejects resources; new types must not inherit a fallback eligibility rule."
     )]
     pub fn is_data(&self) -> bool {
-        let mut work: alloc::vec::Vec<super::Ty> = alloc::vec::Vec::with_capacity(8);
-        work.push(self.clone());
+        let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
+        work.push(self);
+        let mut visited = 0u32;
         let mut is_data = true;
         while let Some(node) = work.pop() {
-            if work.len() >= super::WORK_CAP {
+            visited = visited.saturating_add(1);
+            if work.len() >= super::WORK_CAP || visited > super::TYPE_NODE_CAP {
                 is_data = false;
                 break;
             }
@@ -22,24 +28,24 @@ impl super::Ty {
                     break;
                 }
                 super::Ty::Pair(left, right) | super::Ty::Sum(left, right) => {
-                    work.push(*left);
-                    work.push(*right);
+                    work.push(left);
+                    work.push(right);
                 }
-                super::Ty::List(item) => work.push(*item),
-                super::Ty::Nominal(_, shape) => match *shape {
-                    super::NominalShape::Opaque(representation) => work.push(*representation),
+                super::Ty::List(item) => work.push(item),
+                super::Ty::Nominal(_, shape) => match &**shape {
+                    super::NominalShape::Opaque(representation) => work.push(representation),
                     super::NominalShape::Variant(left, right) => {
-                        work.push(*left);
-                        work.push(*right);
+                        work.push(left);
+                        work.push(right);
                     }
                 },
                 super::Ty::GenericNominal(_, args, shape) => {
-                    work.push(args[0].clone());
-                    work.push(args[1].clone());
-                    match *shape {
+                    work.push(&args[0]);
+                    work.push(&args[1]);
+                    match &**shape {
                         super::NominalShape::Variant(left, right) => {
-                            work.push(*left);
-                            work.push(*right);
+                            work.push(left);
+                            work.push(right);
                         }
                         super::NominalShape::Opaque(_) => {
                             is_data = false;

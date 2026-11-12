@@ -1,14 +1,18 @@
-//! Bounded structural comparison, separate from Clone and Debug boundaries.
+//! Structural comparison, separate from Clone and Debug boundaries.
+//!
+//! The comparison borrows both patterns: it never copies a subtree, so a deep
+//! pattern is compared in one linear pass and a rejected pattern is not
+//! duplicated first.
 
 /// Queue one `Program` pair's element checks; the flag fails closed.
-fn push_pattern_program(
-    mut work: alloc::vec::Vec<(crate::shapes::Pattern, crate::shapes::Pattern)>,
-    first_in: &[crate::shapes::Pattern],
-    first_out: &[crate::shapes::Pattern],
-    second_in: &[crate::shapes::Pattern],
-    second_out: &[crate::shapes::Pattern],
+fn push_pattern_program<'a>(
+    mut work: alloc::vec::Vec<(&'a crate::shapes::Pattern, &'a crate::shapes::Pattern)>,
+    first_in: &'a [crate::shapes::Pattern],
+    first_out: &'a [crate::shapes::Pattern],
+    second_in: &'a [crate::shapes::Pattern],
+    second_out: &'a [crate::shapes::Pattern],
 ) -> (
-    alloc::vec::Vec<(crate::shapes::Pattern, crate::shapes::Pattern)>,
+    alloc::vec::Vec<(&'a crate::shapes::Pattern, &'a crate::shapes::Pattern)>,
     bool,
 ) {
     let is_comparable = first_in.len() == second_in.len()
@@ -16,20 +20,21 @@ fn push_pattern_program(
         && work.len() < super::super::WORK_CAP;
     let mut index = 0;
     while index < first_in.len() && is_comparable {
-        work.push((first_in[index].clone(), second_in[index].clone()));
+        work.push((&first_in[index], &second_in[index]));
         index += 1;
     }
     index = 0;
     while index < first_out.len() && is_comparable {
-        work.push((first_out[index].clone(), second_out[index].clone()));
+        work.push((&first_out[index], &second_out[index]));
         index += 1;
     }
     (work, is_comparable)
 }
 
 pub(super) fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::Pattern) -> bool {
-    let mut work = alloc::vec::Vec::with_capacity(8);
-    work.push((left.clone(), right.clone()));
+    let mut work: alloc::vec::Vec<(&crate::shapes::Pattern, &crate::shapes::Pattern)> =
+        alloc::vec::Vec::with_capacity(8);
+    work.push((left, right));
     let mut is_equal = true;
     while !work.is_empty() {
         if work.len() >= super::super::WORK_CAP {
@@ -49,16 +54,12 @@ pub(super) fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::P
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; structural comparison returns false on unequal constructors, lengths or work exhaustion; ordinary unequal inputs must not panic."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; comparison consumes heap-owned Pattern nodes, calls their non-const equality implementations, and pushes queued operands into Vec. Those operations are not const on the pinned compiler."
-)]
-fn compare(
-    first: crate::shapes::Pattern,
-    second: crate::shapes::Pattern,
-    mut work: alloc::vec::Vec<(crate::shapes::Pattern, crate::shapes::Pattern)>,
+fn compare<'a>(
+    first: &'a crate::shapes::Pattern,
+    second: &'a crate::shapes::Pattern,
+    mut work: alloc::vec::Vec<(&'a crate::shapes::Pattern, &'a crate::shapes::Pattern)>,
 ) -> (
-    alloc::vec::Vec<(crate::shapes::Pattern, crate::shapes::Pattern)>,
+    alloc::vec::Vec<(&'a crate::shapes::Pattern, &'a crate::shapes::Pattern)>,
     bool,
 ) {
     let is_equal = match (first, second) {
@@ -82,10 +83,8 @@ fn compare(
             crate::shapes::Pattern::GenericNominal(first_id, first_args, first_mapping),
             crate::shapes::Pattern::GenericNominal(second_id, second_args, second_mapping),
         ) if first_id == second_id && first_mapping == second_mapping => {
-            let [first_left, first_right] = *first_args;
-            let [second_left, second_right] = *second_args;
-            work.push((first_left, second_left));
-            work.push((first_right, second_right));
+            work.push((&first_args[0], &second_args[0]));
+            work.push((&first_args[1], &second_args[1]));
             true
         }
         (crate::shapes::Pattern::Var(first_var), crate::shapes::Pattern::Var(second_var)) => {
@@ -103,12 +102,12 @@ fn compare(
             crate::shapes::Pattern::Sum(first_head, first_tail),
             crate::shapes::Pattern::Sum(second_head, second_tail),
         ) => {
-            work.push((*first_head, *second_head));
-            work.push((*first_tail, *second_tail));
+            work.push((first_head, second_head));
+            work.push((first_tail, second_tail));
             true
         }
         (crate::shapes::Pattern::List(first_item), crate::shapes::Pattern::List(second_item)) => {
-            work.push((*first_item, *second_item));
+            work.push((first_item, second_item));
             true
         }
         (
@@ -119,7 +118,7 @@ fn compare(
             crate::shapes::Pattern::LiveRef(a_in, a_out, a_eff),
             crate::shapes::Pattern::LiveRef(b_in, b_out, b_eff),
         ) => {
-            let (next, is_program_equal) = push_pattern_program(work, &a_in, &a_out, &b_in, &b_out);
+            let (next, is_program_equal) = push_pattern_program(work, a_in, a_out, b_in, b_out);
             work = next;
             is_program_equal && a_eff == b_eff
         }

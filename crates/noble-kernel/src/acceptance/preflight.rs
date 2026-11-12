@@ -76,13 +76,14 @@ pub(super) fn check_request(
         let at = super::parts::site(None, Some(owner));
         let (owner_cost, next_remaining) = attempt!(guard_inst(owner_inst, request, remaining));
         remaining = next_remaining;
-        let (interface, _) = attempt!(super::parts::instantiate::apply(
-            scheme, owner_inst, None, at, &context,
+        let (interface, _, spent) = attempt!(super::parts::instantiate::apply(
+            scheme, owner_inst, None, at, &context, remaining,
         ));
         remaining = attempt!(super::parts::charge(
             remaining,
             attempt!(super::parts::scheme_cost(scheme))
                 .saturating_add(attempt!(super::parts::join_cost(&interface)))
+                .saturating_add(spent)
         ));
         if interface.stack_in != request.expected.stack_in
             || interface.stack_out != request.expected.stack_out
@@ -242,17 +243,19 @@ fn charge_signed_site(
     context: &super::parts::Ctx,
     remaining: u32,
 ) -> Result<u32, super::Fail> {
-    let (joined, _) = attempt!(super::parts::instantiate::apply(
+    let (joined, _, spent) = attempt!(super::parts::instantiate::apply(
         owner.scheme,
         inst,
         None,
         owner.at,
         context,
+        remaining,
     ));
     let remaining = attempt!(super::parts::charge(
         remaining,
         attempt!(super::parts::scheme_cost(owner.scheme))
-            .saturating_add(attempt!(super::parts::join_cost(&joined))),
+            .saturating_add(attempt!(super::parts::join_cost(&joined)))
+            .saturating_add(spent),
     ));
     if owner.inst.bindings.len() != inst.bindings.len() {
         return Err(super::Fail::Unsupported(

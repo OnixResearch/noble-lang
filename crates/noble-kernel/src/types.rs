@@ -1,8 +1,11 @@
 //! Fragment v0 value, stack, and program types.
 //!
-//! Trees are walked iteratively with explicit, bounded work stacks; no
-//! operation recurses and no walk grows without a local bound. Stacks are
-//! ordered bottom-first, matching the specification's "top on the right".
+//! Every structural walk (`size`, `is_data`, equality) runs iteratively on an
+//! explicit work stack and fails closed past a local bound; none of them
+//! recurses. `Clone` and `Debug` are the exceptions: they are structural and
+//! recurse, so callers must bound a value before copying or formatting it
+//! (`acceptance::nodes::node_of` does). Stacks are ordered bottom-first,
+//! matching the specification's "top on the right".
 
 mod data;
 mod impls;
@@ -10,6 +13,13 @@ mod size;
 
 /// Local bound for one type walk; beyond it the predicate fails closed.
 const WORK_CAP: usize = 512;
+
+/// Most nodes one declared type may hold.
+///
+/// The kernel validates and measures every borrowed type against this local
+/// cap, so a size read, an eligibility read and an exact comparison all finish
+/// in bounded time, and a refused value is never copied node by node.
+pub(crate) const TYPE_NODE_CAP: u32 = 512;
 
 /// Stable identity of a resource kind supplied by the environment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -284,8 +294,9 @@ impl Ty {
         let mut walk = size::Walk {
             todo: alloc::vec::Vec::with_capacity(8),
             sizes: alloc::vec::Vec::with_capacity(8),
+            visited: 0,
         };
-        walk.todo.push((self.clone(), false));
+        walk.todo.push((self, false));
         let mut outcome = size::Step::Continue;
         while matches!(outcome, size::Step::Continue) {
             let (next, step) = size::walk_step(walk);

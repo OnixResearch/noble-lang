@@ -76,6 +76,7 @@ pub(super) fn complete_frame(
     parent: Option<super::Frame>,
     candidate: &crate::untrusted::Candidate,
     ctx: &super::parts::Ctx,
+    fuel: u32,
 ) -> Result<Completion, super::Fail> {
     if frame.stack != frame.claimed_out {
         return Err(super::parts::invalid(
@@ -117,14 +118,15 @@ pub(super) fn complete_frame(
                 | None => return Err(super::Fail::Internal),
             };
             let scheme = super::parts::instantiate::quotation_scheme();
-            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
+            let (interface, _resolved, spent) = attempt!(super::parts::instantiate::apply(
                 &scheme,
                 &inst,
                 None,
                 super::parts::site(Some(node_id), None),
                 ctx,
+                fuel,
             ));
-            let cost = attempt!(super::parts::join_cost(&interface));
+            let cost = attempt!(super::parts::join_cost(&interface)).saturating_add(spent);
             let joined = attempt!(super::parts::join(
                 parent_frame,
                 &interface,

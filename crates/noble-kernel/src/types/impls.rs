@@ -90,31 +90,38 @@ impl Clone for crate::types::Ty {
 }
 
 /// Queue one `Program` pair's element checks; the flag fails closed.
-fn push_type_program(
-    mut work: alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)>,
-    first_in: &[crate::types::Ty],
-    first_out: &[crate::types::Ty],
-    second_in: &[crate::types::Ty],
-    second_out: &[crate::types::Ty],
-) -> (alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)>, bool) {
+fn push_type_program<'a>(
+    mut work: alloc::vec::Vec<(&'a crate::types::Ty, &'a crate::types::Ty)>,
+    first_in: &'a [crate::types::Ty],
+    first_out: &'a [crate::types::Ty],
+    second_in: &'a [crate::types::Ty],
+    second_out: &'a [crate::types::Ty],
+) -> (
+    alloc::vec::Vec<(&'a crate::types::Ty, &'a crate::types::Ty)>,
+    bool,
+) {
     let is_comparable = first_in.len() == second_in.len()
         && first_out.len() == second_out.len()
         && work.len() < super::WORK_CAP;
     let mut index = 0;
     while index < first_in.len() && is_comparable {
-        work.push((first_in[index].clone(), second_in[index].clone()));
+        work.push((&first_in[index], &second_in[index]));
         index += 1;
     }
     index = 0;
     while index < first_out.len() && is_comparable {
-        work.push((first_out[index].clone(), second_out[index].clone()));
+        work.push((&first_out[index], &second_out[index]));
         index += 1;
     }
     (work, is_comparable)
 }
 
 /// Structural equality of two types, decided by one explicit pairwise walk.
-/// The work stack holds cloned node pairs; the walk fails closed past the bound.
+///
+/// The work stack holds borrowed node pairs and visits each compared node
+/// once: equality never copies a subtree, so comparing two deep values costs
+/// the nodes they share, not the square of their depth. The walk fails closed
+/// past the local work bound.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; ty_eq returns false for constructor, stack-length, effect or local-work mismatches; unequal types and exhausted comparisons must remain boolean results rather than panic paths."
@@ -124,8 +131,9 @@ fn push_type_program(
     reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
 fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
-    let mut work = alloc::vec::Vec::with_capacity(8);
-    work.push((left.clone(), right.clone()));
+    let mut work: alloc::vec::Vec<(&crate::types::Ty, &crate::types::Ty)> =
+        alloc::vec::Vec::with_capacity(8);
+    work.push((left, right));
     while !work.is_empty() {
         if work.len() >= super::WORK_CAP {
             return false;
@@ -147,17 +155,17 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
             (
                 crate::types::Ty::Nominal(first_id, first_shape),
                 crate::types::Ty::Nominal(second_id, second_shape),
-            ) if first_id == second_id => match (*first_shape, *second_shape) {
+            ) if first_id == second_id => match (&**first_shape, &**second_shape) {
                 (
                     crate::types::NominalShape::Opaque(first),
                     crate::types::NominalShape::Opaque(second),
-                ) => work.push((*first, *second)),
+                ) => work.push((first, second)),
                 (
                     crate::types::NominalShape::Variant(first_left, first_right),
                     crate::types::NominalShape::Variant(second_left, second_right),
                 ) => {
-                    work.push((*first_right, *second_right));
-                    work.push((*first_left, *second_left));
+                    work.push((first_right, second_right));
+                    work.push((first_left, second_left));
                 }
                 _ => return false,
             },
@@ -165,15 +173,15 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 crate::types::Ty::GenericNominal(first_id, first_args, first_shape),
                 crate::types::Ty::GenericNominal(second_id, second_args, second_shape),
             ) if first_id == second_id => {
-                work.push((first_args[0].clone(), second_args[0].clone()));
-                work.push((first_args[1].clone(), second_args[1].clone()));
-                match (*first_shape, *second_shape) {
+                work.push((&first_args[0], &second_args[0]));
+                work.push((&first_args[1], &second_args[1]));
+                match (&**first_shape, &**second_shape) {
                     (
                         crate::types::NominalShape::Variant(first_left, first_right),
                         crate::types::NominalShape::Variant(second_left, second_right),
                     ) => {
-                        work.push((*first_right, *second_right));
-                        work.push((*first_left, *second_left));
+                        work.push((first_right, second_right));
+                        work.push((first_left, second_left));
                     }
                     _ => return false,
                 }
@@ -186,11 +194,11 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 crate::types::Ty::Sum(first_head, first_tail),
                 crate::types::Ty::Sum(second_head, second_tail),
             ) => {
-                work.push((*first_head, *second_head));
-                work.push((*first_tail, *second_tail));
+                work.push((first_head, second_head));
+                work.push((first_tail, second_tail));
             }
             (crate::types::Ty::List(first_item), crate::types::Ty::List(second_item)) => {
-                work.push((*first_item, *second_item));
+                work.push((first_item, second_item));
             }
             (
                 crate::types::Ty::Program(a_in, a_out, a_eff),
@@ -200,8 +208,7 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 crate::types::Ty::LiveRef(a_in, a_out, a_eff),
                 crate::types::Ty::LiveRef(b_in, b_out, b_eff),
             ) if a_eff == b_eff => {
-                let (next, is_program_equal) =
-                    push_type_program(work, &a_in, &a_out, &b_in, &b_out);
+                let (next, is_program_equal) = push_type_program(work, a_in, a_out, b_in, b_out);
                 work = next;
                 if !is_program_equal {
                     return false;

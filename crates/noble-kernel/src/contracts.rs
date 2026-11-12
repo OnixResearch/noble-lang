@@ -532,6 +532,15 @@ impl Env {
         u64::try_from(self.defs.len()).ok()
     }
 
+    /// Number of effect identities this environment provides.
+    ///
+    /// This is the bound one instantiation's effect set must fit inside; it is
+    /// deliberately independent of the definition count, which says nothing
+    /// about how many effect identities exist.
+    pub fn effect_count(&self) -> Option<u64> {
+        u64::try_from(self.effects.len()).ok()
+    }
+
     /// Whether the environment has no definitions.
     pub fn is_empty(&self) -> bool {
         self.defs.len() == 0

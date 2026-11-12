@@ -27,6 +27,24 @@ pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> supe
         }
         let first = attempt_segment!(walk, first);
         let second = attempt_segment!(walk, second);
+        // Both arguments are copied into the descriptor, so one level doubles
+        // the node count. Bound the result before it is materialized: nested
+        // generic patterns otherwise grow exponentially inside the pattern
+        // bound and only fail long after the declared type-size limit.
+        let (Some(first_nodes), Some(second_nodes)) = (first.size(), second.size()) else {
+            return (walk, Err(crate::words::InstError::OversizedType));
+        };
+        let doubled = match first_nodes
+            .checked_add(second_nodes)
+            .and_then(|nodes| nodes.checked_mul(2))
+            .and_then(|nodes| nodes.checked_add(1))
+        {
+            Some(doubled) => doubled,
+            None => return (walk, Err(crate::words::InstError::OversizedType)),
+        };
+        if doubled > crate::types::TYPE_NODE_CAP {
+            return (walk, Err(crate::words::InstError::OversizedType));
+        }
         let args = [first, second];
         let shape = crate::types::NominalShape::Variant(
             alloc::boxed::Box::new(args[usize::from(mapping[0])].clone()),

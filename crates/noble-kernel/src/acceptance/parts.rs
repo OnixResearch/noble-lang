@@ -186,8 +186,44 @@ pub(crate) fn join(
     joined.stack.truncate(keep);
     joined.stack.extend_from_slice(&interface.stack_out);
     joined.effects = joined.effects.union(&interface.effects);
-    attempt!(limits_of(&joined.stack, ctx));
+    attempt!(limits_of_join(
+        joined.stack.len(),
+        &interface.stack_out,
+        ctx
+    ));
     Ok(joined)
+}
+
+/// Validate the entries one join appends, plus the height it produces.
+///
+/// A retained entry entered the frame through the join that appended it (or
+/// through `limits_of_entry`), so it was already checked against the same
+/// height, type-size and environment predicates. Re-walking the retained
+/// prefix on every node would make one join cost the whole frame instead of
+/// the interface the join charges.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; limits_of_join rejects an unrepresentable or excessive joined height before checking each appended entry, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
+)]
+pub(crate) fn limits_of_join(
+    height: usize,
+    appended: &[crate::types::Ty],
+    ctx: &Ctx,
+) -> Result<(), super::Fail> {
+    let joined_height = match u64::try_from(height) {
+        Ok(joined_height) => joined_height,
+        Err(_) => {
+            return Err(super::Fail::Exhausted(
+                crate::untrusted::LimitKind::StackHeight,
+            ))
+        }
+    };
+    if joined_height > u64::from(ctx.request.limits.stack_height) {
+        return Err(super::Fail::Exhausted(
+            crate::untrusted::LimitKind::StackHeight,
+        ));
+    }
+    limits_of(appended, ctx)
 }
 
 /// Whether the stack's top matches the expected segment.
