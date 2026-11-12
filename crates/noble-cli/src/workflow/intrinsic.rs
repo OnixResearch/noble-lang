@@ -1501,6 +1501,7 @@ fn execute(
     let mut modules = std::vec::Vec::new();
     let mut modules_exceeded = false;
     let mut timeout_ms = super::DEFAULT_TIMEOUT;
+    let mut timeout_seen = false;
     let mut budgets =
         noble_contracts::intrinsic::ProofBudgets::from_limits(noble_contracts::Limits::default());
     let mut at = 2;
@@ -1521,6 +1522,15 @@ fn execute(
                 }
             }
             "--timeout-ms" => {
+                // A repeated deadline is ambiguous: the last value would silently
+                // replace a caller's earlier budget.
+                if timeout_seen {
+                    return Err(output::Failure::error(
+                        "usage",
+                        "repeated proof deadline".into(),
+                    ));
+                }
+                timeout_seen = true;
                 timeout_ms = value
                     .to_str()
                     .and_then(|value| value.parse::<u64>().ok())

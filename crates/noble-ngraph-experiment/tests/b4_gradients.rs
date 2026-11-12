@@ -20,7 +20,7 @@ use noble_ngraph::ir::{
 use noble_ngraph::{check, CheckedGraph, Code};
 use noble_ngraph_experiment::fixtures::{identity_loss, range};
 use noble_ngraph_experiment::scheme::BLAKE3;
-use noble_ngraph_experiment::suites::gradient_campaign;
+use noble_ngraph_experiment::suites::{gradient_campaign, ratio_is_failure};
 
 fn id_loss() -> CheckedGraph {
     check(&BLAKE3, identity_loss()).expect("identity loss")
@@ -41,6 +41,21 @@ fn smooth_region_g1_and_g2_hold_on_f1_mse() {
     assert!(st.used >= 40, "{st:?}");
     assert_eq!(st.g1_failures, 0, "{st:?}");
     assert_eq!(st.g2_failures, 0, "{st:?}");
+}
+
+/// B4's ratio gate: a NaN ratio (an undefined derivative or bound) is a failure.
+/// `r > 1.0` would let it through, because every comparison with NaN is false.
+#[test]
+fn nan_derivative_ratio_fails_the_gradient_gate() {
+    for (ratio, failure) in [
+        (0.0, false),
+        (1.0, false),
+        (1.000_001, true),
+        (f64::INFINITY, true),
+        (f64::NAN, true),
+    ] {
+        assert_eq!(ratio_is_failure(ratio), failure, "ratio {ratio}");
+    }
 }
 
 /// `y = reglu(p0·x, p1·x)`: analytic `∂y/∂p0 = x·relu(p1·x)`, `∂y/∂p1 = p0·x·x` (gate > 0).

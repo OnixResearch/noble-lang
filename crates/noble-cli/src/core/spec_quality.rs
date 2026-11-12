@@ -188,7 +188,21 @@ fn obligations(
             vacuous,
         });
     }
-    Ok(collected)
+    // A repeated obligation is the same attestation, so it counts once. Only
+    // exactly identical entries collapse: a contradictory duplicate keeps both
+    // flags and is still refused below as a self-attested claim.
+    let mut deduplicated: std::vec::Vec<Obligation> = std::vec::Vec::new();
+    for entry in collected {
+        let repeated = deduplicated.iter().any(|seen| {
+            seen.claim == entry.claim
+                && seen.checked == entry.checked
+                && seen.vacuous == entry.vacuous
+        });
+        if !repeated {
+            deduplicated.push(entry);
+        }
+    }
+    Ok(deduplicated)
 }
 
 /// The reported obligations, separated by what each one actually establishes.

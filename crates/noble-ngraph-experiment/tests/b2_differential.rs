@@ -734,3 +734,31 @@ fn agreeing_pairs_produce_no_witness() {
     )
     .is_none());
 }
+
+/// B2 L1 coverage: a per-program mode record is honest only when every vector
+/// is either an ordinary agreement or a recorded ordinary quota outcome, and at
+/// least one ordinary comparison agreed. The committed phase-B-extract receipt
+/// shows `random-1` agreeing on zero vectors, which this rule refuses.
+#[test]
+fn program_with_only_quota_outcomes_has_no_agreement() {
+    use noble_ngraph_experiment::b2i64::l1_coverage;
+    // The observed defect: 20 vectors, all refused at the acceptance stage.
+    assert_eq!(l1_coverage(0, 20, 20), Err("no ordinary-path agreement"));
+    assert_eq!(l1_coverage(1, 19, 20), Ok(()));
+}
+
+#[test]
+fn every_l1_vector_must_be_agreement_or_recorded_quota() {
+    use noble_ngraph_experiment::b2i64::l1_coverage;
+    assert_eq!(l1_coverage(20, 0, 20), Ok(()));
+    assert_eq!(
+        l1_coverage(19, 0, 20),
+        Err("vectors outside agreement plus recorded ordinary quota")
+    );
+    assert_eq!(l1_coverage(0, 19, 20), Err("no ordinary-path agreement"));
+    assert_eq!(l1_coverage(0, 0, 0), Err("no ordinary-path agreement"));
+    assert_eq!(
+        l1_coverage(usize::MAX, 1, 0),
+        Err("vectors outside agreement plus recorded ordinary quota")
+    );
+}

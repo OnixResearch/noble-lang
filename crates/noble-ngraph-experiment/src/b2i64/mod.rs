@@ -355,6 +355,18 @@ fn legs(
                 );
                 agree += usize::from(ok);
             }
+            if let Err(reason) = l1_coverage(agree, quota.len(), n) {
+                t.check(
+                    || {
+                        format!(
+                            "{name} L1 --opt {}: {reason} (agree {agree}, ordinary quota {}, vectors {n})",
+                            opt.flag(),
+                            quota.len()
+                        )
+                    },
+                    false,
+                );
+            }
             modes.insert(
                 opt.flag().to_owned(),
                 json!({
@@ -469,6 +481,21 @@ pub fn campaign(cfg: &Config) -> Result<serde_json::Value, String> {
         "mismatches": t.mismatches,
         "agree": t.mismatches.is_empty(),
     }))
+}
+
+/// Whether one L1 mode observed the source honestly: every vector is either an
+/// ordinary-path agreement or a recorded ordinary quota outcome, and at least one
+/// ordinary comparison agreed. A program whose every vector was refused at the
+/// acceptance stage has no independent-source observation at all, so its record
+/// must be a failure rather than a pass with an empty `agree`.
+pub fn l1_coverage(agree: usize, quota: usize, vectors: usize) -> Result<(), &'static str> {
+    if agree == 0 {
+        return Err("no ordinary-path agreement");
+    }
+    if agree.checked_add(quota) != Some(vectors) {
+        return Err("vectors outside agreement plus recorded ordinary quota");
+    }
+    Ok(())
 }
 
 /// Sums the per-graph L1 records per `--opt` mode.

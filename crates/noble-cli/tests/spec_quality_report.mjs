@@ -796,6 +796,19 @@ assert.equal(combined.document.partial_correctness.reported, true);
 assert.equal(combined.document.termination.claimed, false);
 assert.equal(combined.document.correspondence.claimed, false);
 
+// A repeated obligation is one claim: exact duplicates collapse before the report counts, so
+// repeating an attestation cannot inflate `established` or add another row.
+const repeated = await derived('repeated-obligations', incrementSource, incrementDomain,
+  incrementPermitted,
+  [...incrementClaims(), specification('inhabited'), specification('realizable')]);
+assert.equal(repeated.status, 0, 'a repeated obligation is still a consistent submission');
+assert.deepEqual(repeated.document.specification_quality.obligations.map(entry => entry.claim),
+  ['inhabited', 'realizable', 'deterministic'], 'each claim is reported once');
+assert.equal(repeated.document.specification_quality.established, 3,
+  'repeating a checked obligation does not inflate established claims');
+assert.equal(repeated.document.specification_quality.not_established, 0);
+assert.equal(repeated.document.specification_quality.vacuous, 0);
+
 // Finite domain/output bounds and native unsupported interfaces are refusal classes, not evidence.
 const structuralSource = contractSource({
   name: 'structural-output',

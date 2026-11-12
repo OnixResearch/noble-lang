@@ -5,6 +5,14 @@
 //!   (pure Rust port of LLVM APFloat, `#![forbid(unsafe_code)]`), never by host
 //!   floating point. Comparisons (`relu`, `step`, index bounds) use APFloat's
 //!   own ordering. Guard facts reuse [`noble_ngraph::facts::holds`] (shared code).
+//!
+//!   Not independent of the reference evaluator: the oracle calls the same
+//!   `noble_ngraph::eval::preflight` for slot binding and refusals, and the same
+//!   `noble_ngraph::facts::holds` for guard facts, as L3 and L4 do. Agreement on
+//!   a refusal or a guard outcome therefore re-uses their code and is not
+//!   independent evidence for it; only the per-operation rounding (APFloat or
+//!   binary64-then-round) is computed independently. A genuinely independent
+//!   preflight and guard oracle is a design task, not this leg's claim.
 //! * [`f64_per_op`]: the B2-ORACLE leg. Each `+`, `−`, `×` (and each affine
 //!   product and partial sum) is computed in binary64 and rounded to binary32
 //!   once, the analogue of handwired's per-operation `Math.fround`. Agreement

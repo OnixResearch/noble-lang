@@ -32,6 +32,27 @@ const DEFINITION_LIMIT: usize = 256;
 // The opt-in calculator's checked source closure can include numeric modules
 // whose 321 reachable named bodies exceed the older 256-definition profile.
 const CALCULATOR_DEFINITION_LIMIT: usize = 512;
+
+/// The environment row cap of a selected profile: its definition limit plus the
+/// fixed rows only that profile installs (calculator 32, text cursor 27,
+/// declared text 28, ordinary 26). Borrowed preflight, admission's environment
+/// work accounting and the declared-shape check all use this one function so
+/// the caps cannot drift apart.
+pub(crate) const fn maximum_rows(
+    calculator: bool,
+    text_cursor: bool,
+    declared_text: bool,
+) -> usize {
+    if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else if declared_text {
+        DEFINITION_LIMIT.saturating_add(28)
+    } else if text_cursor {
+        DEFINITION_LIMIT.saturating_add(27)
+    } else {
+        DEFINITION_LIMIT.saturating_add(26)
+    }
+}
 // Calculator source and compiler share a 896-row bound. The independently
 // bounded named-body count and per-clone/fanout budgets are separate gates.
 // Retain the complete E×B scans rather than discounting them. This 2b limit
@@ -982,7 +1003,13 @@ impl Compiler {
             calculator_plan: false,
             max_type_nodes: 0,
         };
-        attempt!(preflight::check(submission, self.calculator, &mut work));
+        attempt!(preflight::check(
+            submission,
+            self.calculator,
+            self.text_cursor,
+            self.declared_text,
+            &mut work
+        ));
         work.calculator_preflight = false;
         if self.worker_inputs
             && (!submission.environment.declared_modules
@@ -2012,7 +2039,7 @@ mod declared_text_ingress_tests {
         let compiler = Compiler::new_declared_text();
         let mut work = budget(original.request.limits.work);
         assert!(
-            preflight::check(&original, false, &mut work).is_ok(),
+            preflight::check(&original, false, true, true, &mut work).is_ok(),
             "whole-source preflight exhausted before declared-text admission"
         );
         let checked = admission::check(&original, false, false, true, false, true, true, &mut work)

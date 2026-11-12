@@ -279,7 +279,13 @@ pub(super) fn check(
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    let environment_work = attempt!(environment::work(&submission.environment, calculator, work));
+    let environment_work = attempt!(environment::work(
+        &submission.environment,
+        calculator,
+        text_cursor,
+        declared_text,
+        work
+    ));
     attempt!(work.charge(environment_work));
     attempt!(environment::check(
         submission,

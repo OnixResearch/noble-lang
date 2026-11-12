@@ -6,6 +6,7 @@ use noble_kernel::{resources as ownership, types::ResourceKind};
 use std::ffi::OsString;
 use std::fs::File;
 use std::io::{Read, Seek};
+use std::os::unix::fs::OpenOptionsExt;
 use wasmtime::{
     component::{types::ComponentItem, Component, Linker, Val},
     Config, Engine, Store, StoreLimits, StoreLimitsBuilder,
@@ -25,6 +26,25 @@ const MAX_REQUESTS: usize = 4096;
 /// regular file; guest strings can select only the fixed `main.rs` entry.
 struct Directory {
     main_rs: File,
+}
+
+/// Opens the host-selected preopen target without blocking on a non-regular
+/// file (`O_NONBLOCK`) and without following a final symlink (`O_NOFOLLOW`),
+/// then refuses anything that is not a regular file. Opening first and checking
+/// afterwards would let a FIFO hang the adapter before any check ran.
+fn open_regular(path: &std::path::Path) -> Result<File> {
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW)
+        .open(path)
+        .context("host preopen failed")?;
+    ensure!(
+        file.metadata()
+            .context("host preopen metadata failed")?
+            .is_file(),
+        "host preopen must be a regular file"
+    );
+    Ok(file)
 }
 
 impl Directory {
@@ -92,6 +112,7 @@ impl Host {
         Ok(Self {
             limits: StoreLimitsBuilder::new()
                 .memory_size(4_194_304)
+                .table_elements(16_384)
                 .instances(16)
                 .tables(16)
                 .build(),
@@ -336,7 +357,7 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         "component differs from independent host-selected Noble source recipe"
     );
     // No file is opened or right granted until exact component correspondence.
-    let file = File::open(file_path).context("host preopen failed")?;
+    let file = open_regular(std::path::Path::new(file_path))?;
     let mut config = Config::new();
     config.wasm_component_model(true).consume_fuel(true);
     let engine = Engine::new(&config)?;
@@ -481,5 +502,42 @@ mod tests {
         assert_eq!(granted.request_trace, vec!["fs.read"; 6]);
         granted.release().unwrap();
         assert_eq!(granted.table.observation().live, 0);
+    }
+}
+
+#[cfg(test)]
+mod preopen_tests {
+    use super::open_regular;
+
+    /// The preopen opens non-blocking and refuses anything that is not a regular
+    /// file. A FIFO would otherwise hang `File::open` before any check ran.
+    #[test]
+    fn preopen_refuses_a_fifo_and_a_symlink() {
+        let base = std::env::temp_dir();
+        let unique = super::super::identity::reserve(1).unwrap();
+        let fifo = base.join(format!("noble-fs-{}-{unique}-fifo", std::process::id()));
+        let regular = base.join(format!("noble-fs-{}-{unique}-regular", std::process::id()));
+        let link = base.join(format!("noble-fs-{}-{unique}-link", std::process::id()));
+        rustix::fs::mkfifoat(
+            rustix::fs::CWD,
+            &fifo,
+            rustix::fs::Mode::from_raw_mode(0o600),
+        )
+        .expect("create fifo fixture");
+        let error = open_regular(&fifo).expect_err("a FIFO is not a regular preopen");
+        assert!(
+            error.to_string().contains("regular file"),
+            "fifo refusal must name the regular-file requirement: {error:#}"
+        );
+        std::fs::write(&regular, b"host-selected\n").expect("write regular fixture");
+        assert!(open_regular(&regular).is_ok());
+        std::os::unix::fs::symlink(&regular, &link).expect("link fixture");
+        assert!(
+            open_regular(&link).is_err(),
+            "a final symlink must not be followed"
+        );
+        std::fs::remove_file(&fifo).expect("remove fifo fixture");
+        std::fs::remove_file(&regular).expect("remove regular fixture");
+        std::fs::remove_file(&link).expect("remove link fixture");
     }
 }

@@ -70,6 +70,20 @@ pub fn g1_tolerance(d: f64) -> f64 {
     1e-6 * d.abs().max(1.0)
 }
 
+/// Whether a tolerance ratio fails its check.
+///
+/// A NaN ratio is a failure: an undefined derivative is not evidence that the
+/// derivative holds, and `r > 1.0` would read NaN as a pass. The predicate is
+/// therefore `!(r <= 1.0)`.
+#[must_use]
+pub fn ratio_is_failure(r: f64) -> bool {
+    // NaN compares as neither less nor equal, so it is a failure.
+    !matches!(
+        r.partial_cmp(&1.0),
+        Some(core::cmp::Ordering::Less | core::cmp::Ordering::Equal)
+    )
+}
+
 fn models() -> (CheckedGraph, CheckedGraph) {
     let m = check(&BLAKE3, fixtures::f1()).unwrap_or_else(|d| panic!("F1: {d}"));
     let l = check(&BLAKE3, fixtures::mse_loss()).unwrap_or_else(|d| panic!("MSE: {d}"));
@@ -122,7 +136,7 @@ pub fn gradient_campaign(seed: u64, samples: u64) -> GradStats {
             let r1 = (g1[k] - cd).abs() / tol;
             st.g1_checks += 1;
             st.g1_worst_ratio = st.g1_worst_ratio.max(r1);
-            if r1 > 1.0 {
+            if ratio_is_failure(r1) {
                 st.g1_failures += 1;
                 st.first_failure
                     .get_or_insert_with(|| format!("G1 slot {k}: g1={} cd={cd} tol={tol}", g1[k]));
@@ -133,7 +147,7 @@ pub fn gradient_campaign(seed: u64, samples: u64) -> GradStats {
             st.g2_checks += 1;
             st.g2_worst_ratio = st.g2_worst_ratio.max(r2);
             st.g2_plain_relative_ok += u64::from(e2 <= bound_k * g1[k].abs());
-            if r2 > 1.0 {
+            if ratio_is_failure(r2) {
                 st.g2_failures += 1;
                 st.first_failure.get_or_insert_with(|| {
                     format!("G2 slot {k}: g2={} g1={} bound={bound}", g2[k], g1[k])

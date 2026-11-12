@@ -454,6 +454,22 @@ fn framed_declared_input(
     Ok((output.status, reports))
 }
 
+/// TEXT-02's declared combination vector: under the combined
+/// `--declared-modules --text-byte-cursor` profile the cursor addresses UTF-8
+/// bytes, so byte 2 of `"Aé"` is the continuation byte 0xA9 (169), not a scalar
+/// value or an ASCII-only byte.
+#[test]
+fn declared_text_reads_multibyte_vector() -> Result<(), Box<dyn std::error::Error>> {
+    let (status, reports) = framed_declared_reports(&[], &[b"\"A\xc3\xa9\" 2 text.byte"])?;
+    assert!(status.success(), "declared-text multibyte read failed");
+    assert_eq!(reports.len(), 1);
+    assert_eq!(reports[0]["profile"], "Declared-Text-v1");
+    assert_eq!(reports[0]["outcome"], "normal");
+    assert_eq!(reports[0]["stack"][0]["value"], "Aé");
+    assert_eq!(reports[0]["stack"][1]["value"], "169");
+    Ok(())
+}
+
 #[test]
 fn declared_retained_source_opt_in_preserves_default_and_explicit_input_caps(
 ) -> Result<(), Box<dyn std::error::Error>> {
