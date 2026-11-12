@@ -2,8 +2,10 @@
 
 Model-theorem check for `.cairn/changes/region-trace-relation`. It builds
 `proofs/m5/RegionTrace.lean` in an isolated project with the pinned Lean toolchain, then checks
-every inventoried theorem's compiled statement and transitive axioms, so a finite instance, an extra
-premise or a weaker statement cannot satisfy the inventory by mentioning a dependency.
+that each inventoried theorem is declared in the sources, that it elaborates to a compiled statement
+the receipt records, and that its transitive axioms stay inside the row's allow-list. Statement text
+is recorded, not compared with an expected statement, so a weaker statement is not detected here;
+what the lane enforces is the declaration set and the axiom set.
 
 ## Command
 

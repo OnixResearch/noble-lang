@@ -10,9 +10,10 @@ on top of two inputs:
   `verification/m5/discovery.tar.gz`;
 - the T1–T3 model `proofs/foundation/NobleFoundation/RegionProtocol.lean`.
 
-The check then audits every inventoried theorem's compiled statement and transitive axioms. It also
-audits four reused theorems, so a finite instance, an extra premise or a weaker statement cannot
-satisfy the inventory by mentioning a dependency:
+The check then audits every inventoried theorem: the name must be declared in the sources, the
+compiled statement is recorded in the receipt (not compared with an expected statement, so a weaker
+statement is not detected here), and every transitive axiom must stay inside the row's allow-list.
+It also audits four reused theorems under the same rules:
 
 - `M5Resources.transition_refines` and `M5Resources.table_decide_refines`;
 - the model's `exactly_one_release_commit` and `run_final_owner`.
