@@ -156,13 +156,25 @@ fn fact_payloads_are_charged() {
         "charge {charged} must cover the one-hot group and evidence payloads above {bare}"
     );
 
-    // A derived rule string is charged too.
-    let with_rule = {
+    // A derived rule string is charged too: the same fact with a payload-free
+    // provenance has the same one-hot group, so only the rule bytes can
+    // account for the difference.
+    let rule = "ir_check.transfer.rule";
+    let without_rule = {
         let mut copy = g.clone();
-        copy.facts[0].provenance = Provenance::Derived("ir_check.transfer.rule".to_string());
+        copy.facts[0].provenance = Provenance::InputValidated;
         copy
     };
-    assert!(retained_bytes(&with_rule) >= bare + group_bytes);
+    let with_rule = {
+        let mut copy = g.clone();
+        copy.facts[0].provenance = Provenance::Derived(rule.to_string());
+        copy
+    };
+    assert!(
+        retained_bytes(&with_rule) >= retained_bytes(&without_rule) + rule.len() as u64,
+        "the {} rule bytes must be charged above the same fact without a rule",
+        rule.len()
+    );
 }
 
 #[test]

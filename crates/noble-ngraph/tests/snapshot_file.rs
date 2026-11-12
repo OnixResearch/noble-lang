@@ -340,3 +340,72 @@ fn binding_refuses_other_graphs_facts_layouts_and_pins() {
         Some("E-SNAPSHOT-LAYOUT")
     );
 }
+
+#[test]
+fn a_digest_consistent_nonfinite_parameter_is_refused_by_the_finiteness_check() {
+    let f = trained(3);
+    let mut bytes = f.snapshot.bytes().to_vec();
+    // The first parameter slot's binary32 NaN, with every identity below
+    // recomputed from these bytes: only the finiteness rule can refuse it.
+    bytes[..4].copy_from_slice(&0x7fc0_0000u32.to_le_bytes());
+    let mut forged = SnapshotFile {
+        snapshot: ParamSnapshot::from_parts(
+            &IDS,
+            f.snapshot.graph(),
+            layout_key_of(&IDS, f.snapshot.slots()),
+            f.snapshot.slots().to_vec(),
+            bytes,
+        ),
+        provenance: f.provenance.clone(),
+    };
+    forged.provenance.result = forged.snapshot.id();
+    let text = forged.print(&IDS);
+    assert_eq!(
+        noble_ngraph::ir::hex(&documented_digest(&IDS, &text)),
+        text.lines().last().expect("a provenance line")["provenance ".len()..],
+        "the forgery's provenance digest is consistent"
+    );
+    assert_eq!(load(&text).err().as_deref(), Some("E-SNAPSHOT-INTEGRITY"));
+}
+
+#[test]
+fn parameter_lines_are_charged_before_they_are_retained() {
+    let text = trained(0).print(&IDS);
+    let params = text.lines().filter(|l| l.starts_with("param ")).count();
+    assert_eq!(params, 2, "the fixture has two parameters");
+    let e = SnapshotFile::parse(&IDS, &text, 3).expect_err("one parameter is over three bytes");
+    assert_eq!(e.code_string(), "E-BUDGET-SNAPSHOT-BYTES");
+    assert_eq!(
+        e.budget,
+        Some((3, 4)),
+        "the first line is charged before it is retained, not the whole block afterwards"
+    );
+}
+
+#[test]
+fn binding_refuses_another_subject_or_other_tool_revisions() {
+    let f = trained(1);
+    let model = checked(linear(false, false));
+    f.bind(&IDS, &model, None).expect("binds");
+    let code = |r: Result<(), noble_ngraph::Diagnostic>| r.err().map(|d| d.code_string());
+    let mut other_subject = SnapshotFile {
+        snapshot: f.snapshot.clone(),
+        provenance: f.provenance.clone(),
+    };
+    other_subject.provenance.subject.identity = [0x11; 32];
+    let reloaded = load(&other_subject.print(&IDS)).expect("a digest-consistent forgery reloads");
+    assert_eq!(
+        code(reloaded.bind(&IDS, &model, None)).as_deref(),
+        Some("E-SNAPSHOT-STALE")
+    );
+    let mut other_tools = SnapshotFile {
+        snapshot: f.snapshot.clone(),
+        provenance: f.provenance.clone(),
+    };
+    other_tools.provenance.tools = "noble-ngraph/9".to_owned();
+    let reloaded = load(&other_tools.print(&IDS)).expect("a digest-consistent forgery reloads");
+    assert_eq!(
+        code(reloaded.bind(&IDS, &model, None)).as_deref(),
+        Some("E-SNAPSHOT-STALE")
+    );
+}

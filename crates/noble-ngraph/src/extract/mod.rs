@@ -23,8 +23,9 @@
 //!    expansion charges inline depth.
 //! 3. Normalization: pruning of nodes that reach no output (`ngraph-i64/0`
 //!    extraction creates no guards and no facts), then the independent graph
-//!    checker ([`crate::check`]), which also recomputes the named-call
-//!    expansion bound from the closure call graph.
+//!    checker ([`crate::check`]). The named-call expansion bound is computed
+//!    here, from the closure call graph plus one node per scalar leaf of the
+//!    root inputs; the checker does not recompute it.
 //!
 //! Every refusal is a [`Diagnostic`] returned before any graph exists, so no
 //! graph node is ever evaluated for a refused subject.

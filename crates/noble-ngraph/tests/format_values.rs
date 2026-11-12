@@ -41,6 +41,14 @@ fn f32_tokens_are_exact_encodings_or_exact_decimals() {
     assert_eq!(code(f("16777217")), "E-LITERAL-INEXACT");
     assert_eq!(code(f("nan")), "E-LITERAL-NONFINITE");
     assert_eq!(code(f("-Infinity")), "E-LITERAL-NONFINITE");
+    for word in ["inf", "INF", "-inf", "-nan"] {
+        assert_eq!(code(f(word)), "E-LITERAL-NONFINITE", "{word}");
+    }
+    // Only the non-finite words take that code: a leading `+` is malformed
+    // (NGRAPH-FORMAT-01), and a longer token is neither a word nor a decimal.
+    for bad in ["+inf", "+nan", "banana", "0.5inf", "infinityy", "--inf"] {
+        assert_eq!(code(f(bad)), "E-FORMAT", "{bad}");
+    }
     for bad in ["0x", "0x123456789", "0xzz", "abc", "1..0"] {
         assert_eq!(code(f(bad)), "E-FORMAT", "{bad}");
     }

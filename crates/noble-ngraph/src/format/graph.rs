@@ -76,8 +76,9 @@ impl<'a> Toks<'a> {
     fn peek(&self) -> Option<&'a str> {
         self.t.get(self.i).copied()
     }
-    fn rest(&mut self) -> alloc::vec::Vec<&'a str> {
-        let r = self.t[self.i..].to_vec();
+    /// The remaining tokens of the line, without copying the vector.
+    fn rest(&mut self) -> &[&'a str] {
+        let r = &self.t[self.i..];
         self.i = self.t.len();
         r
     }
@@ -485,6 +486,37 @@ fn op(
     })
 }
 
+/// Charges the collected-token floor of every significant line against
+/// `graph_bytes` before any token vector is built.
+///
+/// Each token occupies one `&str` entry (16 bytes) in its line's vector, so a
+/// 64 MiB file of one-token lines would otherwise collect tens of millions of
+/// entries before the retained-bytes budget applied. A line whose tokens
+/// alone would retain more than `graph_bytes` is refused here; the vectors
+/// live only while their line is parsed, so a per-line charge bounds the peak.
+///
+/// # Errors
+/// `E-BUDGET-GRAPH-BYTES` with the budget and the floor that crosses it.
+fn token_budget(text: &str, graph_bytes: u64) -> Result<(), crate::diag::Diagnostic> {
+    let per_token_bytes = core::mem::size_of::<&str>() as u64;
+    for line in text.lines() {
+        let body = line.split('#').next().unwrap_or("");
+        let mut tokens = 0u64;
+        for _ in body.split_whitespace() {
+            tokens = tokens.saturating_add(1);
+        }
+        let observed = tokens.saturating_mul(per_token_bytes);
+        if observed > graph_bytes {
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::GraphBytes,
+                graph_bytes,
+                observed,
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// Parses a graph file. `ids` is used only for the `subject authored-name`
 /// sugar.
 ///
@@ -494,6 +526,22 @@ pub fn parse(
     ids: &dyn IdentityScheme,
     text: &str,
 ) -> Result<crate::ir::Graph, crate::diag::Diagnostic> {
+    parse_within(ids, text, crate::check::Budgets::default().graph_bytes)
+}
+
+/// [`parse`] under a graph byte budget: the collected-token floor of any one
+/// significant line must fit, so the token vectors cannot outgrow the budget
+/// before the checker charges the parsed graph. The `/0` policy may only lower
+/// a budget, so `parse` uses the default.
+///
+/// # Errors
+/// `E-BUDGET-GRAPH-BYTES` for an over-budget line, then [`parse`]'s refusals.
+pub fn parse_within(
+    ids: &dyn IdentityScheme,
+    text: &str,
+    graph_bytes: u64,
+) -> Result<crate::ir::Graph, crate::diag::Diagnostic> {
+    token_budget(text, graph_bytes)?;
     let mut lines = super::lines(text);
     let header = lines.next().ok_or_else(|| syntax(1, "empty graph file"))?;
     let hl = header.number;
@@ -552,7 +600,7 @@ pub fn parse(
             }
             "shape" => {
                 let which = t.next()?;
-                let trees = shape_trees(&t.rest(), line)?;
+                let trees = shape_trees(t.rest(), line)?;
                 let slot = match which {
                     "input" => &mut input_shape,
                     "output" => &mut output_shape,

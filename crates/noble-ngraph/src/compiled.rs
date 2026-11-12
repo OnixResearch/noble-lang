@@ -116,8 +116,11 @@ impl Compiled {
         let mut consts = alloc::vec::Vec::with_capacity(n);
         let mut slot_regs = alloc::vec::Vec::with_capacity(n);
         let layer_count = checked.layer_count() as usize;
-        let mut layers = alloc::vec![(0u32, 0u32); layer_count.max(1)];
-        let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count.max(1)];
+        // Exactly the checker's layers, including none for an empty graph: the
+        // layout validator requires one range per layer and one trailing
+        // failure-suffix entry, which `layer_count + 1` below supplies.
+        let mut layers = alloc::vec![(0u32, 0u32); layer_count];
+        let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count];
         let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::with_capacity(n);
         let mut iins: alloc::vec::Vec<crate::schedule::I64Instruction> =
             alloc::vec::Vec::with_capacity(n);
@@ -368,8 +371,32 @@ impl Compiled {
         snapshot: Option<&crate::snapshot::ParamSnapshot>,
         control: &mut crate::eval::Control<'_>,
     ) -> crate::eval::Report {
+        if let Some(refusal) = self.scratch_refusal(control) {
+            return refusal;
+        }
         let mut w = self.workspace();
         self.evaluate_in(&mut w, inputs, snapshot, control)
+    }
+
+    /// The refusal of one workspace against the control's scratch limit, or
+    /// `None` when it fits.
+    ///
+    /// The register file is the scratch the budget bounds, so a caller that
+    /// allocates one workspace for several [`Compiled::evaluate_in`] calls must
+    /// ask this *before* allocating; [`Compiled::evaluate`] asks first itself.
+    /// The refusal is the one every evaluation would report under the same
+    /// control, with no node evaluated.
+    #[must_use]
+    pub fn scratch_refusal(
+        &self,
+        control: &crate::eval::Control<'_>,
+    ) -> Option<crate::eval::Report> {
+        crate::eval::scratch_preflight(self.scratch_bytes(), control)
+            .err()
+            .map(|d| crate::eval::Report {
+                obs: crate::eval::Obs::Refused(d),
+                evaluated_nodes: 0,
+            })
     }
 
     fn get(&self, w: &Workspace, n: crate::ir::NodeId) -> crate::sem::Value {

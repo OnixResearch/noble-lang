@@ -45,8 +45,52 @@ enum Recipe {
     },
     /// `quote`: pushes the captured value (same id; no copy).
     Capture(Sym),
-    /// `compose`.
-    Compose(alloc::rc::Rc<Recipe>, alloc::rc::Rc<Recipe>),
+    /// `compose`: `left` then `right`, nested `depth` compositions deep.
+    Compose {
+        left: Option<alloc::rc::Rc<Recipe>>,
+        right: Option<alloc::rc::Rc<Recipe>>,
+        depth: u32,
+    },
+}
+
+impl Recipe {
+    /// Composition nesting below the inline-depth budget: a quotation or a
+    /// capture holds no composition, and `compose` is one level more than its
+    /// deepest side.
+    fn depth(&self) -> u32 {
+        match self {
+            Recipe::Quotation { .. } | Recipe::Capture(_) => 0,
+            Recipe::Compose { depth, .. } => *depth,
+        }
+    }
+
+    /// Moves this recipe's children into `work`, leaving the slots empty.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the traversal worklist must grow as the chain is unlinked"
+    )]
+    fn unlink(&mut self, work: &mut alloc::vec::Vec<alloc::rc::Rc<Recipe>>) {
+        if let Recipe::Compose { left, right, .. } = self {
+            work.extend(left.take());
+            work.extend(right.take());
+        }
+    }
+}
+
+impl Drop for Recipe {
+    fn drop(&mut self) {
+        // A `compose` chain is freed iteratively: `Rc`'s own drop recurses once
+        // per level, so a crafted chain would otherwise overflow the stack
+        // while it is freed. Only a uniquely held child is unlinked here; a
+        // shared one stays for its other owners and linking is not recursion.
+        let mut work = alloc::vec::Vec::new();
+        self.unlink(&mut work);
+        while let Some(rc) = work.pop() {
+            if let Ok(mut recipe) = alloc::rc::Rc::try_unwrap(rc) {
+                recipe.unlink(&mut work);
+            }
+        }
+    }
 }
 
 enum Task {
@@ -81,7 +125,9 @@ pub struct Stats {
     pub max_inline_depth: u64,
     /// Nodes removed by pruning.
     pub pruned_nodes: u64,
-    /// The checker-side saturating named-call expansion bound (D7 step 5).
+    /// The extractor's saturating upper bound on expanded nodes (D7 step 5):
+    /// the named-call bound over the closure call graph plus one node per
+    /// scalar leaf of the root inputs. The checker does not recompute it.
     pub static_expansion_bound: u64,
 }
 
@@ -307,7 +353,14 @@ impl<'a, 's> Machine<'a, 's> {
                             self.push_entries(*body, entries);
                         }
                         Recipe::Capture(s) => self.sigma.push(s.clone()),
-                        Recipe::Compose(x, y) => {
+                        Recipe::Compose { left, right, .. } => {
+                            let (Some(x), Some(y)) = (left.as_ref(), right.as_ref()) else {
+                                return Err(crate::diag::Diagnostic::new(
+                                    crate::diag::Code::Interface,
+                                    crate::diag::Site::Graph,
+                                    "recipe composition lost an operand",
+                                ));
+                            };
                             self.tasks.push(Task::Recipe(y.clone()));
                             self.tasks.push(Task::Recipe(x.clone()));
                         }
@@ -599,8 +652,24 @@ impl<'a, 's> Machine<'a, 's> {
             noble_kernel::contracts::Behavior::Compose => {
                 let y = self.pop_known(body, node)?;
                 let x = self.pop_known(body, node)?;
+                // A recipe chain is retained and freed through `Rc`, so its
+                // nesting is bounded like other static expansion nesting. A
+                // chain longer than the inline-depth budget is refused instead
+                // of retained and dropped.
+                let depth = x.depth().max(y.depth()).saturating_add(1);
+                if u64::from(depth) > self.a.budget.inline_depth {
+                    return Err(crate::diag::Diagnostic::budget(
+                        crate::diag::BudgetKind::InlineDepth,
+                        self.a.budget.inline_depth,
+                        u64::from(depth),
+                    ));
+                }
                 self.sigma.push(Sym::Known(
-                    alloc::rc::Rc::new(Recipe::Compose(x, y)),
+                    alloc::rc::Rc::new(Recipe::Compose {
+                        left: Some(x),
+                        right: Some(y),
+                        depth,
+                    }),
                     out_ty(),
                 ));
             }
@@ -887,9 +956,33 @@ fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::di
     }
 }
 
-/// D7 step 5: the checker's saturating named-call expansion bound,
-/// recomputed from the closure call graph (one entry per body; the root uses
-/// an identity outside the closure).
+/// Scalar nodes one root input type contributes: [`Machine::input`] creates
+/// one node per `I64`/`Bool` leaf, and none for `Unit` or a pair's structure.
+fn input_leaves(ty: &noble_kernel::types::Ty) -> u64 {
+    let mut work = alloc::vec![ty];
+    let mut leaves = 0u64;
+    while let Some(t) = work.pop() {
+        match t {
+            noble_kernel::types::Ty::Pair(a, b) => {
+                work.push(a);
+                work.push(b);
+            }
+            noble_kernel::types::Ty::Unit => {}
+            other => {
+                if super::admission::scalar(other).is_some() {
+                    leaves = leaves.saturating_add(1);
+                }
+            }
+        }
+    }
+    leaves
+}
+
+/// D7 step 5: the saturating upper bound on expanded nodes, computed here from
+/// the closure call graph (one entry per body; the root uses an identity
+/// outside the closure) plus one node per scalar leaf of the root inputs. The
+/// checker does not recompute it, so it bounds this extractor's own expansion
+/// and nothing else.
 #[expect(
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-maintainers; call-graph entries and callees are bounded by the admitted body count"
@@ -999,7 +1092,14 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
             });
         }
     }
-    let inputs = a.root_interface().0.len() as u64;
+    // One input node per scalar leaf, not per root interface item: a
+    // `Pair(I64, I64)` input contributes two nodes, so counting items would
+    // under-state the bound.
+    let inputs = a
+        .root_interface()
+        .0
+        .iter()
+        .fold(0u64, |leaves, ty| leaves.saturating_add(input_leaves(ty)));
     crate::check::expansion_bound(&entries, root_id)
         .map(|b| b.saturating_add(inputs))
         .ok_or_else(|| {
@@ -1009,4 +1109,42 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                 "recursive closure call graph",
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    /// A left-heavy composition chain `levels` deep, sharing one quotation on
+    /// every right-hand side: exactly the shape `dup compose` grows.
+    fn chain(levels: u32) -> (alloc::rc::Rc<super::Recipe>, alloc::rc::Rc<super::Recipe>) {
+        let leaf = alloc::rc::Rc::new(super::Recipe::Quotation {
+            body: 0,
+            node: noble_kernel::untrusted::NodeId(0),
+        });
+        let mut recipe = alloc::rc::Rc::new(super::Recipe::Capture(super::Sym::Unit));
+        for depth in 1..=levels {
+            recipe = alloc::rc::Rc::new(super::Recipe::Compose {
+                left: Some(recipe),
+                right: Some(leaf.clone()),
+                depth,
+            });
+        }
+        (recipe, leaf)
+    }
+
+    #[test]
+    fn a_deep_recipe_chain_is_freed_iteratively() {
+        let levels = 200_000u32;
+        let (recipe, leaf) = chain(levels);
+        assert_eq!(recipe.depth(), levels, "the chain has every level");
+        assert_eq!(
+            alloc::rc::Rc::strong_count(&leaf),
+            usize::try_from(levels).expect("fits") + 1,
+            "every level shares the leaf"
+        );
+        drop(recipe);
+        // The leaf survives only through this handle: an iterative drop
+        // released every composition above it.
+        assert_eq!(alloc::rc::Rc::strong_count(&leaf), 1);
+        assert_eq!(leaf.depth(), 0);
+    }
 }
