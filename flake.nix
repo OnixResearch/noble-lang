@@ -58,13 +58,14 @@
       # submodule contents; `submodules = true` is what makes the recorded NAR
       # hash cover them. The hash comes from the reviewed policy and the assert
       # below requires the realised store path to equal the recorded one.
-      selectedWasmtimeSource = builtins.fetchTree {
+      wasmtimeTree = builtins.fetchTree {
         type = "git";
         url = "https://github.com/bytecodealliance/wasmtime";
         rev = "bb9ef6703e0c2da39fc0b329ce673d325900e992";
         submodules = true;
         narHash = selectionPolicy.component_sync.wasmtime_source_nar_hash;
       };
+      selectedWasmtimeSource = wasmtimeTree.outPath;
       reviewedVendor = import ./nix/reviewed-vendor.nix {
         inherit pkgs;
         root = ./.;
@@ -332,6 +333,7 @@
           '';
     in
     assert selection.enforce;
+    assert wasmtimeTree.rev == "bb9ef6703e0c2da39fc0b329ce673d325900e992";
     assert toString selectedWasmtimeSource == selectionPolicy.component_sync.wasmtime_source;
     assert toString reviewedVendor == selectionPolicy.component_sync.vendor;
     {

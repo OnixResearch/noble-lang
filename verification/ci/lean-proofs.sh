@@ -66,7 +66,7 @@ stage() {
 # The pinned release must be first on PATH: Lake resolves `lean` from it.
 lean_path="$lean_bin:/run/current-system/sw/bin:/usr/bin:/bin"
 build() { ( cd "$1" && PATH="$lean_path" exec lake build ); }
-gate() { PATH="$lean_path" exec verification/m3-proof-gate.sh; }
+gate() { PATH="$lean_path" verification/m3-proof-gate.sh; }
 foundation_check() {
   env -i "$node" verification/foundation/check.mjs "${dirty_args[@]}" --output "$out/foundation"
 }
