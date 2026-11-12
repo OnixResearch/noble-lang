@@ -2,47 +2,49 @@
 # M3 proof-required gate (change m3-checker-coverage, task 6.1).
 #
 # Succeeds the M2 gate (verification/m2-proof-gate.sh stays the floor and
-# is never weakened). The gate has two tiers:
+# is never weakened). There is one tier: the proofs/m3 root must build.
+# A type error in any of NobleM2, NobleM3, NobleM2.Refinement or the
+# generated NobleKernel fails the gate at BUILD; there is no handoff tier
+# that could turn a broken proof tree green.
 #
-# STRICT TIER — when the proofs/m3 root builds, every check runs against
-# it and the required-theorem list is the full fragment-v1 set: the
-# inventory of verification/m3-proof-evidence.md §6, enumerated there
-# and in this gate's checker A (the strict names: soundness, totality and
-# the work-measure bounds, the per-rule soundness family, the
-# correspondences, the composed refinement theorems, and the generated
-# `noble_kernel.acceptance.check` itself; then the evaluation-closed
-# names: the coverage families, the per-word/per-rule refinement matrix
-# and the decision-path rows, each carrying the M2 per-declaration
-# native_decide axioms). A deleted or renamed name anywhere in the set
-# fails the gate, as does any axiom outside the name's permitted set.
-# The M2 floor gate (verification/m2-proof-gate.sh) stays runnable and
+# The required-theorem list is the fragment-v1 set: the inventory of
+# verification/m3-proof-evidence.md §6, enumerated in this gate's checker A
+# (the strict names: soundness, totality and the work-measure bounds, the
+# per-rule soundness family, the correspondences, the composed refinement
+# theorems, and the generated `noble_kernel.acceptance.check` itself; then
+# the evaluation-closed names: the coverage families, the per-word/per-rule
+# refinement matrix and the decision-path rows, each carrying the M2
+# per-declaration native_decide axioms). A deleted or renamed name anywhere
+# in the set fails the gate, as does any axiom outside the name's permitted
+# set. The M2 floor gate (verification/m2-proof-gate.sh) stays runnable and
 # unweakened over proofs/m2.
 #   The axiom policy is the M2 one: {propext, Classical.choice,
 #   Quot.sound} strictly, plus per-declaration native_decide axioms for
 #   the evaluation-closed theorems; sorryAx and anything else reject.
 #
-# HANDOFF TIER — while the proofs/m3 root does not yet build (tasks
-# 5.1-5.4 in flight), the gate says so explicitly and instead enforces:
-#   M3-KERNEL-BINDING  the m3 root's generated NobleKernel module is
-#                      byte-identical to proofs/m2's — the root the M2
-#                      refinement theorems bind — and carries the v1
-#                      markers (the words.resolve walk, the CyclicWitness
-#                      constraint, the RecursiveDependency/RecursiveSchema
-#                      kinds), so the M2-floor theorems are about the v1
-#                      extracted checker
-#   M3-BINDING-THEOREMS  the committed m3 binding theorems are present in
-#                      the m3 root's sources (textual presence here;
-#                      semantic enforcement engages with the strict tier)
-#   M3-NO-SORRY        no proof hole in the m3 root's sources
-#   M2-FLOOR           the full M2 proof gate passes on proofs/m2
+# Beyond the reviewed list, the gate enumerates every theorem the m3
+# sources declare, from the elaborated environment: each `.lean` file under
+# NobleM2/ and NobleM3/ and the two roots contributes its module, every
+# expected module must be imported by the roots (else its theorems are
+# elaborated by no checker), and every theorem whose defining module is one
+# of them has its transitive axioms audited under the same policy. A new
+# theorem or a new module is therefore covered without editing the gate.
+# `NobleM2.Refinement` is elaborated by checker B instead (it cannot be
+# imported alongside the NobleM2 root), and `NobleM3.CheckV1` is listed as
+# an unaudited source: it does not compile and no root imports it.
 #
-# Usage (from any directory; the pinned Lean must be first on PATH):
+# NO-PROOF-HOLE is a construct scan over the comment- and literal-masked
+# sources (verification/lean-source-scan.mjs): `sorry`, `admit`, an
+# `axiom` declaration, `debug.skipKernelTC` and `addDecl` all fail, and a
+# comment or a doc string that merely mentions one does not.
+#
+# Usage (from any directory; the pinned Lean first on PATH, plus node for
+# the construct scan):
 #
 #   PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
 #     verification/m3-proof-gate.sh [PROOF_ROOT]
 #
-# PROOF_ROOT defaults to the repository's proofs/m3. Exit 0 = the active
-# tier's checks all pass.
+# PROOF_ROOT defaults to the repository's proofs/m3. Exit 0 = all checks pass.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -52,74 +54,58 @@ PROOF_ROOT="$(cd "$PROOF_ROOT" 2>/dev/null && pwd)" || {
   echo "[m3-gate] FAIL SETUP: proof root not found: $1" >&2; exit 1; }
 [ -f "$PROOF_ROOT/lakefile.toml" ] || {
   echo "[m3-gate] FAIL SETUP: $PROOF_ROOT has no lakefile.toml" >&2; exit 1; }
-M2_ROOT="$REPO/proofs/m2"
-M2_GATE="$REPO/verification/m2-proof-gate.sh"
-
 fail() { echo "[m3-gate] FAIL $1: $2" >&2; exit 1; }
 pass() { echo "[m3-gate] PASS $1"; }
+
+# Scratch files the checks write next to the proof root; removed on every exit
+# path, including a refusal before they are assigned.
+cleanup() { rm -f "${GATE_A:-}" "${GATE_B:-}" "${MODULES_A:-}" "${MODULES_B:-}" "${holed:-}"; }
+trap cleanup EXIT
 
 lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
   || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
 pass "TOOLCHAIN (lean 4.35.0)"
 
-# Tier probe: the strict tier needs the m3 root's four targets to build.
-probe_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"
-probe_rc=$?
-
-if [ "$probe_rc" -ne 0 ]; then
-  echo "[m3-gate] HANDOFF: the proofs/m3 root does not build yet (tasks 5.1-5.4 in flight);"
-  echo "[m3-gate] HANDOFF: strict tier not engaged. Probe failure (tail):"
-  printf '%s\n' "$probe_log" | grep -m4 '^error' | sed 's/^/[m3-gate] HANDOFF:   /'
-  echo "[m3-gate] HANDOFF: pending v1 required theorems (strict tier, tasks 5.2-5.4):"
-  echo "[m3-gate] HANDOFF:   check_total_v1, foldBody_work_bounded_v1, eligibility_iff,"
-  echo "[m3-gate] HANDOFF:   inclusion_iff, coverage_positive_word (x23), per-rule soundness"
-  echo "[m3-gate] HANDOFF:   (EMPTY LITERAL WORD SEQUENCE QUOTATION CASE IF LISTCASE), the"
-  echo "[m3-gate] HANDOFF:   refinement matrix, duplication_shares_interface, accepted_via_refinement_v1"
-
-  # M3-KERNEL-BINDING: byte-identity of the generated module with the one
-  # the M2-floor theorems semantically bind, plus the v1 markers.
-  cmp -s "$PROOF_ROOT/NobleKernel.lean" "$M2_ROOT/NobleKernel.lean" \
-    || fail M3-KERNEL-BINDING "the m3 root's generated entry point differs from proofs/m2's"
-  diff -rq "$PROOF_ROOT/NobleKernel" "$M2_ROOT/NobleKernel" >/dev/null \
-    || fail M3-KERNEL-BINDING "the m3 root's generated modules differ from proofs/m2's"
-  grep -q '^def words.resolve.bindings' "$PROOF_ROOT/NobleKernel/Funs.lean" \
-    || fail M3-KERNEL-BINDING "generated module lacks the B-CHECK-05 words.resolve walk"
-  grep -q 'CyclicWitness : untrusted.Constraint' "$PROOF_ROOT/NobleKernel/Types.lean" \
-    || fail M3-KERNEL-BINDING "generated module lacks the CyclicWitness constraint"
-  grep -q 'RecursiveDependency' "$PROOF_ROOT/NobleKernel/Types.lean" \
-    || fail M3-KERNEL-BINDING "generated module lacks the RecursiveDependency kind"
-  pass "M3-KERNEL-BINDING (generated module byte-identical to proofs/m2's; v1 markers present)"
-
-  # M3-BINDING-THEOREMS: the committed m3 binding theorems are present in
-  # the m3 root's sources (textual; semantic in the strict tier).
-  for thm in table_refines apply_refines; do
-    grep -q "^theorem $thm " "$PROOF_ROOT/NobleM3/Refine.lean" \
-      || fail M3-BINDING-THEOREMS "NobleM3/Refine.lean no longer states $thm"
-  done
-  pass "M3-BINDING-THEOREMS (table_refines, apply_refines present in NobleM3/Refine.lean)"
-
-  # M3-NO-SORRY: no proof hole in the m3 root's checked-in sources.
-  sorry_hits="$(grep -rnw --include='*.lean' --exclude-dir=.lake sorry "$PROOF_ROOT" || true)"
-  [ -z "$sorry_hits" ] || { printf '%s\n' "$sorry_hits" >&2; fail M3-NO-SORRY "m3 proof sources contain 'sorry'"; }
-  pass "M3-NO-SORRY (no 'sorry' outside .lake)"
-
-  # M2-FLOOR: the full M2 gate, semantically, on the root it binds.
-  "$M2_GATE" "$M2_ROOT" || fail M2-FLOOR "the M2 proof gate failed on proofs/m2"
-  echo "[m3-gate] PASS (handoff tier) — strict tier engages when proofs/m3 builds"
-  exit 0
+# The m3 root must build. There is no handoff tier: a type error anywhere in
+# these four targets fails the gate here, with the failing diagnostics.
+if ! build_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"; then
+  printf '%s\n' "$build_log" | grep -E '^error' | head -20 >&2
+  fail BUILD "proofs/m3 does not build (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel failed); this gate has no handoff tier"
 fi
-
 pass "BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)"
 
-# STRICT: no proof hole in any checked-in proof source.
-sorry_hits="$(grep -rnw --include='*.lean' --exclude-dir=.lake sorry "$PROOF_ROOT" || true)"
-[ -z "$sorry_hits" ] || {
-  printf '%s\n' "$sorry_hits" >&2
-  fail NO-SORRY "proof sources contain 'sorry'"
+# NO-PROOF-HOLE: every checked-in proof source, with comments and literal text
+# masked, so a doc string that says "sorry" is not a hit and an `admit`, a
+# local `axiom`, `debug.skipKernelTC` or `addDecl` is.
+SCAN="$REPO/verification/lean-source-scan.mjs"
+[ -f "$SCAN" ] || fail NO-PROOF-HOLE "the construct scanner is missing: $SCAN"
+# A JS host for the scan: one on PATH, else the reviewed node of
+# policy/tool-selection.json. No network and no nix.
+NODE_BIN="$(command -v node || true)"
+if [ -z "$NODE_BIN" ]; then
+  node_output="$(sed -n '/^  "tool_paths": {/,/^  },$/p' "$REPO/policy/tool-selection.json" \
+    | sed -n '/^    "node": {/,/^    },$/p' \
+    | sed -n 's/^      "output": "\([^"]*\)".*$/\1/p' | head -1)"
+  [ -n "$node_output" ] && [ -x "$node_output/bin/node" ] && NODE_BIN="$node_output/bin/node"
+fi
+[ -n "$NODE_BIN" ] || fail SETUP "no node on PATH and no reviewed node in policy/tool-selection.json"
+# (a) `sorry` anywhere in the proof root, the scope the old word grep had,
+# comments and literals masked; (b) every construct over the human-written
+# sources, where `admit`/`axiom`/`skipKernelTC`/`addDecl` mean what they say
+# (the generated NobleKernel has data-model functions named `admit`).
+holed="$(mktemp "$PROOF_ROOT/.m3-gate-hole-XXXXXX")"
+scan_log="$("$NODE_BIN" "$SCAN" --only sorry "$PROOF_ROOT" 2>&1)" || {
+  printf '%s\n' "$scan_log" >&2
+  fail NO-PROOF-HOLE "a proof source contains 'sorry'"
 }
-pass "NO-SORRY (no 'sorry' outside .lake)"
+"$NODE_BIN" "$SCAN" "$PROOF_ROOT/NobleM2" "$PROOF_ROOT/NobleM3" \
+  "$PROOF_ROOT/NobleM2.lean" "$PROOF_ROOT/NobleM3.lean" > "$holed" 2>&1 || {
+  cat "$holed" >&2
+  fail NO-PROOF-HOLE "a proof source contains sorry, admit, an axiom declaration, debug.skipKernelTC or addDecl"
+}
+pass "NO-PROOF-HOLE ($scan_log; proof sources: $(cat "$holed"))"
 
-# STRICT: the library entry imports the checked generated functions and exposes
+# The library entry imports the checked generated functions and exposes
 # the extracted checker. A comment is not generator provenance; the separate
 # actual-source extraction gates bind generated bytes to Charon/Aeneas runs.
 gen_header="$PROOF_ROOT/NobleKernel.lean"
@@ -132,7 +118,7 @@ grep -q '^def acceptance.check' "$gen_funs" \
   || fail GENERATED-KERNEL "generated Funs.lean does not define acceptance.check"
 pass "GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)"
 
-# STRICT: the m3 refinement and embedding import the generated module
+# The m3 refinement and embedding import the generated module
 # itself, so the theorems cannot silently bind a same-named substitute.
 for mod in NobleM3/Refine.lean NobleM2/Embed.lean; do
   [ -f "$PROOF_ROOT/$mod" ] || fail REFINEMENT-SUBJECT "$mod is missing"
@@ -141,12 +127,31 @@ for mod in NobleM3/Refine.lean NobleM2/Embed.lean; do
 done
 pass "REFINEMENT-SUBJECT (NobleM3/Refine.lean and NobleM2/Embed.lean import NobleKernel)"
 
-# STRICT REQUIRED-THEOREMS: the floor and the v1 set, with the M2 axiom
-# policy; the refinement family is stated about the generated checker.
+# REQUIRED-THEOREMS: the floor and the v1 set, with the M2 axiom policy; the
+# refinement family is stated about the generated checker.
 GATE_A="$PROOF_ROOT/.m3-gate-a.lean"
 GATE_B="$PROOF_ROOT/.m3-gate-b.lean"
-cleanup() { rm -f "$GATE_A" "$GATE_B"; }
-trap cleanup EXIT
+MODULES_A="$PROOF_ROOT/.m3-gate-modules-a.txt"
+MODULES_B="$PROOF_ROOT/.m3-gate-modules-b.txt"
+# The module set the enumeration must cover: every .lean file under NobleM2/
+# and NobleM3/, plus the two roots. Checker B elaborates NobleM2.Refinement,
+# which cannot be imported alongside the NobleM2 root (duplicate instances),
+# so it is that checker's module. NobleM3.CheckV1 does not compile and no root
+# imports it; its theorems are therefore UNAUDITED, and the gate prints that
+# rather than silently enumerating around it.
+{
+  printf '%s\n' NobleM2 NobleM3
+  for dir in NobleM2 NobleM3; do
+    for module_file in "$PROOF_ROOT/$dir"/*.lean; do
+      [ -e "$module_file" ] || continue
+      module_name="${module_file#"$PROOF_ROOT"/}"
+      printf '%s\n' "${module_name%.lean}" | tr '/' '.'
+    done
+  done
+} | grep -vx 'NobleM2.Refinement' | grep -vx 'NobleM3.CheckV1' > "$MODULES_A"
+printf '%s\n' 'NobleM2.Refinement' > "$MODULES_B"
+[ "$(wc -l < "$MODULES_A")" -gt 2 ] || fail SETUP "no m3 proof modules enumerated under $PROOF_ROOT"
+echo "[m3-gate] NON-CLAIM NobleM3.CheckV1 is not imported by any root and does not compile; its theorems are not audited"
 
 cat > "$GATE_A" <<'LEAN_A'
 import Lean.Elab.Command
@@ -239,6 +244,30 @@ run_cmd do
       let bad := axs.filter (fun a => !(okAxiom isStrict a))
       if !bad.isEmpty then
         logError m!"m3-gate: forbidden axioms on {n}: {bad}"
+  -- Enumerated coverage: every theorem the m3 sources declare, not only the
+  -- reviewed inventory above. The module list is derived from the .lean files
+  -- under NobleM2/ and NobleM3/ plus the roots, so a new theorem or a new
+  -- module is audited without editing this gate; a module no checker imports
+  -- is an error, because its theorems would be elaborated nowhere.
+  let env ← getEnv
+  let nameOf (s : String) : Name := s.splitOn "." |>.foldl (fun n p => n.mkStr p) .anonymous
+  let payload ← IO.FS.readFile "MODULES_A"
+  let expected : Array Name := (payload.splitOn "\n").filterMap (fun line => if line.isEmpty then none else some (nameOf line)) |>.toArray
+  for mod in expected do
+    unless env.header.moduleNames.contains mod do
+      logError m!"m3-gate: module {mod} is not imported, so no checker elaborates its theorems"
+  let expectedSet : NameSet := expected.foldl (fun set mod => set.insert mod) {}
+  let mut audited := 0
+  for (n, ci) in env.constants.toList do
+    if !(ci matches .thmInfo _) then continue
+    let some idx := env.getModuleIdxFor? n | continue
+    if !expectedSet.contains env.header.moduleNames[idx]! then continue
+    audited := audited + 1
+    let axs ← Lean.collectAxioms n
+    let bad := axs.filter (fun a => !(okAxiom false a))
+    if !bad.isEmpty then
+      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad}"
+  logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} m3 modules"
 LEAN_A
 cat > "$GATE_B" <<'LEAN_B'
 import Lean.Elab.Command
@@ -283,7 +312,31 @@ run_cmd do
           logInfo m!"m3-gate: subject {n} binds {gen}"
         else
           logError m!"m3-gate: substituted subject: {n} is not stated about the generated {gen}"
+  -- Enumerated coverage of this checker's module, as in checker A: every
+  -- theorem declared in NobleM2/Refinement.lean is audited, including those
+  -- outside the reviewed list above.
+  let env ← getEnv
+  let nameOf (s : String) : Name := s.splitOn "." |>.foldl (fun n p => n.mkStr p) .anonymous
+  let payload ← IO.FS.readFile "MODULES_B"
+  let expected : Array Name := (payload.splitOn "\n").filterMap (fun line => if line.isEmpty then none else some (nameOf line)) |>.toArray
+  for mod in expected do
+    unless env.header.moduleNames.contains mod do
+      logError m!"m3-gate: module {mod} is not imported, so no checker elaborates its theorems"
+  let expectedSet : NameSet := expected.foldl (fun set mod => set.insert mod) {}
+  let mut audited := 0
+  for (n, ci) in env.constants.toList do
+    if !(ci matches .thmInfo _) then continue
+    let some idx := env.getModuleIdxFor? n | continue
+    if !expectedSet.contains env.header.moduleNames[idx]! then continue
+    audited := audited + 1
+    let axs ← Lean.collectAxioms n
+    let bad := axs.filter (fun a => !(okAxiom false a))
+    if !bad.isEmpty then
+      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad}"
+  logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} checker-B modules"
 LEAN_B
+sed -e "s|MODULES_A|$MODULES_A|" "$GATE_A" > "$GATE_A.resolved" && mv "$GATE_A.resolved" "$GATE_A"
+sed -e "s|MODULES_B|$MODULES_B|" "$GATE_B" > "$GATE_B.resolved" && mv "$GATE_B.resolved" "$GATE_B"
 axioms_log="$(cd "$PROOF_ROOT" && lake env lean .m3-gate-a.lean 2>&1)"
 axioms_rc=$?
 if [ "$axioms_rc" -ne 0 ]; then
@@ -298,9 +351,9 @@ if [ "$subject_rc" -ne 0 ]; then
   fail REQUIRED-THEOREMS "refinement theorem inventory / subject binding exited $subject_rc"
 fi
 printf '%s\n' "$subject_log"
-pass "REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding)"
+pass "REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding, enumerated coverage of every declared theorem)"
 
-# STRICT: no unexplained external model (template axioms reject).
+# No unexplained external model (template axioms reject).
 axiom_hits="$(grep -nE '^[[:space:]]*axiom[[:space:]]' \
   "$PROOF_ROOT/NobleKernel/FunsExternal.lean" "$PROOF_ROOT/NobleKernel/TypesExternal.lean" || true)"
 [ -z "$axiom_hits" ] || {
@@ -309,5 +362,5 @@ axiom_hits="$(grep -nE '^[[:space:]]*axiom[[:space:]]' \
 }
 pass "EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)"
 
-echo "[m3-gate] PASS (strict tier, all checks) — proof root: $PROOF_ROOT"
+echo "[m3-gate] PASS (all checks, no handoff tier) — proof root: $PROOF_ROOT"
 exit 0

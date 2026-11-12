@@ -24,8 +24,16 @@
 # Mutations (each a separate cell, per the M1 control-matrix convention):
 # The expected check is the strict tier's (the m3 root builds); the case list
 # at the end of this file is authoritative.
-#   proof-hole                a `sorry` probe theorem added to an m3     -> NO-SORRY
+#   proof-hole                a `sorry` probe theorem added to an m3     -> NO-PROOF-HOLE
 #                             proof source
+#   broken-build              a type error in an imported m3 root: the   -> BUILD
+#                             root does not build, and the gate has no
+#                             handoff tier that could pass it
+#   admit-tactic              an `admit` probe theorem added to an m3     -> NO-PROOF-HOLE
+#                             root (it compiles with a warning, so the
+#                             construct scan, not the build, must refuse)
+#   local-axiom               a local `axiom` declaration added to an m3 -> NO-PROOF-HOLE
+#                             root (an axiom is not a build error)
 #   missing-per-word-theorem  the per-word application refinement        -> REQUIRED-
 #                             theorem (apply_refines) no longer          THEOREMS
 #                             stated
@@ -169,6 +177,41 @@ STUB
     out="$("$GATE" "$copy" 2>&1)"; rc=$?
     ;;
 
+  broken-build)
+    fresh_copy "$copy"
+    # A type error in an imported root: the build step must refuse. Appending
+    # to the NobleM3 root re-elaborates only the root, so the refusal is quick.
+    { cat "$PROOF_ROOT/NobleM3.lean"
+      printf '\n/-- Refusal-mutation probe: a type error. -/\ntheorem mutation_broken_build : (1 : Nat) = (2 : Nat) := rfl\n'
+    } > "$SCRATCH/broken-build.lean"
+    grep -q 'mutation_broken_build' "$SCRATCH/broken-build.lean" || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/broken-build.lean" "$copy/NobleM3.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
+  admit-tactic)
+    fresh_copy "$copy"
+    # `admit` is not a build error (it compiles with a "declaration uses
+    # sorry" warning), so only the construct scan can refuse it.
+    { cat "$PROOF_ROOT/NobleM3.lean"
+      printf '\n/-- Refusal-mutation probe: admit. -/\ntheorem mutation_admit_probe : False := by admit\n'
+    } > "$SCRATCH/admit-tactic.lean"
+    grep -qw admit "$SCRATCH/admit-tactic.lean" || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/admit-tactic.lean" "$copy/NobleM3.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
+  local-axiom)
+    fresh_copy "$copy"
+    # A local axiom is legal Lean; the construct scan must refuse it.
+    { cat "$PROOF_ROOT/NobleM3.lean"
+      printf '\n/-- Refusal-mutation probe: a local axiom. -/\naxiom mutation_local_axiom : False\n'
+    } > "$SCRATCH/local-axiom.lean"
+    grep -q '^axiom mutation_local_axiom' "$SCRATCH/local-axiom.lean" || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/local-axiom.lean" "$copy/NobleM3.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
   removed-eliminator-oracle-arm)
     fresh_crate_copy "$copy"
     # The `case` arm deleted from the oracle's contract table: the oracle
@@ -237,7 +280,10 @@ STUB
 
 rc_all=0
 for case_label in \
-  'proof-hole NO-SORRY' \
+  'proof-hole NO-PROOF-HOLE' \
+  'broken-build BUILD' \
+  'admit-tactic NO-PROOF-HOLE' \
+  'local-axiom NO-PROOF-HOLE' \
   'missing-per-word-theorem REQUIRED-THEOREMS' \
   'substituted-subject GENERATED-KERNEL' \
   'unexplained-external EXTERNAL-MODELS' \

@@ -33,14 +33,11 @@
 #                     Strength classes describe statement shape only; they do
 #                     not show that the reference model is correct.
 #
-# Tiers (as in m3-proof-gate.sh): when the proofs/m3 root builds, the full
-# battery runs against it (strict). Until then the gate says so and runs
-# the M3-KERNEL-BINDING checks (the m3 root's generated module is
-# byte-identical to proofs/m2's, the module the record's proved citations
-# elaborate against) and then the full M2 coverage battery on proofs/m2
-# with this record (M2-FLOOR). The record's citations split three ways in
-# strict mode: non-refinement -> checker A, NobleM2.Refinement.* ->
-# checker B, NobleM3.Refine.* -> checker C.
+# There is one tier: the proofs/m3 root must build and carry the v1 anchor
+# (`check_total_v1`). A broken root fails the gate at BUILD / ANCHOR; there is
+# no handoff mode that could classify a proof tree that does not compile. The
+# record's citations split three ways: non-refinement -> checker A,
+# NobleM2.Refinement.* -> checker B, NobleM3.Refine.* -> checker C.
 #
 # Usage (from any directory; the pinned Lean must be first on PATH; `bun`
 # is required on PATH):
@@ -64,8 +61,6 @@ RECORD="$(cd "$(dirname "$RECORD")" 2>/dev/null && pwd)/$(basename "$RECORD")"
 [ -f "$RECORD" ] || { echo "[m3-coverage] FAIL SETUP: record not found: $RECORD" >&2; exit 1; }
 [ -f "$PROOF_ROOT/lakefile.toml" ] || {
   echo "[m3-coverage] FAIL SETUP: $PROOF_ROOT has no lakefile.toml" >&2; exit 1; }
-M2_ROOT="$REPO/proofs/m2"
-M2_GATE="$REPO/verification/m2-coverage-gate.sh"
 JOIN="$REPO/verification/m3-coverage-join.mjs"
 
 fail() { echo "[m3-coverage] FAIL $1: $2" >&2; exit 1; }
@@ -76,27 +71,18 @@ lean --version 2>/dev/null | grep -q 'version 4\.35\.0' \
   || fail TOOLCHAIN "lean on PATH is not the pinned 4.35.0 release: $(lean --version 2>&1)"
 pass "SETUP (bun + lean 4.35.0)"
 
-# Tier probe: the strict tier needs the m3 root's four targets to build
-# AND the v1 theorem set's anchor (`check_total_v1`, task 5.3) to be
-# present — until then the handoff tier applies (see m3-proof-gate.sh).
-probe_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"
-probe_rc=$?
-probe_grep="$(grep -rl check_total_v1 "$PROOF_ROOT/NobleM2" "$PROOF_ROOT/NobleM3" 2>/dev/null || true)"
-
-if [ "$probe_rc" -ne 0 ] || [ -z "$probe_grep" ]; then
-  echo "[m3-coverage] HANDOFF: the proofs/m3 root does not build yet (tasks 5.1-5.4 in flight);"
-  echo "[m3-coverage] HANDOFF: strict tier not engaged; enforcing the M3 kernel binding and the M2 floor."
-  cmp -s "$PROOF_ROOT/NobleKernel.lean" "$M2_ROOT/NobleKernel.lean" \
-    || fail M3-KERNEL-BINDING "the m3 root's generated entry point differs from proofs/m2's"
-  diff -rq "$PROOF_ROOT/NobleKernel" "$M2_ROOT/NobleKernel" >/dev/null \
-    || fail M3-KERNEL-BINDING "the m3 root's generated modules differ from proofs/m2's"
-  pass "M3-KERNEL-BINDING (m3 root's generated module byte-identical to proofs/m2's — the record's subject)"
-  "$M2_GATE" "$M2_ROOT" "$RECORD" || fail M2-FLOOR "the M2 coverage battery failed on proofs/m2 with this record"
-  echo "[m3-coverage] PASS (handoff tier) — strict tier engages when proofs/m3 builds"
-  exit 0
+# The subject must build; there is no handoff mode.
+if ! build_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"; then
+  printf '%s\n' "$build_log" | grep -E '^error' | head -20 >&2
+  fail BUILD "proofs/m3 does not build (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel failed); this gate has no handoff mode"
 fi
-
 pass "BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)"
+
+# The v1 theorem set's anchor (`check_total_v1`, task 5.3) must be stated in the
+# sources the record's citations are checked against.
+grep -rq check_total_v1 "$PROOF_ROOT/NobleM2" "$PROOF_ROOT/NobleM3" \
+  || fail ANCHOR "the v1 anchor check_total_v1 is not stated in proofs/m3/NobleM2 or NobleM3"
+pass "ANCHOR (check_total_v1 present in the m3 sources)"
 
 # COVERAGE-DERIVE + COVERAGE-JOIN against the m3 root.
 report="$(bun "$JOIN" check "$PROOF_ROOT" "$RECORD" 2>&1)" || true
@@ -345,5 +331,5 @@ pass "STRENGTH ($strength_counts)"
 echo "[m3-coverage] NON-CLAIM strength classes describe statement shape only; they do not show that the reference model is correct"
 
 echo "[m3-coverage] SUMMARY $counts citations: $strength_counts"
-echo "[m3-coverage] PASS (all checks) — subject: $PROOF_ROOT; record: $RECORD"
+echo "[m3-coverage] PASS (all checks, no handoff mode) — subject: $PROOF_ROOT; record: $RECORD"
 exit 0
