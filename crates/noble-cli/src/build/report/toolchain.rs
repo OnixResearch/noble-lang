@@ -349,7 +349,10 @@ mod tests {
         std::fs::write(library.join("a.olean"), b"alpha").expect("write a");
         std::fs::write(library.join("z.olean"), b"zeta").expect("write z");
         std::fs::write(library.join("sub/b.olean"), b"beta").expect("write b");
-        let walked = walk(&library, 8, 8).expect("walk tree");
+        let walked = match walk(&library, 8, 8) {
+            Ok(walked) => walked,
+            Err(_) => std::panic!("walk failed"),
+        };
         let relative: std::vec::Vec<_> = walked.iter().map(|entry| entry.0.clone()).collect();
         // Traversal appends a nested file after its parent's siblings, so this
         // ordering is only reachable through the explicit sort.

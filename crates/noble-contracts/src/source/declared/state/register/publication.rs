@@ -121,11 +121,7 @@ impl WordBuilder {
             // Two operations of one schema that publish the same spelling make
             // lookup order decide the meaning; refuse instead of publishing an
             // ambiguous word.
-            if self
-                .added_words
-                .iter()
-                .any(|existing| *existing == spelling)
-            {
+            if self.added_words.contains(&spelling) {
                 return Err(crate::source::declared::error(
                     crate::source::Stage::Resolve,
                     "duplicate constructor word",
