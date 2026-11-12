@@ -494,9 +494,12 @@
         clippy = mkCheck "noble-clippy" [ ] ''
           cargo clippy --workspace --all-targets --all-features --locked --offline -- -D warnings
         '';
-        documents = mkCheck "noble-documents" [ pkgs.bun ] ''
+        documents = mkCheck "noble-documents" [ pkgs.bun pkgs.git ] ''
           bun tools/cairn-specs.mjs --self-test
-          bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs
+          NOBLE_GIT=${pkgs.git}/bin/git bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs \
+            tools/calculator-headroom.test.mjs tools/source-inventory-renew.test.mjs \
+            verification/lean-source-scan.test.mjs verification/ngraph/harness-binding.test.mjs \
+            verification/ngraph/l1-attribution.test.mjs verification/principality/run.test.mjs
           bun tools/check-specs.mjs --self-test
         '';
         cairn = mkCheck "noble-cairn" [ cairn.packages.${system}.cairn ] ''

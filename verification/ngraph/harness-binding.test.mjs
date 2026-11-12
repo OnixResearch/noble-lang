@@ -10,7 +10,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { harnessBinding } from './harness-binding.mjs';
 
-const git = realpathSync('/run/current-system/sw/bin/git');
+// The documents check supplies its pinned git through NOBLE_GIT; the host lane
+// default is the system profile's git.
+const git = realpathSync(process.env.NOBLE_GIT ?? '/run/current-system/sw/bin/git');
 const env = {
   PATH: dirname(git), HOME: '/nonexistent', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null',
   GIT_AUTHOR_NAME: 'noble-test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
