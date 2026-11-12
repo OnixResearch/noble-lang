@@ -447,6 +447,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   16119 production paths = 8296 body/open + 4528 generated + 3295 structural;
 #   8020 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed review fixes: kernel deny-all findings and shipped-CLI check from a complete 110-unit selected collection:
+#   IR 4da60c683f3a7cd14ae9cd2df152ee2396ecc568775bb02dcebdc648187ff03c; coverage fc4a89c288cf9f488a31ecf416a45664de9de2cea649cd81aea1446bb363db06;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   16120 production paths = 8297 body/open + 4528 generated + 3295 structural;
+#   8020 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -16689,6 +16694,10 @@ let
     structural "noble_wasm::source::preflight::row_cap_tests::{use#7}" "noble-wasm" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: declaration-only compiler kind (other); accounting only, with no body obligation.",
     structural "noble_wasm::source::preflight::row_cap_tests::{use#8}" "noble-wasm" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: declaration-only compiler kind (other); accounting only, with no body obligation.",
     structural "noble_wasm::source::preflight::row_cap_tests::{use#9}" "noble-wasm" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: declaration-only compiler kind (other); accounting only, with no body obligation.",
+    # Renewed review fixes: kernel deny-all findings and shipped-CLI check: 1 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    body "noble-kernel::closure@crates/noble-kernel/src/acceptance/parts.rs:7081:7089" "noble-kernel" "Renewed review fixes: kernel deny-all findings and shipped-CLI check from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
@@ -21310,8 +21319,8 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/sums.rs:4615:4623",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/sums.rs:503:1739",
     "noble-kernel::closure@crates/noble-kernel/tests/acceptance/sums.rs:638:646",
-    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:1447:1750",
-    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:1782:1933",
+    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:2076:2379",
+    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:2411:2562",
     "noble-kernel::closure@crates/noble-kernel/tests/docexamples.rs:10461:10468",
     "noble-kernel::closure@crates/noble-kernel/tests/docexamples.rs:5343:8703",
     "noble-kernel::closure@crates/noble-kernel/tests/docexamples.rs:5902:5911",
@@ -21559,10 +21568,10 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:2685:4206",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:284:292",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:2971:2979",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:4430:6981",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:4430:6995",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:5051:5059",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:8145:9295",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:8482:8490",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:8159:9309",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:8496:8504",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/witnesses.rs:85:1121",
     "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/calculator_rows.rs:1798:2261",
     "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/calculator_rows.rs:2271:3059",
@@ -21583,9 +21592,9 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/type_walk.rs:871:2773",
     "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/type_walk_cost.rs:1473:3605",
     "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:1024:1032",
-    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:4263:4688",
-    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:4698:5131",
-    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:5141:6070",
+    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:4263:4702",
+    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:4712:5159",
+    "noble-kernel::closure@crates/noble-kernel/tests/resource_bounds/witness_fuel.rs:5169:6098",
     "noble-kernel::closure@crates/noble-kernel/tests/support/mod.rs:523:527",
     "noble-ngraph-experiment::closure@crates/noble-ngraph-experiment/tests/attribution/accepted.rs:1096:1830",
     "noble-ngraph-experiment::closure@crates/noble-ngraph-experiment/tests/attribution/accepted.rs:1740:1743",
