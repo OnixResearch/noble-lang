@@ -26,6 +26,8 @@ mod gen;
 mod knobs;
 #[path = "property/generator/malform.rs"]
 mod malform;
+#[path = "property/malformed_lane.rs"]
+mod malformed_lane;
 #[path = "property/oracle.rs"]
 mod oracle;
 #[path = "property/otypes.rs"]
@@ -39,8 +41,6 @@ mod table;
 
 /// Generated candidates in the agreement lane.
 const GENERATED: u64 = 1000;
-/// Structurally corrupted candidates in the malformed lane.
-const MALFORMED: u64 = 200;
 
 /// The oracle's contract table must carry an arm for every pool word: a
 /// missing arm makes the differential harness silently reject that word's
@@ -109,11 +109,25 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     let mut rng = rng::Stream::new(0x0B1E_5EED_0000_0001);
     let mut both_accepted = 0;
     let mut both_rejected = 0;
+    // Per-word emission counts and the words that appear in accepted cases.
+    // Without both, a generator whose words never fit would keep "agreeing"
+    // with the oracle on rejections alone while its Data and branch rules
+    // decided nothing.
+    let mut emitted = [0_u32; fit::WORDS.len()];
+    let mut accepted_words: Vec<u32> = Vec::new();
     let mut index = 0;
     while index < GENERATED {
         let case = gen::case(&mut rng)?;
         let decision = oracle::decide(&case.request, &case.candidate);
         let outcome = noble_kernel::acceptance::check(&env, &case.request, &case.candidate);
+        for word in &case.words {
+            if let Some(slot) = usize::try_from(*word)
+                .ok()
+                .and_then(|word_index| emitted.get_mut(word_index))
+            {
+                *slot = slot.saturating_add(1);
+            }
+        }
         if matches!(
             (decision, &outcome),
             (
@@ -132,7 +146,34 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
                 reason = "Owner: noble-maintainers; every oracle Decision must be classified explicitly in agreement totals; a new decision must fail compilation until the harness defines its meaning."
             )]
             match decision {
-                otypes::Decision::Accept => both_accepted += 1,
+                otypes::Decision::Accept => {
+                    both_accepted += 1;
+                    // The checker's own derivations say which words it
+                    // accepted. A knob-corrupted case may have had a node
+                    // repaired or repointed, so only an uncorrupted case's
+                    // derivations attest the generated witness itself.
+                    if !case.corrupted {
+                        if let noble_kernel::untrusted::Outcome::Accepted(checked) = &outcome {
+                            for derivation in &checked.derivations {
+                                let node_index = match usize::try_from(derivation.node.0) {
+                                    Ok(node_index) => node_index,
+                                    Err(problem) => {
+                                        return Err(format!(
+                                            "derived node {} exceeds usize: {problem}",
+                                            derivation.node.0
+                                        ))
+                                    }
+                                };
+                                if let Some(noble_kernel::untrusted::Node::Invocation {
+                                    def, ..
+                                }) = case.candidate.nodes.get(node_index)
+                                {
+                                    accepted_words.push(def.0);
+                                }
+                            }
+                        }
+                    }
+                }
                 otypes::Decision::Reject => both_rejected += 1,
             }
         } else {
@@ -149,14 +190,59 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
         }
         index += 1;
     }
+    if both_accepted == 0 {
+        return Err("the agreement lane accepted no generated candidate".to_string());
+    }
+    if both_rejected == 0 {
+        return Err("the agreement lane rejected no generated candidate".to_string());
+    }
+    // The primitive words this lane claims to exercise must be emitted *and*
+    // decided by their own rules: a generator whose witnesses never fit keeps
+    // "agreeing" with the oracle on rejections alone (the defect this control
+    // pins for `dup`/`drop`'s Data rules).
+    let accepted_once = [(0_u32, "dup"), (1, "drop"), (2, "swap")];
+    // The eliminators are asserted as generated: their candidates are compared
+    // for agreement like every other word, and this lane claims only that the
+    // pool reaches them.
+    let emitted_once = [(17_u32, "case"), (18, "if"), (21, "list.case")];
+    let mut kind_report: Vec<String> = Vec::with_capacity(accepted_once.len() + emitted_once.len());
+    for (word, name) in accepted_once {
+        let emission_count = usize::try_from(word)
+            .ok()
+            .and_then(|word_index| emitted.get(word_index))
+            .copied()
+            .unwrap_or(0);
+        if emission_count == 0 {
+            return Err(format!(
+                "the generator emitted no {name} ({word}) in {GENERATED} cases"
+            ));
+        }
+        if !accepted_words.contains(&word) {
+            return Err(format!(
+                "no accepted candidate used {name} ({word}); its rule decided no case"
+            ));
+        }
+        kind_report.push(format!("{name}={emission_count}"));
+    }
+    for (word, name) in emitted_once {
+        let emission_count = usize::try_from(word)
+            .ok()
+            .and_then(|word_index| emitted.get(word_index))
+            .copied()
+            .unwrap_or(0);
+        if emission_count == 0 {
+            return Err(format!(
+                "the generator emitted no {name} ({word}) in {GENERATED} cases"
+            ));
+        }
+        kind_report.push(format!("{name}={emission_count}"));
+    }
     println!(
         "property/agreement: {GENERATED} generated candidates, {both_accepted} accepted by both sides, {both_rejected} rejected by both sides, 0 disagreements"
     );
     println!(
-        "property/agreement: eliminator patterns emitted: case={} if={} list.case={}",
-        gen::ELIMINATORS[0].load(std::sync::atomic::Ordering::Relaxed),
-        gen::ELIMINATORS[1].load(std::sync::atomic::Ordering::Relaxed),
-        gen::ELIMINATORS[2].load(std::sync::atomic::Ordering::Relaxed)
+        "property/agreement: {}; dup/drop/swap each decided an accepted case",
+        kind_report.join(" ")
     );
     Ok(())
 }
@@ -206,55 +292,4 @@ fn disagreement_report(
          candidate: {small:?}",
         shrink::MAX_STEPS,
     )
-}
-
-// r[verify DX-PROPERTY-02]
-// r[verify VT-M2-01]
-#[test]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; each of 200 seeded corruptions returns an error on acceptance and any checker panic fails the test directly; bounded nonaccepting outcomes remain deliberately permitted."
-)]
-fn malformed_candidates_never_panic_or_accept() -> Result<(), String> {
-    let env = gen::environment()?;
-    let mut rng = rng::Stream::new(0x0B1E_5EED_0000_0002);
-    let mut rejected = 0;
-    let mut bounded = 0;
-    let mut unavailable = 0;
-    let mut internal_failure_count = 0;
-    let kinds =
-        usize::try_from(malform::KINDS).map_err(|error| format!("corruption kinds: {error}"))?;
-    let mut labels: Vec<(&str, u32)> = Vec::with_capacity(kinds);
-    let mut index = 0;
-    while index < MALFORMED {
-        let case = gen::case(&mut rng)?;
-        let (broken, label) = malform::corrupt(&mut rng, case)?;
-        let outcome = noble_kernel::acceptance::check(&env, &broken.request, &broken.candidate);
-        match outcome {
-            noble_kernel::untrusted::Outcome::Accepted(_) => {
-                return Err(format!(
-                    "malformed lane case {index} ({label}) was accepted; candidate: {:?}",
-                    broken.candidate
-                ));
-            }
-            noble_kernel::untrusted::Outcome::Invalid(_) => rejected += 1,
-            noble_kernel::untrusted::Outcome::Exhausted(_) => bounded += 1,
-            noble_kernel::untrusted::Outcome::Unsupported(_) => unavailable += 1,
-            noble_kernel::untrusted::Outcome::InternalFailure => internal_failure_count += 1,
-        }
-        match labels.iter_mut().find(|entry| entry.0 == label) {
-            Some(entry) => entry.1 += 1,
-            None => labels.push((label, 1)),
-        }
-        index += 1;
-    }
-    let breakdown = labels
-        .iter()
-        .map(|(label, count)| format!("{label}={count}"))
-        .collect::<Vec<_>>()
-        .join(" ");
-    println!(
-        "property/malformed: {MALFORMED} corrupted candidates, 0 accepted, 0 panics; outcomes: invalid={rejected} exhausted={bounded} unsupported={unavailable} internal-failure={internal_failure_count}; kinds: {breakdown}"
-    );
-    Ok(())
 }

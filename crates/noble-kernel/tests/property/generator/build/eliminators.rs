@@ -11,6 +11,7 @@ pub(super) type Fragment = (
     Vec<noble_kernel::untrusted::NodeId>,
     Vec<noble_kernel::types::Ty>,
     Vec<u32>,
+    u32,
 );
 
 /// Both quotations retain their original claimed interface and effect bounds.
@@ -24,12 +25,6 @@ pub(super) fn build(
     now: Vec<noble_kernel::types::Ty>,
     which: u64,
 ) -> Result<Fragment, String> {
-    let index = usize::try_from(which)
-        .map_err(|error| format!("eliminator index exceeds usize: {error}"))?;
-    let counter = crate::gen::ELIMINATORS
-        .get(index)
-        .ok_or_else(|| format!("unknown generated eliminator {which}"))?;
-    counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let pattern = crate::gen::eliminators::Pattern {
         under: now,
         left: crate::gen::types::base(rng.below(4)),
@@ -67,7 +62,12 @@ pub(super) fn build(
     )?;
     let (word, bindings) = pattern.invocation(&final_stack);
     let invocation = arena.word(word, bindings)?;
-    Ok((vec![disc, quote1, quote2, invocation], final_stack, vec![0]))
+    Ok((
+        vec![disc, quote1, quote2, invocation],
+        final_stack,
+        vec![0],
+        word,
+    ))
 }
 
 impl Pattern {

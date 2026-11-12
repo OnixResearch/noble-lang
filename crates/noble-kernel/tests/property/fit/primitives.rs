@@ -15,7 +15,12 @@ pub(super) fn copy_or_drop(
         super::drop_one(now)?
     };
     Some((
-        vec![super::stack(now.to_vec()), super::value(a)],
+        // `S a -- S a a` / `S a -- S`: `S` is the stack below the operand,
+        // not the whole consumed stack.
+        vec![
+            super::stack(super::under_one(now).to_vec()),
+            super::value(a),
+        ],
         next,
         vec![],
     ))
