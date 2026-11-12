@@ -39,7 +39,7 @@
       "policy/architecture-export-spec.ncl",
     ],
     generated_output | String = "policy/architecture.json",
-    additional_outputs | Array String = ["policy/architecture.manifest.json"],
+    additional_outputs | Array String = [],
     evaluator | String = "nix/source-inventory.nix",
     tests | String = "nix/source-inventory-tests.nix",
     kind | String = "configuration-not-runtime-receipt",
