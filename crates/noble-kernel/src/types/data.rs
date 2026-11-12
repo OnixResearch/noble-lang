@@ -14,11 +14,9 @@ impl super::Ty {
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
-        let mut visited = 0u32;
         let mut is_data = true;
         while let Some(node) = work.pop() {
-            visited = visited.saturating_add(1);
-            if work.len() >= super::WORK_CAP || visited > super::TYPE_NODE_CAP {
+            if work.len() >= super::WORK_CAP {
                 is_data = false;
                 break;
             }

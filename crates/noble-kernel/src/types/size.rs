@@ -14,8 +14,6 @@ pub(super) struct Walk<'a> {
     pub(super) todo: alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
     /// Sizes already computed, in visit order.
     pub(super) sizes: alloc::vec::Vec<u32>,
-    /// Nodes already expanded, so one walk visits at most `TYPE_NODE_CAP`.
-    pub(super) visited: u32,
 }
 
 /// One size-walk step's outcome.
@@ -47,10 +45,6 @@ pub(super) fn walk_step(mut walk: Walk<'_>) -> (Walk<'_>, Step) {
                     None => (walk, Step::Failed),
                 }
             } else {
-                walk.visited = walk.visited.saturating_add(1);
-                if walk.visited > super::TYPE_NODE_CAP {
-                    return (walk, Step::Failed);
-                }
                 let (todo, sizes) = queue_children(node, walk.todo, walk.sizes);
                 walk.todo = todo;
                 walk.sizes = sizes;
@@ -72,14 +66,9 @@ const fn count_children(node: &crate::types::Ty) -> usize {
             crate::types::NominalShape::Opaque(_) => 1,
             crate::types::NominalShape::Variant(_, _) => 2,
         },
-        // A generic descriptor holds both its argument array and a descriptor
-        // built from copies of those arguments, so its child count includes
-        // both. Counting only the descriptor would under-report a nested
-        // generic value by two nodes per level, exactly the growth that makes
-        // substitution exponential.
         crate::types::Ty::GenericNominal(_, _, shape) => match &**shape {
-            crate::types::NominalShape::Variant(_, _) => 4,
-            crate::types::NominalShape::Opaque(_) => 3,
+            crate::types::NominalShape::Variant(_, _) => 2,
+            crate::types::NominalShape::Opaque(_) => 1,
         },
         crate::types::Ty::List(_) => 1,
         crate::types::Ty::Program(stack_in, stack_out, _)
@@ -182,10 +171,8 @@ fn queue_children<'a>(
                 }
             }
         }
-        crate::types::Ty::GenericNominal(_, args, shape) => {
+        crate::types::Ty::GenericNominal(_, _, shape) => {
             todo.push((node, true));
-            todo.push((&args[0], false));
-            todo.push((&args[1], false));
             match &**shape {
                 crate::types::NominalShape::Variant(left, right) => {
                     todo.push((left, false));
