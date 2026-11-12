@@ -18,8 +18,12 @@
 #     verification/m3-proof-gate-refusals.sh
 #
 #   RUST_BIN=/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin
-#   (the two kernel-harness cells also need a C linker, `cc`, on PATH)
-#   CARGO_HOME=/tmp/cargo-home
+#   (the two kernel-harness cells also need a C linker, `cc`, on PATH, and a
+#   CARGO_HOME whose offline registry resolves every workspace member: the
+#   scratch crate resolves the whole workspace, so `noble-cli`'s rustix and
+#   `noble-wasm`'s wat must be present. The user cargo home works; a partial
+#   registry fails before compiling and reads as a missed refusal.)
+#   CARGO_HOME="$HOME/.cargo"
 #
 # Mutations (each a separate cell, per the M1 control-matrix convention):
 # The expected check is the strict tier's (the m3 root builds); the case list
