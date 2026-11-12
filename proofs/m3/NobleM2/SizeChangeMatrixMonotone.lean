@@ -13,7 +13,8 @@ a chain.
 monotone in each factor. That is the property a bound argument uses when it replaces one entry of a
 path by a weaker one without changing what the path can do.
 
-The counting bound itself is not proved here.
+The counting bound itself is `matrix_composites_bounded` in `SizeChangeMatrixPigeonhole`, which uses
+monotonicity to bound a nodup list of composites by the enumeration.
 -/
 
 namespace NobleM2.SizeChange

@@ -4,9 +4,10 @@ import NobleM2.SizeChangeMatrixPigeonhole
 # Decidable equality for matrices (issue #101)
 
 A checker that scans composites, or states a nodup list of them, needs to decide equality of
-matrices. The vector lane already decides equality of `Fin n → Rel`; a matrix is a function into that
-space, so a generic function-equality procedure - parameterised by a decision procedure for the
-codomain - gives the matrix decision by instantiating it with the vector one.
+matrices. The vector lane's `pointwiseEq` decides equality of `Fin n → Rel`, but it is not reused
+here: `MGraph n` is a function into rows, and a row is a function into `Rel4`. So the generic
+`funEq` procedure - parameterised by a decision procedure for the codomain - is instantiated twice,
+with `rel4Eq` for rows and with `rowEq` for matrices, and each instantiation is proved exact.
 
 With `DecidableEq (MGraph n)` the enumeration is searchable and `Nodup` becomes usable over lists of
 composites, which is what `matrix_composites_bounded` consumes.
@@ -50,7 +51,7 @@ theorem funEq_true_iff {α : Type} (eqα : α → α → Bool)
         subst h
         simp [funEq, heq, ih]
 
-/-- Compare two matrices row by row, reusing the vector decision procedure. -/
+/-- Decide equality of two relations. -/
 def rel4Eq (x y : Rel4) : Bool := decide (x = y)
 
 theorem rel4Eq_true_iff (x y : Rel4) : rel4Eq x y = true ↔ x = y := by
@@ -59,6 +60,7 @@ theorem rel4Eq_true_iff (x y : Rel4) : rel4Eq x y = true ↔ x = y := by
 /-- Compare two rows, i.e. two functions `Fin n → Rel4`. -/
 def rowEq (n : Nat) : (Fin n → Rel4) → (Fin n → Rel4) → Bool := funEq rel4Eq n
 
+/-- Compare two matrices row by row, by instantiating `funEq` with the row procedure. -/
 def matrixEq (n : Nat) (a b : MGraph n) : Bool := funEq (rowEq n) n a b
 
 /-- The matrix procedure is exact. -/

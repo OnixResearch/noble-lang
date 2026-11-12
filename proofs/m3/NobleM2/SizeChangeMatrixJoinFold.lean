@@ -12,9 +12,8 @@ lemmas got that wrong and was refuted by the nil case; the shapes below are the 
 
 - `join_fold_left` / `join_fold_right`: joining a value against a fold is a fold with that value as
   the initial accumulator;
-- `join_fold_zip`: joining two folds elementwise is a fold of the elementwise joins.
-
-The double-fold interchange itself, `fold_join_comm`, is the next lemma and is not proved here.
+- `join_fold_zip`: joining two folds elementwise is a fold of the elementwise joins;
+- `fold_join_comm`: the double-fold interchange, and `composeMatrix_assoc` its consumer.
 -/
 
 namespace NobleM2.SizeChange

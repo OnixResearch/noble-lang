@@ -13,8 +13,10 @@ injectivity hypothesis leads to `3 ^ n + 1 <= 3 ^ n`.
 
 What this does not give is a *concrete* pair of positions. Extracting one needs either classical
 reasoning or the decidable scan a checker runs anyway (`decreasesWithin` already searches powers
-decidably). The bound on how many composites a checker must visit is still open, and so is the
-general soundness theorem.
+decidably). Neither is needed here: every graph is its own positive powers
+(`SizeChangeIdempotent.every_graph_powers`), so `SizeChangeBounded.decreasesWithin_complete_zero`
+decides at the first power and no counting bound is consumed by this project's checker. The general
+soundness theorem for a run model with non-strict steps remains open.
 -/
 
 namespace NobleM2.SizeChange

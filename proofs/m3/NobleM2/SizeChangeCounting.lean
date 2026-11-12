@@ -13,7 +13,8 @@ is injective on that list, the mapped list has no duplicates either. That is wha
 distinct positions into `Fin k → Graph n` with a nodup image, which is the shape the pigeonhole
 consumes.
 
-The counting step itself - `Nodup` plus containment implies a length bound - is not proved here.
+The counting step itself - `Nodup` plus containment implies a length bound - is `length_le_of_subset`
+below, and `injective_bound` is its pigeonhole form.
 -/
 
 namespace NobleM2.SizeChange

@@ -10,9 +10,10 @@ factors into three lemmas proved here:
 - `compose_fold_join_left` and `compose_fold_join_right`: composition distributes over a fold of
   joins, in either position.
 
-What remains for `composeMatrix_assoc` is the interchange of the two folds that a product of products
-introduces - a double fold over `List.finRange n` in both orders. That interchange is the next lemma
-and is not proved here.
+What `composeMatrix_assoc` also needs is the interchange of the two folds that a product of products
+introduces - a double fold over `List.finRange n` in both orders. That interchange is
+`fold_join_comm`, and the associativity itself is `composeMatrix_assoc`, both in
+`SizeChangeMatrixJoinFold`.
 -/
 
 namespace NobleM2.SizeChange
