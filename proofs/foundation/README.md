@@ -1235,7 +1235,8 @@ are model-only. A test-local shadow checker agrees with every expectation and
 each of six declared mutations (duplicating or releasing a must-use resource,
 drops one operand during `swap`, consuming a quoted operand, ignoring branch
 accounting, permitting an error return with an outstanding operand) is caught by
-at least one retained expectation. The model-only controls include a branch
+at least one retained expectation; the seventh `Mutation` variant, `None`, is the
+unmutated control and catches nothing. The model-only controls include a branch
 that attempts to lose a resource, a branch that attempts to duplicate one,
 equal-count branches with different resource identities, and a resource move.
 
@@ -2930,7 +2931,7 @@ The clean-source receipt for the first-projection model is
 ## Region protocol model (issue #9, `behavioral-effect-protocol` T1–T3)
 
 `NobleFoundation/RegionProtocol.lean` models `RegionProtocol-v1`, the synchronous bounded-region
-protocol of `.cairn/changes/behavioral-effect-protocol`.
+protocol of `.cairn/archive/2026-11-08-behavioral-effect-protocol`.
 - **Scope.** One host-injected owner, finitely many borrowed reads, and at most one release.
 - **Traces.** A trace keeps the design's three event classes apart: guest requests, host responses
   and committed effects.
