@@ -407,16 +407,6 @@ pub fn check(
     Ok(())
 }
 
-/// Maps a refusal to the graph-malformed diagnostic form for callers that report it.
-#[must_use]
-pub fn refusal_diagnostic(refusal: &Refusal) -> crate::diag::Diagnostic {
-    crate::diag::Diagnostic::malformed(
-        crate::diag::Malformed::UnknownNode,
-        crate::diag::Site::Graph,
-        alloc::format!("ngraph certificate refused: {refusal:?}"),
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use crate::identity::IdentityScheme;
