@@ -1,5 +1,18 @@
 # Main gate restoration (issue #22)
 
+**Counted skips.** Every Rust count below comes from the `rust-tests` check,
+which runs `cargo test --workspace --all-targets --all-features --locked
+--offline` with no environment-gated tool variables set. Cargo's `--all-targets`
+does not run doctests, and four tests return success without running their body
+when their prerequisites are absent:
+`crates/noble-cli/tests/named_v2.rs::exact_named_source_uses_pinned_kernel_and_library`,
+`::framed_session_publishes_only_the_strict_named_proof` and
+`::dying_real_named_consumer_cannot_report_acceptance` each `return Ok(())` when
+`NOBLE_LEAN`, `NOBLE_BWRAP`, `NOBLE_PRLIMIT` or `NOBLE_SYSTEMD_RUN` is unset, and
+`crates/noble-cli/src/core/companions/controls.rs::exercise` returns early
+without `NOBLE_MC2_CONTROL_RECEIPT`. Those four tests are counted as passed
+without executing; the counts do not identify them.
+
 ## Checking change log — 2026-10-29 (all fourteen checks pass at `c99b40f`)
 
 The [receipt](receipt-c99b40f.json) binds the #42 certificate result replay and

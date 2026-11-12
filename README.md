@@ -138,6 +138,15 @@ The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 incompatible tools produce an explicit refusal. The development shell alone
 does not install these runtime tools.
 
+**Host-local Wasmtime source.** `flake.nix` sets
+`selectedWasmtimeSource = builtins.path { path = /nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source; … }`,
+and `crates/noble-cli/Cargo.toml` and `crates/noble-wasm/Cargo.toml` declare
+`wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", … }`.
+No flake input or fetcher produces that store path, so evaluation and the crate
+build both require a host that already has it. On any other machine flake
+evaluation fails at `builtins.path` and the path dependency cannot resolve;
+supply the reviewed source closure at that path (or change the pin and both
+manifests together) before building.
 
 ### Independent Mathlib comparison for implemented I64 arithmetic
 

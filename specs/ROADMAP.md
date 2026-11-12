@@ -440,7 +440,10 @@ All Noble-owned production Rust targets Charon → Aeneas → Lean, not just the
 2. Pin a reviewed immutable `OnixResearch/octet` revision. Declare semantic core source scopes in `dylint.toml`.
 3. Configure workspace-wide, all-target, all-compatible-feature checks. Keep explicit matrices for incompatible features or platforms.
 4. Use the pinned Octet `octet-deny-all` pre-commit template with no disabled lints, warning budgets, or finding baselines.
-5. Make `nix flake check` run the same gate. CI runs `nix flake check -L`.
+5. Make `nix flake check` run the same gate. The repository has no CI workflow: the flake checks are
+   run locally or on a reviewed builder, and none of them builds, checks or axiom-audits a Lean
+   project. A standalone Lean proof script (`verification/ci/lean-proofs.sh`) is the substitute for
+   the missing CI job, and it is not part of `nix flake check`.
 
 M1 also activates VT-OCTET-01 through VT-OCTET-03. The architecture policy declares exact roles, providers, ports, targets, and feature coverage. Its Nickel source, exported policy, and freshness manifest form one reviewed input. Inventory/advisory output cannot close the gate. Missing compiler facts and unsupported required scopes remain blockers.
 
