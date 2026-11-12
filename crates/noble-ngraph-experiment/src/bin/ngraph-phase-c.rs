@@ -172,6 +172,8 @@ struct W3Out {
     json: Json,
     l4_over_native: f64,
     admission_ms: f64,
+    /// Whether native, L3 and L4 agreed under `≡obs` on every pre-timing vector.
+    agreed: bool,
 }
 
 /// Inclusive wall-clock function timings, not sampling/hardware/allocation
@@ -357,6 +359,7 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     W3Out {
         l4_over_native: nm / l4m,
         admission_ms,
+        agreed: agree,
         json: Json::obj([
             ("workload", Json::s(name)),
             ("shape", Json::s(format!("{net:?}: {} ops, {} params, {} inputs", net.ops(), net.params(), net.inputs()))),
@@ -403,7 +406,7 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     clippy::too_many_lines,
     reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
 )]
-fn w4(a: &Args) -> (Json, f64) {
+fn w4(a: &Args) -> (Json, f64, bool) {
     let t = Instant::now();
     let g = workloads::w4_graph();
     let authoring_ns = ns(t.elapsed());
@@ -485,6 +488,7 @@ fn w4(a: &Args) -> (Json, f64) {
             ("training_step", Json::s("not applicable (no params)")),
         ]),
         nm / l4m,
+        agree,
     )
 }
 
@@ -493,13 +497,19 @@ fn w4(a: &Args) -> (Json, f64) {
     clippy::too_many_lines,
     reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
 )]
-fn w12(a: &Args) -> Json {
+fn w12(a: &Args) -> (Json, bool) {
     let g1 = workloads::w1_graph();
     let c1 = check(&BLAKE3, g1.clone()).expect("W1");
     let comp1 = Compiled::new(&BLAKE3, &c1);
     let x1 = i64_inputs(&[5, 4]);
     let mut ctl = Control::default();
     let mut ws1 = comp1.workspace();
+    // The W1 value agreement is measured before timing, not asserted.
+    let w1_l3 = reference(&c1, &x1, None, &mut ctl).obs;
+    let w1_l4 = comp1.evaluate_in(&mut ws1, &x1, None, &mut ctl).obs;
+    let w1_native = workloads::w1_native(5, 4);
+    let w1_agreed = w1_l3.obs_eq(&w1_l4)
+        && matches!(w1_l3.outputs(), Some([Value::I64(value)]) if *value == w1_native);
     let (l3j, l3m, _) = warm(a.samples, || {
         black_box(reference(&c1, black_box(&x1), None, &mut ctl));
     });
@@ -515,6 +525,7 @@ fn w12(a: &Args) -> Json {
     let w1 = Json::obj([
         ("workload", Json::s("W1 = I1 (x=5, y=4 → 24)")),
         ("graph_source", Json::s("hand-built ngraph-i64/0 IR equal to the I1 lowering; extraction time and the ordinary Wasm/V8 leg come from the extraction leg's L1 harness")),
+        ("value_agreement", Json::s(format!("L3 {w1_l3:?}, L4 {w1_l4:?}, native {w1_native}: equal = {w1_agreed}"))),
         ("graph", shape_json(&c1)),
         ("bytes", bytes_json(&c1, &comp1, 0)),
         ("cold", cold1),
@@ -560,18 +571,19 @@ fn w12(a: &Args) -> Json {
     let (nt, ns_) = tot(&mut || {
         workloads::w2_native(black_box(s0), black_box(i), black_box(k), black_box(steps))
     });
+    let w2_agreed = l3s == want && l4s == want && ns_ == want;
     let w2 = Json::obj([
         ("workload", Json::s("W2 = I4 transition (s,i,k) → (s·k+i, s·k+i), 10^5 host steps from s=11, i=3, k=-7")),
         ("graph_source", Json::s("hand-built ngraph-i64/0 IR equal to the I4 lowering; extraction time and the ordinary Wasm/V8 leg come from the extraction leg's L1 harness")),
         ("graph", shape_json(&c2)),
         ("bytes", bytes_json(&c2, &comp2, 0)),
-        ("final_state_agreement", Json::s(format!("L3 {l3s}, L4 {l4s}, native {ns_}, expected {want}: equal = {}", l3s == want && l4s == want && ns_ == want))),
+        ("final_state_agreement", Json::s(format!("L3 {l3s}, L4 {l4s}, native {ns_}, expected {want}: equal = {w2_agreed}"))),
         ("total_10^5_steps_l3_ns", l3t),
         ("total_10^5_steps_l4_ns", l4t),
         ("total_10^5_steps_native_ns", nt),
         ("training_step", Json::s("not applicable (E-DERIV-I64)")),
     ]);
-    Json::A(vec![w1, w2])
+    (Json::A(vec![w1, w2]), w1_agreed && w2_agreed)
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
@@ -584,12 +596,19 @@ fn main() {
     let load_start = read("/proc/loadavg");
     let started = Instant::now();
     let w3s: Vec<W3Out> = W3_SIZES.iter().map(|(n, net)| w3(&a, n, *net)).collect();
-    let (w4j, w4_ratio) = w4(&a);
-    let w12j = w12(&a);
+    let (w4j, w4_ratio, w4_agreed) = w4(&a);
+    let (w12j, w12_agreed) = w12(&a);
+    // C2's agreement claim is derived from what this run measured: every W3
+    // variant, W4 and the W1 value / W2 final state must agree before timing.
+    let w3_agreed = w3s.iter().all(|w| w.agreed);
+    let agreement_ok = w3_agreed && w4_agreed && w12_agreed;
+    let measured_agreement =
+        format!("W3 {w3_agreed}, W4 {w4_agreed}, W1 value and W2 final state {w12_agreed}");
     let large = &w3s[2];
     let speedup = large.l4_over_native;
     let admission_ok = large.admission_ms <= 100.0;
-    let cpu_spec = speedup >= 2.0 && admission_ok;
+    // A disagreement is not a measurement to specialize on, whatever the speed.
+    let cpu_spec = speedup >= 2.0 && admission_ok && agreement_ok;
     let recommendation = if cpu_spec {
         "cpu-specialization"
     } else {
@@ -619,7 +638,11 @@ fn main() {
     let c2 = Json::obj([
         (
             "reference_agreement",
-            Json::s("Per workload, before timing: host-native, L3 and L4 agree under ≡obs on 200 input vectors (W3, W4) and on the W1 value and the W2 final state; see each workload's agreement field. Phase B: L2 (rustc_apfloat), B2-ORACLE, L3, L4 agree on all vectors (phase-b-core.json)."),
+            Json::s(if agreement_ok {
+                format!("Per workload, before timing: host-native, L3 and L4 agree under ≡obs on 200 input vectors (W3, W4) and on the W1 value and the W2 final state. Measured in this run: {measured_agreement}. Phase B: L2 (rustc_apfloat), B2-ORACLE, L3, L4 agree on all vectors (phase-b-core.json).")
+            } else {
+                format!("DISAGREEMENT measured before timing: host-native, L3 and L4 do not agree under ≡obs on every vector of every workload. Measured in this run: {measured_agreement}. See each workload's own agreement field; a disagreeing run is not reference agreement.")
+            }),
         ),
         (
             "finite_coverage",
@@ -694,5 +717,10 @@ fn main() {
     match &a.out {
         Some(p) => std::fs::write(p, text).unwrap_or_else(|e| panic!("write {p}: {e}")),
         None => print!("{text}"),
+    }
+    if !agreement_ok {
+        // The receipt is written first so the disagreement can be inspected;
+        // the exit status still reports that the run failed.
+        std::process::exit(1);
     }
 }
