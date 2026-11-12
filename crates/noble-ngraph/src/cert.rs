@@ -787,4 +787,43 @@ mod tests {
             Err(super::Refusal::AssumptionUnavailable)
         );
     }
+    #[test]
+    fn guarded_rewrite_is_refused_when_the_fact_is_stale() {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-guarded-stale"),
+        );
+        let zero = builder.i64_const(0);
+        let seven = builder.i64_const(7);
+        let _guard = builder.guard(
+            crate::ir::Fact::Range {
+                lo: crate::ir::Literal::I64(0),
+                hi: crate::ir::Literal::I64(1),
+            },
+            zero,
+        );
+        let sum = builder.op(crate::ir::Op::I64Add(zero, seven));
+        builder.output(sum);
+        let graph = builder.finish();
+        let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
+        assert!(!super::guard_pins_zero(&graph, zero, sum));
+        assert_eq!(
+            super::check(&scheme, &graph, &graph, &derivation),
+            Err(super::Refusal::AssumptionUnavailable)
+        );
+    }
+
+    #[test]
+    fn guarded_rewrite_is_refused_when_the_result_is_substituted() {
+        let (graph, zero, seven, sum) = guarded(Some(true));
+        let scheme = TestIds;
+        let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
+        let mut substituted = graph.clone();
+        substituted.nodes[sum.index()].op = crate::ir::Op::Const(crate::ir::Literal::I64(7));
+        assert_eq!(
+            super::check(&scheme, &graph, &substituted, &derivation),
+            Err(super::Refusal::EndpointMismatch)
+        );
+    }
 }
