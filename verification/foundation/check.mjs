@@ -72,7 +72,7 @@ function hygieneViolations(file, text) {
 }
 
 // The theorem declarations of one source, split by whether Lean mangles the name.
-function declarationsOf(file, text) {
+function declarationsOf(text) {
   const code = stripComments(text);
   const found = { public: [], private: [] };
   let namespace = '';
@@ -106,7 +106,7 @@ function runSelfTest() {
     '-- theorem line_comment : True := trivial',
     '/- theorem block_comment : True := trivial -/',
     'theorem declared : True := trivial', ''].join('\n');
-  const names = declarationsOf('commented.lean', commented);
+  const names = declarationsOf(commented);
   cases.push({
     case: 'comment-only declarations are not theorems',
     refused: names.public.join() === 'NobleFoundation.declared' && names.private.length === 0,
@@ -116,7 +116,7 @@ function runSelfTest() {
     'private theorem hidden : True := trivial',
     'protected theorem guarded : True := trivial',
     'theorem shown : True := trivial', ''].join('\n');
-  const split = declarationsOf('prefixed.lean', prefixed);
+  const split = declarationsOf(prefixed);
   cases.push({
     case: 'private and protected theorems are declared',
     refused: split.private.join() === 'NobleFoundation.hidden,NobleFoundation.guarded'
@@ -190,7 +190,7 @@ try {
     const text = readFileSync(join(project, file), 'utf8');
     const violations = hygieneViolations(file, text);
     requireThat(violations.length === 0, violations.join('; '));
-    const found = declarationsOf(file, text);
+    const found = declarationsOf(text);
     declared.push(...found.public);
     privateDeclared.push(...found.private);
   }
