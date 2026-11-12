@@ -982,7 +982,13 @@ impl Compiler {
             calculator_plan: false,
             max_type_nodes: 0,
         };
-        attempt!(preflight::check(submission, self.calculator, &mut work));
+        attempt!(preflight::check(
+            submission,
+            self.calculator,
+            self.text_cursor,
+            self.declared_text,
+            &mut work
+        ));
         work.calculator_preflight = false;
         if self.worker_inputs
             && (!submission.environment.declared_modules
@@ -2012,7 +2018,7 @@ mod declared_text_ingress_tests {
         let compiler = Compiler::new_declared_text();
         let mut work = budget(original.request.limits.work);
         assert!(
-            preflight::check(&original, false, &mut work).is_ok(),
+            preflight::check(&original, false, true, true, &mut work).is_ok(),
             "whole-source preflight exhausted before declared-text admission"
         );
         let checked = admission::check(&original, false, false, true, false, true, true, &mut work)

@@ -158,6 +158,30 @@ fn definition(
     body(&definition.body, limits, work)
 }
 
+/// The profile's definition limit.
+const fn definition_limit(calculator: bool) -> usize {
+    if calculator {
+        super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::DEFINITION_LIMIT
+    }
+}
+
+/// The profile's environment row cap: its definition limit plus the fixed rows
+/// that only this profile installs. The calculator owns 32 fixed rows, the pure
+/// byte cursor 27 and declared text 28; ordinary profiles own 26.
+const fn maximum_rows(calculator: bool, text_cursor: bool, declared_text: bool) -> usize {
+    if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else if declared_text {
+        definition_limit(false).saturating_add(28)
+    } else if text_cursor {
+        definition_limit(false).saturating_add(27)
+    } else {
+        definition_limit(false).saturating_add(26)
+    }
+}
+
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
@@ -169,23 +193,19 @@ fn definition(
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     calculator: bool,
+    text_cursor: bool,
+    declared_text: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    // Profile selection is the compiler's own flag, never an untrusted Env
-    // marker: only the calculator has a 32-row fixed prefix.
-    let fixed = if calculator { 32 } else { 26 };
-    let definitions = if calculator {
-        super::CALCULATOR_DEFINITION_LIMIT
-    } else {
-        super::DEFINITION_LIMIT
-    };
-    let maximum_rows = if calculator {
-        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-    } else {
-        definitions.saturating_add(fixed)
-    };
+    // Profile selection is the compiler's own flags, never an untrusted Env
+    // marker. The cap is the profile's definition limit plus its own fixed
+    // prefix, exactly as `admission::environment` counts rows: the calculator
+    // adds 32 rows, the pure byte cursor adds its row (27) and declared text
+    // its signed-comparison row (28). A narrower prefix here would refuse a
+    // valid full-definition environment before the profile check ran.
+    let maximum_rows = maximum_rows(calculator, text_cursor, declared_text);
     if submission.environment.defs.len() > maximum_rows
-        || submission.definitions.len() > definitions
+        || submission.definitions.len() > definition_limit(calculator)
     {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -289,5 +309,108 @@ fn nominal_shape(
             attempt!(concrete::ty(left, TYPE_LIMIT, work));
             concrete::ty(right, TYPE_LIMIT, work)
         }
+    }
+}
+
+// Test harness only: the profile row cap and a full-definition environment.
+#[allow(
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::numeric_units,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; test harness: descriptive scenario names, fixture imports and long setup legs are the readable form."
+)]
+#[cfg(test)]
+mod row_cap_tests {
+    use super::super::{Work, DEFINITION_LIMIT};
+    use super::{check, maximum_rows};
+    use alloc::format;
+    use alloc::string::String;
+    use alloc::vec::Vec;
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit};
+
+    fn budget(limit: u32) -> Work {
+        Work {
+            remaining: u64::from(limit),
+            issued: u64::from(limit),
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    #[test]
+    fn maximum_rows_follows_the_profile_prefix() {
+        // Ordinary profiles own 26 fixed rows, the pure byte cursor 27 and
+        // declared text 28; the calculator owns its 32-row table.
+        assert_eq!(maximum_rows(false, false, false), DEFINITION_LIMIT + 26);
+        assert_eq!(maximum_rows(false, true, false), DEFINITION_LIMIT + 27);
+        assert_eq!(maximum_rows(false, false, true), DEFINITION_LIMIT + 28);
+        assert_eq!(maximum_rows(false, true, true), DEFINITION_LIMIT + 28);
+        assert_eq!(
+            maximum_rows(true, false, false),
+            noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+        );
+    }
+
+    fn bulk_module(named: usize) -> Vec<u8> {
+        let mut source = String::from("module bulk@1 [");
+        for index in 0..named {
+            source.push_str(&format!(
+                " signature w{index} forall<S:stack> [ S -- S I64 ! pure ] export w{index} def w{index} [ 1 ]"
+            ));
+        }
+        source.push_str(" ]");
+        source.into_bytes()
+    }
+
+    /// Declared text is the only session-selectable profile that installs the
+    /// byte cursor row (26) and a further row (27), so it is the profile whose
+    /// full 256-definition environment the old 256+26 cap refused before the
+    /// profile check ran. The +27 branch is pinned above.
+    #[test]
+    fn declared_text_environment_of_256_definitions_passes_preflight() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 262_144,
+            depth: 64,
+            work: 512_000_000,
+        };
+        let retained = RetainedSourceLimit::new(65_536).expect("valid retained source cap");
+        let session = ModuleSession::new_declared_text(&[], false, retained)
+            .unwrap_or_else(|_| panic!("selected source profile"));
+        let pending = session
+            .prepare(&bulk_module(DEFINITION_LIMIT), &[], limits)
+            .unwrap_or_else(|error| {
+                panic!("module with {DEFINITION_LIMIT} definitions: {error:?}")
+            });
+        let (session, installed) = session.commit(pending);
+        installed.unwrap_or_else(|error| {
+            panic!("module with {DEFINITION_LIMIT} definitions refused: {error:?}")
+        });
+        // Reference every export so the query closure carries all 256 definitions.
+        let mut expression = String::new();
+        for index in 0..DEFINITION_LIMIT {
+            if index != 0 {
+                expression.push_str(" drop ");
+            }
+            expression.push_str(&format!("bulk@1.w{index}"));
+        }
+        let query = session
+            .prepare(expression.as_bytes(), &[], limits)
+            .unwrap_or_else(|_| panic!("query over the full namespace"));
+        let submission = query
+            .submission()
+            .unwrap_or_else(|| panic!("missing submission"));
+        assert_eq!(
+            submission.environment.defs.len(),
+            28 + DEFINITION_LIMIT,
+            "the declared-text environment installs 28 fixed rows"
+        );
+        let mut work = budget(submission.request.limits.work);
+        assert!(
+            check(submission, false, true, true, &mut work).is_ok(),
+            "a full-definition declared-text environment must pass preflight"
+        );
     }
 }
