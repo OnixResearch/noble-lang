@@ -13,7 +13,8 @@ The replacement lemma's hypothesis is guaranteed by the pigeonhole; this module 
   products injective over one more position than there are matrices;
 - `matrixProduct_shorten`: the replacement lemma with the hypothesis discharged.
 
-The counting conclusion (`n * n`) remains open.
+Each reproduction keeps the shortened path a sublist of the original, so the representatives this
+module produces are real sub-paths rather than arbitrary lists with the right product.
 -/
 
 namespace NobleM2.SizeChange
@@ -87,31 +88,32 @@ theorem hasRepeatPrefix_true {n : Nat} (l : List (MGraph n))
       omega
 
 /-- **The replacement lemma, discharged**: a path longer than the matrix enumeration has a strictly
-shorter path with the same product. -/
+shorter sub-path with the same product. -/
 theorem matrixProduct_shorten {n : Nat} (l : List (MGraph n))
     (hlong : (matrixAux n).length + 1 ≤ l.length) :
-    ∃ l' : List (MGraph n), l'.length < l.length ∧ matrixProduct l' = matrixProduct l := by
+    ∃ l' : List (MGraph n),
+      l'.Sublist l ∧ l'.length < l.length ∧ matrixProduct l' = matrixProduct l := by
   obtain ⟨i, j, hij, hj, heq⟩ := hasRepeatPrefix_sound (hasRepeatPrefix_true l hlong)
   exact matrixProduct_shorten_of_repeat l hij hj heq
 
 /-- **Every product has a short representative**: no longer than the matrix enumeration, obtained by
-iterating the replacement lemma. -/
+iterating the replacement lemma, and a sublist of the original path. -/
 theorem matrixProduct_short_representative {n : Nat} (l : List (MGraph n)) :
     ∃ l' : List (MGraph n),
-      l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
+      l'.Sublist l ∧ l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
   have key : ∀ m : Nat, ∀ (l : List (MGraph n)), l.length = m →
       ∃ l' : List (MGraph n),
-        l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
+        l'.Sublist l ∧ l'.length ≤ (matrixAux n).length ∧ matrixProduct l' = matrixProduct l := by
     intro m
     induction m using Nat.strongRecOn with
     | ind m ih =>
         intro l hl
         by_cases hshort : l.length ≤ (matrixAux n).length
-        · exact ⟨l, hshort, rfl⟩
+        · exact ⟨l, List.Sublist.refl l, hshort, rfl⟩
         · have hlong : (matrixAux n).length + 1 ≤ l.length := by omega
-          obtain ⟨l', hl', heq⟩ := matrixProduct_shorten l hlong
-          obtain ⟨l'', h2, h3⟩ := ih l'.length (by omega) l' rfl
-          exact ⟨l'', h2, h3.trans heq⟩
+          obtain ⟨l', hsub, hl', heq⟩ := matrixProduct_shorten l hlong
+          obtain ⟨l'', h2sub, h2, h3⟩ := ih l'.length (by omega) l' rfl
+          exact ⟨l'', h2sub.trans hsub, h2, h3.trans heq⟩
   exact key l.length l rfl
 
 end NobleM2.SizeChange
