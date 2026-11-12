@@ -16,7 +16,7 @@ try {
   assert.equal((await session.configured).outcome, 'configured');
   assert.equal((await issue({ operation: 'install', id: 'keeper', source: '[ 1 + ]',
     inputs: ['I64'] })).outcome, 'installed');
-  assert.equal((await issue({ operation: 'publish', slot: 'Q', id: 'keeper', program_index: 0,
+  assert.equal((await issue({ operation: 'publish', slot: 'Q', id: 'keeper', program_index: 1,
     expected_epoch: '0' })).outcome, 'published');
   const owners = [];
   for (let pass = 0; pass < savedProgramCapacity; pass += 1) {

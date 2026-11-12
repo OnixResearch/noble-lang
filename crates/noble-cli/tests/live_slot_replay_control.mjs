@@ -6,10 +6,10 @@ assert.ok(binary, 'pass the selected noble CLI binary');
 const QUOTE = String.fromCharCode(34);
 const definition = `def traced [ drop ${QUOTE}A${QUOTE} test.emit drop 21 ]`;
 const effects = ['live.dispatch', 'test.emit'];
+// Only the dispatch target is published: the root caller is invoked directly, so the frozen
+// identity covers exactly the checked target rows a recorded root selects.
 const slots = [
   { slotId: 'S1', input: ['I64'], output: ['I64'], effectCeiling: effects, proofRequired: false },
-  { slotId: 'B', input: ['I64', 'LiveRef<I64,I64,live.dispatch+test.emit>'], output: ['I64'],
-    effectCeiling: effects, proofRequired: false },
 ];
 const grants = ['publish', 'dispatch', 'effect'].flatMap(operation =>
   slots.map(slot => ({ operation, slotId: slot.slotId, allowed: true })));
@@ -34,8 +34,7 @@ try {
   await expectRow(session.issue({ operation: 'candidate', id: 'caller' }), 'candidate-staged');
   const leaf = await expectRow(session.issue({ operation: 'publish', slot: 'S1', id: 'named',
     program_index: 0, expected_epoch: '0' }), 'published');
-  await expectRow(session.issue({ operation: 'publish', slot: 'B', id: 'caller',
-    program_index: 0, expected_epoch: leaf.epoch }), 'published');
+  assert.equal(leaf.epoch, '1');
   const recorded = await expectRow(session.issue({ operation: 'invoke', id: 'caller',
     inputs: [{ kind: 'i64', value: '5' }], refs, record: true }), 'executed');
   assert.ok(recorded.replay_token, 'the recorded root must retain a frozen token');
