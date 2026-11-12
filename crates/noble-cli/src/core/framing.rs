@@ -67,7 +67,11 @@ pub(crate) fn read_submission(
             return Err(invalid_header());
         }
         return Ok(Some(Submission::ReleaseObserved {
-            store: store.to_owned(),
+            // The engine's store grammar is canonical lowercase; a UUID is
+            // case-insensitive, so the operator-facing header is normalized
+            // here rather than forwarded as an engine command the worker
+            // would reject terminally.
+            store: store.to_ascii_lowercase(),
             id,
         }));
     }
@@ -281,7 +285,33 @@ pub(super) fn exhausted() -> super::output::Failure {
 
 #[cfg(test)]
 mod tests {
-    use super::{publish_bytes, publish_new, PublishRefusal};
+    use super::{publish_bytes, publish_new, read_submission, PublishRefusal, Submission};
+
+    /// An operator header may spell a store UUID in either case, but the engine
+    /// command grammar is canonical lowercase: the parser normalizes instead of
+    /// forwarding bytes the worker would reject terminally.
+    #[test]
+    fn a_store_uuid_is_normalized_to_the_engine_grammar() -> Result<(), std::string::String> {
+        let mut reader = std::io::BufReader::new(
+            b":release-observed-roots AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA 7\n".as_slice(),
+        );
+        let Some(Submission::ReleaseObserved { store, id }) =
+            read_submission(&mut reader, true, 65_536, false, true)
+                .map_err(|failure| failure.message)?
+        else {
+            return Err("uppercase store header must parse as an observed release".into());
+        };
+        assert_eq!(store, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        assert_eq!(id, 7);
+        let mut reader = std::io::BufReader::new(
+            b":release-observed-roots aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaZ 7\n".as_slice(),
+        );
+        assert!(
+            read_submission(&mut reader, true, 65_536, false, true).is_err(),
+            "a store outside the UUID alphabet stays an invalid header"
+        );
+        Ok(())
+    }
 
     /// A private directory that owns its own destination names.
     struct Scratch(std::path::PathBuf);

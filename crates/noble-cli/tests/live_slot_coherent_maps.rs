@@ -6,9 +6,12 @@
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Real selected-CLI coverage of coherent entry maps: a pinned root dispatches once and performs
-//! the effect exactly once, both rows report one pinned map epoch, and a publication that tries to
-//! land after the pin is refused rather than duplicated. This is behavioral evidence, not a
-//! VC-LIVE-03 proof.
+//! the effect exactly once, both rows report the one map epoch the root pinned, and a
+//! compare-and-set publication that lands while that root is held advances the registry epoch
+//! without changing either row: the held root keeps dispatching to and emitting from the version
+//! it pinned, and the next root is the first to observe the new map. A publication that omits the
+//! compare-and-set fields stale-rejects with no root pinned at all. This is behavioral evidence,
+//! not a VC-LIVE-03 proof.
 
 #[test]
 fn coherent_entry_maps_dispatch_and_emit_exactly_once() {

@@ -559,7 +559,10 @@ export class SlotRegistry {
   issueResource(token, logicalInputPosition, issuedOrdinal, module, nominalOrdinal, kind, owner) {
     const root = this.#root(token);
     const caller = this.#modules.get(root.callerModule);
-    const registration = this.#nominals.get(`${module}:${nominalOrdinal}`);
+    // The checked guest ABI passes the nominal ordinal as a signed i32, so an
+    // ordinal at or above 2^31 arrives negative and must be matched unsigned.
+    const ordinal = nominalOrdinal >>> 0;
+    const registration = this.#nominals.get(`${module}:${ordinal}`);
     const catalog = this.#catalogs.get(caller?.catalog);
     if (root.entered || !Number.isInteger(logicalInputPosition)
       || logicalInputPosition < 0 || logicalInputPosition >= 128
@@ -570,7 +573,7 @@ export class SlotRegistry {
       || !catalog?.rows.some(row => row.module === registration.module
         && row.ordinal === registration.ordinal && row.kind === registration.kind
         && row.shapeFingerprint === registration.shapeFingerprint)
-      || !this.#allowed({ operation: 'issue-resource', nominalId: `${module}:${nominalOrdinal}`,
+      || !this.#allowed({ operation: 'issue-resource', nominalId: `${module}:${ordinal}`,
         owner, rootEpoch: root.state.epoch })) {
       throw Error('unregistered, unowned, or incompatible root resource');
     }
@@ -590,7 +593,7 @@ export class SlotRegistry {
     if (moduleToken !== root.callerModule || root.entered || !resource?.live || resource.bound
       || resource.logicalInputPosition !== logicalInputPosition
       || resource.registration.module !== module
-      || resource.registration.ordinal !== nominalOrdinal
+      || resource.registration.ordinal !== (nominalOrdinal >>> 0)
       || resource.registration.kind !== (kind >>> 0)) return 0;
     resource.bound = true;
     return 1;
@@ -657,7 +660,7 @@ export class SlotRegistry {
 
   reflectSite(module, siteId) {
     const site = this.#modules.get(module)?.sites.get(siteId);
-    if (!site) throw Error('unknown checked dispatch site');
+    if (!site) return null;
     return { instruction: 'slot.invoke', siteId, input: [...site.input],
       output: [...site.output], effects: [...site.effects] };
   }
