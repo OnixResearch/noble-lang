@@ -4,16 +4,15 @@ import NobleM2.SizeChangeEnumeration
 # What enumerating the universe decides (issue #101)
 
 With `graphsAux` complete, a property can be certified by iterating the list instead of quantifying
-over all graphs. Applied to the criterion's decrease test this gives a sound rule - if every graph
-in the universe decreases at measure `i`, then every family is accepted at `i` - and the module
-proves that rule is **incomplete**: on one measure the universe already contains a pass-through
-graph, so the rule refuses a family the criterion can still accept (for example the single-site
-family whose graph *is* the decreasing graph).
+over all graphs. Applied to the criterion's decrease test this gives a rule: if every graph in the
+universe decreases at measure `i`, then every family is accepted at `i` (`everyoneDecreases_sound`).
 
-That gap is the reason the `n * n` bound matters. Enumerating the universe is the cheap rule; the
-criterion lives on the closure, which is a strict subset, and deciding it there needs the bound.
-
-The pigeonhole argument that powers up to `n * n` suffice is still not proved.
+The rule is empty, and this module proves it: the universe contains the all-`equal` graph, which
+decreases nothing, so `everyoneDecreases i` is `false` for every measure and every domain size
+(`everyoneDecreases_false`). The `n * n` counting bound does not rescue it, and is not what the
+criterion's search needs either: every relation is transitive, so every graph equals each of its
+positive powers (`SizeChangeIdempotent.every_graph_powers`) and one power decides. What remains open
+is the criterion's soundness for a run model that honours non-strict steps, not its search space.
 -/
 
 namespace NobleM2.SizeChange
@@ -29,22 +28,14 @@ theorem everyoneDecreases_sound {n : Nat} {i : Fin n} (h : everyoneDecreases i =
   have listed := List.all_eq_true.mp h g (graphsAux_complete n g)
   simpa using listed
 
-/-- A universe certificate covers every site family at that measure. -/
-theorem universe_certificate {k n : Nat} {i : Fin n} (h : everyoneDecreases i = true) :
-    (∀ g : Graph n, g i = .decrease) ∧
-      certifiedAll (fun (_ : Fin k) => (fun _ => .decrease : Graph n)) = true := by
-  refine ⟨everyoneDecreases_sound h, ?_⟩
-  unfold certifiedAll
-  exact List.any_eq_true.mpr ⟨i, List.mem_finRange i,
-    List.all_eq_true.mpr (fun _ _ => by simp)⟩
-
-/-- **Incompleteness of the universe rule**: on one measure it is already refuted. -/
-theorem everyoneDecreases_one_refuted : everyoneDecreases (0 : Fin 1) = false := by
-  cases h : everyoneDecreases (0 : Fin 1) with
+/-- **The universe rule is never usable**: the all-`equal` graph belongs to the universe, so no
+measure decreases at every graph and the rule is `false` everywhere. -/
+theorem everyoneDecreases_false {n : Nat} (i : Fin n) : everyoneDecreases i = false := by
+  cases h : everyoneDecreases i with
   | false => rfl
   | true =>
-      have equalGraph : (fun _ : Fin 1 => Rel.equal) 0 = Rel.decrease :=
-        everyoneDecreases_sound h (fun _ : Fin 1 => Rel.equal)
+      have equalGraph : (fun _ : Fin n => Rel.equal) i = Rel.decrease :=
+        everyoneDecreases_sound h (fun _ : Fin n => Rel.equal)
       exact Rel.noConfusion equalGraph
 
 /-! ## Fixtures -/

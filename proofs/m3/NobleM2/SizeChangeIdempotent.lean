@@ -9,15 +9,16 @@ criterion only has to inspect those. This module formalises idempotence and prov
 argument uses - an idempotent graph is its own every power - together with the cases that produce
 idempotence.
 
-The tight criterion itself (every idempotent member of the closure carries a strict edge on a cycle,
-for every run that respects the sites) is **not** proved here or anywhere in this project, and the
-`n * n` bound that follows from it is open. What is proved is that the class the criterion inspects
-is well behaved: once a graph is idempotent, visiting it any number of times adds nothing new.
+The decisive fact for this algebra is that idempotence is free: every relation is transitive, so
+`Rel.compose_self` holds for each of them and every graph is idempotent (`every_graph_idempotent`).
+Consequently the idempotence clause of the tight criterion imposes nothing here, every positive power
+of every graph is the graph itself (`every_graph_powers`), and the power search needs no bound - one
+power decides (`SizeChangeBounded.decreasesWithin_complete_zero`).
 
-An important consequence is proved at the end: every relation in this algebra is transitive, so every
-graph is idempotent and the tight criterion's idempotence clause imposes nothing here. What the
-criterion still requires - that every member of the closure carries a strict edge on a cycle - is
-open, and so is the `n * n` bound that follows from it.
+What is **not** proved here, or anywhere in this project, is the other half of the tight criterion:
+a condition tying the strict edge to a cycle for a run model that also honours `equal` and
+non-increasing steps. `SizeChangeCriterion` shows why per-member strict edges do not suffice for the
+run model this project defines, so that half cannot be obtained by counting alone.
 
 -/
 
@@ -45,10 +46,11 @@ theorem idempotent_power_two_eq {n : Nat} {g : Graph n} (h : Idempotent g) :
     power 2 g = g := by
   simpa using idempotent_powers h 1
 
-/-- An idempotent member's powers remain in the closure and are all itself. -/
+/-- An idempotent member's powers are all itself, and all remain in the closure. -/
 theorem idempotent_closure_powers {k n : Nat} {sites : Sites k n} {g : Graph n}
-    (member : Closure sites g) (h : Idempotent g) (j : Nat) : Closure sites g :=
-  (idempotent_powers h j).symm ▸ closure_power_succ member j
+    (member : Closure sites g) (h : Idempotent g) (j : Nat) :
+    Closure sites (power (j + 1) g) ∧ power (j + 1) g = g :=
+  ⟨(idempotent_powers h j).symm ▸ closure_power_succ member j, idempotent_powers h j⟩
 
 /-- Composing an idempotent graph with any power of itself is itself. -/
 theorem idempotent_compose_power {n : Nat} {g : Graph n} (h : Idempotent g) (j : Nat) :
