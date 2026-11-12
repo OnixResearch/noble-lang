@@ -1532,6 +1532,7 @@
             "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
             "reviewed_lock": "../verification/m4/extraction-lock.json",
             "reviewed_lock_sha256": "47d7c1491b66d09ee7cba13e78e74537184af14f2c714b59dea1d68e4c28cd05",
+            "reviewed_lock_status": "HISTORICAL AND NO LONGER VERIFIABLE: verification/m4/extraction-lock.json was rewritten after this run, so this reviewed-lock hash does not match the current file and is retained as the run's historical binding, not restamped.",
             "semantic_gate": "proofs/mc2/MC2Gate.lean",
             "source_gate": "proofs/mc2/MC2ExtractionGate.lean",
             "scope_ledger": "verification/mc2/assurance.tar.gz:proofs/proof-ledger-inputs-r3.json"
@@ -1736,6 +1737,7 @@
             "receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
             "reviewed_lock": "../verification/m4/extraction-lock.json",
             "reviewed_lock_sha256": "d23c35f8de0885b9efeff4bea7be3c89c0672c21d62a6fa4978fb4957abc71d1",
+            "reviewed_lock_status": "HISTORICAL AND NO LONGER VERIFIABLE: verification/m4/extraction-lock.json was rewritten after this run, so this reviewed-lock hash does not match the current file and is retained as the run's historical binding, not restamped.",
             "strict_resource_roots": [
               {
                 "declaration": "M5Resources.transition_refines",
@@ -1895,6 +1897,7 @@
             "receipt_sha256": "2df058685f4d57e42080c13e356fa4c998b910f449f834cff637706f8bebaa33",
             "reviewed_lock": "../verification/m4/extraction-lock.json",
             "reviewed_lock_sha256": "28bbc8ca1f7f80c8032e4f62145d47b4d6f2d126cadea4dd73739ad43ab1aa84",
+            "reviewed_lock_status": "HISTORICAL AND NO LONGER VERIFIABLE: verification/m4/extraction-lock.json was rewritten after this run, so this reviewed-lock hash does not match the current file and is retained as the run's historical binding, not restamped.",
             "strict_async_roots": 14,
             "state_event_pairs": 75,
             "m6_refusal_controls": 176
@@ -1953,6 +1956,7 @@
             "receipt_sha256": "fb70c82cf8fc64cb4fa682ac4d045ed4ca5bcf828a1300ce460ec1d0619a8cc5",
             "reviewed_lock": "../verification/m4/extraction-lock.json",
             "reviewed_lock_sha256": "23e085e4e0284d1c8f487e70ad14472e864df88c4ffcf3a04ce562bb18f85d8a",
+            "reviewed_lock_status": "HISTORICAL AND NO LONGER VERIFIABLE: verification/m4/extraction-lock.json was rewritten after this run, so this reviewed-lock hash does not match the current file and is retained as the run's historical binding, not restamped.",
             "pure_implementation_roots": [
               {
                 "declaration": "noble_kernel.dataspace.admit_shared_memory",
@@ -2042,6 +2046,7 @@
             "receipt_sha256": "b0a6247c2131cef4a6fc045d7fcad4f85fc01c5ef18b87edc2f5a67b615fdd3f",
             "reviewed_lock": "../verification/m4/extraction-lock.json",
             "reviewed_lock_sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+            "reviewed_lock_status": "HISTORICAL AND NO LONGER VERIFIABLE: verification/m4/extraction-lock.json was rewritten after this run, so this reviewed-lock hash does not match the current file and is retained as the run's historical binding, not restamped.",
             "pure_implementation_roots": [
               {
                 "declaration": "noble_kernel.dataspace.admit_shared_memory",
