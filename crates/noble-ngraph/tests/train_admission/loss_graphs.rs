@@ -102,7 +102,7 @@ fn parameter_paths_through_loss_graph_boolean_and_index_nodes_are_refused() {
     // The model-graph class the loss graph is compared with.
     let model = checked(step_model());
     let loss = checked(mse());
-    let e = train::admit(&model, &loss, &model.param_slots(), &default)
+    let e = train::admit(&model, &loss, model.param_slots(), &default)
         .expect_err("a model step carries the parameter");
     assert_eq!(e.code_string(), "E-DERIV-BOOLEAN");
 
@@ -110,7 +110,7 @@ fn parameter_paths_through_loss_graph_boolean_and_index_nodes_are_refused() {
     // through the loss graph's step, under the same refusal class.
     let model = checked(biased_linear());
     let loss = checked(step_loss());
-    let e = train::admit(&model, &loss, &model.param_slots(), &default)
+    let e = train::admit(&model, &loss, model.param_slots(), &default)
         .expect_err("a loss step carries the model output");
     assert_eq!(e.code_string(), "E-DERIV-BOOLEAN");
     let base = contract(model.clone(), points());
@@ -126,13 +126,13 @@ fn parameter_paths_through_loss_graph_boolean_and_index_nodes_are_refused() {
 
     // A loss index read whose index operand is the model output.
     let loss = checked(index_loss());
-    let e = train::admit(&model, &loss, &model.param_slots(), &default)
+    let e = train::admit(&model, &loss, model.param_slots(), &default)
         .expect_err("a loss index operand carries the model output");
     assert_eq!(e.code_string(), "E-DERIV-INDEX");
 
     // A boolean node over a target alone is not a parameter path.
     let loss = checked(step_target_loss());
-    train::admit(&model, &loss, &model.param_slots(), &default)
+    train::admit(&model, &loss, model.param_slots(), &default)
         .expect("a target-only step is not refused");
 }
 

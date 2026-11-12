@@ -600,7 +600,7 @@ pub fn parse_within(
             }
             "shape" => {
                 let which = t.next()?;
-                let trees = shape_trees(&t.rest(), line)?;
+                let trees = shape_trees(t.rest(), line)?;
                 let slot = match which {
                     "input" => &mut input_shape,
                     "output" => &mut output_shape,
