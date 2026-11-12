@@ -10,9 +10,21 @@ let
         "noble-kernel"
         "noble-wasm"
       ];
-      target_triple = "x86_64-unknown-linux-gnu";
-      features = [ ];
-      default_features = true;
+      targets = [
+        {
+          target = "x86_64-unknown-linux-gnu";
+          features = [ ];
+          default_features = true;
+        }
+        {
+          target = "x86_64-unknown-linux-gnu";
+          features = [
+            "live-test-barrier"
+            "safety-observe"
+          ];
+          default_features = true;
+        }
+      ];
       units = 6;
       ir_id = "aaaa";
       policy_blake3 = "bbbb";
@@ -47,13 +59,21 @@ let
         }
       ];
     };
-    compiler_tools = [
-      "aeneas"
-      "cargo-octet"
-      "charon"
-      "lean"
-      "miri"
-    ];
+    compiler_tools = {
+      provenance = "declared-requirement-not-observed-execution";
+      declared = [
+        "aeneas"
+        "cargo-octet"
+        "charon"
+        "lean"
+        "miri"
+      ];
+      executions = [ ];
+    };
+    miri = {
+      provenance = "declared-requirement-not-observed-execution";
+      executions = [ ];
+    };
     foreign_libraries = [ ];
     counts = {
       units = 6;
@@ -77,6 +97,14 @@ let
       {
         triple = "x86_64-unknown-linux-gnu";
         features = [ ];
+        default_features = true;
+      }
+      {
+        triple = "x86_64-unknown-linux-gnu";
+        features = [
+          "live-test-barrier"
+          "safety-observe"
+        ];
         default_features = true;
       }
     ];
@@ -195,12 +223,37 @@ let
         packages = builtins.filter (package: package != "noble-wasm") inventory.scope.packages;
       };
     }) policy "scope-package-missing")
-    (reject "missing required target" (withInventory {
-      scope = inventory.scope // { target_triple = "aarch64-unknown-linux-gnu"; };
-    }) policy "scope-target-missing")
-    (reject "feature drift" (withInventory {
-      scope = inventory.scope // { features = [ "extra" ]; };
-    }) policy "scope-target-missing")
+    (reject "undeclared observed target" (withInventory {
+      scope = inventory.scope // {
+        targets = [
+          {
+            target = "aarch64-unknown-linux-gnu";
+            features = [ ];
+            default_features = true;
+          }
+        ];
+      };
+    }) policy "scope-target-undeclared")
+    (reject "undeclared observed feature set" (withInventory {
+      scope = inventory.scope // {
+        targets = [
+          {
+            target = "x86_64-unknown-linux-gnu";
+            features = [ "extra" ];
+            default_features = true;
+          }
+        ];
+      };
+    }) policy "scope-target-undeclared")
+    (reject "declared target never observed" inventory (withPolicy {
+      required_targets = policy.required_targets ++ [
+        {
+          triple = "aarch64-unknown-linux-gnu";
+          features = [ ];
+          default_features = true;
+        }
+      ];
+    }) "scope-target-missing")
     (reject "unsafe forbid evidence missing" (withOwnedUnsafe { workspace_forbids_unsafe = false; }) policy
       "unsafe-forbid-evidence-missing")
     (reject "accounting basis missing" inventory (withPolicy {
@@ -255,8 +308,12 @@ let
         ];
       };
     }) "fixture-lock-unrecorded")
-    (reject "unclassified compiler tool" (withInventory { compiler_tools = [ "miri" ]; }) policy
-      "compiler-tool-mismatch")
+    (reject "unclassified compiler tool" (withInventory {
+      compiler_tools = inventory.compiler_tools // { declared = [ "miri" ]; };
+    }) policy "compiler-tool-declaration-mismatch")
+    (reject "declared tool promoted to execution observation" (withInventory {
+      miri = inventory.miri // { provenance = "observed-execution"; };
+    }) policy "compiler-tool-provenance")
     (reject "unrecorded foreign library" (withInventory {
       foreign_libraries = [ "libc" ];
     }) policy "foreign-library-mismatch")

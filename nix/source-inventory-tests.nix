@@ -229,6 +229,24 @@ let
   modulePolicy = withPolicy {
     subjects = subjects ++ [ (reviewed moduleImpl "structural") (reviewed moduleEq "body") ];
   };
+  structuralFunctionPath = "noble_kernel::structural_function";
+  structuralFunctionInventory = withInventory {
+    production_subjects = inventory.production_subjects ++ [
+      (observed structuralFunctionPath "structural-function-span" false)
+    ];
+  };
+  structuralFunctionPolicy = withPolicy {
+    subjects = subjects ++ [ (reviewed structuralFunctionPath "structural") ];
+  };
+  structuralExpandedFunctionPath = "noble_kernel::structural_expanded_function";
+  structuralExpandedFunctionInventory = withInventory {
+    production_subjects = inventory.production_subjects ++ [
+      (observed structuralExpandedFunctionPath "derive-span" true)
+    ];
+  };
+  structuralExpandedFunctionPolicy = withPolicy {
+    subjects = subjects ++ [ (reviewed structuralExpandedFunctionPath "structural") ];
+  };
   derivePath = "noble_kernel::<Derived as core::clone::Clone>::clone";
   deriveInventory = withInventory {
     production_subjects = inventory.production_subjects ++ [
@@ -367,6 +385,12 @@ let
     (reject "handwritten Module eq relabeled generated" moduleInventory (withPolicy {
       subjects = subjects ++ [ (reviewed moduleImpl "structural") (reviewed moduleEq "generated") ];
     }) "generated-authored-subject")
+    (reject "authored function relabeled structural" structuralFunctionInventory
+      structuralFunctionPolicy "structural-function-subject")
+    (
+      assert (evaluateDefault structuralExpandedFunctionInventory structuralExpandedFunctionPolicy).valid;
+      "expansion-generated function remains eligible for structural accounting"
+    )
     (
       assert (evaluateDefault deriveInventory derivePolicy).valid;
       "derive item is eligible for generated accounting, not proof"

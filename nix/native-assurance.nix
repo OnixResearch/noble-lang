@@ -25,11 +25,16 @@ let
   scopePackages = unique inventory.scope.packages;
   requiredPackages = policy.required_packages;
   requiredTargets = policy.required_targets;
-  targetObserved = any (
-    row: row.triple == inventory.scope.target_triple
-      && row.features == inventory.scope.features
-      && row.default_features == inventory.scope.default_features
-  ) requiredTargets;
+  # Every compiler-observed configuration must be declared, and every declared
+  # configuration must have been observed. The observed rows come from the
+  # compiler units, not from this policy.
+  sameTarget =
+    declared: observed:
+    declared.triple == observed.target
+    && declared.features == observed.features
+    && declared.default_features == observed.default_features;
+  targetObserved = all (observed: any (declared: sameTarget declared observed) requiredTargets) inventory.scope.targets;
+  targetDeclared = all (declared: any (observed: sameTarget declared observed) inventory.scope.targets) requiredTargets;
 
   # An empty owned-unsafe scope requires positive accounting evidence.
   basis = policy.owned_unsafe.accounting_basis;
@@ -51,7 +56,8 @@ let
     map (d: "${d.role}->${d.name}:${d.edge_kind or "normal"}") policy.dependencies.production
   );
   fixtureObserved = unique (map (p: "${p.name} ${p.version}") inventory.dependencies.fixture_packages);
-  fixtureReviewed = unique (map (p: "${p.name} ${p.version}") policy.dependencies.fixture_only);  toolObserved = unique inventory.compiler_tools;
+  fixtureReviewed = unique (map (p: "${p.name} ${p.version}") policy.dependencies.fixture_only);
+  toolDeclared = unique inventory.compiler_tools.declared;
   toolReviewed = unique (map (t: t.name) policy.compiler_tools);
   foreignObserved = unique inventory.foreign_libraries;
   foreignReviewed = unique (map (f: f.name) policy.foreign_libraries);
@@ -77,7 +83,8 @@ let
 
   diagnostics =
     require (all (pkg: elem pkg scopePackages) requiredPackages) "scope-package-missing"
-    ++ require targetObserved "scope-target-missing"
+    ++ require targetObserved "scope-target-undeclared"
+    ++ require targetDeclared "scope-target-missing"
     ++ require (
       policy.owned_unsafe.expectation == "empty" -> inventory.owned_unsafe.workspace_forbids_unsafe
     ) "unsafe-forbid-evidence-missing"
@@ -101,7 +108,11 @@ let
       all (entry: elem entry fixtureObserved) fixtureReviewed
     ) "fixture-dependency-missing"
     ++ require (all (p: p.lock != "") policy.dependencies.fixture_only) "fixture-lock-unrecorded"
-    ++ require (toolObserved == toolReviewed) "compiler-tool-mismatch"
+    ++ require (
+      inventory.compiler_tools.provenance == "declared-requirement-not-observed-execution"
+      && inventory.miri.provenance == "declared-requirement-not-observed-execution"
+    ) "compiler-tool-provenance"
+    ++ require (toolDeclared == toolReviewed) "compiler-tool-declaration-mismatch"
     ++ require (foreignObserved == foreignReviewed) "foreign-library-mismatch"
     ++ require (
       all (pkg: elem pkg safetyScopes) requiredPackages
@@ -131,6 +142,8 @@ in
     "native-assurance-inventory-is-not-soundness"
     "dependency-records-are-not-dependency-safety"
     "miri-results-are-not-refinement"
+    "compiler-tool-records-are-declared-requirements-not-executions"
+    "miri-requirements-are-not-executions"
     "empty-owned-unsafe-scope-requires-accounting"
     "not-m1-acceptance"
   ];

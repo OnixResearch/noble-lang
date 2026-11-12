@@ -20,6 +20,11 @@ let
     match
     sort
     ;
+  uniqueSorted =
+    values:
+    sort builtins.lessThan (
+      attrNames (builtins.listToAttrs (map (v: { name = v; value = null; }) values))
+    );
   selectedPackages = cargoGraph.selected_packages;
   edges = cargoGraph.edges;
   productionEdges = filter (e: !(elem e.callee_package selectedPackages)) edges;
@@ -46,14 +51,26 @@ let
       [ ]
     else
       (builtins.fromTOML fixtureLock).package or [ ];
+  # The configurations the inventory was actually collected with: one row per
+  # distinct compiler unit configuration. These are compiler facts, never a copy
+  # of the reviewed policy (the comparator matches policy against them).
+  unitConfigurations = map builtins.fromJSON (
+    uniqueSorted (
+      map (
+        u:
+        builtins.toJSON {
+          target = u.target_triple;
+          inherit (u) features default_features;
+        }
+      ) ir.units
+    )
+  );
 in
 {
   schema = "noble-native-assurance-inventory/v1";
   scope = {
     packages = sort builtins.lessThan (map (u: u.package_name) ir.units);
-    target_triple = selection.configuration.target;
-    features = selection.configuration.features;
-    default_features = selection.configuration.default_features;
+    targets = unitConfigurations;
     units = length ir.units;
     ir_id = ir.architecture_ir_id;
     policy_blake3 = ir.policy_blake3;
@@ -87,13 +104,24 @@ in
       version = p.version;
     }) fixturePackages;
   };
-  compiler_tools = [
-    "cargo-octet"
-    "charon"
-    "aeneas"
-    "lean"
-    "miri"
-  ];
+  # Declared requirements, not observations: this derivation runs no compiler
+  # tool and records no execution. A passing comparator says the declaration
+  # matches the reviewed policy, never that a tool ran.
+  compiler_tools = {
+    provenance = "declared-requirement-not-observed-execution";
+    declared = [
+      "cargo-octet"
+      "charon"
+      "aeneas"
+      "lean"
+      "miri"
+    ];
+    executions = [ ];
+  };
+  miri = {
+    provenance = "declared-requirement-not-observed-execution";
+    executions = [ ];
+  };
   foreign_libraries = [ ];
   counts = {
     units = length ir.units;

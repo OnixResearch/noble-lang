@@ -134,7 +134,38 @@ let Pin = { rev | String, narHash | String } in
   tool_paths | { _ : { derivation | String, output | String } } = import "tool-selection-tools.ncl",
   # A source-built independent Rust peer, not an unreviewed Wasmtime CLI.
   # Compatibility is established by the M5 execution gate, never this selection.
+  #
+  # Every `component_sync` field is classified below by what binds it. The
+  # comparator refuses a component_sync field that is not classified, so a new
+  # pin cannot enter as an unchecked constant.
+  #   - flake-fetcher: the selected Wasmtime tree is fetched at the recorded NAR
+  #     hash, so the hash decides the tree rather than describing it.
+  #   - flake-assert: `flake.nix` asserts the realised store path equals the
+  #     recorded path (Wasmtime source and reviewed vendor).
+  #   - comparator: the observed side is read from the selected input (the
+  #     Wasmtime workspace version, the selected wasm-tools version).
+  #   - declaration: a reviewed configuration string with no runtime binding.
+  #   - unbound: a recorded host path that no flake input provides. `linker_bin`
+  #     and `publication_probe` are used by the manual M5 gate; binding them
+  #     requires selecting the nixpkgs revision they were captured from.
   component_sync = import "../verification/m5/pins.json",
+  component_sync_bindings | { _ : String } = {
+    schema = "declaration: pin schema identifier",
+    profile = "declaration: reviewed component profile name",
+    world = "declaration: reviewed canonical world name",
+    wit = "declaration: reviewed WIT path, also source-hashed by the M5 gate",
+    wasm_tools_version = "comparator: observed selected wasm-tools version must match",
+    wasmtime_version = "comparator: observed selected Wasmtime workspace version must match",
+    wasmtime_source = "flake-assert: fetched tree path must equal this reviewed store path",
+    wasmtime_source_nar_hash = "flake-fetcher: the selected Wasmtime tree is fetched at this NAR hash",
+    vendor = "flake-assert: built reviewed vendor path must equal this reviewed store path",
+    vendor_nar_hash = "declaration: reviewed vendor NAR hash, not recomputed by a check",
+    linker_bin = "unbound: recorded host linker directory for the manual M5 gate",
+    canonical_abi = "declaration: reviewed canonical ABI profile name",
+    gc_control = "declaration: reviewed GC control description",
+    publication_probe = "unbound: recorded host bash and prlimit paths for the manual M5 gate",
+    non_claims = "declaration: reviewed non-claim list",
+  },
   future_unselected | Array String = ["Verus", "byte-view dependency"],
   claims | Array String = ["selection-policy-only", "execution-required-for-compatibility", "refinement-open", "m1-acceptance-open"],
 }

@@ -4,7 +4,9 @@
 let
   inherit (builtins)
     all
+    any
     attrNames
+    attrValues
     concatLists
     concatStringsSep
     filter
@@ -15,6 +17,8 @@ let
     map
     match
     sort
+    stringLength
+    substring
     ;
   get = value: name: if isAttrs value then value.${name} or null else null;
   at =
@@ -284,6 +288,23 @@ let
         name
         "overflow-checks"
       ] == get config "overflow_checks";
+  componentSync = get policy "component_sync";
+  componentBindings = get policy "component_sync_bindings";
+  # Every recorded component pin must say what binds it. The kinds are closed so
+  # a new pin cannot be added as an unclassified constant.
+  bindingKinds = [
+    "comparator:"
+    "declaration:"
+    "flake-assert:"
+    "flake-fetcher:"
+    "unbound:"
+  ];
+  bindingClassified =
+    text:
+    isString text && any (kind: substring 0 (stringLength kind) text == kind) bindingKinds;
+  componentBindingsValid =
+    equalKeys componentBindings (attrNames componentSync)
+    && all bindingClassified (attrValues componentBindings);
   diagnostics = concatLists [
     (require (get policy "schema_version" == "noble-tool-selection-policy/v1") "selection-schema")
     (require (equalKeys selected sourceNames && equalKeys observed sourceNames) "source-pin-set")
@@ -313,8 +334,7 @@ let
       get policy "future_unselected" == [ "Verus" "byte-view dependency" ]
     ) "unselected-tool-set")
     (require (
-      get policy "component_sync" == get observation "component_sync"
-      && at policy [ "component_sync" "schema" ] == "noble-m5-tool-pins/v1"
+      at policy [ "component_sync" "schema" ] == "noble-m5-tool-pins/v1"
       && at policy [ "component_sync" "profile" ] == "Component-Sync-Bootstrap"
       && at policy [ "component_sync" "world" ] == "noble-test:sync/bootstrap@1.0.0"
       && at policy [ "component_sync" "wasmtime_version" ] == "40.0.2"
@@ -327,6 +347,13 @@ let
         "universal Canonical ABI or engine refinement"
       ]
     ) "component-sync-selection")
+    (require componentBindingsValid "component-sync-binding")
+    (require (
+      at observation [ "component_sync" "wasmtime_version" ] == at policy [ "component_sync" "wasmtime_version" ]
+    ) "component-wasmtime-version-mismatch")
+    (require (
+      at observation [ "component_sync" "wasm_tools_version" ] == at policy [ "component_sync" "wasm_tools_version" ]
+    ) "component-wasm-tools-version-mismatch")
     (require (
       equalKeys (get policy "file_sha256") fileNames
       && equalKeys (get observation "file_sha256") fileNames
