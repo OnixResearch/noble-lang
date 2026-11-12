@@ -68,10 +68,17 @@ unchanged. It needs `proofs/m3/.lake` populated the same way
 - refuses a dirty worktree (`--allow-dirty` records `clean_source:false`)
   and ambient `LEAN*`/`LAKE*`/`NODE*`/`GIT_*`/`NIX_*`/loader overrides;
 - requires every Lake package checkout to be clean at its manifest revision;
-- scans `NobleFoundation/` for `sorry`, `acquire`, `native_decide`,
-  `implemented_by`, `extern`, `unsafe`, `opaque`, `partial` and `axiom`;
-- requires the declared theorems and [`inventory.json`](inventory.json) to
-  be the same set;
+- scans `NobleFoundation/` (comments removed) for `sorry`, `admit`,
+  `native_decide`, `implemented_by`, `extern`, `unsafe`, `opaque`, `partial`,
+  `axiom`, the kernel-checking escape hatches `skipKernelTC`, `addDecl`,
+  `run_cmd`, `run_elab`, `run_meta` and `#eval`; `--self-test` exercises that
+  scan, including the `debug.skipKernelTC` + `addDecl` bypass it refuses;
+- requires the declared public theorems and [`inventory.json`](inventory.json)'s
+  `theorems` to be the same set, and the declared `private`/`protected` theorems
+  to be exactly `inventory.json`'s `private_theorems`; a private helper is
+  existence-checked by name and its axioms are audited transitively through every
+  inventoried theorem that uses it, because Lean does not expose a private name to
+  another module;
 - builds `NobleFoundation` and fails on any warning;
 - for every inventoried theorem, prints `#check` and `#print axioms` through
   `lean --json`, and accepts only `propext`, `Classical.choice` and
