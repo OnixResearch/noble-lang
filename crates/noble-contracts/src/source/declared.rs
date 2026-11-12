@@ -469,6 +469,10 @@ fn split_once_ascii(text: &str, separator: u8) -> Option<(&str, &str)> {
 /// and representable as `u32`. Module headers and every reference to a
 /// versioned module share this one spelling, so `m@01` and `m@+1` never name
 /// `m@1`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; str::parse and byte iteration are not const, so this cannot be a const fn."
+)]
 fn canonical_version(text: &str) -> Option<u32> {
     if text.is_empty() || text.as_bytes().first() == Some(&b'0') {
         return None;

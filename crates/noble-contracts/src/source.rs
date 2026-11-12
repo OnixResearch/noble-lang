@@ -807,13 +807,13 @@ impl Session {
             if index == original {
                 continue;
             }
-            let reaches = definition.tree.nodes.iter().any(|node| match &node.kind {
+            let has_affected_call = definition.tree.nodes.iter().any(|node| match &node.kind {
                 Kind::Call(Target::Named(target)) => {
                     affected.get(*target as usize).copied().unwrap_or(false)
                 }
                 _ => false,
             });
-            if !reaches {
+            if !has_affected_call {
                 continue;
             }
             // A shadowed historical definition is still a resolved hop: a

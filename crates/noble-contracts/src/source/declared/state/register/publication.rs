@@ -250,21 +250,18 @@ pub(super) fn operations(
 
 #[cfg(test)]
 mod tests {
-    use super::WordBuilder;
-    use crate::source::declared::{Schema, SchemaKind};
-
-    fn fixture() -> WordBuilder {
-        WordBuilder {
+    fn fixture() -> super::WordBuilder {
+        super::WordBuilder {
             words: alloc::vec::Vec::new(),
             exported_words: alloc::vec::Vec::new(),
             added_words: alloc::vec::Vec::new(),
         }
     }
 
-    fn schema() -> Schema {
-        Schema {
+    fn schema() -> crate::source::declared::Schema {
+        crate::source::declared::Schema {
             name: alloc::string::String::from("V"),
-            kind: SchemaKind::Opaque {
+            kind: crate::source::declared::SchemaKind::Opaque {
                 base: alloc::string::String::from("I64"),
                 public: true,
             },

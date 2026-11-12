@@ -248,6 +248,10 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the helper returns the checker's own derivations or a typed error for an unrepresentable node, and its bounded walk needs no assertion to state that."
 )]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the vector holds one entry per derivation of a single accepted candidate, so it is bounded by that case's declared 256-node limit."
+)]
 fn accepted_word_derivations(
     case: &gen::Case,
     outcome: &noble_kernel::untrusted::Outcome,
