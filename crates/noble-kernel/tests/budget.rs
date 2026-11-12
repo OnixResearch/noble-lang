@@ -1,6 +1,18 @@
 #![feature(register_tool)]
 #![register_tool(octet, tigerstyle)]
 #![expect(
+    tigerstyle::allocation_in_loop,
+    tigerstyle::ambiguous_params,
+    tigerstyle::ambient_clock,
+    tigerstyle::no_panic,
+    tigerstyle::non_trait_imports,
+    tigerstyle::numeric_units,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::underscore_in_module_filename,
+    reason = "this target also owns the kernel resource-bound controls: the harness names the kernel types it exercises, builds deep fixtures in loops, measures elapsed time, indexes intents by construction and has one test that fails by panicking, which is the readable form of the evidence"
+)]
+#![expect(
     tigerstyle::assertion_density,
     reason = "this target also owns the resource-bound controls, whose scenarios add their assertions where the bound is checked"
 )]

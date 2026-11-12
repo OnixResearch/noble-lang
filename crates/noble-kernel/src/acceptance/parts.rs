@@ -191,6 +191,19 @@ pub(crate) fn join(
         &interface.stack_out,
         ctx
     ));
+    // A join replaces exactly the matched suffix and appends exactly the
+    // interface's output, and the height it validated is the height it
+    // returns.
+    debug_assert_eq!(
+        joined.stack.len(),
+        keep.saturating_add(interface.stack_out.len()),
+        "a join appends exactly the interface output"
+    );
+    debug_assert!(
+        u64::try_from(joined.stack.len())
+            .is_ok_and(|height| height <= u64::from(ctx.request.limits.stack_height)),
+        "a joined frame stays inside the declared stack height"
+    );
     Ok(joined)
 }
 
@@ -201,10 +214,6 @@ pub(crate) fn join(
 /// height, type-size and environment predicates. Re-walking the retained
 /// prefix on every node would make one join cost the whole frame instead of
 /// the interface the join charges.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; limits_of_join rejects an unrepresentable or excessive joined height before checking each appended entry, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
-)]
 pub(crate) fn limits_of_join(
     height: usize,
     appended: &[crate::types::Ty],

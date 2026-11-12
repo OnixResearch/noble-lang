@@ -14,10 +14,6 @@ impl super::Ty {
     /// The walk borrows its pending nodes and visits each at most once, so it
     /// describes the copy without making one. `None` means the tree is larger
     /// than [`super::PHYSICAL_NODE_CAP`], which fails the copy closed.
-    #[expect(
-        tigerstyle::fragile_exhaustive_enum_match,
-        reason = "Owner: noble-maintainers; every Ty constructor must state whether it duplicates stored children; a new type must not inherit a physical-size rule by fallback."
-    )]
     pub(crate) fn physical_nodes(&self) -> Option<u32> {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);

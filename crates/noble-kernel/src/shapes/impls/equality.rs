@@ -54,6 +54,10 @@ pub(super) fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::P
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; structural comparison returns false on unequal constructors, lengths or work exhaustion; ordinary unequal inputs must not panic."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the comparison pushes borrowed node pairs into an owned Vec, whose push and drop are not const on the pinned compiler."
+)]
 fn compare<'a>(
     first: &'a crate::shapes::Pattern,
     second: &'a crate::shapes::Pattern,

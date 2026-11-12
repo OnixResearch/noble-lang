@@ -103,6 +103,10 @@ pub(crate) const fn data_slot(
 /// cyclic chain rejects as invalid, a chain that would outrun the declared
 /// work limit rejects fail-closed, and the resolved witness returns with
 /// the interface so callers can read its segments directly.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; the parameters are the kernel-internal instantiation shape (scheme, witness, Data slot, failing site, context, remaining budget) and bundling them into a struct would change the extracted subject for a naming-discipline lint."
+)]
 pub(crate) fn apply(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
