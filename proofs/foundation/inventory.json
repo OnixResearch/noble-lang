@@ -7813,6 +7813,7 @@
     "NobleFoundation.ofInt_wrap_sub",
     "NobleFoundation.ofInt_wrap_mul",
     "NobleFoundation.rep_succ",
-    "NobleFoundation.rep_succ_succ"
+    "NobleFoundation.rep_succ_succ",
+    "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton"
   ]
 }
