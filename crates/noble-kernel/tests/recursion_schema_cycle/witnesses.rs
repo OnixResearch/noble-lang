@@ -167,7 +167,7 @@ fn resolvable_chain_moves_the_accepting_work_limit_by_its_hops() -> Result<(), S
     let chain_min = first_accepting(&env, &referenced, &expected)?;
     assert_eq!(
         chain_min,
-        direct_min + 1,
+        direct_min.saturating_add(1),
         "one hop must cost one unit: direct accepted at {direct_min}, referenced at {chain_min}"
     );
     Ok(())

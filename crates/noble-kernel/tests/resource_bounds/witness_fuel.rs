@@ -130,7 +130,7 @@ fn one_reference_hop_costs_exactly_one_work_unit() -> Result<(), String> {
     let hop_min = first_accepting(&env, &one_hop(definition))?;
     assert_eq!(
         hop_min,
-        direct_min + 1,
+        direct_min.saturating_add(1),
         "one hop must cost one unit: direct accepted at {direct_min}, one-hop at {hop_min}"
     );
     Ok(())
@@ -143,7 +143,7 @@ fn every_hop_of_a_longer_chain_is_charged() -> Result<(), String> {
     let chain_min = first_accepting(&env, &three_hops(definition))?;
     assert_eq!(
         chain_min,
-        direct_min + 3,
+        direct_min.saturating_add(3),
         "three hops must cost three units: direct accepted at {direct_min}, chained at {chain_min}"
     );
     Ok(())

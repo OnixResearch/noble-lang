@@ -7,10 +7,6 @@ impl super::Ty {
     /// The walk borrows its pending nodes: eligibility never copies the
     /// payload it inspects, so an ineligible value is rejected without first
     /// duplicating it.
-    #[expect(
-        tigerstyle::fragile_exhaustive_enum_match,
-        reason = "Owner: noble-maintainers; each Ty constructor must explicitly declare whether Data eligibility inspects children, accepts directly or rejects resources; new types must not inherit a fallback eligibility rule."
-    )]
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
