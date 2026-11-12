@@ -19,6 +19,11 @@ tables and the obligations*, not the Rust bytes, and proves:
   twice (`constant_duplicate_refused`, issue #94), and an entry that names no node is refused
   (`constant_entry_refused`); the Boolean table check is tied to the readable obligation by
   `constant_predicate_iff` and `slot_predicate_iff`;
+* the interface-slot table follows the same discipline as the constant table: one entry per
+  interface-slot node (`slot_count_refused`) and no slot covered twice (`slot_duplicate_refused`),
+  matching the Rust `covered` bits, so an empty or duplicated forged table is refused
+  (`empty_slot_table_refused`, `duplicated_slot_table_refused`), while the two-slot declaration is
+  accepted (`two_slot_layout_accepted`);
 * the layer table must have one ordered range per layer (`layer_shape_refused`,
   `layers_unordered_refused`), and its ranges must tile the instruction stream: each starts where
   its predecessor ends and holds exactly its layer's instruction nodes (`layer_range_refused`,
@@ -128,6 +133,21 @@ def slotEntryOk (graph : Graph) (layout : Layout) (entry : Nat × Nat) : Bool :=
     | .input slot, some register => register = entry.1 ∧ slot = entry.2
     | _, _ => false).length = 1)
 
+/-- The slot table has one entry per interface-slot node, as the constant table has one per
+constant node. -/
+def slotCountOk (graph : Graph) (layout : Layout) : Bool :=
+  let slots := ((List.range graph.arity).filter fun index =>
+    match graph.node index with
+    | .input _ => true
+    | _ => false).length
+  decide (layout.slotRegs.length = slots)
+
+/-- The slot table names each interface slot at most once. The Rust validator keeps one `covered`
+bit per slot and refuses a second row for a slot, so a table that repeats a row keeps its length
+and every row valid while leaving another slot uncovered. -/
+def slotsDistinctOk (layout : Layout) : Bool :=
+  decide (layout.slotRegs.map (fun entry => entry.2)).Nodup
+
 /-- The layer table declares one range per layer. -/
 def layerShapeOk (layerCount : Nat) (layout : Layout) : Bool :=
   decide (layout.layers.length = layerCount)
@@ -204,6 +224,8 @@ def obligations (graph : Graph) (layerCount : Nat) (fails : Node → Bool)
     constantCountOk graph layout,
     constantsDistinctOk layout,
     layout.slotRegs.all (slotEntryOk graph layout),
+    slotCountOk graph layout,
+    slotsDistinctOk layout,
     layerShapeOk layerCount layout,
     layerOrderOk layout,
     failSuffixOk layerCount graph fails layerOf layout,
@@ -353,6 +375,26 @@ constant count and every entry names a real constant (issue #94). -/
 theorem constant_duplicate_refused (layout : Layout) (hduplicate : ¬ layout.consts.Nodup) :
     constantsDistinctOk layout = false := by
   simp [constantsDistinctOk, hduplicate]
+
+/-- A slot table whose entry count differs from the graph's interface-slot node count is refused,
+as the Rust validator's `declared_slots != slot_nodes` check refuses it. -/
+theorem slot_count_refused (graph : Graph) (layout : Layout) (expected : Nat)
+    (hslots : ((List.range graph.arity).filter fun index =>
+      match graph.node index with
+      | .input _ => true
+      | _ => false).length = expected)
+    (hentries : layout.slotRegs.length ≠ expected) :
+    slotCountOk graph layout = false := by
+  unfold slotCountOk
+  simp [hslots, hentries]
+
+/-- A slot table that names one interface slot twice is refused, even when its length equals the
+slot count and every row names a real input: the Rust validator's per-slot `covered` bit refuses
+the repeated row. -/
+theorem slot_duplicate_refused (layout : Layout)
+    (hduplicate : ¬ (layout.slotRegs.map (fun entry => entry.2)).Nodup) :
+    slotsDistinctOk layout = false := by
+  simp [slotsDistinctOk, hduplicate]
 
 /-- A layer table without one range per layer is refused. -/
 theorem layer_shape_refused (layerCount : Nat) (layout : Layout)
@@ -518,6 +560,54 @@ def exampleLayout : Layout where
 scheduler emits, so acceptance is not vacuous. -/
 theorem exampleLayout_accepted :
     accepted exampleGraph 3 (fun _ => false) exampleLayerOf exampleLayout = true := by
+  decide
+
+/-! ### The slot table is a bijection, not a list of valid rows
+
+An empty table or a table that repeats one row is exactly the forgery the constant table's count
+and duplicate checks refuse (#94); the slot table needs the same two obligations. -/
+
+/-- A two-interface graph: inputs at slots 0 and 1 and their sum at layer 0. -/
+def twoSlotGraph : Graph where
+  arity := 3
+  output := 2
+  node := fun index =>
+    if index = 0 then .input 0
+    else if index = 1 then .input 1
+    else .add 0 1
+
+/-- The declaration for `twoSlotGraph`, with one register per node plus the constant-one register,
+no constants, one slot row per interface slot and one layer holding the addition. -/
+def twoSlotLayout : Layout where
+  revision := revision
+  regs := 4
+  reg := fun index => if index < 3 then some index else none
+  consts := []
+  slotRegs := [(0, 0), (1, 1)]
+  layers := [(0, 1)]
+  failSuffixMin := [maxRegister, maxRegister]
+
+/-- **The two-slot declaration is accepted**, so the new slot obligations are satisfiable. -/
+theorem two_slot_layout_accepted :
+    accepted twoSlotGraph 1 (fun _ => false) (fun _ => 0) twoSlotLayout = true := by
+  decide
+
+/-- **An empty slot table is refused by the count obligation.** -/
+theorem empty_slot_table_refused :
+    slotCountOk twoSlotGraph { twoSlotLayout with slotRegs := [] } = false ∧
+      accepted twoSlotGraph 1 (fun _ => false) (fun _ => 0)
+        { twoSlotLayout with slotRegs := [] } = false := by
+  decide
+
+/-- **A duplicated slot table is refused by the uniqueness obligation**, although its count equals
+the slot-node count and both rows name a real input, so only the per-slot check can refuse it. -/
+theorem duplicated_slot_table_refused :
+    slotCountOk twoSlotGraph { twoSlotLayout with slotRegs := [(0, 0), (0, 0)] } = true ∧
+      ((({ twoSlotLayout with slotRegs := [(0, 0), (0, 0)] }).slotRegs).all
+        (slotEntryOk twoSlotGraph { twoSlotLayout with slotRegs := [(0, 0), (0, 0)] })) = true ∧
+      slotsDistinctOk { twoSlotLayout with slotRegs := [(0, 0), (0, 0)] } = false ∧
+      accepted twoSlotGraph 1 (fun _ => false) (fun _ => 0)
+        { twoSlotLayout with slotRegs := [(0, 0), (0, 0)] } = false := by
   decide
 
 end NobleFoundation.PackedLayout

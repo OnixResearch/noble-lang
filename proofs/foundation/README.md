@@ -171,8 +171,8 @@ Status words:
 | Public/internal orientation, deeper-minus-top subtraction | `internal_of_public`, `exec_sub_is_internal_step`, `sub_operand_order`, `wrap_sub_noncommutative` | `$op_sub` pop order | model **proved**. Helper **tested** (comparator `sub-order`) |
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
-| Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_unique_output`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
-| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_overwriting_update_pairs_to_four`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, the wrong-slot control, and five seeded update-rule mutations caught, including the subtraction sign), and the transpose identity over every well-formed graph, so the reverse sweep computes the derivative. Ordered binary32 gradient model and Rust refinement **open** |
+| Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_functional_post`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
+| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, the wrong-slot control, and five seeded update-rule mutations caught, including the subtraction sign), and the transpose identity over every well-formed graph, so the reverse sweep computes the derivative. Ordered binary32 gradient model and Rust refinement **open** |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Implementation correspondence **open** |
@@ -188,21 +188,21 @@ Status words:
 | First-order unification for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `solved_mgu`, `refused_no_unifier`, `solvable_iff`, `solve_complete`, `answers_agree`, `unique_iff_ground`, `Code.enc_injective`, `Val.enc_injective`, `case09_clash`, `case08_underconstrained` | a Lean model of the design's solver over C's codes and values; no Rust elaborator exists, and source-to-Lean translation is not modelled | model **proved**: an answer is a most general unifier, refusals hide no solution, every solvable problem is answered under some budget, and a solution is unique exactly when it is ground. Rust elaborator refinement **open** |
 | Scope and code discipline for implicit proof arguments (issue #12, `implicit-proof-arguments` task 13) | `mem_levels_subst`, `scoped_subst`, `scoped_of_subst`, `ill_scoped_persists`, `ill_scoped_has_no_repair`, `coded_level_stable`, `wrong_code_persists`, `Arg.source_bound_stable` | rule 7's level restriction and the value-meta exact-code rule over a level-bearing tree algebra; which premise positions may infer is not modelled, only that an accepted premise argument is a ground explicit term; propositions and sorts are encoded separately below | model **proved**: a ground binding that captures a binder keeps every instantiation ill-scoped and wrong-coded, so refusing it at solution time is the only sound point. Rust elaborator refinement **open** |
 | Propositions and sorts of implicit proof arguments: encoding and rebasing (issue #12, `implicit-proof-arguments` task 13) | `PropT.enc_injective`, `SortT.enc_injective`, `PropT.enc_ne_mvar`, `PropT.head_enc`, `PropT.shift_comp`, `PropT.shift_id`, `PropT.levels_shift` | the encoding of the design's `Pi`/`Eq` propositions and `Type0`/`Value` sorts into the solver's tree algebra, and rebasal of their levels; no Rust representation of these trees exists | model **proved**: structural identity is exactly tree equality, encoded propositions never collide with a code or value meta, and rebasal acts on exactly the level occurrences and composes. Rust elaborator refinement **open** |
-| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
+| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `closers_below_zero_depth_do_not_reduce_the_reached_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. The Rust stream is exported (`Compiled::i64_instructions()`); a general Lean↔Rust correspondence is **open** |
 | Real packed I64/Bool artifacts, validated one at a time (issue #43) | `interleaved_validated`, `interleaved_sound`, `lateInput_validated`, `lateInput_sound`, the `*_wellFormed` lemmas, seven `*_refused` mutated copies and ten `*_execution_*_agrees` runs in `PackedScheduleCorpus` | two artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and bound by `the_lean_file_is_the_real_emission`; the slot and constant preload translation is trusted | **proved** for those two artifacts; the Rust executor agrees at ten inputs, a **tested** fact, not a theorem about it |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
-| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification…
+| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `closers_below_zero_depth_do_not_reduce_the_reached_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification…
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict`, and the six `SymbolicSolver.Corpus.*_first` verdicts | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Six fixed pairs of checked `noble-ngraph` graphs: compiled and reference verdicts **tested**, and the same verdicts kernel-decided. Encoder correspondence, solver, emitted-Wasm replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
-| Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `isop_exact`, `isop_bounds`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
+| Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `shannon_exact`, `shannon_bounds`, `majority_cover_has_a_nonprime_cube`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
-| Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
+| Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
 
 Typing premises are stated exactly:
 - Sequences require `depthRun ops k = some k'` (static depth) for typing,
@@ -352,8 +352,9 @@ refusal classes, opt modes, and checked subjects.
 For every eligible pair, fresh Lean declarations bind both complete bodies,
 the fixed input, prefix and selector. Kernel-checked `decide` expectations
 and `exec_branchRef` establish the ordered scalar result and preserved
-prefix in MC1. Structural selected-body equality and the checked visit
-vector establish nonexecution of the changed branch in this fragment.
+prefix in MC1. Structural selected-body equality (`exec_branchCode_selected`) establishes
+nonexecution of the changed branch in this fragment; the declared visit vector
+is a selector projection, not execution evidence.
 The proof record binds both exact source hashes and the model-pair/input
 hashes; changed bytes cannot reuse the original pair's evidence.
 
@@ -635,7 +636,7 @@ Proved here:
 | Theorem | Claim |
 |---|---|
 | `retained_expectations_checked` | every retained expectation is the model's answer for its exact operand encodings |
-| `halfway_ties_round_to_even` | halfway ties round to even in both directions around `1.0` |
+| `halfway_ties_round_to_even` | halfway ties round to even; the `3 * 2^-24` tie distinguishes ties-to-even from truncation |
 | `signed_zero_rules` | `(-0)+(-0) = -0`, `(+0)+(-0) = +0`, `(-0)-(+0) = -0`, `x-x = +0` for nonzero `x` |
 | `nan_class_and_zero_separation` | all NaNs are one observation class; signed zeros and distinct finite encodings stay separate |
 | `encoding_boundaries` | exact scaled interpretation of the smallest subnormal, smallest normal and largest finite encoding |
@@ -1262,13 +1263,17 @@ list.
 
 `reuseStep` overwrites one present cell only when the old and requested sizes
 match. `reuseStep_replaces_unique_root` models consumption of the old value by
-the unique root: that root observes the requested replacement while every
-other root at a different reference observes the same cell as before.
+the unique root: that root observes the requested replacement, changes exactly
+that root occurrence when the replacement differs from the old cell, and every
+other root at a different reference observes the same cell as before; the count
+claim is conditional on the two cells differing. `filter_beq_eq_singleton` is
+where the uniqueness premise is used.
 `reuseStep_initializes_requested_cell` exposes the requested tag, field shape,
 size and initialized state, and `reuseStep_refuses_size_mismatch` is the
 refusal control. The `shared_alias_control` fixture has two roots at one
-address and is checked by `decide`; its second root observes the changed cell,
-which is why uniqueness is required rather than inferred from a last use.
+address and is checked by `decide`; the overwrite is **not** refused, and both
+root occurrences observe the changed cell, which is why the contract theorem's
+uniqueness premise is load-bearing rather than inferred from a last use.
 
 The resource control uses `Ownership.containsResource` recursively and
 `Ownership.duplicable` for every field payload. A wrapped must-use resource is
@@ -1300,10 +1305,16 @@ Open, and deliberately not closed by this model:
 `NobleFoundation/AuthorityLedger.lean` models the M5 protected-operation
 authority ledger with bounded witnessed requests, an independently supplied
 fact bundle (plan, grant, requested identities, source authenticity, checkpoint
-validity, policy liveness, credentials, revocation, cost, available quota), a
+validity, policy liveness, credentials, revocation and cost), a
 consumed-witness list, a registered-attempt ledger and checkpoint-local charges.
 Denials and preflight refusals leave the ledger definitionally unchanged; only
 their separately recorded request/effect counters move.
+
+Admission enforces the quota cumulatively: it charges the checkpoint's recorded
+charges plus the requested cost against the independently supplied snapshot
+(`WithinSnapshot`, `admissible_implies_within_snapshot`). A free per-request
+`available` field would let two requests each fit it and jointly exceed the
+snapshot, so `exhausted_checkpoint_quota_refuses` is the concrete refused case.
 
 Proved: initialization of align/unique/quota/at-most-once
 (`initial_alignment`, `initial_uniqueness`, `initial_within_quota`,
@@ -1314,18 +1325,23 @@ witness and registers exactly one not-yet-started attempt
 checkpoint quota bound and attempt/charge accounting
 (`admission_preserves_alignment`, `admission_preserves_uniqueness`,
 `admission_preserves_quota`, `admission_preserves_attempts_charged`); any finite
-serialized prefix keeps alignment (`acquirePrefix_preserves_alignment`); an
+serialized prefix keeps alignment (`prefix_preserves_alignment`); an
 altered requested plan, revoked or stale facts, or an already started attempt
 mint nothing (`altered_plan_cannot_mint`, `stale_facts_cannot_mint`,
-`started_attempt_cannot_start_again`). Four mutation models break the
-corresponding invariant, which is what makes exact plan equality, checkpoint
-validation, freshness and the quota charge load-bearing rather than decorative
-(`omitted_quota_charge_breaks_accounting`, `unchecked_reuse_breaks_uniqueness`,
-`plan_blind_admission_mints_altered_plan`,
-`checkpoint_blind_admission_mints_stale_checkpoint`).
-`renewed_snapshot_keeps_quota` states checkpoint renewal as a host premise: a
-fresh snapshot must carry prior reservations forward, and host replenishment
-that ignores them is outside kernel-enforced safety. Twenty-five inventoried
+`started_attempt_cannot_start_again`). Four mutation models make exact plan
+equality, checkpoint validation, freshness and the quota charge load-bearing
+rather than decorative. Two break an invariant: forgetting the quota charge
+breaks attempt/charge accounting (`omitted_quota_charge_breaks_accounting`), and
+skipping freshness breaks uniqueness (`unchecked_reuse_breaks_uniqueness`). Two
+are blind admissions whose theorems show both sides: each mutant mints the
+attempt while the exact admission refuses (`plan_blind_admission_mints_altered_plan`,
+`checkpoint_blind_admission_mints_stale_checkpoint`). The plan-blind mutant
+removes the exact-plan comparison; the checkpoint-blind mutant removes the
+validity check, so they differ from each other as well as from `accept`.
+`renewed_snapshot_keeps_quota` is a monotonicity law, not a restatement of its
+premise: a ledger within a snapshot stays within any renewed snapshot that is at
+least as large at every checkpoint, while renewal that lowers a bound below the
+charges remains outside kernel-enforced safety. Twenty-seven inventoried
 theorems; receipt
 [`verification/foundation/receipts/674b32d9/`](../../verification/foundation/receipts/674b32d9/foundation-check.json)
 (286 theorems, `clean_source: true`, axiom sets inside the allow-list,
@@ -1391,7 +1407,7 @@ direction over the graph's slots adds exactly the processed consumer's
 contributions, and the fixture-level **transpose identity**
 (`exampleGraph_adjointDot`) says the sweep's accumulated adjoints pair with the
 declared direction to exactly the tangent `8`. The overwrite control
-(`the_overwriting_update_pairs_to_four`) pairs to `4` on the same slot where the
+(`slotGraph_repeatedCountedOnce_caught` in `ReverseADMutations.lean`) pairs to `4` on the same slot where the
 sweep pairs to `8` (`the_sweep_pairs_to_eight_on_the_second_slot`), so the fixture
 discriminates the update rule rather than agreeing with anything.
 
@@ -1715,7 +1731,12 @@ the reserved one (`accepted_reserves_one_register`); a missing,
 out-of-range or shared register is refused (`missing_register_refused`,
 `out_of_range_refused`, `alias_refused`); a constant table with the wrong entry count
 is refused (`constant_count_refused`), and so is one that names an entry twice
-(`constant_duplicate_refused`); the layer table must have one ordered range per layer
+(`constant_duplicate_refused`); the interface-slot table is held to the same
+discipline as the constant table — one entry per interface-slot node
+(`slot_count_refused`) and no slot named twice (`slot_duplicate_refused`), so the
+empty and duplicated forged tables are refused (`empty_slot_table_refused`,
+`duplicated_slot_table_refused`) while the two-slot declaration is accepted
+(`two_slot_layout_accepted`); the layer table must have one ordered range per layer
 (`layer_shape_refused`, `layers_unordered_refused`) and its ranges must tile the
 instruction stream, each starting where its predecessor ends and holding exactly its
 layer's instruction nodes (`layer_range_refused`), with the last ending at the
@@ -1952,9 +1973,9 @@ and a named reference expectation catches it:
 | Variant | Fault | Caught by |
 |---|---|---|
 | `opMutated` | subtracts where the reference adds | `wrong_op_is_caught` |
-| `operandMutated` | reaches one node twice (`5 + 5`) | `wrong_operand_is_caught` |
+| `operandMutated` | reaches one node twice (`3 + 3`) | `wrong_operand_is_caught` |
 | `constantMutated` | holds six where the reference holds three | `wrong_constant_is_caught` |
-| `twoOutSwapped` | asks the right face for its ordered outputs in the other order | `wrong_output_order_is_caught` |
+| `twoOutSwapped` | both faces hold the same graph; the right consumer asks for its results in the other order | `wrong_output_order_is_caught` |
 | `encodeShifted` | records each slot's exact bits at the next slot | `shifted_encoding_is_caught` |
 | `refutedFirstOnly` | inspects only the first ordered result | `output_blind_verdict_is_caught` |
 
@@ -2133,7 +2154,7 @@ refutation is not itself vacuous
 (`unrealizable_of_contradictory_post`, `contradictory_inhabited`,
 `contradictory_not_realizable`); two distinct satisfying outputs for one
 admissible input refute determinacy (`not_deterministic_of_two_outputs`), and
-per-input uniqueness entails it (`deterministic_of_unique_output`); the exact
+per-input uniqueness entails it (`deterministic_of_functional_post`); the exact
 wrapping `I64` increment with a true precondition is inhabited, realizable and
 deterministic (`increment_inhabited`, `increment_realizable`,
 `increment_deterministic`); an underconstrained `Bool` output is realizable but
@@ -2282,7 +2303,7 @@ Nine theorems, all inventoried; receipt
 
 Those nine hold by construction. `trace` reads only the pinned map, so
 `root_selections_use_pinned_map`, `frozen_entry_map_reference_agrees` and the denial and prefix
-theorems are `rfl`, and `mixed_map_selects_old_and_new` checks one selection. **Event relocation**
+theorems are `rfl`, and `mixed_map_selects_old_and_new` checks both selections of the mixed map. **Event relocation**
 (VC-LIVE-03, model half) gives the model something a pin could get wrong.
 
 **The run.** `run` executes programs that emit a distinguished event and dispatch to other
@@ -2372,9 +2393,9 @@ too:
 
 The depth scan is **balanced**, like the codec's: `depthScanAux` tracks the
 current depth and the largest depth reached, and a closing byte at depth zero
-leaves the current depth at zero, so stray openers and separated runs are schema
-failures rather than depth failures
-(`unbalanced_closers_do_not_count_toward_the_depth`). The earlier scan counted
+leaves the current depth at zero, so a stray closer does not reduce the reached
+depth and stray bytes are schema failures rather than depth failures
+(`closers_below_zero_depth_do_not_reduce_the_reached_depth`). The earlier scan counted
 opening brackets, which was stricter than the codec; the finite comparison below
 surfaced that disagreement, and the model was corrected rather than the finding
 being recorded and dropped.
@@ -2545,8 +2566,9 @@ bound**, so a reduction is only ever proposed for a swap the model supports:
 
 - slot-local actions on the distinct ids **commute**: `cancel_orders_agree_on_distinct_ids`
   and `finish_orders_agree_on_distinct_ids` reach the same documented
-  observation in either order, so the swap preserves enabledness, the related
-  state and the observation for those actions;
+  observation in either order; this is observation-level agreement only, because
+  equal observations do not preserve enabledness
+  (`equal_observation_does_not_preserve_enabledness`);
 - delivery is **not** independent: `delivery_orders_disagree_on_distinct_ids`
   differs because the documented observation keeps one ordered delivery record,
   while `delivery_orders_agree_under_the_lossy_observation` shows the same two
@@ -2772,20 +2794,23 @@ Open, and deliberately not closed:
 truth-table model. `Valuation n` is the finite row type for `n` Boolean
 variables, `BFun n` is a function on those rows, `Formula` supplies
 `const`/`var`/`and`/`or`/`not` syntax, and `Cube`/`Cover` supply optional
-literals and their disjunction. The exact mode has `L = U = F`: `isop` splits
+literals and their disjunction. The exact mode has `L = U = F`: `shannonCover` splits
 on the fixed head-first variable order, recursively covers both cofactors and
-attaches the complementary literals. `isop_exact` proves the generated cover
-has the input function, and `isop_bounds` proves the support interval
+attaches the complementary literals. `shannon_exact` proves the generated cover
+has the input function, and `shannon_bounds` proves the support interval
 `L ≤ cover ≤ U` pointwise whenever `L ≤ F ≤ U`.
 
 `equivOn` is an independent exhaustive checker over `valuations`; its
-soundness theorem does not call `isop` or any recurrence. The checked fixtures
+soundness theorem does not call `shannonCover` or any recurrence. The checked fixtures
 include true and false constants, `x ∧ ¬x`, a repeated atom, three-variable
 parity (including its four-cube growth and fixture-only irredundancy), and two
 orders whose parity covers differ as lists but are checker-equivalent. The
 wrong-cofactor and wrong-complement seeded recurrences are rejected by that
-checker on the repeated-atom fixture. These irredundancy results are fixture
-computations only; no universal irredundancy or minimization theorem is stated.
+checker on the repeated-atom fixture. The recurrence is the cofactor recursion without
+care-set refinement, so its cubes are Shannon cubes, not prime implicants:
+`majority_cover_has_a_nonprime_cube` exhibits an in-cover cube that a strictly wider
+implicant subsumes. These irredundancy results are fixture computations only; no
+universal irredundancy, primeness or minimization theorem is stated.
 
 The module is deliberately a Boolean core, not source integration. A checked
 Boolean DAG representation, lowering to `Program`, branching extensions, care
@@ -3126,9 +3151,11 @@ Proved model claims:
 - **Disjoint ranges** (`PropT.enc_ne_mvar`, `PropT.head_enc`): an encoded
   proposition is never a metavariable and is always headed by one of its own
   tag symbols, so no code meta or value meta can be solved by a proposition.
-- **Rebasal acts on levels only** (`PropT.levels_shift`): the level
-  occurrences of a rebased proposition are the image of its own under the
-  rebasal. Nothing else moves.
+- **Rebasal acts on every level occurrence** (`PropT.levels_shift`,
+  `codeLevels_shift`, `SortT.levels_shift`): the level occurrences of a rebased
+  proposition are the image of its own under the rebasal, and the occurrences
+  include the `Code.var` levels inside a `Value` sort and inside an `Eq` code —
+  the checker's `Code::Variable` case. Nothing else moves.
 - **Rebasal composes** (`PropT.shift_comp`, `PropT.shift_id`): shifting by
   `f` and then `g` is shifting by `g` after `f`, and the identity rebasal
   changes nothing. IMPL-CASE-13 exists because substituting metas before
@@ -3137,8 +3164,10 @@ Proved model claims:
 
 Fixtures from the design, decided by evaluation: P2's head telescope
 `Pi 1 Type0 (Pi 2 (Value (Var 1)) (Eq (Var 1) 2 2))` has exactly the level
-occurrences 1 and 2, and rebasing it by predecessor gives exactly 0 and 1; a
-premise proposition is never a metavariable.
+occurrences 1 and 2, and rebasing it by predecessor gives exactly 0 and 1; the
+rebased `Value`/`Eq` codes carry `Var 0`, not a stuck `Var 1`; an `Eq` code's
+variable level is a level occurrence and is rebased with the indices; a premise
+proposition is never a metavariable.
 
 Open, and deliberately not closed by this model:
 

@@ -558,9 +558,11 @@ theorem abnormal_failure_survives_a_later_success :
       (fun table => table.failure) = some (some 7) := by
   decide
 
+/-- The recorded failure also survives a genuine refusal and a later admitted action: a refused
+    action returns no table at all, so it cannot clear the code, and the admitted right admission
+    keeps it. The first conjunct is a real refusal: delivery after the left record retired. -/
 theorem abnormal_failure_survives_refused_and_acquired_actions :
-    (step (.deliver .left 1) { baseline with failure := some 7 }).map
-      (fun table => table.failure) = some (some 7) ∧
+    step (.deliver .left 1) { freedLeft with failure := some 7 } = none ∧
     ((step (.finish .left 1) { baseline with failure := some 7 }).bind
       (step (.acquire .right 4))).map (fun table => table.failure) = some (some 7) := by
   decide
@@ -621,6 +623,19 @@ def lossyObserve (table : Table) : LossyObservation :=
     rightPinned := table.right.pinHeld
     leftReserved := table.left.reserved
     rightReserved := table.right.reserved }
+
+/-- **Equal documented observations do not preserve enabledness.** The wake/takeWake prefix leaves
+    the left record live, the finish prefix retires it, and both prefixes have equal documented
+    observations (the observation keeps the generation but not the live/retired distinction). The
+    next right-id admission is refused after the first prefix and taken after the second, so an
+    equal observation says nothing about which actions a following step enables. -/
+theorem equal_observation_does_not_preserve_enabledness :
+    Option.map observe (reaches [.wake .left 1, .takeWake .left 1] baseline) =
+        Option.map observe (reaches [.finish .left 1] baseline) ∧
+      ((reaches [.wake .left 1, .takeWake .left 1] baseline).bind
+        (step (.acquire .right 1))).isSome = false ∧
+      ((reaches [.finish .left 1] baseline).bind (step (.acquire .right 1))).isSome = true := by
+  decide
 
 /-- A full table refuses the other id's admission - the shared capacity decides, not the id. -/
 theorem baseline_admission_is_refused : step (.acquire .right 1) baseline = none := by
@@ -686,8 +701,10 @@ def paired : Table :=
     deliveries := [], settled := [] }
 
 /-- The independence rule for slot-local cancellation at the declared bound: cancelling the two ids in
-    either order reaches the same documented observation, so the swap preserves enabledness, the
-    related state and the observation for this action. -/
+    either order reaches the same documented observation. This is an observation-level agreement
+    only; equal observations do **not** preserve enabledness
+    (`equal_observation_does_not_preserve_enabledness`), so nothing here says a following action is
+    enabled on both paths. -/
 theorem cancel_orders_agree_on_distinct_ids :
     Option.map observe ((step (.cancel .right 1) paired).bind (step (.cancel .left 1))) =
     Option.map observe ((step (.cancel .left 1) paired).bind (step (.cancel .right 1))) := by

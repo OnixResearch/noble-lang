@@ -9,11 +9,13 @@ models themselves: every variant is a separate definition, and every theorem sta
 that a named reference expectation detects it.
 
 The variants are one seeded fault each, at the four places the issue names: the
-operation, an operand, a constant, and the ordered output list. Two further
-variants corrupt the *encoding* instead of the graph: a shifted encoder that
-records bits at the wrong slot (with a matching decoder, so both consumers of that
-one faulty encoding agree) and an output-blind verdict that inspects only the first
-ordered result.
+operation, an operand, a constant, and the ordered output list. A `Pair` declares
+one output list for both faces, so the output-order fault cannot live in the
+graph: it is the right consumer's *ask* order, modelled by `replayRightSwapped`.
+Two further variants corrupt the *encoding* instead of the graph: a shifted
+encoder that records bits at the wrong slot (with a matching decoder, so both
+consumers of that one faulty encoding agree) and an output-blind verdict that
+inspects only the first ordered result.
 
 A variant that escaped would mean the retained family cannot distinguish it; the
 lane would then need a new distinguishing case rather than a weakened variant.
@@ -76,11 +78,12 @@ def twoOutRight : Graph where
     else if index = 1 then .constant 5
     else .sub 1 0
 
-/-- Fault 4: the ordered output list. The right face is asked for its outputs in the
-other order, so the ordered results need to differ even where the graphs agree. -/
+/-- Fault 4: the ordered output list. Both faces hold the *same* graph, so no value
+can disagree; the seeded fault is that the right consumer is asked for its results
+in the other order. -/
 def twoOutSwapped : Pair where
   left := twoOutLeft
-  right := twoOutRight
+  right := twoOutLeft
   outputs := [2, 0]
 
 /-- The reference comparison over both ordered outputs: the pair differs at the
@@ -89,6 +92,16 @@ def twoOutPair : Pair where
   left := twoOutLeft
   right := twoOutRight
   outputs := [0, 2]
+
+/-- The faulty consumer's report: the right face's ordered results, asked for in the
+other order. -/
+def replayRightSwapped (pair : Pair) (inputs : Nat → BitVec 64) : List (Option Val) :=
+  pair.outputs.reverse.map (value pair.right inputs)
+
+/-- The order-sensitive reference expectation: the faulty consumer's ordered report
+differs from the left face's declared ordered results. -/
+def orderedReportDiffers (pair : Pair) (inputs : Nat → BitVec 64) : Bool :=
+  decide (replayLeft pair inputs ≠ replayRightSwapped pair inputs)
 
 /-! ### Corrupted encodings
 
@@ -119,7 +132,7 @@ theorem wrong_op_is_caught :
     ∧ refuted agreePair (fun _ => 0) = false := by
   decide
 
-/-- Fault 2 is caught: `5 + 5` is not `3 + 5`. -/
+/-- Fault 2 is caught: `3 + 3` is not `3 + 5`. -/
 theorem wrong_operand_is_caught :
     refuted ⟨agreeLeft, operandMutated, [2]⟩ (fun _ => 0) = true
     ∧ refuted agreePair (fun _ => 0) = false := by
@@ -131,11 +144,13 @@ theorem wrong_constant_is_caught :
     ∧ refuted agreePair (fun _ => 0) = false := by
   decide
 
-/-- Fault 4 is caught: asking the face for its outputs in the other order changes the
-ordered results, and the reference over the declared order catches it. -/
+/-- Fault 4 is caught: the two faces hold the same graph, so the per-position
+refutation sees nothing and a correct consumer's ordered report agrees, while the
+order-sensitive expectation catches the faulty consumer's swapped report. -/
 theorem wrong_output_order_is_caught :
-    refuted twoOutSwapped (fun _ => 0) = true
-    ∧ replayLeft twoOutSwapped (fun _ => 0) ≠ replayLeft twoOutPair (fun _ => 0) := by
+    refuted twoOutSwapped (fun _ => 0) = false
+    ∧ replayLeft twoOutSwapped (fun _ => 0) = replayRight twoOutSwapped (fun _ => 0)
+    ∧ orderedReportDiffers twoOutSwapped (fun _ => 0) = true := by
   decide
 
 /-- Fault 5 is caught: the corrupted witness round-trips at the slot it recorded, and
@@ -162,7 +177,7 @@ theorem all_declared_mutations_are_caught :
     (refuted ⟨agreeLeft, opMutated, [2]⟩ (fun _ => 0))
     && (refuted ⟨agreeLeft, operandMutated, [2]⟩ (fun _ => 0))
     && (refuted ⟨agreeLeft, constantMutated, [2]⟩ (fun _ => 0))
-    && (refuted twoOutSwapped (fun _ => 0))
+    && (orderedReportDiffers twoOutSwapped (fun _ => 0))
     && (decodeInputs (encodeShifted [0] (fun _ => 6)) 0 0 != 6)
     && (!refutedFirstOnly twoOutPair (fun _ => 0))
     && (refuted twoOutPair (fun _ => 0)) = true := by

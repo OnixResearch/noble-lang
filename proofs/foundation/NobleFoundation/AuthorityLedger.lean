@@ -12,41 +12,12 @@
   The model has bounded witnesses, a bounded attempt ledger, single-slot-free
   checkpoint charges and a finite serialized request prefix. Denials and
   preflight refusals leave the ledger unchanged; their changed request/effect
-  counters are deliberately outside the ledger state.
+  counters are deliberately outside the ledger state. Admission compares the
+  requested cost with the *cumulative* charge at the checkpoint against the
+  independently supplied snapshot, so the snapshot bound is enforced at the
+  transition rather than assumed as a separate premise.
 -/
 namespace NobleFoundation.AuthorityLedger
-
-/-- One independently supplied authorization fact bundle. Exact equality of
-    plan and grant is what admission checks; a model input that names only a
-    witness identity is not a capability. -/
-structure Facts where
-  plan : Nat
-  grant : Nat
-  requestedPlan : Nat
-  requestedGrant : Nat
-  sourceAuthentic : Bool
-  checkpointValid : Bool
-  policyLive : Bool
-  credentialsValid : Bool
-  revoked : Bool
-  cost : Nat
-  available : Nat
-deriving DecidableEq, Repr
-
-/-- Tie the two requested identities to the supplied ones: a claim is committed
-    only when the plan and grant facts equal what the request asked for. -/
-def FactsExact (facts : Facts) : Bool :=
-  facts.plan == facts.requestedPlan && facts.grant == facts.requestedGrant
-
-/-- Every independently checked precondition admission requires. -/
-def FactsAdmissible (facts : Facts) : Bool :=
-  FactsExact facts
-    && facts.sourceAuthentic
-    && facts.checkpointValid
-    && facts.policyLive
-    && facts.credentialsValid
-    && !facts.revoked
-    && decide (facts.cost ≤ facts.available)
 
 /-- A registered committed attempt. `started` records the at-most-once start. -/
 structure Attempt where
@@ -77,6 +48,47 @@ def chargedFor (checkpoint : Nat) (charges : List (Nat × Nat)) : Nat :=
     makes no cross-checkpoint conservation claim. -/
 abbrev Snapshot := Nat → Nat
 
+/-- One independently supplied authorization fact bundle. Exact equality of
+    plan and grant is what admission checks; a model input that names only a
+    witness identity is not a capability. -/
+structure Facts where
+  plan : Nat
+  grant : Nat
+  requestedPlan : Nat
+  requestedGrant : Nat
+  sourceAuthentic : Bool
+  checkpointValid : Bool
+  policyLive : Bool
+  credentialsValid : Bool
+  revoked : Bool
+  cost : Nat
+deriving DecidableEq, Repr
+
+/-- Tie the two requested identities to the supplied ones: a claim is committed
+    only when the plan and grant facts equal what the request asked for. -/
+def FactsExact (facts : Facts) : Bool :=
+  facts.plan == facts.requestedPlan && facts.grant == facts.requestedGrant
+
+/-- The cumulative quota component of admissibility, readable on its own. -/
+def WithinSnapshot (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (checkpoint : Nat) : Bool :=
+  decide (chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint)
+
+/-- Every independently checked precondition admission requires. The quota
+    comparison is cumulative: the charges already recorded at the checkpoint
+    plus the requested cost must fit the independently supplied snapshot. A
+    free per-request `available` field would let two requests each fit it and
+    jointly exceed the snapshot. -/
+def FactsAdmissible (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (checkpoint : Nat) : Bool :=
+  FactsExact facts
+    && facts.sourceAuthentic
+    && facts.checkpointValid
+    && facts.policyLive
+    && facts.credentialsValid
+    && !facts.revoked
+    && WithinSnapshot ledger snapshot facts checkpoint
+
 theorem chargedFor_cons_same (checkpoint : Nat) (charges : List (Nat × Nat)) (cost : Nat) :
     chargedFor checkpoint ((checkpoint, cost) :: charges) = cost + chargedFor checkpoint charges := by
   simp [chargedFor]
@@ -97,11 +109,14 @@ def consume (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledge
     separately recorded request/effect counters move. -/
 def refuse (ledger : Ledger) (_facts : Facts) : Ledger := ledger
 
-/-- One serialized request. Admission checks the exact facts *before* consuming
-    the witness; nothing here can start execution directly. -/
-def accept (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
+/-- One serialized request. Admission checks the exact facts, including the
+    cumulative checkpoint charge against the supplied snapshot, *before*
+    consuming the witness; nothing here can start execution directly. -/
+def accept (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (witness checkpoint : Nat) : Ledger :=
   if witness ∈ ledger.consumed then refuse ledger facts
-  else if FactsAdmissible facts then consume ledger facts witness checkpoint
+  else if FactsAdmissible ledger snapshot facts checkpoint then
+    consume ledger facts witness checkpoint
   else refuse ledger facts
 
 /-- Starting a registered attempt. `start` refuses an unregistered or already
@@ -163,60 +178,76 @@ theorem refused_request_preserves_ledger (ledger : Ledger) (facts : Facts) :
     refuse ledger facts = ledger := by
   rfl
 
-theorem denied_admission_preserves_ledger (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (already : witness ∈ ledger.consumed) :
-    accept ledger facts witness checkpoint = ledger := by
+/-- The cumulative quota comparison is exactly the last admissibility conjunct. -/
+theorem admissible_implies_within_snapshot (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (checkpoint : Nat)
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true) :
+    chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint := by
+  unfold FactsAdmissible WithinSnapshot at admissible
+  by_cases within : chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint
+  · exact within
+  · exfalso
+    have failed : decide (chargedFor checkpoint ledger.charges + facts.cost
+        ≤ snapshot checkpoint) = false := by
+      simp [within]
+    simp [failed] at admissible
+
+theorem denied_admission_preserves_ledger (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (already : witness ∈ ledger.consumed) :
+    accept ledger snapshot facts witness checkpoint = ledger := by
   simp [accept, already, refuse]
 
 /-- Admission of a fresh witness under admissible facts grows the consumed set by
     exactly that witness: one committed attempt per consumed witness. -/
-theorem admission_consumes_exactly_one_witness (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) :
-    (accept ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
+theorem admission_consumes_exactly_one_witness (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true) :
+    (accept ledger snapshot facts witness checkpoint).consumed = witness :: ledger.consumed := by
   simp [accept, fresh, admissible, consume]
 
-theorem admission_registers_one_attempt (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) :
-    (accept ledger facts witness checkpoint).attempts
+theorem admission_registers_one_attempt (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true) :
+    (accept ledger snapshot facts witness checkpoint).attempts
       = ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts := by
   simp [accept, fresh, admissible, consume]
 
 /-- The exact-plan comparison is not decorative: an altered requested plan fails
     admissibility and mints nothing. -/
-theorem altered_plan_cannot_mint (facts : Facts) (witness checkpoint : Nat)
-    (ledger : Ledger) (fresh : witness ∉ ledger.consumed) (altered : facts.plan ≠ facts.requestedPlan) :
-    accept ledger facts witness checkpoint = ledger := by
+theorem altered_plan_cannot_mint (facts : Facts) (snapshot : Snapshot)
+    (witness checkpoint : Nat) (ledger : Ledger) (fresh : witness ∉ ledger.consumed)
+    (altered : facts.plan ≠ facts.requestedPlan) :
+    accept ledger snapshot facts witness checkpoint = ledger := by
   have inexact : FactsExact facts = false := by
     simp [FactsExact, altered]
   simp [accept, fresh, FactsAdmissible, inexact, refuse]
 
 /-- A stale or revoked fact bundle likewise mints nothing. -/
-theorem stale_facts_cannot_mint (facts : Facts) (witness checkpoint : Nat)
-    (ledger : Ledger) (fresh : witness ∉ ledger.consumed)
+theorem stale_facts_cannot_mint (facts : Facts) (snapshot : Snapshot)
+    (witness checkpoint : Nat) (ledger : Ledger) (fresh : witness ∉ ledger.consumed)
     (stale : facts.revoked = true ∨ facts.checkpointValid = false
       ∨ facts.policyLive = false ∨ facts.sourceAuthentic = false) :
-    accept ledger facts witness checkpoint = ledger := by
-  have inadmissible : FactsAdmissible facts = false := by
+    accept ledger snapshot facts witness checkpoint = ledger := by
+  have inadmissible : FactsAdmissible ledger snapshot facts checkpoint = false := by
     rcases stale with broken | broken | broken | broken <;> simp [FactsAdmissible, broken]
   simp [accept, fresh, inadmissible, refuse]
 
 /-- A fresh witness under admissible facts reaches the consuming transition. -/
-theorem admission_is_consumption (ledger : Ledger) (facts : Facts)
+theorem admission_is_consumption (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) :
-    accept ledger facts witness checkpoint = consume ledger facts witness checkpoint := by
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true) :
+    accept ledger snapshot facts witness checkpoint = consume ledger facts witness checkpoint := by
   simp [accept, fresh, admissible]
 
 /-- One admission preserves the witness alignment: the consumed list and the
     attempt ledger grow together by the same witness. -/
-theorem admission_preserves_alignment (ledger : Ledger) (facts : Facts)
+theorem admission_preserves_alignment (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) (aligned : WitnessAlignment ledger) :
-    WitnessAlignment (accept ledger facts witness checkpoint) := by
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true)
+    (aligned : WitnessAlignment ledger) :
+    WitnessAlignment (accept ledger snapshot facts witness checkpoint) := by
   rcases aligned with ⟨lengths, members⟩
-  rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
+  rw [admission_is_consumption ledger snapshot facts witness checkpoint fresh admissible]
   refine ⟨by simp [consume, lengths], ?_⟩
   intro other member
   rcases List.mem_cons.mp member with added | old
@@ -227,11 +258,12 @@ theorem admission_preserves_alignment (ledger : Ledger) (facts : Facts)
 
 /-- One admission preserves witness uniqueness because it only adds a witness the
     ledger did not already consume. -/
-theorem admission_preserves_uniqueness (ledger : Ledger) (facts : Facts)
+theorem admission_preserves_uniqueness (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) (unique : WitnessUniqueness ledger) :
-    WitnessUniqueness (accept ledger facts witness checkpoint) := by
-  rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true)
+    (unique : WitnessUniqueness ledger) :
+    WitnessUniqueness (accept ledger snapshot facts witness checkpoint) := by
+  rw [admission_is_consumption ledger snapshot facts witness checkpoint fresh admissible]
   intro other member
   rcases List.mem_cons.mp member with added | old
   · rw [added]
@@ -251,23 +283,48 @@ theorem admission_preserves_uniqueness (ledger : Ledger) (facts : Facts)
     simp [head]
     exact unique other old
 
-/-- One admission preserves the checkpoint quota bound, given that the exact
-    committed cost still fits the snapshot for that checkpoint. -/
+/-- One admission preserves the checkpoint quota bound. The accepted checkpoint's
+    bound is no longer a separate premise: it is the cumulative comparison that
+    admissibility enforces, so an admission cannot push a checkpoint above its
+    snapshot. -/
 theorem admission_preserves_quota (ledger : Ledger) (facts : Facts) (snapshot : Snapshot)
     (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) (within : WithinQuota ledger snapshot)
-    (fits : chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint) :
-    WithinQuota (accept ledger facts witness checkpoint) snapshot := by
-  rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true)
+    (within : WithinQuota ledger snapshot) :
+    WithinQuota (accept ledger snapshot facts witness checkpoint) snapshot := by
+  rw [admission_is_consumption ledger snapshot facts witness checkpoint fresh admissible]
   intro other
   by_cases same : other = checkpoint
   · subst same
     simp [consume, chargedFor_cons_same]
+    have fits := admissible_implies_within_snapshot ledger snapshot facts other admissible
     simpa [Nat.add_comm] using fits
   · rw [show (consume ledger facts witness checkpoint).charges
       = (checkpoint, facts.cost) :: ledger.charges from rfl]
     rw [chargedFor_cons_other other checkpoint ledger.charges facts.cost (Ne.symm same)]
     exact within other
+
+/-- A ledger whose checkpoint 0 is already charged to its snapshot. -/
+def chargedLedger : Ledger :=
+  { consumed := [7], attempts := [⟨7, 0, 5, false⟩], charges := [(0, 5)] }
+
+/-- The checkpoint-0 snapshot of five. -/
+def fiveSnapshot : Snapshot := fun _ => 5
+
+/-- Otherwise-admissible facts costing one unit. -/
+def oneMoreFacts : Facts :=
+  { plan := 1, grant := 2, requestedPlan := 1, requestedGrant := 2, sourceAuthentic := true,
+    checkpointValid := true, policyLive := true, credentialsValid := true, revoked := false,
+    cost := 1 }
+
+/-- **The cumulative quota is enforced at admission**: five units are already
+    charged at checkpoint 0 against a snapshot of five, so a fresh witness costing
+    one more unit is refused and the ledger is unchanged. Under the old
+    per-request `cost ≤ available` test this admission succeeded and the charge
+    reached six. -/
+theorem exhausted_checkpoint_quota_refuses :
+    accept chargedLedger fiveSnapshot oneMoreFacts 8 0 = chargedLedger := by
+  decide
 
 /-- Starting an already started attempt is refused rather than counted twice. -/
 theorem started_attempt_cannot_start_again (ledger : Ledger) (attempt : Attempt)
@@ -285,11 +342,12 @@ theorem initial_attempts_charged : AttemptsCharged initial := by
   intro attempt member
   exact absurd member (by simp [initial])
 
-theorem admission_preserves_attempts_charged (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (admissible : FactsAdmissible facts = true) (charged : AttemptsCharged ledger) :
-    AttemptsCharged (accept ledger facts witness checkpoint) := by
-  rw [admission_is_consumption ledger facts witness checkpoint fresh admissible]
+theorem admission_preserves_attempts_charged (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
+    (admissible : FactsAdmissible ledger snapshot facts checkpoint = true)
+    (charged : AttemptsCharged ledger) :
+    AttemptsCharged (accept ledger snapshot facts witness checkpoint) := by
+  rw [admission_is_consumption ledger snapshot facts witness checkpoint fresh admissible]
   intro attempt member
   rcases List.mem_cons.mp member with added | old
   · rw [added]
@@ -338,67 +396,126 @@ theorem unchecked_reuse_breaks_uniqueness (ledger : Ledger) (facts : Facts)
   rw [lengths] at counted
   omega
 
+/-- Admissibility with the exact-plan comparison removed: the plan-blind mutant's
+    own precondition. -/
+def FactsAdmissibleIgnoringPlan (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (checkpoint : Nat) : Bool :=
+  facts.sourceAuthentic && facts.checkpointValid && facts.policyLive
+    && facts.credentialsValid && !facts.revoked
+    && decide (chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint)
+
 /-- Mutation control: an admission that ignores the exact plan comparison mints an
     attempt for an altered requested plan, so the comparison is load-bearing. -/
-def acceptIgnoringPlan (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
-  if witness ∈ ledger.consumed then ledger
-  else ⟨witness :: ledger.consumed,
-    ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts,
-    (checkpoint, facts.cost) :: ledger.charges⟩
+def acceptIgnoringPlan (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (witness checkpoint : Nat) : Ledger :=
+  if witness ∈ ledger.consumed then refuse ledger facts
+  else if FactsAdmissibleIgnoringPlan ledger snapshot facts checkpoint then
+    consume ledger facts witness checkpoint
+  else refuse ledger facts
 
-theorem plan_blind_admission_mints_altered_plan (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (_altered : facts.plan ≠ facts.requestedPlan) :
-    (acceptIgnoringPlan ledger facts witness checkpoint).consumed = witness :: ledger.consumed := by
-  simp [acceptIgnoringPlan, fresh]
+/-- Admissibility with checkpoint validity removed: the checkpoint-blind mutant's
+    own precondition. -/
+def FactsAdmissibleIgnoringCheckpoint (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (checkpoint : Nat) : Bool :=
+  FactsExact facts && facts.sourceAuthentic && facts.policyLive
+    && facts.credentialsValid && !facts.revoked
+    && decide (chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint)
 
 /-- Mutation control: an admission that ignores checkpoint validity charges stale
     facts, so checkpoint validation is load-bearing. -/
-def acceptIgnoringCheckpoint (ledger : Ledger) (facts : Facts) (witness checkpoint : Nat) : Ledger :=
-  if witness ∈ ledger.consumed then ledger
-  else ⟨witness :: ledger.consumed,
-    ⟨witness, checkpoint, facts.cost, false⟩ :: ledger.attempts,
-    (checkpoint, facts.cost) :: ledger.charges⟩
+def acceptIgnoringCheckpoint (ledger : Ledger) (snapshot : Snapshot) (facts : Facts)
+    (witness checkpoint : Nat) : Ledger :=
+  if witness ∈ ledger.consumed then refuse ledger facts
+  else if FactsAdmissibleIgnoringCheckpoint ledger snapshot facts checkpoint then
+    consume ledger facts witness checkpoint
+  else refuse ledger facts
 
-theorem checkpoint_blind_admission_mints_stale_checkpoint (ledger : Ledger) (facts : Facts)
-    (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
-    (_stale : facts.checkpointValid = false) :
-    (acceptIgnoringCheckpoint ledger facts witness checkpoint).attempts.length
-      = ledger.attempts.length + 1 := by
-  simp [acceptIgnoringCheckpoint, fresh]
+/-- The plan-blind mutant mints exactly where the real admission refuses: with the
+    plan altered but every other fact and the cumulative quota in order, it
+    consumes the witness while `accept` leaves the ledger unchanged. `altered` is
+    used in the proof, so the theorem is not true for arbitrary facts. -/
+theorem plan_blind_admission_mints_altered_plan (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
+    (altered : facts.plan ≠ facts.requestedPlan)
+    (authentic : facts.sourceAuthentic = true) (checkpointValid : facts.checkpointValid = true)
+    (live : facts.policyLive = true) (credentials : facts.credentialsValid = true)
+    (revoked : facts.revoked = false)
+    (within : chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint) :
+    (acceptIgnoringPlan ledger snapshot facts witness checkpoint).consumed
+        = witness :: ledger.consumed
+      ∧ accept ledger snapshot facts witness checkpoint = ledger := by
+  have exactFalse : FactsExact facts = false := by
+    simp [FactsExact, altered]
+  have mutantAdmissible : FactsAdmissibleIgnoringPlan ledger snapshot facts checkpoint = true := by
+    simp [FactsAdmissibleIgnoringPlan, authentic, checkpointValid, live, credentials, revoked,
+      within]
+  have realInadmissible : FactsAdmissible ledger snapshot facts checkpoint = false := by
+    simp [FactsAdmissible, exactFalse]
+  constructor
+  · simp [acceptIgnoringPlan, fresh, mutantAdmissible, consume]
+  · simp [accept, fresh, realInadmissible, refuse]
+
+/-- The checkpoint-blind mutant mints exactly where the real admission refuses:
+    with checkpoint validity false but the plan exact and the other facts in
+    order, it consumes the witness while `accept` leaves the ledger unchanged. -/
+theorem checkpoint_blind_admission_mints_stale_checkpoint (ledger : Ledger) (snapshot : Snapshot)
+    (facts : Facts) (witness checkpoint : Nat) (fresh : witness ∉ ledger.consumed)
+    (stale : facts.checkpointValid = false)
+    (exact : FactsExact facts = true)
+    (authentic : facts.sourceAuthentic = true)
+    (live : facts.policyLive = true) (credentials : facts.credentialsValid = true)
+    (revoked : facts.revoked = false)
+    (within : chargedFor checkpoint ledger.charges + facts.cost ≤ snapshot checkpoint) :
+    (acceptIgnoringCheckpoint ledger snapshot facts witness checkpoint).consumed
+        = witness :: ledger.consumed
+      ∧ accept ledger snapshot facts witness checkpoint = ledger := by
+  have mutantAdmissible : FactsAdmissibleIgnoringCheckpoint ledger snapshot facts checkpoint = true := by
+    simp [FactsAdmissibleIgnoringCheckpoint, exact, authentic, live, credentials, revoked, within]
+  have realInadmissible : FactsAdmissible ledger snapshot facts checkpoint = false := by
+    simp [FactsAdmissible, stale]
+  constructor
+  · simp [acceptIgnoringCheckpoint, fresh, mutantAdmissible, consume]
+  · simp [accept, fresh, realInadmissible, refuse]
 
 /-- A finite serialized prefix: admission, then one start of the last committed
     witness. Every step either preserves the ledger (refusal) or adds exactly one
     attempt (admission). -/
-def acceptPrefix (ledger : Ledger) (requests : List Facts) (checkpoint : Nat) : Ledger :=
-  requests.foldl (fun state facts => accept state facts state.consumed.length checkpoint) ledger
+def acceptPrefix (ledger : Ledger) (snapshot : Snapshot) (requests : List Facts)
+    (checkpoint : Nat) : Ledger :=
+  requests.foldl (fun state facts =>
+    accept state snapshot facts state.consumed.length checkpoint) ledger
 
 /-- Preservation over any finite serialized prefix: the consumed set length equals
     the attempt ledger length and every consumed witness names a registered
     attempt. -/
-theorem prefix_preserves_alignment (requests : List Facts) (checkpoint : Nat) :
+theorem prefix_preserves_alignment (snapshot : Snapshot) (requests : List Facts)
+    (checkpoint : Nat) :
     ∀ ledger : Ledger, WitnessAlignment ledger →
-      WitnessAlignment (acceptPrefix ledger requests checkpoint) := by
+      WitnessAlignment (acceptPrefix ledger snapshot requests checkpoint) := by
   induction requests with
   | nil => intro ledger aligned; exact aligned
   | cons facts rest induction =>
       intro ledger aligned
       unfold acceptPrefix
       rw [List.foldl_cons]
-      refine induction (accept ledger facts ledger.consumed.length checkpoint) ?_
+      refine induction (accept ledger snapshot facts ledger.consumed.length checkpoint) ?_
       by_cases present : ledger.consumed.length ∈ ledger.consumed
       · simp [accept, present]
         exact aligned
-      · by_cases admissible : FactsAdmissible facts = true
-        · exact admission_preserves_alignment ledger facts _ checkpoint present admissible aligned
+      · by_cases admissible : FactsAdmissible ledger snapshot facts checkpoint = true
+        · exact admission_preserves_alignment ledger snapshot facts _ checkpoint present
+            admissible aligned
         · simp [accept, present, admissible, refuse]
           exact aligned
 
-/-- Checkpoint renewal premise: a *fresh* snapshot that carries the prior charges
-    forward keeps the quota bound. Host replenishment that ignores reservations
-    is outside this premise rather than kernel-enforced safety. -/
-theorem renewed_snapshot_keeps_quota (ledger : Ledger) (_snapshot renewed : Snapshot)
-    (carried : ∀ checkpoint, chargedFor checkpoint ledger.charges ≤ renewed checkpoint) :
-    WithinQuota ledger renewed := carried
+/-- Checkpoint renewal is monotone: a ledger within one snapshot stays within every
+    snapshot that is at least as large at every checkpoint. This uses the existing
+    bound rather than restating it; host replenishment that lowers a snapshot
+    below the charges is outside this premise rather than kernel-enforced safety. -/
+theorem renewed_snapshot_keeps_quota (ledger : Ledger) (snapshot renewed : Snapshot)
+    (within : WithinQuota ledger snapshot)
+    (carried : ∀ checkpoint, snapshot checkpoint ≤ renewed checkpoint) :
+    WithinQuota ledger renewed :=
+  fun checkpoint => Nat.le_trans (within checkpoint) (carried checkpoint)
 
 end NobleFoundation.AuthorityLedger

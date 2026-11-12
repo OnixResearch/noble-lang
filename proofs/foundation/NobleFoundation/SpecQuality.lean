@@ -91,14 +91,17 @@ theorem not_deterministic_of_two_outputs (r : Relation) {params input out₁ out
   intro hdet
   exact hne (hdet params input out₁ out₂ hpre h₁ h₂)
 
-/-- A unique satisfying output under the precondition entails determinacy on
-that input. The premise is per input; this is not a claim that searching for a
-second output failed. -/
-theorem deterministic_of_unique_output (r : Relation)
-    (hunique : ∀ params input out₁ out₂,
-      r.pre params input → r.post params input out₁ → r.post params input out₂ →
-        out₁ = out₂) :
-    Deterministic r := hunique
+/-- A relation whose postcondition names its output by a function is
+deterministic on its admissible domain. Unlike a premise that repeats
+`Deterministic`'s definition, this requires exhibiting the function and
+proving every satisfying output equals it, so the proof rests on the
+relation's own functional definition rather than on restating the goal. -/
+theorem deterministic_of_functional_post (r : Relation)
+    (f : r.Params → r.Input → r.Output)
+    (hpost : ∀ params input out, r.post params input out → out = f params input) :
+    Deterministic r := by
+  intro params input out₁ out₂ _ h₁ h₂
+  rw [hpost params input out₁ h₁, hpost params input out₂ h₂]
 
 /-! ### The exact wrapping increment
 

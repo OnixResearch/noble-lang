@@ -118,10 +118,17 @@ theorem frozen_entry_map_reference_agrees (root : Root) (requests : List Nat) :
     pinned between them can select a mixed pair. -/
 def mixedMap (fresh : EntryMap) : EntryMap := publish fresh 0 2
 
-theorem mixed_map_selects_old_and_new (fresh : EntryMap) :
-    select (mixedMap fresh) 0 = some 2 := by
-  unfold mixedMap
-  exact publish_selects_the_published_generation fresh 0 2
+/-- A fresh two-slot registry: slots 0 and 1 both name generation 1. -/
+def twoSlotFresh : EntryMap :=
+  [{ key := 0, generation := 1 }, { key := 1, generation := 1 }]
+
+/-- **A map pinned after one single-slot publication mixes old and new**: slot 0
+    names the published generation 2 while slot 1 still names the old generation 1,
+    so the pair is neither all-old nor all-new. -/
+theorem mixed_map_selects_old_and_new :
+    select (mixedMap twoSlotFresh) 0 = some 2 ∧
+      select (mixedMap twoSlotFresh) 1 = some 1 := by
+  constructor <;> decide
 
 /-- A dispatch that is denied produces no guest event: authorization is checked
     at the dispatch even though the map selection is frozen. -/

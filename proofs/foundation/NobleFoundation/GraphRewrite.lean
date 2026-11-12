@@ -364,6 +364,19 @@ theorem foldGraph_reference :
     simp
   · exact checked_sound_const_add foldGraph hwf (fun _ => 0) 2 0 1 8 (by decide)
 
+/-- The fixture with the multiplication's right constant changed from one to two.
+    Node shapes and operand positions still match `oneRight`, so only the constant
+    bits can refuse the claim. -/
+def wrongBitsGraph : Graph where
+  arity := 5
+  output := 2
+  node := fun index =>
+    if index = 0 then .constant 3
+    else if index = 1 then .constant 5
+    else if index = 2 then .add 0 1
+    else if index = 3 then .constant 2
+    else .mul 2 3
+
 /-- The accepted claim about the fixture's addition is the true one. -/
 theorem fold_certificate_accepted :
     Checked foldGraph (.constAdd 2 0 1 8) = true := by
@@ -384,11 +397,15 @@ theorem wrong_rule_identity_refused :
     Checked foldGraph (.constAdd 0 0 1 3) = false := by
   decide
 
-/-- A wrong constant *bits* under a rule-shaped node is refused: change the fixture's
-one to a two and the one-identity certificate is rejected. -/
+/-- A wrong constant *bits* under a rule-shaped node is refused: the fixture and
+    `wrongBitsGraph` have the same multiplication and operand positions, and differ
+    only in the right constant (one against two). The refusal therefore comes from
+    the bit comparison, not from a node-shape or operand-position mismatch. -/
 theorem wrong_bits_refused :
-    Checked foldGraph (.oneRight 4 2 3) = true ∧
-      Checked foldGraph (.oneRight 4 3 2) = false := by
+    wrongBitsGraph.node 4 = .mul 2 3 ∧
+      wrongBitsGraph.node 3 = .constant 2 ∧
+      Checked foldGraph (.oneRight 4 2 3) = true ∧
+      Checked wrongBitsGraph (.oneRight 4 2 3) = false := by
   decide
 
 end NobleFoundation.GraphRewrite

@@ -134,6 +134,10 @@ deriving DecidableEq, Repr
 /-- The fixture index intentionally maps every manifest to the same key. -/
 def collidingIndex (_ : FixtureManifest) : Nat := 17
 
+/-- A non-colliding fixture index: each manifest version gets its own key. The stale-manifest
+    fixture uses it, so that fixture is not the same proposition as the collision miss. -/
+def distinctIndex (manifest : FixtureManifest) : Nat := manifest.version
+
 /-- First fixture manifest. -/
 def fixtureManifestOne : FixtureManifest := { version := 1 }
 
@@ -157,20 +161,41 @@ theorem colliding_index_wrong_manifest_misses :
         fixtureManifestTwo = none := by
   decide
 
-/-- A stale entry with the matching request key is refused by exact manifest comparison. -/
-theorem stale_manifest_entry_refused :
+/-- A hit exists even through a colliding index: the first entry names the other manifest, the
+    second the request, and the lookup returns the second entry's content. -/
+theorem colliding_index_hit_skips_wrong_manifest :
     lookup collidingIndex
-        [{ key := collidingIndex fixtureManifestTwo,
+        [{ key := collidingIndex fixtureManifestOne, storedManifest := fixtureManifestOne,
+           content := 41, verified := true },
+         { key := collidingIndex fixtureManifestTwo, storedManifest := fixtureManifestTwo,
+           content := 42, verified := true }]
+        fixtureManifestTwo = some 42 := by
+  decide
+
+/-- A stale entry under the request's own, non-colliding key is refused by exact manifest
+    comparison: `distinctIndex` gives the two manifests different keys, so only the stored manifest
+    can explain this refusal. -/
+theorem stale_manifest_entry_refused :
+    lookup distinctIndex
+        [{ key := distinctIndex fixtureManifestTwo,
            storedManifest := fixtureManifestOne, content := 41, verified := true }]
         fixtureManifestTwo = none := by
   decide
 
 /-- A matching key and manifest are still refused when verification is false. -/
 theorem corrupt_entry_refused :
-    lookup collidingIndex
-        [{ key := collidingIndex fixtureManifestTwo,
+    lookup distinctIndex
+        [{ key := distinctIndex fixtureManifestTwo,
            storedManifest := fixtureManifestTwo, content := 41, verified := false }]
         fixtureManifestTwo = none := by
+  decide
+
+/-- A matching key, manifest and verified entry is a hit. -/
+theorem matching_entry_hits :
+    lookup distinctIndex
+        [{ key := distinctIndex fixtureManifestTwo,
+           storedManifest := fixtureManifestTwo, content := 42, verified := true }]
+        fixtureManifestTwo = some 42 := by
   decide
 
 /-- Erasing the only entry removes a hit and does not manufacture one. -/

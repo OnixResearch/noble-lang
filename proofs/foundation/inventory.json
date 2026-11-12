@@ -565,7 +565,7 @@
       "name": "NobleFoundation.branchVisits_selected",
       "phase": 4,
       "role": "emi-branch",
-      "claim": "selected-branch visit vector is [1,0] for left and [0,1] for right"
+      "claim": "the declared selector projection has one selected and one untaken entry; it is not execution evidence"
     },
     {
       "name": "NobleFoundation.stackTyped_length",
@@ -1387,7 +1387,7 @@
       "name": "NobleFoundation.LinkBoundary.wrong_return_target_refused",
       "phase": 3,
       "role": "negative-control",
-      "claim": "a different continuation index is not the exact caller return target"
+      "claim": "the immediate-return mutant that dispatches the caller slot is refused: the first dispatch of a scheduled call selects the callee slot"
     },
     {
       "name": "NobleFoundation.LinkBoundary.return_target_exact",
@@ -1531,7 +1531,7 @@
       "name": "NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even",
       "phase": 5,
       "role": "binary32-reference",
-      "claim": "halfway ties round to even in both directions"
+      "claim": "halfway ties round to even, and the 3*2^-24 tie distinguishes ties-to-even from truncation"
     },
     {
       "name": "NobleFoundation.Binary32.Expectations.signed_zero_rules",
@@ -1591,7 +1591,7 @@
       "name": "NobleFoundation.Binary32.Mutations.flush_to_zero_is_caught",
       "phase": 5,
       "role": "binary32-mutation-lane",
-      "claim": "flush-to-zero removes the retained smallest and largest subnormals"
+      "claim": "flush-to-zero removes the retained smallest subnormal and the retained normal-boundary subnormal"
     },
     {
       "name": "NobleFoundation.Binary32.Mutations.zero_sign_collapse_is_caught",
@@ -1810,10 +1810,10 @@
       "claim": "the record suffix closes the prefix's bracket and opens none, so the scan reaches at most depth one"
     },
     {
-      "name": "NobleFoundation.ServiceWire.unbalanced_closers_do_not_count_toward_the_depth",
+      "name": "NobleFoundation.ServiceWire.closers_below_zero_depth_do_not_reduce_the_reached_depth",
       "phase": 3,
       "role": "service-ref-codec",
-      "claim": "an input with stray openers and a closing byte below zero depth is a schema failure at depth two, not a depth failure"
+      "claim": "a closer at depth zero does not reduce the reached depth; the stray closer is a schema failure, not a depth failure"
     },
     {
       "name": "NobleFoundation.Ownership.duplicable_iff",
@@ -2155,7 +2155,7 @@
       "name": "NobleFoundation.AuthorityLedger.admission_preserves_quota",
       "phase": 1,
       "role": "preservation",
-      "claim": "One admission keeps checkpoint charges within the supplied snapshot when the acquired cost fits."
+      "claim": "one admission keeps checkpoint charges within the snapshot; the accepted checkpoint's bound is enforced by admissibility rather than assumed"
     },
     {
       "name": "NobleFoundation.AuthorityLedger.started_attempt_cannot_start_again",
@@ -2191,13 +2191,13 @@
       "name": "NobleFoundation.AuthorityLedger.plan_blind_admission_mints_altered_plan",
       "phase": 1,
       "role": "control",
-      "claim": "An admission ignoring exact plan equality mints an altered-plan attempt."
+      "claim": "a plan-blind admission mints an altered-plan attempt where the exact admission refuses, so exact plan equality is load-bearing"
     },
     {
       "name": "NobleFoundation.AuthorityLedger.checkpoint_blind_admission_mints_stale_checkpoint",
       "phase": 1,
       "role": "control",
-      "claim": "An admission ignoring checkpoint validity registers an attempt on stale facts."
+      "claim": "a checkpoint-blind admission mints a stale-checkpoint attempt where the exact admission refuses, so checkpoint validation is load-bearing"
     },
     {
       "name": "NobleFoundation.AuthorityLedger.prefix_preserves_alignment",
@@ -2209,7 +2209,7 @@
       "name": "NobleFoundation.AuthorityLedger.renewed_snapshot_keeps_quota",
       "phase": 1,
       "role": "premise",
-      "claim": "A renewal snapshot that carries prior charges forward keeps the quota bound; host replenishment is a premise."
+      "claim": "a ledger within a snapshot stays within any renewed snapshot that is at least as large at every checkpoint"
     },
     {
       "name": "NobleFoundation.SpecQuality.realizable_of_uninhabited",
@@ -2230,10 +2230,10 @@
       "claim": "Two distinct satisfying outputs for one admissible input refute determinacy."
     },
     {
-      "name": "NobleFoundation.SpecQuality.deterministic_of_unique_output",
+      "name": "NobleFoundation.SpecQuality.deterministic_of_functional_post",
       "phase": 1,
       "role": "specification-quality",
-      "claim": "Per-input uniqueness entails determinacy; no output-search failure is claimed."
+      "claim": "a relation whose postcondition names its output by a function is deterministic on its admissible domain, proved from that definition rather than by restating determinacy"
     },
     {
       "name": "NobleFoundation.SpecQuality.increment_inhabited",
@@ -2390,12 +2390,6 @@
       "phase": 3,
       "role": "specification-quality",
       "claim": "on the checked fixture the sweep's accumulated adjoints pair with the declared direction to exactly the tangent"
-    },
-    {
-      "name": "NobleFoundation.ReverseAD.the_overwriting_update_pairs_to_four",
-      "phase": 3,
-      "role": "specification-quality",
-      "claim": "an overwriting update pairs to four on the fixture's second slot"
     },
     {
       "name": "NobleFoundation.ReverseAD.the_sweep_pairs_to_eight_on_the_second_slot",
@@ -2839,7 +2833,7 @@
       "name": "NobleFoundation.GraphRewrite.wrong_bits_refused",
       "phase": 1,
       "role": "negative-control",
-      "claim": "The right-one claim is accepted only at the exact operand positions and refused when swapped."
+      "claim": "the right-one claim is refused when only the constant bits differ, so the bit comparison rather than the node shape refuses it"
     },
     {
       "name": "NobleFoundation.SymbolicPair.lookup_returns_recorded",
@@ -3367,7 +3361,7 @@
       "name": "NobleFoundation.TaskInterleaving.abnormal_failure_survives_refused_and_acquired_actions",
       "phase": 6,
       "role": "task-interleaving",
-      "claim": "a recorded abnormal failure survives refused and acquired actions"
+      "claim": "a recorded abnormal failure survives a real refusal and a later admitted action"
     },
     {
       "name": "NobleFoundation.TaskInterleaving.first_failure_code_is_kept_as_the_sticky_one",
@@ -3973,7 +3967,7 @@
       "name": "NobleFoundation.SymbolicPair.Mutations.wrong_output_order_is_caught",
       "phase": 2,
       "role": "symbolic-mutation-lane",
-      "claim": "Reversing the declared ordered outputs changes the ordered results, and the reference over the declared order catches it."
+      "claim": "The right consumer is asked for its ordered results in the other order while both faces hold the same graph; the per-position refutation sees nothing and the order-sensitive report comparison catches it."
     },
     {
       "name": "NobleFoundation.SymbolicPair.Mutations.shifted_encoding_is_caught",
@@ -4792,13 +4786,13 @@
       "claim": "the exhaustive Boolean equivalence checker implies equality on every model valuation"
     },
     {
-      "name": "NobleFoundation.Isop.isop_exact",
+      "name": "NobleFoundation.Isop.shannon_exact",
       "phase": 1,
       "role": "isop",
       "claim": "the exact cofactor recurrence evaluates to its input Boolean function on every valuation"
     },
     {
-      "name": "NobleFoundation.Isop.isop_bounds",
+      "name": "NobleFoundation.Isop.shannon_bounds",
       "phase": 1,
       "role": "isop-bounds",
       "claim": "an exact-mode cover lies pointwise inside every support interval lower bound through upper bound"
@@ -5401,13 +5395,13 @@
       "name": "NobleFoundation.CacheLookup.stale_manifest_entry_refused",
       "phase": 1,
       "role": "negative-control",
-      "claim": "a stale stored manifest is refused despite a matching request index"
+      "claim": "a stale stored manifest is refused under the request's own non-colliding key"
     },
     {
       "name": "NobleFoundation.CacheLookup.corrupt_entry_refused",
       "phase": 1,
       "role": "negative-control",
-      "claim": "an unverified matching entry is refused"
+      "claim": "an unverified entry with a matching key and manifest is refused"
     },
     {
       "name": "NobleFoundation.CacheLookup.erase_hit_disappears",
@@ -5497,7 +5491,7 @@
       "name": "NobleFoundation.ConstructorReuse.reuseStep_replaces_unique_root",
       "phase": 1,
       "role": "reuse-model",
-      "claim": "under one root occurrence the replacement is observed at the reused address and every other root is unchanged"
+      "claim": "under one root occurrence the replacement is observed at the reused address, changes exactly that occurrence when the cell differs, and leaves every other root unchanged"
     },
     {
       "name": "NobleFoundation.ConstructorReuse.reuseStep_initializes_requested_cell",
@@ -5527,7 +5521,7 @@
       "name": "NobleFoundation.ConstructorReuse.shared_alias_control",
       "phase": 1,
       "role": "negative-control",
-      "claim": "two roots at one address observe a changed value after overwrite, so shared aliases fail the reuse control"
+      "claim": "two aliases at one address both observe the overwrite, so the reuse contract's uniqueness premise is load-bearing"
     },
     {
       "name": "NobleFoundation.Binary32.Sgd.update_preserves_shape",
@@ -6757,7 +6751,7 @@
       "name": "NobleFoundation.Binary32.Checker.mismatch_is_not_an_unknown_outcome",
       "phase": 2,
       "role": "negative-control",
-      "claim": "a context mismatch is its own refusal class, never unknown, unsupported or exhausted"
+      "claim": "a context mismatch is notApplicable where the ungated checker certifies, and is never unknown, unsupported or exhausted for any payload"
     },
     {
       "name": "NobleFoundation.Binary32.Checker.Encoded.cancellation_certified",
@@ -7496,6 +7490,114 @@
       "phase": 1,
       "role": "unification-scope",
       "claim": "rebasal acts on exactly the level occurrences of a proposition and on nothing else"
+    },
+    {
+      "name": "NobleFoundation.Isop.majority_cover_has_a_nonprime_cube",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the majority cover contains a cube that a strictly wider implicant subsumes, so the recurrence is a Shannon cover, not a prime cover"
+    },
+    {
+      "name": "NobleFoundation.TaskInterleaving.equal_observation_does_not_preserve_enabledness",
+      "phase": 6,
+      "role": "task-interleaving",
+      "claim": "two prefixes with equal documented observations can differ on whether a following action is accepted, so the observation does not preserve enabledness"
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.admissible_implies_within_snapshot",
+      "phase": 1,
+      "role": "preservation",
+      "claim": "admissibility's cumulative quota comparison is exactly the last conjunct: an admissible request fits the checkpoint snapshot"
+    },
+    {
+      "name": "NobleFoundation.AuthorityLedger.exhausted_checkpoint_quota_refuses",
+      "phase": 1,
+      "role": "control",
+      "claim": "a checkpoint already charged to its snapshot refuses one more unit and leaves the ledger unchanged"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.colliding_index_hit_skips_wrong_manifest",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a colliding index still yields a hit: the wrong-manifest entry is skipped and the matching one is returned"
+    },
+    {
+      "name": "NobleFoundation.CacheLookup.matching_entry_hits",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a matching key, manifest and verified entry is a cache hit"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.codeShift_comp",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing codes composes: shifting by f then g is shifting by g after f"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.codeShift_id",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing codes by the identity changes no code"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.codeLevels_shift",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing a code maps exactly its variable-level occurrences"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.SortT.shift_comp",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing sorts composes: shifting by f then g is shifting by g after f"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.SortT.shift_id",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing a sort by the identity changes nothing"
+    },
+    {
+      "name": "NobleFoundation.ImplicitPropositions.SortT.levels_shift",
+      "phase": 1,
+      "role": "unification-scope",
+      "claim": "rebasing a sort maps exactly the variable levels of the code it carries"
+    },
+    {
+      "name": "NobleFoundation.InteractionNet.third_input_cannot_feed_an_operand",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "an input slot of 2 or more cannot feed an operand under the per-edge slot equality"
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.slot_count_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "a slot table whose entry count differs from the interface-slot node count is refused"
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.slot_duplicate_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "a slot table that names one interface slot twice is refused"
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.two_slot_layout_accepted",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "the two-slot declaration satisfies the slot count and uniqueness obligations, so they are satisfiable"
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.empty_slot_table_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "an empty slot table is refused by the count obligation"
+    },
+    {
+      "name": "NobleFoundation.PackedLayout.duplicated_slot_table_refused",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
     }
   ]
 }

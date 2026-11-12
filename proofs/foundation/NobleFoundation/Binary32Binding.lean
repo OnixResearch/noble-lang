@@ -28,7 +28,9 @@
     pass the six refusals and fail the matching-context witness, so both are stated.
 
   This remains a statement about the exact reference model. No analyzer, Rust, Wasm or host
-  correspondence is claimed, and an encoded `noble-ngraph` graph is still not bound.
+  correspondence is claimed. `Binary32CheckerBound` binds two encoded `noble-ngraph` graphs by the
+  context literals its generator computed; this file still does not compute, decode or relate any
+  identity, so a forged identity that compares equal to itself is not ruled out.
 -/
 import NobleFoundation.Binary32Checker
 
@@ -152,15 +154,32 @@ theorem stale_model_is_not_applicable :
   decide +kernel
 
 set_option maxRecDepth 100000 in
-/-- **A mismatch never reports a failed check.** The refusal class stays distinct from `unknown`,
-`unsupported` and `exhausted` for a case whose unbounded certificate would certify. -/
+/-- **A mismatch never reports a failed check, and the gate is load-bearing.** The same certificate
+under the *ungated* checker is `certified`, so the gated outcome differs from the ungated one; the
+gated outcome stays outside `unknown`, `unsupported` and `exhausted` for every payload, not only
+payload zero. -/
 theorem mismatch_is_not_an_unknown_outcome :
-    checkBound fixtureBudget cancellationGraph certificateContext
-        { certificateContext with model := 6 } cancellationCertificate ≠ .unknown 0 ∧
+    check fixtureBudget cancellationGraph cancellationCertificate = .certified ∧
       checkBound fixtureBudget cancellationGraph certificateContext
-        { certificateContext with model := 6 } cancellationCertificate ≠ .unsupported 0 ∧
+        { certificateContext with model := 6 } cancellationCertificate = .notApplicable ∧
+      (∀ payload, checkBound fixtureBudget cancellationGraph certificateContext
+        { certificateContext with model := 6 } cancellationCertificate ≠ .unknown payload) ∧
+      (∀ payload, checkBound fixtureBudget cancellationGraph certificateContext
+        { certificateContext with model := 6 } cancellationCertificate ≠ .unsupported payload) ∧
       checkBound fixtureBudget cancellationGraph certificateContext
         { certificateContext with model := 6 } cancellationCertificate ≠ .exhausted := by
-  decide +kernel
+  have gated : checkBound fixtureBudget cancellationGraph certificateContext
+      { certificateContext with model := 6 } cancellationCertificate = .notApplicable := by
+    decide +kernel
+  refine ⟨?_, gated, ?_, ?_, ?_⟩
+  · decide +kernel
+  · intro payload
+    rw [gated]
+    simp
+  · intro payload
+    rw [gated]
+    simp
+  · rw [gated]
+    simp
 
 end NobleFoundation.Binary32.Checker
