@@ -142,6 +142,7 @@ impl Host {
         Ok(Self {
             limits: StoreLimitsBuilder::new()
                 .memory_size(4_194_304)
+                .table_elements(16_384)
                 .instances(16)
                 .tables(16)
                 .build(),

@@ -406,6 +406,7 @@ impl Host {
         Ok(Self {
             limits: StoreLimitsBuilder::new()
                 .memory_size(4_194_304)
+                .table_elements(16_384)
                 .instances(16)
                 .tables(16)
                 .build(),
@@ -1522,8 +1523,8 @@ mod ordered_trace_tests {
 #[cfg(test)]
 mod report_v2_tests {
     use super::{
-        options, outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent, Invocation,
-        Operation, Options, RefusalClass, Release, ResponseKind, Schema, FUEL,
+        execute, options, outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent,
+        Invocation, Operation, Options, RefusalClass, Release, ResponseKind, Schema, FUEL,
     };
     use crate::workflow::encoding::Json;
     use std::ffi::OsString;
@@ -1818,5 +1819,51 @@ mod report_v2_tests {
         assert!(with(&["--fuel", "0"]).is_err());
         assert!(with(&["--fuel", "10000001"]).is_err());
         assert!(with(&["--fuel", "10000000"]).is_ok());
+    }
+
+    /// The component adapters cap table elements (16,384, as the worker guest
+    /// does); Wasmtime's own default leaves tables unlimited, so a component with a
+    /// larger table must be refused at instantiation rather than allocated. The
+    /// component below is a hand-encoded core module section whose only content is
+    /// `(table 16385 funcref)`, instantiated by an empty core instance section.
+    #[test]
+    fn a_component_table_above_the_element_limit_is_refused_at_instantiation() {
+        let mut component = vec![0x00, 0x61, 0x73, 0x6d, 0x0d, 0x00, 0x01, 0x00];
+        // Core module section (id 1, 16 bytes): `(module (table 16385 funcref))`.
+        component.extend([0x01, 0x10]);
+        component.extend([
+            0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, // core module header
+            0x04, 0x06, // table section, 6 bytes
+            0x01, // one table
+            0x70, 0x00, // funcref, min only
+            0x81, 0x80, 0x01, // 16385, one above the limit
+        ]);
+        // Core instance section (id 2, 4 bytes): instantiate module 0 with no args.
+        component.extend([0x02, 0x04, 0x01, 0x00, 0x00, 0x00]);
+        let path = std::env::temp_dir().join(format!(
+            "noble-bounded-region-{}-{}.component.wasm",
+            std::process::id(),
+            super::super::identity::reserve(1).unwrap()
+        ));
+        std::fs::write(&path, &component).expect("write hostile component fixture");
+        let arguments: Vec<OsString> = [
+            OsString::from("noble"),
+            OsString::from("read-region"),
+            path.clone().into_os_string(),
+            OsString::from("00"),
+            OsString::from("0"),
+            OsString::from("0"),
+        ]
+        .into_iter()
+        .collect();
+        let Err(error) = execute(&arguments) else {
+            panic!("an oversized table was not refused");
+        };
+        let message = format!("{error:#}");
+        std::fs::remove_file(&path).expect("remove hostile component fixture");
+        assert!(
+            message.contains("table minimum size"),
+            "the table element limit must refuse instantiation: {message}"
+        );
     }
 }
