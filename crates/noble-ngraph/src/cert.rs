@@ -1,8 +1,8 @@
 //! Replayable certificates for a small set of pure `I64` graph rewrites.
 //!
 //! The transformation stays untrusted. A certificate names, per rewritten node, the
-//! rule identity, the ordered operand identities, the exact constant bits the rule
-//! consumed and the value it claims. [`check`] validates those premises against the
+//! rule identity, the ordered operand identities, and the constant bits and claim each
+//! rule requires in canonical form. [`check`] validates those premises against the
 //! original graph without calling the emitter, replays the folds on a copy of the
 //! original and requires the resulting graph to equal that replay, and endpoint digests
 //! bind the exact original and resulting graphs. A digest alone binds the result the
@@ -49,6 +49,19 @@ impl Rule {
 }
 
 /// One derivation step: the whole premise, in ordered form.
+///
+/// Every field is canonical for the rule and [`check`] refuses a step that is not:
+///
+/// - [`Rule::FoldAddConstants`]: `first_bits` and `second_bits` are the exact bits of
+///   the two operand constants, and `claimed` is their wrapping sum.
+/// - [`Rule::NeutralAddLeft`]: the first operand is the graph constant `0`, `first_bits`
+///   is `0`, `second_bits` equals `first_bits`, and `claimed` is `0`.
+/// - [`Rule::NeutralMulRight`]: the second operand is the graph constant `1`,
+///   `second_bits` is `1`, `first_bits` equals `second_bits`, and `claimed` is `0`.
+///
+/// An identity step records the cancelled identity element in both bit fields and
+/// claims the other identity, `0`; it never claims the rewritten node's value, which
+/// the surviving operand carries at run time.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Step {
     /// Rule identity.
@@ -57,11 +70,11 @@ pub struct Step {
     pub node: crate::ir::NodeId,
     /// Ordered operand identities, destination order preserved.
     pub operands: [crate::ir::NodeId; 2],
-    /// The exact bits of the first operand's constant.
+    /// The first recorded constant bits, canonical for the rule.
     pub first_bits: u64,
-    /// The exact bits of the second operand's constant.
+    /// The second recorded constant bits, canonical for the rule.
     pub second_bits: u64,
-    /// The claimed value of the rewritten node.
+    /// The claimed value: the folded sum, or `0` for an identity step.
     pub claimed: u64,
 }
 
@@ -135,10 +148,11 @@ fn wrapping_add(first: u64, second: u64) -> u64 {
     first.wrapping_add(second)
 }
 
-/// Emits a derivation for every foldable and identity node, and the resulting
-/// graph in which each foldable addition is replaced, in place, by its constant.
-/// Identity rewrites are recorded but not applied here: replacing `0 + x` by `x`
-/// in place would change the node's identity, which is a separate contract.
+/// Emits a derivation for every `I64` addition of two exact constants and every
+/// `x * 1` multiplication, with the resulting graph in which each such addition is
+/// replaced, in place, by its constant. The `x * 1` steps are recorded canonical but
+/// not applied: replacing the node would change its identity, which is a separate
+/// contract. `0 + x` is not recorded at all.
 #[must_use]
 pub fn emit(ids: &dyn IdentityScheme, graph: &crate::ir::Graph) -> (Derivation, crate::ir::Graph) {
     let mut result = graph.clone();
@@ -169,13 +183,14 @@ pub fn emit(ids: &dyn IdentityScheme, graph: &crate::ir::Graph) -> (Derivation, 
                 }
             }
             crate::ir::Op::I64Mul(first, second) if constant_bits(graph, second) == Some(1) => {
-                let one = constant_bits(graph, second).unwrap_or(0);
                 steps.push(Step {
                     rule: Rule::NeutralMulRight,
                     node: crate::ir::NodeId(index),
                     operands: [first, second],
-                    first_bits: one,
-                    second_bits: one,
+                    // Canonical identity premise: both recorded bit fields hold the
+                    // cancelled identity `1`, and the claim is the other identity `0`.
+                    first_bits: 1,
+                    second_bits: 1,
                     claimed: 0,
                 });
             }
@@ -345,8 +360,9 @@ fn replay(graph: &crate::ir::Graph, derivation: &Derivation) -> Result<crate::ir
 
 /// Validates a derivation against the original and the resulting graph. The
 /// operand order is compared, never re-derived from the claimed value, every
-/// declared constant is compared against the graph's own bits, and the resulting
-/// graph must equal the original with the folds replayed.
+/// recorded bit field and claim must be the canonical one for its rule (see
+/// [`Step`]), and the resulting graph must equal the original with the folds
+/// replayed.
 pub fn check(
     ids: &dyn IdentityScheme,
     graph: &crate::ir::Graph,
@@ -385,15 +401,27 @@ pub fn check(
                 }
             }
             (Rule::NeutralAddLeft, &crate::ir::Op::I64Add(first, second)) => {
+                // Canonical identity step: the consumed operand is the graph's own
+                // constant zero, both recorded bit fields hold that constant, and the
+                // claim is the cancelled identity.
                 if step.operands != [first, second]
-                    || checked_bits(graph, first, step.first_bits)? != 0
+                    || constant_bits(graph, first) != Some(0)
+                    || step.first_bits != 0
+                    || step.second_bits != step.first_bits
+                    || step.claimed != 0
                 {
                     return Err(Refusal::Malformed);
                 }
             }
             (Rule::NeutralMulRight, &crate::ir::Op::I64Mul(first, second)) => {
+                // Canonical identity step: the consumed operand is the graph's own
+                // constant one, both recorded bit fields hold that constant, and the
+                // claim is the cancelled identity.
                 if step.operands != [first, second]
-                    || checked_bits(graph, second, step.second_bits)? != 1
+                    || constant_bits(graph, second) != Some(1)
+                    || step.second_bits != 1
+                    || step.first_bits != step.second_bits
+                    || step.claimed != 0
                 {
                     return Err(Refusal::Malformed);
                 }
@@ -614,5 +642,270 @@ mod tests {
             super::check(&scheme, &graph, &result, &redigested(&derivation, &result)),
             Ok(())
         );
+    }
+
+    /// A derivation over `steps` whose endpoints are both `graph`: identity steps are
+    /// recorded without changing it.
+    fn identity_derivation(
+        graph: &crate::ir::Graph,
+        steps: alloc::vec::Vec<super::Step>,
+    ) -> super::Derivation {
+        let scheme = TestIds;
+        super::Derivation {
+            revision: alloc::string::String::from(super::CERT_REVISION),
+            steps,
+            left: graph.logical_id(&scheme),
+            right: graph.logical_id(&scheme),
+        }
+    }
+
+    /// `zero + x` with `x` a program input: the canonical `neutral-add-left` premise.
+    fn neutral_add_left() -> (
+        crate::ir::Graph,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+    ) {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-neutral-add-left"),
+        );
+        let zero = builder.i64_const(0);
+        let input = builder.input(crate::ir::ScalarType::I64);
+        let sum = builder.op(crate::ir::Op::I64Add(zero, input));
+        builder.output(sum);
+        (builder.finish(), zero, input, sum)
+    }
+
+    /// `x * 1` with `x` a program input: the canonical `neutral-mul-right` premise.
+    fn neutral_mul_right() -> (
+        crate::ir::Graph,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+    ) {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-neutral-mul-right"),
+        );
+        let input = builder.input(crate::ir::ScalarType::I64);
+        let one = builder.i64_const(1);
+        let product = builder.op(crate::ir::Op::I64Mul(input, one));
+        builder.output(product);
+        (builder.finish(), one, input, product)
+    }
+
+    /// `x + 0` with `x` a program input: the operands of `neutral-add-left` in the
+    /// other order, so its premise does not hold. Returns the graph and a premise-shaped
+    /// step over it.
+    fn swapped_sum() -> (crate::ir::Graph, super::Step) {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-neutral-add-left-swapped"),
+        );
+        let input = builder.input(crate::ir::ScalarType::I64);
+        let zero = builder.i64_const(0);
+        let sum = builder.op(crate::ir::Op::I64Add(input, zero));
+        builder.output(sum);
+        let step = super::Step {
+            rule: super::Rule::NeutralAddLeft,
+            node: sum,
+            operands: [input, zero],
+            first_bits: 0,
+            second_bits: 0,
+            claimed: 0,
+        };
+        (builder.finish(), step)
+    }
+
+    /// `1 * x` with `x` a program input: the operands of `neutral-mul-right` in the
+    /// other order, so its premise does not hold. Returns the graph and a premise-shaped
+    /// step over it.
+    fn swapped_mul() -> (crate::ir::Graph, super::Step) {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-neutral-mul-right-swapped"),
+        );
+        let input = builder.input(crate::ir::ScalarType::I64);
+        let one = builder.i64_const(1);
+        let product = builder.op(crate::ir::Op::I64Mul(one, input));
+        builder.output(product);
+        let step = super::Step {
+            rule: super::Rule::NeutralMulRight,
+            node: product,
+            operands: [one, input],
+            first_bits: 1,
+            second_bits: 1,
+            claimed: 0,
+        };
+        (builder.finish(), step)
+    }
+
+    #[test]
+    fn a_canonical_neutral_add_left_step_is_accepted_and_every_field_is_bound() {
+        let (graph, zero, input, sum) = neutral_add_left();
+        let scheme = TestIds;
+        let canonical = super::Step {
+            rule: super::Rule::NeutralAddLeft,
+            node: sum,
+            operands: [zero, input],
+            first_bits: 0,
+            second_bits: 0,
+            claimed: 0,
+        };
+        assert_eq!(
+            super::check(
+                &scheme,
+                &graph,
+                &graph,
+                &identity_derivation(&graph, alloc::vec![canonical])
+            ),
+            Ok(()),
+            "the canonical `0 + x` step is accepted"
+        );
+        for (field, mutant) in [
+            (
+                "first_bits",
+                super::Step {
+                    first_bits: 1,
+                    ..canonical
+                },
+            ),
+            (
+                "second_bits",
+                super::Step {
+                    second_bits: 1,
+                    ..canonical
+                },
+            ),
+            (
+                "claimed",
+                super::Step {
+                    claimed: 1,
+                    ..canonical
+                },
+            ),
+        ] {
+            assert_eq!(
+                super::check(
+                    &scheme,
+                    &graph,
+                    &graph,
+                    &identity_derivation(&graph, alloc::vec![mutant])
+                ),
+                Err(super::Refusal::Malformed),
+                "a mutated {field} is not a canonical identity premise"
+            );
+        }
+        // The rule consumes its first operand only when the graph spells it as constant zero.
+        let (swapped, swapped_step) = swapped_sum();
+        assert_eq!(
+            super::check(
+                &scheme,
+                &swapped,
+                &swapped,
+                &identity_derivation(&swapped, alloc::vec![swapped_step])
+            ),
+            Err(super::Refusal::Malformed),
+            "`x + 0` is not the `neutral-add-left` premise"
+        );
+    }
+
+    #[test]
+    fn a_canonical_neutral_mul_right_step_is_accepted_and_every_field_is_bound() {
+        let (graph, one, input, product) = neutral_mul_right();
+        let scheme = TestIds;
+        let canonical = super::Step {
+            rule: super::Rule::NeutralMulRight,
+            node: product,
+            operands: [input, one],
+            first_bits: 1,
+            second_bits: 1,
+            claimed: 0,
+        };
+        assert_eq!(
+            super::check(
+                &scheme,
+                &graph,
+                &graph,
+                &identity_derivation(&graph, alloc::vec![canonical])
+            ),
+            Ok(()),
+            "the canonical `x * 1` step is accepted"
+        );
+        for (field, mutant) in [
+            (
+                "first_bits",
+                super::Step {
+                    first_bits: 0,
+                    ..canonical
+                },
+            ),
+            (
+                "second_bits",
+                super::Step {
+                    second_bits: 0,
+                    ..canonical
+                },
+            ),
+            (
+                "claimed",
+                super::Step {
+                    claimed: u64::MAX,
+                    ..canonical
+                },
+            ),
+        ] {
+            assert_eq!(
+                super::check(
+                    &scheme,
+                    &graph,
+                    &graph,
+                    &identity_derivation(&graph, alloc::vec![mutant])
+                ),
+                Err(super::Refusal::Malformed),
+                "a mutated {field} is not a canonical identity premise"
+            );
+        }
+        // The rule consumes its second operand only when the graph spells it as constant one.
+        let (swapped, swapped_step) = swapped_mul();
+        assert_eq!(
+            super::check(
+                &scheme,
+                &swapped,
+                &swapped,
+                &identity_derivation(&swapped, alloc::vec![swapped_step])
+            ),
+            Err(super::Refusal::Malformed),
+            "`1 * x` is not the `neutral-mul-right` premise"
+        );
+    }
+
+    #[test]
+    fn the_emitted_identity_step_is_canonical_and_accepted() {
+        let (graph, one, input, product) = neutral_mul_right();
+        let scheme = TestIds;
+        let (derivation, result) = super::emit(&scheme, &graph);
+        assert_eq!(
+            derivation.steps,
+            alloc::vec![super::Step {
+                rule: super::Rule::NeutralMulRight,
+                node: product,
+                operands: [input, one],
+                first_bits: 1,
+                second_bits: 1,
+                claimed: 0,
+            }],
+            "the emitter records the canonical `x * 1` premise"
+        );
+        assert_eq!(
+            result, graph,
+            "a recorded identity does not change the graph"
+        );
+        assert_eq!(super::check(&scheme, &graph, &result, &derivation), Ok(()));
     }
 }
