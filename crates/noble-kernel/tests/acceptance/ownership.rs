@@ -471,6 +471,22 @@ fn drive_production(case: &Case) -> Result<ProductionCategory, String> {
     }
 }
 
+/// The production refusal each rejected corpus case must surface. Naming the
+/// category is the point: if a word's rule is lost, the case turns into a
+/// different refusal (a `dup` of a resource accepted, then joined) and this
+/// table notices even though the rejected total is unchanged.
+const EXPECTED_REJECTIONS: [(&str, ProductionCategory); 6] = [
+    ("dup-one-resource", ProductionCategory::Eligibility),
+    ("dup-resource-then-i64", ProductionCategory::Eligibility),
+    ("drop-one-resource", ProductionCategory::Eligibility),
+    ("drop-resource-then-i64", ProductionCategory::Eligibility),
+    ("dup-drop-one-resource", ProductionCategory::Eligibility),
+    (
+        "dup-drop-resource-then-i64",
+        ProductionCategory::Eligibility,
+    ),
+];
+
 #[test]
 fn ownership_corpus_matches_the_acceptance_machine() -> Result<(), String> {
     let cases = load_cases();
@@ -486,7 +502,26 @@ fn ownership_corpus_matches_the_acceptance_machine() -> Result<(), String> {
             Decision::Rejected => rejected += 1,
             Decision::ModelOnly => model_only += 1,
         }
-        match drive_production(case)? {
+        let category = drive_production(case)?;
+        if case.decision == Decision::Rejected {
+            let expected = EXPECTED_REJECTIONS
+                .iter()
+                .find(|entry| entry.0 == case.name)
+                .map(|entry| entry.1)
+                .ok_or_else(|| {
+                    format!(
+                        "{} is rejected but declares no expected production category",
+                        case.name
+                    )
+                })?;
+            if category != expected {
+                return Err(format!(
+                    "{} was refused as {category:?}, expected {expected:?}",
+                    case.name
+                ));
+            }
+        }
+        match category {
             ProductionCategory::Eligibility => eligibility += 1,
             ProductionCategory::StackJoin => stack_join += 1,
             ProductionCategory::OtherRejection => other_rejection += 1,
@@ -497,6 +532,16 @@ fn ownership_corpus_matches_the_acceptance_machine() -> Result<(), String> {
         return Err(format!(
             "corpus coverage regressed: accepted={accepted} rejected={rejected} model-only={model_only}"
         ));
+    }
+    for (name, _) in EXPECTED_REJECTIONS {
+        let is_rejected = cases
+            .iter()
+            .any(|case| case.decision == Decision::Rejected && case.name == name);
+        if !is_rejected {
+            return Err(format!(
+                "expected rejection {name} is no longer a rejected corpus case"
+            ));
+        }
     }
     if eligibility == 0 {
         return Err("no accepted case surfaced the eligibility constraint".to_string());
