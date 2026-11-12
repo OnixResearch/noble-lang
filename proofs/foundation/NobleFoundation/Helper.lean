@@ -9,7 +9,8 @@ WAT functions are:
 - `$op_add`, `$op_sub`, `$op_mul` (`crates/noble-wasm/runtime/operations.wat`);
 - `$need`, `$slot_kind`, `$push_tag`, `$push_i64`, `$take`, `$pop_kind`
   (`stack.wat`);
-- `$fail` (`accounting.wat`).
+- `$fail` and `$quota` (`accounting.wat`); `$push_tag` calls `$quota` on the
+  operand limit, which the model renders as `wFail quota`.
 
 The Phase 3 slice (`verification/foundation/slice.mjs`, which `ci.sh` runs unless
 `--skip-slice` is given) pins the exact text of those functions through

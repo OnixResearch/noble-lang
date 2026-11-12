@@ -17,7 +17,8 @@
       "$pop_kind": "44ee057fd622bb74dd7d498aadda2c02e39528e5e2f3ff87ce628956fa3dfeec"
     },
     "crates/noble-wasm/runtime/accounting.wat": {
-      "$fail": "6dd7fff77abe6a0f85000b3e84ddec9ff50029ac21aeea084603b1511cb1622a"
+      "$fail": "6dd7fff77abe6a0f85000b3e84ddec9ff50029ac21aeea084603b1511cb1622a",
+      "$quota": "f9d59fff796d03b73297f138c0de0f2f29b4f5e6568fa52a7f1b8dbe4ce9cac9"
     }
   }
 }
