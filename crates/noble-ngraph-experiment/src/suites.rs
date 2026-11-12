@@ -77,7 +77,11 @@ pub fn g1_tolerance(d: f64) -> f64 {
 /// therefore `!(r <= 1.0)`.
 #[must_use]
 pub fn ratio_is_failure(r: f64) -> bool {
-    !(r <= 1.0)
+    // NaN compares as neither less nor equal, so it is a failure.
+    !matches!(
+        r.partial_cmp(&1.0),
+        Some(core::cmp::Ordering::Less | core::cmp::Ordering::Equal)
+    )
 }
 
 fn models() -> (CheckedGraph, CheckedGraph) {

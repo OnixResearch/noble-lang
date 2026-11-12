@@ -167,21 +167,6 @@ const fn definition_limit(calculator: bool) -> usize {
     }
 }
 
-/// The profile's environment row cap: its definition limit plus the fixed rows
-/// that only this profile installs. The calculator owns 32 fixed rows, the pure
-/// byte cursor 27 and declared text 28; ordinary profiles own 26.
-const fn maximum_rows(calculator: bool, text_cursor: bool, declared_text: bool) -> usize {
-    if calculator {
-        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-    } else if declared_text {
-        definition_limit(false).saturating_add(28)
-    } else if text_cursor {
-        definition_limit(false).saturating_add(27)
-    } else {
-        definition_limit(false).saturating_add(26)
-    }
-}
-
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
@@ -203,8 +188,8 @@ pub(super) fn check(
     // adds 32 rows, the pure byte cursor adds its row (27) and declared text
     // its signed-comparison row (28). A narrower prefix here would refuse a
     // valid full-definition environment before the profile check ran.
-    let maximum_rows = maximum_rows(calculator, text_cursor, declared_text);
-    if submission.environment.defs.len() > maximum_rows
+    let rows_cap = super::maximum_rows(calculator, text_cursor, declared_text);
+    if submission.environment.defs.len() > rows_cap
         || submission.definitions.len() > definition_limit(calculator)
     {
         return Err(crate::Diagnostic::Exhausted);
@@ -322,8 +307,8 @@ fn nominal_shape(
 )]
 #[cfg(test)]
 mod row_cap_tests {
-    use super::super::{Work, DEFINITION_LIMIT};
-    use super::{check, maximum_rows};
+    use super::super::{admission, maximum_rows, Work, DEFINITION_LIMIT};
+    use super::check;
     use alloc::format;
     use alloc::string::String;
     use alloc::vec::Vec;
@@ -411,6 +396,50 @@ mod row_cap_tests {
         assert!(
             check(submission, false, true, true, &mut work).is_ok(),
             "a full-definition declared-text environment must pass preflight"
+        );
+    }
+
+    /// The same 284-row environment must also pass admission: `environment::work`
+    /// used to cap every non-calculator profile at 256+27 rows and refused it
+    /// after preflight had admitted it.
+    #[test]
+    fn declared_text_module_of_256_definitions_is_admitted() {
+        let limits = noble_contracts::Limits {
+            bytes: 65_536,
+            nodes: 262_144,
+            depth: 64,
+            work: 512_000_000,
+        };
+        let retained = RetainedSourceLimit::new(65_536).expect("valid retained source cap");
+        let session = ModuleSession::new_declared_text(&[], false, retained)
+            .unwrap_or_else(|_| panic!("selected source profile"));
+        let pending = session
+            .prepare(&bulk_module(DEFINITION_LIMIT), &[], limits)
+            .unwrap_or_else(|error| {
+                panic!("module with {DEFINITION_LIMIT} definitions: {error:?}")
+            });
+        let (session, installed) = session.commit(pending);
+        installed.unwrap_or_else(|error| {
+            panic!("module with {DEFINITION_LIMIT} definitions refused: {error:?}")
+        });
+        let mut expression = String::new();
+        for index in 0..DEFINITION_LIMIT {
+            if index != 0 {
+                expression.push_str(" drop ");
+            }
+            expression.push_str(&format!("bulk@1.w{index}"));
+        }
+        let query = session
+            .prepare(expression.as_bytes(), &[], limits)
+            .unwrap_or_else(|_| panic!("query over the full namespace"));
+        let submission = query
+            .submission()
+            .unwrap_or_else(|| panic!("missing submission"));
+        assert_eq!(submission.environment.defs.len(), 28 + DEFINITION_LIMIT);
+        let mut work = budget(submission.request.limits.work);
+        assert!(
+            admission::check(submission, false, false, true, false, true, false, &mut work).is_ok(),
+            "a full-definition declared-text module must be admitted, not refused by the row cap"
         );
     }
 }

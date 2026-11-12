@@ -83,13 +83,7 @@ pub(super) fn check(
     } else {
         super::super::DEFINITION_LIMIT
     };
-    let maximum_rows = if calculator {
-        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-    } else if declared_text {
-        definition_cap.saturating_add(28)
-    } else {
-        definition_cap.saturating_add(27)
-    };
+    let maximum_rows = super::super::maximum_rows(calculator, text_cursor, declared_text);
     if env.defs.len() > maximum_rows || submission.definitions.len() > definition_cap {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -496,6 +490,8 @@ fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagn
 pub(super) fn work(
     environment: &noble_kernel::contracts::Env,
     calculator: bool,
+    text_cursor: bool,
+    declared_text: bool,
     meter: &mut super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
     let definition_cap = if calculator {
@@ -503,11 +499,10 @@ pub(super) fn work(
     } else {
         super::super::DEFINITION_LIMIT
     };
-    let maximum_rows = if calculator {
-        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-    } else {
-        definition_cap.saturating_add(27)
-    };
+    // The same per-profile row cap the declared-shape check uses: a full
+    // 256-definition declared-text environment (284 rows) is valid and must not
+    // be refused here after preflight admitted it.
+    let maximum_rows = super::super::maximum_rows(calculator, text_cursor, declared_text);
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -661,7 +656,7 @@ mod contract_meter_tests {
         ));
         assert_eq!(sufficient.remaining, 0);
         assert!(
-            work(&env, false, &mut budget(u64::MAX))
+            work(&env, false, false, false, &mut budget(u64::MAX))
                 .ok()
                 .expect("full environment budget")
                 > cost
@@ -676,7 +671,7 @@ mod contract_meter_tests {
             .map(|_| noble_kernel::shapes::Pattern::Unit)
             .collect();
         assert!(matches!(
-            work(&env, false, &mut budget(u64::MAX)),
+            work(&env, false, false, false, &mut budget(u64::MAX)),
             Err(Diagnostic::Exhausted)
         ));
     }
