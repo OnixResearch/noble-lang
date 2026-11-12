@@ -38,6 +38,10 @@
 #                             construct scan, not the build, must refuse)
 #   local-axiom               a local `axiom` declaration added to an m3 -> NO-PROOF-HOLE
 #                             root (an axiom is not a build error)
+#   unreviewed-native-decide  a `native_decide` probe theorem added to   -> REQUIRED-
+#                             an m3 root: it builds and passes the        THEOREMS
+#                             construct scan, so only the enumerated
+#                             axiom audit's reviewed-name rule refuses it
 #   missing-per-word-theorem  the per-word application refinement        -> REQUIRED-
 #                             theorem (apply_refines) no longer          THEOREMS
 #                             stated
@@ -216,6 +220,19 @@ STUB
     out="$("$GATE" "$copy" 2>&1)"; rc=$?
     ;;
 
+  unreviewed-native-decide)
+    fresh_copy "$copy"
+    # native_decide adds a per-declaration axiom, not a build error or a
+    # scanned construct; the gate admits that axiom family only on reviewed
+    # theorem names, so a new unlisted theorem must be refused.
+    { cat "$PROOF_ROOT/NobleM3.lean"
+      printf '\n/-- Refusal-mutation probe: an unreviewed native_decide proof. -/\ntheorem mutation_native_probe : (2 : Nat) + 2 = 4 := by native_decide\n'
+    } > "$SCRATCH/unreviewed-native-decide.lean"
+    grep -q 'by native_decide$' "$SCRATCH/unreviewed-native-decide.lean" || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/unreviewed-native-decide.lean" "$copy/NobleM3.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
   removed-eliminator-oracle-arm)
     fresh_crate_copy "$copy"
     # The `case` arm deleted from the oracle's contract table: the oracle
@@ -288,6 +305,7 @@ for case_label in \
   'broken-build BUILD' \
   'admit-tactic NO-PROOF-HOLE' \
   'local-axiom NO-PROOF-HOLE' \
+  'unreviewed-native-decide REQUIRED-THEOREMS' \
   'missing-per-word-theorem REQUIRED-THEOREMS' \
   'substituted-subject GENERATED-KERNEL' \
   'unexplained-external EXTERNAL-MODELS' \

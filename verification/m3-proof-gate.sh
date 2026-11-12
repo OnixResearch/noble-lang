@@ -20,7 +20,12 @@
 # unweakened over proofs/m2.
 #   The axiom policy is the M2 one: {propext, Classical.choice,
 #   Quot.sound} strictly, plus per-declaration native_decide axioms for
-#   the evaluation-closed theorems; sorryAx and anything else reject.
+#   the evaluation-closed theorems; sorryAx and anything else reject. The
+#   native_decide family is admitted only on reviewed names: the
+#   evaluation-closed required theorems, checker B's refinement rows and an
+#   explicit list of eight unrequired fixture theorems. Any other declared
+#   theorem must stay within the strict set, so a new native_decide proof
+#   fails until it is reviewed and listed.
 #
 # Beyond the reviewed list, the gate enumerates every theorem the m3
 # sources declare, from the elaborated environment: each `.lean` file under
@@ -30,8 +35,7 @@
 # of them has its transitive axioms audited under the same policy. A new
 # theorem or a new module is therefore covered without editing the gate.
 # `NobleM2.Refinement` is elaborated by checker B instead (it cannot be
-# imported alongside the NobleM2 root), and `NobleM3.CheckV1` is listed as
-# an unaudited source: it does not compile and no root imports it.
+# imported alongside the NobleM2 root).
 #
 # NO-PROOF-HOLE is a construct scan over the comment- and literal-masked
 # sources (verification/lean-source-scan.mjs): `sorry`, `admit`, an
@@ -136,9 +140,7 @@ MODULES_B="$PROOF_ROOT/.m3-gate-modules-b.txt"
 # The module set the enumeration must cover: every .lean file under NobleM2/
 # and NobleM3/, plus the two roots. Checker B elaborates NobleM2.Refinement,
 # which cannot be imported alongside the NobleM2 root (duplicate instances),
-# so it is that checker's module. NobleM3.CheckV1 does not compile and no root
-# imports it; its theorems are therefore UNAUDITED, and the gate prints that
-# rather than silently enumerating around it.
+# so it is that checker's module.
 {
   printf '%s\n' NobleM2 NobleM3
   for dir in NobleM2 NobleM3; do
@@ -148,10 +150,9 @@ MODULES_B="$PROOF_ROOT/.m3-gate-modules-b.txt"
       printf '%s\n' "${module_name%.lean}" | tr '/' '.'
     done
   done
-} | grep -vx 'NobleM2.Refinement' | grep -vx 'NobleM3.CheckV1' > "$MODULES_A"
+} | grep -vx 'NobleM2.Refinement' > "$MODULES_A"
 printf '%s\n' 'NobleM2.Refinement' > "$MODULES_B"
 [ "$(wc -l < "$MODULES_A")" -gt 2 ] || fail SETUP "no m3 proof modules enumerated under $PROOF_ROOT"
-echo "[m3-gate] NON-CLAIM NobleM3.CheckV1 is not imported by any root and does not compile; its theorems are not audited"
 
 cat > "$GATE_A" <<'LEAN_A'
 import Lean.Elab.Command
@@ -244,6 +245,19 @@ run_cmd do
       let bad := axs.filter (fun a => !(okAxiom isStrict a))
       if !bad.isEmpty then
         logError m!"m3-gate: forbidden axioms on {n}: {bad}"
+  -- Theorems outside the required v1 contract that are reviewed to carry the
+  -- per-declaration native_decide family: the four Coverage fixture runs
+  -- (Termination.lean) and the four SignedSelf acceptance runs. Every other
+  -- declared theorem must stay within the strict set.
+  let nativeUnrequired : List Name :=
+    [``NobleM2.Coverage.addInst, ``NobleM2.Coverage.addLook,
+     ``NobleM2.Coverage.lit1, ``NobleM2.Coverage.lit41,
+     ``NobleM2.SignedSelf.forever_accepted,
+     ``NobleM2.SignedSelf.forever_signed_derives,
+     ``NobleM2.SignedSelf.monomorphic_accepted,
+     ``NobleM2.SignedSelf.polymorphic_ordinary_check_accepts]
+  let nativeReviewed : NameSet :=
+    (evalClosed ++ nativeUnrequired).foldl (fun set n => set.insert n) {}
   -- Enumerated coverage: every theorem the m3 sources declare, not only the
   -- reviewed inventory above. The module list is derived from the .lean files
   -- under NobleM2/ and NobleM3/ plus the roots, so a new theorem or a new
@@ -264,9 +278,9 @@ run_cmd do
     if !expectedSet.contains env.header.moduleNames[idx]! then continue
     audited := audited + 1
     let axs ← Lean.collectAxioms n
-    let bad := axs.filter (fun a => !(okAxiom false a))
+    let bad := axs.filter (fun a => !(okAxiom (!nativeReviewed.contains n) a))
     if !bad.isEmpty then
-      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad}"
+      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad} (native_decide is admitted only on reviewed names)"
   logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} m3 modules"
 LEAN_A
 cat > "$GATE_B" <<'LEAN_B'
@@ -312,6 +326,8 @@ run_cmd do
           logInfo m!"m3-gate: subject {n} binds {gen}"
         else
           logError m!"m3-gate: substituted subject: {n} is not stated about the generated {gen}"
+  let nativeReviewed : NameSet :=
+    refinementEval.foldl (fun set n => set.insert n) {}
   -- Enumerated coverage of this checker's module, as in checker A: every
   -- theorem declared in NobleM2/Refinement.lean is audited, including those
   -- outside the reviewed list above.
@@ -330,9 +346,9 @@ run_cmd do
     if !expectedSet.contains env.header.moduleNames[idx]! then continue
     audited := audited + 1
     let axs ← Lean.collectAxioms n
-    let bad := axs.filter (fun a => !(okAxiom false a))
+    let bad := axs.filter (fun a => !(okAxiom (!nativeReviewed.contains n) a))
     if !bad.isEmpty then
-      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad}"
+      logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad} (native_decide is admitted only on reviewed names)"
   logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} checker-B modules"
 LEAN_B
 sed -e "s|MODULES_A|$MODULES_A|" "$GATE_A" > "$GATE_A.resolved" && mv "$GATE_A.resolved" "$GATE_A"

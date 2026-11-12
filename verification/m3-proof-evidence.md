@@ -48,6 +48,15 @@ the literal suffix `ax_1_1`; the v1 policy must match the family
 (`._native.native_decide.ax_` prefix), or twelve sound theorems below will
 be refused by accident.
 
+The family is admitted only on reviewed theorem names: the gate's
+evaluation-closed required list, checker B's refinement rows, and eight
+unrequired fixture theorems (`NobleM2.Coverage.{addInst,addLook,lit1,lit41}`
+and `NobleM2.SignedSelf.{forever_accepted,forever_signed_derives,
+monomorphic_accepted,polymorphic_ordinary_check_accepts}`). Every other
+theorem the m3 sources declare must stay within the trifecta, so a new
+`native_decide` proof fails `REQUIRED-THEOREMS` until it is reviewed and
+listed; the refusal matrix's `unreviewed-native-decide` cell pins this.
+
 ## 3. Theorem inventory with axiom sets (V-CHECK-03/04/05, PO-09/10/11)
 
 Enumerated with `Lean.collectAxioms`; "n.d." = the theorem's own
