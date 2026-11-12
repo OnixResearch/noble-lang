@@ -11,9 +11,10 @@ WAT functions are:
   (`stack.wat`);
 - `$fail` (`accounting.wat`).
 
-`verification/foundation/check.mjs` pins the exact text of those functions.
-A changed helper therefore invalidates this model instead of silently
-diverging from it.
+The Phase 3 slice (`verification/foundation/slice.mjs`, which `ci.sh` runs unless
+`--skip-slice` is given) pins the exact text of those functions through
+`helper-transcription.json`; `check.mjs` reads no WAT. A changed helper therefore
+invalidates this model instead of silently diverging from it.
 
 What is modelled:
 - the operand slots, top first (slot `sp-1` at the head), with the slot tag

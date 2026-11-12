@@ -68,10 +68,17 @@ unchanged. It needs `proofs/m3/.lake` populated the same way
 - refuses a dirty worktree (`--allow-dirty` records `clean_source:false`)
   and ambient `LEAN*`/`LAKE*`/`NODE*`/`GIT_*`/`NIX_*`/loader overrides;
 - requires every Lake package checkout to be clean at its manifest revision;
-- scans `NobleFoundation/` for `sorry`, `acquire`, `native_decide`,
-  `implemented_by`, `extern`, `unsafe`, `opaque`, `partial` and `axiom`;
-- requires the declared theorems and [`inventory.json`](inventory.json) to
-  be the same set;
+- scans `NobleFoundation/` (comments removed) for `sorry`, `admit`,
+  `native_decide`, `implemented_by`, `extern`, `unsafe`, `opaque`, `partial`,
+  `axiom`, the kernel-checking escape hatches `skipKernelTC`, `addDecl`,
+  `run_cmd`, `run_elab`, `run_meta` and `#eval`; `--self-test` exercises that
+  scan, including the `debug.skipKernelTC` + `addDecl` bypass it refuses;
+- requires the declared public theorems and [`inventory.json`](inventory.json)'s
+  `theorems` to be the same set, and the declared `private`/`protected` theorems
+  to be exactly `inventory.json`'s `private_theorems`; a private helper is
+  existence-checked by name and its axioms are audited transitively through every
+  inventoried theorem that uses it, because Lean does not expose a private name to
+  another module;
 - builds `NobleFoundation` and fails on any warning;
 - for every inventoried theorem, prints `#check` and `#print axioms` through
   `lean --json`, and accepts only `propext`, `Classical.choice` and
@@ -146,7 +153,7 @@ that claims an implementation theorem. Names that are specification identifiers
 rather than inventoried theorems are declared with their reason in the audit
 itself. The retained result is
 [`verification/foundation/claims.json`](../../verification/foundation/claims.json):
-16 claim-table rows, 15 proved, 8 tested-bearing and 11 open, 563 inventoried
+40 claim-table rows, 39 proved, 10 tested-bearing and 28 open, 1276 inventoried
 theorems, no diagnostics. The audit is a *document* check: passing it is not a
 correctness claim about any implementation, and the rows labelled open stay
 open.
@@ -163,8 +170,8 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add/sub/mul/neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
-| MC1 BitVec add/sub/mul decode to the comparator oracle | `toInt_add/sub/mul`, `oracle_add/sub/mul` | none | **proved** |
+| ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
+| MC1 BitVec add/sub/mul decode to the comparator oracle | `toInt_add`, `toInt_sub`, `toInt_mul`, `oracle_add`, `oracle_sub`, `oracle_mul` | none | **proved** |
 | Checked I64 scalar arithmetic and explicit truncating division/remainder | `NobleFoundation.CheckedI64.checkedAdd_ok_iff`, `checkedSub_ok_iff`, `checkedMul_ok_iff`, `checkedNeg_ok_iff`, `checkedAbs_ok_iff`, `checkedAdd_overflow_iff`, `checkedSub_overflow_iff`, `checkedMul_overflow_iff`, `checkedNeg_overflow_iff`, `checkedAbs_overflow_iff`, `div_rem_identity`, `trem_natAbs_lt`, `trem_sign`, `checkedDivRem_overflow_iff`, `checkedDivRem_divisionByZero` | none (name-neutral mathematical model; no Rust/API correspondence) | **proved** |
 | Literal acceptance is exact range rejection, not wrapping | `acceptLiteral` (spec); `accumulate_eq_acceptLiteral` over a *transcription* of `Accumulator::digit`; `accepted_literal_exact`; `ofInt_collapses_out_of_range`; `literal_boundary_regressions` | `crates/noble-contracts/src/syntax/integer.rs`, token classification in `source/lexer/tokens.rs` | transcription **proved**. Rust ↔ transcription **open** (the Aeneas extraction exists in `proofs/mc1/NobleContractImpl/Funs.lean`, but there is no refinement theorem). CLI rejection **tested**: `verification/m4/acceptance.json` and the Phase 4 comparator |
 | Universal instruction semantics with a preserved typed prefix | `add_spec`, `sub_spec`, `mul_spec` (`ArithSpec`); `exec_arith_toInt`; `add_needs_i64` | `crates/noble-wasm/src/operations.rs:21-23` (word → helper), `runtime/operations.wat:14-25`, `runtime/stack.wat` (`$pop_kind`, `$take`, `$push_i64`) | model **proved**. Lowering/helpers **open** (PO-17), finite Wasm **tested** |
@@ -190,9 +197,8 @@ Status words:
 | Propositions and sorts of implicit proof arguments: encoding and rebasing (issue #12, `implicit-proof-arguments` task 13) | `PropT.enc_injective`, `SortT.enc_injective`, `PropT.enc_ne_mvar`, `PropT.head_enc`, `PropT.shift_comp`, `PropT.shift_id`, `PropT.levels_shift` | the encoding of the design's `Pi`/`Eq` propositions and `Type0`/`Value` sorts into the solver's tree algebra, and rebasal of their levels; no Rust representation of these trees exists | model **proved**: structural identity is exactly tree equality, encoded propositions never collide with a code or value meta, and rebasal acts on exactly the level occurrences and composes. Rust elaborator refinement **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. The Rust stream is exported (`Compiled::i64_instructions()`); a general Lean↔Rust correspondence is **open** |
-| Real packed I64/Bool artifacts, validated one at a time (issue #43) | `interleaved_validated`, `interleaved_sound`, `lateInput_validated`, `lateInput_sound`, the `*_wellFormed` lemmas, seven `*_refused` mutated copies and ten `*_execution_*_agrees` runs in `PackedScheduleCorpus` | two artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and bound by `the_lean_file_is_the_real_emission`; the slot and constant preload translation is trusted | **proved** for those two artifacts; the Rust executor agrees at ten inputs, a **tested** fact, not a theorem about it |
+| Real packed I64/Bool artifacts, validated one at a time (issue #43) | `interleaved_validated`, `interleaved_sound`, `interleaved_wellFormed`, `lateInput_validated`, `lateInput_sound`, `lateInput_wellFormed`, the seven `*_refused` mutated copies and the ten `*_execution_*_agrees` runs in the generated PackedScheduleCorpus module | two artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and bound by `the_lean_file_is_the_real_emission`; the slot and constant preload translation is trusted | **proved** for those two artifacts; the Rust executor agrees at ten inputs, a **tested** fact, not a theorem about it |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
-| Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `unbalanced_closers_do_not_count_toward_the_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification…
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict`, and the six `SymbolicSolver.Corpus.*_first` verdicts | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Six fixed pairs of checked `noble-ngraph` graphs: compiled and reference verdicts **tested**, and the same verdicts kernel-decided. Encoder correspondence, solver, emitted-Wasm replay and witness shrinking **open** |
@@ -1226,10 +1232,11 @@ records 108 independent cases generated from the model, of which 15 accepted and
 6 rejected cases are driven through the actual acceptance machine
 (`noble_kernel::acceptance::check`) over the unary `dup`/`drop` fragment, and 87
 are model-only. A test-local shadow checker agrees with every expectation and
-each of seven declared mutations (duplicating or releasing a must-use resource,
+each of six declared mutations (duplicating or releasing a must-use resource,
 drops one operand during `swap`, consuming a quoted operand, ignoring branch
 accounting, permitting an error return with an outstanding operand) is caught by
-at least one retained expectation. The model-only controls include a branch
+at least one retained expectation; the seventh `Mutation` variant, `None`, is the
+unmutated control and catches nothing. The model-only controls include a branch
 that attempts to lose a resource, a branch that attempts to duplicate one,
 equal-count branches with different resource identities, and a resource move.
 
@@ -1314,7 +1321,7 @@ witness and registers exactly one not-yet-started attempt
 checkpoint quota bound and attempt/charge accounting
 (`admission_preserves_alignment`, `admission_preserves_uniqueness`,
 `admission_preserves_quota`, `admission_preserves_attempts_charged`); any finite
-serialized prefix keeps alignment (`acquirePrefix_preserves_alignment`); an
+serialized prefix keeps alignment (`prefix_preserves_alignment`); an
 altered requested plan, revoked or stale facts, or an already started attempt
 mint nothing (`altered_plan_cannot_mint`, `stale_facts_cannot_mint`,
 `started_attempt_cannot_start_again`). Four mutation models break the
@@ -1690,9 +1697,12 @@ Open, and deliberately not closed:
   other result (`Refusal::ResultMismatch`), but that fix is implementation
   evidence rather than a Lean correspondence result;
 - `crates/noble-ngraph/tests/cert_differential.rs` executes both endpoints of
-  single-step folds on the compiled and reference evaluators; no multi-step
-  simplification is admitted, and its expectations are computed in Rust rather
-  than kernel-checked;
+  single-step folds and of a three-step certificate (two independent folds and a
+  recorded identity) on the compiled and reference evaluators; no dependent
+  multi-step simplification is admitted beyond that, corrupting any step after the
+  first is refused, including the identity step's operand order and, under the
+  canonical-bits rule, its declared bits and claim, and its expectations are
+  computed in Rust rather than kernel-checked;
 - substitution/transitivity closure, a full e-graph, guard/failure-preserving
   rewrites and `F32` laws are outside phase 1; value preservation says nothing
   about fuel, allocation, cancellation behaviour or recipe identity;
@@ -1800,7 +1810,8 @@ it refused the compiler's own parameter layouts.
 `NobleFoundation/CertificateCodec.lean` models a token codec for the same
 `ngraph-cert/0` derivation: one seven-token chunk per step, a rule token that must
 decode through the modelled rule set, decimal bit tokens that must stay inside the
-64-bit range, and a revision token the decoder re-checks before any step.
+64-bit range, a declared step count and a revision token the decoder re-checks
+before any step.
 
 Proved: decoding an encoded step returns the same step (`decode_encode_step_replays`)
 and decoding an encoded derivation returns the derivation itself
@@ -1809,10 +1820,13 @@ and decoding an encoded derivation returns the derivation itself
 (`encodeStep_length`), so a six-token tail is refused (`truncated_step_refused`);
 an unknown rule token refuses the step (`unknown_rule_token_refused`); and a stale
 revision token refuses decoding before any step is inspected
-(`stale_revision_token_refused`).
+(`stale_revision_token_refused`). The envelope's declared step count is checked
+before decoding (`chunk_count_refused`), so a chunk removed in transit refuses
+(`dropped_chunk_refused`) instead of decoding into a shorter derivation.
 
-The clean-source kernel check is retained at `verification/foundation/receipts/26fca0806/`
-(381 theorems, `clean_source: true`, every axiom set inside the allow-list).
+The seven earlier theorems were retained at `verification/foundation/receipts/26fca0806/`
+(381 theorems, `clean_source: true`, every axiom set inside the allow-list); the
+two count theorems are newer than that receipt.
 
 Not claimed: tokens are modelled as strings and no byte-level envelope is modelled,
 so nothing here binds the `serde`/binary bytes the Rust encoder writes; envelope
@@ -1824,8 +1838,10 @@ digests, replay-budget accounting and the identity rules are out of scope.
 `crates/noble-ngraph/src/cert.rs` emits: the revision, the declared step bound, the
 ordered step list (rule identity, rewritten node, ordered operands, declared
 constant bits, claimed value), the decode of rule identities to the graph
-checker's claims, the structural bit comparison against the graph, and acceptance
-of a whole derivation.
+checker's claims, the structural bit comparison against the graph — which for the
+identity rules requires the declared bits to be the graph's exact zero or one, the
+two declared bit fields to agree and the claim to be zero — and acceptance of a
+whole derivation.
 
 Proved: a certificate naming another revision is refused
 (`stale_revision_refused`) and that refusal kills acceptance even when every step
@@ -1841,12 +1857,22 @@ order while leaving identity steps unchanged, and the endpoint theorem
 (`accepted_endpoint_equivalence`) proves agreement of every node denotation
 under an accepted derivation whose premises are checked against the original
 graph. The two-independent-fold fixture and substituted-result control are
-`multiFold_endpoint` and `substituted_result_differs`. Thirteen inventoried
-theorems; receipt
+`multiFold_endpoint` and `substituted_result_differs`. The identity fixture's two
+canonical steps are accepted (`neutral_add_left_step_accepted`,
+`neutral_mul_right_step_accepted`), every accepted `0 + x` step declares the graph's
+zero in both bit fields and claims zero (`neutral_add_left_bits_canonical`), every
+accepted `x * 1` step does the same with the graph's one
+(`neutral_mul_right_bits_canonical`), and a step that declares other bits, disagrees
+with itself or claims a nonzero constant is refused
+(`neutral_add_left_bits_refused`, `neutral_add_left_second_bits_refused`,
+`neutral_add_left_claim_refused`, `neutral_mul_right_bits_refused`,
+`neutral_mul_right_first_bits_refused`, `neutral_mul_right_claim_refused`).
+Twenty-three inventoried theorems; the thirteen earlier ones are retained at
 [`verification/foundation/receipts/50ec19885/`](../../verification/foundation/receipts/50ec19885/foundation-check.json)
 (594 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`). The first seven were first retained at
-`d67efd4a2` (374 theorems).
+`implementation_theorem: false`), and the first seven were first retained at
+`d67efd4a2` (374 theorems). The ten canonical-bits theorems are newer than that
+receipt.
 
 Open, and deliberately not closed:
 
@@ -2114,7 +2140,10 @@ The models are the solvers', so nothing here certifies a pair, and no encoder is
 inventoried theorems, each depending only on `propext`.
 The clean-source receipt is
 [`verification/foundation/receipts/73cec09e8/`](../../verification/foundation/receipts/73cec09e8/foundation-check.json)
-(1239 theorems, `clean_source: true`, Lean 4.35.0).
+(1239 theorems, `clean_source: true`, Lean 4.35.0). Its `source_commit` field
+names `68d4f355`, the amended-away first version of the evidence commit that no
+ref contains; its proof sources are byte-identical to `73cec09e`'s, so the
+directory is named for the reachable commit that retains those bytes.
 
 ## Specification-quality obligations (issue #65)
 
@@ -2902,7 +2931,7 @@ The clean-source receipt for the first-projection model is
 ## Region protocol model (issue #9, `behavioral-effect-protocol` T1–T3)
 
 `NobleFoundation/RegionProtocol.lean` models `RegionProtocol-v1`, the synchronous bounded-region
-protocol of `.cairn/changes/behavioral-effect-protocol`.
+protocol of `.cairn/archive/2026-11-08-behavioral-effect-protocol`.
 - **Scope.** One host-injected owner, finitely many borrowed reads, and at most one release.
 - **Traces.** A trace keeps the design's three event classes apart: guest requests, host responses
   and committed effects.

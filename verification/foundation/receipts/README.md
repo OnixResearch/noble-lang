@@ -5,6 +5,13 @@ source commit. The raw run directories (emitted `.noble`/`.wat`/`.wasm`,
 Lean audit files, sandbox outputs) stay outside the repository. `index.json`
 records their SHA-256.
 
+One directory is named for the reachable commit that retains the bytes rather than
+the commit its receipt records: `73cec09e8/foundation-check.json` has
+`source_commit` `68d4f355`, the amended-away first version of the same evidence
+commit, which no ref contains. Its 83 source hashes are identical to
+`73cec09e`'s, so the two commits carry the same proof sources; the receipt is a
+provenance anomaly, not a proof gap.
+
 ## 898cfe1 — original foundation run
 
 `898cfe1/` contains these files. Its source tree is `d11cd3c70621`, and it is the

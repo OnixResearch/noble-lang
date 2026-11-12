@@ -28,6 +28,105 @@ const leanCommit = 'eb6cafb7290e8bd5f2937522d8d804f58f02bafc';
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const fileHash = path => digest(readFileSync(path));
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
+const forbiddenConstructs = Object.freeze(['sorry', 'admit', 'native_decide', 'implemented_by',
+  '@[extern', 'unsafe ', 'opaque ', 'partial ', 'skipKernelTC', 'addDecl', 'run_cmd', 'run_elab',
+  'run_meta', '#eval']);
+const axiomDeclaration = /^\s*axiom\s/m;
+const declaration = /^\s*(?:@\[[^\]]*\]\s*)?(?:(private|protected)\s+)?(?:theorem|lemma)\s+(\S+)/;
+
+// Strip Lean comments, keeping line structure. Strings are scanned as code, so a
+// forbidden word inside a string is refused too.
+function stripComments(text) {
+  let out = '';
+  let index = 0;
+  let depth = 0;
+  while (index < text.length) {
+    const char = text[index];
+    const next = text[index + 1];
+    if (depth > 0) {
+      if (char === '/' && next === '-') { depth += 1; index += 2; continue; }
+      if (char === '-' && next === '/') { depth -= 1; index += 2; continue; }
+      if (char === '\n') out += char;
+      index += 1;
+      continue;
+    }
+    if (char === '/' && next === '-') { depth = 1; index += 2; continue; }
+    if (char === '-' && next === '-') {
+      while (index < text.length && text[index] !== '\n') index += 1;
+      continue;
+    }
+    out += char;
+    index += 1;
+  }
+  return out;
+}
+
+// The escape hatches a foundation source may not contain. Kernel checking cannot be
+// turned off, no metaprogram may add a declaration, and no source may evaluate.
+function hygieneViolations(file, text) {
+  const code = stripComments(text);
+  const violations = forbiddenConstructs.filter(word => code.includes(word))
+    .map(word => `${file}: forbidden construct ${word}`);
+  if (axiomDeclaration.test(code)) violations.push(`${file}: declares an axiom`);
+  return violations;
+}
+
+// The theorem declarations of one source, split by whether Lean mangles the name.
+function declarationsOf(text) {
+  const code = stripComments(text);
+  const found = { public: [], private: [] };
+  let namespace = '';
+  for (const line of code.split('\n')) {
+    const ns = line.match(/^namespace\s+(\S+)/);
+    if (ns) namespace = ns[1];
+    const th = line.match(declaration);
+    if (!th) continue;
+    const name = th[2].startsWith('_root_.') ? th[2].slice(7) : `${namespace}.${th[2]}`;
+    (th[1] ? found.private : found.public).push(name);
+  }
+  return found;
+}
+
+// The reviewer's bypass, its controls, and the comment-only declaration control.
+function runSelfTest() {
+  const cases = [];
+  const bypass = ['set_option debug.skipKernelTC true in',
+    'run_cmd liftCoreM (addDecl (.thmDecl { name := `bad`, type := False, value := True.intro }))',
+    'theorem one_eq_two : (1 : Nat) = 2 := absurd bad id', ''].join('\n');
+  const refused = hygieneViolations('bypass.lean', bypass);
+  cases.push({
+    case: 'debug.skipKernelTC + addDecl + run_cmd bypass',
+    refused: ['skipKernelTC', 'addDecl', 'run_cmd'].every(word =>
+      refused.some(violation => violation.includes(word))),
+    violations: refused,
+  });
+  const clean = 'namespace NobleFoundation\n\ntheorem clean : True := trivial\n';
+  cases.push({ case: 'clean source accepted', refused: hygieneViolations('clean.lean', clean).length === 0 });
+  const commented = ['namespace NobleFoundation',
+    '-- theorem line_comment : True := trivial',
+    '/- theorem block_comment : True := trivial -/',
+    'theorem declared : True := trivial', ''].join('\n');
+  const names = declarationsOf(commented);
+  cases.push({
+    case: 'comment-only declarations are not theorems',
+    refused: names.public.join() === 'NobleFoundation.declared' && names.private.length === 0,
+    declared: names,
+  });
+  const prefixed = ['namespace NobleFoundation',
+    'private theorem hidden : True := trivial',
+    'protected theorem guarded : True := trivial',
+    'theorem shown : True := trivial', ''].join('\n');
+  const split = declarationsOf(prefixed);
+  cases.push({
+    case: 'private and protected theorems are declared',
+    refused: split.private.join() === 'NobleFoundation.hidden,NobleFoundation.guarded'
+      && split.public.join() === 'NobleFoundation.shown',
+    declared: split,
+  });
+  const passed = cases.every(entry => entry.refused);
+  console.log(JSON.stringify({ self_test: passed, cases }, null, 2));
+  process.exit(passed ? 0 : 1);
+}
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
     timeout: 3600000, env: childBase, ...options });
@@ -38,6 +137,7 @@ function run(command, args, options = {}) {
 }
 
 const args = process.argv.slice(2);
+if (args.includes('--self-test')) runSelfTest();
 const allowDirty = args[0] === '--allow-dirty' ? (args.shift(), true) : false;
 requireThat(args.length === 0 || (args.length === 2 && args[0] === '--output'),
   'usage: check.mjs [--allow-dirty] [--output NEW_DIR]');
@@ -85,28 +185,33 @@ try {
   const sources = ['NobleFoundation.lean', ...readdirSync(sourceDir).filter(f => f.endsWith('.lean')).sort()
     .map(f => `NobleFoundation/${f}`)];
   const declared = [];
+  const privateDeclared = [];
   for (const file of sources) {
     const text = readFileSync(join(project, file), 'utf8');
-    const code = text.replace(/\/-[\s\S]*?-\//g, '').replace(/--.*$/gm, '');
-    for (const word of ['sorry', 'admit', 'native_decide', 'implemented_by', '@[extern', 'unsafe ', 'opaque ', 'partial ']) {
-      requireThat(!code.includes(word), `${file}: forbidden construct ${word}`);
-    }
-    requireThat(!/^\s*axiom\s/m.test(code), `${file}: declares an axiom`);
-    let namespace = '';
-    for (const line of code.split('\n')) {
-      const ns = line.match(/^namespace\s+(\S+)/);
-      if (ns) namespace = ns[1];
-      const th = line.match(/^\s*(?:@\[[^\]]*\]\s*)?theorem\s+(\S+)/);
-      if (th) declared.push(th[1].startsWith('_root_.') ? th[1].slice(7) : `${namespace}.${th[1]}`);
-    }
+    const violations = hygieneViolations(file, text);
+    requireThat(violations.length === 0, violations.join('; '));
+    const found = declarationsOf(text);
+    declared.push(...found.public);
+    privateDeclared.push(...found.private);
   }
   const inventory = JSON.parse(readFileSync(join(project, 'inventory.json')));
   const names = inventory.theorems.map(t => t.name);
   requireThat(new Set(names).size === names.length, 'duplicate inventory names');
+  const privateNames = inventory.private_theorems ?? [];
+  requireThat(Array.isArray(privateNames), 'inventory private_theorems is not a list');
+  requireThat(new Set(privateNames).size === privateNames.length, 'duplicate inventory private names');
+  requireThat(privateNames.every(name => !names.includes(name)),
+    'a private theorem is inventoried as public');
   const unlisted = declared.filter(name => !names.includes(name));
   const missing = names.filter(name => !declared.includes(name));
   requireThat(unlisted.length === 0, `theorems missing from inventory: ${unlisted.join(', ')}`);
   requireThat(missing.length === 0, `inventory names not declared: ${missing.join(', ')}`);
+  const unlistedPrivate = privateDeclared.filter(name => !privateNames.includes(name));
+  const missingPrivate = privateNames.filter(name => !privateDeclared.includes(name));
+  requireThat(unlistedPrivate.length === 0,
+    `private theorems missing from inventory.private_theorems: ${unlistedPrivate.join(', ')}`);
+  requireThat(missingPrivate.length === 0,
+    `inventory.private_theorems not declared: ${missingPrivate.join(', ')}`);
 
   const env = { ...childBase, TMPDIR: scratch };
   const build = run(lake, ['build', 'NobleFoundation'], { cwd: project, env });
@@ -171,6 +276,7 @@ try {
     sources_sha256: Object.fromEntries(hashed.map(p => [p, fileHash(join(root, p))])),
     allowed_axioms: inventory.allowed_axioms,
     theorem_count: theorems.length,
+    private_theorems: privateDeclared,
     theorems,
     implementation_theorem: false,
     artifact_directory: retained ? scratch : null,

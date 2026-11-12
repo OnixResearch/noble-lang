@@ -33,6 +33,16 @@ stage() {
 }
 stage check env -i "$node" verification/foundation/check.mjs --output "$out/check" || status=1
 stage claims env -i "$node" verification/foundation/claims.mjs > "$out/claims.json" || status=1
+# The retained audit is the committed claims.json. A regenerated audit that differs
+# means the tables and the retained result have drifted, which is a failure even when
+# both audits individually pass.
+if cmp -s "$out/claims.json" verification/foundation/claims.json; then
+  echo "claims-match=0" >> "$out/summary.txt"
+else
+  echo "claims-match=1" >> "$out/summary.txt"
+  echo "ci: regenerated claims audit differs from verification/foundation/claims.json" >&2
+  status=1
+fi
 if [ "$skip_slice" != "--skip-slice" ]; then
   stage slice env -i XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" "$node" verification/foundation/slice.mjs \
     --foundation "$out/check/foundation-check.json" --output "$out/slice" || status=1

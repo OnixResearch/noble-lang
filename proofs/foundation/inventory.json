@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -2914,6 +2914,102 @@
       "claim": "A corrupted witness can flip the verdict, so the recorded bits are load-bearing."
     },
     {
+      "name": "NobleFoundation.SymbolicSolver.stale_revision_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A stale or altered query binding is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.malformed_certificate_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A malformed certificate or witness is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.corrupted_encoding_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A corrupted graph encoding is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_unsupported",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An exhausted query budget is unsupported, not a refusal of the pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An unfinished query (UNKNOWN, error or timeout) is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_not_certified",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An unfinished query is never certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_not_refuted",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A model that does not replay on the original graphs is never refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.no_witness_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A finished query with no witness is inconclusive: external UNSAT is not agreement."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refuted_requires_replay",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A refuted status implies a found witness that replayed on the original graphs."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.clean_query_certifies",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A clean finished query whose bound certificate established agreement is certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.clean_query_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The clean fixture outcome is certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "An unfinished fixture outcome that already found agreement is inconclusive, not certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.no_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A finished fixture outcome with no agreement and no witness is inconclusive, not refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A fixture model that does not replay is inconclusive, not refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refuted_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A fixture model that replays is refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "An exhausted-budget fixture outcome is unsupported, not inconclusive."
+    },
+    {
       "name": "NobleFoundation.SymbolicSolver.encode_length",
       "phase": 2,
       "role": "symbolic-solver",
@@ -3028,6 +3124,66 @@
       "claim": "A step with an unknown rule identity cannot be accepted."
     },
     {
+      "name": "NobleFoundation.Certificate.neutral_add_left_bits_canonical",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted 0 + x step declares the graph's zero in both bit fields and claims zero."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_bits_canonical",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted x * 1 step declares the graph's one in both bit fields and claims zero."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_step_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The canonical 0 + x step on the identity fixture is accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_step_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The canonical x * 1 step on the identity fixture is accepted."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step that declares five at the graph's zero is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_second_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step whose two declared bit fields differ is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_add_left_claim_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "A 0 + x step that claims a nonzero constant is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step whose declared second bits are not the graph's one is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_first_bits_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step whose two declared bit fields differ is refused."
+    },
+    {
+      "name": "NobleFoundation.Certificate.neutral_mul_right_claim_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "An x * 1 step that claims a nonzero constant is refused."
+    },
+    {
       "name": "NobleFoundation.Certificate.stale_revision_kills_acceptance",
       "phase": 2,
       "role": "certificate",
@@ -3116,6 +3272,18 @@
       "phase": 2,
       "role": "certificate-codec",
       "claim": "A stale revision token refuses decoding before any step is inspected."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.chunk_count_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A chunk list whose length differs from the declared step count refuses."
+    },
+    {
+      "name": "NobleFoundation.CertificateCodec.dropped_chunk_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A chunk dropped in transit refuses instead of shortening the derivation."
     },
     {
       "name": "NobleFoundation.CertificateCodec.acceptance_preserved_by_codec",
@@ -5040,55 +5208,55 @@
     {
       "name": "NobleFoundation.Binary32.DecimalImport.digitsValue_snoc",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "appending one decimal digit multiplies the spelling value by ten and adds that digit"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.digitsValue_nil",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "the empty digit sequence has value zero"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_nonneg",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "a nonnegative exponent reads the spelling as digit value times ten to the exponent, over one"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_neg",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "a negative exponent reads the spelling as the digit value over ten to the negated exponent"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.zeroOf_false",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "the positive signed zero is the all-zero encoding"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.zeroOf_true",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "the negative signed zero is the sign bit alone"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.signedMagnitude_false",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "without a sign the magnitude is the plain binary32 encoding"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.rne_zero_magnitude",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "a zero digit value rounds to the signed zero of the spelling"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.rne_empty_digits",
       "phase": 1,
-      "role": "real-artifact",
+      "role": "binary32-decimal-import",
       "claim": "an empty digit sequence rounds to the signed zero of the spelling"
     },
     {
@@ -7497,5 +7665,52 @@
       "role": "unification-scope",
       "claim": "rebasal acts on exactly the level occurrences of a proposition and on nothing else"
     }
+  ],
+  "private_theorems": [
+    "NobleFoundation.enc_cons",
+    "NobleFoundation.exec_if_true",
+    "NobleFoundation.exec_if_false",
+    "NobleFoundation.exec_sum_left",
+    "NobleFoundation.exec_sum_right",
+    "NobleFoundation.CheckedI64.inRange_ok_iff",
+    "NobleFoundation.CheckedI64.inRange_overflow_iff",
+    "NobleFoundation.CheckedI64.sign_sign",
+    "NobleFoundation.CheckedI64.sign_sq_of_ne_zero",
+    "NobleFoundation.CheckedI64.sign_natAbs_zero",
+    "NobleFoundation.CheckedI64.sign_natAbs_nonzero",
+    "NobleFoundation.CheckedI64.tquot_natAbs",
+    "NobleFoundation.CheckedI64.trem_natAbs",
+    "NobleFoundation.CheckedI64.range_natAbs_le",
+    "NobleFoundation.CheckedI64.tquot_natAbs_le",
+    "NobleFoundation.CheckedI64.tquot_range_of_ne_upper",
+    "NobleFoundation.CheckedI64.tquot_upper_iff",
+    "NobleFoundation.Effects.i64_inv",
+    "NobleFoundation.Effects.res_inv",
+    "NobleFoundation.Effects.prog_inv",
+    "NobleFoundation.typed_pair",
+    "NobleFoundation.Isop.coverEval_append",
+    "NobleFoundation.Isop.map_false_eval_false",
+    "NobleFoundation.Isop.map_false_eval_true",
+    "NobleFoundation.Isop.map_none_eval_false",
+    "NobleFoundation.Isop.map_none_eval_true",
+    "NobleFoundation.Isop.map_true_eval_false",
+    "NobleFoundation.Isop.map_true_eval_true",
+    "NobleFoundation.snoc2_inj",
+    "NobleFoundation.LinkBoundary.split_body_run_unique",
+    "NobleFoundation.LinkBoundary.caller_root_run_unique",
+    "NobleFoundation.LinkBoundary.run_append",
+    "NobleFoundation.LinkBoundary.runtime_step_control_preserved",
+    "NobleFoundation.LinkBoundary.steps_trans",
+    "NobleFoundation.LinkBoundary.forward_simulation_steps",
+    "NobleFoundation.foldl_none",
+    "NobleFoundation.extend_mono_pos",
+    "NobleFoundation.extend_mono_neg",
+    "NobleFoundation.foldl_checked",
+    "NobleFoundation.extend_zero",
+    "NobleFoundation.ofInt_wrap_add",
+    "NobleFoundation.ofInt_wrap_sub",
+    "NobleFoundation.ofInt_wrap_mul",
+    "NobleFoundation.rep_succ",
+    "NobleFoundation.rep_succ_succ"
   ]
 }
