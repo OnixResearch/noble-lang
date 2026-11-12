@@ -18,11 +18,14 @@
 //! the fold rewrites in place, so the folded endpoint evaluates the same number of
 //! nodes and retains no more bytes while producing the same outputs, including for a
 //! sum that wraps. A three-step certificate (two independent folds and a recorded
-//! identity) is executed the same way, and corrupting any step after the first is
-//! still refused.
+//! identity) is executed the same way, and corrupting the recorded identity step's
+//! operands, bits or claim is refused like corrupting a fold.
 
 #[path = "cert/differential.rs"]
 mod differential;
+
+#[path = "cert/tamper.rs"]
+mod tamper;
 
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>
@@ -243,46 +246,5 @@ fn a_multi_step_certificate_executes_both_endpoints_identically(
 
 #[test]
 fn a_corrupted_later_step_of_a_multi_step_certificate_is_refused() {
-    let before = differential::independent_folds();
-    let (derivation, after) = differential::fold(&before);
-    let scheme = differential::TestIds;
-    let refused = |corrupt: &dyn Fn(&mut noble_ngraph::cert::Derivation)| {
-        let mut corrupted = derivation.clone();
-        corrupt(&mut corrupted);
-        noble_ngraph::cert::check(&scheme, &before, &after, &corrupted)
-    };
-    // Each corruption touches a step after the first, so a checker that validated only the
-    // leading step would accept all of them.
-    assert_eq!(
-        refused(&|corrupted| corrupted.steps[1].claimed ^= 1),
-        Err(noble_ngraph::cert::Refusal::ClaimMismatch),
-        "the second fold's claim"
-    );
-    assert_eq!(
-        refused(&|corrupted| corrupted.steps[1].second_bits ^= 1),
-        Err(noble_ngraph::cert::Refusal::ConstantMismatch),
-        "the second fold's declared constant"
-    );
-    assert_eq!(
-        refused(&|corrupted| corrupted.steps[2].operands.swap(0, 1)),
-        Err(noble_ngraph::cert::Refusal::Malformed),
-        "the identity step's operand order"
-    );
-    assert_eq!(
-        refused(&|corrupted| corrupted.steps.swap(1, 2)),
-        Err(noble_ngraph::cert::Refusal::Order),
-        "steps out of node order"
-    );
-    assert_eq!(
-        refused(&|corrupted| {
-            corrupted.steps.remove(1);
-        }),
-        Err(noble_ngraph::cert::Refusal::ResultMismatch),
-        "a fold applied in the result but missing from the derivation"
-    );
-    assert_eq!(
-        refused(&|_| {}),
-        Ok(()),
-        "the uncorrupted certificate is accepted"
-    );
+    tamper::later_steps_are_refused();
 }

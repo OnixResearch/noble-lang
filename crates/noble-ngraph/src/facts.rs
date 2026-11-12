@@ -365,8 +365,14 @@ fn grid_holds_f32(v: f32, log2: i32) -> bool {
     if !v.is_finite() {
         return false;
     }
-    // f64 scaling by 2^-k is exact for every binary32 value and |k| ≤ 300.
-    if !(-300..=300).contains(&log2) {
+    // Every finite binary32 value is an integer multiple of 2^-149, the smallest
+    // subnormal step, so a grid at or below that step holds for every finite value.
+    if log2 <= -149 {
+        return true;
+    }
+    // f64 scaling by 2^-k is exact for every binary32 value and k ≤ 300; finer than
+    // that no nonzero value is a multiple.
+    if log2 > 300 {
         return v == 0.0;
     }
     let scaled = f64::from(v) * crate::sem::soft::pow2_f64(-log2);
@@ -507,5 +513,90 @@ pub fn group_values(
     match fact {
         crate::ir::Fact::OneHot { group, .. } => group.iter().map(|g| value_of(*g)).collect(),
         _ => alloc::vec::Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    struct TestHasher(u64);
+
+    impl crate::identity::IdentityHasher for TestHasher {
+        fn update(&mut self, bytes: &[u8]) {
+            for &byte in bytes {
+                self.0 = self.0.wrapping_mul(31).wrapping_add(u64::from(byte));
+            }
+        }
+
+        fn finish(self: alloc::boxed::Box<Self>) -> crate::ir::Digest {
+            let mut digest = [0u8; 32];
+            digest[..8].copy_from_slice(&self.0.to_le_bytes());
+            digest
+        }
+    }
+
+    struct TestIds;
+
+    impl crate::identity::IdentityScheme for TestIds {
+        fn name(&self) -> &'static str {
+            "test"
+        }
+
+        fn start(&self) -> alloc::boxed::Box<dyn crate::identity::IdentityHasher + '_> {
+            alloc::boxed::Box::new(TestHasher(0))
+        }
+    }
+
+    fn grid(log2: i32) -> crate::ir::Fact {
+        crate::ir::Fact::Grid { log2 }
+    }
+
+    #[test]
+    fn a_grid_at_or_below_the_smallest_binary32_step_holds_for_every_finite_value() {
+        // Every finite binary32 value is an integer multiple of 2^-149.
+        assert!(super::grid_holds_f32(1.0, -301));
+        assert!(super::grid_holds_f32(f32::MIN_POSITIVE, -149));
+        assert!(super::grid_holds_f32(-f32::MIN_POSITIVE, -149));
+        assert!(super::grid_holds_f32(f32::MAX, -149));
+        assert!(super::grid_holds_f32(f32::from_bits(1), -149));
+        assert!(super::AbsF32::exact(1.0).implies(&grid(-301)));
+        assert!(super::holds(
+            &grid(-301),
+            crate::sem::Value::F32(1.0f32.to_bits()),
+            &[],
+            None
+        ));
+        // The coarse direction is unchanged: no nonzero value is a multiple of 2^301,
+        // and the smallest subnormal is not a multiple of 2^-148.
+        assert!(!super::grid_holds_f32(f32::INFINITY, -301));
+        assert!(!super::grid_holds_f32(1.0, 301));
+        assert!(super::grid_holds_f32(0.0, 301));
+        assert!(!super::grid_holds_f32(f32::from_bits(1), -148));
+    }
+
+    #[test]
+    fn a_grid_below_the_smallest_binary32_step_passes_a_guard() {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::F32,
+            crate::ir::Subject::authored(&scheme, "facts-grid-guard"),
+        );
+        let one = builder.f32_const(1.0);
+        let _guard = builder.guard(grid(-301), one);
+        builder.output(one);
+        let checked = crate::check::check(&scheme, builder.finish())
+            .expect("the guarded constant graph is admitted");
+        let mut control = crate::eval::Control {
+            fuel: None,
+            cancel: None,
+            scratch: None,
+            forward_scratch: None,
+            evaluated_nodes: None,
+        };
+        let report = crate::eval::reference(&checked, &[], None, &mut control);
+        assert_eq!(
+            report.obs,
+            crate::eval::Obs::Normal(alloc::vec![crate::sem::Value::F32(1.0f32.to_bits())]),
+            "the runtime fact test agrees with the static implication"
+        );
     }
 }
