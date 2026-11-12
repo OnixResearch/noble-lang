@@ -4,10 +4,15 @@
 pub(crate) fn select(
     engine: &crate::companion::Core,
     evidence: crate::companion::EvidenceId,
+    subject: &crate::companion::Subject,
 ) -> Result<crate::companion::Release, crate::companion::Refusal> {
     let entry = attempt!(crate::companion::registry::application::proved(
         engine, evidence
     ));
+    // Release is a decision about this subject, so the same complete
+    // observation applicability that `bind` uses decides it; a digest or
+    // cache match alone never does.
+    attempt!(crate::companion::registry::application::matches_observation(&entry.subject, subject));
     Ok(crate::companion::Release {
         contract: entry.contract,
         evidence,

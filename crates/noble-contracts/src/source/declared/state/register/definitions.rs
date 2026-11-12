@@ -153,7 +153,7 @@ fn conflicts_with_definition(
     else {
         return false;
     };
-    declared_version.parse::<u32>().ok() == Some(version)
+    crate::source::declared::canonical_version(declared_version) == Some(version)
         && contains_exported_word(local_exports, word)
 }
 

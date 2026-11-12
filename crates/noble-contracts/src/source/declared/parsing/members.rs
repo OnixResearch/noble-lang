@@ -549,6 +549,15 @@ fn variant_arm(
     crate::Diagnostic,
 > {
     let (cursor, left) = attempt!(cursor.ident());
+    // `match` is the variant's generated eliminator suffix, so an arm with
+    // that spelling would publish two words spelled `V.match` and make the
+    // constructor unreachable.
+    if left == "match" {
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "variant arm 'match' collides with the generated eliminator",
+        ));
+    }
     let (cursor, left_type) = attempt!(cursor.next());
     let left_type = alloc::string::String::from(left_type);
     let (cursor, left_public) = attempt!(cursor.public());

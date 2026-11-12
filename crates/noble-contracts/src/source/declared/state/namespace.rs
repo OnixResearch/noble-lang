@@ -47,10 +47,9 @@ impl super::ModuleSession {
                 "expected versioned exported type"
             )));
         let located = if let Some((name, version)) = super::super::split_once_ascii(module, b'@') {
-            let version = attempt!(version.parse::<u32>().map_err(|_| super::super::error(
-                crate::source::Stage::Resolve,
-                "invalid type module version"
-            )));
+            let version = attempt!(super::super::canonical_version(version).ok_or_else(|| {
+                super::super::error(crate::source::Stage::Resolve, "invalid type module version")
+            }));
             let mut found = None;
             let mut at = 0usize;
             while at < self.modules.len() {

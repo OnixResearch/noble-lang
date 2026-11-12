@@ -137,7 +137,7 @@ pub(super) fn refutation(state: &mut super::Harness) {
         Err(noble_contracts::companion::Refusal::WrongPremiseClass)
     );
     assert_eq!(
-        core.release(refutation_id),
+        core.release(refutation_id, &refuted_subject),
         Err(noble_contracts::companion::Refusal::WrongPremiseClass)
     );
     assert_eq!(

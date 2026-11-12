@@ -20,7 +20,7 @@ pub(super) fn module_word(module: &super::Module, name: &str) -> bool {
     let Some((version, word)) = super::split_once_ascii(rest, b'.') else {
         return false;
     };
-    version.parse::<u32>().ok() == Some(module.version) && has_word(module, word)
+    super::canonical_version(version) == Some(module.version) && has_word(module, word)
 }
 
 fn has_word(module: &super::Module, word: &str) -> bool {

@@ -594,11 +594,12 @@ impl ModulePrepared {
         if module.definition_spans.is_empty() {
             return Err(ProgramClosureError::Invalid);
         }
-        // The closure traversal is bounded by the definition cap; a larger
-        // module exhausts the traversal, it is not thereby invalid.
+        // The closure traversal is bounded by the module definition cap that
+        // admission enforces, not by the module *count* cap; a module at its
+        // legal definition cap still closes.
         if core::iter::once(module)
             .chain(dependencies.iter().copied())
-            .any(|selected| selected.definition_spans.len() > super::MODULE_CAP)
+            .any(|selected| selected.definition_spans.len() > super::CONSTRUCTOR_CAP)
         {
             return Err(ProgramClosureError::Exhausted);
         }

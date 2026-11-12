@@ -50,6 +50,13 @@ pub(crate) fn subject_json(prepared: &noble_contracts::Prepared, source: &[u8]) 
     subject::describe(prepared, source)
 }
 
+/// The canonical contract library root this process compiles and checks
+/// against (`NOBLE_CONTRACT_LIBRARY` or the pinned default). The proof-required
+/// build binds only the bytes this selection actually uses.
+pub(crate) fn contract_library_root() -> Result<std::path::PathBuf, output::Failure> {
+    rules::root()
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; run records argument, verification and emission failures in the JSON report before choosing the outcome's exit status. External failures must remain reportable rather than become assertion panics."

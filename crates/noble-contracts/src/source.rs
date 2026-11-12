@@ -755,7 +755,8 @@ impl Session {
 
     /// Names of current named dependents whose resolved calls reach `name`, in
     /// declaration order. Historical definitions retained for captured Programs
-    /// are not dependents.
+    /// are not dependents themselves, but a current body that reaches `name`
+    /// through one is reported: the resolved hop does not hide the dependency.
     pub fn current_dependent_names(&self, name: &str) -> alloc::vec::Vec<alloc::string::String> {
         let Some(index) = self
             .definitions
@@ -803,22 +804,28 @@ impl Session {
         affected[original] = true;
         let mut dependents = alloc::vec::Vec::new();
         for (index, definition) in self.definitions.iter().enumerate() {
-            if index == original
-                || self
-                    .definitions
-                    .iter()
-                    .skip(index.saturating_add(1))
-                    .any(|later| later.name == definition.name)
-            {
+            if index == original {
                 continue;
             }
-            if definition.tree.nodes.iter().any(|node| match &node.kind {
+            let reaches = definition.tree.nodes.iter().any(|node| match &node.kind {
                 Kind::Call(Target::Named(target)) => {
                     affected.get(*target as usize).copied().unwrap_or(false)
                 }
                 _ => false,
-            }) {
-                affected[index] = true;
+            });
+            if !reaches {
+                continue;
+            }
+            // A shadowed historical definition is still a resolved hop: a
+            // current body that calls it reaches the original identity through
+            // it, even though the hop itself is not a live dependent.
+            affected[index] = true;
+            let is_shadowed = self
+                .definitions
+                .iter()
+                .skip(index.saturating_add(1))
+                .any(|later| later.name == definition.name);
+            if !is_shadowed {
                 dependents.push(index);
             }
         }
@@ -1658,6 +1665,42 @@ mod tests {
         );
         assert_eq!(session.current_dependent_names("addone"), ["twice", "four"]);
         assert_eq!(preview.current_dependent_names("addone"), ["twice", "four"]);
+    }
+
+    #[test]
+    fn a_dependency_through_a_shadowed_definition_is_still_a_dependent() {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let mut session = Session::new();
+        for source in [
+            b"def x [ 1 + ]".as_slice(),
+            b"def h [ x ]",
+            b"def c [ h ]",
+            b"def h [ 2 + ]",
+        ] {
+            let prepared = session.prepare(source, &[], limits).unwrap();
+            session.commit(prepared).unwrap();
+        }
+        // `c` is current and its immutable resolved call reaches the old `x`
+        // through the shadowed historical `h`; `h` itself is not live.
+        assert_eq!(session.current_dependent_names("x"), ["c"]);
+        assert!(session.live_definition_has_dependents("x"));
+        assert!(session.current_dependent_names("h").is_empty());
+        // The successor cannot retarget `c`'s shadowed hop, so the batch is
+        // refused instead of silently leaving `c` on the old `x`.
+        let replacement = session.prepare(b"def x [ 3 + ]", &[], limits).unwrap();
+        let failure = session.preview_core_rebuild(&replacement).unwrap_err();
+        assert!(
+            failure
+                .diagnostic()
+                .message
+                .contains("unapproved resolved call target"),
+            "{failure:?}"
+        );
     }
 
     #[test]

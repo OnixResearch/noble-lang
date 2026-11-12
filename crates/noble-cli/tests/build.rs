@@ -77,6 +77,7 @@ fn usage_failures_are_reported_as_errors() -> std::io::Result<()> {
         vec![],
         vec!["--require-proof", "[ 1 + ]"],
         vec!["--require-proof", "[ 1 + ]", "--contract"],
+        vec!["[ 1 + ]", "--contract", "a"],
         vec![
             "--require-proof",
             "[ 1 + ]",
@@ -208,4 +209,47 @@ fn rejected_contract_blocks_release_as_error() -> std::io::Result<()> {
     assert_blocked(&outcome, "error", 2);
     std::fs::remove_file(source)?;
     std::fs::remove_file(contract)
+}
+
+#[test]
+fn v2_refuses_an_empty_library_tree_before_binding_it() -> std::io::Result<()> {
+    let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("noble-build-{}-toolchain", std::process::id()));
+    std::fs::create_dir_all(root.join("lib"))?;
+    let lean = root.join("lean");
+    std::fs::write(&lean, b"not the selected Lean release")?;
+    let source = write_file(FileInput {
+        name: "v2-source.noble",
+        contents: "[ 1 + ]\n",
+    })?;
+    let outcome = build(&[
+        "--require-proof".as_ref(),
+        source.as_os_str(),
+        "--contract".as_ref(),
+        fixture("increment.noble-contract").as_os_str(),
+        "--report-schema".as_ref(),
+        "v2".as_ref(),
+        "--lean-binary".as_ref(),
+        lean.as_os_str(),
+        "--library-tree".as_ref(),
+        root.join("lib").as_os_str(),
+    ])?;
+    assert_eq!(outcome.status, Some(4), "stdout: {}", outcome.stdout);
+    assert!(
+        outcome.stdout.contains("\"schema\":\"noble-mc2-build/v2\""),
+        "{}",
+        outcome.stdout
+    );
+    assert!(
+        outcome.stdout.contains("\"code\":\"toolchain-binding\""),
+        "{}",
+        outcome.stdout
+    );
+    assert!(
+        outcome.stdout.contains("contains no files"),
+        "{}",
+        outcome.stdout
+    );
+    std::fs::remove_file(source)?;
+    std::fs::remove_dir_all(&root)
 }

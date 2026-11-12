@@ -32,7 +32,7 @@ pub(super) fn record(
         };
         let release = core
             .bind_artifact(evidence, submission)
-            .and_then(|_| core.release(evidence));
+            .and_then(|subject| core.release(evidence, &subject));
         record_bound(report, &admission, release, refusals);
         return;
     }
@@ -48,18 +48,6 @@ pub(super) fn record(
         core_contract: contract.map(|contract| contract.0),
         core_evidence: evidence.map(|evidence| evidence.0),
     };
-}
-
-pub(super) fn allowed(reason: &str) -> super::report::ReleaseDecision {
-    super::report::ReleaseDecision {
-        allowed: true,
-        reason: reason.into(),
-        refusals: std::vec::Vec::new(),
-        core_subject: None,
-        core_statement: None,
-        core_contract: None,
-        core_evidence: None,
-    }
 }
 
 const fn outcome_of(
@@ -121,10 +109,70 @@ fn record_bound(
                     ),
                     refusals: refused,
                     core_subject: None,
-                    core_statement: report.statement_digest,
+                    // The same core digest the released branch stores: the
+                    // report's `claim_statement_digest` is a different fold
+                    // family (over Lean statement text), not the core value.
+                    core_statement: Some(admission.statement_digest),
                     core_contract: admission.contract.map(|contract| contract.0),
                     core_evidence: admission.evidence.map(|evidence| evidence.0),
                 };
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::record_bound;
+
+    /// The core's own digest, deliberately different from the CLI's
+    /// claim-statement fold so a branch that stores the wrong family fails.
+    const CORE_STATEMENT: u64 = 0x0123_4567_89ab_cdef;
+
+    const CLI_CLAIM_FOLD: u64 = 0xdead_beef_cafe_f00d;
+
+    fn admission() -> noble_contracts::companion::Admission {
+        noble_contracts::companion::Admission {
+            outcome: noble_contracts::companion::Outcome::Proved,
+            contract: Some(noble_contracts::companion::ContractId(7)),
+            evidence: Some(noble_contracts::companion::EvidenceId(3)),
+            statement_digest: CORE_STATEMENT,
+            refusals: std::vec::Vec::new(),
+        }
+    }
+
+    fn document() -> crate::build::report::Document {
+        let mut document = crate::build::report::Document::new();
+        document.statement_digest = Some(CLI_CLAIM_FOLD);
+        document
+    }
+
+    #[test]
+    fn released_and_refused_reports_carry_the_core_statement_digest() {
+        let admission = admission();
+        let mut released = document();
+        record_bound(
+            &mut released,
+            &admission,
+            Ok(noble_contracts::companion::Release {
+                contract: noble_contracts::companion::ContractId(7),
+                evidence: noble_contracts::companion::EvidenceId(3),
+                statement: CORE_STATEMENT,
+                subject: noble_contracts::companion::SubjectDigest(9),
+                policy: 1,
+                ruleset: noble_contracts::companion::RULESET_V1,
+            }),
+            std::vec::Vec::new(),
+        );
+        let mut refused = document();
+        record_bound(
+            &mut refused,
+            &admission,
+            Err(noble_contracts::companion::Refusal::MismatchedSubject),
+            std::vec::Vec::new(),
+        );
+        assert_eq!(released.release.core_statement, Some(CORE_STATEMENT));
+        assert_eq!(refused.release.core_statement, Some(CORE_STATEMENT));
+        assert_ne!(refused.release.core_statement, Some(CLI_CLAIM_FOLD));
+        assert!(!refused.release.allowed);
     }
 }

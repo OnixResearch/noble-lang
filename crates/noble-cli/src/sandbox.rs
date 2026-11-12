@@ -43,6 +43,13 @@ pub fn configured_path(key: &str, default: &std::path::Path) -> std::path::PathB
     }
 }
 
+/// The Lean release binary the sandboxed checker invokes: `NOBLE_LEAN` or the
+/// selected installation's `lean`, resolved exactly as `Environment::discover`
+/// resolves it. Callers that bind a toolchain must bind these bytes.
+pub(crate) fn release_binary() -> Result<std::path::PathBuf, crate::workflow::output::Failure> {
+    runtime::installation().map(|(lean, _root)| lean)
+}
+
 #[allow(
     tigerstyle::ambient_clock,
     reason = "Owner: noble-maintainers. The process boundary must observe monotonic time to enforce the shared wall-clock deadline against real child processes."

@@ -201,6 +201,18 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     assert_eq!(nominal[0].declaration().id.module, owner.0);
     assert!(prepared.resolve_type("package@1.Choice").is_ok());
     assert!(prepared.resolve_type("package@2.Choice").is_err());
+    // References share the module header's canonical spelling: no leading
+    // zero and no sign.
+    for non_canonical in ["package@01.Choice", "package@+1.Choice"] {
+        let refusal = prepared
+            .resolve_type(non_canonical)
+            .expect_err("a non-canonical version names no module");
+        assert_eq!(
+            refusal.stage(),
+            noble_contracts::source::Stage::Resolve,
+            "{non_canonical}"
+        );
+    }
     let root = prepared
         .checked_program_owner("root")
         .ok_or("exported root lost source identity")?;
@@ -279,6 +291,43 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
         host_module.checked_program_closure("handle").err() == Some(ProgramClosureError::Invalid),
         "an independently linked host adapter must not enter a pure worker package"
     );
+    Ok(())
+}
+
+#[test]
+fn a_module_at_the_definition_cap_still_closes_its_worker_program() -> Result<(), String> {
+    // 128 definitions plus the exported root is over the module *count* cap
+    // but inside the definition cap admission enforces.
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false, retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let mut source = String::from("module big@1 [ ");
+    for index in 0..128usize {
+        source.push_str(&format!("def d{index} [ 0 drop ] "));
+    }
+    source.push_str("export root def root [ ");
+    for index in 0..128usize {
+        source.push_str(&format!("d{index} "));
+    }
+    source.push_str("] ]");
+    // The shared fixture node budget is sized for small modules; a module with
+    // 129 definitions exceeds it while the closure bound under test is separate.
+    let limits = noble_contracts::Limits {
+        bytes: 65_536,
+        nodes: 2_000_000,
+        depth: 64,
+        work: 100_000_000,
+    };
+    let prepared = session
+        .prepare(source.as_bytes(), &[], limits)
+        .map_err(|error| format!("{error:?}"))?;
+    let closure = prepared
+        .checked_program_closure("root")
+        .map_err(|error| format!("a module at its definition cap must close: {error:?}"))?;
+    let ordinals: Vec<u32> = closure
+        .iter()
+        .map(|entry| entry.definition_ordinal())
+        .collect();
+    assert_eq!(ordinals, (0u32..129).collect::<Vec<_>>());
     Ok(())
 }
 
@@ -608,30 +657,53 @@ fn invalid_initializers_and_imports_leave_generation_unchanged() -> Result<(), S
     )
     .map_err(|e| format!("{e:?}"))?;
     let generation = session.generation();
-    assert!(
-        matches!(&session.prepare(b"import ledger@99 as missing",&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Resolve)
-    );
-    assert!(session
-        .prepare(
+    for (source, expected_stage, expected_message) in [
+        (
+            b"import ledger@99 as missing".as_slice(),
+            noble_contracts::source::Stage::Resolve,
+            "missing immutable module version",
+        ),
+        (
             b"module ledger@1 [ export handle def handle [ \"audit\" test.emit ] ]",
-            &[],
-            LIMITS
-        )
-        .is_err());
-    assert!(session
-        .prepare(b"module ledger@1 [ \"initializer\" ]", &[], LIMITS)
-        .is_err());
-    assert!(session
-        .prepare(b"module ledger@1 [ export missing ]", &[], LIMITS)
-        .is_err());
-    assert!(session
-        .prepare("module café@1 [ ]".as_bytes(), &[], LIMITS)
-        .is_err());
-    assert!(session
-        .prepare(b"\"audit\" test.emit", &[], LIMITS)
-        .is_err());
+            noble_contracts::source::Stage::Resolve,
+            "unbound or recursive module word",
+        ),
+        (
+            b"module ledger@1 [ \"initializer\" ]",
+            noble_contracts::source::Stage::Parse,
+            "unknown module declaration or initializer",
+        ),
+        (
+            b"module ledger@1 [ export missing ]",
+            noble_contracts::source::Stage::Resolve,
+            "export references missing declaration",
+        ),
+        (
+            "module café@1 [ ]".as_bytes(),
+            noble_contracts::source::Stage::Parse,
+            "word contains a character outside the ASCII token grammar",
+        ),
+        (
+            b"\"audit\" test.emit",
+            noble_contracts::source::Stage::Resolve,
+            "unbound or unexported module word",
+        ),
+    ] {
+        let refusal = session
+            .prepare(source, &[], LIMITS)
+            .expect_err("invalid source must not prepare");
+        assert_eq!(refusal.stage(), expected_stage, "{refusal:?}");
+        assert_eq!(refusal.diagnostic().message, expected_message);
+    }
     assert_pure_candidate(&session)?;
-    assert_eq!(session.generation(), generation);
+    // The generation counter only moves on a commit: if a refused preparation
+    // had advanced it, the successful commit below would be two ahead.
+    let prepared = session
+        .prepare(b"1", &[], LIMITS)
+        .map_err(|e| format!("{e:?}"))?;
+    let (session, outcome) = session.commit(prepared);
+    outcome.map_err(|e| format!("{e:?}"))?;
+    assert_eq!(session.generation(), generation + 1);
     Ok(())
 }
 

@@ -106,6 +106,12 @@ pub(super) fn read_library() -> Result<Library, super::output::Failure> {
     Ok(Library { root, modules })
 }
 
+/// The canonical library root `read_library` compiles, with the same
+/// absolute-path and pinned-toolchain checks.
+pub(super) fn root() -> Result<std::path::PathBuf, super::output::Failure> {
+    selected_root()
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; selected_root rejects relative or unresolved library paths and a mismatched byte-bounded toolchain pin with Unsupported. Configuration and filesystem errors must remain typed failures."

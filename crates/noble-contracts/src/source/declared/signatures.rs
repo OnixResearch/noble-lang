@@ -511,10 +511,7 @@ fn named_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
 fn exported_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
     let (qualified_module, export_name) = word.rsplit_once('.')?;
     let (module_name, version) = qualified_module.rsplit_once('@')?;
-    if version.as_bytes().first() == Some(&b'0') {
-        return None;
-    }
-    let version = version.parse::<u32>().ok()?;
+    let version = super::canonical_version(version)?;
     let module = families
         .modules
         .iter()

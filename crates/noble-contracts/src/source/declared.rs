@@ -465,6 +465,20 @@ fn split_once_ascii(text: &str, separator: u8) -> Option<(&str, &str)> {
     }
 }
 
+/// A canonical decimal module version: digits only, no sign, no leading zero
+/// and representable as `u32`. Module headers and every reference to a
+/// versioned module share this one spelling, so `m@01` and `m@+1` never name
+/// `m@1`.
+fn canonical_version(text: &str) -> Option<u32> {
+    if text.is_empty() || text.as_bytes().first() == Some(&b'0') {
+        return None;
+    }
+    if !text.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    text.parse::<u32>().ok()
+}
+
 const fn quotation_step(depth: u32, token: &crate::source::lexer::Token) -> Option<(u32, bool)> {
     if let crate::source::lexer::TokenKind::Open = &token.kind {
         let Some(next_depth) = depth.checked_add(1) else {
