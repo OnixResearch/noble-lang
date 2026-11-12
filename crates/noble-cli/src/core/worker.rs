@@ -705,11 +705,7 @@ impl Engine {
         id: u64,
         store: &str,
     ) -> Result<super::output::Report, super::output::Failure> {
-        if store.len() != 36
-            || !store
-                .bytes()
-                .all(|byte| byte.is_ascii_hexdigit() || byte == b'-')
-        {
+        if !wire_store_id(store) {
             return Err(protocol::error());
         }
         attempt!(self.write(std::format!("release-source-observation {id} {store}\n").as_bytes()));
@@ -984,6 +980,16 @@ impl Drop for Engine {
             eprintln!("noble: engine worker cleanup failed: {}", error.message);
         }
     }
+}
+
+/// The engine's `release-source-observation` header names a store with its
+/// canonical lowercase UUID grammar. Operator input is normalized by framing,
+/// so any other spelling here is a host-side defect, not an operator refusal.
+fn wire_store_id(store: &str) -> bool {
+    store.len() == 36
+        && store
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte) || byte == b'-')
 }
 
 fn private_scratch() -> Result<crate::workflow::artifacts::Temporary, super::output::Failure> {

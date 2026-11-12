@@ -1119,6 +1119,16 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
                 "authority grant requires exactly one slot or nominal scope",
             ));
         }
+        // Effects are performed on behalf of one selected dispatch target, so
+        // they are authorized only by a slot-scoped grant. A nominal-scoped
+        // `effect` entry could otherwise name the same identifier as a slot and
+        // re-enable a denied protected effect once the two scopes are keyed
+        // together.
+        if op == "effect" && nominal.is_some() {
+            return Err(reject(
+                "authority effect grant requires a slot scope, not a nominal",
+            ));
+        }
         if !grant_keys.insert((op.to_owned(), slot.clone(), nominal.clone())) {
             return Err(reject("duplicate authority grant"));
         }
@@ -2954,6 +2964,10 @@ impl Host {
         if record && self.replays.len() >= MAX_INSTALLS {
             return Err(reject("recorded root retention limit exhausted"));
         }
+        // The session must refuse an invocation whose checked Program outputs
+        // cannot be retained before the guest runs: only then are no effects
+        // performed and no trace rows dropped for a root the host cannot own.
+        self.require_saved_program_capacity(&module_id)?;
         let mut invocation = self.invocation(request, &module_id)?;
         invocation["record"] = json!(record);
         self.worker_invocation_started = true;
@@ -3017,6 +3031,27 @@ impl Host {
             }
         }
         Ok(report)
+    }
+
+    /// Refuse before the guest runs when this root's checked Program outputs
+    /// would exceed the session's saved-Program ledger.
+    fn require_saved_program_capacity(&self, module_id: &str) -> Result<(), String> {
+        let output = &self
+            .candidates
+            .get(module_id)
+            .ok_or_else(|| reject("unknown checked caller"))?
+            .output;
+        let program_outputs = output
+            .iter()
+            .filter(|descriptor| descriptor.starts_with("Program("))
+            .count();
+        if self.programs.len().saturating_add(program_outputs) > MAX_SAVED_PROGRAMS {
+            return Err(reject(&format!(
+                "saved Program capacity {MAX_SAVED_PROGRAMS} is exhausted; \
+                 this root would retain {program_outputs} checked output(s)"
+            )));
+        }
+        Ok(())
     }
 
     fn retain_program_outputs(
