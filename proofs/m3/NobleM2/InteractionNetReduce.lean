@@ -4,15 +4,24 @@ import NobleM2.InteractionNetV2
 # The arithmetic rule of revision 2 (issue #37)
 
 The reducer's core, isolated: a binary agent holds one LIFO stack per operand port and fires when
-both are non-empty, popping one value from each and pushing the result onto its result wire.
+both are non-empty. A firing pops one value from each operand port and **discards** the value the
+rule computes.
 
 The contract's decisions are visible in the type: operand order is the **port**, never the source
 (`first - second` below); stacks are **LIFO**; and values are `BitVec 64`, so wrapping is the
 operation rather than a mode.
 
-Proved here: when the rule fires, when it does not, that `Sub` subtracts in port order, and that each
-firing consumes exactly two operands. Not proved and not modelled: the worklist, wire transport,
-fanout, erasure, boundary read-back, or any budget.
+Proved here: when a rule fires and when it does not; that `Sub` subtracts in port order; that a
+firing consumes exactly two operands; the fanout and erase value effects; the shape of boundary
+read-back; non-wrapping rewrite and retained-byte charges; the stack reducer `stepList`/`run` and its
+node-count, fuel and potential bounds; and a certificate checker over a net's own node list.
+
+Not modelled: **delivery**. No agent's result reaches another agent's operand stack, so there is no
+whole-net reduction here — `pushNode` and `deliverOutput` are the pieces a delivery-capable reducer
+needs and have no call site. Fanout and erase are value-effect formulas only: `stepNode` never fires
+them. `run`'s `some` means "no node is reducible", not "the net has produced its outputs"
+(`run_some_all_irreducible`), and the "progress" theorem below is a fact about the operand scan, not
+a statement that `stepList` keeps going (`anyFireable_disagrees_with_stepList`).
 -/
 
 namespace NobleM2.InteractionNet
@@ -79,7 +88,7 @@ theorem fire_non_arithmetic (kind : AgentKind) (h : kind.isArithmetic = false)
           cases kind <;> simp_all [AgentKind.isArithmetic, fire]
 
 /-- **Stack effect**: a firing pops exactly the two heads and leaves the tails, whatever the
-operator. Stated as the shape of the result, which is what a worklist update needs. -/
+arithmetic operator. Stated as the shape of the result, which is what a delivery update needs. -/
 theorem fire_consumes_heads {kind : AgentKind} (hk : kind.isArithmetic = true)
     (a b : Value) (as bs : List Value) :
     ∃ v : Value, fire kind ⟨a :: as, b :: bs⟩ = some (⟨as, bs⟩, v) := by
@@ -98,9 +107,11 @@ def fireErase (_v : Value) : List Value := []
 
 theorem fireErase_empty (v : Value) : fireErase v = [] := rfl
 
-/-- Net change in the number of live values caused by one firing of each agent kind. Arithmetic
-consumes two and produces one; fanout consumes one and produces two; erase consumes one and produces
-none; a value or boundary agent is not a firing. -/
+/-- The change in the number of live values that one firing of each rule causes in a net that
+delivers the rule's result onto a wire: arithmetic consumes two and emits one, fanout consumes one
+and emits two, erase consumes one and emits none, and a value or boundary agent is not a firing.
+This is a per-rule quantity, not the reducer's state change: `stepNode` does not deliver anything,
+so the waiting-value count drops by exactly the two consumed operands (`fire_ops_lengths`). -/
 def valueDelta : AgentKind → Int
   | .add => -1
   | .sub => -1
@@ -112,15 +123,15 @@ def valueDelta : AgentKind → Int
   | .input => 0
   | .output => 0
 
-/-- Every arithmetic firing reduces the value count by one. -/
+/-- Every arithmetic rule's value delta is minus one. -/
 theorem valueDelta_arithmetic (kind : AgentKind) (hk : kind.isArithmetic = true) :
     valueDelta kind = -1 := by
   cases kind <;> simp_all [AgentKind.isArithmetic, valueDelta]
 
-/-- Fanout is the only rule that increases the value count. -/
+/-- Fanout's delta is plus one: it is the rule that increases the value count. -/
 theorem valueDelta_fanout : valueDelta .fanout = 1 := rfl
 
-/-- Erase reduces the value count by one. -/
+/-- Erase's delta is minus one. -/
 theorem valueDelta_erase : valueDelta .erase = -1 := rfl
 
 /-- A fanout is the only rule with a positive delta, and an arithmetic agent is never it. -/
@@ -129,11 +140,14 @@ theorem arithmetic_delta_not_positive (kind : AgentKind) (hk : kind.isArithmetic
   rw [valueDelta_arithmetic kind hk]
   decide
 
-/-- A node is fireable when both operand stacks are non-empty. -/
+/-- An operand pair is fireable when both of its stacks are non-empty. The predicate carries no
+agent kind, so it is the firing condition of the arithmetic rules only. -/
 def fireable (ops : Operands) : Bool :=
   !ops.first.isEmpty && !ops.second.isEmpty
 
-/-- The worklist scan: is any node fireable? -/
+/-- The operand scan: is any entry's pair of operand stacks fireable? This is not the reducer's
+worklist: `stepList` decides with `stepNode`, so a value, fanout or erase agent holding two full
+stacks is fireable here and irreducible there (`anyFireable_disagrees_with_stepList`). -/
 def anyFireable (nodes : List Operands) : Bool :=
   nodes.any fireable
 
@@ -149,8 +163,8 @@ theorem anyFireable_iff (nodes : List Operands) :
   unfold anyFireable
   exact List.any_eq_true
 
-/-- **Progress**: if a fireable node exists, the scan finds one, so the reducer never stalls while
-work remains. -/
+/-- **Scan progress**: if one of the operand pairs is fireable, the scan finds it. This is a fact
+about the operand scan alone; it says nothing about `stepList`, which does not consult the scan. -/
 theorem anyFireable_of_mem {nodes : List Operands} {ops : Operands}
     (hmem : ops ∈ nodes) (h : fireable ops = true) : anyFireable nodes = true := by
   unfold anyFireable
@@ -173,7 +187,8 @@ theorem anyFireable_cons_true {ops : Operands} {nodes : List Operands}
   rw [anyFireable, List.any_cons, h]
   simp
 
-/-- Read-back of boundary outputs: the complete vector in order, or a refusal. -/
+/-- Read-back of boundary outputs: the complete vector in order, or a refusal. The reducer never
+calls it; it is the check a delivery-capable reducer needs. -/
 def readBack (expected : Nat) (values : List Value) : Option (List Value) :=
   if values.length = expected then some values else none
 
@@ -206,15 +221,17 @@ theorem readBack_length {expected : Nat} {values out : List Value}
   have hlen := (readBack_complete_iff expected values).mp (h ▸ Option.isSome_some)
   simpa [readBack_order h] using hlen
 
-/-- Reducer state: the operand stacks of every arithmetic node and the outputs observed so far. -/
+/-- Observational state of a net: the operand stacks of every node and the outputs observed so
+far. Nothing here produces this structure: `stepList` and `run` work on the node list alone, and
+`deliverOutput` is its only writer, so no firing in this file reaches `outputs`. -/
 structure Machine where
-  /-- Operand stacks, one entry per arithmetic node. -/
+  /-- Operand stacks, one entry per node. -/
   nodes : List Operands
   /-- Outputs observed in boundary order. -/
   outputs : List Value
 
 /-- Deliver a fired value to a boundary output: the value is appended, so the observation order is
-the delivery order. -/
+the delivery order. Not called by the reducer; it is the writer a delivery-capable reducer needs. -/
 def Machine.deliverOutput (m : Machine) (v : Value) : Machine :=
   { m with outputs := m.outputs ++ [v] }
 
@@ -244,7 +261,8 @@ theorem deliverOutput_fireable (m : Machine) (v : Value) :
   rw [deliverOutput_nodes]
 
 
-/-- Push a delivered value onto one operand stack of a node, LIFO. -/
+/-- Push a delivered value onto one operand stack of a node, LIFO. Not called by the reducer: no
+agent's result is routed to another agent here. -/
 def Operands.push (ops : Operands) (secondPort : Bool) (v : Value) : Operands :=
   match secondPort with
   | true => { ops with second := v :: ops.second }
@@ -283,8 +301,10 @@ theorem pushNode_length : ∀ (nodes : List Operands) (index : Nat) (secondPort 
           subst hupd
           simp [pushNode_length rest n secondPort v t hrest]
 
-/-- Unwinding accounting for one reduction: rewrites performed and bytes retained, against declared
-caps. Every charge is non-wrapping: a charge that would exceed its cap is refused, never truncated. -/
+/-- Unwinding accounting a caller may charge for a reduction: rewrites performed and bytes retained,
+against declared caps. Every charge is non-wrapping: a charge that would exceed its cap is refused,
+never truncated. The reducer does not charge this structure — `stepList` and `run` take no budget —
+so these operations are what a charged reducer would call, not what this one does. -/
 structure Budget where
   /-- Rewrites performed so far. -/
   rewrites : Nat
@@ -345,7 +365,8 @@ theorem retain_refuses_over_cap {b : Budget} {n : Nat} (h : b.maxBytes < b.bytes
   · rfl
 
 
-/-- Step one node: fire it if arithmetic and both stacks are ready. -/
+/-- Step one node: fire it if arithmetic and both stacks are ready. The value the rule computes is
+dropped; `stepNodeValue` is the variant that reports it. -/
 def stepNode : AgentKind × Operands → Option (AgentKind × Operands)
   | (kind, ops) =>
       match fire kind ops with
@@ -449,23 +470,49 @@ theorem stepList_none_iff : ∀ (nodes : List (AgentKind × Operands)),
           · intro hall n hmem
             exact hall n (by simp [hmem])
 
-/-- Run the reducer for at most `fuel` steps. `some nodes` is a stuck (complete) net; `none` means
-the fuel ran out with work remaining. -/
+/-- The operand scan is not the reducer's worklist: a non-arithmetic agent with two full operand
+stacks is fireable for the scan and irreducible for `stepList`. -/
+theorem anyFireable_disagrees_with_stepList :
+    anyFireable [⟨[1], [2]⟩] = true ∧ stepList [(.value, ⟨[1], [2]⟩)] = none := ⟨rfl, rfl⟩
+
+/-- Run the reducer for at most `fuel` steps. `some nodes` is a stuck net: no node is reducible.
+`none` means a step was still possible when the fuel ran out, so work remains. A stuck net
+therefore completes whatever the fuel, including zero. -/
 def run : Nat → List (AgentKind × Operands) → Option (List (AgentKind × Operands))
-  | 0, _ => none
+  | 0, nodes =>
+      match stepList nodes with
+      | none => some nodes
+      | some _ => none
   | fuel + 1, nodes =>
       match stepList nodes with
-      | some nodes' => run fuel nodes'
       | none => some nodes
+      | some nodes' => run fuel nodes'
 
-/-- With no fuel, nothing happens. -/
-theorem run_zero (nodes : List (AgentKind × Operands)) : run 0 nodes = none := rfl
+/-- With no fuel, a stuck net still completes: `run 0` returns the net, not `none`. -/
+theorem run_zero_of_stuck {nodes : List (AgentKind × Operands)}
+    (h : stepList nodes = none) : run 0 nodes = some nodes := by
+  simp [run, h]
+
+/-- `run` returns `none` exactly when work remains, at zero fuel as at any other fuel. -/
+theorem run_zero (nodes : List (AgentKind × Operands)) :
+    run 0 nodes = none ↔ stepList nodes ≠ none := by
+  constructor
+  · intro h
+    cases hstep : stepList nodes with
+    | none => simp [run_zero_of_stuck hstep] at h
+    | some _ => simp
+  · intro h
+    cases hstep : stepList nodes with
+    | none => exact absurd hstep h
+    | some _ => simp [run, hstep]
 
 /-- A stuck net is a completed run, whatever fuel remains. -/
-theorem run_stuck {nodes : List (AgentKind × Operands)} {fuel : Nat}
-    (h : stepList nodes = none) : run (fuel + 1) nodes = some nodes := by
-  unfold run
-  rw [h]
+theorem run_stuck {nodes : List (AgentKind × Operands)}
+    (h : stepList nodes = none) : ∀ (fuel : Nat), run fuel nodes = some nodes := by
+  intro fuel
+  induction fuel with
+  | zero => exact run_zero_of_stuck h
+  | succ fuel ih => simp [run, h]
 
 /-- A completed run preserves the node count: steps never add or drop agents. -/
 theorem run_length : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind × Operands)),
@@ -474,7 +521,13 @@ theorem run_length : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind × Operand
   induction fuel with
   | zero =>
       intro nodes nodes' h
-      simp [run_zero] at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [run_zero_of_stuck hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          simp
+      | some _ => simp [run, hstep] at h
   | succ fuel ih =>
       intro nodes nodes' h
       unfold run at h
@@ -502,6 +555,21 @@ theorem run_none_step {nodes : List (AgentKind × Operands)} {fuel : Nat}
       rw [hstep] at h
       exact ⟨nodes', rfl, h⟩
 
+/-- `none` is never returned for a net that cannot step: a completed run always reports the net.
+This is the converse of `run_none_step`, and the property the `run` doc states. -/
+theorem run_none_work_remains : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)},
+    run fuel nodes = none → stepList nodes ≠ none := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes h
+      exact (run_zero nodes).mp h
+  | succ fuel ih =>
+      intro nodes h
+      obtain ⟨nodes', hstep, _⟩ := run_none_step h
+      rw [hstep]
+      simp
+
 /-- A successful run ends on a stuck net: the reducer stops only when no node is reducible. -/
 theorem run_some_stuck : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
     {nodes' : List (AgentKind × Operands)},
@@ -510,7 +578,13 @@ theorem run_some_stuck : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
   induction fuel with
   | zero =>
       intro nodes nodes' h
-      simp [run_zero] at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [run_zero_of_stuck hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact hstep
+      | some _ => simp [run, hstep] at h
   | succ fuel ih =>
       intro nodes nodes' h
       unfold run at h
@@ -524,24 +598,32 @@ theorem run_some_stuck : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
           rw [hstep] at h
           exact ih h
 
-/-- A successful run is complete: every node is irreducible at the end. -/
+/-- A successful run ends stuck: every node is irreducible at the end. `some` reports that, not
+that the net's outputs are ready. -/
 theorem run_some_all_irreducible {fuel : Nat} {nodes nodes' : List (AgentKind × Operands)}
     (h : run fuel nodes = some nodes') : ∀ node ∈ nodes', reducible node = false :=
   (stepList_none_iff nodes').mp (run_some_stuck fuel h)
 
-/-- A run that also reports how many interaction steps it took. -/
+/-- A run that also reports how many interaction steps it took. `some (k, final)` is a net that is
+stuck after `k` steps and `none` means a step was still possible when the fuel ran out, exactly as
+for `run`; a net needing `k` steps therefore completes with `k` units of fuel (see
+`run_runCount_fuel`). -/
 def runCount : Nat → List (AgentKind × Operands) →
     Option (Nat × List (AgentKind × Operands))
-  | 0, _ => none
+  | 0, nodes =>
+      match stepList nodes with
+      | none => some (0, nodes)
+      | some _ => none
   | fuel + 1, nodes =>
       match stepList nodes with
+      | none => some (0, nodes)
       | some nodes' =>
           match runCount fuel nodes' with
           | some (k, final) => some (k + 1, final)
           | none => none
-      | none => some (0, nodes)
 
-/-- The counted run's step count never exceeds the fuel. -/
+/-- The counted run's step count never exceeds the fuel, and the bound is reachable:
+`run_runCount_fuel` shows the reported count is enough fuel for `run`. -/
 theorem runCount_steps_le : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
     {k : Nat} {final : List (AgentKind × Operands)},
     runCount fuel nodes = some (k, final) → k ≤ fuel := by
@@ -549,7 +631,13 @@ theorem runCount_steps_le : ∀ (fuel : Nat) {nodes : List (AgentKind × Operand
   induction fuel with
   | zero =>
       intro nodes k final h
-      simp [runCount] at h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨hk, _⟩ := h
+          subst hk
+          exact Nat.zero_le _
+      | some _ => simp [runCount, hstep] at h
   | succ fuel ih =>
       intro nodes k final h
       cases hstep : stepList nodes with
@@ -576,7 +664,13 @@ theorem runCount_snd_run : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands
   induction fuel with
   | zero =>
       intro nodes k final h
-      simp [runCount] at h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨_, hnodes⟩ := h
+          subst hnodes
+          exact run_zero_of_stuck hstep
+      | some _ => simp [runCount, hstep] at h
   | succ fuel ih =>
       intro nodes k final h
       cases hstep : stepList nodes with
@@ -584,7 +678,7 @@ theorem runCount_snd_run : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands
           simp [runCount, hstep] at h
           obtain ⟨_, hnodes⟩ := h
           subst hnodes
-          exact run_stuck hstep
+          simp [run, hstep]
       | some next =>
           cases hrc : runCount fuel next with
           | none => simp [runCount, hstep, hrc] at h
@@ -598,6 +692,39 @@ theorem runCount_snd_run : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands
               rw [hstep]
               exact this
 
+/-- The reported interaction count is exactly enough fuel: a net the counted run finishes in `k`
+steps completes under `run` with `k` units of fuel. -/
+theorem run_runCount_fuel : ∀ (fuel : Nat) {nodes : List (AgentKind × Operands)}
+    {k : Nat} {final : List (AgentKind × Operands)},
+    runCount fuel nodes = some (k, final) → run k nodes = some final := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro nodes k final h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨rfl, rfl⟩ := h
+          exact run_zero_of_stuck hstep
+      | some _ => simp [runCount, hstep] at h
+  | succ fuel ih =>
+      intro nodes k final h
+      cases hstep : stepList nodes with
+      | none =>
+          simp [runCount, hstep] at h
+          obtain ⟨rfl, rfl⟩ := h
+          exact run_zero_of_stuck hstep
+      | some next =>
+          cases hrc : runCount fuel next with
+          | none => simp [runCount, hstep, hrc] at h
+          | some p =>
+              obtain ⟨k', final'⟩ := p
+              simp [runCount, hstep, hrc] at h
+              obtain ⟨rfl, rfl⟩ := h
+              have := ih hrc
+              simp only [run, hstep]
+              exact this
+
 /-- The counted run preserves the node population: the reported interaction count bounds the work
 done, not the number of live nodes. -/
 theorem runCount_length {fuel : Nat} {nodes : List (AgentKind × Operands)} {k : Nat}
@@ -608,7 +735,13 @@ theorem runCount_length {fuel : Nat} {nodes : List (AgentKind × Operands)} {k :
 /-- A single fully-fed add agent fires once and is then stuck: one interaction, and the agent
 survives with empty stacks. -/
 theorem runCount_single_add (a b : BitVec 64) :
-    runCount 2 [(.add, ⟨[a], [b]⟩)] = some (1, [(.add, ⟨[], []⟩)]) := rfl
+    runCount 1 [(.add, ⟨[a], [b]⟩)] = some (1, [(.add, ⟨[], []⟩)]) := rfl
+
+/-- A net needing one interaction completes with exactly one unit of fuel, and reports work
+remaining at zero: the strict bound is reachable, not merely an inequality. -/
+theorem run_single_add_exact_fuel (a b : BitVec 64) :
+    run 1 [(.add, ⟨[a], [b]⟩)] = some [(.add, ⟨[], []⟩)] ∧
+      run 0 [(.add, ⟨[a], [b]⟩)] = none := ⟨rfl, rfl⟩
 
 /-- A net whose head is a value agent does not fire; the run completes in zero interactions. -/
 theorem runCount_value_head_stuck : runCount 3 [(.value, ⟨[7], []⟩)] = some (0, [(.value, ⟨[7], []⟩)]) := rfl
@@ -975,7 +1108,9 @@ theorem applyPlanValues_applyPlan : ∀ (ks : List Nat) (nodes : List (AgentKind
               exact ih next vs' final' hrec
 
 /-- Time potential: the work still available at a node, counted as the values waiting on its two
-ports. A node with empty ports has no work left. -/
+ports. A node with empty ports has no work left. This is a per-node quantity: the only theorem about
+it is the one-node obligation `timePotential_obligation`, and no run's interaction count is derived
+from it — the only proved count bound is the fuel (`runCount_steps_le`). -/
 def timePotential : AgentKind × Operands → Nat
   | (kind, ops) =>
       if kind.isArithmetic then ops.first.length + ops.second.length else 0
@@ -1041,8 +1176,8 @@ theorem spacePotential_ge_length : ∀ (nodes : List (AgentKind × Operands)),
       simp only [List.length_cons]
       omega
 
-/-- A successful step on a named node rewrites that node in place, with the value the rule
-computed. -/
+/-- A successful step on a named node rewrites that node in place, and the rule it fired computed
+some value. The step does not keep that value; `stepNodeValue` is the variant that returns it. -/
 theorem stepNode_some_fire {kind : AgentKind} {ops : Operands} {node' : AgentKind × Operands}
     (h : stepNode (kind, ops) = some node') :
     ∃ ops' v, node' = (kind, ops') ∧ fire kind ops = some (ops', v) := by
@@ -1055,10 +1190,10 @@ theorem stepNode_some_fire {kind : AgentKind} {ops : Operands} {node' : AgentKin
       simp only [Option.some.injEq] at h
       exact ⟨ops2, v, h.symm, rfl⟩
 
-/-- A step rewrites one node in place: firing cannot increase the space potential, and in fact
-drops it by the two values consumed. -/
-theorem stepList_spacePotential_le : ∀ (nodes nodes' : List (AgentKind × Operands)),
-    stepList nodes = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+/-- A step rewrites one node in place and consumes exactly two waiting values, so it drops the
+space potential by exactly two: the potential after the step plus two is the potential before it. -/
+theorem stepList_spacePotential_drop : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → spacePotential nodes' + 2 = spacePotential nodes := by
   intro nodes
   induction nodes with
   | nil =>
@@ -1090,8 +1225,16 @@ theorem stepList_spacePotential_le : ∀ (nodes nodes' : List (AgentKind × Oper
             | none => simp
             | some t => simp [eq_comm]
           obtain ⟨t, hrest, rfl⟩ := hmap.mp h
+          have hih := ih t hrest
           unfold spacePotential
-          exact Nat.add_le_add_left (ih t hrest) _
+          omega
+
+/-- A step cannot increase the space potential; the exact drop is `stepList_spacePotential_drop`. -/
+theorem stepList_spacePotential_le : ∀ (nodes nodes' : List (AgentKind × Operands)),
+    stepList nodes = some nodes' → spacePotential nodes' ≤ spacePotential nodes := by
+  intro nodes nodes' h
+  have hdrop := stepList_spacePotential_drop nodes nodes' h
+  omega
 
 /-- Values waiting on the net's ports, summed over nodes. -/
 def stackValues : List (AgentKind × Operands) → Nat
@@ -1143,7 +1286,13 @@ theorem run_spacePotential_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind
   induction fuel with
   | zero =>
       intro nodes nodes' h
-      simp [run_zero] at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [run_zero_of_stuck hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact Nat.le_refl _
+      | some _ => simp [run, hstep] at h
   | succ fuel ih =>
       intro nodes nodes' h
       unfold run at h
@@ -1165,7 +1314,13 @@ theorem run_stackValues_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind ×
   induction fuel with
   | zero =>
       intro nodes nodes' h
-      simp [run_zero] at h
+      cases hstep : stepList nodes with
+      | none =>
+          rw [run_zero_of_stuck hstep] at h
+          simp only [Option.some.injEq] at h
+          subst h
+          exact Nat.le_refl _
+      | some _ => simp [run, hstep] at h
   | succ fuel ih =>
       intro nodes nodes' h
       unfold run at h
@@ -1182,26 +1337,30 @@ theorem run_stackValues_le : ∀ (fuel : Nat) (nodes nodes' : List (AgentKind ×
 /-- The certificate revision this checker accepts. -/
 def certificateRevision : Nat := 1
 
-/-- A bounded certificate over a net: the revision it is written for, the net it binds, the node
-count it claims, and the space it declares. -/
+/-- A bounded certificate over a net: the revision it is written for, the net it carries, the node
+count it claims for that net, and the space it declares. The net is inside the certificate, so
+accepting one binds no network outside it. -/
 structure NetCertificate where
   /-- Certificate format revision. -/
   revision : Nat
-  /-- The net the certificate is about. -/
+  /-- The net the certificate is about, carried inside the certificate. -/
   nodes : List (AgentKind × Operands)
-  /-- Node count the certificate claims. -/
+  /-- Node count claimed for `nodes`, the certificate's own list. -/
   netLength : Nat
-  /-- Space the certificate declares sufficient. -/
+  /-- Space the certificate declares sufficient for `nodes`. -/
   declaredSpace : Nat
 
 /-- Accept a certificate only when it is written for this revision, its claimed node count is the
-net's actual count, and its declared space dominates the net's space potential. -/
+count of its own embedded node list, and its declared space dominates that list's space potential.
+Nothing compares the embedded list with an independently supplied net, so acceptance says the
+embedded net fits the embedded declaration — not that the certificate describes the net a producer
+claims to have. -/
 def checkCertificate (c : NetCertificate) : Bool :=
   (c.revision == certificateRevision) && (c.netLength == c.nodes.length) &&
     decide (spacePotential c.nodes ≤ c.declaredSpace)
 
 /-- A checked certificate says exactly what it claims: the revision matches, the node count is the
-net's, and the declared space dominates the potential. -/
+embedded list's, and the declared space dominates that list's potential. -/
 theorem checkCertificate_sound {c : NetCertificate} (h : checkCertificate c = true) :
     c.revision = certificateRevision ∧ c.netLength = c.nodes.length ∧
       spacePotential c.nodes ≤ c.declaredSpace := by
@@ -1217,8 +1376,10 @@ theorem checkCertificate_refuses_undersized (c : NetCertificate)
   unfold checkCertificate
   simp [hnot]
 
-/-- A checked certificate bounds every completed run of its net: the run cannot use more space than
-the certificate declared. -/
+/-- A checked certificate bounds the final net of any completed run of its embedded node list.
+Since a step never increases the potential (`stepList_spacePotential_le`), every net the run passes
+through is no larger either, and `plan_within_declared_space` states the same bound for every
+intermediate net an in-place plan produces. -/
 theorem run_within_declared_space {c : NetCertificate} {fuel : Nat}
     {nodes' : List (AgentKind × Operands)}
     (hcheck : checkCertificate c = true) (hrun : run fuel c.nodes = some nodes') :
@@ -1236,7 +1397,8 @@ theorem checkCertificate_iff (c : NetCertificate) :
   · exact checkCertificate_sound
   · intro h
     unfold checkCertificate
-    simp [h.1, h.2.1, h.2.2]
+    simp only [Bool.and_eq_true, beq_iff_eq, decide_eq_true_eq]
+    exact ⟨⟨h.1, h.2.1⟩, h.2.2⟩
 
 /-- Control: a certificate written for a different revision is refused. -/
 theorem checkCertificate_refuses_wrong_revision (c : NetCertificate)
