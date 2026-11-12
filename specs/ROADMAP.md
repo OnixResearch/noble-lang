@@ -1023,10 +1023,14 @@ doctests, under external target
 `/home/brittonr/.cache/noble-proof-tmp/scase06-rust-suite-20260930/target`.
 The passing command used the populated Cargo registry, pinned Rust/GCC linker
 and external target/temp directories. Environment-gated named_v2/MC2 paths
-are not new Lean/MC2 proofs. The active S-CASE-06 Cairn change is **not
-archived**: Phase3 staged postpromotion and archive/final checklist remain
-unmarked because no executed scoped Octet/full signed+sandbox Nix assurance
-receipt exists. Selected Octet availability, source projection and native
+are not new Lean/MC2 proofs. The S-CASE-06 Cairn change was **archived on
+2026-10-26** at
+[`.cairn/archive/2026-10-26-safety-authorized-fs-read/`](../.cairn/archive/2026-10-26-safety-authorized-fs-read/proposal.md)
+after the owner explicitly accepted that its postpromotion evidence root is
+permanently reclaimed; the documented replay was not re-run and no receipt
+was regenerated. It is not an assurance closeout: no executed scoped
+Octet/full signed+sandbox Nix assurance receipt exists. Selected Octet
+availability, source projection and native
 document validation do not satisfy that missing assurance. The previously
 reported whole-workspace boundary-controls failure was not rerun/promoted;
 owner law and Aeneas refinement remain open.
@@ -1057,7 +1061,9 @@ receipts or runners.
 
 Both [S-CASE-04](../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/proposal.md)
 and [S-CASE-06](../.cairn/archive/2026-10-26-safety-authorized-fs-read/proposal.md)
-Cairn changes remain **ACTIVE**; the two full normative trees, including all
+Cairn changes were **archived on 2026-10-26**, each on the owner's explicit
+acceptance that its postpromotion evidence root is permanently reclaimed (no
+replay was re-run and no receipt regenerated). The two full normative trees, including all
 substantive task prose, native safety/resource/evidence views, WIT, production
 source and frozen runner identities are bound. Only task checkbox completion
 markers are normalized to the accepted source. Fresh pinned offline
@@ -1066,9 +1072,9 @@ under external target
 `/home/brittonr/.cache/noble-proof-tmp/scase04-rust-suite-20260930/target`
 passed **254 tests across 32 runs, zero failed/ignored/filtered and zero
 compiler warnings**, including eight compile-fail doctests. No separately
-executed scoped Octet/full signed+sandbox Nix assurance or archive is claimed;
-S-CASE-06 Phase3 staged postpromotion and final checklist remain
-blocked/unmarked. The old whole-workspace boundary-control failure was not
+executed scoped Octet/full signed+sandbox Nix assurance is claimed, and the
+archived S-CASE-06 postpromotion replay and final-source closeout were not
+re-run. The old whole-workspace boundary-control failure was not
 rerun, and aggregate lowering, owner law, universal host/compiler behavior
 and Rust-to-Lean refinement remain open.
 
@@ -1131,7 +1137,7 @@ immutable receipts, and reconstruct every prior complete canonical case file
 byte-for-byte. The nested postpromotion check additionally reconstructs
 S-CASE-08's original absent/not-run prepromotion safety-case bytes.
 
-Full substantive prose of all three active changes, synced native
+Full substantive prose of all three changes, synced native
 safety/resource/evidence views, WIT and four production crates is source-bound;
 only task checklist markers are normalized. Specifically, the S-CASE-08 runner
 exhaustively reconstructs all **128** possible original marker assignments
@@ -1142,9 +1148,11 @@ noble-contracts, noble-wasm and noble-cli under external target
 `/home/brittonr/.cache/noble-proof-tmp/scase08-rust-suite-20260930/target`
 passed **257 tests across 32 runs, zero failed/ignored/filtered and zero
 compiler warnings**, including eight kernel compile-fail doctests. All three
-Cairn changes remain active; full scoped Octet/signed+sandbox Nix assurance,
-the S-CASE-08/S-CASE-06 final staged closeout and archive remain
-blocked/unmarked. Document validation is not runtime assurance; universal
+Cairn changes were archived on 2026-10-26 on the owner's explicit acceptance
+that their postpromotion evidence roots are permanently reclaimed; the
+documented replays were not re-run and no receipt was regenerated. Full
+scoped Octet/signed+sandbox Nix assurance and the S-CASE-08/S-CASE-06 final
+staged closeout were never obtained. Document validation is not runtime assurance; universal
 callback owner law, host/compiler behavior and Rust-to-Lean refinement remain
 open. The previously reported whole-workspace boundary gate was not rerun.
 

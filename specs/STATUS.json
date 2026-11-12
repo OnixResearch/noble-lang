@@ -378,14 +378,16 @@
     "execution": "passed",
     "proof": "open",
     "trust": "explicit",
-    "change": "../.cairn/changes/safety-recursive-resource-eligibility/",
+    "change": "../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/",
+    "archived": true,
+    "archive_path": "../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/",
     "receipt": "../verification/scase04/acceptance.json",
     "receipt_sha256": "16ba34b6672486271eaef6bc22e7fd86c476374fd4f46acb745e66c2fc87f8be",
     "source_revision": "sha256:328f05c640c6bf71082d1e5c241ee9890e91f4050582584465879f6adc584286",
     "variants": 16,
     "commands": 27,
     "scope": "Real WIT own<counter> ResourceKind(1); source-checked complete Resource, Pair, false-selected I64 Sum and nonempty List Ty; sixteen independent production typed source/export and compiled CLI eligibility refusals before component emission. Three resource/Pair/Data positive components compile. Sum and List positives are source-preparation only, not compiled or runtime proof. Canonical check/eligibility-reject maps the actual kernel word/whole-Ty refusal and literal CLI component-check/error; zero guest requests and protected operations follow from non-publication and no invocation, not measured host counters.",
-    "cairn_assurance": "ACTIVE change: selected source-bound finite acceptance and native S-RES-01/S-RES-04 sync pass; no separate scoped Octet/full signed+sandbox Nix assurance receipt or archive. Formal owner law, aggregate lowering and universal resource safety remain open.",
+    "cairn_assurance": "ARCHIVED change (2026-10-26, ../.cairn/archive/2026-10-26-safety-recursive-resource-eligibility/): selected source-bound finite acceptance and native S-RES-01/S-RES-04 sync passed; its postpromotion evidence root is permanently reclaimed, so archive proceeded on the owner's explicit acceptance without re-running the replay. No separate scoped Octet or full signed+sandbox Nix assurance receipt exists for this change's own scope; formal owner law, aggregate lowering and universal resource safety remain open.",
     "later_source_replay": "passed-against-truthful-two-active-source, later three-active-source and four-relevant-active-source; see post_scase04_two_active_source_replay, post_scase08_three_active_source_replay, post_adapt15_three_active_source_replay, historical post_wi03_current_source_replay and post_wi03_release_source_replay, and latest post_diagnostic_join_source_replay; initial S-CASE-04 receipt retains its own historical source revision"
   },
   "authorized_fs_read": {
@@ -394,7 +396,9 @@
     "execution": "passed",
     "proof": "open",
     "trust": "explicit",
-    "change": "../.cairn/changes/safety-authorized-fs-read/",
+    "change": "../.cairn/archive/2026-10-26-safety-authorized-fs-read/",
+    "archived": true,
+    "archive_path": "../.cairn/archive/2026-10-26-safety-authorized-fs-read/",
     "receipt": "../verification/scase06/final-acceptance.json",
     "receipt_sha256": "6943c1a03163ebe5c7e98c1cdc4187cfa02a8c7007c57702e7f241d5679ab418",
     "source_revision": "sha256:e67068ecefd7161de12dd73b484598294317f9d7c227c82c49af2781b7ae5ebf",
@@ -411,7 +415,7 @@
     "commands": 9,
     "scope": "The final chronological source freeze repeats the exact compiled Noble main.rs fs.read through the production Wasmtime callback. Its live host-owned invocation-1 logical Directory maps only main.rs to a host-vetted preopened regular file. Host-retained Table WrongRights, not guest-returned text, classifies the one-request authorization denial with zero protected reads; the same component with READ returns exact bounded file bytes and settles its owner. Independent full WIT/world/export-source byte correspondence precedes file opening or authority, and compiled path escape plus production hostile-right/handle/size/guest-result controls refuse. The two previous receipts remain immutable earlier source scopes; general filesystem safety, owner law, Octet, Aeneas and compiler/engine proof remain open.",
     "later_source_replay": "passed-against-truthful-active-source; see post_scase06_active_source_replay, post_scase04_two_active_source_replay, post_scase08_three_active_source_replay, post_adapt15_three_active_source_replay, historical post_wi03_current_source_replay and post_wi03_release_source_replay, and latest post_diagnostic_join_source_replay; historical receipts retain their own source revisions",
-    "cairn_archive": "BLOCKED and unexecuted: active change retained, Phase3 staged postpromotion and archive/final checklist remain unmarked; selected Octet availability and document-only source projection are not an executed scoped Octet or full signed+sandbox Nix assurance receipt"
+    "cairn_archive": "ARCHIVED (2026-10-26, ../.cairn/archive/2026-10-26-safety-authorized-fs-read/): its postpromotion evidence root is permanently reclaimed and the owner explicitly accepted archiving without re-running the replay; the archive record, not this entry, is the lifecycle evidence. No executed scoped Octet or full signed+sandbox Nix assurance receipt exists for this change's own scope, and selected Octet availability plus document-only source projection do not substitute for one."
   },
   "callback_returned_owner": {
     "case": "S-CASE-08",
@@ -419,13 +423,15 @@
     "execution": "passed",
     "proof": "open",
     "trust": "explicit",
-    "change": "../.cairn/changes/safety-callback-returned-owner/",
+    "change": "../.cairn/archive/2026-10-26-safety-callback-returned-owner/",
+    "archived": true,
+    "archive_path": "../.cairn/archive/2026-10-26-safety-callback-returned-owner/",
     "receipt": "../verification/scase08/acceptance.json",
     "receipt_sha256": "e4da8ac29888544ef6586b12582cc1abd2d3c1065bd5c7c10d70897179402925",
     "source_revision": "sha256:4fc42fce61b7f78fc4711de3a195a61f90d91a2ca3df0e50964827f265e47cb0",
     "commands": 11,
     "scope": "A byte-matched compiled Noble tokens.issue tokens.consume guest invokes the production Wasmtime owned-result callback. The host selects genuine retired-generation, live wrong-kind and live foreign-context table claims, each refused by retained Table::validate at callback ingress before ResourceAny/Val::Resource publication: callback/invalid-result, zero trusted values and protected operations, one guest request and one pending owner released. The same component accepts the authentic claim, returns 42 through consume, creates one WIT-owned guest value and releases its retained Table owner once. A valid byte-distinct component refuses before guest entry; shared nonwrapping component identity allocation separates simultaneous host Stores even when slot/generation coincide. This finite result does not establish general host/engine correctness or owner-law refinement.",
-    "cairn_archive": "BLOCKED and unexecuted: native callback change remains ACTIVE; no full scoped Octet or signed+sandbox Nix source-bound assurance, Phase3 staged postpromotion closeout or Cairn archive has passed. Finite chronological replay and document checks do not substitute. Historical S-CASE-02/04/06 receipts retain their original source revisions.",
+    "cairn_archive": "ARCHIVED (2026-10-26, ../.cairn/archive/2026-10-26-safety-callback-returned-owner/): its postpromotion evidence root is permanently reclaimed and the owner explicitly accepted archiving without re-running the replay; the archive record, not this entry, is the lifecycle evidence. No full scoped Octet or signed+sandbox Nix source-bound assurance was obtained for this change's own scope. Finite chronological replay and document checks do not substitute. Historical S-CASE-02/04/06 receipts retain their original source revisions.",
     "later_source_replay": "passed-against-truthful-four-relevant-active-source; see post_scase08_three_active_source_replay, post_adapt15_three_active_source_replay, historical post_wi03_current_source_replay and post_wi03_release_source_replay, and latest post_diagnostic_join_source_replay; immutable prepromotion receipt retains its own historical source revision"
   },
   "mandatory_admission_all_build_modes": {
