@@ -595,4 +595,32 @@ const frame = (address, parent, handle, pairs) => {
   assert.throws(() => registry.pinRoot(999), /backend retirement failed/);
 }
 
+// A nominal ordinal at or above 2^31 still binds. The checked guest ABI delivers the ordinal as a
+// signed i32, so the host must match it against the registration unsigned instead of treating
+// -2147483648 as an unregistered nominal.
+{
+  const registry = host(8);
+  const ordinal = 0x80000000;
+  const signed = ordinal | 0;
+  assert.equal(signed, -2147483648, 'the i32 ABI delivers this ordinal negative');
+  grants('register-resource', `9:${ordinal}`, true);
+  grants('issue-resource', `9:${ordinal}`, true);
+  registry.registerNominal({ module: '9', ordinal, kind: 79,
+    shapeFingerprint: 'b'.repeat(64), schemaFingerprint: 'd'.repeat(64),
+    owner: 'high-ordinal-owner', sourceArtifactSha256s: [digest],
+    interfaceDescriptor: 'Account@3' });
+  const catalog = registry.admitResourceCatalog('high-ordinal-owner', digest,
+    [{ module: '9', ordinal, kind: 79, shapeFingerprint: 'b'.repeat(64) }],
+    [{ module: '9', ordinal, schemaFingerprint: 'd'.repeat(64) }]);
+  const module = registry.registerModule(digest, [], ['Account@3'], catalog, digest);
+  const root = registry.pinRoot(460, module);
+  registry.issueResource(root, 0, 3, '9', signed, 79, 'high-ordinal-owner');
+  assert.equal(registry.validateResourceBinding(root, module, 0, 3, 79, 9, 0, signed), 1,
+    'a registered ordinal at 2^31 must bind');
+  assert.equal(registry.validateResourceBinding(root, module, 0, 3, 79, 9, 0, signed), 0,
+    'the same issue ordinal binds at most once');
+  assert.equal(registry.validateResource(root, 3, 79), 1);
+  registry.finishRoot(root);
+}
+
 console.log('live-slot host registry: pin/CAS/authority/quota/nominal/evidence transitions passed');

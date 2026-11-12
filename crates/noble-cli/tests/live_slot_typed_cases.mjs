@@ -337,75 +337,120 @@ const negativeMutations = [
     stage: 'command',
     // The caller has no formal that names slot X, so the reference cannot bind.
     mutate: oneCase => ({ ...oneCase, refs: [{ position: 1, ordinal: 0, slot: 'X' }] }),
+    expect: { outcome: 'refused', guest_requests: 0, trace: [] },
   },
   {
     class: 'binding-wrong-position',
     stage: 'command',
     // The reference is bound at the value formal instead of the reference formal.
     mutate: oneCase => ({ ...oneCase, refs: [{ position: 0, ordinal: 0, slot: 'A' }] }),
+    expect: { outcome: 'refused', guest_requests: 0, trace: [] },
   },
   {
     class: 'stack-incompatible',
     stage: 'command',
     // The invocation supplies a value the caller's first formal does not admit.
     mutate: oneCase => ({ ...oneCase, stack: [{ kind: 'bool', value: 'true' }] }),
+    expect: { outcome: 'refused', guest_requests: 0, trace: [] },
   },
   {
     class: 'effect-not-granted',
     stage: 'slot',
-    // Authority withholds the leaf's declared effect while the program still declares it.
+    // Authority withholds the leaf's declared effect while the program still declares it, so the
+    // witness is the guest's own denied effect row, not any other refusal at the slot stage.
     mutate: oneCase => ({ ...oneCase, denyEffect: true }),
+    expect: { outcome: 'execution-failed', guest_requests: 2,
+      trace: [['dispatch', 'allowed'], ['effect', 'denied']] },
   },
 ];
 
-const runNegative = async (binary, oneCase, mutation, ordinal) => {
+// The declared target contracts of the negative family's direct case.
+const negativeContracts = oneCase => [
+  { slotId: 'A', input: ['I64'], output: ['I64'], effectCeiling: oneCase.effects,
+    proofRequired: false },
+  { slotId: 'B', input: ['I64', refType(['I64'], ['I64'], oneCase.effects)], output: ['I64'],
+    effectCeiling: oneCase.effects, proofRequired: false },
+];
+
+// The setup steps that must be admitted before the mutated invocation is sent, in order. A
+// refusal of any of them belongs to that step, never to the negative family.
+const negativeSetup = oneCase => [
+  { step: 'configured', outcome: 'configured' },
+  { step: 'define', request: { operation: 'define', id: 'defLeaf', name: 'emittingLeaf',
+    source: leafPrograms.emitting.source, inputs: [] }, outcome: 'definition-retained' },
+  { step: 'install-leaf', request: { operation: 'install', id: 'leaf', source: 'emittingLeaf',
+    inputs: ['I64'], selected_name: 'emittingLeaf' }, outcome: 'installed' },
+  { step: 'install-caller', request: { operation: 'install', id: 'callerA', source: 'slot.invoke',
+    inputs: ['I64', refType(['I64'], ['I64'], oneCase.effects)] }, outcome: 'installed' },
+  { step: 'candidate', request: { operation: 'candidate', id: 'callerA' },
+    outcome: 'candidate-staged' },
+  { step: 'publish-leaf', request: { operation: 'publish', slot: 'A', id: 'leaf',
+    program_index: 0, expected_epoch: '0' }, outcome: 'published' },
+  { step: 'publish-caller', request: { operation: 'publish', slot: 'B', id: 'callerA',
+    program_index: 0, expected_epoch: '1' }, outcome: 'published' },
+];
+
+/**
+ * Run one declared mutation. Every setup step is asserted, so only the mutated invocation's own
+ * receipt can satisfy the negative family; `observed` is that receipt's refusal class (outcome,
+ * stage, diagnostic, accounting and ordered trace rows), never a copy of the mutation.
+ *
+ * `options.tolerateSetupRefusal` lets the minimization driver observe that a shrink cannot even be
+ * set up; the negative family itself never sets it.
+ */
+const runNegative = async (binary, oneCase, mutation, ordinal, options = {}) => {
   const mutated = mutation.mutate(oneCase);
   const variant = `typed-negative-${mutation.class}-${ordinal}`;
   const emit = oneCase.effects.includes('test.emit');
-  const contracts = [
-    { slotId: 'A', input: ['I64'], output: ['I64'], effectCeiling: oneCase.effects, proofRequired: false },
-    { slotId: 'B', input: ['I64', refType(['I64'], ['I64'], oneCase.effects)], output: ['I64'],
-      effectCeiling: oneCase.effects, proofRequired: false },
-  ];
+  const contracts = negativeContracts(oneCase);
   const grants = contracts.flatMap(slot => ['publish', 'dispatch', 'effect'].map(operation => ({
     operation, slotId: slot.slotId,
     allowed: !(operation === 'effect' && (!emit || (mutated.denyEffect === true && slot.slotId === 'A'))),
   })));
   const session = await cli(binary, variant, selectedAuthority({
-    sources: { defLeaf: leafPrograms[oneCase.leaf].source, leaf: leafPrograms[oneCase.leaf].name,
+    sources: { defLeaf: leafPrograms.emitting.source, leaf: leafPrograms.emitting.name,
       callerA: oneCase.callerSource },
-    slots: contracts, grants, effects: oneCase.effects, quota: 32,
+    slots: contracts, grants, effects: oneCase.effects, quota: mutated.quota ?? 32,
   }));
-  const outcomes = [];
+  const setup = [];
   try {
-    outcomes.push(await session.configured);
-    const issue = async request => { const row = await session.issue(request); outcomes.push(row); return row; };
-    await issue({ operation: 'define', id: 'defLeaf', name: leafPrograms[oneCase.leaf].name,
-      source: leafPrograms[oneCase.leaf].source, inputs: [] });
-    await issue({ operation: 'install', id: 'leaf', source: leafPrograms[oneCase.leaf].name,
-      inputs: ['I64'], selected_name: leafPrograms[oneCase.leaf].name });
-    await issue({ operation: 'install', id: 'callerA', source: oneCase.callerSource,
-      inputs: ['I64', refType(['I64'], ['I64'], oneCase.effects)] });
-    await issue({ operation: 'candidate', id: 'callerA' });
-    const leafEpoch = (await issue({ operation: 'publish', slot: 'A', id: 'leaf', program_index: 0,
-      expected_epoch: '0' })).epoch;
-    await issue({ operation: 'publish', slot: 'B', id: 'callerA', program_index: 0,
-      expected_epoch: leafEpoch });
-    const invoke = () => issue({ operation: 'invoke', id: 'callerA',
+    for (const step of negativeSetup(oneCase)) {
+      const row = step.request === undefined
+        ? await session.configured : await session.issue(step.request);
+      setup.push([step.step, row.outcome]);
+      if (row.outcome !== step.outcome) {
+        const message = `${variant}: setup step ${step.step} was ${row.outcome}`;
+        if (options.tolerateSetupRefusal === true) {
+          return { variant, setup, observed: undefined, refused_at: step.step };
+        }
+        assert.fail(`${message}: ${JSON.stringify(row).slice(0, 600)}`);
+      }
+    }
+    // The mutated invocation is the family's only witness: a refusal anywhere
+    // else in the session never counts.
+    const row = await session.issue({ operation: 'invoke', id: 'callerA',
       inputs: mutated.stack ?? [{ kind: 'i64', value: '5' }], refs: mutated.refs });
-    for (let pass = 0; pass < (mutated.repeat ?? oneCase.repeat); pass += 1) await invoke();
+    const observed = {
+      outcome: row.outcome,
+      stage: row.stage,
+      diagnostic: row.diagnostic ?? null,
+      guest_requests: row.guest_requests,
+      protected_operations: row.protected_operations,
+      trace: (row.request_trace ?? []).map(item => [item.operation, item.outcome]),
+    };
+    if (options.tolerateSetupRefusal === true) return { variant, setup, observed };
+    assert.equal(observed.outcome, mutation.expect.outcome,
+      `${variant}: ${JSON.stringify(observed).slice(0, 600)}`);
+    assert.equal(observed.stage, mutation.stage,
+      `${variant}: ${JSON.stringify(observed).slice(0, 600)}`);
+    assert.equal(observed.guest_requests, mutation.expect.guest_requests,
+      `${variant}: ${JSON.stringify(observed).slice(0, 600)}`);
+    assert.deepEqual(observed.trace, mutation.expect.trace,
+      `${variant}: ${JSON.stringify(observed).slice(0, 600)}`);
+    return { variant, setup, observed };
   } finally {
     await session.close();
   }
-  // The mutation must be refused, and refused at the declared stage, without being folded into a
-  // different class: the refusal of the mutated request itself is the one that matters.
-  const refused = outcomes.filter(row => row.outcome === 'refused' || row.outcome === 'execution-failed');
-  assert.ok(refused.length > 0, `${variant}: mutation must be refused, saw ${JSON.stringify(outcomes).slice(0, 600)}`);
-  const matching = refused.filter(row => row.stage === mutation.stage);
-  assert.ok(matching.length > 0,
-    `${variant}: expected a refusal at stage ${mutation.stage}, saw ${JSON.stringify(refused).slice(0, 600)}`);
-  return { variant, class: mutation.class, stage: mutation.stage, refused: matching.length,
-    diagnostics: refused.map(row => row.diagnostic ?? row.outcome) };
 };
 
 export const runNegativeFamily = async (binary, positives) => {
@@ -420,41 +465,51 @@ export const runNegativeFamily = async (binary, positives) => {
   }
   assert.equal(results.length, negativeMutations.length);
   return {
-    classes: results.map(row => row.class),
-    by_stage: Object.fromEntries([...new Set(results.map(row => row.stage))]
-      .map(stage => [stage, results.filter(row => row.stage === stage).length])),
-    refused: results.reduce((total, row) => total + row.refused, 0),
-    diagnostics: results.map(row => ({ class: row.class, observed: row.diagnostics })),
+    classes: negativeMutations.map(mutation => mutation.class),
+    by_stage: Object.fromEntries([...new Set(results.map(row => row.observed.stage))]
+      .map(stage => [stage, results.filter(row => row.observed.stage === stage).length])),
+    refused: results.length,
+    observations: results.map((row, index) => ({ class: negativeMutations[index].class,
+      observed: row.observed, setup: row.setup })),
     positives_admitted: positives.admitted,
   };
 };
 
 
 /**
- * Failure-class-preserving minimization (issue #49 item 6). Each candidate shrinks one witness
- * dimension; a candidate is accepted only when the *same* declared class is still observed at the
- * same stage. A shrink that converts the failure into a different refusal class is rejected, and
- * for these four classes the starting witness is already minimal — which the report states rather
- * than implying a deep reduction happened.
+ * Failure-class-preserving minimization (issue #49 item 6). A shrink is accepted only when it
+ * changes an input the run actually reads and the mutated invocation's *observed* receipt is
+ * identical to the starting witness, so a shrink that turns the failure into another refusal (or
+ * into a refusal of an earlier setup step) is rejected with the observation that rejected it.
+ * The only declared shrink is the retention quota: `repeat: 1` and `program_index: 0` were the
+ * starting values, so "shrinking" either to itself would prove nothing.
  */
 export const minimizeFamily = async (binary, oneCase, mutation, baseline) => {
-  const candidates = [
-    { dimension: 'repeat', value: 1 },
-    { dimension: 'quota', value: 1 },
-    { dimension: 'program_index', value: 0 },
-  ];
+  const candidates = [{ dimension: 'quota', value: 1 }];
   const accepted = [];
   const rejected = [];
   for (const candidate of candidates) {
-    const attempt = { ...mutation, mutate: base => ({ ...mutation.mutate(base), [candidate.dimension]: candidate.value }) };
-    const result = await runNegative(binary, oneCase, attempt, `${baseline.class}-${candidate.dimension}`);
-    if (result.class === baseline.class && result.stage === baseline.stage) accepted.push(candidate.dimension);
-    else rejected.push({ dimension: candidate.dimension, observed: result.class });
+    const attempt = { ...mutation, mutate: base =>
+      ({ ...mutation.mutate(base), [candidate.dimension]: candidate.value }) };
+    const result = await runNegative(binary, oneCase, attempt,
+      `${baseline.class}-${candidate.dimension}`, { tolerateSetupRefusal: true });
+    if (result.observed === undefined) {
+      rejected.push({ dimension: candidate.dimension, observed: 'setup-refused',
+        refused_at: result.refused_at });
+      continue;
+    }
+    const same = result.observed.outcome === baseline.outcome
+      && result.observed.stage === baseline.stage
+      && result.observed.diagnostic === baseline.diagnostic
+      && result.observed.guest_requests === baseline.guest_requests;
+    if (same) accepted.push(candidate.dimension);
+    else rejected.push({ dimension: candidate.dimension,
+      observed: { outcome: result.observed.outcome, stage: result.observed.stage } });
   }
-  // "Minimal" here means the class survives every candidate shrink, so none of the witness
-  // dimensions tried is load-bearing for it.
-  return { class: baseline.class, accepted, rejected,
-    minimal: accepted.length === candidates.length, starting_witness: mutation.class };
+  // "Minimal" is the honest converse of acceptance: no declared shrink reproduced the identical
+  // receipt, so the starting witness is minimal in the declared input space.
+  return { class: baseline.class, accepted, rejected, minimal: accepted.length === 0,
+    starting_witness: mutation.class, candidates: candidates.map(row => row.dimension) };
 };
 
 export const runMinimization = async (binary, fourCases) => {
@@ -465,15 +520,19 @@ export const runMinimization = async (binary, fourCases) => {
   };
   const results = [];
   for (const [ordinal, mutation] of negativeMutations.entries()) {
+    const observed = fourCases.observations[ordinal]?.observed;
+    assert.ok(observed, `negative family must observe ${mutation.class} before minimizing it`);
     results.push(await minimizeFamily(binary, oneCase, mutation,
-      { class: mutation.class, stage: mutation.stage }));
+      { ...observed, class: mutation.class }));
   }
   return {
     classes: results.map(row => row.class),
     minimal_starting_witnesses: results.filter(row => row.minimal).length,
     accepted_shrinks: results.reduce((total, row) => total + row.accepted.length, 0),
-    rejected_shrinks: results.flatMap(row => row.rejected),
-    detail: results.map(row => ({ class: row.class, accepted: row.accepted, rejected: row.rejected })),
+    rejected_shrinks: results.flatMap(result =>
+      result.rejected.map(rejection => ({ class: result.class, ...rejection }))),
+    detail: results.map(row => ({ class: row.class, candidates: row.candidates,
+      accepted: row.accepted, rejected: row.rejected })),
     negative_family_classes: fourCases.classes,
   };
 };

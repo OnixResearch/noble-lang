@@ -103,6 +103,13 @@ try {
     inputs: [{ kind: 'i64', value: '20' }, { kind: 'program', owner: savedOwner }], refs: [] }), 'executed');
   const latest = expected(await issue(root20('generic')), 'executed');
   const after = expected(await issue({ operation: 'reflect', id: 'generic', site_id: 0 }), 'reflected');
+  // An unknown dispatch site is a read-only query miss: it must be refused without ending the
+  // session, exactly like an unknown module.
+  const unknownSite = await issue({ operation: 'reflect', id: 'generic', site_id: 1 });
+  assert.equal(unknownSite.outcome, 'unadmitted-site', JSON.stringify(unknownSite).slice(0, 400));
+  assert.equal(unknownSite.site_id, 1);
+  const stillAlive = expected(await issue({ operation: 'reflect', id: 'generic', site_id: 0 }), 'reflected');
+  assert.deepEqual(stillAlive.site, before.site, 'the session survives an unknown-site query');
   assert.deepEqual(ordinary.stack, [{ kind: 1, value: String(fixture.expected.saved_result) }]);
   assert.deepEqual(latest.stack, [{ kind: 1, value: String(fixture.expected.generic_result) }]);
   assert.deepEqual(after.site, before.site, 'one installed generic recipe cannot change at publication');

@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 /**
- * VC-LIVE-03 relocation witness: a host effect that used to be performed by the caller slot is
- * moved into the callee slot, and the effect row's checked DefinitionId moves with it while the
- * request and the response stay identical.
+ * VC-LIVE-03 relocation witness: the host effect is always performed on behalf of the checked
+ * *target* slot a frame selected, so relocating it means republishing the caller's forwarded
+ * reference from target slot A to target slot E. The effect row's checked slot and DefinitionId
+ * move with that republication while the request and the response stay identical; the caller-side
+ * program cannot perform the effect itself (`requestEffect` requires the current frame's
+ * `targetHandle`), and this lane does not claim otherwise.
  *
  * Every scenario asserts a *count* over the request trace rather than a shape, and the duplicate
  * and omission scenarios name explicitly which coincidence they exhibit.
@@ -80,7 +83,8 @@ const publish = async (session, slot, id, expectedEpoch) => expectRow(session.is
   operation: 'publish', slot, id, program_index: 0, expected_epoch: expectedEpoch,
 }), 'published');
 
-// Old version: the caller slot B dispatches to slot A, and slot A performs the effect.
+// Old version: the caller program is published to slot D, forwards a test.emit-only reference to
+// slot A, and slot A performs the effect.
 const oldVersionRow = async binary => {
   const session = await openSession(binary, 'reloc-old');
   await install(session, 'tracedA', sources.tracedA, ['I64'], 'tracedA');
@@ -96,7 +100,8 @@ const oldVersionRow = async binary => {
   return root;
 };
 
-// New version: the caller slot B dispatches to slot E, and slot E performs the effect.
+// New version: the caller program is published to slot B, forwards a dispatch+test.emit reference
+// to slot E, and slot E performs the effect.
 const newVersionRow = async binary => {
   const session = await openSession(binary, 'reloc-new');
   await install(session, 'tracedE', sources.tracedE, ['I64'], 'tracedE');
@@ -126,9 +131,10 @@ export const run = async binary => {
   assert.deepEqual(oldRows[0].response, RESPONSE);
   assert.deepEqual(newRows[0].response, RESPONSE);
 
-  // The relocation witness: the effect row's checked DefinitionId and slot move from A to E.
-  assert.equal(oldRows[0].policyInput.slotId, 'A', 'old row must name the caller-side slot');
-  assert.equal(newRows[0].policyInput.slotId, 'E', 'new row must name the callee slot');
+  // The relocation witness: the effect row's checked slot and DefinitionId move from target A to
+  // target E when the caller's forwarded reference is republished there.
+  assert.equal(oldRows[0].policyInput.slotId, 'A', 'old row must name target slot A');
+  assert.equal(newRows[0].policyInput.slotId, 'E', 'new row must name target slot E');
   assert.notEqual(oldRows[0].definitionId, newRows[0].definitionId,
     'the emitting program DefinitionId must change with the relocation');
 

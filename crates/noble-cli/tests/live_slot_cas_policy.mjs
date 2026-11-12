@@ -74,7 +74,7 @@ function session(name) {
     closeSync(fd);
     closeSync(requestFd);
     writeFileSync(join(artifactDir, `${name}.stderr.txt`), stderr, { mode: 0o600 });
-    assert.ok(exitCode === 0 || exitCode === 2, `CLI exited ${exitCode}: ${stderr}`);
+    return exitCode;
   }
   return { name, child, next, issue, end, path, requestFd };
 }
@@ -149,9 +149,13 @@ async function baseline(s) {
   return { before, bBefore };
 }
 
-async function runCase(name, test) {
+// A case's exit code is part of its declared evidence: every case that ends on
+// an ordinary refusal must leave the session live and exit 0, and only a case
+// whose last root terminates the session after a guest failure may exit 2.
+async function runCase(name, test, expectedExit = 0) {
   const s = session(name);
-  const summary = { name, raw: s.path, counters: join(artifactDir, `${name}.counters.json`) };
+  const summary = { name, expected_exit: expectedExit, raw: s.path,
+    counters: join(artifactDir, `${name}.counters.json`) };
   try {
     await test(s, summary);
     summary.result = 'pass';
@@ -160,7 +164,9 @@ async function runCase(name, test) {
     summary.error = String(error.stack ?? error);
     throw error;
   } finally {
-    await s.end();
+    const exit = await s.end();
+    summary.exit = exit;
+    assert.equal(exit, expectedExit, `${name}: CLI exited ${exit}, expected ${expectedExit}`);
     writeFileSync(summary.counters, JSON.stringify(summary, null, 2) + '\n', { mode: 0o600 });
     console.log(evidenceDir ? JSON.stringify(summary) : `${name}: ${summary.result}`);
   }
@@ -274,7 +280,7 @@ await runCase('LSLOT07-dispatch-without-grant', async (s, log) => {
   assert.equal(denied.request_trace[0].rootEpoch, '1');
   observedRefusal(log, denied, 1);
   log.denied = denied;
-});
+}, 2); // The denied dispatch fails the guest, which terminates the session.
 await runCase('LSLOT07-old-version-effect-revoked-after-pin', async (s, log) => {
   await emitBaseline(s);
   outcome(await s.issue({ operation: 'hold-checkpoint', import: 'test_emit', occurrence: 1 }),
@@ -308,7 +314,7 @@ await runCase('LSLOT07-old-version-effect-revoked-after-pin', async (s, log) => 
     [['1', 'policy-updated']]);
   observedRefusal(log, denied, 2);
   log.checkpoint = entered; log.ack = committed; log.denied = denied;
-});
+}, 2); // The denied effect fails the guest, which terminates the session.
 await runCase('LSLOT07-revoked-after-root-pin', async (s, log) => {
   await emitBaseline(s);
   outcome(await s.issue({ operation: 'hold-checkpoint', import: 'live_select', occurrence: 1 }),
@@ -346,5 +352,5 @@ await runCase('LSLOT07-revoked-after-root-pin', async (s, log) => {
     [['1', 'policy-updated']]);
   log.checkpoint = entered; log.ack = committed; log.denied = denied;
   observedRefusal(log, denied, 1);
-});
+}, 2); // The denied dispatch fails the guest, which terminates the session.
 if (evidenceDir) console.log(`CASE_ARTIFACT_DIRECTORY=${artifactDir}`);
