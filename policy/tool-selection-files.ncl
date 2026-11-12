@@ -296,7 +296,7 @@
   "nix/octet-controls.nix" = "5152989c19793e9ef22cfc0099ca9c741c556472618365827ec2eabf864353da",
   "nix/octet-controls-tests.nix" = "284c10aea394e58b723dbb7144aeb28973ca5b9f27bf3bb7b110e5199ab3047a",
   "nix/tool-selection-observation.nix" = "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
-  "nix/tool-selection-tests.nix" = "944d489f0b63777c0331d7866499ee0739b4f1457808eb1edfa3ce810ecbe946",
+  "nix/tool-selection-tests.nix" = "e054566d1a0e4dd1df1c612d57ea3a131e6ecd21d1f0816b5a6426217e58a92d",
   "nix/lean-dependency-check.nix" = "92390712899ed9e248c5032924ec0d3242e64c45abc3c6fbd7984b9f9164ed40",
   "nix/lean-release.nix" = "7d88aa27b4f8a5d1c0036ed98a1e2db1f5485b782b462eaaae51b8b7b6c46485",
   "nix/extract-kernel-app.nix" = "862081a90a982fcd461c7d3da85969cd29f7bfc2640ff31c8542a9b9f4d0ad85",

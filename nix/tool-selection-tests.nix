@@ -117,8 +117,10 @@ let
       [ "component_sync" "profile" ] "Component-Draft")
     (badPolicy "component peer version changed" "component-sync-selection"
       [ "component_sync" "wasmtime_version" ] "unreviewed")
-    (badPolicy "component source pin unclassified" "component-sync-binding"
-      [ "component_sync" "wasmtime_source_nar_hash" ] "sha256-unreviewed")
+    # A new pin field must declare what binds it; changing a reviewed value is
+    # a re-pin, which the pinned-file hash for verification/m5/pins.json catches.
+    (badPolicy "component pin unclassified" "component-sync-binding"
+      [ "component_sync" "unclassified_pin" ] "unreviewed")
     (badObservation "selected Wasmtime version changed" "component-wasmtime-version-mismatch"
       [ "component_sync" "wasmtime_version" ] "39.0.0")
     (badObservation "selected wasm-tools version changed" "component-wasm-tools-version-mismatch"
