@@ -371,16 +371,32 @@ impl Compiled {
         snapshot: Option<&crate::snapshot::ParamSnapshot>,
         control: &mut crate::eval::Control<'_>,
     ) -> crate::eval::Report {
-        // Refuse before the register file is allocated, as the reference
-        // evaluator does: the workspace is the scratch the budget bounds.
-        if let Err(d) = crate::eval::scratch_preflight(self.scratch_bytes(), control) {
-            return crate::eval::Report {
-                obs: crate::eval::Obs::Refused(d),
-                evaluated_nodes: 0,
-            };
+        if let Some(refusal) = self.scratch_refusal(control) {
+            return refusal;
         }
         let mut w = self.workspace();
         self.evaluate_in(&mut w, inputs, snapshot, control)
+    }
+
+    /// The refusal of one workspace against the control's scratch limit, or
+    /// `None` when it fits.
+    ///
+    /// The register file is the scratch the budget bounds, so a caller that
+    /// allocates one workspace for several [`Compiled::evaluate_in`] calls must
+    /// ask this *before* allocating; [`Compiled::evaluate`] asks first itself.
+    /// The refusal is the one every evaluation would report under the same
+    /// control, with no node evaluated.
+    #[must_use]
+    pub fn scratch_refusal(
+        &self,
+        control: &crate::eval::Control<'_>,
+    ) -> Option<crate::eval::Report> {
+        crate::eval::scratch_preflight(self.scratch_bytes(), control)
+            .err()
+            .map(|d| crate::eval::Report {
+                obs: crate::eval::Obs::Refused(d),
+                evaluated_nodes: 0,
+            })
     }
 
     fn get(&self, w: &Workspace, n: crate::ir::NodeId) -> crate::sem::Value {

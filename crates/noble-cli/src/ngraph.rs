@@ -497,13 +497,23 @@ fn eval(
         )];
     let compiled =
         (!args.switch("--reference")).then(|| noble_ngraph::compiled::Compiled::new(&IDS, &graph));
-    let mut workspace = compiled
-        .as_ref()
-        .map(noble_ngraph::compiled::Compiled::workspace);
+    // One workspace serves every row, so the evaluator's own scratch preflight
+    // runs once here, before the register file is allocated. A refusal is the
+    // observation every row would have produced.
+    let refusal = compiled.as_ref().and_then(|c| c.scratch_refusal(&control));
+    let mut workspace = match refusal {
+        Some(_) => None,
+        None => compiled
+            .as_ref()
+            .map(noble_ngraph::compiled::Compiled::workspace),
+    };
     for (i, row) in vectors.rows.iter().enumerate() {
-        let obs = match (&compiled, &mut workspace) {
+        let obs = match (&compiled, workspace.as_mut()) {
             (Some(c), Some(w)) => c.evaluate_in(w, row, param_snapshot, &mut control).obs,
-            _ => noble_ngraph::reference(&graph, row, param_snapshot, &mut control).obs,
+            _ => match &refusal {
+                Some(report) => report.obs.clone(),
+                None => noble_ngraph::reference(&graph, row, param_snapshot, &mut control).obs,
+            },
         };
         lines.push(match &obs {
             noble_ngraph::Obs::Normal(values) => Line::normal(C, "evaluation")
