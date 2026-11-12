@@ -351,18 +351,24 @@ fn replay(graph: &crate::ir::Graph, derivation: &Derivation) -> Result<crate::ir
 /// Whether some guard in the graph pins `value` to zero: the guard names that value and its fact is
 /// the closed range `[0, 0]`. The certificate carries no copy of the guard; the checker re-derives
 /// the premise from the graph it was given.
-fn guard_pins_zero(graph: &crate::ir::Graph, value: crate::ir::NodeId) -> bool {
-    graph.nodes.iter().any(|node| {
-        matches!(
-            &node.op,
-            crate::ir::Op::Guard {
-                value: guarded,
-                fact: crate::ir::Fact::Range {
-                    lo: crate::ir::Literal::I64(0),
-                    hi: crate::ir::Literal::I64(0),
-                },
-            } if *guarded == value
-        )
+fn guard_pins_zero(
+    graph: &crate::ir::Graph,
+    value: crate::ir::NodeId,
+    node: crate::ir::NodeId,
+) -> bool {
+    let limit = usize::try_from(node.0).unwrap_or(usize::MAX);
+    graph.nodes.iter().enumerate().any(|(index, candidate)| {
+        index < limit
+            && matches!(
+                &candidate.op,
+                crate::ir::Op::Guard {
+                    value: guarded,
+                    fact: crate::ir::Fact::Range {
+                        lo: crate::ir::Literal::I64(0),
+                        hi: crate::ir::Literal::I64(0),
+                    },
+                } if *guarded == value
+            )
     })
 }
 
@@ -425,7 +431,7 @@ pub fn check(
                 if step.operands != [first, second] {
                     return Err(Refusal::Malformed);
                 }
-                if !guard_pins_zero(graph, first) {
+                if !guard_pins_zero(graph, first, step.node) {
                     return Err(Refusal::AssumptionUnavailable);
                 }
             }
@@ -658,8 +664,12 @@ mod tests {
     }
     /// A graph whose single value is `zero + seven`, with a guard that pins `pinned` to [0, 0] when
     /// one is given. The guard is the premise a guarded rewrite re-derives from the graph.
-    fn guarded(
+    /// A graph whose single value is `zero + seven`, with an optional guard pinning `pinned` to
+    /// [0, 0]. `guard_first` places the guard before the addition, so it may justify the rewrite;
+    /// without it the guard is a future guard and must not.
+    fn guarded_with(
         pinned: Option<bool>,
+        guard_first: bool,
     ) -> (
         crate::ir::Graph,
         crate::ir::NodeId,
@@ -673,21 +683,45 @@ mod tests {
         );
         let zero = builder.i64_const(0);
         let seven = builder.i64_const(7);
+        if guard_first {
+            if let Some(pins_zero) = pinned {
+                let guarded_node = if pins_zero { zero } else { seven };
+                let _guard = builder.guard(
+                    crate::ir::Fact::Range {
+                        lo: crate::ir::Literal::I64(0),
+                        hi: crate::ir::Literal::I64(0),
+                    },
+                    guarded_node,
+                );
+            }
+        }
         let sum = builder.op(crate::ir::Op::I64Add(zero, seven));
         builder.output(sum);
-        if let Some(pins_zero) = pinned {
-            let guarded_node = if pins_zero { zero } else { seven };
-            let _guard = builder.guard(
-                crate::ir::Fact::Range {
-                    lo: crate::ir::Literal::I64(0),
-                    hi: crate::ir::Literal::I64(0),
-                },
-                guarded_node,
-            );
+        if !guard_first {
+            if let Some(pins_zero) = pinned {
+                let guarded_node = if pins_zero { zero } else { seven };
+                let _guard = builder.guard(
+                    crate::ir::Fact::Range {
+                        lo: crate::ir::Literal::I64(0),
+                        hi: crate::ir::Literal::I64(0),
+                    },
+                    guarded_node,
+                );
+            }
         }
         (builder.finish(), zero, seven, sum)
     }
 
+    fn guarded(
+        pinned: Option<bool>,
+    ) -> (
+        crate::ir::Graph,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+        crate::ir::NodeId,
+    ) {
+        guarded_with(pinned, true)
+    }
     fn guarded_step(node: crate::ir::NodeId, operands: [crate::ir::NodeId; 2]) -> super::Step {
         super::Step {
             rule: super::Rule::GuardedNeutralAddLeft,
@@ -714,7 +748,7 @@ mod tests {
         let (graph, zero, seven, sum) = guarded(Some(true));
         let scheme = TestIds;
         let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
-        assert!(super::guard_pins_zero(&graph, zero));
+        assert!(super::guard_pins_zero(&graph, zero, sum));
         assert_eq!(super::check(&scheme, &graph, &graph, &derivation), Ok(()));
     }
 
@@ -723,7 +757,7 @@ mod tests {
         let (graph, zero, seven, sum) = guarded(None);
         let scheme = TestIds;
         let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
-        assert!(!super::guard_pins_zero(&graph, zero));
+        assert!(!super::guard_pins_zero(&graph, zero, sum));
         assert_eq!(
             super::check(&scheme, &graph, &graph, &derivation),
             Err(super::Refusal::AssumptionUnavailable)
@@ -735,8 +769,19 @@ mod tests {
         let (graph, zero, seven, sum) = guarded(Some(false));
         let scheme = TestIds;
         let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
-        assert!(!super::guard_pins_zero(&graph, zero));
-        assert!(super::guard_pins_zero(&graph, seven));
+        assert!(!super::guard_pins_zero(&graph, zero, sum));
+        assert!(super::guard_pins_zero(&graph, seven, sum));
+        assert_eq!(
+            super::check(&scheme, &graph, &graph, &derivation),
+            Err(super::Refusal::AssumptionUnavailable)
+        );
+    }
+    #[test]
+    fn guarded_rewrite_is_refused_when_the_guard_comes_after_the_node() {
+        let (graph, zero, seven, sum) = guarded_with(Some(true), false);
+        let scheme = TestIds;
+        let derivation = guarded_derivation(&graph, guarded_step(sum, [zero, seven]));
+        assert!(!super::guard_pins_zero(&graph, zero, sum));
         assert_eq!(
             super::check(&scheme, &graph, &graph, &derivation),
             Err(super::Refusal::AssumptionUnavailable)
