@@ -2,7 +2,8 @@
   "schema": "noble.postpromotion-evidence-gap-20261112/v1",
   "date": "2026-11-12",
   "observation": "The canonical ledgers still cite 80 distinct external evidence paths, and 77 of them are absent on this host. The earlier record (postpromotion-evidence-gap-20261025.json) covered only the roots that block five one-step post-promotion archives; it did not record that the cited evidence for promoted cases below is also gone. This record lists every missing root, the affected cases and the affected STATUS records. No citation was deleted or rewritten, and no sha256 binding was restamped: those bindings can no longer be checked against the tree.",
-  "method": "Read-only. Enumerate every /home/brittonr/.cache/... and /var/tmp/... path cited in specs/conformance/*.json, specs/STATUS.json and specs/ROADMAP.md, then test each with fs.existsSync. Case attribution is by JSON-string containment of an absent path inside that case's record.",
+  "method": "Read-only. Enumerate every ~/.cache/... and /var/tmp/... path cited in specs/conformance/*.json, specs/STATUS.json and specs/ROADMAP.md, then test each with fs.existsSync. Case attribution is by JSON-string containment of an absent path inside that case's record.",
+  "path_notation": "Paths under the maintainer's home directory are written ~/...; the ledgers cite the same paths in absolute form.",
   "totals": {
     "distinct_external_paths_cited": 80,
     "distinct_external_paths_absent": 77,
@@ -20,7 +21,7 @@
   },
   "roots": [
     {
-      "root": "/home/brittonr/.cache/noble-proof-tmp",
+      "root": "~/.cache/noble-proof-tmp",
       "root_state": "absent",
       "absent_cited_paths": 51,
       "affected_cases": ["ADAPT-01", "ADAPT-06", "ADAPT-15", "CONTRACT-17", "CONTRACT-18", "CONTRACT-19", "CONTRACT-21", "CONTRACT-22", "CONTRACT-24", "CONTRACT-25", "CONTRACT-26", "DX-01", "DX-02", "S-CASE-01", "S-CASE-03", "S-CASE-04", "S-CASE-05", "S-CASE-06", "S-CASE-07", "S-CASE-08", "S-CASE-13", "S-CASE-14"],
@@ -38,21 +39,21 @@
       ]
     },
     {
-      "root": "/home/brittonr/.cache/noble-issues",
+      "root": "~/.cache/noble-issues",
       "root_state": "present (only proof/, publish.sh, tmp/ and wt/); the cited subdirectories under proof/ are absent",
       "absent_cited_paths": 11,
       "absent_examples": [
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/soft-float-1e7.log",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
-        "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
-        "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/trait-resolver-r8-source-only-final-index.json",
-        "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/source-archive-after-run-closure-r8.json",
-        "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/permanent-helper-consumer-nwjvr-retained-r8/receipt.json"
+        "~/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+        "~/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/soft-float-1e7.log",
+        "~/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+        "~/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+        "~/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+        "~/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+        "~/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+        "~/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+        "~/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/trait-resolver-r8-source-only-final-index.json",
+        "~/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/source-archive-after-run-closure-r8.json",
+        "~/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/permanent-helper-consumer-nwjvr-retained-r8/receipt.json"
       ],
       "affected_cases": ["NGRAPH-CASE-01", "NGRAPH-CASE-03", "NGRAPH-CASE-04", "NGRAPH-CASE-05", "NGRAPH-CASE-06", "NGRAPH-CASE-07", "NGRAPH-CASE-08", "NGRAPH-CASE-09", "NGRAPH-CASE-10", "NGRAPH-CASE-11", "NGRAPH-CASE-12", "NGRAPH-CASE-13", "NGRAPH-CASE-14", "NGRAPH-CASE-15"],
       "affected_records": [
@@ -64,13 +65,13 @@
       ]
     },
     {
-      "root": "/home/brittonr/.cache/noble-safety-core-20260930-a",
+      "root": "~/.cache/noble-safety-core-20260930-a",
       "root_state": "absent",
       "absent_cited_paths": 3,
       "affected_cases": ["DX-06", "S-CASE-01", "S-CASE-05", "S-CASE-14"]
     },
     {
-      "root": "/home/brittonr/.cache/noble-adapt06-tmp",
+      "root": "~/.cache/noble-adapt06-tmp",
       "root_state": "absent",
       "absent_cited_paths": 1,
       "affected_cases": ["ADAPT-06"],
@@ -78,14 +79,14 @@
     },
     {
       "roots": [
-        "/home/brittonr/.cache/noble-scase02-source-gate-20260930-a",
-        "/home/brittonr/.cache/noble-scase02-corrected-gate-20260930-b",
-        "/home/brittonr/.cache/noble-scase06-acceptance-20260930-a",
-        "/home/brittonr/.cache/noble-scase06-corrected-20260930-a",
-        "/home/brittonr/.cache/noble-scase06-final-20260930-a",
-        "/home/brittonr/.cache/noble-scase08-callback-owner-prepromotion-7c9e2d4a",
-        "/home/brittonr/.cache/noble-scase13-gate-20260930-a",
-        "/home/brittonr/.cache/noble-scase13-gate-20260930-b"
+        "~/.cache/noble-scase02-source-gate-20260930-a",
+        "~/.cache/noble-scase02-corrected-gate-20260930-b",
+        "~/.cache/noble-scase06-acceptance-20260930-a",
+        "~/.cache/noble-scase06-corrected-20260930-a",
+        "~/.cache/noble-scase06-final-20260930-a",
+        "~/.cache/noble-scase08-callback-owner-prepromotion-7c9e2d4a",
+        "~/.cache/noble-scase13-gate-20260930-a",
+        "~/.cache/noble-scase13-gate-20260930-b"
       ],
       "root_state": "absent",
       "absent_cited_paths": 8,
