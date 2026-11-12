@@ -38,8 +38,16 @@ pub(crate) fn f32_token(tok: &str) -> Result<u32, F32Refusal> {
             .and_then(|b| u32::try_from(b).ok())
             .ok_or(F32Refusal::Malformed);
     }
-    let word = |w: &[u8]| w.eq_ignore_ascii_case(b"nan") || w.eq_ignore_ascii_case(b"inf");
-    if tok.as_bytes().windows(3).any(word) {
+    // Only the non-finite *words* of the decimal grammar are
+    // `E-LITERAL-NONFINITE` (design D5: NaN and infinities are given as bits).
+    // A leading `+` is a malformed number token (NGRAPH-FORMAT-01), and a
+    // longer token such as `banana` or `0.5inf` is neither a word nor a
+    // decimal, so both are `Malformed`.
+    let word = tok.strip_prefix('-').unwrap_or(tok);
+    if ["inf", "infinity", "nan"]
+        .iter()
+        .any(|w| word.eq_ignore_ascii_case(w))
+    {
         return Err(F32Refusal::Nonfinite);
     }
     if !crate::sem::is_decimal(tok) {

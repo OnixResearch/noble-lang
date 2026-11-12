@@ -20,6 +20,8 @@
 mod common;
 #[path = "grad_ordered/differential.rs"]
 mod grad_ordered;
+#[path = "train_admission/loss_graphs.rs"]
+mod loss_graphs;
 
 use common::{checked, contract, linear, mse, points, IDS};
 use noble_ngraph::check::Budgets;

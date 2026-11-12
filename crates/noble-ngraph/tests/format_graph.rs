@@ -317,6 +317,22 @@ fn malformed_records_are_refused_with_their_codes() {
             "E-LITERAL-NONFINITE",
         ),
         (
+            format!("{head}{subj}slot input f32\n%0 = const f32 +inf\nout %0\n"),
+            "E-GRAPH-MALFORMED",
+        ),
+        (
+            format!("{head}{subj}slot input f32\n%0 = const f32 +nan\nout %0\n"),
+            "E-GRAPH-MALFORMED",
+        ),
+        (
+            format!("{head}{subj}slot input f32\n%0 = const f32 banana\nout %0\n"),
+            "E-GRAPH-MALFORMED",
+        ),
+        (
+            format!("{head}{subj}slot input f32\n%0 = const f32 0.5inf\nout %0\n"),
+            "E-GRAPH-MALFORMED",
+        ),
+        (
             format!("{head}{subj}slot input f32\n%0 = f32.frob %0\nout %0\n"),
             "E-GRAPH-MALFORMED",
         ),
@@ -327,6 +343,23 @@ fn malformed_records_are_refused_with_their_codes() {
             Err(d) => assert_eq!(d.code_string(), code, "{text}\n{d}"),
         }
     }
+}
+
+#[test]
+fn a_line_over_the_graph_token_budget_is_refused_before_its_tokens_exist() {
+    let text = format!(
+        "ngraph-ir/0 ngraph-f32/0\nsubject authored-name budget demo\nshape input {}\n{BODY}",
+        "s ".repeat(7).trim_end()
+    );
+    // The shape line's nine tokens (the keyword, the side and seven trees)
+    // cost nine `&str` entries (144 bytes); the header and subject lines are
+    // 32 and 64, so only the shape line crosses 64.
+    let e = noble_ngraph::format::graph::parse_within(&IDS, &text, 64)
+        .expect_err("the shape line is over the budget");
+    assert_eq!(e.code_string(), "E-BUDGET-GRAPH-BYTES");
+    assert_eq!(e.budget, Some((64, 144)));
+    noble_ngraph::format::graph::parse_within(&IDS, &text, 144)
+        .expect("the same file fits a nine-token budget");
 }
 
 #[test]

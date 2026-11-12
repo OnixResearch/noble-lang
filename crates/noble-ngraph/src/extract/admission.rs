@@ -125,6 +125,17 @@ pub fn admit<'s>(
         ));
     }
 
+    // The environment is producer data: extraction chooses every operation's
+    // behaviour from it, and the kernel accepts a Core (non-declared-module)
+    // environment without comparing its rows with the bootstrap table. Every
+    // profile's first rows must therefore be the canonical ones here.
+    if !bootstrap_rows(submission) {
+        return Err(refuse(
+            crate::diag::Code::Subject,
+            "the environment's built-in rows differ from the bootstrap table",
+        ));
+    }
+
     // (a) Independent kernel acceptance of every body of the exact subject.
     let bodies = accept_all(submission)?;
 
@@ -192,6 +203,28 @@ pub fn admit<'s>(
 }
 
 type Accepted<'s> = (Body<'s>, noble_kernel::untrusted::Checked);
+
+/// Whether `submission`'s environment carries the canonical bootstrap table's
+/// behaviours as its prefix.
+///
+/// Extraction selects every operation from `Env::kind`, so the behaviours are
+/// the rows it trusts; the schemes decide only what the kernel accepts, which
+/// is the kernel's own check. Additional rows (declared modules, bound
+/// adapters, a selected text or calculator profile) and the host-owned widening
+/// of `test.emit` are legitimate, so only the canonical prefix is compared.
+fn bootstrap_rows(submission: &noble_kernel::execution::Submission) -> bool {
+    let Ok(canonical) = noble_kernel::contracts::environment() else {
+        return false;
+    };
+    let env = &submission.environment;
+    if canonical.kinds.is_empty() || env.kinds.len() < canonical.kinds.len() {
+        return false;
+    }
+    env.kinds
+        .iter()
+        .zip(&canonical.kinds)
+        .all(|(actual, expected)| actual == expected)
+}
 
 #[expect(
     tigerstyle::allocation_in_loop,
@@ -574,11 +607,13 @@ pub(super) const fn scalar(ty: &noble_kernel::types::Ty) -> Option<crate::ir::Sc
     }
 }
 
-/// Subject identity: the exact root request and body plus every closure
-/// definition specialization (identity, contract entry, body, expected
-/// interface), encoded with the kernel's derived `Debug` rendering under a
-/// domain tag. The encoding is deterministic for one kernel revision; it is
-/// a producer digest, not independent validation.
+/// Subject identity: the exact root request, environment and body (including
+/// its text-literal payloads, which the candidate's `Lit::Text` does not
+/// carry) plus every closure definition specialization (identity, contract
+/// entry, body, text literals, expected interface), encoded with the kernel's
+/// derived `Debug` rendering under a domain tag. The encoding is
+/// deterministic for one kernel revision; it is a producer digest, not
+/// independent validation.
 fn subject_of(
     ids: &dyn IdentityScheme,
     submission: &noble_kernel::execution::Submission,
@@ -587,7 +622,9 @@ fn subject_of(
     let mut parts: alloc::vec::Vec<alloc::vec::Vec<u8>> = alloc::vec![
         b"noble.ngraph.subject.kernel-debug.v0".to_vec(),
         alloc::format!("{:?}", submission.request.expected).into_bytes(),
+        alloc::format!("{:?}", submission.environment).into_bytes(),
         alloc::format!("{:?}", submission.body.candidate).into_bytes(),
+        alloc::format!("{:?}", submission.body.texts).into_bytes(),
     ];
     let mut defs: alloc::vec::Vec<_> = submission
         .definitions
@@ -598,8 +635,14 @@ fn subject_of(
     for d in defs {
         parts.push(d.identity.to_le_bytes().to_vec());
         parts.push(
-            alloc::format!("{:?}|{:?}|{:?}", d.definition, d.expected, d.body.candidate)
-                .into_bytes(),
+            alloc::format!(
+                "{:?}|{:?}|{:?}|{:?}",
+                d.definition,
+                d.expected,
+                d.body.candidate,
+                d.body.texts
+            )
+            .into_bytes(),
         );
     }
     let refs: alloc::vec::Vec<&[u8]> = parts.iter().map(alloc::vec::Vec::as_slice).collect();

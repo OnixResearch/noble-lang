@@ -194,7 +194,7 @@ impl SnapshotFile {
     /// ([`crate::train::Adam::admit`]) — values `train` can never publish.
     #[expect(
         tigerstyle::unbounded_collection_growth,
-        reason = "Owner: noble-maintainers; slots are bounded by the declared snapshot slot count"
+        reason = "Owner: noble-maintainers; each `param` line is charged against `snapshot_bytes` before it is retained, so both vectors are bounded by the budget"
     )]
     pub fn parse(
         ids: &dyn IdentityScheme,
@@ -231,6 +231,16 @@ impl SnapshotFile {
                     "expected `param <slot> 0x<bits>`",
                 ));
             };
+            // Charge the line before it is retained: the format declares no
+            // slot count, so `snapshot_bytes` is the only bound.
+            let observed = (bytes.len() as u64).saturating_add(4);
+            if observed > snapshot_bytes {
+                return Err(crate::diag::Diagnostic::budget(
+                    crate::diag::BudgetKind::SnapshotBytes,
+                    snapshot_bytes,
+                    observed,
+                ));
+            }
             if !f32::from_bits(b).is_finite() {
                 return Err(integrity(alloc::format!(
                     "non-finite parameter 0x{b:08x} in slot {k}"
@@ -239,14 +249,7 @@ impl SnapshotFile {
             slots.push(k);
             bytes.extend_from_slice(&b.to_le_bytes());
         }
-        let observed = bytes.len() as u64;
-        if observed > snapshot_bytes {
-            return Err(crate::diag::Diagnostic::budget(
-                crate::diag::BudgetKind::SnapshotBytes,
-                snapshot_bytes,
-                observed,
-            ));
-        }
+        debug_assert!((bytes.len() as u64) <= snapshot_bytes);
         let optimizer_state = c.digest("optimizer-state")?;
         let parent = c.digest("parent")?;
         let (t, n) = c.field("subject")?;
@@ -376,9 +379,9 @@ impl SnapshotFile {
     /// (design D6).
     ///
     /// # Errors
-    /// `E-SNAPSHOT-STALE` (another `GraphLogicalId` or fact-binding digest),
-    /// `E-SNAPSHOT-LAYOUT` (another param layout) or `E-SNAPSHOT-ID` (not
-    /// the caller-pinned snapshot).
+    /// `E-SNAPSHOT-STALE` (another `GraphLogicalId`, subject, fact-binding
+    /// digest or tool-revision string), `E-SNAPSHOT-LAYOUT` (another param
+    /// layout) or `E-SNAPSHOT-ID` (not the caller-pinned snapshot).
     pub fn bind(
         &self,
         ids: &dyn IdentityScheme,
@@ -397,6 +400,20 @@ impl SnapshotFile {
                 crate::diag::Code::SnapshotStale,
                 crate::diag::Site::Graph,
                 "snapshot was trained under other fact bindings",
+            ));
+        }
+        if self.provenance.subject != checked.graph().subject {
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotStale,
+                crate::diag::Site::Graph,
+                "snapshot was trained for another subject",
+            ));
+        }
+        if self.provenance.tools != crate::train::tools() {
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotStale,
+                crate::diag::Site::Graph,
+                "snapshot records other tool revisions",
             ));
         }
         self.snapshot.check_use(checked)?;

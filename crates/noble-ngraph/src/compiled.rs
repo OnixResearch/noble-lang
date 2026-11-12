@@ -116,8 +116,11 @@ impl Compiled {
         let mut consts = alloc::vec::Vec::with_capacity(n);
         let mut slot_regs = alloc::vec::Vec::with_capacity(n);
         let layer_count = checked.layer_count() as usize;
-        let mut layers = alloc::vec![(0u32, 0u32); layer_count.max(1)];
-        let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count.max(1)];
+        // Exactly the checker's layers, including none for an empty graph: the
+        // layout validator requires one range per layer and one trailing
+        // failure-suffix entry, which `layer_count + 1` below supplies.
+        let mut layers = alloc::vec![(0u32, 0u32); layer_count];
+        let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count];
         let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::with_capacity(n);
         let mut iins: alloc::vec::Vec<crate::schedule::I64Instruction> =
             alloc::vec::Vec::with_capacity(n);
@@ -368,6 +371,14 @@ impl Compiled {
         snapshot: Option<&crate::snapshot::ParamSnapshot>,
         control: &mut crate::eval::Control<'_>,
     ) -> crate::eval::Report {
+        // Refuse before the register file is allocated, as the reference
+        // evaluator does: the workspace is the scratch the budget bounds.
+        if let Err(d) = crate::eval::scratch_preflight(self.scratch_bytes(), control) {
+            return crate::eval::Report {
+                obs: crate::eval::Obs::Refused(d),
+                evaluated_nodes: 0,
+            };
+        }
         let mut w = self.workspace();
         self.evaluate_in(&mut w, inputs, snapshot, control)
     }

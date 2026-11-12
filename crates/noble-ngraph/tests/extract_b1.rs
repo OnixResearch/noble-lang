@@ -19,7 +19,11 @@
 //! prepared with the block's input types (bottom-first) — exactly what
 //! `noble session` submits when those values are on its stack.
 
+#[path = "extract_b1/admission_env.rs"]
+mod admission_env;
 mod common;
+#[path = "extract_b1/recipes.rs"]
+mod recipes;
 
 use common::IDS;
 use noble_kernel::types::Ty;
@@ -122,6 +126,8 @@ fn i3_repeated_named_call_to_one_identity() {
         .filter_map(|n| n.origin.as_ref())
         .filter_map(|o| o.expansion.first())
         .collect();
+    // Two invocations in the root body, so the `all()` below is not vacuous.
+    assert_eq!(call_sites.len(), 2, "both `sq` calls record an expansion");
     assert!(call_sites.iter().all(|s| s.definition.is_none()));
     assert_eq!(x.stats.max_inline_depth, 1);
 }

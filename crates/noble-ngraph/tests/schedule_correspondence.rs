@@ -18,6 +18,7 @@
 //! obligation the issue names (issue #43).
 use noble_ngraph::check::{self, CheckedGraph};
 use noble_ngraph::compiled::Compiled;
+use noble_ngraph::eval::{Control, Obs};
 use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::layout::{self, PackedLayout, Refusal};
 use noble_ngraph::schedule::{self, I64Instruction, StreamRefusal};
@@ -254,6 +255,29 @@ fn an_f32_profile_is_outside_this_validator() {
     assert!(compiled.i64_instructions().is_none());
     let refused = schedule::check(&accepted, &compiled.packed_layout(), &[]);
     assert_eq!(refused, Err(StreamRefusal::UnsupportedProfile));
+}
+
+#[test]
+fn an_empty_graph_compiles_to_a_layout_and_stream_both_validators_accept() {
+    let scheme = common::IDS;
+    let empty = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&scheme, "schedule-correspondence-empty"),
+    )
+    .finish();
+    let accepted = check::check(&scheme, empty).expect("the checker admits an empty graph");
+    assert_eq!(accepted.layer_count(), 0);
+    let compiled = Compiled::new(&scheme, &accepted);
+    let layout = compiled.packed_layout();
+    assert!(layout.layers.is_empty(), "no layers to tile");
+    assert_eq!(layout.fail_suffix_min, vec![u32::MAX], "one trailing entry");
+    assert_eq!(layout::check(&accepted, &layout), Ok(()));
+    let stream = compiled.i64_instructions().expect("I64");
+    assert!(stream.is_empty());
+    assert_eq!(schedule::check(&accepted, &layout, stream), Ok(()));
+    let report = compiled.evaluate(&[], None, &mut Control::default());
+    assert_eq!(report.obs, Obs::Normal(Vec::new()));
+    assert_eq!(report.evaluated_nodes, 0);
 }
 
 #[path = "schedule_guards_dir/guards.rs"]

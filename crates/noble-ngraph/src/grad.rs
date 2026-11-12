@@ -15,6 +15,9 @@
 //! * Surrogates (`straight-through`, `clamped-linear`, index
 //!   `backward-difference`, `select` gate straight-through) are opt-ins and are
 //!   labelled as surrogates; they are never described as exact derivatives.
+//!   A `clamped-linear` width must be a finite, strictly positive, normal
+//!   binary32 value: the surrogate's window and slope are defined only there,
+//!   and a subnormal width overflows the `g/w` division.
 
 /// Derivative policy revision.
 pub const DERIV_POLICY: &str = "ngraph-deriv-real/0";
@@ -60,6 +63,29 @@ impl DerivOptions {
     }
     fn index(&self, n: crate::ir::NodeId) -> IndexPolicy {
         self.index.get(&n).copied().unwrap_or(IndexPolicy::Refuse)
+    }
+
+    /// Whether two option sets are the same at the level the recorded policy
+    /// uses: the same nodes with the same policies, and, for
+    /// [`BooleanPolicy::ClampedLinear`], the same width bits.
+    ///
+    /// `PartialEq` compares the width as an `f32`, so `NaN` never equals
+    /// itself and two distinct `NaN` payloads never differ. Provenance replay
+    /// must compare the recorded bits instead, exactly as
+    /// [`crate::train::Adam::same_bits`] does for the optimizer settings.
+    #[must_use]
+    pub fn same_bits(&self, other: &Self) -> bool {
+        let width = |p: &BooleanPolicy| match p {
+            BooleanPolicy::ClampedLinear(w) => Some(w.to_bits()),
+            BooleanPolicy::Refuse | BooleanPolicy::StraightThrough => None,
+        };
+        self.boolean.len() == other.boolean.len()
+            && self.boolean.iter().all(|(n, p)| {
+                other.boolean.get(n).is_some_and(|q| {
+                    core::mem::discriminant(p) == core::mem::discriminant(q) && width(p) == width(q)
+                })
+            })
+            && self.index == other.index
     }
 
     /// Canonical text of every opt-in (recorded in provenance).
@@ -149,6 +175,24 @@ pub fn admit(
         }
         dep[i] = has_dependency;
     }
+    admit_paths(g, &dep, opts)
+}
+
+/// Refuses a declared-parameter path to an output through a hard boolean node
+/// or the index operand of an index read. `dep[i]` says whether node `i`
+/// carries a declared parameter (the model's params, or a model output feeding
+/// the loss graph); `opts` names nodes of the model graph and is the default
+/// for a loss graph, whose nodes no opt-in can name.
+///
+/// # Errors
+/// `E-DERIV-BOOLEAN` or `E-DERIV-INDEX`.
+pub(crate) fn admit_paths(
+    g: &crate::ir::Graph,
+    dep: &[bool],
+    opts: &DerivOptions,
+) -> Result<(), crate::diag::Diagnostic> {
+    debug_assert_eq!(dep.len(), g.nodes.len());
+    let n = g.nodes.len();
     let mut reaches = alloc::vec![false; n];
     for o in &g.outputs {
         reaches[o.index()] = true;
@@ -213,6 +257,21 @@ fn admit_options(g: &crate::ir::Graph, opts: &DerivOptions) -> Result<(), crate:
         ))
     };
     for (&n, policy) in &opts.boolean {
+        if let BooleanPolicy::ClampedLinear(w) = policy {
+            // The surrogate divides by the width and defines its window from
+            // it: only a finite, strictly positive, normal binary32 value is
+            // a width the policy defines (a subnormal width overflows `g/w`).
+            if !(w.is_normal() && *w > 0.0) {
+                return Err(crate::diag::Diagnostic::new(
+                    crate::diag::Code::DerivBoolean,
+                    crate::diag::Site::Node(n),
+                    alloc::format!(
+                        "clamped-linear width 0x{:08x} is not a finite, strictly positive, normal value",
+                        w.to_bits()
+                    ),
+                ));
+            }
+        }
         let is_applicable = matches!(
             (policy, op(n)),
             (

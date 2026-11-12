@@ -278,8 +278,9 @@ pub fn tools() -> alloc::string::String {
 ///
 /// # Errors
 /// `E-PARAM-UNDECLARED`, `E-DERIV-I64`, `E-DERIV-BOOLEAN`, `E-DERIV-INDEX`
-/// or `E-INTERFACE` (loss graph: not `ngraph-f32/0`, a `param` slot, fewer
-/// input slots than model outputs, or not exactly one output).
+/// (in the model graph or in the loss graph), or `E-INTERFACE` (loss graph:
+/// not `ngraph-f32/0`, a `param` slot, fewer input slots than model outputs,
+/// or not exactly one output).
 pub fn admit(
     model: &crate::check::CheckedGraph,
     loss: &crate::check::CheckedGraph,
@@ -315,7 +316,25 @@ pub fn admit(
     if lg.outputs.len() != 1 {
         return interface("the loss graph must have exactly one output");
     }
-    Ok(())
+    // NGRAPH-DERIV-01 refuses any contract in which a declared parameter
+    // reaches the loss through a hard boolean node or an index operand, and
+    // the loss graph is part of the loss. A parameter reaches it through the
+    // model outputs, which feed the loss graph's first input slots; every
+    // other input is a target from the data, not a parameter. Opt-ins name
+    // model nodes (D6, D10), so no opt-in can name a loss node and the
+    // default policy applies here.
+    let model_outputs = model.graph().outputs.len();
+    let mut dep = alloc::vec![false; lg.nodes.len()];
+    for (i, node) in lg.nodes.iter().enumerate() {
+        let mut has_dependency = false;
+        if let crate::ir::Op::Input(k) = node.op {
+            has_dependency = usize::try_from(k).is_ok_and(|k| k < model_outputs);
+        } else {
+            node.op.visit_operands(|o| has_dependency |= dep[o.index()]);
+        }
+        dep[i] = has_dependency;
+    }
+    crate::grad::admit_paths(lg, &dep, &crate::grad::DerivOptions::default())
 }
 
 /// Number of target values each training point must carry for `loss`.
@@ -575,11 +594,11 @@ pub fn train(
 /// reproduced training result.
 ///
 /// # Errors
-/// [`Stopped`] with `E-SNAPSHOT-STALE` if the model, its fact bindings, the
-/// loss graph, the data, the seed, the optimizer bits, the derivative
-/// options or the parent differ from the record; `E-SNAPSHOT-REPLAY` if the
-/// reproduced snapshot or optimizer state differs; or the code that stopped
-/// training.
+/// [`Stopped`] with `E-SNAPSHOT-STALE` if the model, its subject, its fact
+/// bindings, the loss graph, the data, the seed, the optimizer bits, the
+/// derivative options, the recorded tool revisions or the parent differ from
+/// the record; `E-SNAPSHOT-REPLAY` if the reproduced snapshot or optimizer
+/// state differs; or the code that stopped training.
 pub fn replay(
     ids: &dyn IdentityScheme,
     c: &Contract,
@@ -611,8 +630,14 @@ pub fn replay(
     if data_digest(ids, &c.data) != p.data {
         return Err(stale("data"));
     }
-    if c.seed != p.seed || !c.adam.same_bits(&p.optimizer) || c.deriv != p.deriv {
+    if c.seed != p.seed || !c.adam.same_bits(&p.optimizer) || !c.deriv.same_bits(&p.deriv) {
         return Err(stale("seed/optimizer/policy"));
+    }
+    if c.model.graph().subject != p.subject {
+        return Err(stale("subject"));
+    }
+    if tools() != p.tools {
+        return Err(stale("tool revisions"));
     }
     let parent_id = match parent {
         Some(s) => s.id(),
