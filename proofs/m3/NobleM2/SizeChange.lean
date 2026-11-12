@@ -15,6 +15,11 @@ natural-valued; wrapping `I64` arithmetic is not, so a call measured by it is re
 and refused rather than assumed decreasing.
 
 Refusal means **not shown terminating**, never "diverges".
+
+Composing two relations is `Rel.compose`. `unknown` means "not shown", so it permits an increase and
+therefore absorbs: a decrease on one side of an `unknown` step proves nothing about the pair. The
+composition is proved sound for the step semantics `Rel.Allowed` (`Rel.allowed_compose`), which is
+what makes a composed graph describe a real two-step path.
 -/
 
 namespace NobleM2.SizeChange
@@ -28,16 +33,65 @@ deriving DecidableEq, Repr
 
 namespace Rel
 
-/-- Sequencing two calls: a decrease in either position is still a decrease. -/
+/-- Sequencing two calls. A strict decrease on one side survives only when the other side is known:
+`unknown` permits an increase that cancels it, so `unknown` absorbs on both sides. -/
 def compose : Rel → Rel → Rel
-  | .decrease, _ => .decrease
-  | _, .decrease => .decrease
+  | .decrease, .equal => .decrease
+  | .decrease, .decrease => .decrease
+  | .equal, .decrease => .decrease
   | .equal, .equal => .equal
   | _, _ => .unknown
 
-@[simp] theorem compose_decrease_left (x : Rel) : compose .decrease x = .decrease := rfl
-@[simp] theorem compose_decrease_right (x : Rel) : compose x .decrease = .decrease := by
+/-- What a call may do to one measure: `decrease` really drops, `equal` really holds, `unknown`
+permits any pair. -/
+def Allowed : Rel → Nat → Nat → Prop
+  | .decrease, before, after => after < before
+  | .equal, before, after => after = before
+  | .unknown, _, _ => True
+
+/-- `unknown` absorbs composition on the left: nothing follows from an unconstrained step. -/
+@[simp] theorem compose_unknown_left (x : Rel) : compose .unknown x = .unknown := rfl
+
+/-- `unknown` absorbs composition on the right. -/
+@[simp] theorem compose_unknown_right (x : Rel) : compose x .unknown = .unknown := by
   cases x <;> rfl
+
+/-- A decrease composed with a known relation stays a decrease. -/
+theorem compose_decrease_left (x : Rel) (hx : x ≠ .unknown) :
+    compose .decrease x = .decrease := by
+  cases x <;> simp_all [compose]
+
+/-- A known relation composed with a decrease stays a decrease. -/
+theorem compose_decrease_right (x : Rel) (hx : x ≠ .unknown) :
+    compose x .decrease = .decrease := by
+  cases x <;> simp_all [compose]
+
+/-- A `decrease` is a known relation. -/
+theorem known_of_decrease {x : Rel} (h : x = .decrease) : x ≠ .unknown := by
+  rw [h]; exact fun hbad => noConfusion hbad
+
+/-- Composing two known relations is known. -/
+theorem known_compose {x y : Rel} (hx : x ≠ .unknown) (hy : y ≠ .unknown) :
+    x.compose y ≠ .unknown := by
+  cases x <;> cases y <;> simp_all [compose]
+
+/-- **Composition describes real two-step paths**: a pair the composed relation permits is a pair
+some intermediate value makes both steps permit. (The converse fails — the table is sound, not
+complete — which is why a refusal is never a divergence claim.) -/
+theorem allowed_compose {r₁ r₂ : Rel} {a b c : Nat}
+    (h₁ : r₁.Allowed a b) (h₂ : r₂.Allowed b c) : (r₁.compose r₂).Allowed a c := by
+  cases r₁ <;> cases r₂ <;> simp_all [compose, Allowed] <;> omega
+
+/-- The concrete reason `unknown` must absorb: `5 → 3` is a real decrease and `3 → 9` is
+unconstrained, yet `5 → 9` is not a decrease. A table that called `decrease ∘ unknown` a decrease
+would therefore describe no two-step path. -/
+theorem compose_decrease_unknown_raises :
+    Rel.Allowed .decrease 5 3 ∧ Rel.Allowed .unknown 3 9 ∧ ¬ Rel.Allowed .decrease 5 9 := by
+  refine ⟨?_, trivial, ?_⟩
+  · show 3 < 5
+    omega
+  · show ¬ (9 < 5)
+    omega
 
 theorem eq_decrease_of_compose {x y : Rel} (h : compose x y = .decrease) :
     x = .decrease ∨ y = .decrease := by
@@ -86,10 +140,15 @@ theorem no_decreasing_chain (m : Nat → Nat) (h : ∀ k, m (k + 1) < m k) : Fal
   have beyond := bound (m 0 + 1)
   omega
 
-/-- A certified call cannot be repeated forever: its measure strictly decreases each time. -/
-theorem certified_terminates {n : Nat} {g : Graph n} (_h : certified g = true)
-    (m : Nat → Nat) (step : ∀ k, m (k + 1) < m k) : False :=
-  no_decreasing_chain m step
+/-- **A certified self-loop has no infinite run.** The certificate supplies the measure: `h` is
+used to pick the measure `i` that `g` decreases, and `respects` says exactly that each traversal of
+`g` drops it. So the conclusion is about runs of this graph, not about an arbitrary decreasing
+function. -/
+theorem certified_terminates {n : Nat} {g : Graph n} (h : certified g = true)
+    (state : Nat → Fin n → Nat)
+    (respects : ∀ (t : Nat) (i : Fin n), g i = .decrease → state (t + 1) i < state t i) : False := by
+  obtain ⟨i, hi⟩ := certified_sound h
+  exact no_decreasing_chain (fun t => state t i) (fun t => respects t i hi)
 
 /-! ## Fixtures -/
 
@@ -113,8 +172,9 @@ def wrappingGraph : Graph 1 := fun _ => .unknown
 
 theorem wrapping_refused : certified wrappingGraph = false := rfl
 
-/-- The refusal names the offending self-loop: no measure decreases on it. -/
-theorem wrapping_reports_cycle : ¬ ∃ i, wrappingGraph i = .decrease :=
+/-- The refusal states what is proved about the offending self-loop: no measure decreases on it. It
+does not exhibit a call cycle. -/
+theorem wrapping_reports_no_decrease : ¬ ∃ i, wrappingGraph i = .decrease :=
   certified_refusal wrapping_refused
 
 /-- A growth call is refused as well. -/

@@ -9,10 +9,11 @@ site graph. This module states the identity graph, proves powers stay in the clo
 decrease survives them, which is what lets `closure_decreases` see repeated paths without unfolding
 the closure each time.
 
-What is *not* proved here is the bound that makes the criterion decidable in practice - that powers
-up to `n * n` suffice (the Lee-Jones-Ben-Amram bound). Without it, the criterion is stated over an
-infinite closure and the decision procedure only sees what it enumerates. That bound, and the
-general soundness theorem, remain open.
+The power search needs no bound at all in this algebra: every relation is transitive, so composing a
+graph with itself reproduces it and every positive power of a graph is the graph itself
+(`SizeChangeIdempotent.every_graph_powers`). `SizeChangeBounded` records the consequence - the first
+power already decides. What remains open is the soundness of the general closure criterion for a run
+model that honours non-strict steps, not a counting bound.
 -/
 
 namespace NobleM2.SizeChange
@@ -57,15 +58,15 @@ theorem power_decreases {n : Nat} {g : Graph n} {i : Fin n} (hi : g i = .decreas
   intro j
   induction j with
   | zero => simpa [power] using hi
-  | succ j _ => exact composeGraph_decrease_left hi
+  | succ j ih => exact composeGraph_decrease_left hi (Rel.known_of_decrease ih)
 
-/-- A certified family's shared measure survives every power of every site. -/
+/-- A certified family's shared measure survives every power of every site, and the witness is the
+same measure for all sites and all powers. -/
 theorem powers_of_certified_decrease {k n : Nat} {sites : Sites k n}
     (h : certifiedAll sites = true) (s : Fin k) :
-    ∀ j, ∃ i, power (j + 1) (sites s) i = .decrease := by
+    ∃ i, ∀ j, power (j + 1) (sites s) i = .decrease := by
   obtain ⟨i, hi⟩ := certifiedAll_sound h
-  intro j
-  exact ⟨i, power_decreases (hi s) j⟩
+  exact ⟨i, fun j => power_decreases (hi s) j⟩
 
 /-! ## Fixtures -/
 

@@ -10,8 +10,10 @@ sites over the same declared measures.
 The criterion here is the shared-measure one: a *single* measure strictly decreases at **every**
 site. It is sound by construction — whichever site runs, that measure drops — and it is what the
 bounded #99 fragment can check without a closure over composed graphs. Refusal means **not shown
-terminating**: the general size-change closure (composed graphs over paths, idempotent graphs with
-a strict edge on a cycle) is strictly stronger and stays open.
+terminating**: the general size-change closure (composed graphs over paths, idempotent graphs with a
+strict edge on a cycle) is strictly stronger, and it is not obtained here because it needs a run
+model that honours non-strict steps — `SizeChangeCriterion.alternate_criterion_unsound` shows that
+per-member strictness alone is unsound for the `Run` below.
 
 A `Run` is any infinite sequence of sites whose states respect the relations each site declares.
 The invariant the criterion needs is exactly the `respects` field, so nothing about the runtime is
@@ -85,8 +87,8 @@ def twoSitesMixed : Sites 2 2
 
 theorem twoSitesMixed_refused : certifiedAll twoSitesMixed = false := rfl
 
-/-- The refusal names the cycle: no measure decreases at every site. -/
-theorem twoSitesMixed_reports_cycle : ¬ ∃ i, ∀ s, twoSitesMixed s i = .decrease :=
+/-- The refusal states what is proved: no measure decreases at every site. It exhibits no cycle. -/
+theorem twoSitesMixed_reports_no_shared : ¬ ∃ i, ∀ s, twoSitesMixed s i = .decrease :=
   certifiedAll_refusal twoSitesMixed_refused
 
 /-- Every site decreasing measure `1` certifies each site individually. -/
