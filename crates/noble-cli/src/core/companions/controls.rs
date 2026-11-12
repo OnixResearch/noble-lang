@@ -196,14 +196,14 @@ struct Harness {
 }
 
 #[test]
+#[ignore = "requires NOBLE_MC2_CONTROL_RECEIPT and NOBLE_MC2_CHECKER_BINARY"]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; exercise orchestrates the fixed control set and writes its receipt; checked verifies genuine independent admission and each control helper asserts its own observed Core transition."
 )]
 fn exercise() {
     let Some(destination) = std::env::var_os("NOBLE_MC2_CONTROL_RECEIPT") else {
-        eprintln!("MC2 independent-Lean controls not requested; no receipt produced");
-        return;
+        panic!("MC2 controls require NOBLE_MC2_CONTROL_RECEIPT; run with --ignored and the variable set");
     };
     let binary = std::env::var_os("NOBLE_MC2_CHECKER_BINARY")
         .expect("real noble checker binary is required");

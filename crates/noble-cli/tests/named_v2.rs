@@ -48,6 +48,28 @@ impl Fixture {
         Ok(cmd)
     }
 }
+
+/// The strict-kernel cases need the pinned Lean sandbox tools. They are
+/// `#[ignore]`d so a plain sandbox run reports them as ignored rather than
+/// passed; run them with `--ignored` and every variable set.
+const SANDBOX_TOOLS: [&str; 4] = [
+    "NOBLE_LEAN",
+    "NOBLE_BWRAP",
+    "NOBLE_PRLIMIT",
+    "NOBLE_SYSTEMD_RUN",
+];
+
+fn require_sandbox_tools() -> Result<(), Box<dyn std::error::Error>> {
+    let missing: Vec<&str> = SANDBOX_TOOLS
+        .iter()
+        .copied()
+        .filter(|key| std::env::var_os(key).is_none())
+        .collect();
+    if missing.is_empty() {
+        return Ok(());
+    }
+    Err(format!("requires {}", missing.join(", ")).into())
+}
 fn library_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../proofs/mc1")
 }
@@ -138,18 +160,9 @@ fn wrong_output_weak_claim_and_cross_version_cannot_verify(
 }
 
 #[test]
+#[ignore = "requires NOBLE_LEAN, NOBLE_BWRAP, NOBLE_PRLIMIT, NOBLE_SYSTEMD_RUN"]
 fn exact_named_source_uses_pinned_kernel_and_library() -> Result<(), Box<dyn std::error::Error>> {
-    if [
-        "NOBLE_LEAN",
-        "NOBLE_BWRAP",
-        "NOBLE_PRLIMIT",
-        "NOBLE_SYSTEMD_RUN",
-    ]
-    .iter()
-    .any(|key| std::env::var_os(key).is_none())
-    {
-        return Ok(());
-    }
+    require_sandbox_tools()?;
     let fixture = Fixture::new(&std::env::temp_dir(), "consumer")?;
     let (passed, report) = run(&mut fixture.command(SUBJECT)?)?;
     assert!(
@@ -200,19 +213,10 @@ fn exact_named_source_uses_pinned_kernel_and_library() -> Result<(), Box<dyn std
 }
 
 #[test]
+#[ignore = "requires NOBLE_LEAN, NOBLE_BWRAP, NOBLE_PRLIMIT, NOBLE_SYSTEMD_RUN"]
 fn framed_session_publishes_only_the_strict_named_proof() -> Result<(), Box<dyn std::error::Error>>
 {
-    if [
-        "NOBLE_LEAN",
-        "NOBLE_BWRAP",
-        "NOBLE_PRLIMIT",
-        "NOBLE_SYSTEMD_RUN",
-    ]
-    .iter()
-    .any(|key| std::env::var_os(key).is_none())
-    {
-        return Ok(());
-    }
+    require_sandbox_tools()?;
     let mut child = Command::new(env!("CARGO_BIN_EXE_noble"))
         .args([
             "session",
@@ -294,18 +298,9 @@ fn named_consumer(pid: u32, lean: &Path) -> bool {
 
 #[cfg(target_os = "linux")]
 #[test]
+#[ignore = "requires NOBLE_LEAN, NOBLE_BWRAP, NOBLE_PRLIMIT, NOBLE_SYSTEMD_RUN"]
 fn dying_real_named_consumer_cannot_report_acceptance() -> Result<(), Box<dyn std::error::Error>> {
-    if [
-        "NOBLE_LEAN",
-        "NOBLE_BWRAP",
-        "NOBLE_PRLIMIT",
-        "NOBLE_SYSTEMD_RUN",
-    ]
-    .iter()
-    .any(|key| std::env::var_os(key).is_none())
-    {
-        return Ok(());
-    }
+    require_sandbox_tools()?;
     let fixture = Fixture::new(&std::env::temp_dir(), "consumer-fault")?;
     let lean = std::fs::canonicalize(std::env::var_os("NOBLE_LEAN").ok_or("Lean not configured")?)?;
     let mut child = fixture
