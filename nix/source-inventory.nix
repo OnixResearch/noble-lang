@@ -55,6 +55,14 @@ let
     # absent historical derive rows authored current compiler observations.
     in rows != [ ] && !(all (row: validSpan row && row.from_expansion) rows)
   ) generated;
+  # A structural subject is accounting only: no proof obligation. The
+  # compiler's item kind must therefore agree that it is not an authored
+  # function body; an expansion-generated function is a derive, not a body.
+  structuralWithFunctionKind = filter (
+    s:
+    let rows = observedProduction.${s.qualified_path} or [ ];
+    in rows != [ ] && any (row: row.item_kind == "function" && !row.from_expansion) rows
+  ) structural;
   packageOf =
     path:
     let
@@ -117,6 +125,7 @@ let
     ++ require (all validSpan (inventory.production_subjects ++ inventory.test_subjects))
       "subject-span-provenance"
     ++ require (empty generatedWithAuthoredFact) "generated-authored-subject"
+    ++ require (empty structuralWithFunctionKind) "structural-function-subject"
     ++ require (inventory.coverage.status == "complete") "coverage-status"
     ++ require (empty inventory.coverage.missing_units) "coverage-missing-units"
     ++ require (empty inventory.coverage.unexpected_units) "coverage-unexpected-units"

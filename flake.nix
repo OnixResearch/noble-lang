@@ -53,10 +53,17 @@
         binaryen = pkgs.binaryen;
       };
       selectionPolicy = builtins.fromJSON (builtins.readFile ./policy/tool-selection.json);
-      selectedWasmtimeSource = builtins.path {
-        path = /nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source;
-        name = "source";
-        sha256 = selectionPolicy.component_sync.wasmtime_source_nar_hash;
+      # Upstream Wasmtime v40.0.2. The CLI and the Wasm peers consume the crates
+      # as path dependencies, so the tree must be a real checkout with its
+      # submodule contents; `submodules = true` is what makes the recorded NAR
+      # hash cover them. The hash comes from the reviewed policy and the assert
+      # below requires the realised store path to equal the recorded one.
+      selectedWasmtimeSource = builtins.fetchTree {
+        type = "git";
+        url = "https://github.com/bytecodealliance/wasmtime";
+        rev = "bb9ef6703e0c2da39fc0b329ce673d325900e992";
+        submodules = true;
+        narHash = selectionPolicy.component_sync.wasmtime_source_nar_hash;
       };
       reviewedVendor = import ./nix/reviewed-vendor.nix {
         inherit pkgs;
@@ -74,6 +81,9 @@
         (import ./nix/tool-selection-observation.nix {
           inherit inputs system;
           root = ./.;
+          wasmtimeVersion =
+            (builtins.fromTOML (builtins.readFile (selectedWasmtimeSource + "/Cargo.toml"))).workspace.package.version;
+          wasmToolsVersion = wasmVerificationTools.wasm_tools.version;
         })
         // {
           verification_tool_versions = builtins.mapAttrs (_: tool: tool.version) wasmVerificationTools;
@@ -161,6 +171,11 @@
         # suite is the separate rust-tests check, not the installed artifact.
         cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--no-default-features" ];
         cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--no-default-features" ];
+        # `--all-targets` never runs doctests; the shipped configuration must
+        # still execute the kernel's compile_fail boundary tests.
+        postCheck = ''
+          cargo test --locked --workspace --doc --no-default-features --offline
+        '';
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
       };
@@ -442,6 +457,37 @@
         '';
         rust-tests = mkCheck "noble-rust-tests" (builtins.attrValues wasmVerificationTools) ''
           cargo test --workspace --all-targets --all-features --locked --offline
+          # `--all-targets` excludes doctests, so the kernel's compile_fail
+          # boundary tests would otherwise never run.
+          cargo test --workspace --doc --all-features --locked --offline
+        '';
+        shipped-cli = mkCheck "noble-shipped-cli" (builtins.attrValues wasmVerificationTools) ''
+          # The installed CLI is built with --no-default-features, so code that
+          # exists only in the shipped configuration must still compile, lint
+          # and run. The full test suite assumes the all-features build; the
+          # calculator Node suites run against the shipped binary below.
+          cargo build --locked --offline -p noble-cli --bin noble --no-default-features
+          cargo clippy --locked --offline -p noble-cli --all-targets --no-default-features -- -D warnings
+          NOBLE_CALCULATOR_ASSEMBLER="$CARGO_TARGET_DIR/debug/noble" \
+            node --test crates/noble-cli/src/core/runtime/engine-assets.test.mjs \
+              crates/noble-cli/src/core/runtime/engine-calculator.test.mjs > "$out/calculator-engine.log"
+          grep -Fxq 'ℹ skipped 0' "$out/calculator-engine.log"
+          printf '%s\n' 'shipped CLI: no-default-features build and clippy passed; calculator Node suites ran without skips' > "$out/validated.txt"
+        '';
+        verification-self-tests = mkCheck "noble-verification-self-tests" [
+          wasmVerificationTools.node
+        ] ''
+          # Hermetic verification suites: pure Node, reading only repository
+          # files. Suites that need Lean, bubblewrap, a scheduler, a network or
+          # live .cairn change state stay manual lanes.
+          node --test verification/calculator-v1/woxi/lane.test.mjs \
+            verification/current-source-replay/projection.test.mjs \
+            verification/current-source-replay-dx02/projection.test.mjs > "$out/node-tests.log"
+          node verification/ngraph/symbolic-pair-inventory.mjs > "$out/symbolic-pair-inventory.json"
+          node verification/ngraph/symbolic-pair-inventory.mjs --self-test \
+            > "$out/symbolic-pair-inventory-self-test.json"
+          node --version > "$out/node-version.txt"
+          printf '%s\n' 'verification self-tests: three Node suites and the symbolic-pair inventory controls passed' > "$out/validated.txt"
         '';
         clippy = mkCheck "noble-clippy" [ ] ''
           cargo clippy --workspace --all-targets --all-features --locked --offline -- -D warnings
@@ -461,18 +507,38 @@
               "octet pin/scope/lint controls failed: "
               + builtins.concatStringsSep ", " octetControls.diagnostics
             );
-          mkCheck "noble-policy-freshness" [ nickel standards pkgs.diffutils ] ''
+          mkCheck "noble-policy-freshness" [ nickel standards pkgs.diffutils pkgs.jq ] ''
           nickel export --format json policy/architecture.ncl > "$TMPDIR/architecture.json"
           cmp policy/architecture.json "$TMPDIR/architecture.json"
           nickel export --format json policy/source-inventory.ncl > "$TMPDIR/source-inventory.json"
           cmp policy/source-inventory.json "$TMPDIR/source-inventory.json"
           nickel export --format json policy/native-assurance.ncl > "$TMPDIR/native-assurance.json"
           cmp policy/native-assurance.json "$TMPDIR/native-assurance.json"
+          nickel export --format json policy/boundary-controls.ncl > "$TMPDIR/boundary-controls.json"
+          cmp policy/boundary-controls.json "$TMPDIR/boundary-controls.json"
+          nickel export --format json policy/lean-inputs.ncl > "$TMPDIR/lean-inputs.json"
+          cmp policy/lean-inputs.json "$TMPDIR/lean-inputs.json"
+          nickel export --format json policy/m1-acceptance.ncl > "$TMPDIR/m1-acceptance.json"
+          cmp policy/m1-acceptance.json "$TMPDIR/m1-acceptance.json"
           nickel export --format json policy/architecture-export-spec.ncl > "$TMPDIR/export-spec.json"
           octet-standards nickel-export-manifest --spec "$TMPDIR/export-spec.json" \
             --output policy/architecture.json --manifest-out "$TMPDIR/architecture.manifest.json" \
               --nickel-identity "$(nickel --version)"
           cmp policy/architecture.manifest.json "$TMPDIR/architecture.manifest.json"
+          # The registry must cover exactly the exports above, and every path it
+          # names must exist, so a policy family cannot drift outside the check.
+          nickel export --format json standards/policies/registry.ncl > "$TMPDIR/registry.json"
+          printf '%s\n' policy/architecture.json policy/architecture.manifest.json \
+            policy/boundary-controls.json policy/lean-inputs.json policy/m1-acceptance.json \
+            policy/native-assurance.json policy/source-inventory.json policy/tool-selection.json \
+            | sort > "$TMPDIR/exported.txt"
+          jq -r '.families[] | .generated_output, (.additional_outputs[]?)' "$TMPDIR/registry.json" \
+            | sort > "$TMPDIR/registered.txt"
+          diff -u "$TMPDIR/exported.txt" "$TMPDIR/registered.txt"
+          registered_paths="$(jq -r '.families[] | .source, .generated_output, (.additional_outputs[]?), (.dependencies[]?), (.evaluator | select(. != "")), (.tests | select(. != ""))' "$TMPDIR/registry.json" | sort -u)"
+          for path in $registered_paths; do
+            test -f "$path" || { echo "policy registry names a missing path: $path" >&2; exit 1; }
+          done
           printf '%s\n' '${builtins.toJSON octetControls.diagnostics}' > "$out/octet-control-diagnostics.json"
           printf '%s\n' '${builtins.toJSON octetControls.lint_lints}' > "$out/octet-lint-table.json"
           printf '%s\n' ${pkgs.lib.escapeShellArg (builtins.concatStringsSep "\n" octetControlTests)} > "$out/octet-control-tests.txt"

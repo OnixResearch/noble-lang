@@ -155,6 +155,14 @@
       "default_features": true,
       "features": [],
       "triple": "x86_64-unknown-linux-gnu"
+    },
+    {
+      "default_features": true,
+      "features": [
+        "live-test-barrier",
+        "safety-observe"
+      ],
+      "triple": "x86_64-unknown-linux-gnu"
     }
   ],
   "safety_arguments": [

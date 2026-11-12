@@ -3,6 +3,8 @@
   inputs,
   root,
   system,
+  wasmtimeVersion,
+  wasmToolsVersion,
 }:
 let
   inherit (builtins)
@@ -46,7 +48,13 @@ in
       value = hashFile "sha256" (root + "/${name}");
     }) fileNames
   );
-  component_sync = fromJSON (readFile (root + "/verification/m5/pins.json"));
+  # Observed component inputs. The reviewed `component_sync` record is policy;
+  # only fields with a real input behind them are repeated here, so the
+  # comparator cannot compare the policy file with itself.
+  component_sync = {
+    wasmtime_version = wasmtimeVersion;
+    wasm_tools_version = wasmToolsVersion;
+  };
   inherit system;
   quality_rust = rust.toolchain.channel;
   extraction_rust = (fromTOML (readFile (charon + "/rust-toolchain"))).toolchain.channel;

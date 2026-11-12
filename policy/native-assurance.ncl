@@ -6,8 +6,14 @@
   scope_note | String =
     "Seven-crate workspace scope: noble-kernel, noble-contracts, noble-wasm, the Numeric-Graph-v1 library noble-ngraph, noble-cli, noble-syndicate and the issue #14 noble-ngraph-experiment measurement harness on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime verification peers are separate Cargo workspaces, with the M8 peer's external Cargo lock derived exactly from the reviewed M7 peer lock and selected source/vendor NAR identities. Engine behavior, native resource lifetime and host credential provenance remain explicit assumptions, not production dependency or unsafe-code discharge.",
   required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-ngraph", "noble-cli", "noble-syndicate", "noble-ngraph-experiment" ],
+  # The configurations the compiler inventory must observe, and only those.
+  # The collector runs `--features live-test-barrier,safety-observe`, so
+  # noble-cli units carry both features while the other member units keep the
+  # default configuration; the two rows below are compiler facts, not a copy of
+  # the selection policy's target list.
   required_targets | Array { triple | String, features | Array String, default_features | Bool } = [
     { triple = "x86_64-unknown-linux-gnu", features = [], default_features = true },
+    { triple = "x86_64-unknown-linux-gnu", features = ["live-test-barrier", "safety-observe"], default_features = true },
   ],
   # The comparator requires all three basis entries, but they are not equal
   # evidence. The scoped owned-unsafe basis is the workspace unsafe_code =
@@ -133,6 +139,9 @@
       },
     ],
   },
+  # Declared requirements only. No check or app executes these tools for native
+  # assurance; a matching list says the review agreed on the tool set, not that
+  # any of them ran.
   compiler_tools | Array { name | String, role | String } = [
     { name = "cargo-octet", role = "architecture-collector" },
     { name = "charon", role = "extraction" },
@@ -144,6 +153,9 @@
   # its comparator check are not proof of an empty link closure; Wasmtime's
   # build script links a C helper into noble-cli.
   foreign_libraries | Array { name | String, linkage | String, assumption | String } = [],
+  # A declared requirement, not an observation: nothing in the repository runs
+  # Miri, and the inventory records no Miri execution. These fields say what a
+  # Miri lane would have to cover; they are not evidence that it ran.
   miri = {
     required | Bool = true,
     toolchain | String = "nightly-2026-08-18",
