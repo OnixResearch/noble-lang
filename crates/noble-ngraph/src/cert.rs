@@ -356,9 +356,9 @@ fn guard_pins_zero(
     value: crate::ir::NodeId,
     node: crate::ir::NodeId,
 ) -> bool {
-    let limit = usize::try_from(node.0).unwrap_or(usize::MAX);
+    let rewritten_index = usize::try_from(node.0).unwrap_or(usize::MAX);
     graph.nodes.iter().enumerate().any(|(index, candidate)| {
-        index < limit
+        index < rewritten_index
             && matches!(
                 &candidate.op,
                 crate::ir::Op::Guard {
