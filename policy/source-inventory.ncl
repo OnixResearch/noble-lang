@@ -447,6 +447,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   15957 production paths = 8203 body/open + 4504 generated + 3250 structural;
 #   7702 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed renewal after issue 108 units-lint rename (rewritten_index) from a complete 110-unit selected collection:
+#   IR 09c6e4eb3cd20e5dbdb075f132bcf59083a7a74d1ea4a2b6956bae52fa7d091d; coverage 2e6f38c4d5f7241485c4e9a6b119cd520a985ca84c772dc4237871f1795214d3;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   15957 production paths = 8203 body/open + 4504 generated + 3250 structural;
+#   7702 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -16520,19 +16525,22 @@ let
     # Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: 13 newly observed production paths,
     # classified from compiler facts only (see tools/source-inventory-renew.mjs).
     # Bodies keep OPEN extraction and refinement obligations.
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19307:19815" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19833:22223" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:22649:25192" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28080:28470" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28488:28928" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28946:29471" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:29488:29964" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:29981:30980" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:30998:31536" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     body "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_fact_is_stale" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_guard_comes_after_the_node" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::cert::tests::guarded_rewrite_is_refused_when_the_result_is_substituted" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_ngraph::cert::tests::guarded_with" "noble-ngraph" "Renewed renewal after issue 108 controls: guard scope, stale fact, substituted result from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    # Renewed renewal after issue 108 units-lint rename (rewritten_index): 9 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19327:19835" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:19853:22243" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:22669:25212" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28100:28490" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28508:28948" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:28966:29491" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:29508:29984" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:30001:31000" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-ngraph::closure@crates/noble-ngraph/src/cert.rs:31018:31556" "noble-ngraph" "Renewed renewal after issue 108 units-lint rename (rewritten_index): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
