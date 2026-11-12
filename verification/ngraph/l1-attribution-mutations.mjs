@@ -117,3 +117,6 @@ const receipt = {
 };
 fs.writeFileSync(opts.out, `${JSON.stringify(receipt, null, 2)}\n`);
 console.log(`${opts.out} ${receipt.result}: ${mutations.length} mutations, silent ${JSON.stringify(silent)}`);
+// A rule whose removal passes every test is a failed control, not a note:
+// the receipt is retained for inspection and the caller sees a nonzero exit.
+process.exitCode = receipt.result === 'passed' ? 0 : 1;

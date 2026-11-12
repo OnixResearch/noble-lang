@@ -135,9 +135,14 @@ const runs = opts.runs.map((run) => {
 
 const sameCli = runs.filter((run) => run.cli_source_revision === opts.baselineCliRevision);
 for (const run of runs) {
+  // A run built from the baseline CLI's own revision cannot differ from the
+  // baseline *because of* the CLI version; only another baseline-CLI run
+  // reproducing the record can carry that attribution.
+  const usedBaselineCli = run.cli_source_revision === opts.baselineCliRevision;
   run.differing = run.records.filter((r) => !r.identical).map((r) => ({
     record: r.record,
-    attributed_to_cli_version: sameCli.some((other) => other !== run && other.records.some((o) => o.record === r.record && o.identical)),
+    attributed_to_cli_version: !usedBaselineCli && sameCli.some((other) => other !== run
+      && other.records.some((o) => o.record === r.record && o.identical)),
   }));
 }
 
@@ -177,3 +182,6 @@ const evidence = {
 };
 fs.writeFileSync(opts.out, `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(`${opts.out} ${evidence.result}: ${runs.map((r) => `${r.label} ${r.identical}/${r.compared} identical`).join('; ')}; unattributed ${unattributed.length}`);
+// A failed evidence file is a failed lane: the receipt is retained for
+// inspection, but the caller must not see exit 0.
+process.exitCode = passed ? 0 : 1;
