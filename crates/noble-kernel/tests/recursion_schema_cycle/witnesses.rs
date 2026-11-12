@@ -112,16 +112,36 @@ fn resolvable_witness_chains_accept_and_resolve() -> Result<(), String> {
 #[test]
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; let-else requires resolved-chain acceptance and tight-budget exhaustion, then the assertion requires Work; long witness setup needs no additional assertions."
+    reason = "Owner: noble-maintainers; the control asserts the exact hop charge at two limits; the setup is a linear scenario with no further invariants to assert."
 )]
-fn resolvable_chain_at_the_walk_boundary_and_exhausted_below_it() -> Result<(), String> {
-    // `pair` with a two-hop reference chain under its declared value
-    // variable: the resolution walk charges one unit per hop inside `apply`
-    // — before the node's fold charge — so a work limit below the hop count
-    // fails closed at the walk, and an ample budget resolves and accepts.
+fn resolvable_chain_moves_the_accepting_work_limit_by_its_hops() -> Result<(), String> {
+    // `pair` whose first value variable names the second through variable 2:
+    // one reference hop. Resolution spends one unit per hop, and the spend is
+    // charged to the request, so the same interface stated with a direct
+    // binding and with a reference must differ by exactly one work unit at the
+    // smallest accepting limit. (The bootstrap table has three variables per
+    // word, so one hop is the longest chain a built-in word can state.)
     let env = noble_kernel::contracts::environment()
         .map_err(|defect| format!("table must validate: {defect:?}"))?;
-    let program = crate::builders::candidate(
+    let direct = crate::builders::candidate(
+        vec![
+            crate::builders::lit_node(noble_kernel::untrusted::Lit::Bool(true), vec![]),
+            crate::builders::lit_node(
+                noble_kernel::untrusted::Lit::Bool(false),
+                vec![noble_kernel::types::Ty::Bool],
+            ),
+            crate::builders::invocation(
+                noble_kernel::contracts::Definition(13),
+                vec![
+                    crate::builders::segment(vec![]),
+                    crate::builders::value(noble_kernel::types::Ty::Bool),
+                    crate::builders::value(noble_kernel::types::Ty::Bool),
+                ],
+            ),
+        ],
+        vec![0, 1, 2],
+    );
+    let referenced = crate::builders::candidate(
         vec![
             crate::builders::lit_node(noble_kernel::untrusted::Lit::Bool(true), vec![]),
             crate::builders::lit_node(
@@ -139,29 +159,42 @@ fn resolvable_chain_at_the_walk_boundary_and_exhausted_below_it() -> Result<(), 
         ],
         vec![0, 1, 2],
     );
-    let request = crate::builders::request(
-        vec![],
-        vec![noble_kernel::types::Ty::Pair(
-            Box::new(noble_kernel::types::Ty::Bool),
-            Box::new(noble_kernel::types::Ty::Bool),
-        )],
+    let expected = vec![noble_kernel::types::Ty::Pair(
+        Box::new(noble_kernel::types::Ty::Bool),
+        Box::new(noble_kernel::types::Ty::Bool),
+    )];
+    let direct_min = first_accepting(&env, &direct, &expected)?;
+    let chain_min = first_accepting(&env, &referenced, &expected)?;
+    assert_eq!(
+        chain_min,
+        direct_min + 1,
+        "one hop must cost one unit: direct accepted at {direct_min}, referenced at {chain_min}"
     );
-    let observed = crate::builders::seen(&env, &request, &program)?;
-    let crate::builders::Seen::Accepted = observed else {
-        return Err(format!(
-            "an ample budget resolves the chain and accepts, got {observed:?}"
-        ));
-    };
-    let mut tight = request.clone();
-    tight.limits.work = 1;
-    let observed = crate::builders::seen(&env, &tight, &program)?;
-    let crate::builders::Seen::Exhausted(limit) = observed else {
-        return Err(format!(
-            "a work limit below the chain's hops must fail closed, got {observed:?}"
-        ));
-    };
-    assert_eq!(limit, noble_kernel::untrusted::LimitKind::Work);
     Ok(())
+}
+
+/// The smallest work limit that accepts this candidate.
+fn first_accepting(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    expected: &[noble_kernel::types::Ty],
+) -> Result<u32, String> {
+    let mut work = 0;
+    while work <= 200 {
+        let mut request = crate::builders::request(vec![], expected.to_vec());
+        request.limits.work = work;
+        match crate::builders::seen(env, &request, candidate)? {
+            crate::builders::Seen::Accepted => return Ok(work),
+            crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) => {}
+            other => {
+                return Err(format!(
+                    "work limit {work} must accept or exhaust for work, got {other:?}"
+                ))
+            }
+        }
+        work += 1;
+    }
+    Err("no work limit up to 200 accepted the candidate".to_string())
 }
 
 #[test]

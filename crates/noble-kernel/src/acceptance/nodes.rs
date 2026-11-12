@@ -5,10 +5,13 @@ mod visibility;
 /// Fetch one node, rejecting a reference outside the finite arena.
 ///
 /// The node returns owned: a reference into the candidate arena cannot be
-/// carried across the machine state the extraction interpreter tracks.
+/// carried across the machine state the extraction interpreter tracks. The
+/// copy is structural, so the node's witness is measured first and refused
+/// while it is still borrowed; a witness nested deeper than the local node cap
+/// would otherwise overflow the stack inside the copy instead of rejecting.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; node_of checks index representability and arena membership and reports MalformedReference for either failure; hostile references must not trigger assertions."
+    reason = "Owner: noble-maintainers; node_of checks index representability, arena membership and the witness copy bound and reports a typed diagnostic for each failure; hostile references must not trigger assertions."
 )]
 pub(super) fn node_of(
     candidate: &crate::untrusted::Candidate,
@@ -28,7 +31,14 @@ pub(super) fn node_of(
         }
     };
     match candidate.nodes.get(index) {
-        Some(node) => Ok(node.clone()),
+        Some(node) if is_within_copy_bound(node) => Ok(node.clone()),
+        Some(_) => Err(super::parts::invalid_without_stacks(
+            super::parts::site(
+                Some(node_id),
+                super::parts::definition_of(candidate, node_id),
+            ),
+            crate::untrusted::Constraint::InvalidType,
+        )),
         None => Err(super::parts::invalid(
             context,
             super::parts::site(Some(node_id), None),
@@ -39,14 +49,56 @@ pub(super) fn node_of(
     }
 }
 
+/// Whether every type this node's witness would copy fits the local node cap.
+///
+/// `Ty::size` walks borrowed nodes and fails closed past `TYPE_NODE_CAP`, so
+/// this reads the witness without copying it and refuses exactly the shapes a
+/// structural copy could not survive.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; is_within_copy_bound accepts every binding whose measured size is available and reports false for an oversized witness; the measurement itself is the fail-closed bound."
+)]
+fn is_within_copy_bound(node: &crate::untrusted::Node) -> bool {
+    let inst = match node {
+        crate::untrusted::Node::Literal { inst, .. }
+        | crate::untrusted::Node::Invocation { inst, .. }
+        | crate::untrusted::Node::SignedSelf { inst, .. }
+        | crate::untrusted::Node::Quotation { inst, .. } => inst,
+        crate::untrusted::Node::SlotInvoke { .. } => return true,
+    };
+    let mut index = 0;
+    let mut is_bounded = true;
+    while index < inst.bindings.len() && is_bounded {
+        is_bounded = match &inst.bindings[index] {
+            crate::words::Binding::Value(ty) => ty.size().is_some(),
+            crate::words::Binding::Stack(stack) => stack_is_measurable(stack.as_slice()),
+            crate::words::Binding::Effect(_) | crate::words::Binding::Ref(_) => true,
+        };
+        index += 1;
+    }
+    is_bounded
+}
+
+fn stack_is_measurable(stack: &[crate::types::Ty]) -> bool {
+    let mut index = 0;
+    let mut is_measurable = true;
+    while index < stack.len() && is_measurable {
+        is_measurable = stack[index].size().is_some();
+        index += 1;
+    }
+    is_measurable
+}
+
 /// Fold one literal or invocation node into its frame.
 ///
-/// Returns the work charged for the node's instantiation and join.
+/// Returns the work charged for the node's instantiation, its witness
+/// resolution and its join.
 pub(super) fn fold_node(
     frame: super::Frame,
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &super::parts::Ctx,
+    fuel: u32,
 ) -> Result<
     (
         u32,
@@ -61,10 +113,12 @@ pub(super) fn fold_node(
             let scheme = super::parts::instantiate::literal_scheme(*lit);
             let at = super::parts::site(Some(node_id), None);
             let cost = attempt!(super::parts::scheme_cost(&scheme));
-            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
-                &scheme, inst, None, at, context
+            let (interface, _resolved, spent) = attempt!(super::parts::instantiate::apply(
+                &scheme, inst, None, at, context, fuel
             ));
-            let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));
+            let cost = cost
+                .saturating_add(attempt!(super::parts::join_cost(&interface)))
+                .saturating_add(spent);
             let joined = attempt!(super::parts::join(frame, &interface, at, context));
             Ok((cost, joined, interface, None))
         }
@@ -93,10 +147,12 @@ pub(super) fn fold_node(
             let at = super::parts::site(Some(node_id), Some(*def));
             let data_var = super::parts::instantiate::data_slot(context.env.kind(*def));
             let cost = attempt!(super::parts::scheme_cost(&scheme));
-            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
-                &scheme, inst, data_var, at, context
+            let (interface, _resolved, spent) = attempt!(super::parts::instantiate::apply(
+                &scheme, inst, data_var, at, context, fuel
             ));
-            let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));
+            let cost = cost
+                .saturating_add(attempt!(super::parts::join_cost(&interface)))
+                .saturating_add(spent);
             let joined = attempt!(super::parts::join(frame, &interface, at, context));
             Ok((cost, joined, interface, None))
         }
@@ -322,7 +378,8 @@ fn validate_forwarded_ref(
 
 /// Validate one quotation node and build its parent and child frames.
 ///
-/// Returns the work charged for the node's instantiation.
+/// Returns the work charged for the node's instantiation and its witness
+/// resolution.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; open_quotation validates the witness and depth before reading its three required bindings, with typed rejection or Internal failure instead of panic paths."
@@ -332,6 +389,7 @@ pub(super) fn open_quotation(
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &super::parts::Ctx,
+    fuel: u32,
 ) -> Result<(u32, super::Frame, super::Frame), super::Fail> {
     let (body, inst) = match node {
         crate::untrusted::Node::Quotation { body, inst } => (body, inst),
@@ -345,13 +403,15 @@ pub(super) fn open_quotation(
     // The child frame opens from the resolved witness: a reference binding
     // (for example a result stack stated as the input stack) has no direct
     // stack of its own.
-    let (_, resolved) = attempt!(super::parts::instantiate::apply(
+    let (_, resolved, spent) = attempt!(super::parts::instantiate::apply(
         &scheme,
         inst,
         None,
         super::parts::site(Some(node_id), None),
         context,
+        fuel,
     ));
+    let cost = cost.saturating_add(spent);
     if frame.depth.saturating_add(1) > context.request.limits.depth {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Depth));
     }

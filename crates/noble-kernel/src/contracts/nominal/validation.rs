@@ -35,6 +35,7 @@ impl super::super::Env {
         }
         bootstrap_matches(self)
             && (!self.text_cursor || !self.declared_modules || declared_text_prefix_matches(self))
+            && (!self.calculator || calculator_prefix_matches(self))
             && super::super::live::catalog_valid(self)
             && (!self.declared_modules || fixed_definitions_match(self))
             && counts_match(self)
@@ -85,6 +86,43 @@ fn declared_text_prefix_matches(env: &super::super::Env) -> bool {
     }
     is_matching
 }
+
+/// The calculator rows 27 through 31 are exactly the fixed calculator prefix.
+///
+/// Visibility grants those five rows by index alone, so a replaced scheme or
+/// relabeled kind would be admitted under the visible row's name while
+/// deriving a different interface. Every row the profile can invoke is
+/// therefore compared with its canonical scheme, as the bootstrap rows are.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-kernel; the prefix check compares side-effect-free table lengths and rows against the fixed calculator environment and reports a mismatch as false; callers turn that into a typed rejection."
+)]
+fn calculator_prefix_matches(env: &super::super::Env) -> bool {
+    let Ok(fixed) = super::super::calculator_environment() else {
+        return false;
+    };
+    if env.defs.len() < fixed.defs.len()
+        || env.kinds.len() < fixed.kinds.len()
+        || env.deps.len() < fixed.defs.len()
+        || env.definition_owners.len() < fixed.defs.len()
+    {
+        return false;
+    }
+    let mut index = CALCULATOR_FIRST_ROW;
+    let mut is_matching = true;
+    while index < fixed.defs.len() && is_matching {
+        is_matching = env.kinds[index] == fixed.kinds[index]
+            && super::schemes::same_scheme(&env.defs[index], &fixed.defs[index])
+            && env.deps[index].is_empty()
+            && env.definition_owners[index].is_none();
+        index += 1;
+    }
+    is_matching
+}
+
+/// First row the calculator profile adds and visibility grants by index.
+const CALCULATOR_FIRST_ROW: usize = 27;
 
 #[expect(
     tigerstyle::assertion_density,

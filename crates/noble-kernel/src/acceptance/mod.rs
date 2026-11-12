@@ -205,7 +205,8 @@ fn close_frame(
     context: &parts::Ctx,
 ) -> Machine {
     let parent = machine.frames.pop();
-    let completion = match frames::complete_frame(frame, parent, candidate, context) {
+    let fuel = machine.state.work;
+    let completion = match frames::complete_frame(frame, parent, candidate, context, fuel) {
         Ok(completion) => completion,
         Err(problem) => return halted(machine, Err(problem)),
     };
@@ -255,11 +256,12 @@ fn fold_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context)
-    {
-        Ok(folded) => folded,
-        Err(problem) => return halted(machine, Err(problem)),
-    };
+    let fuel = machine.state.work;
+    let (cost, joined, interface, live_site) =
+        match nodes::fold_node(frame, node_id, node, context, fuel) {
+            Ok(folded) => folded,
+            Err(problem) => return halted(machine, Err(problem)),
+        };
     let remaining = match parts::charge(machine.state.work, cost) {
         Ok(remaining) => remaining,
         Err(problem) => return halted(machine, Err(problem)),
@@ -291,7 +293,8 @@ fn open_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, parent, child) = match nodes::open_quotation(frame, node_id, node, context) {
+    let fuel = machine.state.work;
+    let (cost, parent, child) = match nodes::open_quotation(frame, node_id, node, context, fuel) {
         Ok(opened) => opened,
         Err(problem) => return halted(machine, Err(problem)),
     };

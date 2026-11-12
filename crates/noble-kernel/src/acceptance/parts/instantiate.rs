@@ -109,7 +109,8 @@ pub(crate) fn apply(
     data_var: Option<crate::words::Variable>,
     at: super::Site,
     ctx: &super::Ctx,
-) -> Result<(crate::untrusted::Interface, crate::words::Inst), super::super::Fail> {
+    fuel: u32,
+) -> Result<(crate::untrusted::Interface, crate::words::Inst, u32), super::super::Fail> {
     if !valid_bindings(inst.bindings.as_slice(), ctx.env) {
         return Err(super::invalid_without_stacks(
             at,
@@ -117,9 +118,9 @@ pub(crate) fn apply(
         ));
     }
     attempt!(check_bounds(scheme, inst, at, ctx));
-    let resolved = attempt!(resolve_witness(scheme, inst, at, ctx));
+    let (resolved, spent) = attempt!(resolve_witness(scheme, inst, at, fuel));
     let interface = attempt!(project(scheme, &resolved, data_var, at, ctx));
-    Ok((interface, resolved))
+    Ok((interface, resolved, spent))
 }
 
 /// Reject malformed types and unknown effect identities before resolving refs.
@@ -156,7 +157,11 @@ fn valid_effect_bindings(effects: &crate::types::EffSet, env: &crate::contracts:
     is_every_effect_known
 }
 
-/// Resolve one witness's reference bindings under the declared work limit.
+/// Resolve one witness's reference bindings inside the remaining work budget.
+///
+/// Each hop spends one unit of `fuel`, so a chain longer than the budget the
+/// caller still holds refuses before taking the hop. The spent amount returns
+/// to the caller, which charges it against that same budget.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; both pinned Rust compilers reject const Vec dereference, runtime resolve::bindings, and the owned Result destructor (E0015/E0277/E0493/E0658); reassess when those operations become const without changing typed witness failures."
@@ -165,10 +170,10 @@ fn resolve_witness(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
     at: super::Site,
-    ctx: &super::Ctx,
-) -> Result<crate::words::Inst, super::super::Fail> {
-    match crate::words::resolve::bindings(&scheme.var_kinds, inst, ctx.request.limits.work) {
-        Ok((resolved, _spent)) => Ok(resolved),
+    fuel: u32,
+) -> Result<(crate::words::Inst, u32), super::super::Fail> {
+    match crate::words::resolve::bindings(&scheme.var_kinds, inst, fuel) {
+        Ok((resolved, spent)) => Ok((resolved, spent)),
         Err(crate::words::InstError::CyclicWitness) => Err(super::invalid_without_stacks(
             at,
             crate::untrusted::Constraint::CyclicWitness,
@@ -198,7 +203,7 @@ fn resolve_witness(
 )]
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; both pinned Rust compilers reject non-const Env::len and Scheme::check_inst (E0015); reassess when these bounded checks become const without changing typed rejection order."
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject non-const Env::effect_count and Scheme::check_inst (E0015); reassess when these bounded checks become const without changing typed rejection order."
 )]
 fn check_bounds(
     scheme: &crate::words::Scheme,
@@ -206,7 +211,7 @@ fn check_bounds(
     at: super::Site,
     ctx: &super::Ctx,
 ) -> Result<(), super::super::Fail> {
-    let max_effects = match ctx.env.len() {
+    let max_effects = match ctx.env.effect_count() {
         Some(count) => count,
         None => {
             return Err(super::super::Fail::Unsupported(
@@ -265,11 +270,11 @@ fn project(
     };
     let stack_in = match scheme.subst_stack(&scheme.stack_in, inst) {
         Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(at)),
+        Err(problem) => return Err(substitution_failure(at, problem)),
     };
     let stack_out = match scheme.subst_stack(&scheme.stack_out, inst) {
         Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(at)),
+        Err(problem) => return Err(substitution_failure(at, problem)),
     };
     let effects = match scheme.subst_effects(&scheme.effects, inst) {
         Ok(effects) => effects,
@@ -301,4 +306,35 @@ fn project(
 
 const fn instantiation_invalid(at: super::Site) -> super::super::Fail {
     super::invalid_without_stacks(at, crate::untrusted::Constraint::InstantiationKind)
+}
+
+/// Report one substitution failure with the refusal it names.
+///
+/// A substitution that exceeds the local type-size bound is the same refusal
+/// `limits_of` would report for the resulting interface, so it keeps that
+/// identity even though the oversized value is now refused before it exists.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every InstError maps explicitly to its acceptance refusal, and a new substitution error must be classified rather than inherit a fallback."
+)]
+const fn substitution_failure(
+    at: super::Site,
+    problem: crate::words::InstError,
+) -> super::super::Fail {
+    match problem {
+        crate::words::InstError::OversizedType => {
+            super::super::Fail::Exhausted(crate::untrusted::LimitKind::TypeSize)
+        }
+        crate::words::InstError::OversizedStack => {
+            super::super::Fail::Exhausted(crate::untrusted::LimitKind::StackHeight)
+        }
+        crate::words::InstError::OversizedEffects => {
+            super::super::Fail::Exhausted(crate::untrusted::LimitKind::TypeSize)
+        }
+        crate::words::InstError::KindMismatch
+        | crate::words::InstError::UnknownVariable
+        | crate::words::InstError::ArityMismatch
+        | crate::words::InstError::CyclicWitness
+        | crate::words::InstError::WalkExhausted => instantiation_invalid(at),
+    }
 }
