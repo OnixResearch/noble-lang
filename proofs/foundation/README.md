@@ -446,8 +446,11 @@ The recipe is **not** a `flake.nix` `checks` entry, for these reasons:
   available inside a Nix build sandbox.
 - **There is no workflow file to extend.** The repository has no
   `.github/workflows`; its CI surface is the flake `checks` set.
-  `flake.nix` and `nix/*` are policy-pinned files, so changing them
-  requires a re-pin.
+  `flake.nix` and every `nix/*` file a check evaluates are policy-pinned
+  files, so changing them requires a re-pin. The unreferenced probes
+  `nix/lean-backend.nix`, `nix/lean-offline-probe.nix`,
+  `nix/lean-git-source.nix`, `nix/lean-git-tar.nix` and
+  `nix/m1-acceptance*.nix` are not pinned.
 
 A sandbox check becomes feasible once reviewed offline Lean sources and
 either a rebuilt Mathlib `.olean` set or an authenticated cache are pinned

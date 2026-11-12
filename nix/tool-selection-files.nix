@@ -194,6 +194,8 @@
   "nix/lean-dependency-check.nix"
   "nix/lean-release.nix"
   "nix/extract-kernel-app.nix"
+  "nix/boundary-read-observation.nix"
+  "nix/tool-selection-app.nix"
   "policy/architecture.contracts.ncl"
   "policy/architecture-export-spec.ncl"
   "policy/architecture.ncl"

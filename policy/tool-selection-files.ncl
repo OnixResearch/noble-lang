@@ -300,4 +300,6 @@
   "nix/lean-dependency-check.nix" = "92390712899ed9e248c5032924ec0d3242e64c45abc3c6fbd7984b9f9164ed40",
   "nix/lean-release.nix" = "7d88aa27b4f8a5d1c0036ed98a1e2db1f5485b782b462eaaae51b8b7b6c46485",
   "nix/extract-kernel-app.nix" = "862081a90a982fcd461c7d3da85969cd29f7bfc2640ff31c8542a9b9f4d0ad85",
+  "nix/boundary-read-observation.nix" = "2f741c1285a7754131898ada36c9f7f189a18d219cd8bba1762daa2e1b516701",
+  "nix/tool-selection-app.nix" = "4cb3cecb6786f7edd9e5372dfd94beedd046edb655cdb24ce64697c771e01dce",
 }
