@@ -2914,6 +2914,102 @@
       "claim": "A corrupted witness can flip the verdict, so the recorded bits are load-bearing."
     },
     {
+      "name": "NobleFoundation.SymbolicSolver.stale_revision_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A stale or altered query binding is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.malformed_certificate_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A malformed certificate or witness is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.corrupted_encoding_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A corrupted graph encoding is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_unsupported",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An exhausted query budget is unsupported, not a refusal of the pair."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An unfinished query (UNKNOWN, error or timeout) is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_not_certified",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An unfinished query is never certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_not_refuted",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A model that does not replay on the original graphs is never refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.no_witness_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A finished query with no witness is inconclusive: external UNSAT is not agreement."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refuted_requires_replay",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A refuted status implies a found witness that replayed on the original graphs."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.clean_query_certifies",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A clean finished query whose bound certificate established agreement is certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.clean_query_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The clean fixture outcome is certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_query_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "An unfinished fixture outcome that already found agreement is inconclusive, not certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.no_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A finished fixture outcome with no agreement and no witness is inconclusive, not refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A fixture model that does not replay is inconclusive, not refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refuted_witness_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "A fixture model that replays is refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_fixture",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "An exhausted-budget fixture outcome is unsupported, not inconclusive."
+    },
+    {
       "name": "NobleFoundation.SymbolicSolver.encode_length",
       "phase": 2,
       "role": "symbolic-solver",

@@ -92,8 +92,8 @@
     "covered": [
       {
         "hazard": "altered witness bytes",
-        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
-        "theorem": "corrupted_witness_shifts_bits"
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "unreplayed_witness_not_refuted"
       },
       {
         "hazard": "replay of an encoded witness",
@@ -102,8 +102,8 @@
       },
       {
         "hazard": "no witness found is not agreement",
-        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
-        "theorem": "firstIndex_none_agrees"
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "no_witness_inconclusive"
       },
       {
         "hazard": "shrink replay refutes every step",
@@ -118,32 +118,37 @@
       {
         "hazard": "stale semantic revision",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "stale_revision_refused"
+        "theorem": "stale_revision_inconclusive"
       },
       {
         "hazard": "malformed certificate",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "malformed_certificate_refused"
+        "theorem": "malformed_certificate_inconclusive"
       },
       {
-        "hazard": "forced UNKNOWN distinct from refusal",
+        "hazard": "forced UNKNOWN is inconclusive, not a refusal of the pair",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "timeout_is_unknown"
+        "theorem": "unfinished_query_inconclusive"
       },
       {
         "hazard": "forced UNKNOWN is not certification",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "unknown_is_not_certified"
+        "theorem": "unfinished_query_not_certified"
       },
       {
-        "hazard": "timeout and exhausted budget statuses",
+        "hazard": "an exhausted budget is unsupported, not inconclusive",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "exhausted_budget_refused"
+        "theorem": "exhausted_budget_unsupported"
       },
       {
-        "hazard": "corrupted encoding refuses",
+        "hazard": "a corrupted encoding is inconclusive",
         "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "corrupted_encoding_refused"
+        "theorem": "corrupted_encoding_inconclusive"
+      },
+      {
+        "hazard": "counterexample status requires a replayed witness",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+        "theorem": "refuted_requires_replay"
       },
       {
         "hazard": "acceptance control: a clean query certifies",
@@ -156,11 +161,11 @@
       "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
       "statuses": [
         "certified",
-        "counterexample",
-        "unknown",
-        "refused"
+        "refuted",
+        "inconclusive",
+        "unsupported"
       ],
-      "note": "refused means this method established no result; unknown means the query did not finish; neither asserts agreement or disagreement"
+      "note": "certified comes only from a bound kernel certificate; refuted only from a witness that replays on the original graphs; inconclusive from a stale or altered binding, a malformed witness, a corrupted encoding, UNKNOWN, an error or a timeout; unsupported from an exhausted budget or fragment violation. QueryOutcome is supplied by the caller: no lane constructs one, so these are the decision rules, not the lane's observed results."
     }
   }
 }

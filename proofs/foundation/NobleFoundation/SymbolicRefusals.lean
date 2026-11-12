@@ -1,119 +1,202 @@
 /-
 Query verdicts and the hazards that must not certify (issue #56, acceptance item 5).
 
-A bounded query lane reports one of four verdicts. The hazard theorems below say
-that each condition the acceptance criterion names - a stale revision, a malformed
-certificate, a corrupted encoding, an exhausted budget - produces `refused` rather
-than `certified`, and that an unfinished query produces `unknown`, which is a
-different status from refusal and also not certification.
+`verification/symbolic/solver.mjs` reports one status per query: `certified` only
+from a bound kernel certificate; `refuted` only for a solver model that replays on
+the original graphs; `inconclusive` for a stale or altered binding, a malformed
+witness, an UNKNOWN answer, a solver error or a timeout; and `unsupported` for a
+query the lane refuses to run inside its declared node, slot and formula budget.
+This file states those rules as a decision model over observations a caller
+supplies:
 
-`refused` means this method did not establish a result. `unknown` means the query
-did not finish. Neither asserts agreement or disagreement.
+* a stale or altered binding, a malformed certificate or witness, and a corrupted
+  encoding are `inconclusive`;
+* an exhausted budget is `unsupported`, and an unfinished query is `inconclusive`,
+  which is a different status from `unsupported` and is not certification;
+* `refuted` requires a witness that replays on the original graphs;
+* only a bound, well-formed, intact, in-budget, finished query whose bound
+  certificate established agreement is `certified`.
+
+Scope: `QueryOutcome` is supplied by the caller and `classify` is defined here.
+Nothing yet connects this model to `verification/symbolic/solver.mjs`: no lane
+constructs a `QueryOutcome`, so these theorems are about the decision rules, not
+about the lane's observed results. `refuted` is a graph-model counterexample whose
+witness replayed; it is not a Wasm theorem.
 -/
 namespace NobleFoundation.SymbolicSolver
 
 /-- The status a bounded query lane may report. -/
 inductive Verdict where
-  /-- A checked certificate was produced. -/
+  /-- A bound kernel certificate established agreement. -/
   | certified
-  /-- A kernel-checked witness refutes the pair. -/
-  | counterexample
-  /-- The query did not finish within its budget. -/
-  | unknown
-  /-- A precondition failed; no result is claimed. -/
-  | refused
+  /-- A solver model replayed as a counterexample on the original graphs. -/
+  | refuted
+  /-- The query produced no result this method may use. -/
+  | inconclusive
+  /-- The query was refused before it ran: an exhausted budget or a fragment
+  violation. -/
+  | unsupported
 deriving DecidableEq, Repr
 
-/-- What a query lane holds when it reports. Every field is a condition the acceptance criterion
-names, in the form the lane can actually observe. -/
+/-- What a caller observed about one query. Each field mirrors something
+`verification/symbolic/solver.mjs` can observe. -/
 structure QueryOutcome where
-  /-- The semantic revision the query was built against is the current one. -/
-  revisionCurrent : Bool
-  /-- The certificate parsed and its fields are consistent. -/
+  /-- The query is bound to the expected encoder, revision, profile and pair bytes. -/
+  bound : Bool
+  /-- The certificate or witness parsed and its fields are consistent. -/
   certificateWellFormed : Bool
-  /-- The graph-to-formula encoding round-trips. -/
+  /-- The graph-to-formula encoding round-trips and its fixed points hold. -/
   encodingIntact : Bool
-  /-- The search stayed inside its declared budget. -/
+  /-- The query stayed inside the lane's declared node, slot and formula budget. -/
   withinBudget : Bool
-  /-- The search reached a conclusion rather than timing out. -/
+  /-- The search reached an answer rather than an UNKNOWN, an error or a timeout. -/
   finished : Bool
-  /-- The search established agreement. -/
+  /-- A bound kernel certificate established agreement. -/
   foundAgreement : Bool
+  /-- The search returned a model. -/
+  foundWitness : Bool
+  /-- The returned model replays on the original graphs. -/
+  witnessReplays : Bool
 
-/-- Classify a query. Hazards refuse; an unfinished query is unknown; only a clean, finished query
-that established agreement is certified. -/
-def classify (o : QueryOutcome) : Verdict :=
-  if !o.revisionCurrent then .refused
-  else if !o.certificateWellFormed then .refused
-  else if !o.encodingIntact then .refused
-  else if !o.withinBudget then .refused
-  else if !o.finished then .unknown
-  else if o.foundAgreement then .certified
-  else .counterexample
+/-- Classify a query. A binding, certificate, encoding or completion failure is
+inconclusive, an exhausted budget is unsupported, agreement is certified only from a
+bound certificate, and a counterexample is refuted only when its witness replays. -/
+def classify (outcome : QueryOutcome) : Verdict :=
+  if !outcome.bound then .inconclusive
+  else if !outcome.certificateWellFormed then .inconclusive
+  else if !outcome.encodingIntact then .inconclusive
+  else if !outcome.withinBudget then .unsupported
+  else if !outcome.finished then .inconclusive
+  else if outcome.foundAgreement then .certified
+  else if outcome.foundWitness && outcome.witnessReplays then .refuted
+  else .inconclusive
 
-/-- A stale semantic revision refuses. -/
-theorem stale_revision_refused (o : QueryOutcome) (h : o.revisionCurrent = false) :
-    classify o = .refused := by
-  unfold classify
-  rw [h]
-  rfl
+/-- A stale or altered binding is inconclusive. -/
+theorem stale_revision_inconclusive (outcome : QueryOutcome) (hbound : outcome.bound = false) :
+    classify outcome = .inconclusive := by
+  simp [classify, hbound]
 
-/-- A malformed certificate refuses. -/
-theorem malformed_certificate_refused (o : QueryOutcome) (hrev : o.revisionCurrent = true)
-    (h : o.certificateWellFormed = false) : classify o = .refused := by
-  unfold classify
-  rw [hrev, h]
-  rfl
+/-- A malformed certificate or witness is inconclusive. -/
+theorem malformed_certificate_inconclusive (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = false) :
+    classify outcome = .inconclusive := by
+  simp [classify, hbound, hcert]
 
-/-- A corrupted encoding refuses. -/
-theorem corrupted_encoding_refused (o : QueryOutcome) (hrev : o.revisionCurrent = true)
-    (hcert : o.certificateWellFormed = true) (h : o.encodingIntact = false) :
-    classify o = .refused := by
-  unfold classify
-  rw [hrev, hcert, h]
-  rfl
+/-- A corrupted encoding is inconclusive. -/
+theorem corrupted_encoding_inconclusive (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = false) : classify outcome = .inconclusive := by
+  simp [classify, hbound, hcert, hencoding]
 
-/-- An exhausted budget refuses: the search did not stay inside what it declared. -/
-theorem exhausted_budget_refused (o : QueryOutcome) (hrev : o.revisionCurrent = true)
-    (hcert : o.certificateWellFormed = true) (henc : o.encodingIntact = true)
-    (h : o.withinBudget = false) : classify o = .refused := by
-  unfold classify
-  rw [hrev, hcert, henc, h]
-  rfl
+/-- An exhausted budget is unsupported: the lane refused to run the query. -/
+theorem exhausted_budget_unsupported (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = false) :
+    classify outcome = .unsupported := by
+  simp [classify, hbound, hcert, hencoding, hbudget]
 
-/-- An unfinished query is unknown, not refused and not certified. -/
-theorem timeout_is_unknown (o : QueryOutcome) (hrev : o.revisionCurrent = true)
-    (hcert : o.certificateWellFormed = true) (henc : o.encodingIntact = true)
-    (hbudget : o.withinBudget = true) (h : o.finished = false) :
-    classify o = .unknown := by
-  unfold classify
-  rw [hrev, hcert, henc, hbudget, h]
-  rfl
+/-- An unfinished query is inconclusive: an UNKNOWN, an error and a timeout share
+one status, and none of them is refusal or certification. -/
+theorem unfinished_query_inconclusive (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = true)
+    (hfinished : outcome.finished = false) : classify outcome = .inconclusive := by
+  simp [classify, hbound, hcert, hencoding, hbudget, hfinished]
 
-/-- UNKNOWN is never certification. -/
-theorem unknown_is_not_certified (o : QueryOutcome) : classify o ≠ .certified ∨ o.foundAgreement = true := by
-  unfold classify
-  split
-  · exact Or.inl (by simp)
-  · split
-    · exact Or.inl (by simp)
-    · split
-      · exact Or.inl (by simp)
-      · split
-        · exact Or.inl (by simp)
-        · split
-          · exact Or.inl (by simp)
-          · split
-            · exact Or.inr ‹o.foundAgreement = true›
-            · exact Or.inl (by simp)
+/-- A forced UNKNOWN is never certification. -/
+theorem unfinished_query_not_certified (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = true)
+    (hfinished : outcome.finished = false) : classify outcome ≠ .certified := by
+  rw [unfinished_query_inconclusive outcome hbound hcert hencoding hbudget hfinished]
+  simp
 
-/-- The positive control: a clean, finished query that established agreement is certified. -/
-theorem clean_query_certifies (o : QueryOutcome) (hrev : o.revisionCurrent = true)
-    (hcert : o.certificateWellFormed = true) (henc : o.encodingIntact = true)
-    (hbudget : o.withinBudget = true) (hfin : o.finished = true)
-    (hagree : o.foundAgreement = true) : classify o = .certified := by
-  unfold classify
-  rw [hrev, hcert, henc, hbudget, hfin, hagree]
-  rfl
+/-- A model that does not replay on the original graphs is never refuted, so an
+altered or malformed witness cannot certify a counterexample. -/
+theorem unreplayed_witness_not_refuted (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = true)
+    (hfinished : outcome.finished = true) (hagreement : outcome.foundAgreement = false)
+    (hwitness : outcome.foundWitness = true) (hreplay : outcome.witnessReplays = false) :
+    classify outcome = .inconclusive := by
+  simp [classify, hbound, hcert, hencoding, hbudget, hfinished, hagreement, hwitness, hreplay]
+
+/-- A finished query that found no witness is inconclusive: an external UNSAT
+answer without an accepted proof is not agreement. -/
+theorem no_witness_inconclusive (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = true)
+    (hfinished : outcome.finished = true) (hagreement : outcome.foundAgreement = false)
+    (hwitness : outcome.foundWitness = false) : classify outcome = .inconclusive := by
+  simp [classify, hbound, hcert, hencoding, hbudget, hfinished, hagreement, hwitness]
+
+/-- A counterexample status requires a replayed witness: `refuted` implies both that
+a model was found and that it replayed on the original graphs. -/
+theorem refuted_requires_replay (outcome : QueryOutcome)
+    (hrefuted : classify outcome = .refuted) :
+    outcome.foundWitness = true ∧ outcome.witnessReplays = true := by
+  unfold classify at hrefuted
+  split at hrefuted
+  · simp at hrefuted
+  · split at hrefuted
+    · simp at hrefuted
+    · split at hrefuted
+      · simp at hrefuted
+      · split at hrefuted
+        · simp at hrefuted
+        · split at hrefuted
+          · simp at hrefuted
+          · split at hrefuted
+            · simp at hrefuted
+            · split at hrefuted
+              · next hfound =>
+                  simp_all
+              · simp at hrefuted
+
+/-- The positive control: a clean, finished query whose bound certificate established
+agreement is certified. -/
+theorem clean_query_certifies (outcome : QueryOutcome)
+    (hbound : outcome.bound = true) (hcert : outcome.certificateWellFormed = true)
+    (hencoding : outcome.encodingIntact = true) (hbudget : outcome.withinBudget = true)
+    (hfinished : outcome.finished = true) (hagreement : outcome.foundAgreement = true) :
+    classify outcome = .certified := by
+  simp [classify, hbound, hcert, hencoding, hbudget, hfinished, hagreement]
+
+/-! ### Fixtures
+
+Concrete observations for the distinctions the lane draws. -/
+
+/-- The clean query is certified. -/
+theorem clean_query_fixture :
+    classify ⟨true, true, true, true, true, true, false, false⟩ = .certified := by
+  decide
+
+/-- An unfinished query that already found agreement is inconclusive, not certified:
+the UNKNOWN status is the query's completion, not its result. -/
+theorem unfinished_query_fixture :
+    classify ⟨true, true, true, true, false, true, false, false⟩ = .inconclusive := by
+  decide
+
+/-- A finished query with no agreement and no witness is inconclusive, not refuted: an
+external UNSAT answer is not a counterexample. -/
+theorem no_witness_fixture :
+    classify ⟨true, true, true, true, true, false, false, false⟩ = .inconclusive := by
+  decide
+
+/-- A witness that does not replay is inconclusive, not refuted. -/
+theorem unreplayed_witness_fixture :
+    classify ⟨true, true, true, true, true, false, true, false⟩ = .inconclusive := by
+  decide
+
+/-- A witness that replays is refuted. -/
+theorem refuted_witness_fixture :
+    classify ⟨true, true, true, true, true, false, true, true⟩ = .refuted := by
+  decide
+
+/-- An exhausted budget is unsupported, which is a different status from the
+inconclusive one an unfinished query takes. -/
+theorem exhausted_budget_fixture :
+    classify ⟨true, true, true, false, false, false, false, false⟩ = .unsupported := by
+  decide
 
 end NobleFoundation.SymbolicSolver
