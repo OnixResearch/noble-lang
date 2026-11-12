@@ -4,6 +4,14 @@
     tigerstyle::no_panic,
     reason = "property test crate: a failing generated property panics by design"
 )]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "one agreement target: generation, oracle comparison, coverage assertions and disagreement shrinking read as one lane"
+)]
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "the lane's module files are named by subject so the crate root reads as its test map"
+)]
 //! Bounded property harness for the M2 fragment checker (DX-PROPERTY-01/02).
 //!
 //! Lane one generates seeded candidates and requires the kernel checker and
@@ -107,6 +115,10 @@ fn oracle_table_covers_every_pool_word() -> Result<(), String> {
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-maintainers; the agreement lane keeps generation, comparison, coverage assertions and the failure report in one reading order; the derivations and shrinking it delegates are already separate functions."
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the vector holds one entry per accepted candidate's derived word, at most the lane's 1000 cases times the declared 256-node limit, and is only appended once per derivation."
 )]
 fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     let env = gen::environment()?;
@@ -233,8 +245,8 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
 /// A knob-corrupted case may have had a node repaired or repointed, so only an
 /// uncorrupted case's derivations attest the generated witness itself.
 #[expect(
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-maintainers; one accepted candidate contributes at most its declared nodes limit (256) of derivations, each appended once; the vector is bounded by the request the generator declares."
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the helper returns the checker's own derivations or a typed error for an unrepresentable node, and its bounded walk needs no assertion to state that."
 )]
 fn accepted_word_derivations(
     case: &gen::Case,

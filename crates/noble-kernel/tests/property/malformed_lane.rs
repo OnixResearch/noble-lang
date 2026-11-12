@@ -1,7 +1,3 @@
-#![expect(
-    tigerstyle::underscore_in_module_filename,
-    reason = "the module name reads as its lane's subject; the test target is property.rs"
-)]
 //! Structurally corrupted candidates: bounded outcome, never acceptance.
 
 /// Structurally corrupted candidates in the malformed lane.
