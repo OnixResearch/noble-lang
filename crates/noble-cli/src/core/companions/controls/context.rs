@@ -92,7 +92,7 @@ fn renew_one(state: &mut super::Harness, variant: &str, value: u64) {
         &baseline,
     );
     assert_eq!(
-        state.core.release(evidence),
+        state.core.release(evidence, &subject),
         Err(noble_contracts::companion::Refusal::StaleContext)
     );
     assert_eq!(

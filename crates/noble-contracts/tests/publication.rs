@@ -125,3 +125,34 @@ fn nested_imported_dependencies_are_charged_for_every_published_use() -> Result<
     assert_eq!(Some(session.generation()), prior.checked_add(1));
     Ok(())
 }
+
+#[test]
+fn proof_uses_require_a_canonical_module_version() -> Result<(), String> {
+    let session = imported_chain()?;
+    let non_canonical = session
+        .prepare(
+            b"module c@1 [ proof 1 top : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use a@01.base) x)) ] ]",
+            &[],
+            LIMITS,
+        )
+        .expect_err("a@01 must not resolve to a@1");
+    assert_eq!(
+        non_canonical.stage(),
+        noble_contracts::source::Stage::Resolve
+    );
+    assert!(
+        non_canonical
+            .diagnostic()
+            .message
+            .contains("missing imported proof module version"),
+        "{non_canonical:?}"
+    );
+    // The canonical spelling resolves the same published proof end to end.
+    let (_, published) = publish(
+        session,
+        b"module c@1 [ proof 1 top : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use a@1.base) x)) ] ]",
+        LIMITS,
+    )?;
+    published.map_err(|error| format!("canonical use refused: {error:?}"))?;
+    Ok(())
+}

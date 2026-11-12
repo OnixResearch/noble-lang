@@ -651,7 +651,8 @@ fn resolve_contract(
 )]
 fn is_current(request: &Request<'_>, scope: &str) -> bool {
     scope.split_once('@').is_some_and(|(name, version)| {
-        name == request.name && version.parse::<u32>().ok() == Some(request.version)
+        name == request.name
+            && crate::source::declared::canonical_version(version) == Some(request.version)
     })
 }
 
@@ -669,7 +670,7 @@ fn imported_module<'a>(
     span: crate::Span,
 ) -> Result<&'a crate::source::declared::Module, crate::source::Error> {
     let module = if let Some((name, version)) = scope.split_once('@') {
-        let version = version.parse::<u32>().ok();
+        let version = crate::source::declared::canonical_version(version);
         session
             .modules
             .iter()

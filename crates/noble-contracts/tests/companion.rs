@@ -10,6 +10,8 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
 const INCREMENT: &[u8] = include_bytes!("../../../verification/mc2/contracts/increment.contract");
 const PROOF: &[u8] = include_bytes!("../../../verification/mc2/contracts/increment.proof.lean");
 const GUARDED: &[u8] = include_bytes!("../../../verification/mc2/contracts/guarded.contract");
+const GUARDED_PROOF: &[u8] =
+    include_bytes!("../../../verification/mc2/contracts/guarded.proof.lean");
 
 fn prepared(source: &[u8]) -> Result<noble_contracts::Prepared, String> {
     noble_contracts::prepare(source, LIMITS).map_err(|error| format!("{error:?}"))
@@ -21,6 +23,17 @@ fn offer(bytes: &[u8]) -> noble_contracts::companion::EvidenceOffer {
         refutation: false,
         payload: noble_contracts::companion::EvidencePayload::Declaration(bytes.to_vec()),
     }
+}
+
+/// Any subject; an unknown evidence id is refused before the subject is read.
+fn any_subject() -> noble_contracts::companion::Subject {
+    noble_contracts::companion::observe(
+        &[],
+        noble_contracts::companion::InterfaceSignatures {
+            input: 0,
+            output: 0,
+        },
+    )
 }
 
 fn retained_subject(
@@ -80,7 +93,7 @@ fn serialized_status_and_matching_digest_never_admit_a_proof() -> Result<(), Str
         assert_eq!(result.evidence, None);
     }
     assert_eq!(
-        core.release(noble_contracts::companion::EvidenceId(0)),
+        core.release(noble_contracts::companion::EvidenceId(0), &any_subject()),
         Err(noble_contracts::companion::Refusal::UnknownEvidence)
     );
     Ok(())
@@ -106,7 +119,7 @@ fn zero_premise_replay_cannot_turn_an_unproved_contract_into_authority() -> Resu
         );
     }
     assert_eq!(
-        core.release(noble_contracts::companion::EvidenceId(0)),
+        core.release(noble_contracts::companion::EvidenceId(0), &subject),
         Err(noble_contracts::companion::Refusal::UnknownEvidence)
     );
     Ok(())
@@ -226,5 +239,95 @@ fn guard_recognition_does_not_weaken_a_larger_or_unrelated_precondition() -> Res
         core.guard_templates(admission.contract.ok_or("missing retained contract")?),
         Ok(vec![noble_contracts::companion::GuardTemplate::LtI64Max])
     );
+    Ok(())
+}
+
+/// Mint one accepted exact-declaration evidence entry through the trusted
+/// observation seam, without running Lean: the observation is the premise the
+/// host checker supplies after it has checked these exact inputs.
+fn proved_evidence(
+    core: &mut noble_contracts::companion::Core,
+    contract: &noble_contracts::Prepared,
+    proof: &[u8],
+) -> Result<
+    (
+        noble_contracts::companion::Admission,
+        noble_contracts::companion::Subject,
+    ),
+    String,
+> {
+    let request = core
+        .begin_admission(contract, offer(proof))
+        .map_err(|admission| format!("begin refused: {:?}", admission.refusals))?;
+    let admission = core.complete_admission(
+        request,
+        noble_contracts::companion::CheckObservation::new(
+            noble_contracts::export_lean(contract),
+            proof.to_vec(),
+            Ok(noble_contracts::companion::EvidenceClass::LeanExact),
+        ),
+    );
+    if admission.outcome != noble_contracts::companion::Outcome::Proved {
+        return Err(format!("admission refused: {:?}", admission.refusals));
+    }
+    let subject = retained_subject(core, &admission, contract)?;
+    Ok((admission, subject))
+}
+
+#[test]
+fn release_requires_a_matching_subject() -> Result<(), String> {
+    let contract = prepared(INCREMENT)?;
+    let mut core = noble_contracts::companion::Core::new(LIMITS);
+    let (admission, subject) = proved_evidence(&mut core, &contract, PROOF)?;
+    let evidence = admission.evidence.ok_or("proved without evidence")?;
+    let released = core.release(evidence, &subject);
+    assert!(released.is_ok(), "the exact subject releases: {released:?}");
+    assert_eq!(
+        core.release(evidence, &any_subject()),
+        Err(noble_contracts::companion::Refusal::MismatchedSubject)
+    );
+    Ok(())
+}
+
+#[test]
+fn identity_rules_restate_a_premise_and_refuse_a_duplicate() -> Result<(), String> {
+    use noble_contracts::companion::RuleId;
+    // `admit-lean`, `guard`, `project` and `invoke` transport an existing
+    // theorem; they never mint a second entry for the same contract, claim and
+    // subject, so the only sound replay result is `DuplicateEntry`.
+    for (contract_bytes, proof, rules) in [
+        (
+            INCREMENT,
+            PROOF,
+            &[RuleId::AdmitLeanV1, RuleId::ProjectV1, RuleId::InvokeV1][..],
+        ),
+        (
+            GUARDED,
+            GUARDED_PROOF,
+            &[
+                RuleId::AdmitLeanV1,
+                RuleId::GuardV1,
+                RuleId::ProjectV1,
+                RuleId::InvokeV1,
+            ][..],
+        ),
+    ] {
+        let contract = prepared(contract_bytes)?;
+        let mut core = noble_contracts::companion::Core::new(LIMITS);
+        let (admission, subject) = proved_evidence(&mut core, &contract, proof)?;
+        let evidence = admission.evidence.ok_or("proved without evidence")?;
+        // The transport rules compare against the retained subject, which
+        // `bind` returns after checking the observation applies.
+        let retained = core
+            .bind(evidence, &subject)
+            .map_err(|error| format!("bind: {error:?}"))?;
+        for rule in rules {
+            assert_eq!(
+                core.replay(&derivation(*rule, &admission, &retained, vec![evidence])?),
+                Err(noble_contracts::companion::Refusal::DuplicateEntry),
+                "{rule:?} restates the premise instead of minting"
+            );
+        }
+    }
     Ok(())
 }

@@ -72,7 +72,7 @@ fn conclusion(
     );
     let released = state
         .core
-        .release(composition)
+        .release(composition, composed)
         .expect("derived claim release");
     assert_ne!(
         released.contract,

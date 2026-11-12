@@ -85,6 +85,20 @@ fn subject_identity_binds_captures_and_callees() {
 }
 
 #[test]
+fn subject_identity_separates_ops_from_captures() {
+    // Both flatten to the same 1, 7, 0 sequence without field lengths, yet
+    // they run differently and must not share an identity.
+    let pushed = program(vec![Op::Push(7)], Vec::new(), 0);
+    let captured = program(Vec::new(), vec![1, 7], 0);
+    assert_ne!(subject_hash(&pushed), subject_hash(&captured));
+    // An op code and a capture value are different fields even when the
+    // flattened number is the same.
+    let added = program(vec![Op::Add], Vec::new(), 0);
+    let capture = program(Vec::new(), vec![3], 0);
+    assert_ne!(subject_hash(&added), subject_hash(&capture));
+}
+
+#[test]
 fn evidence_refuses_wrong_claims_and_stale_revisions() {
     let base = program(Vec::new(), Vec::new(), 0);
     let first = program(vec![Op::Push(1), Op::Add], Vec::new(), 0);

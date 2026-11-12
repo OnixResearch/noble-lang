@@ -49,7 +49,10 @@ report.json, wrapper.noble, contract.noble, artifact.wat, artifact.wasm and
 proof.lean when present. `--report-schema v2` additionally binds the selected toolchain in the
 report: the exact --lean-binary bytes (SHA-256, with the pinned version and commit recorded beside
 them) and the contract library tree (BLAKE3 over every file's relative path and content in sorted
-order). v2 requires both paths and passing either without v2 is a usage error; without the flag the
+order). The selection is refused unless those bytes are the ones this build uses: the configured
+Lean release (NOBLE_LEAN or the selected installation) and the configured contract library root
+(NOBLE_CONTRACT_LIBRARY or the pinned default). v2 requires both paths and passing either without
+v2 is a usage error; without the flag the
 report keeps the noble-mc2-build/v1 schema and its exact field set. The emitted Wasm is build/loading evidence (PO-17/18),
 never a verified backend correspondence. Exit status follows VC-TOOL-02:
 proved 0, disproved 1, error 2, unknown 3, unsupported 4, timeout 124, not-run 0.";
@@ -71,13 +74,16 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             return print_report(&report);
         }
     };
-    report.require_proof = options.require_proof;
+    // `--require-proof` is a mandatory operand (see `arguments::parse`), so
+    // every accepted invocation is reported as a proof-required build.
+    report.require_proof = true;
     report.source_path = options.source.to_string_lossy().into_owned();
     report.contract_path = options.contract.to_string_lossy().into_owned();
     report.timeout_ms = options.timeout_ms;
     report.schema_v2 = options.schema_v2;
-    // v2 binds the exact Lean binary and contract library the caller froze; the parser already
-    // refuses v2 without both paths, and v1 without them.
+    // v2 binds the exact Lean binary and contract library bytes the caller names, and the
+    // selection itself refuses them unless they are the configured Lean release and library root
+    // this build actually invokes. The parser refuses v2 without both paths, and v1 with them.
     if let (Some(lean_binary), Some(library_tree)) = (&options.lean_binary, &options.library_tree) {
         match report::toolchain::select(lean_binary, library_tree) {
             Ok(selected) => report.selected_toolchain = Some(selected),
@@ -202,11 +208,8 @@ fn execute(
     let wrapper = wrapper_source(&core, admission.decision.contract);
     if evidence.is_none() {
         report.outcome = crate::workflow::output::Outcome::NotRun;
-        report.release = if options.require_proof {
-            report::ReleaseDecision::blocked("proof required but no evidence offer was supplied")
-        } else {
-            release::allowed("permissive build; no proof was required")
-        };
+        report.release =
+            report::ReleaseDecision::blocked("proof required but no evidence offer was supplied");
     } else {
         let submission = attempt!(artifact.prepared.submission().ok_or_else(|| {
             crate::workflow::output::Failure::error(

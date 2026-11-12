@@ -9,6 +9,7 @@ enum ExportRejection {
 pub(super) struct WordBuilder {
     words: alloc::vec::Vec<(alloc::string::String, crate::source::Target)>,
     exported_words: alloc::vec::Vec<(alloc::string::String, crate::source::Target)>,
+    added_words: alloc::vec::Vec<alloc::string::String>,
 }
 
 impl WordBuilder {
@@ -117,6 +118,20 @@ impl WordBuilder {
     ) -> Result<Self, crate::source::Error> {
         if let Some(definition) = definition {
             let spelling = attempt!(constructor_spelling(schema, suffix));
+            // Two operations of one schema that publish the same spelling make
+            // lookup order decide the meaning; refuse instead of publishing an
+            // ambiguous word.
+            if self
+                .added_words
+                .iter()
+                .any(|existing| *existing == spelling)
+            {
+                return Err(crate::source::declared::error(
+                    crate::source::Stage::Resolve,
+                    "duplicate constructor word",
+                ));
+            }
+            self.added_words.push(spelling.clone());
             let target = crate::source::Target::Builtin(definition.0);
             if is_external {
                 self.exported_words.push((spelling.clone(), target));
@@ -211,6 +226,7 @@ pub(super) fn operations(
     let mut builder = WordBuilder {
         words,
         exported_words: alloc::vec::Vec::with_capacity(3),
+        added_words: alloc::vec::Vec::with_capacity(3),
     };
     let (first, second) = match &schema.kind {
         crate::source::declared::SchemaKind::Opaque { .. } => {
@@ -234,4 +250,72 @@ pub(super) fn operations(
         );
     }
     Ok(builder)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WordBuilder;
+    use crate::source::declared::{Schema, SchemaKind};
+
+    fn fixture() -> WordBuilder {
+        WordBuilder {
+            words: alloc::vec::Vec::new(),
+            exported_words: alloc::vec::Vec::new(),
+            added_words: alloc::vec::Vec::new(),
+        }
+    }
+
+    fn schema() -> Schema {
+        Schema {
+            name: alloc::string::String::from("V"),
+            kind: SchemaKind::Opaque {
+                base: alloc::string::String::from("I64"),
+                public: true,
+            },
+        }
+    }
+
+    #[test]
+    fn adding_the_same_constructor_word_twice_is_refused() {
+        let builder = fixture()
+            .add(
+                &schema(),
+                "new",
+                Some(noble_kernel::contracts::Definition(0)),
+                true,
+            )
+            .expect("first word");
+        assert_eq!(builder.words.len(), 1);
+        let duplicate = builder.add(
+            &schema(),
+            "new",
+            Some(noble_kernel::contracts::Definition(1)),
+            true,
+        );
+        assert!(duplicate.is_err(), "a repeated spelling would be ambiguous");
+        let Err(failure) = duplicate else { return };
+        assert_eq!(failure.diagnostic().message, "duplicate constructor word");
+        assert_eq!(failure.stage(), crate::source::Stage::Resolve);
+    }
+
+    #[test]
+    fn distinct_constructor_words_still_publish() {
+        let builder = fixture()
+            .add(
+                &schema(),
+                "new",
+                Some(noble_kernel::contracts::Definition(0)),
+                true,
+            )
+            .expect("first word")
+            .add(
+                &schema(),
+                "into",
+                Some(noble_kernel::contracts::Definition(1)),
+                true,
+            )
+            .expect("second word");
+        assert_eq!(builder.words.len(), 2);
+        assert_eq!(builder.exported_words.len(), 2);
+    }
 }

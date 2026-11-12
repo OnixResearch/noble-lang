@@ -20,7 +20,7 @@ fn hole() -> noble_contracts::source::editor::Candidate {
 
 #[test]
 fn editor_analysis_retains_real_word_constraints_without_admission() -> Result<(), String> {
-    let session = noble_contracts::source::Session::new();
+    let mut session = noble_contracts::source::Session::new();
     let result = session
         .analyze_editor(&hole(), &[], limits())
         .map_err(|error| format!("analyze: {error:?}"))?;
@@ -49,7 +49,15 @@ fn editor_analysis_retains_real_word_constraints_without_admission() -> Result<(
     assert!(effectful.holes[0].unresolved_effect);
     assert!(effectful.unresolved_effect);
     assert_eq!(effectful.known_effects, [0]);
-    assert_eq!(session.generation(), 0);
+    // Analysis admits nothing: the first successful commit lands generation 1
+    // rather than one ahead of a counter analysis had moved.
+    let prepared = session
+        .prepare(b"1", &[], limits())
+        .map_err(|error| format!("commit candidate: {error:?}"))?;
+    session
+        .commit(prepared)
+        .map_err(|error| format!("commit: {error:?}"))?;
+    assert_eq!(session.generation(), 1);
     Ok(())
 }
 
@@ -64,8 +72,6 @@ fn typed_direct_admission_refuses_hole_before_prepared() {
         refusal.diagnostic().message,
         "editor hole cannot enter source admission"
     );
-    let session = noble_contracts::source::Session::new();
-    assert_eq!(session.generation(), 0);
 }
 
 #[test]
@@ -76,7 +82,7 @@ fn typed_nested_quotation_admission_refuses_hole_before_prepared() -> Result<(),
             noble_contracts::source::editor::Node::Hole,
         ])],
     };
-    let session = noble_contracts::source::Session::new();
+    let mut session = noble_contracts::source::Session::new();
     assert_eq!(
         session
             .analyze_editor(&nested, &[], limits())
@@ -93,7 +99,13 @@ fn typed_nested_quotation_admission_refuses_hole_before_prepared() -> Result<(),
         refusal.diagnostic().message,
         "editor hole cannot enter source admission"
     );
-    assert_eq!(session.generation(), 0);
+    let prepared = session
+        .prepare(b"1", &[], limits())
+        .map_err(|error| format!("commit candidate: {error:?}"))?;
+    session
+        .commit(prepared)
+        .map_err(|error| format!("commit: {error:?}"))?;
+    assert_eq!(session.generation(), 1);
     Ok(())
 }
 

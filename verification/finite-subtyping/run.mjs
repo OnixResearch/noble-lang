@@ -74,7 +74,7 @@ const receipt = {
   },
   decision: counts.decision,
   rationale:
-    "Every supported family has a principal candidate; the only non-reflexive relation is directed effect-bound inclusion.",
+    `Measured over every case: ${counts.principal_families} families have exactly one principal candidate and ${counts.ambiguous} do not; the explicit finite-family membership search agrees with the target-directed subtype rule on all ${counts.cases} cases. The only non-reflexive relation is directed effect-bound inclusion.`,
   elapsed_ms: Date.now() - started,
 };
 

@@ -325,3 +325,26 @@ mod part6;
 
 #[path = "cases/part7.rs"]
 mod part7;
+
+#[test]
+fn a_constructor_named_match_cannot_publish_the_eliminator_word() -> Result<(), String> {
+    let session =
+        noble_contracts::source::ModuleSession::new_declared_text(&[], false, super::retained())
+            .map_err(|error| format!("{error:?}"))?;
+    let refusal = session
+        .prepare(
+            b"module collision@1 [ variant V match I64 public other Text public export V ]",
+            &[],
+            super::LIMITS,
+        )
+        .expect_err("an arm named match would publish V.match twice");
+    assert_eq!(refusal.stage(), noble_contracts::source::Stage::Parse);
+    assert!(
+        refusal
+            .diagnostic()
+            .message
+            .contains("collides with the generated eliminator"),
+        "{refusal:?}"
+    );
+    Ok(())
+}

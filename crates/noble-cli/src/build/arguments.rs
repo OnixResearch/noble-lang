@@ -5,9 +5,10 @@
 //! SOURCE is the single positional operand; `--contract` names the contract
 //! file. Options may follow `build` in any order. Each option occurs at most
 //! once and `--proof`/`--refutation` share one mutually exclusive slot.
+//! `--require-proof` is mandatory: there is no permissive build route that
+//! emits a released artifact without a required proof.
 
 pub(super) struct Options {
-    pub(super) require_proof: bool,
     pub(super) source: std::path::PathBuf,
     pub(super) contract: std::path::PathBuf,
     pub(super) evidence: Option<std::path::PathBuf>,
@@ -133,8 +134,13 @@ pub(super) fn parse(
     if schema_v2 != (lean_binary.is_some() && library_tree.is_some()) {
         return Err(usage());
     }
+    // The usage grammar shows `--require-proof` without brackets and the docs
+    // say a build releases only for a required proof; omitting the flag would
+    // otherwise emit an artifact on the undocumented permissive route.
+    if !has_require_proof {
+        return Err(usage());
+    }
     Ok(Options {
-        require_proof: has_require_proof,
         source: attempt!(source.ok_or_else(usage)),
         contract: attempt!(contract.ok_or_else(usage)),
         evidence,
@@ -159,7 +165,12 @@ mod tests {
 
     #[test]
     fn v1_is_the_default_and_binds_no_toolchain() {
-        let parsed = parse(&argv(&["x.noble", "--contract", "c.json"]));
+        let parsed = parse(&argv(&[
+            "--require-proof",
+            "x.noble",
+            "--contract",
+            "c.json",
+        ]));
         assert!(parsed.is_ok(), "v1 parses");
         let Ok(options) = parsed else { return };
         assert!(!options.schema_v2);
@@ -170,6 +181,7 @@ mod tests {
     #[test]
     fn v2_requires_both_selections_and_v1_refuses_them() {
         assert!(parse(&argv(&[
+            "--require-proof",
             "x.noble",
             "--contract",
             "c.json",
@@ -178,6 +190,7 @@ mod tests {
         ]))
         .is_err());
         assert!(parse(&argv(&[
+            "--require-proof",
             "x.noble",
             "--contract",
             "c.json",
@@ -188,6 +201,7 @@ mod tests {
         ]))
         .is_err());
         assert!(parse(&argv(&[
+            "--require-proof",
             "x.noble",
             "--contract",
             "c.json",
@@ -198,6 +212,7 @@ mod tests {
         ]))
         .is_err());
         let parsed = parse(&argv(&[
+            "--require-proof",
             "x.noble",
             "--contract",
             "c.json",
@@ -219,5 +234,19 @@ mod tests {
             both.library_tree.as_deref(),
             Some(std::path::Path::new("/t"))
         );
+    }
+
+    #[test]
+    fn require_proof_is_mandatory_and_occurs_at_most_once() {
+        let arguments = argv(&["[ 1 + ]", "--contract", "c.json"]);
+        assert!(parse(&arguments).is_err(), "the flag is required");
+        let duplicated = argv(&[
+            "--require-proof",
+            "--require-proof",
+            "[ 1 + ]",
+            "--contract",
+            "c.json",
+        ]);
+        assert!(parse(&duplicated).is_err(), "the flag is not repeatable");
     }
 }

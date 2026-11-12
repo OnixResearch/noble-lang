@@ -52,31 +52,44 @@ pub(super) fn family(base: &Interface, universe: &[EffId]) -> Vec<Candidate> {
 }
 
 pub(super) fn principal(candidates: &[Candidate]) -> Option<&Candidate> {
-    let mut at = 0usize;
-    while at < candidates.len() {
-        let candidate = &candidates[at];
-        let mut other = 0usize;
-        let mut is_principal = true;
-        while other < candidates.len() {
-            if !is_interface_subtype(&candidate.interface, &candidates[other].interface) {
-                is_principal = false;
-                break;
-            }
-            other += 1;
-        }
-        if is_principal {
-            return Some(candidate);
-        }
-        at += 1;
-    }
-    None
+    candidates
+        .iter()
+        .find(|candidate| is_principal(candidate, candidates))
 }
 
+/// How many family members are below every other member. Zero means no member
+/// is the most specific; more than one means mutually interchangeable minima.
+pub(super) fn principal_count(candidates: &[Candidate]) -> usize {
+    candidates
+        .iter()
+        .filter(|candidate| is_principal(candidate, candidates))
+        .count()
+}
+
+fn is_principal(candidate: &Candidate, candidates: &[Candidate]) -> bool {
+    let mut other = 0usize;
+    while other < candidates.len() {
+        if !is_interface_subtype(&candidate.interface, &candidates[other].interface) {
+            return false;
+        }
+        other += 1;
+    }
+    true
+}
+
+/// The explicit-family checker: the target must be exactly one of the base's
+/// enumerated effect refinements over the finite declared universe, and that
+/// candidate must satisfy the structural rule. Requiring an exact effect-set
+/// match makes this a real membership search rather than the target-directed
+/// inclusion rule, so a defect in either the enumeration or the rule makes the
+/// differential disagree.
 pub(super) fn explicit_accepts(base: &Interface, target: &Interface, universe: &[EffId]) -> bool {
     let candidates = family(base, universe);
     let mut at = 0usize;
     while at < candidates.len() {
-        if is_interface_subtype(&candidates[at].interface, target) {
+        if candidates[at].interface.effects == target.effects
+            && is_interface_subtype(&candidates[at].interface, target)
+        {
             return true;
         }
         at += 1;
@@ -92,7 +105,16 @@ pub(super) fn is_whole_candidate(candidate: &Candidate, base: &Interface) -> boo
     is_interface_subtype(&candidate.interface, base)
         && is_interface_subtype(base, &candidate.interface)
 }
-pub(super) fn differential() -> (usize, usize, usize, usize, usize) {
+pub(super) struct Differential {
+    pub(super) cases: usize,
+    pub(super) accepted: usize,
+    pub(super) refused: usize,
+    pub(super) principal_families: usize,
+    pub(super) ambiguous: usize,
+    pub(super) max_family: usize,
+}
+
+pub(super) fn differential() -> Differential {
     let universes: &[&[EffId]] = &[
         &[],
         &[TEST_EMIT],
@@ -103,6 +125,7 @@ pub(super) fn differential() -> (usize, usize, usize, usize, usize) {
     let mut accepted = 0usize;
     let mut refused = 0usize;
     let mut principal_families = 0usize;
+    let mut ambiguous = 0usize;
     let mut max_family = 0usize;
     let mut universe_at = 0usize;
     while universe_at < universes.len() {
@@ -118,8 +141,10 @@ pub(super) fn differential() -> (usize, usize, usize, usize, usize) {
                 if candidates.len() > max_family {
                     max_family = candidates.len();
                 }
-                if principal(&candidates).is_some() {
+                if principal_count(&candidates) == 1 {
                     principal_families += 1;
+                } else {
+                    ambiguous += 1;
                 }
                 let is_explicit = explicit_accepts(&base, &target, universe);
                 let is_backward = backward_accepts(&base, &target);
@@ -136,7 +161,14 @@ pub(super) fn differential() -> (usize, usize, usize, usize, usize) {
         }
         universe_at += 1;
     }
-    (cases, accepted, refused, principal_families, max_family)
+    Differential {
+        cases,
+        accepted,
+        refused,
+        principal_families,
+        ambiguous,
+        max_family,
+    }
 }
 
 pub(super) fn subset(universe: &[EffId], mask: usize) -> EffSet {

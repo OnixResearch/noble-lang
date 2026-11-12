@@ -11,7 +11,8 @@ use noble_kernel::contracts::{TEST_CLOCK, TEST_EMIT};
 use noble_kernel::types::{NominalShape, NominalTypeId, Ty};
 
 use super::candidates::{
-    backward_accepts, differential, explicit_accepts, family, is_whole_candidate, Candidate,
+    backward_accepts, differential, explicit_accepts, family, is_whole_candidate, principal,
+    principal_count, Candidate,
 };
 use super::relation::{effect_set, interface, is_data_subtype, program};
 fn real_examples() -> (usize, usize) {
@@ -74,23 +75,40 @@ fn real_examples() -> (usize, usize) {
 }
 #[test]
 fn prototype_records_a_principal_candidate() {
-    let (cases, accepted, refused, principal_families, max_family) = differential();
+    let measured = differential();
     let (real_accepted, real_refused) = real_examples();
-    assert!(cases >= 100);
-    assert_eq!(accepted + refused, cases);
-    assert_eq!(principal_families, cases);
+    assert!(measured.cases >= 100);
+    assert_eq!(measured.accepted + measured.refused, measured.cases);
+    assert_eq!(
+        measured.principal_families + measured.ambiguous,
+        measured.cases
+    );
     assert!(real_accepted >= 3);
     assert!(real_refused >= 3);
     std::println!(
-        "NOBLE_FINITE_BASES_RECEIPT {{\"relation\":\"finite-bases/v0\",\"cases\":{},\"accepted\":{},\"refused\":{},\"principal_families\":{},\"ambiguous\":0,\"max_family\":{},\"real_accepted\":{},\"real_refused\":{},\"decision\":\"no-go\"}}",
-        cases,
-        accepted,
-        refused,
-        principal_families,
-        max_family,
+        "NOBLE_FINITE_BASES_RECEIPT {{\"relation\":\"finite-bases/v0\",\"cases\":{},\"accepted\":{},\"refused\":{},\"principal_families\":{},\"ambiguous\":{},\"max_family\":{},\"real_accepted\":{},\"real_refused\":{},\"decision\":\"no-go\"}}",
+        measured.cases,
+        measured.accepted,
+        measured.refused,
+        measured.principal_families,
+        measured.ambiguous,
+        measured.max_family,
         real_accepted,
         real_refused
     );
+}
+
+#[test]
+fn a_non_nested_family_has_no_principal_candidate() {
+    let first = Candidate {
+        interface: interface(Vec::new(), vec![Ty::I64], effect_set(&[TEST_EMIT])),
+    };
+    let second = Candidate {
+        interface: interface(Vec::new(), vec![Ty::I64], effect_set(&[TEST_CLOCK])),
+    };
+    let family = [first, second];
+    assert!(principal(&family).is_none());
+    assert_eq!(principal_count(&family), 0);
 }
 
 #[test]

@@ -31,7 +31,11 @@ Script operations (one per line; '#' starts a comment):
   invoke INDEX ARGUMENT           guard-checked certified invocation
   policy REVISION                 select a policy; invalidate old evidence
   derive RULE CONTRACT_ID SUBJECT_INDEX EVIDENCE_ID...
-                                  submit an explicit bounded replay offer
+                                  submit an explicit bounded replay offer;
+                                  'compose' and 'instantiate' mint a derived
+                                  entry, while 'admit-lean', 'guard', 'project'
+                                  and 'invoke' only restate their premise and
+                                  refuse 'duplicate-entry' instead of minting
 Exit status is 2 for malformed input or I/O failure; every accepted script
 prints its per-operation outcomes and exits 0. The Lean kernel runs only for
 'contract PATH PROOF_PATH'.";

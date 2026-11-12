@@ -177,7 +177,13 @@ fn stale_and_cross_namespace_declarations_cannot_commit() -> Result<(), String> 
         Ok(()) => return Err(String::from("stale namespace preparation committed")),
     }
     assert_eq!(session.generation(), generation);
-    assert!(session.prepare(b"stale", &[], limits()).is_err());
+    assert!(
+        matches!(
+            session.prepare(b"stale", &[], limits()),
+            Err(error) if error.stage() == noble_contracts::source::Stage::Resolve
+        ),
+        "a refused declaration leaves its name unbound"
+    );
     assert_eq!(
         prepare(&session, b"current")?.output(),
         &[noble_kernel::types::Ty::Bool]
@@ -186,8 +192,21 @@ fn stale_and_cross_namespace_declarations_cannot_commit() -> Result<(), String> 
     let mut other = noble_contracts::source::Session::new();
     define(&mut other, b"def current [ 2 ]")?;
     let foreign = prepare(&other, b"def inherited [ current ]")?;
-    assert!(session.commit(foreign).is_err());
-    assert!(session.prepare(b"inherited", &[], limits()).is_err());
+    match session.commit(foreign) {
+        Err(error) => assert_eq!(
+            error.stage(),
+            noble_contracts::source::Stage::Acceptance,
+            "a foreign namespace is refused at acceptance"
+        ),
+        Ok(()) => return Err(String::from("foreign namespace preparation committed")),
+    }
+    assert!(
+        matches!(
+            session.prepare(b"inherited", &[], limits()),
+            Err(error) if error.stage() == noble_contracts::source::Stage::Resolve
+        ),
+        "the refused foreign definition is not in this namespace"
+    );
     Ok(())
 }
 
@@ -223,6 +242,10 @@ fn generic_definitions_check_open_constraints_without_execution() -> Result<(), 
         }
     }
     assert_eq!(session.generation(), generation);
+    // A refused preparation must not move the counter; the successful commit
+    // below would otherwise land two generations ahead.
+    define(&mut session, b"def accepted [ 3 + ]")?;
+    assert_eq!(session.generation(), generation + 1);
     Ok(())
 }
 

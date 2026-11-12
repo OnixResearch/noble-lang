@@ -178,12 +178,15 @@ impl crate::companion::Core {
     }
 
     /// Proof-required build release (VC-TOOL-04): only an applicable accepted
-    /// `proved` claim for the exact subject/claim/context/policy releases.
+    /// `proved` claim for the exact subject/claim/context/policy releases. The
+    /// caller supplies the observed subject; a claim about any other subject
+    /// refuses with `MismatchedSubject` rather than releasing it.
     pub fn release(
         &self,
         evidence: crate::companion::registry::EvidenceId,
+        subject: &crate::companion::Subject,
     ) -> Result<crate::companion::Release, crate::companion::Refusal> {
-        crate::companion::release::select(self, evidence)
+        crate::companion::release::select(self, evidence, subject)
     }
 
     /// Check that an evidence entry corresponds to a selected contract

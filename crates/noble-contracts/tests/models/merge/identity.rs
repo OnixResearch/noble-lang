@@ -11,6 +11,9 @@
 use super::model::{Op, Program};
 pub(super) fn subject_hash(program: &Program) -> u64 {
     let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    // Every field is length-delimited: an op list, a capture list and a callee
+    // with the same flattened values are different subjects.
+    hash = fold(hash, program.ops.len() as u64);
     let mut at = 0usize;
     while at < program.ops.len() {
         hash = fold(hash, op_code(program.ops[at]));
@@ -21,6 +24,7 @@ pub(super) fn subject_hash(program: &Program) -> u64 {
         }
         at += 1;
     }
+    hash = fold(hash, program.captures.len() as u64);
     let mut at = 0usize;
     while at < program.captures.len() {
         hash = fold(hash, program.captures[at]);
