@@ -1180,8 +1180,6 @@ pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
 
 #[cfg(test)]
 mod tests {
-    use crate::diag::{Code, Malformed};
-
     struct TestHasher(u64);
 
     impl crate::identity::IdentityHasher for TestHasher {
@@ -1237,7 +1235,7 @@ mod tests {
             .expect_err("a graph naming a missing node is refused");
         assert_eq!(
             refusal.code,
-            Code::GraphMalformed(Malformed::UnknownNode),
+            crate::diag::Code::GraphMalformed(crate::diag::Malformed::UnknownNode),
             "{refusal}"
         );
         assert!(

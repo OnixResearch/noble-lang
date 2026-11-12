@@ -518,8 +518,6 @@ pub fn group_values(
 
 #[cfg(test)]
 mod tests {
-    use super::{grid_holds_f32, holds, AbsF32};
-
     struct TestHasher(u64);
 
     impl crate::identity::IdentityHasher for TestHasher {
@@ -555,13 +553,13 @@ mod tests {
     #[test]
     fn a_grid_at_or_below_the_smallest_binary32_step_holds_for_every_finite_value() {
         // Every finite binary32 value is an integer multiple of 2^-149.
-        assert!(grid_holds_f32(1.0, -301));
-        assert!(grid_holds_f32(f32::MIN_POSITIVE, -149));
-        assert!(grid_holds_f32(-f32::MIN_POSITIVE, -149));
-        assert!(grid_holds_f32(f32::MAX, -149));
-        assert!(grid_holds_f32(f32::from_bits(1), -149));
-        assert!(AbsF32::exact(1.0).implies(&grid(-301)));
-        assert!(holds(
+        assert!(super::grid_holds_f32(1.0, -301));
+        assert!(super::grid_holds_f32(f32::MIN_POSITIVE, -149));
+        assert!(super::grid_holds_f32(-f32::MIN_POSITIVE, -149));
+        assert!(super::grid_holds_f32(f32::MAX, -149));
+        assert!(super::grid_holds_f32(f32::from_bits(1), -149));
+        assert!(super::AbsF32::exact(1.0).implies(&grid(-301)));
+        assert!(super::holds(
             &grid(-301),
             crate::sem::Value::F32(1.0f32.to_bits()),
             &[],
@@ -569,10 +567,10 @@ mod tests {
         ));
         // The coarse direction is unchanged: no nonzero value is a multiple of 2^301,
         // and the smallest subnormal is not a multiple of 2^-148.
-        assert!(!grid_holds_f32(f32::INFINITY, -301));
-        assert!(!grid_holds_f32(1.0, 301));
-        assert!(grid_holds_f32(0.0, 301));
-        assert!(!grid_holds_f32(f32::from_bits(1), -148));
+        assert!(!super::grid_holds_f32(f32::INFINITY, -301));
+        assert!(!super::grid_holds_f32(1.0, 301));
+        assert!(super::grid_holds_f32(0.0, 301));
+        assert!(!super::grid_holds_f32(f32::from_bits(1), -148));
     }
 
     #[test]

@@ -339,6 +339,21 @@ fn checked_bits(
     }
 }
 
+/// Whether an identity step's recorded bits are the canonical ones: the operand the rule
+/// cancels is the graph's own constant holding `identity_bits`, and both recorded fields
+/// hold that same constant.
+fn identity_bits_are_canonical(
+    graph: &crate::ir::Graph,
+    operand: crate::ir::NodeId,
+    declared_bits: [u64; 2],
+    identity_bits: u64,
+) -> bool {
+    let [first_bits, second_bits] = declared_bits;
+    constant_bits(graph, operand) == Some(identity_bits)
+        && first_bits == identity_bits
+        && second_bits == identity_bits
+}
+
 /// The graph the steps denote: each fold replaces its node, in place, by the claimed
 /// constant, and identity steps are recorded but not applied, as the proposers record
 /// them. Written beside the checker rather than shared with the proposers, so the checker
@@ -401,28 +416,40 @@ pub fn check(
                 }
             }
             (Rule::NeutralAddLeft, &crate::ir::Op::I64Add(first, second)) => {
-                // Canonical identity step: the consumed operand is the graph's own
-                // constant zero, both recorded bit fields hold that constant, and the
-                // claim is the cancelled identity.
-                if step.operands != [first, second]
-                    || constant_bits(graph, first) != Some(0)
-                    || step.first_bits != 0
-                    || step.second_bits != step.first_bits
-                    || step.claimed != 0
-                {
+                if step.operands != [first, second] {
+                    return Err(Refusal::Malformed);
+                }
+                // Canonical identity step: the graph's own constant zero is the operand the
+                // rule cancels, both recorded bit fields hold it, and the claim is the
+                // cancelled identity.
+                if !identity_bits_are_canonical(
+                    graph,
+                    first,
+                    [step.first_bits, step.second_bits],
+                    0,
+                ) {
+                    return Err(Refusal::Malformed);
+                }
+                if step.claimed != 0 {
                     return Err(Refusal::Malformed);
                 }
             }
             (Rule::NeutralMulRight, &crate::ir::Op::I64Mul(first, second)) => {
-                // Canonical identity step: the consumed operand is the graph's own
-                // constant one, both recorded bit fields hold that constant, and the
-                // claim is the cancelled identity.
-                if step.operands != [first, second]
-                    || constant_bits(graph, second) != Some(1)
-                    || step.second_bits != 1
-                    || step.first_bits != step.second_bits
-                    || step.claimed != 0
-                {
+                if step.operands != [first, second] {
+                    return Err(Refusal::Malformed);
+                }
+                // Canonical identity step: the graph's own constant one is the operand the
+                // rule cancels, both recorded bit fields hold it, and the claim is the
+                // cancelled identity.
+                if !identity_bits_are_canonical(
+                    graph,
+                    second,
+                    [step.first_bits, step.second_bits],
+                    1,
+                ) {
+                    return Err(Refusal::Malformed);
+                }
+                if step.claimed != 0 {
                     return Err(Refusal::Malformed);
                 }
             }
