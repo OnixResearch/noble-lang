@@ -38,17 +38,17 @@ M6 separately implements `Component-Async-Bootstrap`: compiled direct-style
 native suspension, selected live future/stream operations and bounded task,
 ownership and retirement decisions. It does not relax M5's borrow restrictions
 or provide a general guest scheduler.
-See the [CLI usage and evidence boundary](../README.md#running-core-bootstrap-source).
+See the [CLI usage](../README.md#try-it) and the [verification boundary](VERIFICATION.md).
 [Status](STATUS.json) and the [roadmap](roadmap.json) distinguish implemented
 behavior from retained acceptance and open language/proof obligations. M4's
 retained runtime acceptance includes the integrated developer workflows;
-the [acceptance evidence](../README.md#m4-acceptance-evidence) separately records
+the [acceptance evidence](../verification/m4/acceptance.json) separately records
 the passed extraction, regression and quality gates. The separate
 [M5 completion record](../verification/m5/evidence.json) binds the bounded
 component/resource/authority acceptance. The retained
 [M6 native receipt](../verification/m6/acceptance.json) passes WI-11, WI-12,
 WI-16 and the local WORKER-08 slice, with 38 variants, 62 controls and 13 native
-kernel tests. [Native usage and evidence scope](../README.md#compiling-native-async-wit-components)
+kernel tests. The [native-async boundary and compatibility](WIT-WASI.md#selected-native-async-boundary-and-compatibility)
 distinguish compiled Noble from peer-only official prerelease WASI clock
 compatibility and local lifecycle/schema/progress probes. The pin is
 `0.3.0-rc-2025-09-16`, not stable WASI 0.3 or full WASI support.

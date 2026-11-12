@@ -143,7 +143,7 @@ A WIT borrow does not imply a Rust shared-reference contract or an immutable ext
 
 ## Async extension gate
 
-The selected `Component-Async-Bootstrap` implementation uses the `noble-test:async-boundary/bootstrap@1.0.0` world and Wasmtime 40.0.2 native async support, with the toolchain, ABI and driver selections recorded in [M6 pins](../verification/m6/pins.json). This bounded selection extends, rather than relaxes, the resource-lowering obligation in [WI-RES-04](WIT-WASI.md#requirement-wi-res-04). It does not enable suspension in `Component-Sync-Bootstrap` or imply full `Component-Draft` support.
+The selected `Component-Async-Bootstrap` implementation uses the `noble-test:async-boundary/bootstrap@1.0.0` world and Wasmtime 40.0.2 native async support, with the toolchain, ABI and driver selections recorded in [M6 pins](../verification/m6/pins.json). This bounded selection extends, rather than relaxes, the resource-lowering obligation in [WI-RES-04](WIT-WASI.md#4-wit-resources-and-noble-ownership). It does not enable suspension in `Component-Sync-Bootstrap` or imply full `Component-Draft` support.
 
 **RA-ASYNC-01.** The synchronous subset MUST reject an async call that retains a borrow. Full async support requires an explicit task/owner transfer contract, cancellation points, completion rules, and backpressure limits. The selected `Component-Async-Bootstrap` profile MUST also reject borrow-retaining async calls before component emission; native suspension does not extend an adapter-local borrow's lifetime.
 

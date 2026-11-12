@@ -158,7 +158,7 @@ The consumer validates the wire shape and bounds, rejects duplicate/trusted-name
 
 ### 5.2 MC1 consumer configuration and limits
 
-The concrete commands and seven outcomes are specified in [SPEC-V002 section 12](PROGRAM-CONTRACTS.md#12-verification-tooling); the [README](../README.md#using-mc1-contracts) gives build and invocation examples. The binary is `noble`, built by package `noble-cli`. `explain-proof` and verification without evidence prepare/export statements but launch no proof tools. Actual proof/refutation checking requires Linux and the following consumer-selected configuration:
+The concrete commands and seven outcomes are specified in [SPEC-V002 section 12](PROGRAM-CONTRACTS.md#12-verification-tooling); the same section gives the argument grammar for build and invocation. The binary is `noble`, built by package `noble-cli`. `explain-proof` and verification without evidence prepare/export statements but launch no proof tools. Actual proof/refutation checking requires Linux and the following consumer-selected configuration:
 
 | Setting | Required meaning |
 |---|---|

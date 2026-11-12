@@ -33,7 +33,7 @@
 
 - [x] [serial] Write `verification/ownership/cases.mjs` from the model and generate 108 cases over nine programmes and eleven operand shapes plus branch/resource controls, classifying each case as an executable production control or as model-only with a stated reason. r[VC-OWN-02]
 - [x] [serial] Drive the unary fragment through `noble_kernel::acceptance::check`: 15 accepted cases must derive exactly the model's stack and 6 rejected cases must surface the production rejection, with the category split reported. r[VC-OWN-02]
-- [x] [serial] Compare a test-local shadow checker against every expectation and declare seven mutations, each caught by at least one retained expectation while the unmutated checker agrees everywhere. r[VC-OWN-02]
+- [x] [serial] Compare a test-local shadow checker against every expectation and declare six mutations plus the unmutated `None` control, each mutation caught by at least one retained expectation while the unmutated checker agrees everywhere (receipt counts `caught=[None=0 ResourceOperandDuplicated=9 ResourceOperandReleased=5 SwapDropsOperand=14 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]`). r[VC-OWN-02]
 - [x] [serial] Retain `verification/ownership/differential.json`: clean commit, rustc pin, host, case-file, reference, model and lane digests, the coverage counts, the mutation line and the open Rust-to-model edge. r[VC-OWN-03]
 
 ## Phase 3: Promotion (not selected)

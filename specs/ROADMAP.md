@@ -554,7 +554,7 @@ artifacts belong in `verification/m4/runtime.tar.gz` and
 gate: independent check mode must re-extract and compare source/generated
 identities, inventories, dependencies and axioms against the reviewed lock.
 The reviewed receipt/inventory, not a fixed function/model count in prose,
-defines coverage. The [acceptance evidence](../README.md#m4-acceptance-evidence)
+defines coverage. The [acceptance evidence](../verification/m4/acceptance.json)
 distinguishes these completed observations from open refinement obligations.
 
 The M4 receipt recorded 887 open authored-body obligations in 19 units.
