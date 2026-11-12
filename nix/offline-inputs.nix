@@ -1,14 +1,25 @@
-# Offline backend inputs captured on the operator host.
+# UNUSED record of offline backend inputs captured on the operator host.
+#
+# Nothing imports this file and no flake check evaluates it. It is kept as the
+# reviewed record of the paths the manual offline Lean backend lane was
+# captured from, not as a binding the flake enforces.
+#
+# What is and is not checked:
+#   - No extraction check exists. No check builds a Lean project or re-binds
+#     these paths.
+#   - `noble-lean-dependencies-check` (nix/lean-dependency-check.nix) compares a
+#     working directory's `.lake/packages` entries against the selected
+#     revisions, their clean status and their directory identity. It never
+#     checks a remote URL and it never reads this file.
+#   - `policy/lean-inputs.ncl` records reviewed URLs, revisions and NAR hashes.
+#     No check compares those hashes with these store paths.
+#   - All eleven Lean source paths below are absent on this host.
 #
 # Nix cannot fetch these reproducibly: Lake requires a real `.git` directory in
 # every `.lake/packages` entry (a plain tree fetch is rejected), and recursive
 # hashing of a fresh clone was not reproducible for most of these repositories.
-# Each Lean source value is therefore the store path recorded by
-# `nix store add-path` over the pinned clone (regenerate with
-# `.pi/m1-offline-backend/store-backend.sh`); `policy/lean-inputs.ncl` records
-# the reviewed URLs, revisions, and NAR hashes, and the extraction check
-# re-binds every package through `noble-lean-dependencies-check` (remote URL and
-# checked-out revision) plus the repository's `lake-manifest.json`.
+# Each Lean source value is the store path recorded by `nix store add-path` over
+# the pinned clone (regenerate with `.pi/m1-offline-backend/store-backend.sh`).
 #
 # The Miri sysroot is the `cargo miri setup` output for the selected extraction
 # toolchain. Setup resolves and downloads build dependencies, so the built
