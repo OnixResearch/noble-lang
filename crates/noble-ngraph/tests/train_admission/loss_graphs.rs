@@ -1,6 +1,11 @@
 //! Loss-graph admission (NGRAPH-DERIV-01), the `clamped-linear` width domain
 //! and replay's recorded-identity checks.
 
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the fixtures name the loss graph they build and the module path names the same domain"
+)]
+
 use noble_ngraph::grad::{BooleanPolicy, DerivOptions};
 use noble_ngraph::ir::{
     Fact, Graph, GraphBuilder, Literal, NodeId, Op, OutOfRange, Provenance, ScalarType, SubProfile,
