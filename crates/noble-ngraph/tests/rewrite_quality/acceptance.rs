@@ -4,11 +4,13 @@ use super::common::rewrite_corpus;
 use super::common::IDS;
 use noble_ngraph::cert::{self, Derivation, Proposer, Refusal};
 
-/// One measured row: certificate verdict, residual sites and whether the target was reached.
+/// One measured row: certificate verdict, residual sites, whether the target was reached and
+/// the rule names the proposer emitted.
 pub(super) struct Row {
     verdict: Result<(), Refusal>,
     residual: usize,
     target_reached: bool,
+    rules: Vec<&'static str>,
 }
 
 #[expect(
@@ -24,6 +26,11 @@ fn measure(graph: &noble_ngraph::ir::Graph, proposer: Proposer) -> Row {
         verdict,
         residual,
         target_reached: residual == 0,
+        rules: derivation
+            .steps
+            .iter()
+            .map(|step| step.rule.name())
+            .collect(),
     }
 }
 
@@ -47,13 +54,25 @@ pub(super) fn run() -> Result<(), Box<dyn std::error::Error>> {
         "/../../verification/ngraph/rewrite-quality-v1.txt"
     )))?;
     assert_manifest(&manifest);
+    let mut exercised = std::collections::BTreeSet::new();
     let mut valid_but_unoptimized = 0_usize;
     for fixture in &manifest.fixtures {
-        valid_but_unoptimized += verify_fixture(fixture)?;
+        valid_but_unoptimized += verify_fixture(fixture, &mut exercised)?;
     }
-    assert!(
-        valid_but_unoptimized >= 2,
-        "the corpus must show valid-but-unoptimized controls: {valid_but_unoptimized}"
+    let mut bound = manifest.rules.clone();
+    bound.sort();
+    assert_eq!(
+        exercised.iter().copied().collect::<Vec<_>>(),
+        bound,
+        "the manifest binds exactly the rules the proposers emit"
+    );
+    // Every fixture contributes the identity proposer's row (7) and the two fixtures that
+    // declare two foldable sites (`independent-folds`, `ordered-outputs`, per
+    // `REVIEWED_FIXTURES`) also leave a site behind under `FirstEligible`, so the pinned
+    // corpus has exactly nine valid-but-unoptimized rows.
+    assert_eq!(
+        valid_but_unoptimized, 9,
+        "the corpus must show its reviewed valid-but-unoptimized controls"
     );
     Ok(())
 }
@@ -66,12 +85,9 @@ fn assert_manifest(manifest: &rewrite_corpus::Manifest) {
     assert_eq!(manifest.schema, "noble-rewrite-quality/v1");
     assert_eq!(
         manifest.rules,
-        vec![
-            "fold-add-constants".to_string(),
-            "neutral-add-left".to_string(),
-            "neutral-mul-right".to_string()
-        ],
-        "the manifest binds the rules it exercises"
+        vec!["fold-add-constants".to_string()],
+        "the manifest binds the rules the fold proposers exercise; a fixture cannot claim a \
+         rule this lane never emits"
     );
     assert!(!manifest.fixtures.is_empty(), "the corpus is not empty");
     // The corpus itself is frozen: declared order and measured sites must match the reviewed
@@ -90,7 +106,10 @@ fn assert_manifest(manifest: &rewrite_corpus::Manifest) {
     );
 }
 
-fn verify_fixture(fixture: &rewrite_corpus::Fixture) -> Result<usize, Box<dyn std::error::Error>> {
+fn verify_fixture(
+    fixture: &rewrite_corpus::Fixture,
+    exercised: &mut std::collections::BTreeSet<&'static str>,
+) -> Result<usize, Box<dyn std::error::Error>> {
     assert_eq!(fixture.target, "no-foldable-sites");
     let graph = rewrite_corpus::build(&IDS, fixture)?;
     let sites = cert::residual_fold_sites(&graph);
@@ -148,6 +167,9 @@ fn verify_fixture(fixture: &rewrite_corpus::Fixture) -> Result<usize, Box<dyn st
     assert_eq!(single.verdict, Ok(()), "{}", fixture.name);
     let fixed = measure(&graph, Proposer::FixedPoint);
     assert_fixed_point(&single, &fixed, &fixture.name);
+    for row in [&identity, &first, &single, &fixed] {
+        exercised.extend(row.rules.iter().copied());
+    }
     Ok(valid_but_unoptimized)
 }
 
