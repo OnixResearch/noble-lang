@@ -104,6 +104,10 @@ fn oracle_table_covers_every_pool_word() -> Result<(), String> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; all 1000 seeded candidates must match the independent oracle or return a predicate-preserving minimized disagreement; assertion padding would lose that failure report."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-maintainers; the agreement lane keeps generation, comparison, coverage assertions and the failure report in one reading order; the derivations and shrinking it delegates are already separate functions."
+)]
 fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     let env = gen::environment()?;
     let mut rng = rng::Stream::new(0x0B1E_5EED_0000_0001);
@@ -148,31 +152,7 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
             match decision {
                 otypes::Decision::Accept => {
                     both_accepted += 1;
-                    // The checker's own derivations say which words it
-                    // accepted. A knob-corrupted case may have had a node
-                    // repaired or repointed, so only an uncorrupted case's
-                    // derivations attest the generated witness itself.
-                    if !case.corrupted {
-                        if let noble_kernel::untrusted::Outcome::Accepted(checked) = &outcome {
-                            for derivation in &checked.derivations {
-                                let node_index = match usize::try_from(derivation.node.0) {
-                                    Ok(node_index) => node_index,
-                                    Err(problem) => {
-                                        return Err(format!(
-                                            "derived node {} exceeds usize: {problem}",
-                                            derivation.node.0
-                                        ))
-                                    }
-                                };
-                                if let Some(noble_kernel::untrusted::Node::Invocation {
-                                    def, ..
-                                }) = case.candidate.nodes.get(node_index)
-                                {
-                                    accepted_words.push(def.0);
-                                }
-                            }
-                        }
-                    }
+                    accepted_words.extend(accepted_word_derivations(&case, &outcome)?);
                 }
                 otypes::Decision::Reject => both_rejected += 1,
             }
@@ -205,7 +185,8 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     // for agreement like every other word, and this lane claims only that the
     // pool reaches them.
     let emitted_once = [(17_u32, "case"), (18, "if"), (21, "list.case")];
-    let mut kind_report: Vec<String> = Vec::with_capacity(accepted_once.len() + emitted_once.len());
+    let mut kind_report: Vec<String> =
+        Vec::with_capacity(accepted_once.len().saturating_add(emitted_once.len()));
     for (word, name) in accepted_once {
         let emission_count = usize::try_from(word)
             .ok()
@@ -245,6 +226,44 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
         kind_report.join(" ")
     );
     Ok(())
+}
+
+/// The word definitions the checker itself derived for one accepted candidate.
+///
+/// A knob-corrupted case may have had a node repaired or repointed, so only an
+/// uncorrupted case's derivations attest the generated witness itself.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; one accepted candidate contributes at most its declared nodes limit (256) of derivations, each appended once; the vector is bounded by the request the generator declares."
+)]
+fn accepted_word_derivations(
+    case: &gen::Case,
+    outcome: &noble_kernel::untrusted::Outcome,
+) -> Result<Vec<u32>, String> {
+    let mut words = Vec::new();
+    if case.is_corrupted {
+        return Ok(words);
+    }
+    let noble_kernel::untrusted::Outcome::Accepted(checked) = outcome else {
+        return Ok(words);
+    };
+    for derivation in &checked.derivations {
+        let node_index = match usize::try_from(derivation.node.0) {
+            Ok(node_index) => node_index,
+            Err(problem) => {
+                return Err(format!(
+                    "derived node {} exceeds usize: {problem}",
+                    derivation.node.0
+                ))
+            }
+        };
+        if let Some(noble_kernel::untrusted::Node::Invocation { def, .. }) =
+            case.candidate.nodes.get(node_index)
+        {
+            words.push(def.0);
+        }
+    }
+    Ok(words)
 }
 
 /// Inputs needed to replay and minimize a kernel/oracle disagreement.

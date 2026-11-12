@@ -1,3 +1,7 @@
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "the module name reads as its lane's subject; the test target is property.rs"
+)]
 //! Structurally corrupted candidates: bounded outcome, never acceptance.
 
 /// Structurally corrupted candidates in the malformed lane.
@@ -6,6 +10,10 @@ const MALFORMED: u64 = 200;
 // r[verify DX-PROPERTY-02]
 // r[verify VT-M2-01]
 #[test]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the test name is the retained evidence name cited by verification/m3-fragment.md, so it keeps its subject rather than the module's spelling."
+)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; each of 200 seeded corruptions returns an error on acceptance and any checker panic fails the test directly; bounded nonaccepting outcomes remain deliberately permitted."

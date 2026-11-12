@@ -134,6 +134,10 @@ fn require_word_coverage(covered: &[bool; WORDS.len()]) -> Result<(), String> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every stated outcome, minimum example count and per-word coverage is checked through descriptive Result failures; duplicating them as assertions would discard file/line diagnostics."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-maintainers; the one linear scan states each example's outcome, constraint and word coverage in reading order; splitting it would duplicate the decode/check sequence across helpers."
+)]
 fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<(), String> {
     let blocks = fences::scan_all()?;
     let mut executed = 0;

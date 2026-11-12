@@ -58,10 +58,6 @@ fn quotation_result_stack_may_reference_its_input_stack() -> Result<(), String> 
 /// stack.
 // r[verify VT-M3-01]
 #[test]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; let-else requires the second run's refusal, and three assertions pin its node, the expected instantiated interface and the retained copy; the fixture itself needs no redundant checks."
-)]
 fn duplicated_program_value_shares_one_interface() -> Result<(), String> {
     let env = noble_kernel::contracts::environment().map_err(|defect| format!("{defect:?}"))?;
     // The shared interface's input stack is empty, so `dup` leaves the two

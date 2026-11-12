@@ -20,7 +20,7 @@ pub struct Case {
     pub words: Vec<u32>,
     /// Whether a post-generation knob changed a claim. A corrupted case's
     /// generated witnesses are no longer the ones the checker decides.
-    pub corrupted: bool,
+    pub is_corrupted: bool,
 }
 
 /// Bootstrap plus fixture definition 23, producing the opaque resource.
@@ -141,15 +141,15 @@ pub fn case(rng: &mut crate::rng::Stream) -> Result<crate::gen::Case, String> {
         nodes: arena.nodes,
         body: frame.ids,
     };
-    let corrupted = rng.below(100) < crate::gen::KNOB_CHANCE;
-    if corrupted {
+    let is_corrupted = rng.below(100) < crate::gen::KNOB_CHANCE;
+    if is_corrupted {
         crate::knobs::apply(rng, &mut request, &mut candidate)?;
     }
     Ok(crate::gen::Case {
         request,
         candidate,
         words: frame.words,
-        corrupted,
+        is_corrupted,
     })
 }
 

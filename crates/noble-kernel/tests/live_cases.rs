@@ -180,6 +180,10 @@ fn root_type(case: &LiveCase) -> Ty {
 /// The interface the program must derive. A repeated reborrow reuses the root
 /// signature's value formals as its result stack, so the second invocation node
 /// meets the same stack the first one consumed and the sites stay distinct.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; expected_stack_out clones owned Vec-backed types through runtime allocation APIs, which are not const."
+)]
 fn expected_stack_out(case: &LiveCase) -> Vec<Ty> {
     if case.sites.len() > 1 {
         // The non-borrowed formals: the target identity and the trailing text.
