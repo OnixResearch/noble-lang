@@ -13,9 +13,12 @@ back to the source.
   same component.
 
 With these, "the strict edge lies on a cycle" is a statement about a component rather than about one
-matrix. Connecting that to `periodic_cycle_terminates` - showing that the sequences occurring inside a
-component are exactly the periodic ones the theorem covers - is the next step and is not attempted
-here.
+matrix. What is **not** true is that the sequences occurring inside a component are the periodic ones
+`periodic_cycle_terminates` covers: a component's runs need not be periodic at all. The lasso
+`1, 0, 0, 0, …` is a walk of the complete call graph, so it stays inside one component, yet it has
+no period (`not_every_sequence_periodic`). Connecting reachability to the cycle theorem therefore
+needs a different argument - a bound on how many in-component steps can elapse before a node
+repeats, plus a treatment of the aperiodic prefix - and is not attempted here.
 -/
 
 namespace NobleM2.SizeChange
@@ -68,5 +71,28 @@ theorem twoCycle_twoCycleEdges :
 
 theorem twoCycle_sameSCC : SameSCC twoCycle 0 1 :=
   onCycleEdge_sameSCC twoCycle_twoCycleEdges.1
+
+/-! ## Not every in-component sequence is periodic -/
+
+/-- A call graph with an edge between every pair of nodes. -/
+def completeCall {n : Nat} : Fin n → Fin n → Bool := fun _ _ => true
+
+/-- The lasso `1, 0, 0, 0, …`: one step to node `0`, then it stays there. -/
+def lasso (t : Nat) : Fin 2 := if t = 0 then 1 else 0
+
+/-- The lasso is a walk of the complete call graph, hence stays inside one component. -/
+theorem lasso_follows : ∀ t, completeCall (lasso t) (lasso (t + 1)) = true := fun _ => rfl
+
+/-- **A component's runs are not all periodic**: the lasso returns to `0` after its first step and
+never leaves, so no period reproduces its first value. `periodic_cycle_terminates` therefore covers
+only the runs that happen to be periodic, not every run of a component. -/
+theorem not_every_sequence_periodic (p : Nat) (hp : p ≠ 0) :
+    ¬ ∀ t : Nat, lasso (t + p) = lasso t := by
+  intro hper
+  have h0 := hper 0
+  have hleft : lasso (0 + p) = (0 : Fin 2) := by simp [lasso, hp]
+  have hright : lasso 0 = (1 : Fin 2) := rfl
+  rw [hleft, hright] at h0
+  exact absurd h0 (by decide)
 
 end NobleM2.SizeChange

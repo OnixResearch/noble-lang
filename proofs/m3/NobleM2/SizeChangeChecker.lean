@@ -4,18 +4,25 @@ import NobleM2.SizeChangeClosure
 # The checker arm: argument classification to call graphs (issue #101)
 
 The models so far take their graphs as input. This module derives them from the arguments a
-definition passes at each of its self-call sites, and proves the derivation sound against the
-arguments' semantics.
+definition passes at each of its self-call sites, and relates the classification to the argument
+semantics.
 
 The argument grammar is deliberately small — the forms a bounded checker can classify without
 evaluating arbitrary expressions: the measure itself, its predecessor, a reset to zero, and
-anything opaque. The soundness claims are only what the classifier proves: an `equal` really
-passes the same value, and a `decrease` really drops it **given the site's positivity guard**.
-`unknown` claims nothing, which is why an opaque argument is refused rather than trusted.
+anything opaque. The classifier proves two facts: an `equal` really passes the same value
+(`graphOf_equal_sound`), and a `decrease` really drops it **given the site's positivity guard**
+`0 < value` (`graphOf_decrease_sound`). `unknown` claims nothing, which is why an opaque argument is
+refused rather than trusted.
 
 This is not a parser or an evaluator for arbitrary source: the grammar, the guard and the call
-graph are the interface a front end has to fill. Under that interface the decision the criterion
-consumes is exactly the classification of the arguments.
+graph are the interface a front end has to fill.
+
+What the termination theorem consumes is narrower than that interface. `checked_family_terminates`
+rules out infinite runs that respect the *classified relations*; it does not evaluate arguments, it
+does not use the positivity guard, and it therefore says nothing about an actual execution of the
+definition. `Sites` and `Run` have no guard field at all, so a run may pass through a zero even
+where `graphOf_decrease_sound` would need `0 < value`. Relating a classified family to real
+executions - including the guard - is the front end's obligation, not a result of this module.
 -/
 
 namespace NobleM2.SizeChange
@@ -84,8 +91,10 @@ theorem checked_family_certified {k n : Nat} {argsOf : Fin k → Args n} {i : Fi
   exact List.any_eq_true.mpr ⟨i, List.mem_finRange i,
     List.all_eq_true.mpr (fun s _ => by simp [graphOf, Arg.classify, h s])⟩
 
-/-- **End to end.** Checked arguments, the shared criterion and the run model compose: a family
-whose arguments all classify as decreasing at one measure admits no infinite run. -/
+/-- **End to end for the classified relations.** Checked arguments, the shared criterion and the run
+model compose: a family whose arguments all classify as decreasing at one measure admits no infinite
+run *that respects those classified relations*. The argument values and the positivity guard play no
+part in this theorem; see the module note. -/
 theorem checked_family_terminates {k n : Nat} {argsOf : Fin k → Args n} {i : Fin n}
     (h : ∀ s, (argsOf s) i = .predOfSame) :
     ∀ _run : Run k n (fun s => graphOf (argsOf s)), False :=

@@ -11,11 +11,18 @@ applies to it directly.
 This is the modelling step, made as small as it can be: the program is a call graph plus one matrix
 per edge, and a run carries its node and state sequences with the obligation that each step follows
 an edge and satisfies that edge's matrix. What is *not* modelled is how a compiler produces those
-matrices from a definition's syntax; that is the front end, and it is where the vector lane's
-checker already sits.
+matrices from a definition's syntax; that is the front end.
 
-With this, the chain is complete: call sites → matrices → path products → periodic cycles →
-termination. The `n * n` bound - that checking composites up to `n * n` suffices - remains open.
+Both hypotheses of the theorem are assumptions, not consequences, so the result is narrower than
+"the program terminates". Periodicity is not derived from the call graph - a run's node sequence
+need not be periodic at all (`SizeChangeCallGraph.not_every_sequence_periodic`) - and the
+strict-diagonal hypothesis is given. The proof never uses `follows`, so the call edges themselves
+play no part in it.
+
+What is proved is: call sites → matrices → path products → periodic cycles → termination *of a
+periodic run whose period product is strict on a diagonal*. It is not a termination proof for a
+program. The path-length bound a composite search needs is `matrixProduct_short_representative`,
+which produces a sub-path representative no longer than the matrix enumeration.
 -/
 
 namespace NobleM2.SizeChange
@@ -55,7 +62,8 @@ theorem step_periodic {n m : Nat} {prog : Program n m} (run : CallRun prog) {p :
   rw [h1, h2]
 
 /-- **Termination for a periodic call run**: if the product of the matrices visited over one period
-is strict on a diagonal, the run cannot be infinite. -/
+is strict on a diagonal, the run cannot be infinite. `follows` is not used: the call edges are
+carried for the front end, not consumed here. -/
 theorem call_run_terminates {n m : Nat} {prog : Program n m} (run : CallRun prog) {p : Nat}
     {i : Fin m} (hper : ∀ t, run.node (t + p) = run.node t)
     (hprod : pathMatrix p run.step 0 i i = .strict) : False :=
