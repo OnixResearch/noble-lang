@@ -5,7 +5,8 @@
 //! candidate inside its declared limits could spend work quadratic in the type
 //! depth per charged unit. These controls state the review scenario: a stack of
 //! deep `List` values, then repeated `swap`. The measured cost of the same
-//! scenario is bounded in `tests/type_walk_cost.rs`.
+//! scenario is bounded in `tests/resource_bounds/type_walk_cost.rs`, reached
+//! as `budget::type_walk_cost::one_deep_join_costs_the_interface_not_the_whole_frame`.
 
 use noble_kernel::contracts::Definition;
 use noble_kernel::untrusted::LimitKind;

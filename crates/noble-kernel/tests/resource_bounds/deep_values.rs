@@ -5,7 +5,7 @@
 //! control states a 100,000-deep witness and requires a typed refusal instead.
 
 use noble_kernel::contracts::Definition;
-use noble_kernel::untrusted::{Constraint, LimitKind};
+use noble_kernel::untrusted::Constraint;
 
 use super::builders::{self, Seen};
 
