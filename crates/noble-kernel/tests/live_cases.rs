@@ -72,6 +72,8 @@ struct LiveCase {
     stack_in: Vec<Ty>,
     /// One dispatch site per invocation node: its node identity.
     sites: Vec<u32>,
+    /// One declared `site_id` per invocation node, in node order.
+    site_ids: Vec<u32>,
     /// Whether the root signature carries a nested borrowed-reference formal.
     nested: bool,
     /// The second registered identity a nested signature also names.
@@ -172,7 +174,19 @@ fn root_type(case: &LiveCase) -> Ty {
     let mut formals = vec![nominal_type(case.target)];
     formals.extend(root_formals(case));
     formals.push(Ty::Text);
-    Ty::live_ref(formals, vec![nominal_type(case.target)], EffSet::empty())
+    Ty::live_ref(formals, expected_stack_out(case), EffSet::empty())
+}
+
+/// The interface the program must derive. A repeated reborrow reuses the root
+/// signature's value formals as its result stack, so the second invocation node
+/// meets the same stack the first one consumed and the sites stay distinct.
+fn expected_stack_out(case: &LiveCase) -> Vec<Ty> {
+    if case.sites.len() > 1 {
+        // The non-borrowed formals: the target identity and the trailing text.
+        vec![nominal_type(case.target), Ty::Text]
+    } else {
+        vec![nominal_type(case.target)]
+    }
 }
 
 fn limits() -> Limits {
@@ -221,8 +235,8 @@ fn model(case: &LiveCase) -> ModelVerdict {
             Ok(None) | Err(_) => return ModelVerdict::ForwardedOutOfStack,
         }
     }
-    for (index, &node) in case.sites.iter().enumerate() {
-        if usize::try_from(node).ok() != Some(index) {
+    for (index, &site_id) in case.site_ids.iter().enumerate() {
+        if usize::try_from(site_id).ok() != Some(index) {
             return ModelVerdict::SiteIdentity;
         }
     }
@@ -253,7 +267,7 @@ fn request_for(case: &LiveCase) -> Request {
         input_bytes: 40,
         expected: Expected {
             stack_in: case.stack_in.clone(),
-            stack_out: vec![nominal_type(case.target)],
+            stack_out: expected_stack_out(case),
             allowed_effects: effects(&case.ceilings),
         },
         limits: case.limits,
@@ -267,9 +281,10 @@ fn candidate_for(case: &LiveCase) -> Candidate {
         nodes: case
             .sites
             .iter()
-            .map(|node| Node::SlotInvoke {
+            .zip(case.site_ids.iter())
+            .map(|(_, site_id)| Node::SlotInvoke {
                 ref_ordinal: case.root_ordinal,
-                site_id: *node,
+                site_id: *site_id,
                 forwarded_ref_ordinals: case.forwarded.clone(),
             })
             .collect(),
@@ -281,7 +296,8 @@ fn candidate_for(case: &LiveCase) -> Candidate {
 /// borrowed root input whose signature names that exact target, one forwarded
 /// position per borrowed-reference formal, and one site per invocation node. A
 /// repeated reborrow uses the same root reference from two invocation nodes, which
-/// the formal signature permits; the sites stay distinct.
+/// the formal signature permits: the root returns the value formals it consumed,
+/// so the second node meets the first node's stack; the sites stay distinct.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; positive_case builds owned Vec-backed live-case fixtures and inserts heap-owned types through runtime allocation APIs, which are not const."
@@ -311,24 +327,26 @@ fn positive_case(nesting: u32, repeated_reborrow: bool) -> LiveCase {
         stack_in.push(forwarded_type());
     }
     stack_in.push(Ty::Text);
+    let sites = if repeated_reborrow {
+        // Two invocation nodes reuse the one root reference.
+        vec![0, 1]
+    } else {
+        vec![0]
+    };
     let mut case = LiveCase {
         registrations: vec![one, two],
         root_ordinal: 0,
         target: one,
         forwarded: forwarded.clone(),
         stack_in,
-        // A second invocation of the same root in one straight-line program needs
-        // the first site's result in its own formal stack, which this phase does
-        // not model; the repeated lane therefore reuses the root across program
-        // instances instead of forging a two-site program.
-        sites: vec![0],
+        site_ids: sites.clone(),
+        sites,
         nested: is_nested,
         second: two,
         ceilings: vec![TEST_EMIT, LIVE_DISPATCH],
         limits: limits(),
     };
     case.stack_in.insert(0, root_type(&case));
-    let _ = repeated_reborrow;
     case
 }
 
@@ -347,12 +365,13 @@ fn admitted(case: &LiveCase) -> bool {
 /// The declared-case summary a replay must reproduce byte for byte.
 fn summary(case: &LiveCase) -> String {
     format!(
-        "registrations={:?} root={} target={:?} forwarded={:?} sites={:?} stack_len={} words={:?}",
+        "registrations={:?} root={} target={:?} forwarded={:?} sites={:?} site_ids={:?} stack_len={} words={:?}",
         case.registrations,
         case.root_ordinal,
         case.target,
         case.forwarded,
         case.sites,
+        case.site_ids,
         case.stack_in.len(),
         case.stack_in.iter().map(Ty::is_data).collect::<Vec<_>>()
     )
@@ -372,13 +391,13 @@ const fn expected_constraint(premise: Premise) -> Constraint {
         }
         Premise::Target => Constraint::InvalidType,
         Premise::ForwardedMismatch => Constraint::BorrowProvenance,
-        Premise::SiteIdentity => {
-            Constraint::MalformedReference(noble_kernel::untrusted::NodeId(SITE_IDENTITY_MUTATION))
-        }
+        // The body reference stays inside the arena, so the slot rule itself
+        // refuses: the declared `site_id` is not the node identity.
+        Premise::SiteIdentity => Constraint::SlotSite,
     }
 }
 
-/// The node identity the site premise mutation declares.
+/// The site identity the site premise mutation declares.
 const SITE_IDENTITY_MUTATION: u32 = 7;
 
 #[derive(Default)]
@@ -442,19 +461,19 @@ fn positives_agree_with_the_independent_model_and_admit() {
                 panic!("model admitted the constructed case but production refused it: {outcome:?}; case {case:?}");
             };
             assert_eq!(checked.live_sites.len(), case.sites.len());
-            for (site, node) in checked.live_sites.iter().zip(case.sites.iter()) {
-                assert_eq!(site.site_id, *node);
+            for (site, site_id) in checked.live_sites.iter().zip(case.site_ids.iter()) {
+                assert_eq!(site.site_id, *site_id);
                 assert_eq!(site.forwarded_ref_ordinals, case.forwarded);
                 assert_eq!(site.ref_ordinal, case.root_ordinal);
             }
             let is_admitted = true;
             coverage.record(&case, verdict, is_admitted);
             if repeated_reborrow {
-                // The same root reference is issued again, as a second program
-                // instance: two sites inside one straight-line program would need
-                // the first site's result in the second site's formal stack, which
-                // this phase does not model and does not forge.
-                assert!(matches!(outcome_of(&case), Outcome::Accepted(_)));
+                // The same root reference is issued by two invocation nodes: the
+                // root's result stack is its own value formals, so both sites
+                // consume and reproduce the same stack.
+                assert_eq!(checked.live_sites.len(), 2);
+                assert_ne!(case.site_ids.first(), case.site_ids.get(1));
                 coverage.repeated_reborrows += 1;
             }
         }
@@ -498,7 +517,9 @@ fn one_premise_mutations_are_attributed_and_refused() {
             }
             Premise::ForwardedPosition => case.forwarded[1] = 17,
             Premise::ForwardedMismatch => case.stack_in[3] = Ty::Text,
-            Premise::SiteIdentity => case.sites[0] = SITE_IDENTITY_MUTATION,
+            // The node reference stays intact; only the declared `site_id`
+            // disagrees with its node, which is the site guard's premise.
+            Premise::SiteIdentity => case.site_ids[0] = SITE_IDENTITY_MUTATION,
         }
         let verdict = model(&case);
         assert_ne!(
@@ -507,11 +528,23 @@ fn one_premise_mutations_are_attributed_and_refused() {
             "{premise:?} was not modelled as refusal"
         );
         match outcome_of(&case) {
-            Outcome::Invalid(problem) => assert_eq!(
-                problem.constraint,
-                expected_constraint(premise),
-                "{premise:?} must be attributed to its own premise"
-            ),
+            Outcome::Invalid(problem) => {
+                assert_eq!(
+                    problem.constraint,
+                    expected_constraint(premise),
+                    "{premise:?} must be attributed to its own premise"
+                );
+                if premise == Premise::SiteIdentity {
+                    // The failing node is the body reference itself, so the
+                    // refusal is the slot-site guard and not a malformed
+                    // reference.
+                    assert_eq!(
+                        problem.node,
+                        Some(NodeId(case.sites[0])),
+                        "the site identity premise must keep the node reference intact"
+                    );
+                }
+            }
             other => panic!("{premise:?} mutation was not refused: {other:?}"),
         }
         let is_admitted = false;
