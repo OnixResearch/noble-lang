@@ -202,15 +202,20 @@ const fn decode_rule(token: u64) -> Option<Rule> {
 }
 
 /// Appends `value` as its decimal token.
+// justification: appending to an owned String is the required operation; slices and str cannot
+// provide this mutation API, and a generic formatting sink would make an infallible write fallible.
+#[allow(tigerstyle::borrowed_argument_types)]
 fn push_decimal(out: &mut alloc::string::String, value: u64) {
     let mut digits = ['0'; DECIMAL_DIGITS];
     let mut at = DECIMAL_DIGITS;
     let mut rest = value;
+    let radix = u64::from(DECIMAL_RADIX);
+    assert!(radix != 0);
     loop {
         at -= 1;
-        let digit = u32::try_from(rest % u64::from(DECIMAL_RADIX)).unwrap_or(0);
+        let digit = u32::try_from(rest % radix).unwrap_or(0);
         digits[at] = char::from_digit(digit, DECIMAL_RADIX).unwrap_or('0');
-        rest /= u64::from(DECIMAL_RADIX);
+        rest /= radix;
         if rest == 0 {
             break;
         }

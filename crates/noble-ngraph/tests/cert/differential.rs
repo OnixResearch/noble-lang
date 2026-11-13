@@ -72,6 +72,10 @@ pub(super) fn symbolic_sum() -> noble_ngraph::ir::Graph {
 /// Node order: `%0` and `%1` are the two program inputs, `%2`/`%3`/`%5`/`%6` the constants, `%4`
 /// the folded small sum, `%7` the folded wrapping sum, `%8` the scaling product, `%9` the recorded
 /// `x * 1` product, `%10` the shifted sum and `%11` the subtraction consuming both products.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this fixture builder constructs the admitted graph used by independent tests; assertions belong at the consumers that check its graph and certificate properties."
+)]
 pub(super) fn independent_folds() -> noble_ngraph::ir::Graph {
     let mut builder = i64_builder("cert-multi-step");
     let input = builder.input(noble_ngraph::ir::ScalarType::I64);
