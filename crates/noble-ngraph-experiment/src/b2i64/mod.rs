@@ -7,6 +7,7 @@
 //!   ([`Oracle`]);
 //! - L3 the reference interpreter ([`noble_ngraph::eval::reference`]);
 //! - L4 the compiled layered evaluator ([`noble_ngraph::compiled::Compiled`]).
+//! - L5 the independently checked sequential-belt evaluator.
 //!
 //! Agreement is `≡obs` (for `I64`/`Bool`: equality of every output). It is
 //! finite differential evidence; it proves neither extraction (NG-PO-A) nor
@@ -265,7 +266,7 @@ impl Tally {
     }
 }
 
-/// Runs L2–L4 on `vectors` (and L1 on the first `l1` of them, both `--opt`
+/// Runs L2–L5 on `vectors` (and L1 on the first `l1` of them, both `--opt`
 /// modes); returns the per-graph record.
 fn legs(
     cfg: &Config,
@@ -279,19 +280,36 @@ fn legs(
         node: cfg.node.clone(),
     };
     let l2 = oracle.evaluate(lowered.extraction.checked.graph(), vectors)?;
+    let checked = &lowered.extraction.checked;
+    let belt = noble_ngraph::belt::lower(&BLAKE3, checked, 8, 8)
+        .map_err(|refusal| format!("{name} belt lowering refused: {refusal:?}"))?;
+    let belt_accepted = noble_ngraph::belt::check(&BLAKE3, checked, &belt.bytes)
+        .map_err(|refusal| format!("{name} belt checker refused: {refusal:?}"))?;
     let mut digest = blake3::Hasher::new();
     let mut l3_all = Vec::with_capacity(vectors.len());
+    let mut l5_all = Vec::with_capacity(vectors.len());
     for (i, v) in vectors.iter().enumerate() {
         let l3 = lowered.l3(v)?;
         let l4 = lowered.l4(v)?;
+        let l5 = noble_ngraph::belt::execute_checked(&BLAKE3, checked, belt_accepted, v)
+            .map_err(|refusal| format!("{name} v{i}: checked belt execution refused: {refusal:?}"))?;
         t.check(
             || format!("{name} v{i}: L3 {l3:?} ≢ L4 {l4:?}"),
             sem::obs_eq_all(&l3, &l4),
         );
+        t.check(
+            || format!("{name} v{i}: L3 {l3:?} ≢ L5 belt {l5:?}"),
+            sem::obs_eq_all(&l3, &l5),
+        );
         let l3_cells: Vec<String> = l3.iter().map(|x| cell(*x)).collect();
+        let l5_cells: Vec<String> = l5.iter().map(|x| cell(*x)).collect();
         t.check(
             || format!("{name} v{i}: L3 {l3_cells:?} ≢ L2 {:?}", l2[i]),
             l3_cells == l2[i],
+        );
+        t.check(
+            || format!("{name} v{i}: L5 belt {l5_cells:?} ≢ L2 {:?}", l2[i]),
+            l5_cells == l2[i],
         );
         for c in &l3_cells {
             digest.update(c.as_bytes());
@@ -299,6 +317,7 @@ fn legs(
         }
         digest.update(b";");
         l3_all.push(l3);
+        l5_all.push(l5);
     }
     let mut l1_record = serde_json::Value::Null;
     if let (Some(bin), true) = (&cfg.cli, l1 > 0) {
@@ -341,14 +360,17 @@ fn legs(
                     quota.push(json!({ "vector": i, "outcome": r.outcome, "stage": r.stage, "diagnostic": r.diagnostic }));
                     continue;
                 }
-                let ok = r.outcome == "normal" && r.stack == l1_values(&l3_all[i]);
+                let ok = r.outcome == "normal"
+                    && r.stack == l1_values(&l3_all[i])
+                    && r.stack == l1_values(&l5_all[i]);
                 t.check(
                     || {
                         format!(
-                            "{name} v{i}: L1 --opt {} {} ≢ L3 {:?}",
+                            "{name} v{i}: L1 --opt {} {} ≢ L3/L5 {:?}/{:?}",
                             opt.flag(),
                             r.raw,
-                            l3_all[i]
+                            l3_all[i],
+                            l5_all[i]
                         )
                     },
                     ok,
@@ -393,6 +415,16 @@ fn legs(
         "work_units": lowered.extraction.stats.work_units,
         "max_inline_depth": lowered.extraction.stats.max_inline_depth,
         "l2_l3_l4_vectors": vectors.len(),
+        "l2_l3_l4_l5_vectors": vectors.len(),
+        "l3_l5_belt_vectors": vectors.len(),
+        "l2_l5_belt_vectors": vectors.len(),
+        "belt": {
+            "capacity": belt_accepted.capacity(),
+            "save_slots": belt_accepted.save_slots(),
+            "instruction_count": belt_accepted.instruction_count(),
+            "preservation_saves": belt.preservation_saves,
+            "preservation_loads": belt.preservation_loads,
+        },
         "l1": l1_record,
         "l3_output_digest": digest.finalize().to_hex().to_string(),
     }))

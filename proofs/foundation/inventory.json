@@ -7766,6 +7766,12 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.Belt.validate_sound",
+      "phase": 1,
+      "role": "packed-belt-validator",
+      "claim": "An accepted symbolic belt program returns every ordered graph-reference value; this is a Lean model theorem, not Rust refinement."
     }
   ],
   "private_theorems": [

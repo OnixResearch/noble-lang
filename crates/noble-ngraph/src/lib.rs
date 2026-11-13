@@ -67,6 +67,7 @@
 extern crate alloc;
 
 pub mod batch;
+pub mod belt;
 pub mod cert;
 pub mod check;
 pub mod compiled;

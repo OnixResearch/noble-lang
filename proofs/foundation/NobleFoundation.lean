@@ -21,6 +21,8 @@ import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
 import NobleFoundation.PackedScheduleCorpus
+import NobleFoundation.Belt
+import NobleFoundation.BeltCorpus
 import NobleFoundation.GraphRewrite
 import NobleFoundation.Specialize
 import NobleFoundation.SymbolicMutations
