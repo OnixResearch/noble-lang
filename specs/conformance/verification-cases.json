@@ -52,6 +52,158 @@
       "expected": {"stage": "assurance-gate", "outcome": "reject-each-variant", "extraction_implies_refinement": false},
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
       "evidence": []
+    },
+    {
+      "id": "NGV-F32-CASE-01",
+      "profile": "Binary32-Reference-Model",
+      "kind": "identity",
+      "requirements": ["NGV-F32-01"],
+      "input": {"harness": "foundation-binary32-boundary-expectations", "model": "proofs/foundation/NobleFoundation/Binary32.lean", "row": "add 0x3F800000 0x33800000", "exact_sum": "1 + 2^-24, strictly larger than 1", "rounded_once": "ties-to-even keeps 0x3F800000"},
+      "expected": {"stage": "lean-kernel", "outcome": "accepted", "theorem": "NobleFoundation.Binary32.Expectations.exact_sum_exceeds_the_rounded_result", "halfway_tie_theorem": "NobleFoundation.Binary32.Expectations.halfway_ties_round_to_even", "round_to_real_discharges_binary32": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "accepted", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The kernel decides both theorems in the shipped model module, and the retained clean-source foundation receipt records their statements and axiom sets inside the foundation allow-list.",
+          "subject": "NGV-F32-CASE-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "lean-kernel",
+          "result": "accepted",
+          "source_revision": "f8555afa31df8719e0ff684e8f52b3b41225d20e",
+          "configuration": {
+            "profile": "Binary32-Reference-Model",
+            "case_id": "NGV-F32-CASE-01",
+            "receipt": "../../verification/foundation/receipts/f8555afa3/foundation-check.json",
+            "receipt_sha256": "250a86018f1a68666b51bedde71ff3e0075155bfc8eef98f90b84bd2a6385c12",
+            "receipt_theorems": 1293,
+            "lean_version": "4.35.0",
+            "model_file_sha256": "5a95176815989e3ff34f18fe62d5b4f4579bc1f946638f111b571e37f093e412",
+            "expectations_file_sha256": "d492d19ca70097ec4ffd76919d5ead227b5ee268bb4267eb032b52e82d162a98"
+          },
+          "assumptions": [
+            "One pinned Lean release and one clean source revision; the receipt binds the toolchain, not the host CPU.",
+            "The theorem is a model statement. Correspondence with crates/noble-ngraph/src/sem.rs is a reviewed trusted, tested assumption on x86_64-unknown-linux-gnu, not a proof.",
+            "Reading the retained decimal and hexadecimal rows as model encodings is the documented interpretation; no external tool is trusted for the answer."
+          ]
+        },
+        {
+          "claim": "The foundation lane built and checked the model module at the receipt's clean source revision with Lean 4.35.0: 1293 inventory-checked theorems, no private gap, and no axiom outside the allow-list.",
+          "subject": "NGV-F32-CASE-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "f8555afa31df8719e0ff684e8f52b3b41225d20e",
+          "configuration": {
+            "profile": "Binary32-Reference-Model",
+            "case_id": "NGV-F32-CASE-01",
+            "lane": "verification/foundation/check.mjs with the pinned Lean 4.35.0 toolchain, output written outside the repository",
+            "receipt": "../../verification/foundation/receipts/f8555afa3/foundation-check.json",
+            "receipt_sha256": "250a86018f1a68666b51bedde71ff3e0075155bfc8eef98f90b84bd2a6385c12",
+            "clean_source": true,
+            "allow_dirty": false,
+            "theorem_count": 1293,
+            "implementation_theorem": false
+          },
+          "assumptions": [
+            "The run is at one clean source revision and one pinned Lean release; re-running at another revision needs a new receipt.",
+            "The lane checks model statements only; it establishes nothing about Rust, Wasm or a host FPU."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGV-F32-CASE-02",
+      "profile": "Binary32-Reference-Model",
+      "kind": "identity",
+      "requirements": ["NGV-F32-02"],
+      "input": {"harness": "external-proposer-kernel-checked-expectations", "proposer": "verification/binary32/propose.py", "proposal_packet": "verification/binary32/proposals.json", "retained_expectations": 26, "coverage": ["halfway ties in both directions", "cancellation", "both zero signs", "smallest and largest subnormals", "normal/subnormal boundary", "gradual underflow", "overflow in both signs", "infinities", "NaNs"]},
+      "expected": {"stage": "lean-kernel", "outcome": "accepted", "theorem": "NobleFoundation.Binary32.Expectations.retained_expectations_checked", "expectations_examined": 26, "proposal_treated_as_evidence": false, "native_evaluation_used": false, "axioms_outside_allow_list": []},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "accepted", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The kernel checks every retained expectation against the selected model, the proposer is an independent external tool, and the retained clean-source receipt records the theorem with axioms inside the allow-list.",
+          "subject": "NGV-F32-CASE-02",
+          "revision": "0.1.0-draft.5",
+          "kind": "lean-kernel",
+          "result": "accepted",
+          "source_revision": "f8555afa31df8719e0ff684e8f52b3b41225d20e",
+          "configuration": {
+            "profile": "Binary32-Reference-Model",
+            "case_id": "NGV-F32-CASE-02",
+            "receipt": "../../verification/foundation/receipts/f8555afa3/foundation-check.json",
+            "receipt_sha256": "250a86018f1a68666b51bedde71ff3e0075155bfc8eef98f90b84bd2a6385c12",
+            "proposals_sha256": "850362e810b321b7620fba51132b25cff1527ac48855e57379adaef72f75bf6e",
+            "proposer_sha256": "4ddb2ee0eb0ae702585bd5b166ce4e84a159103164b016bb2d9be1c5971e327a",
+            "expectations_file_sha256": "d492d19ca70097ec4ffd76919d5ead227b5ee268bb4267eb032b52e82d162a98"
+          },
+          "assumptions": [
+            "The proposer is independent of the Lean model but is not evidence: only the kernel check is.",
+            "The retained expectation set is finite. Untested inputs are not covered by this case.",
+            "The mutation lane reports detection of six declared wrong models, which is detection evidence, not a correctness proof."
+          ]
+        },
+        {
+          "claim": "The foundation lane built and checked the expectations module at the receipt's clean source revision with Lean 4.35.0, so the kernel evaluated every retained row rather than accepting the proposal packet.",
+          "subject": "NGV-F32-CASE-02",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "f8555afa31df8719e0ff684e8f52b3b41225d20e",
+          "configuration": {
+            "profile": "Binary32-Reference-Model",
+            "case_id": "NGV-F32-CASE-02",
+            "lane": "verification/foundation/check.mjs with the pinned Lean 4.35.0 toolchain, output written outside the repository",
+            "receipt": "../../verification/foundation/receipts/f8555afa3/foundation-check.json",
+            "receipt_sha256": "250a86018f1a68666b51bedde71ff3e0075155bfc8eef98f90b84bd2a6385c12",
+            "clean_source": true,
+            "allow_dirty": false,
+            "theorem_count": 1293,
+            "implementation_theorem": false
+          },
+          "assumptions": [
+            "The run is at one clean source revision and one pinned Lean release; re-running at another revision needs a new receipt.",
+            "The lane checks model statements only; it establishes nothing about Rust, Wasm or a host FPU."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGV-F32-CASE-03",
+      "profile": "Binary32-Reference-Model",
+      "kind": "review",
+      "requirements": ["NGV-F32-03"],
+      "input": {"harness": "receipt-scope-review", "receipts": ["verification/foundation/receipts/f8555afa3/foundation-check.json", "verification/binary32/replay.json", "verification/binary32/shrinker.json"], "claim_table": "proofs/foundation/README.md", "decision_record": ".cairn/archive/2026-11-13-binary32-lean-reference/design.md"},
+      "expected": {"stage": "review", "outcome": "scope-and-claims-separated", "model_theorems_named": true, "proved_model_separate_from_tested_implementation": true, "sem_rs_correspondence_claimed_as_proof": false, "correspondence_classification": "reviewed-trusted-tested-assumption", "receipt_staleness_refused": true, "universal_target_claim_made": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "not-applicable", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "A reviewer read the receipts and the claim table: proved model theorems, tested implementations, the reviewed trusted correspondence assumption and the open obligations are named separately, and neither the receipt binding nor the claim table reports a correspondence proof or a universal target claim.",
+          "subject": "NGV-F32-CASE-03",
+          "revision": "0.1.0-draft.5",
+          "kind": "review",
+          "result": "passed",
+          "source_revision": "f8555afa31df8719e0ff684e8f52b3b41225d20e",
+          "configuration": {
+            "profile": "Binary32-Reference-Model",
+            "case_id": "NGV-F32-CASE-03",
+            "receipt": "../../verification/foundation/receipts/f8555afa3/foundation-check.json",
+            "receipt_sha256": "250a86018f1a68666b51bedde71ff3e0075155bfc8eef98f90b84bd2a6385c12",
+            "replay_receipt_sha256": "150d83379a09d6f66c729e9fc9de7bc8d9229c9e193e90f167acbcbfc704894a",
+            "shrinker_receipt_sha256": "b36fc6e5c15a2958897f2e89311c1b16a4c592e9112ebc5d0acf365081c08223",
+            "reviewed_files": [
+              "proofs/foundation/README.md",
+              "verification/binary32/replay.json",
+              "verification/binary32/replay.mjs",
+              "verification/binary32/shrinker.json",
+              "verification/binary32/shrinker.mjs"
+            ]
+          },
+          "assumptions": [
+            "This is a review of retained documents and receipts, not a re-run of the lanes.",
+            "The retained replay receipt binds lane and model bytes older than the current sources, and the review records that staleness instead of accepting it as current.",
+            "No receipt is a cross-platform claim; each names one host and target."
+          ]
+        }
+      ]
     }
   ]
 }

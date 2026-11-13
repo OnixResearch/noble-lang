@@ -3493,6 +3493,48 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "NGV-F32-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGV-F32-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGV-F32-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "P-AUTH-01",
       "document": "../.cairn/specs/language/spec.md",
       "document_id": "SPEC-0001",
