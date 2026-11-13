@@ -95,25 +95,25 @@ CEGIS process reported 62.521 s wall, 11.938 s user CPU, 1.555 s system CPU, 4,1
 process peak RSS, 22 solver runs and 47,236 KiB solver peak RSS. Per-task search,
 baseline, solver and CLI timings/hashes are retained in the receipt.
 
-Reproduce from a clean tree after building the CLI with the pinned `cargo.sh`; use new output paths
-outside the repository:
+Reproduce from a clean tree after building the CLI with the pinned toolchain; every path is absolute
+(the lane refuses relative ones), and the outputs are new paths outside the repository:
 
 ```sh
 env -i PATH=/run/current-system/sw/bin:/usr/bin:/bin \
-  HOME="$HOME" USER="$USER" LANG=C.UTF-8 TMPDIR="$HOME/.cache/noble-iss/tmp" \
+  HOME="$HOME" USER="$USER" LANG=C.UTF-8 TMPDIR=<private temporary directory> \
   /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
   verification/synthesis/cegis.mjs \
-  --noble "$HOME/.cache/noble-iss/target/synth-116/debug/noble" \
+  --noble <absolute path of the built noble CLI> \
   --bitwuzla /nix/store/5i2dxw5dxqx73sb235zgb904yc3jlh49-bitwuzla-0.8.2/bin/bitwuzla \
   --z3 /nix/store/qzngzax9x0f84g5iapqr3xjc4vg1a2sz-z3-4.15.8/bin/z3 \
   --time /nix/store/mqldjw98f2f4w2glz0f12qdnvv8m4aq9-time-1.9/bin/time \
-  --output "$HOME/.cache/noble-iss/scratch/synth-116/reproduced.json" \
-  --check-lean proofs/foundation/NobleFoundation/SynthesisCertified.lean \
-  --scratch "$HOME/.cache/noble-iss/scratch/synth-116"
+  --output <new file>/reproduced.json \
+  --check-lean "$PWD/proofs/foundation/NobleFoundation/SynthesisCertified.lean" \
+  --scratch <new directory>
 ```
 
 The reproduction records search and run evidence; it does not itself run Lean. Run
-`~/.cache/noble-iss/slot.sh lean 3 verification/ci/lean-proofs.sh --allow-dirty <scratch>`
+`verification/ci/lean-proofs.sh --allow-dirty <scratch>`
 to build and kernel-check the foundation proofs. No claim is made about unrestricted synthesis,
 all programs in the grammar, general 64-bit bitwise operators, solver proof production, list
 extraction, or source-to-graph preservation.
