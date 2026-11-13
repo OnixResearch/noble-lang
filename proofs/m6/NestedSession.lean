@@ -18,9 +18,11 @@ declares a whole label set at one state.
 
 Declared premises, kept premises:
 * the grammar is versioned but this model carries no version field yet;
-* a bounded mailbox is modelled per session, but no scheduler or peer is; the one progress statement
-  (`guest_local_progress_on_a_declared_action`) is guest-local, assumes only an open endpoint whose
-  state resolves and declares the action, and is not deadlock freedom;
+* a bounded mailbox is modelled per session; the scheduler grant, the peer's selected branch and the
+  host admission appear only as the explicit premises of one guest step
+  (`progress_under_explicit_premises`), whose guest-local case is
+  `guest_local_progress_on_a_declared_action`. No progress statement here is deadlock freedom:
+  termination, fairness, eventual delivery and network reliability stay separate and unclaimed;
 * the depth-only `resolve`/`step` operand is retained as a legacy control, while `stackStep` is the
   nested operand: a recursive entry saves the nested parameter and a finished node pops it. The
   balanced table's unbounded trace language `sendⁿ·recvⁿ` is not regular and needs that return stack;
