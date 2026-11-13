@@ -3,6 +3,10 @@ import NobleM2.InteractionNetV2
 /-!
 # The arithmetic rule of revision 2 (issue #37)
 
+This is the superseded revision-2 local stack model, retained only as a recorded comparison. The
+selected revision-3 I64 interaction system is `NobleFoundation.NetI64.system` over inets; none of the
+reducer's node-count, fuel, potential, or certificate bounds are bounds on that real interaction net.
+
 The reducer's core, isolated: a binary agent holds one LIFO stack per operand port and fires when
 both are non-empty. A firing pops one value from each operand port and **discards** the value the
 rule computes.

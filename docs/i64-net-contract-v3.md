@@ -62,6 +62,14 @@ There is no other rule. Any other pair whose principal ports meet (for example `
 `op2 ⋈ op2`) is **stuck**; a translated well-typed graph never produces one (to be proved), and a
 reducer that meets one reports `internal-invalid`, never a result.
 
+### Revision-2 operand-stack multiplicity (from #124)
+
+Revision 2's `Operands : List Value` could hold multiple values if two producers delivered to one
+operand port, making LIFO consumption schedule-dependent; revision 2 never stated single-producer
+admission. This question is **decided: superseded by revision 3**. In revision 3 there are no
+operand stacks: every inets wire is one edge between exactly two port endpoints, so each consumer
+port has one producer endpoint (and fanout is represented by an explicit `dup` agent).
+
 ## 3. Translation and read-back
 
 - Each program input slot `i` becomes `num (inputs i)`; each constant `c` becomes `num c`.
