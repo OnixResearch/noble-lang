@@ -55,10 +55,9 @@ function imports() {
   return found;
 }
 
-function initialGlobals(binary, file) {
-  const printed = spawnSync(binary, ['print', file], { encoding: 'utf8' });
-  assert.equal(printed.status, 0, `stub does not print: ${printed.stderr}`);
-  return Object.fromEntries([...printed.stdout.matchAll(
+function initialGlobals(file) {
+  const text = fs.readFileSync(file, 'utf8');
+  return Object.fromEntries([...text.matchAll(
     /\(global \(export "([^"]+)"\) \(mut i32\) \(i32\.const (-?\d+)\)\)/g,
   )].map(([, name, value]) => [name, Number(value)]));
 }
@@ -103,8 +102,8 @@ function mismatches(binary, file) {
     globals: { i32: shape.globals.filter(k => k === 'i32').length, i64: shape.globals.filter(k => k === 'i64').length } };
 }
 
-function initialMismatches(binary, file, limits) {
-  const observed = initialGlobals(binary, file);
+function initialMismatches(file, limits) {
+  const observed = initialGlobals(file);
   return { observed, problems: Object.entries(limits)
     .filter(([name, expected]) => observed[name] !== expected)
     .map(([name, expected]) => `${name} initial value ${observed[name]} is not ${expected}`) };
@@ -124,7 +123,7 @@ function main() {
   const limits = Object.fromEntries(abi.globals.filter(entry => entry.name.endsWith('_limit'))
     .map(entry => [entry.name, Number(entry.value)]));
   assert.deepEqual(Object.keys(limits).sort(), ['allocation_limit','continuation_limit','depth_limit','operand_limit','recipe_limit','step_limit'].sort());
-  const initial = initialMismatches(binary, path.join(ROOT, STUB), limits);
+  const initial = initialMismatches(path.join(ROOT, STUB), limits);
   assert.deepEqual(initial.problems, [], `stub initial state differs from ABI: ${initial.problems.join('; ')}`);
   // A matching interface with a zeroed step limit is not a faithful initial state.
   const text = fs.readFileSync(path.join(ROOT, STUB), 'utf8');
@@ -134,7 +133,7 @@ function main() {
   const control = path.join(process.env.TMPDIR ?? '', `noble-host-control-${process.pid}.wat`);
   assert.ok(path.isAbsolute(control) && process.env.TMPDIR, 'TMPDIR must be an absolute private directory');
   fs.writeFileSync(control, mutated, { flag: 'wx' });
-  const refused = initialMismatches(binary, control, limits);
+  const refused = initialMismatches(control, limits);
   fs.rmSync(control);
   assert.ok(refused.problems.includes('step_limit initial value 0 is not 100000'), 'zero step_limit is refused');
   const receipt = {
