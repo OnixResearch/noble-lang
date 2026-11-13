@@ -38,6 +38,10 @@ impl CandidateChecker {
         )
     }
 
+    pub fn graph_bytes(&self) -> Vec<u8> {
+        noble_ngraph::format::graph::print(self.checked.graph()).into_bytes()
+    }
+
     pub fn one_step(&self, state: &[u64], input: &[u64]) -> Result<Vec<u64>, String> {
         self.one_step_with_control(state, input, None, None)
     }
@@ -49,8 +53,6 @@ impl CandidateChecker {
         fuel: Option<u64>,
         cancel: Option<&dyn Fn(u32) -> bool>,
     ) -> Result<Vec<u64>, String> {
-        let source = programs::source_transition(self.program, state, input)
-            .ok_or_else(|| "state/input shape refused".to_owned())?;
         let words = programs::inputs_for(self.program, state, input)
             .ok_or_else(|| "state/input shape refused".to_owned())?;
         let encoded: Vec<Value> = match self.program {
@@ -91,12 +93,24 @@ impl CandidateChecker {
             return Err("compiled/reference observation mismatch".to_owned());
         }
         let decoded = decode_words(&compiled_values)?;
+        self.verify_decoded(state, input, &decoded)?;
+        Ok(decoded)
+    }
+
+    pub fn verify_decoded(
+        &self,
+        state: &[u64],
+        input: &[u64],
+        decoded: &[u64],
+    ) -> Result<(), String> {
+        let source = programs::source_transition(self.program, state, input)
+            .ok_or_else(|| "state/input shape refused".to_owned())?;
         if decoded != source {
             return Err(format!(
                 "source transition mismatch: expected {source:?}, got {decoded:?}"
             ));
         }
-        Ok(decoded)
+        Ok(())
     }
 }
 

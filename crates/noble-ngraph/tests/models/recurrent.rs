@@ -1,62 +1,22 @@
 use crate::common;
 #[path = "recurrent/checker.rs"]
 mod checker;
+#[path = "recurrent/measurement.rs"]
+mod measurement;
 #[path = "recurrent/programs.rs"]
 mod programs;
-use noble_ngraph::ir::{
-    Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject,
-};
+use noble_ngraph::ir::{Fact, GraphBuilder, ScalarType, SubProfile, Subject};
 use noble_ngraph::sem::Value;
 use programs::Program;
 
-const WIDTH: usize = 64;
-
-fn select(builder: &mut GraphBuilder, bit: NodeId, off: NodeId, on: NodeId) -> NodeId {
-    builder.op(Op::F32Select { bit, off, on })
-}
-
-fn exact_adder() -> Graph {
-    let mut builder = GraphBuilder::new(
-        SubProfile::F32,
-        Subject::authored(&common::IDS, "recurrent-weights-wrapping-adder"),
-    );
-    let mut left = Vec::with_capacity(WIDTH);
-    let mut right = Vec::with_capacity(WIDTH);
-    for _ in 0..WIDTH {
-        let a = builder.input(ScalarType::F32);
-        let b = builder.input(ScalarType::F32);
-        builder.guard(Fact::Bit, a);
-        builder.guard(Fact::Bit, b);
-        left.push(a);
-        right.push(b);
-    }
-    let zero = builder.param();
-    let one = builder.param();
-    builder.fact(zero, Fact::Bit, Provenance::InputValidated);
-    builder.fact(one, Fact::Bit, Provenance::InputValidated);
-    let mut carry = zero;
-    let mut sum = Vec::with_capacity(WIDTH);
-    for (&a, &b) in left.iter().zip(&right) {
-        let not_b = select(&mut builder, b, one, zero);
-        let a_xor_b = select(&mut builder, a, b, not_b);
-        let not_carry = select(&mut builder, carry, one, zero);
-        let bit_sum = select(&mut builder, a_xor_b, carry, not_carry);
-        let b_or_carry = select(&mut builder, b, carry, one);
-        let b_and_carry = select(&mut builder, b, zero, carry);
-        carry = select(&mut builder, a, b_and_carry, b_or_carry);
-        sum.push(bit_sum);
-    }
-    builder.guard(Fact::Bit, carry);
-    for bit in sum {
-        builder.output(bit);
-    }
-    builder.finish()
-}
-
 #[test]
 fn wrapping_adder_matches_reference_and_source_boundaries() {
-    let checker = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-        .expect("checker accepts emitted graph");
+    let checker = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("checker accepts emitted graph");
     for a in 0..4 {
         for b in 0..4 {
             assert_eq!(
@@ -100,10 +60,18 @@ fn stack_routing_is_exhaustive_over_the_tiny_domain() {
 
 #[test]
 fn both_target_programs_emit_stable_artifact_manifest_rows() {
-    let adder_a = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-        .expect("adder checker");
-    let adder_b = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-        .expect("same adder checker");
+    let adder_a = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("adder checker");
+    let adder_b = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("same adder checker");
     let swap_a = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("swap checker");
     let swap_b = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
@@ -112,19 +80,25 @@ fn both_target_programs_emit_stable_artifact_manifest_rows() {
     assert_eq!(swap_a.identities(), swap_b.identities());
     for (name, checker) in [("accumulator", adder_a), ("stack-swap", swap_a)] {
         let (graph, snapshot, bytes) = checker.identities();
+        let graph_bytes = checker.graph_bytes();
         println!(
-            "RECURRENT_MANIFEST\t{name}\t{}\t{}\t{}",
+            "RECURRENT_MANIFEST\t{name}\t{}\t{}\t{}\t{}",
             hex(&graph),
             hex(&snapshot),
-            hex(&bytes)
+            hex(&bytes),
+            hex(&graph_bytes)
         );
     }
 }
 
 #[test]
 fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
-    let checker = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-        .expect("adder checker");
+    let checker = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("adder checker");
     let mut teacher_source = 0u64;
     let mut teacher_steps = 0usize;
     for step in 0..1_000u64 {
@@ -156,8 +130,40 @@ fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
         free_state = target_next;
         free_steps += 1;
     }
-    println!("RECURRENT_TRAJECTORY\tteacher_forced\t{teacher_steps}");
-    println!("RECURRENT_TRAJECTORY\tfree_running\t{free_steps}");
+    println!("RECURRENT_TRAJECTORY\taccumulator\tteacher_forced\t{teacher_steps}");
+    println!("RECURRENT_TRAJECTORY\taccumulator\tfree_running\t{free_steps}");
+}
+
+#[test]
+fn stack_swap_trajectory_reports_teacher_forced_and_free_running_separately() {
+    let candidate = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+        .expect("stack-swap checker");
+    let (mut teacher_left, mut teacher_right) = (1u64, 2u64);
+    for _ in 0..1_000 {
+        let expected =
+            programs::source_transition(Program::StackSwap, &[teacher_left, teacher_right], &[])
+                .expect("source domain");
+        assert_eq!(
+            candidate
+                .one_step(&[teacher_left, teacher_right], &[])
+                .expect("teacher-forced swap"),
+            expected
+        );
+        [teacher_left, teacher_right] = [expected[0], expected[1]];
+    }
+    let (mut free_left, mut free_right) = (1u64, 2u64);
+    for step in 0..1_000 {
+        let target = candidate
+            .one_step(&[free_left, free_right], &[])
+            .expect("free-running swap");
+        let expected =
+            programs::source_transition(Program::StackSwap, &[free_left, free_right], &[])
+                .expect("source domain");
+        assert_eq!(target, expected, "free-running swap step {step}");
+        [free_left, free_right] = [target[0], target[1]];
+    }
+    println!("RECURRENT_TRAJECTORY\tstack-swap\tteacher_forced\t1000");
+    println!("RECURRENT_TRAJECTORY\tstack-swap\tfree_running\t1000");
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -166,9 +172,12 @@ fn hex(bytes: &[u8]) -> String {
 
 #[test]
 fn malformed_state_input_and_decoder_values_are_refused() {
-    let candidate =
-        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-            .expect("accumulator checker");
+    let candidate = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("accumulator checker");
     assert!(candidate.one_step(&[], &[0]).is_err());
     assert!(candidate.one_step(&[0], &[]).is_err());
     assert!(candidate.one_step(&[0, 1], &[0]).is_err());
@@ -182,9 +191,12 @@ fn malformed_state_input_and_decoder_values_are_refused() {
 
 #[test]
 fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
-    let corrupted =
-        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[1.0, 0.0])
-            .expect("bit-valued but corrupted snapshot");
+    let corrupted = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[1.0, 0.0],
+    )
+    .expect("bit-valued but corrupted snapshot");
     assert!(corrupted.one_step(&[0], &[1]).is_err());
 
     let mut builder = GraphBuilder::new(
@@ -207,28 +219,35 @@ fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
 #[test]
 fn wrong_program_configuration_and_little_endian_decoder_are_detected() {
     let wrong_program =
-        checker::CandidateChecker::new(Program::StackSwap, exact_adder(), &[0.0, 1.0])
+        checker::CandidateChecker::new(Program::StackSwap, programs::one_step_adder(), &[0.0, 1.0])
             .expect("shape-compatible graph with wrong declared program");
     assert!(wrong_program.one_step(&[1, 2], &[]).is_err());
-    let encoded = (0..64)
-        .map(|bit| Value::f32(((1u64 >> bit) & 1) as f32))
+    let candidate = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+        .expect("stack-swap checker");
+    let reversed = [1u64, 2]
+        .into_iter()
+        .flat_map(|word| {
+            (0..64)
+                .rev()
+                .map(move |bit| Value::f32(((word >> bit) & 1) as f32))
+        })
         .collect::<Vec<_>>();
-    let expected = checker::decode_words(&encoded).expect("valid codec");
-    let mut reversed = encoded;
-    reversed.reverse();
     let wrong_decode = checker::decode_words(&reversed).expect("valid but wrong byte order");
-    assert_eq!(expected, [1]);
-    assert_ne!(
-        wrong_decode, expected,
-        "wrong decoder must be caught against the source result"
-    );
+    let correct = candidate.one_step(&[1, 2], &[]).expect("source transition");
+    assert!(candidate
+        .verify_decoded(&[1, 2], &[], &wrong_decode)
+        .is_err());
+    assert_eq!(correct, [2, 1]);
 }
 
 #[test]
 fn insufficient_budget_cancellation_and_resume_are_explicit() {
-    let candidate =
-        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
-            .expect("accumulator checker");
+    let candidate = checker::CandidateChecker::new(
+        Program::Accumulator,
+        programs::one_step_adder(),
+        &[0.0, 1.0],
+    )
+    .expect("accumulator checker");
     assert!(candidate
         .one_step_with_control(&[1], &[2], Some(0), None)
         .is_err());
