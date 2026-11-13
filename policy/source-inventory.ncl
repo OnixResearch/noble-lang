@@ -457,6 +457,11 @@
 #   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
 #   16116 production paths = 8297 body/open + 4528 generated + 3291 structural;
 #   8021 test-only paths; 90 macro origins. Earlier header counts are historical.
+# Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests) from a complete 110-unit selected collection:
+#   IR 5c87e0dfe150c5f1c3245e16362e6fbb9e4f43ca6219c86e23dbf5af8cadc0c5; coverage 6203a9da3b63546d2bd29c6781dae5ca11c46ca6be808ee1d7e64302463cce76;
+#   cargo graph f937b153421756e820abc6132863fde1a7bf7e738e79949eb2a48603fc16672f; collector policy fead079ea6cb4df97d772deaee5ad59ef82357c30789d95ae15d6ad6ad1ad292.
+#   16119 production paths = 8298 body/open + 4529 generated + 3292 structural;
+#   8021 test-only paths; 90 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -15808,8 +15813,6 @@ let
     generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:16346:17011" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:17029:18473" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:18491:19321" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:19339:20106" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-    generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:20124:20980" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     body "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4137:4144" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4272:4279" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:4923:4930" "noble-cli" "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -16702,6 +16705,14 @@ let
     body "noble-contracts::closure@crates/noble-contracts/src/source/declared.rs:18961:18967" "noble-contracts" "Renewed review fixes: deny-all findings in contracts and kernel tests from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     generated "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/publication.rs:10176:10761" "noble-contracts" "Renewed review fixes: deny-all findings in contracts and kernel tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
     generated "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/publication.rs:9372:10158" "noble-contracts" "Renewed review fixes: deny-all findings in contracts and kernel tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    # Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests): 5 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:19643:21195" "noble-cli" "Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:21213:21980" "noble-cli" "Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    generated "noble-cli::closure@crates/noble-cli/src/build/report/toolchain.rs:21998:22854" "noble-cli" "Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+    body "noble::build::report::toolchain::tests::distinct_non_utf8_names_never_share_a_tree_identity" "noble-cli" "Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    structural "noble::build::report::toolchain::tests::distinct_non_utf8_names_never_share_a_tree_identity::{use#0}" "noble-cli" "Renewed Campaign batch 1: #120 two-tree non-UTF-8 counterexample test (noble-cli toolchain tests): declaration-only compiler kind (other); accounting only, with no body obligation.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
