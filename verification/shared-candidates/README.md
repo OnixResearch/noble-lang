@@ -1,22 +1,25 @@
 # Shared candidate execution over `ngraph-i64/0` (issue #117)
 
-Evaluating a *family* of candidate programs — the shape a synthesis search produces — has three
+Evaluating a *family* of candidate programs — the shape a synthesis search produces — has four
 comparison points in Noble today: evaluate each candidate separately, evaluate one merged
-multi-output graph that shares the value the candidates have in common, and the gated interaction-net
-path. This lane measures the two that exist. It changes no Rust, adds no compilation unit and adds no
-feature gate.
+multi-output graph that shares the value the candidates have in common, evaluate the merged graph
+with the shared value recomputed, and evaluate through the opt-in revision-3 interaction-net path.
+The packed evaluator remains the default. The lane adds no compilation unit or Cargo feature gate.
 
-The frozen protocol, its families, arms, metrics and thresholds are in
-[criteria.md](criteria.md) and [criteria.json](criteria.json), committed as `1fa70cef` — before any
-number below existed. Two measurement runs are retained as receipts:
+The original #117 protocol, families, packed arms, metrics and thresholds are in
+[criteria.md](criteria.md) and [criteria.json](criteria.json), committed as `1fa70cef` before runs a
+and b; those files remain unchanged. The separate #37 net speed rule is frozen in
+[`../ngraph/net-continuation-criteria.md`](../ngraph/net-continuation-criteria.md), committed before
+run c. Three measurement runs are retained as receipts:
 
 | Run | Commit | Receipt | Host load (1 min) |
 | --- | --- | --- | --- |
 | a | `4654cd3` | [receipt-2026-11-13-a.json](receipt-2026-11-13-a.json) | 81.66 on 32 CPUs |
 | b | `4654cd3` | [receipt-2026-11-13-b.json](receipt-2026-11-13-b.json) | 55.33 on 32 CPUs |
+| c (#37 net continuation) | `ee34d98` | [receipt-2026-11-13-c.json](receipt-2026-11-13-c.json) | 37.37 on 32 CPUs |
 
-Both were produced by the producer's own command from a clean tree of that commit, with the raw
-graphs, vector files and per-invocation timings outside the repository. Neither receipt is edited
+All three were produced by the producer's own command from a clean tree of the source commit, with
+the raw graphs, vector files and per-invocation timings outside the repository. No receipt is edited
 by hand.
 
 ## What ran
@@ -27,6 +30,10 @@ by hand.
 | `merged` | one multi-output graph holding all twelve candidates, the shared value computed once | 1 |
 | `merged-duplicated` | the same candidates in one graph, the shared value recomputed per candidate | 1 |
 | `floor` | the merged graph over a single row — attribution only, but it does take part in d4 (see the note below) | 1 |
+| `net-separate` | twelve candidate graphs, each evaluated through explicit `--net` over all 8192 rows | 12 |
+| `net-merged` | the shared multi-output graph evaluated through explicit `--net` | 1 |
+| `net-merged-duplicated` | the recomputing multi-output graph evaluated through explicit `--net` | 1 |
+| `net-floor` | the merged graph over one row through explicit `--net` (descriptive; not in packed d4) | 1 |
 
 Two twelve-candidate families over `ngraph-i64/0` with one `i64` input: `shared-prefix` (every
 candidate is one common 18-node prefix value followed by its own tail, so a value is genuinely
@@ -34,16 +41,11 @@ shared) and `distinct-prefix` (each candidate is an independent program over the
 but the input node is shared). Each candidate, the merged source and the recomputing source are Core
 text generated from `criteria.json` and turned into graphs by the CLI's own extractor.
 
-The twelve-process `separate` arm and the two single-process arms all produce the same 12 outputs for
-every row; that agreement is a gate, not a finding.
+The packed and net arms all produce the same 12 expected outputs for every frozen row; agreement is
+a gate, not a finding.
 
 ## What did not run
 
-- **The net arm** is not measured. `crates/` has no interaction-net entry point, `noble ngraph`
-  dispatch has no net subcommand and `crates/noble-ngraph/Cargo.toml` declares no `[features]`, so
-  there is no backend and no feature gate to preserve here. **Pending #37.** The lane asserts this
-  absence: a future #37 landing trips the lane's `backend-gate` control instead of measuring
-  something else under this name.
 - **The labelled-SUP arm** is not measured: there is no labelled DUP/SUP contract. **Pending #105.**
 - Allocation counts are not measured anywhere in the lane; see the instrument limits below.
 
@@ -58,10 +60,10 @@ node verification/shared-candidates/run.mjs measure --binary "$CLI" --work "$OUT
 bun test verification/shared-candidates/
 ```
 
-`verify` runs the correctness gates and the thirteen negative controls and takes about ten seconds;
-`measure` repeats them, then times the arms, and refuses to run on a dirty tree. The receipt records
-the source revision, the CLI's SHA-256, the criteria's SHA-256 and committed blob, the frozen row
-set's digest and the host's load.
+`verify` runs the correctness gates, including the full-row `reference-all-net` check, and thirteen
+negative controls. `measure` repeats them, then times the packed and net arms, and refuses to run on
+a dirty tree. The receipt records the source revision, the CLI's SHA-256, the criteria's SHA-256 and
+committed blob, the frozen row set's digest and the host's load.
 
 ## Results — run a (`receipt-2026-11-13-a.json`)
 
@@ -94,34 +96,85 @@ sources, `distinct-prefix` 524.5 ms; peak RSS 10.7 MiB and 9.9 MiB.
 
 Extraction: `shared-prefix` median 440.1 ms, `distinct-prefix` 411.3 ms; peak RSS 10.6 MiB each.
 
+## Results — run c (`receipt-2026-11-13-c.json`)
+
+Run c adds the net arms without changing `criteria.json` or `criteria.md`. It used one warm-up plus
+nine interleaved warm rounds. “First” is the warm-up round, not a page-cache-cold measurement.
+
+| family | arm | processes | first ms | warm median ms | IQR ms | CPU ms | peak RSS KiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `shared-prefix` | `separate` | 12 | 3886.564 | 1388.136 | 1062.396 | 1050 | 13932 |
+| `shared-prefix` | `merged` | 1 | 674.434 | 268.659 | 127.771 | 180 | 18212 |
+| `shared-prefix` | `merged-duplicated` | 1 | 685.157 | 269.768 | 75.673 | 220 | 17984 |
+| `shared-prefix` | `floor` | 1 | 53.793 | 16.898 | 17.522 | 0 | 9904 |
+| `shared-prefix` | `net-separate` | 12 | 54967.374 | 23809.172 | 13861.291 | 16900 | 12372 |
+| `shared-prefix` | `net-merged` | 1 | 13164.048 | 4240.036 | 2111.828 | 3120 | 18540 |
+| `shared-prefix` | `net-merged-duplicated` | 1 | 29206.555 | 12163.044 | 10023.371 | 10690 | 18868 |
+| `shared-prefix` | `net-floor` | 1 | 33.659 | 14.452 | 7.93 | 0 | 10368 |
+| `distinct-prefix` | `separate` | 12 | 1191.979 | 1184.829 | 166.209 | 900 | 14144 |
+| `distinct-prefix` | `merged` | 1 | 187.408 | 178.68 | 20.12 | 150 | 18820 |
+| `distinct-prefix` | `merged-duplicated` | 1 | 186.553 | 193.482 | 21.766 | 160 | 18544 |
+| `distinct-prefix` | `floor` | 1 | 14.215 | 12.219 | 2.473 | 0 | 10148 |
+| `distinct-prefix` | `net-separate` | 12 | 11538.542 | 9098.232 | 546.743 | 8260 | 13556 |
+| `distinct-prefix` | `net-merged` | 1 | 3112.095 | 2836.094 | 56.7 | 2700 | 19012 |
+| `distinct-prefix` | `net-merged-duplicated` | 1 | 2866.033 | 2864.274 | 175.938 | 2750 | 18748 |
+| `distinct-prefix` | `net-floor` | 1 | 12.42 | 12.454 | 4.903 | 0 | 10440 |
+
+Net instrumentation for one complete 8192-row evaluation run:
+
+| family | net arm | interactions | peak live agents | maximum retained-byte estimate |
+| --- | --- | ---: | ---: | ---: |
+| `shared-prefix` | `net-separate` | 3,522,560 | 33 | 2,321 B |
+| `shared-prefix` | `net-merged` | 819,200 | 84 | 5,684 B |
+| `shared-prefix` | `net-merged-duplicated` | 3,612,672 | 348 | 22,580 B |
+| `distinct-prefix` | `net-separate` | 737,280 | 9 | 785 B |
+| `distinct-prefix` | `net-merged` | 827,392 | 84 | 5,684 B |
+| `distinct-prefix` | `net-merged-duplicated` | 827,392 | 84 | 5,684 B |
+
+The net measurements include per-row graph-to-net lowering, independent validation, reduction and
+read-back; construction is accounted for once across a complete run. The extra net arms do not alter
+the frozen #117 d1–d4 gates, which remain defined over its original packed arms; the #37 net speed
+threshold is evaluated separately below. The host was shared (32 CPUs, load average 37.37), with no
+CPU pinning or page-cache drop.
+
 ## The rule's verdict, per run
 
-| Test | Threshold | Run a | Run b |
-| --- | --- | --- | --- |
-| d1 merged / separate, `shared-prefix` | ≤ 0.75 | 0.185 holds | 0.162 holds |
-| d2 merged / merged-duplicated, `shared-prefix` | ≤ 0.90 | 0.835 holds | 0.856 holds |
-| d3 identical-program control, `distinct-prefix` | ≤ 0.10 | **0.156 fails** | 0.064 holds |
-| d4 peak-RSS growth, first → second warm round | ≤ 1024 KiB | **fails** (`separate` +1180) | **fails** (`merged` +1088) |
+| Test | Threshold | Run a | Run b | Run c |
+| --- | --- | --- | --- | --- |
+| d1 merged / separate, `shared-prefix` | ≤ 0.75 | 0.185 holds | 0.162 holds | 0.194 holds |
+| d2 merged / merged-duplicated, `shared-prefix` | ≤ 0.90 | 0.835 holds | 0.856 holds | **0.996 fails** |
+| d3 identical-program control, `distinct-prefix` | ≤ 0.10 | **0.156 fails** | 0.064 holds | 0.077 holds |
+| d4 peak-RSS growth, first → second warm round | ≤ 1024 KiB | **fails** (`separate` +1180) | **fails** (`merged` +1088) | **fails** (`merged` +1208) |
 
 Run a's d3 failure makes run a's d2 unreadable by the frozen rule: its noise floor is larger than
-the sharing difference it was meant to detect. Run b's noise control holds, so its d2 is readable —
-but d4 fails in both runs, so **the frozen rule yields no GO**. d4's failures move between arms and
-families from run to run (`separate` +1180 in a, `merged` +1088 and `floor` +696 in b, and −1036 and
-−568 elsewhere), i.e. they sit inside the resolution of the instrument: a debug binary of about
-16 MiB peak RSS varies by about a megabyte with dynamic-loader and page-cache state. The bound is
-reported as it fell rather than explained away; it is an instrument defect of this lane, not a
-sharing result, and it is not adjusted after seeing numbers.
+the sharing difference it was meant to detect. Runs b and c pass d3, so their d2 values are
+readable; run c's d2 also fails. d4 fails in all three runs, so **the frozen rule yields no GO**.
+d4's failures move between arms and families (`separate` +1180 KiB in a, `merged` +1088 KiB and
+`floor` +696 KiB in b, `merged` +1208 KiB in c, and negative changes elsewhere), i.e. they sit
+inside the resolution of the instrument: a debug binary of about 16 MiB peak RSS varies by about a
+megabyte with dynamic-loader and page-cache state. The bound is reported as it fell rather than
+explained away; it is an instrument defect of this lane, not a sharing result, and it is not adjusted
+after seeing numbers.
 
 One wording conflict is worth quoting rather than smoothing over: `criteria.md` calls the one-row
 `floor` arm "not gated", while `criteria.json`'s d4 says "every arm". The runner follows the
-machine-readable half, so `floor` is included in d4. Both readings give the same verdict on both
-runs — run a fails d4 on `separate` (+1180 KiB) and run b on `merged` (+1088 KiB), while `floor` on
-its own stays inside the bound (a: +128 and −1036 KiB; b: −332 and +696 KiB) — and neither frozen
-file was edited after the numbers existed.
+machine-readable half, so `floor` is included in d4. Both readings give the same verdict on all
+three runs — run a fails d4 on `separate` (+1180 KiB), run b on `merged` (+1088 KiB), and run c on
+`merged` (+1208 KiB), while `floor` stays inside the bound (a: +128 and −1036 KiB; b: −332 and
++696 KiB; c: −828 and −420 KiB) — and neither frozen file was edited after the numbers existed.
+
+## #37 net continuation decision
+
+The separate frozen #37 threshold compares the packed `merged` and `net-merged` warm medians from
+run c: `packed / net = 268.659 / 4240.036 = 0.06336`, below the required `1.15`. The complete
+end-to-end net arm is therefore about **15.78× slower** than packed execution on the selected
+workload: **NO-GO**. The run also records `reference-all-net`, which verifies all 8,192 rows for
+every separate, merged and recomputing graph against the BigInt oracle, packed evaluator, and net;
+the gate holds. Correctness does not rescue the failed speed threshold.
 
 ## What the numbers do and do not say
 
-Measured, both runs:
+Measured in runs a and b (the original packed-only measurements):
 
 - Merging twelve candidates into one graph and one process costs about **1/6** of evaluating them in
   twelve processes over the same 8192 rows (run a: 296 ms against 1605 ms; run b: 299 ms against
@@ -131,17 +184,22 @@ Measured, both runs:
   that single process (run b: 298.7 ms against 348.9 ms; run a: 296.2 ms against 354.6 ms), while
   the node count drops from 243 to 56.
 
+Measured in run c (the net continuation): the selected `net-merged` median is 4,240.036 ms versus
+268.659 ms for packed `merged`; despite reducing interactions from 3,612,672 in the recomputing net
+to 819,200, the inclusive net path is **15.78× slower** than packed execution. The per-input
+construction and validation cost is inside that timing; no reusable net cache was measured.
+
 Not claimed:
 
-- **No optimal-runtime claim, and no GO.** The frozen rule's memory bound failed in both runs, and in
-  run a the noise control failed as well. d1's effect is far larger than the noise floor in both
-  runs; d2's effect is only one to two times it.
-- No claim about allocation counts, interaction counts, GPU behaviour, or any purpose-built
-  shared-candidate engine.
+- **No optimal-runtime claim, and no GO.** The frozen #117 rule fails d4 in all three runs, and run
+  c also fails d2; the separate frozen #37 net speed threshold fails by a wide margin. Run a's
+  noise control also failed, so its d2 is unreadable.
+- No claim about allocation counts, GPU behaviour, or any purpose-built shared-candidate engine.
 - No claim that the graph evaluator's cost is proportional to node count. It is not: 4.3× fewer live
-  nodes bought 14 % less time, so per-row work dominates at these graph sizes. That is the reading
-  that matters for #37/#105: a net or labelled-SUP arm has to remove *per-row* work, not only node
-  count, to beat the merged arm.
+  nodes bought 14 % less time in runs a and b. Run c confirms that lower net interaction count alone
+  does not make an evaluator faster: the measured net path remains much slower than packed execution.
+  Any future net or labelled-SUP arm has to remove *per-row* work, not only node count, to beat the
+  merged arm.
 
 ## Structure: what sharing removes
 
@@ -161,8 +219,8 @@ exists because the merged source computes the value once and duplicates it — w
 
 ## Unsupported constructs and backend fallback
 
-Every row below was exercised by the lane's controls in both runs; the codes and exits are the CLI's
-own, quoted from the reports.
+Every row below was exercised by the lane's controls in all three runs; the codes and exits are the
+CLI's own, quoted from the reports.
 
 | Construct | Admission | Observed | What happens to the output file |
 | --- | --- | --- | --- |
@@ -177,14 +235,15 @@ own, quoted from the reports.
 | Vector types that do not match the graph | eval | `E-INTERFACE`, exit 2 | — |
 | A vector row before its `types` line | eval | `E-FORMAT`, exit 2 | — |
 
-**Fallback behaviour.** There is no backend fallback to document into: `ngraph-i64/0` extraction
-either admits a source into one graph or refuses it with the code above, and evaluation is the
-compiled evaluator or, with `--reference`, the normative reference interpreter. The two are checked
-against each other and against this lane's independent oracle over the first 256 rows of every
-family. A graph the compiled evaluator refuses on its scratch budget reports the same observation for
-every row (`crates/noble-cli/src/ngraph.rs`, the `scratch_refusal` arm of `eval`); the CLI does not
-silently switch interpreters, and this lane's rows all evaluate normally, so that arm was not
-exercised here.
+**Fallback behaviour.** There is no backend fallback: `ngraph-i64/0` extraction either admits a
+source into one graph or refuses it with the code above. Packed, `--reference`, and explicit `--net`
+evaluation are separate selections; the CLI does not silently switch interpreters or backends. Runs
+a and b compare the packed evaluator with the reference interpreter and independent oracle over the
+first 256 rows of each family. Run c retains that frozen check and adds `reference-all-net`: all
+8,192 rows for every separate, merged, and recomputing graph are compared across reference, packed,
+net, and the independent oracle. A graph the packed evaluator refuses on its scratch budget reports
+the same observation for every row (`crates/noble-cli/src/ngraph.rs`, the `scratch_refusal` arm of
+`eval`); all lane rows evaluate normally, so that arm was not exercised here.
 
 A wrong merged graph is *not* refused by the CLI — it is well-typed and well-formed. The
 `permuted-outputs` control shows the CLI admitting a graph whose candidates are wired to the wrong
@@ -194,8 +253,8 @@ arity. Candidate identity therefore comes from the harness's bindings, not from 
 ## Instruments and their limits
 
 - Wall time: `process.hrtime.bigint` around `spawnSync`; CPU and peak RSS from `GNU time 1.10`
-  (`%U %S %M`). Both runs on a 32-core host shared with other builds at load 55-82; no CPU pinning,
-  no cache drop.
+  (`%U %S %M`). Runs a, b, and c were on a shared 32-CPU host at load averages 81.66, 55.33, and
+  37.37 respectively; no CPU pinning, no cache drop.
 - "Cold" is the first round only. This host cannot drop page caches without root, so it means "not
   previously executed by this run", nothing more. All comparisons use warm medians.
 - Peak RSS is a `wait4` high-water mark, and for the twelve-process arm it is the maximum over twelve
@@ -209,8 +268,10 @@ arity. Candidate identity therefore comes from the harness's bindings, not from 
    well below its effect; the current margin is one to two times the floor.
 2. A memory bound derived from repeated identical runs, or RSS growth measured across a longer run
    rather than between two single rounds, would replace d4's 1-MiB snapshot comparison.
-3. #37 would add the net arm and interaction counts; #105 would add the labelled DUP/SUP arm. Both
-   must clear *per-row* work, not only node count, to beat the merged arm measured here.
+3. The #37 net arm and interaction counts are now measured; it is a no-go under the frozen speed
+   criterion. A future net design would need to reduce inclusive per-row work, not only interactions
+   or node count. #105 would add the labelled DUP/SUP arm only under its own selected contract; it too
+   must clear per-row work to beat the measured packed arm.
 
 ## Files
 
@@ -220,4 +281,4 @@ arity. Candidate identity therefore comes from the harness's bindings, not from 
 | `oracle.mjs` | the independent JS stack machine and the frozen program assembly |
 | `run.mjs` | the runner: gates, negative controls, measurement, receipt |
 | `oracle.test.mjs` | hand-derived unit tests for the oracle, the programs and the comparator |
-| `receipt-2026-11-13-a.json`, `receipt-2026-11-13-b.json` | the two runs |
+| `receipt-2026-11-13-a.json`, `receipt-2026-11-13-b.json`, `receipt-2026-11-13-c.json` | all three source-bound runs |
