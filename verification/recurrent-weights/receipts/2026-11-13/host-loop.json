@@ -1,0 +1,23 @@
+{
+  "schema": "noble.recurrent-weights.test-run.v0",
+  "source_commit": "94e35636938c15b9d757e1463f91c5776fde3579",
+  "manifest": {
+    "compiler_revision": "ngraph-layered/0",
+    "target_format": "ngraph-f32/0 exact-bit threshold graph",
+    "state_codec": "unsigned 64-bit words, little-endian, one exact +0/1 F32 per bit",
+    "numeric_contract": "bit-exact binary32 values only; accumulator wraps modulo 2^64; no I64-to-F32 casts",
+    "runtime": "noble-ngraph reference and compiled CPU evaluators; no exported or stock runtime",
+    "execution_limits": {"max_semantic_steps": 1000, "max_unrolled_steps": 4},
+    "identity_scheme": "test-only common::TestScheme; stable for the pinned test toolchain, not a production digest"
+  },
+  "command": ["cargo", "test", "-p", "noble-ngraph", "--test", "layout_differential", "--", "--nocapture", "recurrent"],
+  "exit_code": 0,
+  "artifacts": [
+    {"program": "accumulator", "graph_id": "f9bb01aff2957947f252aa2f5e6579be349cf8582965412e254d05a74823763c", "snapshot_id": "ebb216b86beec8269c357e1d03360ee6d952ff7a8c95a70a7e54361c3acf26e5", "weight_bytes": "000000000000803f"},
+    {"program": "stack-swap", "graph_id": "2f012a518cf5a931c968906cc04ae6a573d54afe7edd94d91cd4349b6dc1f038", "snapshot_id": "978a8138e2c1c98c4f66e727e3223bde87efe1aa63ff46a0c2a4983284b34907", "weight_bytes": ""}
+  ],
+  "trajectories": [{"mode": "teacher_forced", "steps": 1000}, {"mode": "free_running", "steps": 1000}],
+  "stdout": "\nrunning 4 tests\ntest recurrent::stack_routing_is_exhaustive_over_the_tiny_domain ... ok\ntest recurrent::wrapping_adder_matches_reference_and_source_boundaries ... ok\nRECURRENT_MANIFEST\taccumulator\tf9bb01aff2957947f252aa2f5e6579be349cf8582965412e254d05a74823763c\tebb216b86beec8269c357e1d03360ee6d952ff7a8c95a70a7e54361c3acf26e5\t000000000000803f\nRECURRENT_MANIFEST\tstack-swap\t2f012a518cf5a931c968906cc04ae6a573d54afe7edd94d91cd4349b6dc1f038\t978a8138e2c1c98c4f66e727e3223bde87efe1aa63ff46a0c2a4983284b34907\t\ntest recurrent::both_target_programs_emit_stable_artifact_manifest_rows ... ok\nRECURRENT_TRAJECTORY\tteacher_forced\t1000\nRECURRENT_TRAJECTORY\tfree_running\t1000\ntest recurrent::host_loop_trajectory_reports_teacher_forced_and_free_running_separately ... ok\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.15s\n\n",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s\n     Running tests/layout_differential.rs (/home/brittonr/.cache/noble-iss/target/recurrent-78/debug/deps/layout_differential-3d112e4dd8e61c18)\n",
+  "note": "Correctness receipt only: finite-domain checks and 1,000-step trajectories; no performance or external-runtime claim."
+}
