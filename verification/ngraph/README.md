@@ -90,6 +90,20 @@ The wrapping-boundary and operand-order fixtures are new in this record: both re
 target under every step-bearing proposer, and `Identity` still reaches none of it. They raised the
 cost lane's denominator from 20 to 28 attempts, so coverage is reported against the larger corpus.
 
+**2026-11-13 issue #42 remeasurement.** After the result-replay checker and Rust token codec landed,
+the same frozen v2 plan and all 28 fixture/proposer rows were rerun from clean source commit
+`f5aef69f77c8bd144f0174dfd8aca1a6aa4f074b`. The fresh [receipt](rewrite-cost-2026-11-13.json)
+retains its runner evidence alongside it. `cert::check` now replays each derivation against the
+result endpoint; its measured per-call medians are 13.70–33.57 µs and per-step medians are
+7.96–33.30 µs across the 21 step-bearing rows (informational shared-host debug timings, not a
+retention or speedup claim). The measurement now records `cert::encode` token-envelope lengths per
+row: 28 B for zero steps, 42–78 B for one step (fixture-dependent decimal node/value token widths),
+and 57–59 B for two steps. The corresponding structural in-memory estimates are 161, 201 and 241 B.
+The v2 plan's `certificate_wire_bytes` pipeline stage remains **unmeasured**, as pre-registered:
+these row fields measure encoded size only, not a timed or retained pipeline stage. Its historical
+reason text and bytes are untouched. The v2 runner now treats `wire_bytes` as an optional extra
+field, so previously retained v2 reports without it remain valid.
+
 The comparison of the unchanged and certified paths is on identical fixture inputs: the identity row
 carries **no steps** and reaches no target, so every certificate-bearing row pays check cost with no
 measured saving. Retaining the baseline is valid, and nothing here shows the certified path pays for
@@ -127,9 +141,10 @@ real library pipeline, not a source compiler, Wasm executable, Lean replay or de
   the timers; I64 output evidence is encoded as exact decimal strings.
 - Both paths use identical empty fixture inputs and agree with the source reference. All elapsed
   values are informational debug-build, shared-host observations, including instrumentation overhead.
-  Library graph/code size estimates and scratch leases are separately labeled; allocator/RSS, wire
-  encoding and decoding remain unmeasured. Layout validation does not establish instruction-byte
-  correspondence.
+  Library graph/code size estimates and scratch leases are separately labeled; allocator/RSS and
+  decoding remain unmeasured. The row-level `wire_bytes` field records the Rust token encoder's
+  output length, but the frozen plan's end-to-end `certificate_wire_bytes` stage is unmeasured.
+  Layout validation does not establish instruction-byte correspondence.
 
 The direct admission diagnostic exposed a boundary hidden by the old certificate-only report:
 `independent-folds` and `ordered-outputs` contain dangling nodes; every non-identity candidate is
