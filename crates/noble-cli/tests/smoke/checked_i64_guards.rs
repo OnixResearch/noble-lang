@@ -1,7 +1,11 @@
 use super::checked_i64::run_session;
 
 fn assert_no_host_requests(report: &serde_json::Value, name: &str) {
-    for field in ["guest_requests", "protected_operations", "candidate_prepare_requests"] {
+    for field in [
+        "guest_requests",
+        "protected_operations",
+        "candidate_prepare_requests",
+    ] {
         assert_eq!(report[field], 0, "{name}: {field}");
     }
     assert_eq!(report["prior_stack"], "unchanged", "{name}");
@@ -26,7 +30,8 @@ fn assert_refusal(
 }
 
 #[test]
-fn checked_i64_rejections_and_resource_exhaustion_start_no_guest() -> Result<(), Box<dyn std::error::Error>> {
+fn checked_i64_rejections_and_resource_exhaustion_start_no_guest(
+) -> Result<(), Box<dyn std::error::Error>> {
     let cases: &[(&str, &[&str], &str, &str, &str, &str)] = &[
         (
             "wrong operand type",
@@ -46,13 +51,7 @@ fn checked_i64_rejections_and_resource_exhaustion_start_no_guest() -> Result<(),
         ),
         (
             "zero source-work limit",
-            &[
-                "session",
-                "--framed",
-                "--checked-i64",
-                "--source-work",
-                "0",
-            ],
+            &["session", "--framed", "--checked-i64", "--source-work", "0"],
             "1 2 i64.checked-add",
             "Checked-I64-v1",
             "exhausted",

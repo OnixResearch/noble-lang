@@ -195,7 +195,8 @@ fn assert_value(actual: &serde_json::Value, expected: &str, name: &str) {
 }
 
 #[test]
-fn retained_checked_i64_expectations_match_lean_and_real_source_wasm() -> Result<(), Box<dyn std::error::Error>> {
+fn retained_checked_i64_expectations_match_lean_and_real_source_wasm(
+) -> Result<(), Box<dyn std::error::Error>> {
     let cases = cases();
     let proposed = cases
         .iter()
@@ -208,7 +209,11 @@ fn retained_checked_i64_expectations_match_lean_and_real_source_wasm() -> Result
             )
         })
         .collect::<Vec<_>>();
-    assert_eq!(proposed, lean_cases(), "Wasm rows equal the Lean retained table");
+    assert_eq!(
+        proposed,
+        lean_cases(),
+        "Wasm rows equal the Lean retained table"
+    );
     assert_eq!(cases.len(), 57);
 
     for optimization in ["off", "on"] {
@@ -219,7 +224,12 @@ fn retained_checked_i64_expectations_match_lean_and_real_source_wasm() -> Result
             assert_eq!(report["stage"], "wasm", "{}", case.name);
             assert_eq!(report["outcome"], "normal", "{}", case.name);
             assert_eq!(report["guest_requests"], 0, "{}", case.name);
-            assert_eq!(report["stack"].as_array().map(Vec::len), Some(1), "{}", case.name);
+            assert_eq!(
+                report["stack"].as_array().map(Vec::len),
+                Some(1),
+                "{}",
+                case.name
+            );
             assert_value(&report["stack"][0], &case.expected, &case.name);
         }
     }
@@ -227,14 +237,12 @@ fn retained_checked_i64_expectations_match_lean_and_real_source_wasm() -> Result
 }
 
 #[test]
-fn checked_i64_preserves_stack_prefix_on_success_and_overflow() -> Result<(), Box<dyn std::error::Error>> {
+fn checked_i64_preserves_stack_prefix_on_success_and_overflow(
+) -> Result<(), Box<dyn std::error::Error>> {
     for optimization in ["off", "on"] {
         for (source, expected) in [
             ("97 1 -2 i64.checked-add", "ok:-1"),
-            (
-                "97 9223372036854775807 1 i64.checked-add",
-                "error:1",
-            ),
+            ("97 9223372036854775807 1 i64.checked-add", "error:1"),
         ] {
             let output = run_session(
                 &[
@@ -254,7 +262,11 @@ fn checked_i64_preserves_stack_prefix_on_success_and_overflow() -> Result<(), Bo
             let report: serde_json::Value = serde_json::from_slice(&output.stdout)?;
             assert_eq!(report["outcome"], "normal", "{source}");
             assert_eq!(report["profile"], "Checked-I64-v1", "{source}");
-            assert_eq!(report["stack"].as_array().map(Vec::len), Some(2), "{source}");
+            assert_eq!(
+                report["stack"].as_array().map(Vec::len),
+                Some(2),
+                "{source}"
+            );
             assert_eq!(report["stack"][0]["type"], "I64", "{source}");
             assert_eq!(report["stack"][0]["value"], "97", "{source}");
             assert_value(&report["stack"][1], expected, source);
@@ -262,4 +274,3 @@ fn checked_i64_preserves_stack_prefix_on_success_and_overflow() -> Result<(), Bo
     }
     Ok(())
 }
-
