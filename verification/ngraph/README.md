@@ -225,12 +225,12 @@ Training and circuit search remain in RSI Lab #73; the optional LLVM comparison 
 
 ### Issue #64 v3 clean-source measurement
 
-The [v3 receipt](rewrite-cost-2026-11-13.json) binds the clean source and plan commit
+The [v3 receipt](rewrite-cost-v3-2026-11-13.json) binds the clean source and plan commit
 `d9b62eaf64091c26808eb21592c346d9fa9c4c98`; its source tree is `0bfb0e47cf20e8db6ad2e349859eb5595fbae7ce`.
-The sibling `.evidence` directory retains matching [source-before](rewrite-cost-2026-11-13.json.evidence/source-before.json)
-and [source-after](rewrite-cost-2026-11-13.json.evidence/source-after.json) snapshots, the
-[process record](rewrite-cost-2026-11-13.json.evidence/process.json), [raw stdout](rewrite-cost-2026-11-13.json.evidence/raw/stdout),
-[raw stderr](rewrite-cost-2026-11-13.json.evidence/raw/stderr) and selected Cargo config; the receipt
+The sibling `.evidence` directory retains matching [source-before](rewrite-cost-v3-2026-11-13.json.evidence/source-before.json)
+and [source-after](rewrite-cost-v3-2026-11-13.json.evidence/source-after.json) snapshots, the
+[process record](rewrite-cost-v3-2026-11-13.json.evidence/process.json), [raw stdout](rewrite-cost-v3-2026-11-13.json.evidence/raw/stdout),
+[raw stderr](rewrite-cost-v3-2026-11-13.json.evidence/raw/stderr) and selected Cargo config; the receipt
 records their hashes. The runner completed all 32 fixture/proposer rows (64 unrecorded priming
 iterations and 200 samples per row).
 
