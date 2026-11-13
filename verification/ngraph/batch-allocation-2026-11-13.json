@@ -1,0 +1,64 @@
+{
+  "schema": "noble-ngraph-batch-allocation-summary/v1",
+  "issue": 41,
+  "result": "measured",
+  "source_commit": "624c3de54a626c84f1ca5876f2381e6f940d42d7",
+  "source_tree": "7a85f3c775d53dd43ce3dbf4fbae60ba16d6bdf4",
+  "clean_source": true,
+  "harness": "crates/noble-ngraph/tests/batch_rows/measure.rs",
+  "command": "cargo test --release --message-format=json --locked --offline -p noble-ngraph --test batch_row_reference --no-run; then Valgrind DHAT runs of the ignored allocation_lane, one lane per process",
+  "toolchain": {
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=",
+    "valgrind": "valgrind-3.27.1",
+    "profiler": "DHAT"
+  },
+  "sizes": [1, 16, 64, 256, 1024, 4096, 65536],
+  "delta_allocations_per_row": {
+    "reference": {
+      "1": {"blocks": 4, "bytes": 192},
+      "16": {"blocks": 3.063, "bytes": 192.063},
+      "64": {"blocks": 3.016, "bytes": 192.016},
+      "256": {"blocks": 3.004, "bytes": 192.008},
+      "1024": {"blocks": 3.001, "bytes": 192.003},
+      "4096": {"blocks": 2.999, "bytes": 191.946},
+      "65536": {"blocks": 3, "bytes": 192}
+    },
+    "single": {
+      "1": {"blocks": 3, "bytes": 80},
+      "16": {"blocks": 2.063, "bytes": 80.063},
+      "64": {"blocks": 1.953, "bytes": 76.516},
+      "256": {"blocks": 1.988, "bytes": 79.133},
+      "1024": {"blocks": 1.997, "bytes": 79.784},
+      "4096": {"blocks": 2, "bytes": 80.001},
+      "65536": {"blocks": 2, "bytes": 80}
+    },
+    "batch": {
+      "1": {"blocks": 5, "bytes": 240},
+      "16": {"blocks": 2.438, "bytes": 254.063},
+      "64": {"blocks": 2.109, "bytes": 243.516},
+      "256": {"blocks": 2.027, "bytes": 240.883},
+      "1024": {"blocks": 2.007, "bytes": 240.222},
+      "4096": {"blocks": 2.002, "bytes": 240.055},
+      "65536": {"blocks": 2, "bytes": 240.003}
+    }
+  },
+  "batch_allocations_at_65536": {
+    "total_blocks_delta": 131079,
+    "total_bytes_delta": 15728868,
+    "classes": {
+      "report vector": {"blocks": 1, "bytes": 8388608},
+      "preflight slot vectors": {"blocks": 65536, "bytes": 2097152},
+      "output value vectors": {"blocks": 65536, "bytes": 2097152},
+      "harness staged inputs": {"blocks": 1, "bytes": 2097152},
+      "harness operand rows": {"blocks": 1, "bytes": 1048576}
+    }
+  },
+  "reference_allocations_at_65536": {"blocks_delta": 196609, "bytes_delta": 12582916},
+  "single_allocations_at_65536": {"blocks_delta": 131073, "bytes_delta": 5242884},
+  "measurement_notes": [
+    "Delta is total lane allocations minus the zero-row graph-build/check/compile/prepare baseline, divided by row count; counts and bytes include separately classified harness inputs and operand rows.",
+    "DHAT counts allocations out of process; the workspace keeps unsafe_code forbidden and compiles no counting global allocator.",
+    "One host, one run per lane; DHAT changes timing, so these counts are not timing measurements. Allocation bytes sum every allocated block and are not live-memory size."
+  ]
+}

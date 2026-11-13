@@ -44,9 +44,10 @@ Both of: an into-sink run whose per-row reports are not owned allocations, and a
 beats 157 ns/row at 65536 rows by 15 % against the measured 181 ns/row single lane
 ($181 / 1.15 \approx 157.39$, so the integer cutoff is 157). The earlier 177 ns/row figure was an
 arithmetic error. Neither exists today, and neither is started here. Any
-measurement that claims either must also state the allocation-count gap recorded above: this
-workspace cannot host a counting allocator under `unsafe_code = "forbid"`, so an allocation claim
-needs an explicit instrumentation seam decision by an owner first.
+measurement that claims either must also state the instrumentation limitation recorded above: this
+workspace cannot host a counting allocator under `unsafe_code = "forbid"`; out-of-process DHAT
+allocation totals are now available, but they do not provide an in-process allocator seam or alter
+the measured continuation decision.
 
 ## Cold, staging, output-copy and byte breakdown (item 6, 2026-11-07)
 
@@ -86,11 +87,38 @@ and 7.5 ns per row at 65536 rows, small next to the run.
 
 This is not a continuation measurement. Its warm run used a different build route from the
 2026-11-01 lanes, and the two are not comparable, so the NO-GO above stands under its frozen
-criteria. Allocation counts remain unavailable. The authored workload has no extraction cost.
+criteria. The authored workload has no extraction cost.
+
+## Post-decision remeasurement and allocation counts (2026-11-13)
+
+The ignored release timing lane was rerun after committing source `624c3de5`; the source tree was
+clean. The full compact receipt is [`batch-measurements-2026-11-13.json`](batch-measurements-2026-11-13.json).
+The same seven sizes were compared, with five timed repetitions per lane and size:
+
+| Rows | 1 | 16 | 64 | 256 | 1024 | 4096 | 65536 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `single` compiled (median ns/row) | 220 | 90.81 | 93.14 | 137.76 | 117.54 | 96.42 | 127.18 |
+| `batch` median (ns/row) | 151 | 92 | 131.03 | 134.16 | 135.84 | 127.76 | 127.38 |
+
+Batch is faster by the median at 1 and 256 rows only; the wins do not form a monotonic crossover.
+At 4096 rows it is slower than the single-row lane, and at 65536 it is marginally slower
+(127.38 vs 127.18 ns/row). The first and second identical 65536-row runs grew the resident set by
+10,620,928 and 8,388,608 bytes, respectively. This is one-host post-decision reporting, not a
+reapplication of the frozen continuation criteria; the original NO-GO remains unchanged.
+
+Allocation counts were obtained out of process with the pinned Valgrind 3.27.1 DHAT tool, without
+changing the workspace's `unsafe_code = "forbid"` policy. The full summary is
+[`batch-allocation-2026-11-13.json`](batch-allocation-2026-11-13.json); at 65536 rows, the
+reference, compiled single-row and batch lanes add approximately 3/192, 2/80 and 2/240
+allocation blocks/bytes per row, respectively. The batch's counted bytes include 8 MiB for its
+single report vector, 2 MiB of per-row preflight vectors, 2 MiB of output vectors, and harness
+staging. DHAT totals sum allocations rather than measuring live memory and are not timing results.
+Both dated receipts bind source commit `624c3de54a626c84f1ca5876f2381e6f940d42d7` and record the
+pinned compiler/vendor provenance.
 
 ## Scope
 
 This decision covers CPU independent-row batching only. It says nothing about native code
 generation, GPUs, specialization/`#32`–`#33`, direct Wasm lowering (`#36`) or interaction nets
 (`#37`). #14's historical performance STOP is unchanged, and no throughput, speed or memory claim
-beyond the numbers in the two retained receipts is made.
+beyond the numbers in the retained receipts is made.

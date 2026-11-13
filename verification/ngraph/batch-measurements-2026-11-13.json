@@ -1,0 +1,39 @@
+{
+  "schema": "noble-ngraph-batch-measurement-summary/v1",
+  "issue": 41,
+  "result": "measured",
+  "lane": "post-decision remeasurement; frozen continuation rule not reapplied",
+  "source_commit": "624c3de54a626c84f1ca5876f2381e6f940d42d7",
+  "source_tree": "7a85f3c775d53dd43ce3dbf4fbae60ba16d6bdf4",
+  "clean_source": true,
+  "harness": "crates/noble-ngraph/tests/batch_rows/measure_repeated.rs",
+  "measurement_command": "cargo test --release --locked --offline -p noble-ngraph --test batch_row_reference -- --ignored --nocapture --exact measure::repeated::timed_workloads",
+  "toolchain": {
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=",
+    "release": true,
+    "host": "one shared host",
+    "timed_repetitions_per_lane_and_size": 5
+  },
+  "sizes": [1, 16, 64, 256, 1024, 4096, 65536],
+  "ns_per_row_median": {
+    "1": {"single": 220, "batch": 151},
+    "16": {"single": 90.8125, "batch": 92},
+    "64": {"single": 93.140625, "batch": 131.03125},
+    "256": {"single": 137.7578125, "batch": 134.15625},
+    "1024": {"single": 117.5439453125, "batch": 135.8388671875},
+    "4096": {"single": 96.42041015625, "batch": 127.758056640625},
+    "65536": {"single": 127.17681884765625, "batch": 127.38304138183594}
+  },
+  "agreement": "reference, compiled single-row and batch lane outputs agreed at every measured size",
+  "resident_growth_bytes_at_65536": {
+    "batch_first_run": 10620928,
+    "batch_second_run": 8388608
+  },
+  "interpretation": "The median wins are nonmonotonic (1 and 256 rows only); no sustained crossover is established. The batch lane loses at 4096 rows and is marginally slower at 65536 rows. This is post-decision reporting, not a reapplication of frozen GO/NO-GO thresholds.",
+  "non_claims": [
+    "one host and one remeasurement; median of five is reported, not a bound on other hardware",
+    "resident-set growth is transient footprint, not retained memory",
+    "native lane is a checksum-protected harness floor, not an alternate implementation of the graph"
+  ]
+}
