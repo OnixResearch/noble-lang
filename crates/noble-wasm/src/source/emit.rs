@@ -281,5 +281,14 @@ pub(super) fn module(
         attempt!(out.append(b" (global.set $core_live_module_installed (i32.const 1))\n (i32.store (i32.const 61440) (i32.const 0))\n"));
     }
     attempt!(out.append(b"))\n(global.get $failure))\n)\n"));
+    if plan.type_directed_experimental {
+        attempt!(out.append(
+            b";; noble-type-directed-report:v1 specialized-known-sum-cases="
+        ));
+        attempt!(out.number(plan.type_directed_specializations));
+        attempt!(out.append(b" baseline-fallback-operations="));
+        attempt!(out.number(plan.type_directed_fallback_operations));
+        attempt!(out.append(b"\n"));
+    }
     Ok(out.finish())
 }

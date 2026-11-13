@@ -13,6 +13,7 @@ pub(super) struct Options {
     pub manifest: Option<bindings::Manifest>,
     pub framed: bool,
     pub optimized: bool,
+    pub type_directed_experimental: bool,
     pub emit: Option<std::path::PathBuf>,
     pub limits: noble_contracts::Limits,
 }
@@ -64,6 +65,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         manifest: None,
         framed: false,
         optimized: false,
+        type_directed_experimental: false,
         emit: None,
         limits: maximum,
     };
@@ -74,7 +76,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 13];
+    let mut seen = [""; 14];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -127,6 +129,11 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
     }
     if options.retained_source_bytes.is_some()
         && (!options.declared_modules || !is_session && !options.compile_only)
+    {
+        return Err(usage());
+    }
+    if options.type_directed_experimental
+        && (!options.compile_only || options.declared_modules || options.text_byte_cursor)
     {
         return Err(usage());
     }
@@ -190,6 +197,11 @@ fn set(
             Some("on") => options.optimized = true,
             Some(_) | None => return Err(usage()),
         },
+        "--lowering" if options.compile_only => match value.to_str() {
+            Some("baseline") => options.type_directed_experimental = false,
+            Some("type-directed-experimental") => options.type_directed_experimental = true,
+            Some(_) | None => return Err(usage()),
+        },
         "--emit" => options.emit = Some(std::path::PathBuf::from(value)),
         "--bindings" => options.bindings = Some(std::path::PathBuf::from(value)),
         "--source-bytes" => options.limits.bytes = attempt!(limit(value, maximum.bytes)),
@@ -244,6 +256,46 @@ mod tests {
             .map(|argument| std::ffi::OsString::from(*argument))
             .collect();
         super::parse(&arguments).map_err(|failure| failure.message)
+    }
+
+    #[test]
+    fn experimental_lowering_is_explicit_compile_only_and_profile_scoped(
+    ) -> Result<(), std::string::String> {
+        let selected = flags(&[
+            "compile",
+            "expression.noble",
+            "--lowering",
+            "type-directed-experimental",
+        ])?;
+        assert!(selected.type_directed_experimental);
+        let default = flags(&["compile", "expression.noble"])?;
+        assert!(!default.type_directed_experimental);
+        let baseline = flags(&["compile", "expression.noble", "--lowering", "baseline"])?;
+        assert!(!baseline.type_directed_experimental);
+        for arguments in [
+            &["run", "expression.noble", "--lowering", "type-directed-experimental"][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--text-byte-cursor",
+                "--lowering",
+                "type-directed-experimental",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--bindings",
+                "host.txt",
+                "--lowering",
+                "type-directed-experimental",
+            ][..],
+        ] {
+            if flags(arguments).is_ok() {
+                return Err(std::format!("accepted unsupported lowering options: {arguments:?}"));
+            }
+        }
+        Ok(())
     }
 
     #[test]

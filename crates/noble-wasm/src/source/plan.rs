@@ -29,6 +29,8 @@ pub(super) enum Action {
     NominalLeft(u64, u32, u32),
     NominalRight(u64, u32, u32),
     NominalMatch(u64, u32, u32, u32, u32),
+    KnownVariant(u32),
+    KnownCase(u32),
     EmitBound(u32),
     ClockBound(u32),
     CodeExportBound(u32),
@@ -115,6 +117,8 @@ pub(super) fn atom_metadata(
             None,
             ordinal,
         ),
+        Action::KnownVariant(definition) => (2, i64::from(definition), None, None, 0),
+        Action::KnownCase(_) => (2, 17, None, None, 0),
         Action::EmitBound(slot) => (31, i64::from(slot), None, None, 0),
         Action::ClockBound(slot) => (32, i64::from(slot), None, None, 0),
         Action::CodeExportBound(slot) => (34, i64::from(slot), None, None, 0),
@@ -184,6 +188,7 @@ impl Action {
             Self::Call(..)
             | Self::CalculatorIterate
             | Self::NominalMatch(..)
+            | Self::KnownCase(_)
             | Self::EmitBound(_)
             | Self::ClockBound(_)
             | Self::CodeExportBound(_)
@@ -193,6 +198,7 @@ impl Action {
             | Self::SlotInvoke(..) => false,
             Self::Word(3 | 9 | 10 | 17 | 18 | 21) => false,
             Self::Word(_)
+            | Self::KnownVariant(_)
             | Self::I64(_)
             | Self::Bool(_)
             | Self::Unit
@@ -267,6 +273,9 @@ pub(super) struct Layout {
     pub(super) has_bound_send: bool,
     pub(super) has_live_propose: bool,
     pub(super) has_live_generation: bool,
+    pub(super) type_directed_experimental: bool,
+    pub(super) type_directed_specializations: u64,
+    pub(super) type_directed_fallback_operations: u64,
 }
 
 struct Arena {
@@ -397,6 +406,9 @@ fn start(
         has_bound_send: false,
         has_live_propose: false,
         has_live_generation: false,
+        type_directed_experimental: compiler.type_directed_experimental,
+        type_directed_specializations: 0,
+        type_directed_fallback_operations: 0,
     };
     Ok((layout, arenas))
 }
@@ -489,6 +501,12 @@ pub(super) fn lower(
         owner_definition: None,
     };
     attempt!(operations::fill(input, compiler, &mut layout, work));
+    if compiler.type_directed_experimental {
+        let (specializations, fallbacks) =
+            attempt!(specialize_known_sum_cases(&mut layout.programs, work));
+        layout.type_directed_specializations = specializations;
+        layout.type_directed_fallback_operations = fallbacks;
+    }
     attempt!(host_footprint(&mut layout));
     attempt!(topology::order(&mut layout));
     attempt!(allocation::finish(
@@ -498,6 +516,60 @@ pub(super) fn lower(
         work
     ));
     Ok(layout)
+}
+
+/// Fuse only a scalar literal, its adjacent `inl`/`inr`, two static
+/// quotations, and the matching checked `case`. The kernel checker has
+/// already established every complete stack/type interface. Other shapes
+/// retain the baseline operations unchanged.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this pass rewrites only the exact five-operation source pattern after independent checking; unmatched shapes remain baseline operations."
+)]
+fn specialize_known_sum_cases(
+    programs: &mut [Program],
+    work: &mut super::Work,
+) -> Result<(u64, u64), crate::Diagnostic> {
+    let mut specializations = 0u64;
+    let mut fallback_operations = 0u64;
+    for program in programs {
+        let mut index = 0usize;
+        while index < program.operations.len() {
+            attempt!(work.charge(1));
+            if index.saturating_add(4) < program.operations.len() {
+                let literal = matches!(
+                    program.operations[index].action,
+                    Action::I64(_) | Action::Bool(_) | Action::Unit
+                );
+                let variant = match program.operations[index + 1].action {
+                    Action::Word(definition @ (15 | 16)) => Some(definition),
+                    _ => None,
+                };
+                let quotations = matches!(program.operations[index + 2].action, Action::Program(_))
+                    && matches!(program.operations[index + 3].action, Action::Program(_));
+                if literal
+                    && quotations
+                    && matches!(program.operations[index + 4].action, Action::Word(17))
+                {
+                    if let Some(definition) = variant {
+                        program.operations[index + 1].action = Action::KnownVariant(definition);
+                        program.operations[index + 4].action =
+                            Action::KnownCase(u32::from(definition == 16));
+                        specializations = specializations
+                            .checked_add(1)
+                            .ok_or(crate::Diagnostic::Exhausted)?;
+                        index += 5;
+                        continue;
+                    }
+                }
+            }
+            fallback_operations = fallback_operations
+                .checked_add(1)
+                .ok_or(crate::Diagnostic::Exhausted)?;
+            index += 1;
+        }
+    }
+    Ok((specializations, fallback_operations))
 }
 
 pub(super) fn number(value: usize) -> Result<u32, crate::Diagnostic> {
