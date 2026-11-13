@@ -213,3 +213,5 @@ mod endpoint_controls;
 mod pilots;
 #[path = "scoped/scope_controls.rs"]
 mod scope_controls;
+#[path = "scoped/corpus.rs"]
+mod corpus;
