@@ -1,0 +1,20 @@
+[package]
+name = "stateful-alloc"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# A standalone fixture crate (its own workspace, not a workspace member). This is the
+# only place in the allocator-admission lane that declares `unsafe`: `Allocator` is an
+# `unsafe trait`, so a concrete stateful implementation cannot exist without
+# `unsafe impl`. It stays outside the repository workspace, which keeps
+# `unsafe_code = "forbid"` in force for every admitted Noble subject.
+[workspace]
+
+[lib]
+name = "stateful_alloc"
+path = "src/lib.rs"
+
+[features]
+default = []
+nightly-allocator-api = []
