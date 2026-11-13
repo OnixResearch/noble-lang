@@ -21,6 +21,8 @@ import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
 import NobleFoundation.PackedScheduleCorpus
+import NobleFoundation.NetI64
+import NobleFoundation.NetI64Corpus
 import NobleFoundation.GraphRewrite
 import NobleFoundation.Specialize
 import NobleFoundation.SymbolicMutations
@@ -50,6 +52,7 @@ import NobleFoundation.TaskInterleaving
 import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.InteractionNetOrientation
+import NobleFoundation.NetI64
 import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
