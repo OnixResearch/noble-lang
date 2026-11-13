@@ -734,8 +734,15 @@ The retained receipt [`schedule-receipt-29fc1e17.json`](schedule-receipt-29fc1e1
 from the clean commit `29fc1e17`; it covers the two earlier artifacts and all 23 corpus theorems,
 taken from the foundation receipt of `a41435fd`. Its open-edge reference to issue #97 is an erratum:
 #97 concerns re-extracting Aeneas subjects and is not a dependency of this schedule model. The actual
-open edge is that no theorem relates the Rust packed executor to the Lean machines. A new receipt
-will bind the tagged three-artifact export, including the layer lists and exact failure-suffix table.
+open edge is that no theorem relates the Rust packed executor to the Lean machines.
+
+The new [`schedule-receipt-8aa12e67.json`](schedule-receipt-8aa12e67.json) was produced from clean
+source commit `8aa12e674e0b31d071b8f6ae21f81876be039f2c` and its matching clean foundation receipt.
+It binds export tag `ngraph-packed-export/0`, all three artifacts and 44 corpus theorems. The guarded
+artifact records eight refused mutations, seven packed/reference execution rows, the exact exported
+failure-suffix table and the canonical-first guard witness. Receipt SHA-256:
+`9e776c943140b801ba98d2da092c01d309c009e9e079c9f68c95cdf61d011eb7`. No general Rust-executor
+theorem or byte decoder is claimed; F32 remains gated on the separate #38 follow-up.
 
 ### Needs integrator
 
