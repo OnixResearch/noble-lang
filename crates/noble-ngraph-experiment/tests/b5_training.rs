@@ -284,7 +284,10 @@ fn assert_restored(result: &noble_ngraph_experiment::opt::TrialResult, parent: &
     assert_eq!(result.checkpoint.counters, parent.counters);
 }
 
-fn assert_fault_events(records: &[noble_ngraph_experiment::opt::AttemptRecord], after_steps: usize) {
+fn assert_fault_events(
+    records: &[noble_ngraph_experiment::opt::AttemptRecord],
+    after_steps: usize,
+) {
     assert!(matches!(&records[0].event, AttemptEvent::StepStaged { .. }));
     assert!(
         matches!(&records[1].event, AttemptEvent::FaultInjected { after_steps: observed } if *observed == after_steps)
@@ -296,11 +299,12 @@ fn assert_opt_provenance(
     candidate: &Candidate,
     dataset: &FrozenDataset,
     parent: &Checkpoint,
+    expected_parent_id: noble_ngraph_experiment::opt::Digest,
     result: &noble_ngraph_experiment::opt::TrialResult,
 ) {
     let provenance = result.checkpoint.snapshot.provenance();
     assert_eq!(provenance.optimizer_code, candidate.id());
-    assert_eq!(provenance.parent_snapshot, Some(parent.snapshot.id()));
+    assert_eq!(provenance.parent_snapshot, Some(expected_parent_id));
     assert_ne!(
         provenance.parent_parameters,
         parent.snapshot.provenance().parent_parameters
@@ -324,15 +328,24 @@ fn opt_snapshot_provenance_binds_artifacts_and_keeps_parents_stable() {
     let parent_id = parent.snapshot.id();
     let parent_bytes = parent.snapshot.parameter_bytes();
     let parent_state = parent.snapshot.state_bytes().to_vec();
-    let result = run_trial(
+    let prefix = run_trial(
         &candidate,
         Some(&parent),
         &dataset,
-        3,
+        2,
         FaultInjection::None,
         &mut AttemptLog::default(),
     )
-    .expect("trial completes");
+    .expect("prefix trial completes");
+    let result = run_trial(
+        &candidate,
+        Some(&prefix.checkpoint),
+        &dataset,
+        1,
+        FaultInjection::None,
+        &mut AttemptLog::default(),
+    )
+    .expect("final trial step completes");
     assert_eq!(result.status, TrialStatus::Completed);
     assert_ne!(result.checkpoint.snapshot.id(), parent_id);
     assert_eq!(parent.snapshot.id(), parent_id);
@@ -348,7 +361,13 @@ fn opt_snapshot_provenance_binds_artifacts_and_keeps_parents_stable() {
     );
     assert_eq!(result.checkpoint.data_cursor, 3);
     assert_eq!(result.checkpoint.rng.draws, 3);
-    assert_opt_provenance(&candidate, &dataset, &parent, &result);
+    assert_opt_provenance(
+        &candidate,
+        &dataset,
+        &parent,
+        prefix.checkpoint.snapshot.id(),
+        &result,
+    );
 }
 
 #[test]
