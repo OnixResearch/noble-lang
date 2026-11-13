@@ -1,0 +1,1295 @@
+{
+  "schema": "noble-focus-elaboration-measure/v2",
+  "source": {
+    "commit": "adffa9d5072c878adba0166e5ad541003c86189c",
+    "shortCommit": "adffa9d5072c",
+    "tree": "clean",
+    "dirtyPaths": [],
+    "cleanTreeEvidence": true
+  },
+  "noble": "/home/brittonr/.cache/noble-iss/target/focus-79/release/noble",
+  "nobleSha256": "4c432d6244a0170c81b141f9f0186b3812854bb231b2621006513586aa3c1864",
+  "nobleProfile": "release",
+  "nobleVersionString": null,
+  "nobleVersionNote": "the CLI exposes no --version string; identity is the binary sha256",
+  "host": "linux x64",
+  "opt": "off",
+  "runs": 7,
+  "formsDirectory": "verification/focus-elaboration/forms",
+  "stackOrderProbe": {
+    "source": "1 5",
+    "stack": [
+      {
+        "handle": null,
+        "type": "I64",
+        "value": "1"
+      },
+      {
+        "handle": null,
+        "type": "I64",
+        "value": "5"
+      }
+    ],
+    "cells": 2,
+    "bottomToTop": true,
+    "note": "each authored word is pushed in order, so ascending reported index is ascending stack position",
+    "diagnostic": null
+  },
+  "results": [
+    {
+      "form": "nested-product.dip-library",
+      "path": "verification/focus-elaboration/forms/nested-product.dip-library.noble",
+      "authored": {
+        "bytes": 65,
+        "tokens": 19,
+        "tokensExcludingParentheses": 19,
+        "stackManipulationTokens": 8,
+        "quotations": 4
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 6.886,
+        "minMilliseconds": 4.031,
+        "maxMilliseconds": 9.428,
+        "warmupMilliseconds": 6.208,
+        "moduleBytes": 68686,
+        "moduleLines": 1173,
+        "moduleSha256": "906ac94debdf58fa6bc66bc0fcde0dc25100cfc3b98fbc1a5015959b6183afd7"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 41,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 40,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 39,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 41,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 40,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 41,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 40,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 48,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1968,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "nested-product.dip",
+      "path": "verification/focus-elaboration/forms/nested-product.dip.noble",
+      "authored": {
+        "bytes": 33,
+        "tokens": 10,
+        "tokensExcludingParentheses": 10,
+        "stackManipulationTokens": 5,
+        "quotations": 1
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 6.972,
+        "minMilliseconds": 5.333,
+        "maxMilliseconds": 11.388,
+        "warmupMilliseconds": 7.413,
+        "moduleBytes": 61653,
+        "moduleLines": 1063,
+        "moduleSha256": "e8b6b695dee5539f56203236ca96e2067a1e27fba1c33ee97ef37310cc388018"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 25,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 24,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 23,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 25,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 24,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 25,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 24,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 27,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1200,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "nested-product.explicit",
+      "path": "verification/focus-elaboration/forms/nested-product.explicit.noble",
+      "authored": {
+        "bytes": 35,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 6,
+        "quotations": 0
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 7.601,
+        "minMilliseconds": 4.823,
+        "maxMilliseconds": 9.761,
+        "warmupMilliseconds": 6.852,
+        "moduleBytes": 61094,
+        "moduleLines": 1057,
+        "moduleSha256": "743f7f8b8e275a105fdbaf9339cf84c4d7dc26a0d3bccea718b5f599056b1b55"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 24,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 23,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 22,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 24,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 22,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 24,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 22,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 25,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1152,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 8
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "nested-product.library",
+      "path": "verification/focus-elaboration/forms/nested-product.library.noble",
+      "authored": {
+        "bytes": 67,
+        "tokens": 18,
+        "tokensExcludingParentheses": 18,
+        "stackManipulationTokens": 9,
+        "quotations": 3
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 8.159,
+        "minMilliseconds": 5.765,
+        "maxMilliseconds": 12.211,
+        "warmupMilliseconds": 9.293,
+        "moduleBytes": 68127,
+        "moduleLines": 1167,
+        "moduleSha256": "67a0b900b74d4fcdab05462faa15de2a7bff5edde9574e3456a0030e3f80875f"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 40,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 39,
+                "type": "I64",
+                "value": "2"
+              },
+              {
+                "handle": 38,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 40,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 38,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 40,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "2"
+            },
+            {
+              "handle": 38,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 46,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1920,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-nested.dip-library",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.dip-library.noble",
+      "authored": {
+        "bytes": 65,
+        "tokens": 19,
+        "tokensExcludingParentheses": 19,
+        "stackManipulationTokens": 8,
+        "quotations": 4
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 6.441,
+        "minMilliseconds": 5.205,
+        "maxMilliseconds": 6.984,
+        "warmupMilliseconds": 8.208,
+        "moduleBytes": 70386,
+        "moduleLines": 1198,
+        "moduleSha256": "d192b0d53617fa429416b05d1135bcbc910edba38ef82e1710e7880999beb347"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 41,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 40,
+                "type": "Bool",
+                "value": false
+              },
+              {
+                "handle": 39,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 41,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 40,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 41,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 40,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 39,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 52,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1968,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-nested.dip",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.dip.noble",
+      "authored": {
+        "bytes": 33,
+        "tokens": 10,
+        "tokensExcludingParentheses": 10,
+        "stackManipulationTokens": 5,
+        "quotations": 1
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 4.93,
+        "minMilliseconds": 3.434,
+        "maxMilliseconds": 5.905,
+        "warmupMilliseconds": 5.099,
+        "moduleBytes": 62876,
+        "moduleLines": 1083,
+        "moduleSha256": "13f2c6ac62839dc186998f426ac3c898aabfafdfdab1db27ea2cbdea1e2e103d"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 25,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 24,
+                "type": "Bool",
+                "value": false
+              },
+              {
+                "handle": 23,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 25,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 24,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 25,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 24,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 23,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 30,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1200,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-nested.explicit",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.explicit.noble",
+      "authored": {
+        "bytes": 35,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 6,
+        "quotations": 0
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 4.087,
+        "minMilliseconds": 3.299,
+        "maxMilliseconds": 6.957,
+        "warmupMilliseconds": 6.17,
+        "moduleBytes": 62328,
+        "moduleLines": 1077,
+        "moduleSha256": "6438d6d3f22cb5728c80ecf06f29dafd72e672df54652aca70ac4fea21b5cabf"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 24,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 23,
+                "type": "Bool",
+                "value": false
+              },
+              {
+                "handle": 22,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 24,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 23,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 22,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 24,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 23,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 22,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 28,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1152,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 8
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-nested.library",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.library.noble",
+      "authored": {
+        "bytes": 67,
+        "tokens": 18,
+        "tokensExcludingParentheses": 18,
+        "stackManipulationTokens": 9,
+        "quotations": 3
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 5.931,
+        "minMilliseconds": 5.503,
+        "maxMilliseconds": 7.158,
+        "warmupMilliseconds": 5.475,
+        "moduleBytes": 69839,
+        "moduleLines": 1192,
+        "moduleSha256": "2bb73d8bbaa515913e0d6f103537caa3bc7835454ab1b8fcf8b1e9423ec26061"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": 40,
+            "type": "Pair",
+            "value": [
+              {
+                "handle": 39,
+                "type": "Bool",
+                "value": false
+              },
+              {
+                "handle": 38,
+                "type": "I64",
+                "value": "5"
+              }
+            ]
+          }
+        ],
+        "stackOrder": [
+          "Pair"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": 40,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 39,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 38,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "value": {
+          "handle": 40,
+          "type": "Pair",
+          "value": [
+            {
+              "handle": 39,
+              "type": "Bool",
+              "value": false
+            },
+            {
+              "handle": 38,
+              "type": "I64",
+              "value": "5"
+            }
+          ]
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 50,
+        "quoteInvocations": 0,
+        "reflectionSteps": 3,
+        "allocatedTotalBytes": 1920,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 24
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-step.explicit",
+      "path": "verification/focus-elaboration/forms/type-changing-step.explicit.noble",
+      "authored": {
+        "bytes": 6,
+        "tokens": 3,
+        "tokensExcludingParentheses": 3,
+        "stackManipulationTokens": 1,
+        "quotations": 0
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 8.332,
+        "minMilliseconds": 7.054,
+        "maxMilliseconds": 9.889,
+        "warmupMilliseconds": 6.795,
+        "moduleBytes": 56472,
+        "moduleLines": 970,
+        "moduleSha256": "9639a15fa6532efbdd18e20a7c2e0d832e8928b92b92a65991dfc542d583d4b7"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": null,
+            "type": "Bool",
+            "value": false
+          }
+        ],
+        "stackOrder": [
+          "Bool"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": null,
+          "type": "Bool",
+          "value": false
+        },
+        "value": {
+          "handle": null,
+          "type": "Bool",
+          "value": false
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 12,
+        "quoteInvocations": 0,
+        "reflectionSteps": 1,
+        "allocatedTotalBytes": 288,
+        "operandPeakBytes": 32,
+        "continuationPeakBytes": 8
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    },
+    {
+      "form": "type-changing-step.library",
+      "path": "verification/focus-elaboration/forms/type-changing-step.library.noble",
+      "authored": {
+        "bytes": 26,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 3,
+        "quotations": 2
+      },
+      "compile": {
+        "opt": "off",
+        "runs": 7,
+        "status": 0,
+        "stderr": "",
+        "medianMilliseconds": 6.288,
+        "minMilliseconds": 5.022,
+        "maxMilliseconds": 8.619,
+        "warmupMilliseconds": 9.754,
+        "moduleBytes": 61043,
+        "moduleLines": 1045,
+        "moduleSha256": "cb56d7dea5a786f3f880bea89efc22f7bf737ededd36697b0b48d289203dce9e"
+      },
+      "executed": {
+        "status": 0,
+        "outcome": "normal",
+        "stack": [
+          {
+            "handle": null,
+            "type": "Bool",
+            "value": false
+          }
+        ],
+        "stackOrder": [
+          "Bool"
+        ],
+        "stackCells": 1,
+        "stackLengthMetric": 1,
+        "stackHeightConsistent": true,
+        "topOfStack": {
+          "handle": null,
+          "type": "Bool",
+          "value": false
+        },
+        "value": {
+          "handle": null,
+          "type": "Bool",
+          "value": false
+        },
+        "guestRequests": 0,
+        "requestTrace": [],
+        "effectRequests": null,
+        "quotaReason": null,
+        "executionSteps": 26,
+        "quoteInvocations": 0,
+        "reflectionSteps": 1,
+        "allocatedTotalBytes": 768,
+        "operandPeakBytes": 48,
+        "continuationPeakBytes": 16
+      },
+      "liveDiagnostic": null,
+      "effectTrace": {
+        "observable": true,
+        "reason": "reported by noble live repl as guest_requests/request_trace",
+        "guestRequests": 0,
+        "requestTrace": []
+      },
+      "resourceObligations": {
+        "observable": false,
+        "reason": "the selected source profile has no must-use resource word, so this program owns no obligation to observe; the live report exposes values, stack cells and metrics only. The ownership axis is the #59 fragment (proofs/foundation/NobleFoundation/Ownership.lean)"
+      }
+    }
+  ],
+  "proposal": "verification/focus-elaboration/forms/proposed-sugar.md",
+  "sugar": [
+    {
+      "role": "sugar",
+      "name": "nested-product",
+      "snippet": "1 5 pair focus .0 (+ 1)",
+      "authored": {
+        "bytes": 23,
+        "tokens": 7,
+        "tokensExcludingParentheses": 7,
+        "stackManipulationTokens": 1,
+        "quotations": 0
+      },
+      "compilable": false,
+      "expandsTo": "nested-product.dip",
+      "comparedForms": [
+        "nested-product.explicit",
+        "nested-product.dip",
+        "nested-product.library"
+      ]
+    },
+    {
+      "role": "expansion",
+      "name": "nested-product.explicit",
+      "snippet": "1 5 pair unpair swap 1 + swap pair",
+      "authored": {
+        "bytes": 34,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 6,
+        "quotations": 0
+      },
+      "compilable": true,
+      "form": "nested-product.explicit",
+      "path": "verification/focus-elaboration/forms/nested-product.explicit.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "expansion",
+      "name": "nested-product.dip",
+      "snippet": "1 5 pair unpair [ 1 + ] dip pair",
+      "authored": {
+        "bytes": 32,
+        "tokens": 10,
+        "tokensExcludingParentheses": 10,
+        "stackManipulationTokens": 5,
+        "quotations": 1
+      },
+      "compilable": true,
+      "form": "nested-product.dip",
+      "path": "verification/focus-elaboration/forms/nested-product.dip.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "expansion",
+      "name": "nested-product.library",
+      "snippet": "1 5 pair [ unpair ] [ swap 1 + swap ] compose [ pair ] compose run",
+      "authored": {
+        "bytes": 66,
+        "tokens": 18,
+        "tokensExcludingParentheses": 18,
+        "stackManipulationTokens": 9,
+        "quotations": 3
+      },
+      "compilable": true,
+      "form": "nested-product.library",
+      "path": "verification/focus-elaboration/forms/nested-product.library.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "sugar",
+      "name": "type-changing-nested",
+      "snippet": "7 5 pair focus .0 (0 =)",
+      "authored": {
+        "bytes": 23,
+        "tokens": 7,
+        "tokensExcludingParentheses": 7,
+        "stackManipulationTokens": 1,
+        "quotations": 0
+      },
+      "compilable": false,
+      "expandsTo": "type-changing-nested.dip",
+      "comparedForms": [
+        "type-changing-nested.explicit",
+        "type-changing-nested.dip",
+        "type-changing-nested.library"
+      ]
+    },
+    {
+      "role": "expansion",
+      "name": "type-changing-nested.explicit",
+      "snippet": "7 5 pair unpair swap 0 = swap pair",
+      "authored": {
+        "bytes": 34,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 6,
+        "quotations": 0
+      },
+      "compilable": true,
+      "form": "type-changing-nested.explicit",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.explicit.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "expansion",
+      "name": "type-changing-nested.dip",
+      "snippet": "7 5 pair unpair [ 0 = ] dip pair",
+      "authored": {
+        "bytes": 32,
+        "tokens": 10,
+        "tokensExcludingParentheses": 10,
+        "stackManipulationTokens": 5,
+        "quotations": 1
+      },
+      "compilable": true,
+      "form": "type-changing-nested.dip",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.dip.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "expansion",
+      "name": "type-changing-nested.library",
+      "snippet": "7 5 pair [ unpair ] [ swap 0 = swap ] compose [ pair ] compose run",
+      "authored": {
+        "bytes": 66,
+        "tokens": 18,
+        "tokensExcludingParentheses": 18,
+        "stackManipulationTokens": 9,
+        "quotations": 3
+      },
+      "compilable": true,
+      "form": "type-changing-nested.library",
+      "path": "verification/focus-elaboration/forms/type-changing-nested.library.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "sugar",
+      "name": "type-changing-step",
+      "snippet": "7 focus (0 =)",
+      "authored": {
+        "bytes": 13,
+        "tokens": 4,
+        "tokensExcludingParentheses": 4,
+        "stackManipulationTokens": 0,
+        "quotations": 0
+      },
+      "compilable": false,
+      "expandsTo": "type-changing-step.library",
+      "comparedForms": [
+        "type-changing-step.explicit",
+        "type-changing-step.library"
+      ]
+    },
+    {
+      "role": "expansion",
+      "name": "type-changing-step.explicit",
+      "snippet": "7 0 =",
+      "authored": {
+        "bytes": 5,
+        "tokens": 3,
+        "tokensExcludingParentheses": 3,
+        "stackManipulationTokens": 1,
+        "quotations": 0
+      },
+      "compilable": true,
+      "form": "type-changing-step.explicit",
+      "path": "verification/focus-elaboration/forms/type-changing-step.explicit.noble",
+      "matchesForm": true
+    },
+    {
+      "role": "expansion",
+      "name": "type-changing-step.library",
+      "snippet": "7 [ 0 ] [ = ] compose run",
+      "authored": {
+        "bytes": 25,
+        "tokens": 9,
+        "tokensExcludingParentheses": 9,
+        "stackManipulationTokens": 3,
+        "quotations": 2
+      },
+      "compilable": true,
+      "form": "type-changing-step.library",
+      "path": "verification/focus-elaboration/forms/type-changing-step.library.noble",
+      "matchesForm": true
+    }
+  ],
+  "comparisons": [
+    {
+      "sugar": "nested-product",
+      "sugarTokens": 7,
+      "sugarTokensExcludingParentheses": 7,
+      "expandsTo": "nested-product.dip",
+      "forms": [
+        {
+          "form": "nested-product.explicit",
+          "tokens": 9,
+          "tokensExcludingParentheses": 9,
+          "compilable": true
+        },
+        {
+          "form": "nested-product.dip",
+          "tokens": 10,
+          "tokensExcludingParentheses": 10,
+          "compilable": true
+        },
+        {
+          "form": "nested-product.library",
+          "tokens": 18,
+          "tokensExcludingParentheses": 18,
+          "compilable": true
+        }
+      ]
+    },
+    {
+      "sugar": "type-changing-nested",
+      "sugarTokens": 7,
+      "sugarTokensExcludingParentheses": 7,
+      "expandsTo": "type-changing-nested.dip",
+      "forms": [
+        {
+          "form": "type-changing-nested.explicit",
+          "tokens": 9,
+          "tokensExcludingParentheses": 9,
+          "compilable": true
+        },
+        {
+          "form": "type-changing-nested.dip",
+          "tokens": 10,
+          "tokensExcludingParentheses": 10,
+          "compilable": true
+        },
+        {
+          "form": "type-changing-nested.library",
+          "tokens": 18,
+          "tokensExcludingParentheses": 18,
+          "compilable": true
+        }
+      ]
+    },
+    {
+      "sugar": "type-changing-step",
+      "sugarTokens": 4,
+      "sugarTokensExcludingParentheses": 4,
+      "expandsTo": "type-changing-step.library",
+      "forms": [
+        {
+          "form": "type-changing-step.explicit",
+          "tokens": 3,
+          "tokensExcludingParentheses": 3,
+          "compilable": true
+        },
+        {
+          "form": "type-changing-step.library",
+          "tokens": 9,
+          "tokensExcludingParentheses": 9,
+          "compilable": true
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "forms": 10,
+    "compiled": 10,
+    "executed": 10,
+    "failures": [],
+    "stackOrderEstablished": true,
+    "heightConsistent": true,
+    "expansionBlocksMatchForms": true,
+    "comparisonsResolve": true
+  }
+}
