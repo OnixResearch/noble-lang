@@ -89,7 +89,7 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
   | .add leftAge rightAge =>
       match graph.node state.nextNode with
       | .add left right =>
-          match state.belt.get? leftAge, state.belt.get? rightAge with
+          match state.belt[leftAge]?, state.belt[rightAge]? with
           | some actualLeft, some actualRight =>
               if actualLeft == left && actualRight == right then
                 defineNode graph outputs capacity state
@@ -99,7 +99,7 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
   | .sub leftAge rightAge =>
       match graph.node state.nextNode with
       | .sub left right =>
-          match state.belt.get? leftAge, state.belt.get? rightAge with
+          match state.belt[leftAge]?, state.belt[rightAge]? with
           | some actualLeft, some actualRight =>
               if actualLeft == left && actualRight == right then
                 defineNode graph outputs capacity state
@@ -109,7 +109,7 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
   | .mul leftAge rightAge =>
       match graph.node state.nextNode with
       | .mul left right =>
-          match state.belt.get? leftAge, state.belt.get? rightAge with
+          match state.belt[leftAge]?, state.belt[rightAge]? with
           | some actualLeft, some actualRight =>
               if actualLeft == left && actualRight == right then
                 defineNode graph outputs capacity state
@@ -119,7 +119,7 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
   | .eq leftAge rightAge =>
       match graph.node state.nextNode with
       | .eq left right =>
-          match state.belt.get? leftAge, state.belt.get? rightAge with
+          match state.belt[leftAge]?, state.belt[rightAge]? with
           | some actualLeft, some actualRight =>
               if actualLeft == left && actualRight == right then
                 defineNode graph outputs capacity state
@@ -127,7 +127,7 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
           | _, _ => none
       | _ => none
   | .save age slot =>
-      match state.belt.get? age, state.saves.get? slot with
+      match state.belt[age]?, state.saves[slot]? with
       | some node, some previous =>
           let otherSlots := state.saves.take slot ++ state.saves.drop (slot + 1)
           let overwritesLive := match previous with
@@ -140,12 +140,12 @@ def stepBody (graph : Graph) (outputs : List Nat) (capacity : Nat)
               { state with saves := saves }
       | _, _ => none
   | .load slot =>
-      match state.saves.get? slot with
+      match state.saves[slot]? with
       | some (some node) => insertNode graph outputs capacity state node
       | _ => none
   | .output age =>
       if state.nextNode != graph.arity then none else
-        match outputs.get? state.nextOutput, state.belt.get? age with
+        match outputs[state.nextOutput]?, state.belt[age]? with
         | some expected, some actual =>
             if expected == actual then
               some { state with
@@ -230,15 +230,15 @@ theorem validate_sound (graph : Graph) (inputs : Nat → BitVec 64) (outputs : L
     runOutputs graph inputs outputs capacity saveSlots program =
       some (NobleFoundation.PackedSchedule.referenceOutputs graph inputs outputs) := by
   have hparts :
-      boundsValid capacity saveSlots = true ∧
-      graphAdmissible graph = true ∧
-      graphTyped graph = true ∧
-      outputs.all (fun output => decide (output < graph.arity)) = true ∧
+      ((((boundsValid capacity saveSlots = true ∧
+        graphAdmissible graph = true) ∧
+        graphTyped graph = true) ∧
+        outputs.all (fun output => decide (output < graph.arity)) = true) ∧
       (match run graph outputs capacity program {
         belt := [], saves := List.replicate saveSlots none,
         nextNode := 0, nextOutput := 0, outputNodes := [] } with
         | none => false
-        | some state => complete graph outputs state) = true := by
+        | some state => complete graph outputs state) = true) := by
     simpa only [validate, Bool.and_eq_true] using hvalid
   cases hrun : run graph outputs capacity program {
       belt := [], saves := List.replicate saveSlots none,
@@ -246,10 +246,14 @@ theorem validate_sound (graph : Graph) (inputs : Nat → BitVec 64) (outputs : L
   | none => simp [hrun] at hparts
   | some state =>
       have hcomplete : complete graph outputs state = true := by
-        simpa only [hrun] using hparts.2.2.2.2
-      have hcompleteParts := Bool.and_eq_true.mp hcomplete
+        simpa only [hrun] using hparts.2
+      have hcompleteParts :
+          (decide (state.nextNode = graph.arity) = true ∧
+            decide (state.nextOutput = outputs.length) = true) ∧
+            decide (state.outputNodes = outputs) = true := by
+        simpa only [complete, Bool.and_eq_true] using hcomplete
       have houtputs : decide (state.outputNodes = outputs) = true :=
-        (Bool.and_eq_true.mp hcompleteParts.2).2
+        hcompleteParts.2
       have hnodeOrder : state.outputNodes = outputs := of_decide_eq_true houtputs
       simp [runOutputs, hrun, hnodeOrder,
         NobleFoundation.PackedSchedule.referenceOutputs]

@@ -9,27 +9,19 @@ theorem, finite source-level correspondence, and cost observations.
 
 ## Reproduce from a committed slice tree
 
-Use the pinned slice tools, not host Cargo/Rust. Set `ROOT` to this worktree and
-keep Cargo output under its private target:
+Run from the repository root with the toolchain declared by `rust-toolchain.toml`
+and its reviewed offline dependency source:
 
 ```sh
-ROOT=/path/to/noble-worktree
-TARGET="$HOME/.cache/noble-iss/target/belt-113"
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" test -p noble-ngraph -p noble-ngraph-experiment \
+cargo test -p noble-ngraph -p noble-ngraph-experiment \
   --all-targets --all-features --offline --locked
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" test -p noble-ngraph-experiment \
+NOBLE_NODE="<pinned Node installation directory>" cargo test -p noble-ngraph-experiment \
   --test extract_b2 --offline --locked -- --ignored l2_node_bigint_oracle_agrees_with_l3
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" test -p noble-ngraph --release \
+cargo test --release -p noble-ngraph \
   --test schedule_correspondence --offline --locked -- --ignored --nocapture \
   belt_measure::belt_cost_report
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" fmt --all -- --check
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" clippy --workspace --all-targets \
-  --all-features --offline --locked -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features --offline --locked -- -D warnings
 ```
 
 The extracted-source B2 harness is the ordinary-path comparison: build the CLI
@@ -44,18 +36,13 @@ separately declared sample. Capture the receipt before copying it into this
 directory, and only from a clean committed tree.
 
 ```sh
-ROOT=/path/to/noble-worktree
-TARGET="$HOME/.cache/noble-iss/target/belt-113"
-NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-RUSTC=/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" build --release -p noble-cli --bin noble --offline --locked
-NOBLE_ROOT="$ROOT" NOBLE_TARGET="$TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" run --release -p noble-ngraph-experiment \
+cargo build --release -p noble-cli --bin noble --offline --locked
+TMPDIR="<private temporary directory>" cargo run --release -p noble-ngraph-experiment \
   --bin ngraph-phase-b-extract -- \
-  --cli "$TARGET/release/noble" --node "$NODE" \
-  --out "$HOME/.cache/noble-iss/scratch/belt-113/phase-b-extract.json" \
-  --source-rev "$(git -C "$ROOT" rev-parse HEAD)" --toolchain "$("$RUSTC" -V)"
+  --cli "<absolute path of the built noble CLI>" \
+  --node "<absolute path of pinned Node binary>" \
+  --out "<new directory outside the repository>/phase-b-extract.json" \
+  --source-rev "$(git rev-parse HEAD)" --toolchain "$(rustc -V)"
 ```
 
 The hand-built graph fixture covers wrapping I64 results, asymmetric

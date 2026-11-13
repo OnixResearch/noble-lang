@@ -25,7 +25,7 @@ def graph : Graph := {
 def outputs : List Nat := [3, 4, 6, 3, 5, 7, 4]
 def capacity : Nat := 2
 def saveSlots : Nat := 8
-def program : List Instr := [
+def program : List NobleFoundation.Belt.Instr := [
   .input 0,
   .input 1,
   .save 1 0,
@@ -78,20 +78,26 @@ def inputs0 (slot : Nat) : BitVec 64 := match slot with
   | 1 => BitVec.ofInt 64 (1)
   | _ => 0
 example : runOutputs graph inputs0 outputs capacity saveSlots program =
-  some [some (.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (.i64 (BitVec.ofInt 64 (-9223372036854775806))), some (.boolean false), some (.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (.i64 (BitVec.ofInt 64 (0))), some (.i64 (BitVec.ofInt 64 (-2))), some (.i64 (BitVec.ofInt 64 (-9223372036854775806)))] := by decide
+  some [some (Val.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (Val.i64 (BitVec.ofInt 64 (-9223372036854775806))), some (Val.boolean false), some (Val.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (Val.i64 (BitVec.ofInt 64 (0))), some (Val.i64 (BitVec.ofInt 64 (-2))), some (Val.i64 (BitVec.ofInt 64 (-9223372036854775806)))] := by
+    rw [validate_sound graph inputs0 outputs capacity saveSlots program (by decide)]
+    decide
 
 def inputs1 (slot : Nat) : BitVec 64 := match slot with
   | 0 => BitVec.ofInt 64 (-9223372036854775808)
   | 1 => BitVec.ofInt 64 (-1)
   | _ => 0
 example : runOutputs graph inputs1 outputs capacity saveSlots program =
-  some [some (.i64 (BitVec.ofInt 64 (9223372036854775807))), some (.i64 (BitVec.ofInt 64 (9223372036854775807))), some (.boolean false), some (.i64 (BitVec.ofInt 64 (9223372036854775807))), some (.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (.i64 (BitVec.ofInt 64 (0))), some (.i64 (BitVec.ofInt 64 (9223372036854775807)))] := by decide
+  some [some (Val.i64 (BitVec.ofInt 64 (9223372036854775807))), some (Val.i64 (BitVec.ofInt 64 (9223372036854775807))), some (Val.boolean false), some (Val.i64 (BitVec.ofInt 64 (9223372036854775807))), some (Val.i64 (BitVec.ofInt 64 (-9223372036854775808))), some (Val.i64 (BitVec.ofInt 64 (0))), some (Val.i64 (BitVec.ofInt 64 (9223372036854775807)))] := by
+    rw [validate_sound graph inputs1 outputs capacity saveSlots program (by decide)]
+    decide
 
 def inputs2 (slot : Nat) : BitVec 64 := match slot with
   | 0 => BitVec.ofInt 64 (5)
   | 1 => BitVec.ofInt 64 (3)
   | _ => 0
 example : runOutputs graph inputs2 outputs capacity saveSlots program =
-  some [some (.i64 (BitVec.ofInt 64 (8))), some (.i64 (BitVec.ofInt 64 (-2))), some (.boolean false), some (.i64 (BitVec.ofInt 64 (8))), some (.i64 (BitVec.ofInt 64 (0))), some (.i64 (BitVec.ofInt 64 (10))), some (.i64 (BitVec.ofInt 64 (-2)))] := by decide
+  some [some (Val.i64 (BitVec.ofInt 64 (8))), some (Val.i64 (BitVec.ofInt 64 (-2))), some (Val.boolean false), some (Val.i64 (BitVec.ofInt 64 (8))), some (Val.i64 (BitVec.ofInt 64 (0))), some (Val.i64 (BitVec.ofInt 64 (10))), some (Val.i64 (BitVec.ofInt 64 (-2)))] := by
+    rw [validate_sound graph inputs2 outputs capacity saveSlots program (by decide)]
+    decide
 
 end NobleFoundation.BeltCorpus

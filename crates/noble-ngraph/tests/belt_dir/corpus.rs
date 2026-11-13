@@ -112,8 +112,8 @@ fn lean_i64(value: i64) -> String {
 
 fn lean_value(value: Value) -> String {
     match value {
-        Value::I64(value) => format!("some (.i64 ({}))", lean_i64(value)),
-        Value::Bool(value) => format!("some (.boolean {value})"),
+        Value::I64(value) => format!("some (Val.i64 ({}))", lean_i64(value)),
+        Value::Bool(value) => format!("some (Val.boolean {value})"),
         Value::F32(_) => panic!("the corpus contains no F32 values"),
     }
 }
@@ -157,7 +157,7 @@ fn render() -> String {
         .expect("writing to a string succeeds");
     writeln!(text, "def saveSlots : Nat := {}", accepted.save_slots())
         .expect("writing to a string succeeds");
-    text.push_str("def program : List Instr := [\n");
+    text.push_str("def program : List NobleFoundation.Belt.Instr := [\n");
     for instruction in instructions {
         writeln!(text, "  {instruction},").expect("writing to a string succeeds");
     }
@@ -179,7 +179,7 @@ fn render() -> String {
         let expected_terms = expected.iter().copied().map(lean_value).collect::<Vec<_>>();
         writeln!(
             text,
-            "example : runOutputs graph inputs{index} outputs capacity saveSlots program =\n  some [{}] := by decide\n",
+            "example : runOutputs graph inputs{index} outputs capacity saveSlots program =\n  some [{}] := by\n    rw [validate_sound graph inputs{index} outputs capacity saveSlots program (by decide)]\n    decide\n",
             expected_terms.join(", ")
         )
         .expect("writing to a string succeeds");
