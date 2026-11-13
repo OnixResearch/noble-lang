@@ -385,6 +385,15 @@ const stackKey = stack => stack.map(value => (value.type === 'i64' ? `i${hex16(v
 const complete = (stacks, out) => stacks.every(stack => stack.length === 1
   && stack[0].type === (out === 'bool' ? 'bool' : out === 'list' ? 'list' : 'i64'));
 
+/** Prune Bool/List stack values that cannot reach the task's requested output type. */
+const canStillReachOutput = (stacks, out) => stacks.every(stack => {
+  if (stack.some(value => value.type === 'bool')) {
+    return out === 'bool' && stack.length === 1 && stack[0].type === 'bool';
+  }
+  const lists = stack.filter(value => value.type === 'list').length;
+  return lists <= 1 && (lists === 0 || out === 'list');
+});
+
 /** What one complete program computes on every example. */
 const observedOf = stacks => stacks.map(stack => stack[0].value);
 
@@ -418,8 +427,6 @@ function discover(task, examples, expected, spec, budget) {
     const next = new Map();
     for (const state of frontier) {
       for (const step of spec.words) {
-        if (candidates >= budget) return { exhausted: 'candidate fuel', sizes, candidates };
-        candidates += 1;
         const stacks = [];
         let live = true;
         for (const stack of state.stacks) {
@@ -427,7 +434,10 @@ function discover(task, examples, expected, spec, budget) {
           if (!extended) { live = false; break; }
           stacks.push(extended);
         }
-        if (!live) continue;
+        if (!live || !canStillReachOutput(stacks, task.out)) continue;
+        // Fuel counts admitted typed extensions, not rejected word/stack combinations.
+        if (candidates >= budget) return { exhausted: 'candidate fuel', sizes, candidates };
+        candidates += 1;
         const extended = { stacks, words: [...state.words, step] };
         const id = key(extended);
         if (seen.has(id)) continue;
@@ -453,8 +463,6 @@ function baseline(task, examples, expected, spec, budget) {
     }
     if (depth.length === spec.bound) return null;
     for (const step of spec.words) {
-      if (candidates >= budget) return { exhausted: 'candidate fuel' };
-      candidates += 1;
       const next = [];
       let live = true;
       for (const stack of stacks) {
@@ -462,7 +470,10 @@ function baseline(task, examples, expected, spec, budget) {
         if (!extended) { live = false; break; }
         next.push(extended);
       }
-      if (!live) continue;
+      if (!live || !canStillReachOutput(next, task.out)) continue;
+      // The baseline uses the same candidate definition and budget as the deduplicated search.
+      if (candidates >= budget) return { exhausted: 'candidate fuel' };
+      candidates += 1;
       const found = visit(next, [...depth, step]);
       if (found) return found;
     }
@@ -1007,7 +1018,7 @@ function runTask(task, context) {
       task.train.map(example => example.output), { ...spec, bound: task.controlBound }, globals['max-candidates']);
     const controlProgram = control.program ?? null;
     assert.equal(record.status, 'exhausted', `${task.name}: a control-bound task is the narrow-bound negative`);
-    assert.ok(controlProgram, `${task.name}: the control bound must find a program`);
+    assert.ok(controlProgram, `${task.name}: the control bound must find a program; ${JSON.stringify(control)}`);
     const controlPair = pairFor(controlProgram);
     const controlAffine = certificateOf(controlPair, task.inputs);
     assert.ok(controlAffine.certifiable, `${task.name}: the control program must have the reference's affine form`);
