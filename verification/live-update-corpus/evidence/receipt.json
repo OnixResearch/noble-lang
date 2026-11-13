@@ -1,0 +1,1946 @@
+{
+  "schema": "noble-live-update-corpus-receipt/v1",
+  "claim": "bounded live-update corpus exported from the authoritative Noble fixture lanes; experimental evidence, not a proof, not a conformance promotion and not a model-to-implementation claim",
+  "source": {
+    "commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+    "tree": "873804cd159f32115ac21db38e2b67b2cd5c2741",
+    "clean": true,
+    "git": "git version 2.56.0",
+    "bound": [
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+        "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+        "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+        "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_package_retention.mjs",
+        "sha256": "3636e510e3ab351b45f0177720af6f71dced868cbbf80e497319fd8d2f683978"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_module_root_retention.mjs",
+        "sha256": "77518e47bec1c67a926863e5f859870b699d6bd27e0c4d7c641bb19b27024d4c"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_program_capacity.mjs",
+        "sha256": "9da3fbe7aef7c3e89c7bda953dfbadb88b107abb19bb4d667ac2da913432aab3"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_relocation_witness.mjs",
+        "sha256": "313f864c22807700a3eaac0b5f9c73d586c70e7d3db3bd2c9a5efe00b471b506"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_typed_cases.mjs",
+        "sha256": "4b04ab2c1c68fd2a0ce1ae0e9f26137f98a824917174786d94e69e09a994f118"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+        "sha256": "2aa14d493aa120439bbf35bfe6b0002c06c3e2bc4a7416e33db639a13614cafa"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot.rs",
+        "sha256": "5cdf04e91ab0a029c888307470cb9fde42f22d3232f6ee77e0aae3ed2c57ab42"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_coherent_maps.rs",
+        "sha256": "062c30b8ea9e105ed6461d8e5143767f4d2b59a8c4e48190d2f3e4a2fcf5288b"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+        "sha256": "354d2a3d99de3af20c9113acb6ac1491a389b0e0d5a22670781ee4e8b095a88a"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_relocation_witness.rs",
+        "sha256": "6f48bcd5949e2d1ecaa5c41c82b4bdd2b1ff7fb90c1649dc4d507e402087083e"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_typed_cases.rs",
+        "sha256": "456fee31834260bac6ace4af09fbc0bf0764f116c2b5b2f7d83b6a88c721a95c"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "0b9c588fbb19fe1b479a57331b60a7b2ad87f2a225ab474a2fffb22e013204a9"
+      },
+      {
+        "path": "verification/live-update-corpus/corpus.mjs",
+        "sha256": "4546e1a9c66671f72af343c385bbf33ef7a6b7e01fb84bcd0effb226165949e7"
+      },
+      {
+        "path": "verification/live-update-corpus/export.mjs",
+        "sha256": "b40a01d02f5e175651746c59270502868159e5d2a42e2067a2ec0fc15fc03e9c"
+      },
+      {
+        "path": "verification/live-update-corpus/controls.mjs",
+        "sha256": "3b2454d4b43148fbe077430f236b84c56ee3d2eb4c5d56c9bb8564a2462bca83"
+      },
+      {
+        "path": "verification/live-update-corpus/controls.test.mjs",
+        "sha256": "359a20a63d542aa5f5684ad67fd9ef6c51152fe67c8ad507e4c73edc16e0acda"
+      },
+      {
+        "path": "verification/live-update-corpus/schema.json",
+        "sha256": "d01f82cae2ce637dfab730ae7798d820ca010ef0d90f0be11d24de395f77ac7f"
+      },
+      {
+        "path": "specs/conformance/live-reference-cases.json",
+        "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63"
+      },
+      {
+        "path": ".cairn/changes/live-reference-lifetimes/design.md",
+        "sha256": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15"
+      },
+      {
+        "path": ".cairn/changes/ownership-lifetime-contract/design.md",
+        "sha256": "7f889a3cfd1a19ddfd85267bffa4a0266d1303690ce04cf569f706a5509e2efb"
+      }
+    ]
+  },
+  "profile": {
+    "path": "verification/live-update-corpus/profiles/noble.json",
+    "evidence_path": "profile.json",
+    "id": "noble-live-update-profile/noble-v1",
+    "sha256": "edd80d9ea2b3884c7ab0ba0cbdafaa374dc54ec2e79f944fa4667c00e1d57857"
+  },
+  "corpus": {
+    "evidence_path": "corpus.json",
+    "sha256": "8ec852490158b5ae63c55e605a272b5983fc9a18bb31871699dcdb75a5f4aa4e"
+  },
+  "runtime": {
+    "name": "noble",
+    "engine": "v8",
+    "selection_command": "noble live slot --engine v8 --authority <authority.json>",
+    "cli": {
+      "path": "/home/brittonr/.cache/noble-iss/target/live-corpus-119/debug/noble",
+      "sha256": "83dfa3373bcec3009fe23fd97a42f28e8556ab1e7e304bf4f6d3a83df6b18f9c"
+    },
+    "sources": [
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a",
+        "what": "publication CAS, pins, retention and retirement"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
+        "what": "root and frame pins, saved owners, module sweep"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+        "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6",
+        "what": "bounded slot Wasm import/export policy"
+      }
+    ]
+  },
+  "pins": [
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+      "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a",
+      "what": "publication CAS, pins, retention and retirement"
+    },
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+      "sha256": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
+      "what": "root and frame pins, saved owners, module sweep"
+    },
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+      "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6",
+      "what": "bounded slot Wasm import/export policy"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+      "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
+      "what": "authoritative fixture lane nested"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+      "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70",
+      "what": "authoritative fixture lane coherent"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_package_retention.mjs",
+      "sha256": "3636e510e3ab351b45f0177720af6f71dced868cbbf80e497319fd8d2f683978",
+      "what": "authoritative fixture lane packageRetention"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_module_root_retention.mjs",
+      "sha256": "77518e47bec1c67a926863e5f859870b699d6bd27e0c4d7c641bb19b27024d4c",
+      "what": "authoritative fixture lane moduleRoot"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_program_capacity.mjs",
+      "sha256": "9da3fbe7aef7c3e89c7bda953dfbadb88b107abb19bb4d667ac2da913432aab3",
+      "what": "authoritative fixture lane capacity"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_relocation_witness.mjs",
+      "sha256": "313f864c22807700a3eaac0b5f9c73d586c70e7d3db3bd2c9a5efe00b471b506",
+      "what": "authoritative fixture lane relocation"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.mjs",
+      "sha256": "4b04ab2c1c68fd2a0ce1ae0e9f26137f98a824917174786d94e69e09a994f118",
+      "what": "authoritative fixture lane typed"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+      "sha256": "2aa14d493aa120439bbf35bfe6b0002c06c3e2bc4a7416e33db639a13614cafa",
+      "what": "authoritative fixture lane ownership"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot.rs",
+      "sha256": "5cdf04e91ab0a029c888307470cb9fde42f22d3232f6ee77e0aae3ed2c57ab42",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.rs",
+      "sha256": "062c30b8ea9e105ed6461d8e5143767f4d2b59a8c4e48190d2f3e4a2fcf5288b",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+      "sha256": "354d2a3d99de3af20c9113acb6ac1491a389b0e0d5a22670781ee4e8b095a88a",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_relocation_witness.rs",
+      "sha256": "6f48bcd5949e2d1ecaa5c41c82b4bdd2b1ff7fb90c1649dc4d507e402087083e",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.rs",
+      "sha256": "456fee31834260bac6ace4af09fbc0bf0764f116c2b5b2f7d83b6a88c721a95c",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+      "sha256": "0b9c588fbb19fe1b479a57331b60a7b2ad87f2a225ab474a2fffb22e013204a9",
+      "what": "operator-session helper shared by the lanes"
+    },
+    {
+      "path": "verification/live-update-corpus/corpus.mjs",
+      "sha256": "4546e1a9c66671f72af343c385bbf33ef7a6b7e01fb84bcd0effb226165949e7",
+      "what": "corpus expectations and raw-report derivation"
+    },
+    {
+      "path": "verification/live-update-corpus/export.mjs",
+      "sha256": "b40a01d02f5e175651746c59270502868159e5d2a42e2067a2ec0fc15fc03e9c",
+      "what": "Noble lane exporter"
+    },
+    {
+      "path": "verification/live-update-corpus/controls.mjs",
+      "sha256": "3b2454d4b43148fbe077430f236b84c56ee3d2eb4c5d56c9bb8564a2462bca83",
+      "what": "evidence mutation controls"
+    },
+    {
+      "path": "verification/live-update-corpus/controls.test.mjs",
+      "sha256": "359a20a63d542aa5f5684ad67fd9ef6c51152fe67c8ad507e4c73edc16e0acda",
+      "what": "retained evidence control test"
+    },
+    {
+      "path": "verification/live-update-corpus/schema.json",
+      "sha256": "d01f82cae2ce637dfab730ae7798d820ca010ef0d90f0be11d24de395f77ac7f",
+      "what": "versioned corpus schema"
+    },
+    {
+      "path": "specs/conformance/live-reference-cases.json",
+      "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63",
+      "what": "canonical LSLOT designs; states must stay unpromoted"
+    },
+    {
+      "path": ".cairn/changes/live-reference-lifetimes/design.md",
+      "sha256": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15",
+      "what": "frozen profile text"
+    },
+    {
+      "path": ".cairn/changes/ownership-lifetime-contract/design.md",
+      "sha256": "7f889a3cfd1a19ddfd85267bffa4a0266d1303690ce04cf569f706a5509e2efb",
+      "what": "ownership expectations reused by the retention scenarios"
+    }
+  ],
+  "expectations_sha256": "b88524a9beb2230997459d7d961c69158ca884023c4222839b3dc8884da9bc15",
+  "canonical_cases": {
+    "path": "specs/conformance/live-reference-cases.json",
+    "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63",
+    "states": {
+      "LSLOT-01": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-02": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-03": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-04": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-05": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-06": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-07": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-08": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      },
+      "LSLOT-09": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed",
+        "evidence": []
+      }
+    },
+    "promoted": []
+  },
+  "scenarios": [
+    {
+      "case_id": "noble-live-update/held-root-and-new-root",
+      "title": "Held root, nested replacement and a new root under one pinned map",
+      "result_class": "supported-outcome",
+      "expectations": {
+        "holds": 13,
+        "mismatch": 0,
+        "unsupported": 0
+      },
+      "unsupported_dimensions": [
+        "a single invocation routing to two emitting slots cannot be built from this authority shape",
+        "two host threads sharing one registry"
+      ],
+      "timing": {
+        "started_at": "2026-11-13T16:36:30.066Z",
+        "ended_at": "2026-11-13T16:36:43.246Z",
+        "duration_ms": 13180,
+        "bound_to": {
+          "case_id": "noble-live-update/held-root-and-new-root",
+          "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+          "result_class": "supported-outcome",
+          "admission_outcome": [
+            {
+              "expectation_id": "held-root.old-root-selections",
+              "status": "holds",
+              "observed": {
+                "slots": [
+                  "A",
+                  "B",
+                  "B"
+                ],
+                "rootEpochs": [
+                  "1"
+                ],
+                "generations": [
+                  "1",
+                  "1",
+                  "1"
+                ]
+              }
+            },
+            {
+              "expectation_id": "held-root.old-root-result",
+              "status": "holds",
+              "observed": [
+                {
+                  "kind": 1,
+                  "value": "22"
+                }
+              ]
+            },
+            {
+              "expectation_id": "held-root.new-root-selections",
+              "status": "holds",
+              "observed": {
+                "slots": [
+                  "A",
+                  "B",
+                  "B"
+                ],
+                "rootEpochs": [
+                  "2"
+                ],
+                "generations": [
+                  "1",
+                  "2",
+                  "2"
+                ]
+              }
+            },
+            {
+              "expectation_id": "held-root.new-root-result",
+              "status": "holds",
+              "observed": [
+                {
+                  "kind": 1,
+                  "value": "24"
+                }
+              ]
+            },
+            {
+              "expectation_id": "held-root.next-leaf-result",
+              "status": "holds",
+              "observed": [
+                {
+                  "kind": 1,
+                  "value": "22"
+                }
+              ]
+            },
+            {
+              "expectation_id": "held-root.coherent-publication-during-hold",
+              "status": "holds",
+              "observed": {
+                "publication": "published",
+                "held": {
+                  "dispatches": 1,
+                  "effects": 1
+                },
+                "fresh": {
+                  "dispatches": 1,
+                  "effects": 1
+                },
+                "epochsDiffer": true
+              }
+            },
+            {
+              "expectation_id": "held-root.held-root-keeps-pinned-definition",
+              "status": "holds",
+              "observed": {
+                "heldEqualsPinned": true,
+                "freshDiffersFromHeld": true,
+                "heldEpochs": [
+                  "2"
+                ],
+                "freshEpochs": [
+                  "3"
+                ]
+              }
+            },
+            {
+              "expectation_id": "held-root.stale-compare-and-set-control",
+              "status": "holds",
+              "observed": "stale-reject"
+            },
+            {
+              "expectation_id": "held-root.partial-publication-refusal",
+              "status": "holds",
+              "observed": {
+                "outcome": "execution-failed",
+                "rows": 0,
+                "session_state": "terminated-after-guest-failure"
+              }
+            },
+            {
+              "expectation_id": "held-root.omission-control",
+              "status": "holds",
+              "observed": {
+                "dispatches": 1,
+                "effects": 0
+              }
+            },
+            {
+              "expectation_id": "held-root.retention-budget-refusal",
+              "status": "holds",
+              "observed": {
+                "outcome": "retention-budget-refused",
+                "epoch": "0",
+                "guest_requests": 0,
+                "probes": [
+                  {
+                    "slot": "B",
+                    "outcome": "stale-reject"
+                  },
+                  {
+                    "slot": "A",
+                    "outcome": "stale-reject"
+                  }
+                ],
+                "repeat_outcome": "retention-budget-refused",
+                "trace_rows": 0
+              }
+            },
+            {
+              "expectation_id": "held-root.transitive-selections",
+              "status": "holds",
+              "observed": {
+                "old": [
+                  "A",
+                  "B",
+                  "C"
+                ],
+                "oldGenerations": [
+                  "1",
+                  "1",
+                  "1"
+                ],
+                "new": [
+                  "A",
+                  "B",
+                  "C"
+                ],
+                "newGenerations": [
+                  "1",
+                  "1",
+                  "2"
+                ],
+                "oldEpochs": [
+                  "1"
+                ],
+                "newEpochs": [
+                  "2"
+                ]
+              }
+            },
+            {
+              "expectation_id": "held-root.transitive-results",
+              "status": "holds",
+              "observed": {
+                "old": [
+                  {
+                    "kind": 1,
+                    "value": "21"
+                  }
+                ],
+                "new": [
+                  {
+                    "kind": 1,
+                    "value": "22"
+                  }
+                ],
+                "leaf": [
+                  {
+                    "kind": 1,
+                    "value": "22"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "other_runtime": {
+        "name": "makepad-relax",
+        "result_class": "not-run",
+        "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+      }
+    },
+    {
+      "case_id": "noble-live-update/saved-program-and-package-retention",
+      "title": "Saved Program, package retention and the retained-version quota",
+      "result_class": "supported-outcome",
+      "expectations": {
+        "holds": 10,
+        "mismatch": 0,
+        "unsupported": 0
+      },
+      "unsupported_dimensions": [
+        "cross-process persistence of the registry",
+        "a multi-slot atomic publication group"
+      ],
+      "timing": {
+        "started_at": "2026-11-13T16:36:43.249Z",
+        "ended_at": "2026-11-13T16:36:52.980Z",
+        "duration_ms": 9731,
+        "bound_to": {
+          "case_id": "noble-live-update/saved-program-and-package-retention",
+          "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+          "result_class": "supported-outcome",
+          "admission_outcome": [
+            {
+              "expectation_id": "retention.replacement-runs-old-code",
+              "status": "holds",
+              "observed": [
+                {
+                  "kind": 1,
+                  "value": "21"
+                }
+              ]
+            },
+            {
+              "expectation_id": "retention.no-retirement-while-owned",
+              "status": "holds",
+              "observed": []
+            },
+            {
+              "expectation_id": "retention.retirement-after-last-owner",
+              "status": "holds",
+              "observed": {
+                "spans": 1,
+                "generation": 1,
+                "length": 5,
+                "start": 4
+              }
+            },
+            {
+              "expectation_id": "retention.released-program-refused",
+              "status": "holds",
+              "observed": {
+                "executed": false,
+                "outcome": "refused"
+              }
+            },
+            {
+              "expectation_id": "retention.charge-refuses-while-owned",
+              "status": "holds",
+              "observed": {
+                "outcome": "retention-budget-refused",
+                "epoch": "1"
+              }
+            },
+            {
+              "expectation_id": "retention.charge-admits-after-release",
+              "status": "holds",
+              "observed": {
+                "outcome": "published",
+                "spans": 1
+              }
+            },
+            {
+              "expectation_id": "retention.module-root-survives-supersession",
+              "status": "holds",
+              "observed": {
+                "outcome": "executed",
+                "stack": [
+                  {
+                    "kind": 1,
+                    "value": "42"
+                  }
+                ]
+              }
+            },
+            {
+              "expectation_id": "retention.module-root-retires-at-zero-owners",
+              "status": "holds",
+              "observed": {
+                "spans": 1,
+                "generation": 1,
+                "length": 6,
+                "start": 4
+              }
+            },
+            {
+              "expectation_id": "retention.module-root-last-run-refused",
+              "status": "holds",
+              "observed": "refused"
+            },
+            {
+              "expectation_id": "retention.saved-program-capacity-boundary",
+              "status": "holds",
+              "observed": {
+                "capacity": 4096,
+                "summary": "saved Program capacity 4096 refused the over-budget root before execution",
+                "requests": {
+                  "install": 1,
+                  "publish": 1,
+                  "invoke": 4098,
+                  "release-program": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "other_runtime": {
+        "name": "makepad-relax",
+        "result_class": "not-run",
+        "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+      }
+    },
+    {
+      "case_id": "noble-live-update/relocation-and-effect-prefix",
+      "title": "Event relocation under a pinned map and the abnormal effect prefix",
+      "result_class": "unsupported",
+      "expectations": {
+        "holds": 5,
+        "mismatch": 0,
+        "unsupported": 1
+      },
+      "unsupported_dimensions": [
+        "a duplicate-vs-omission ratio for one invocation routing to two emitting slots"
+      ],
+      "timing": {
+        "started_at": "2026-11-13T16:36:52.986Z",
+        "ended_at": "2026-11-13T16:36:59.914Z",
+        "duration_ms": 6928,
+        "bound_to": {
+          "case_id": "noble-live-update/relocation-and-effect-prefix",
+          "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+          "result_class": "unsupported",
+          "admission_outcome": [
+            {
+              "expectation_id": "relocation.effect-moves-with-target",
+              "status": "holds",
+              "observed": {
+                "oldSlot": "A",
+                "newSlot": "E",
+                "definitionsDiffer": true
+              }
+            },
+            {
+              "expectation_id": "relocation.one-effect-per-root",
+              "status": "holds",
+              "observed": {
+                "oldEffects": 1,
+                "newEffects": 1,
+                "oldRequest": "relocated",
+                "newRequest": "relocated",
+                "oldResponse": "emitted:relocated",
+                "newResponse": "emitted:relocated"
+              }
+            },
+            {
+              "expectation_id": "relocation.dispatch-precedes-effect",
+              "status": "holds",
+              "observed": {
+                "oldFirst": "dispatch",
+                "newFirst": "dispatch"
+              }
+            },
+            {
+              "expectation_id": "relocation.omission-control",
+              "status": "holds",
+              "observed": {
+                "dispatches": 1,
+                "effects": 0
+              }
+            },
+            {
+              "expectation_id": "relocation.denied-effect",
+              "status": "holds",
+              "observed": {
+                "executed": false,
+                "responses": 0,
+                "dispatchKept": true,
+                "effectRequest": "relocated",
+                "outcome": "execution-failed"
+              }
+            },
+            {
+              "expectation_id": "relocation.duplicate-not-constructible",
+              "status": "unsupported",
+              "observed": null
+            }
+          ]
+        }
+      },
+      "other_runtime": {
+        "name": "makepad-relax",
+        "result_class": "not-run",
+        "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+      }
+    },
+    {
+      "case_id": "noble-live-update/typed-cases-and-bounds",
+      "title": "Typed generated cases, negative families and the declared host bounds",
+      "result_class": "supported-outcome",
+      "expectations": {
+        "holds": 10,
+        "mismatch": 0,
+        "unsupported": 0
+      },
+      "unsupported_dimensions": [
+        "structural coercion between differing slot interfaces"
+      ],
+      "timing": {
+        "started_at": "2026-11-13T16:36:59.916Z",
+        "ended_at": "2026-11-13T16:37:34.691Z",
+        "duration_ms": 34775,
+        "bound_to": {
+          "case_id": "noble-live-update/typed-cases-and-bounds",
+          "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+          "result_class": "supported-outcome",
+          "admission_outcome": [
+            {
+              "expectation_id": "typed.direct-pure-repeat1",
+              "status": "holds",
+              "observed": {
+                "roots": 1,
+                "dispatches": [
+                  1
+                ],
+                "effects": [
+                  0
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.direct-pure-repeat2",
+              "status": "holds",
+              "observed": {
+                "roots": 2,
+                "dispatches": [
+                  1,
+                  1
+                ],
+                "effects": [
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.direct-emit-repeat1",
+              "status": "holds",
+              "observed": {
+                "roots": 1,
+                "dispatches": [
+                  1
+                ],
+                "effects": [
+                  1
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.direct-emit-repeat2",
+              "status": "holds",
+              "observed": {
+                "roots": 2,
+                "dispatches": [
+                  1,
+                  1
+                ],
+                "effects": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.nested-chain",
+              "status": "holds",
+              "observed": {
+                "roots": 1,
+                "dispatches": [
+                  3
+                ],
+                "effects": [
+                  0
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.coverage-totals",
+              "status": "holds",
+              "observed": {
+                "admitted": 5,
+                "by_shape": {
+                  "direct": 4,
+                  "chain": 1
+                },
+                "by_nesting": {
+                  "single": 4,
+                  "nested": 1
+                },
+                "by_ceiling": {
+                  "pure": 2,
+                  "dispatch+emit": 2
+                },
+                "by_repeated_reborrow": {
+                  "once": 2,
+                  "twice": 2
+                },
+                "total_dispatch_rows": 9,
+                "total_effect_rows": 3
+              }
+            },
+            {
+              "expectation_id": "typed.negative-families",
+              "status": "holds",
+              "observed": {
+                "refused": 4,
+                "classes": [
+                  "binding-foreign-root",
+                  "binding-wrong-position",
+                  "effect-not-granted",
+                  "stack-incompatible"
+                ],
+                "by_stage": {
+                  "command": 3,
+                  "slot": 1
+                },
+                "guest_requests": 2,
+                "trace": [
+                  [
+                    "dispatch",
+                    "allowed"
+                  ],
+                  [
+                    "effect",
+                    "denied"
+                  ]
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.minimization-is-minimal",
+              "status": "holds",
+              "observed": {
+                "minimal_starting_witnesses": 4,
+                "accepted_shrinks": 0,
+                "rejected": [
+                  {
+                    "class": "binding-foreign-root",
+                    "dimension": "quota",
+                    "observed": "setup-refused"
+                  },
+                  {
+                    "class": "binding-wrong-position",
+                    "dimension": "quota",
+                    "observed": "setup-refused"
+                  },
+                  {
+                    "class": "stack-incompatible",
+                    "dimension": "quota",
+                    "observed": "setup-refused"
+                  },
+                  {
+                    "class": "effect-not-granted",
+                    "dimension": "quota",
+                    "observed": "setup-refused"
+                  }
+                ]
+              }
+            },
+            {
+              "expectation_id": "typed.retention-saturation",
+              "status": "holds",
+              "observed": {
+                "bound": 128,
+                "retained": 128,
+                "refusal_stage": "command"
+              }
+            },
+            {
+              "expectation_id": "typed.type-boundaries",
+              "status": "holds",
+              "observed": {
+                "stack": {
+                  "admitted": 128,
+                  "refused_first": 129
+                },
+                "nesting": {
+                  "admitted": 31,
+                  "refused_first": 32
+                },
+                "refusal_stage": "authority"
+              }
+            }
+          ]
+        }
+      },
+      "other_runtime": {
+        "name": "makepad-relax",
+        "result_class": "not-run",
+        "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+      }
+    },
+    {
+      "case_id": "noble-live-update/ownership-duplicates-and-modules",
+      "title": "Shared saved owners, composition ownership and a cross-module alias",
+      "result_class": "supported-outcome",
+      "expectations": {
+        "holds": 4,
+        "mismatch": 0,
+        "unsupported": 0
+      },
+      "unsupported_dimensions": [
+        "owner tokens surviving a host process restart"
+      ],
+      "timing": {
+        "started_at": "2026-11-13T16:37:34.696Z",
+        "ended_at": "2026-11-13T16:37:49.569Z",
+        "duration_ms": 14873,
+        "bound_to": {
+          "case_id": "noble-live-update/ownership-duplicates-and-modules",
+          "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+          "result_class": "supported-outcome",
+          "admission_outcome": [
+            {
+              "expectation_id": "ownership.duplicates-released-in-both-orders",
+              "status": "holds",
+              "observed": [
+                {
+                  "order": "A-then-B",
+                  "owners": 2,
+                  "survivor": [
+                    {
+                      "kind": 1,
+                      "value": "42"
+                    }
+                  ],
+                  "exit": 0,
+                  "refusedInvocations": 2,
+                  "refusedReleases": 1
+                },
+                {
+                  "order": "B-then-A",
+                  "owners": 2,
+                  "survivor": [
+                    {
+                      "kind": 1,
+                      "value": "42"
+                    }
+                  ],
+                  "exit": 0,
+                  "refusedInvocations": 2,
+                  "refusedReleases": 1
+                }
+              ]
+            },
+            {
+              "expectation_id": "ownership.balanced-tree-ownership",
+              "status": "holds",
+              "observed": {
+                "leaves": 8,
+                "intermediates": 7,
+                "released_before_root": 14,
+                "before": [
+                  {
+                    "kind": 1,
+                    "value": "8"
+                  }
+                ],
+                "after": [
+                  {
+                    "kind": 1,
+                    "value": "8"
+                  }
+                ],
+                "exit": 0
+              }
+            },
+            {
+              "expectation_id": "ownership.deep-chain-bounded",
+              "status": "holds",
+              "observed": {
+                "refused_at_compose": 5,
+                "session_state": "terminated-after-guest-failure",
+                "exit": 2
+              }
+            },
+            {
+              "expectation_id": "ownership.cross-module-alias",
+              "status": "holds",
+              "observed": {
+                "owners": 3,
+                "exit": 0
+              }
+            }
+          ]
+        }
+      },
+      "other_runtime": {
+        "name": "makepad-relax",
+        "result_class": "not-run",
+        "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+      }
+    }
+  ],
+  "result_class_counts": {
+    "contract-violation": 0,
+    "intentional-semantic-difference": 0,
+    "supported-outcome": 4,
+    "unexpected-refusal": 0,
+    "runtime-failure": 0,
+    "unsupported": 1,
+    "not-run": 5
+  },
+  "counts_basis": "one comparison cell per scenario per runtime: five Noble cells plus five makepad-relax cells, each of which is not-run",
+  "relax": {
+    "name": "makepad-relax",
+    "status": "blocked",
+    "result_class": "not-run",
+    "reason": "compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run"
+  },
+  "observations_for_issue_10": {
+    "regressions": [],
+    "performance": [
+      {
+        "subject": "saved Program ledger boundary",
+        "observation": "the capacity lane admitted 4096 saved owners, refused the 4097th root before execution and kept the session usable; its lane wall time was 4042 ms in this export",
+        "actionable": false,
+        "reasoning": "no baseline for this path exists in this export, so the number is a bound and not a regression claim"
+      }
+    ],
+    "tooling_observations": [
+      {
+        "subject": "live_slot_program_capacity.mjs report shape",
+        "observation": "the lane asserts the ledger boundary but prints a human sentence, so the boundary is not machine-readable; the corpus therefore records the declared 4096 constant and the exact 4096 + 2 invoke request sequence the constant produces",
+        "actionable": true,
+        "reasoning": "a structured report would let a corpus normalize the refusal stage and diagnostic without restating the declared constant; no runtime change is proposed"
+      }
+    ],
+    "conclusion": "No actionable Noble runtime regression or performance defect was observed. The bounded observations reproduced every frozen expectation; the only actionable item is the lane report shape above."
+  },
+  "timing": {
+    "started_at": "2026-11-13T16:36:30.028Z",
+    "ended_at": "2026-11-13T16:37:49.585Z",
+    "duration_ms": 79557,
+    "bound_to": {
+      "source_commit": "d51e7e4c0892bef634f58763e5c8a0b2257862ef",
+      "scenarios": [
+        "noble-live-update/held-root-and-new-root",
+        "noble-live-update/saved-program-and-package-retention",
+        "noble-live-update/relocation-and-effect-prefix",
+        "noble-live-update/typed-cases-and-bounds",
+        "noble-live-update/ownership-duplicates-and-modules"
+      ],
+      "result_classes": {
+        "noble-live-update/held-root-and-new-root": "supported-outcome",
+        "noble-live-update/saved-program-and-package-retention": "supported-outcome",
+        "noble-live-update/relocation-and-effect-prefix": "unsupported",
+        "noble-live-update/typed-cases-and-bounds": "supported-outcome",
+        "noble-live-update/ownership-duplicates-and-modules": "supported-outcome"
+      },
+      "admission_outcomes": {
+        "noble-live-update/held-root-and-new-root": [
+          {
+            "expectation_id": "held-root.old-root-selections",
+            "status": "holds",
+            "observed": {
+              "slots": [
+                "A",
+                "B",
+                "B"
+              ],
+              "rootEpochs": [
+                "1"
+              ],
+              "generations": [
+                "1",
+                "1",
+                "1"
+              ]
+            }
+          },
+          {
+            "expectation_id": "held-root.old-root-result",
+            "status": "holds",
+            "observed": [
+              {
+                "kind": 1,
+                "value": "22"
+              }
+            ]
+          },
+          {
+            "expectation_id": "held-root.new-root-selections",
+            "status": "holds",
+            "observed": {
+              "slots": [
+                "A",
+                "B",
+                "B"
+              ],
+              "rootEpochs": [
+                "2"
+              ],
+              "generations": [
+                "1",
+                "2",
+                "2"
+              ]
+            }
+          },
+          {
+            "expectation_id": "held-root.new-root-result",
+            "status": "holds",
+            "observed": [
+              {
+                "kind": 1,
+                "value": "24"
+              }
+            ]
+          },
+          {
+            "expectation_id": "held-root.next-leaf-result",
+            "status": "holds",
+            "observed": [
+              {
+                "kind": 1,
+                "value": "22"
+              }
+            ]
+          },
+          {
+            "expectation_id": "held-root.coherent-publication-during-hold",
+            "status": "holds",
+            "observed": {
+              "publication": "published",
+              "held": {
+                "dispatches": 1,
+                "effects": 1
+              },
+              "fresh": {
+                "dispatches": 1,
+                "effects": 1
+              },
+              "epochsDiffer": true
+            }
+          },
+          {
+            "expectation_id": "held-root.held-root-keeps-pinned-definition",
+            "status": "holds",
+            "observed": {
+              "heldEqualsPinned": true,
+              "freshDiffersFromHeld": true,
+              "heldEpochs": [
+                "2"
+              ],
+              "freshEpochs": [
+                "3"
+              ]
+            }
+          },
+          {
+            "expectation_id": "held-root.stale-compare-and-set-control",
+            "status": "holds",
+            "observed": "stale-reject"
+          },
+          {
+            "expectation_id": "held-root.partial-publication-refusal",
+            "status": "holds",
+            "observed": {
+              "outcome": "execution-failed",
+              "rows": 0,
+              "session_state": "terminated-after-guest-failure"
+            }
+          },
+          {
+            "expectation_id": "held-root.omission-control",
+            "status": "holds",
+            "observed": {
+              "dispatches": 1,
+              "effects": 0
+            }
+          },
+          {
+            "expectation_id": "held-root.retention-budget-refusal",
+            "status": "holds",
+            "observed": {
+              "outcome": "retention-budget-refused",
+              "epoch": "0",
+              "guest_requests": 0,
+              "probes": [
+                {
+                  "slot": "B",
+                  "outcome": "stale-reject"
+                },
+                {
+                  "slot": "A",
+                  "outcome": "stale-reject"
+                }
+              ],
+              "repeat_outcome": "retention-budget-refused",
+              "trace_rows": 0
+            }
+          },
+          {
+            "expectation_id": "held-root.transitive-selections",
+            "status": "holds",
+            "observed": {
+              "old": [
+                "A",
+                "B",
+                "C"
+              ],
+              "oldGenerations": [
+                "1",
+                "1",
+                "1"
+              ],
+              "new": [
+                "A",
+                "B",
+                "C"
+              ],
+              "newGenerations": [
+                "1",
+                "1",
+                "2"
+              ],
+              "oldEpochs": [
+                "1"
+              ],
+              "newEpochs": [
+                "2"
+              ]
+            }
+          },
+          {
+            "expectation_id": "held-root.transitive-results",
+            "status": "holds",
+            "observed": {
+              "old": [
+                {
+                  "kind": 1,
+                  "value": "21"
+                }
+              ],
+              "new": [
+                {
+                  "kind": 1,
+                  "value": "22"
+                }
+              ],
+              "leaf": [
+                {
+                  "kind": 1,
+                  "value": "22"
+                }
+              ]
+            }
+          }
+        ],
+        "noble-live-update/saved-program-and-package-retention": [
+          {
+            "expectation_id": "retention.replacement-runs-old-code",
+            "status": "holds",
+            "observed": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ]
+          },
+          {
+            "expectation_id": "retention.no-retirement-while-owned",
+            "status": "holds",
+            "observed": []
+          },
+          {
+            "expectation_id": "retention.retirement-after-last-owner",
+            "status": "holds",
+            "observed": {
+              "spans": 1,
+              "generation": 1,
+              "length": 5,
+              "start": 4
+            }
+          },
+          {
+            "expectation_id": "retention.released-program-refused",
+            "status": "holds",
+            "observed": {
+              "executed": false,
+              "outcome": "refused"
+            }
+          },
+          {
+            "expectation_id": "retention.charge-refuses-while-owned",
+            "status": "holds",
+            "observed": {
+              "outcome": "retention-budget-refused",
+              "epoch": "1"
+            }
+          },
+          {
+            "expectation_id": "retention.charge-admits-after-release",
+            "status": "holds",
+            "observed": {
+              "outcome": "published",
+              "spans": 1
+            }
+          },
+          {
+            "expectation_id": "retention.module-root-survives-supersession",
+            "status": "holds",
+            "observed": {
+              "outcome": "executed",
+              "stack": [
+                {
+                  "kind": 1,
+                  "value": "42"
+                }
+              ]
+            }
+          },
+          {
+            "expectation_id": "retention.module-root-retires-at-zero-owners",
+            "status": "holds",
+            "observed": {
+              "spans": 1,
+              "generation": 1,
+              "length": 6,
+              "start": 4
+            }
+          },
+          {
+            "expectation_id": "retention.module-root-last-run-refused",
+            "status": "holds",
+            "observed": "refused"
+          },
+          {
+            "expectation_id": "retention.saved-program-capacity-boundary",
+            "status": "holds",
+            "observed": {
+              "capacity": 4096,
+              "summary": "saved Program capacity 4096 refused the over-budget root before execution",
+              "requests": {
+                "install": 1,
+                "publish": 1,
+                "invoke": 4098,
+                "release-program": 1
+              }
+            }
+          }
+        ],
+        "noble-live-update/relocation-and-effect-prefix": [
+          {
+            "expectation_id": "relocation.effect-moves-with-target",
+            "status": "holds",
+            "observed": {
+              "oldSlot": "A",
+              "newSlot": "E",
+              "definitionsDiffer": true
+            }
+          },
+          {
+            "expectation_id": "relocation.one-effect-per-root",
+            "status": "holds",
+            "observed": {
+              "oldEffects": 1,
+              "newEffects": 1,
+              "oldRequest": "relocated",
+              "newRequest": "relocated",
+              "oldResponse": "emitted:relocated",
+              "newResponse": "emitted:relocated"
+            }
+          },
+          {
+            "expectation_id": "relocation.dispatch-precedes-effect",
+            "status": "holds",
+            "observed": {
+              "oldFirst": "dispatch",
+              "newFirst": "dispatch"
+            }
+          },
+          {
+            "expectation_id": "relocation.omission-control",
+            "status": "holds",
+            "observed": {
+              "dispatches": 1,
+              "effects": 0
+            }
+          },
+          {
+            "expectation_id": "relocation.denied-effect",
+            "status": "holds",
+            "observed": {
+              "executed": false,
+              "responses": 0,
+              "dispatchKept": true,
+              "effectRequest": "relocated",
+              "outcome": "execution-failed"
+            }
+          },
+          {
+            "expectation_id": "relocation.duplicate-not-constructible",
+            "status": "unsupported",
+            "observed": null
+          }
+        ],
+        "noble-live-update/typed-cases-and-bounds": [
+          {
+            "expectation_id": "typed.direct-pure-repeat1",
+            "status": "holds",
+            "observed": {
+              "roots": 1,
+              "dispatches": [
+                1
+              ],
+              "effects": [
+                0
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.direct-pure-repeat2",
+            "status": "holds",
+            "observed": {
+              "roots": 2,
+              "dispatches": [
+                1,
+                1
+              ],
+              "effects": [
+                0,
+                0
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.direct-emit-repeat1",
+            "status": "holds",
+            "observed": {
+              "roots": 1,
+              "dispatches": [
+                1
+              ],
+              "effects": [
+                1
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.direct-emit-repeat2",
+            "status": "holds",
+            "observed": {
+              "roots": 2,
+              "dispatches": [
+                1,
+                1
+              ],
+              "effects": [
+                1,
+                1
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.nested-chain",
+            "status": "holds",
+            "observed": {
+              "roots": 1,
+              "dispatches": [
+                3
+              ],
+              "effects": [
+                0
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.coverage-totals",
+            "status": "holds",
+            "observed": {
+              "admitted": 5,
+              "by_shape": {
+                "direct": 4,
+                "chain": 1
+              },
+              "by_nesting": {
+                "single": 4,
+                "nested": 1
+              },
+              "by_ceiling": {
+                "pure": 2,
+                "dispatch+emit": 2
+              },
+              "by_repeated_reborrow": {
+                "once": 2,
+                "twice": 2
+              },
+              "total_dispatch_rows": 9,
+              "total_effect_rows": 3
+            }
+          },
+          {
+            "expectation_id": "typed.negative-families",
+            "status": "holds",
+            "observed": {
+              "refused": 4,
+              "classes": [
+                "binding-foreign-root",
+                "binding-wrong-position",
+                "effect-not-granted",
+                "stack-incompatible"
+              ],
+              "by_stage": {
+                "command": 3,
+                "slot": 1
+              },
+              "guest_requests": 2,
+              "trace": [
+                [
+                  "dispatch",
+                  "allowed"
+                ],
+                [
+                  "effect",
+                  "denied"
+                ]
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.minimization-is-minimal",
+            "status": "holds",
+            "observed": {
+              "minimal_starting_witnesses": 4,
+              "accepted_shrinks": 0,
+              "rejected": [
+                {
+                  "class": "binding-foreign-root",
+                  "dimension": "quota",
+                  "observed": "setup-refused"
+                },
+                {
+                  "class": "binding-wrong-position",
+                  "dimension": "quota",
+                  "observed": "setup-refused"
+                },
+                {
+                  "class": "stack-incompatible",
+                  "dimension": "quota",
+                  "observed": "setup-refused"
+                },
+                {
+                  "class": "effect-not-granted",
+                  "dimension": "quota",
+                  "observed": "setup-refused"
+                }
+              ]
+            }
+          },
+          {
+            "expectation_id": "typed.retention-saturation",
+            "status": "holds",
+            "observed": {
+              "bound": 128,
+              "retained": 128,
+              "refusal_stage": "command"
+            }
+          },
+          {
+            "expectation_id": "typed.type-boundaries",
+            "status": "holds",
+            "observed": {
+              "stack": {
+                "admitted": 128,
+                "refused_first": 129
+              },
+              "nesting": {
+                "admitted": 31,
+                "refused_first": 32
+              },
+              "refusal_stage": "authority"
+            }
+          }
+        ],
+        "noble-live-update/ownership-duplicates-and-modules": [
+          {
+            "expectation_id": "ownership.duplicates-released-in-both-orders",
+            "status": "holds",
+            "observed": [
+              {
+                "order": "A-then-B",
+                "owners": 2,
+                "survivor": [
+                  {
+                    "kind": 1,
+                    "value": "42"
+                  }
+                ],
+                "exit": 0,
+                "refusedInvocations": 2,
+                "refusedReleases": 1
+              },
+              {
+                "order": "B-then-A",
+                "owners": 2,
+                "survivor": [
+                  {
+                    "kind": 1,
+                    "value": "42"
+                  }
+                ],
+                "exit": 0,
+                "refusedInvocations": 2,
+                "refusedReleases": 1
+              }
+            ]
+          },
+          {
+            "expectation_id": "ownership.balanced-tree-ownership",
+            "status": "holds",
+            "observed": {
+              "leaves": 8,
+              "intermediates": 7,
+              "released_before_root": 14,
+              "before": [
+                {
+                  "kind": 1,
+                  "value": "8"
+                }
+              ],
+              "after": [
+                {
+                  "kind": 1,
+                  "value": "8"
+                }
+              ],
+              "exit": 0
+            }
+          },
+          {
+            "expectation_id": "ownership.deep-chain-bounded",
+            "status": "holds",
+            "observed": {
+              "refused_at_compose": 5,
+              "session_state": "terminated-after-guest-failure",
+              "exit": 2
+            }
+          },
+          {
+            "expectation_id": "ownership.cross-module-alias",
+            "status": "holds",
+            "observed": {
+              "owners": 3,
+              "exit": 0
+            }
+          }
+        ]
+      },
+      "lane_contract": "the three slot runtime sources and every lane digest in `pins`"
+    }
+  },
+  "non_claims": [
+    "this corpus is an experimental export of existing fixture observations; it is not a proof, a conformance result or a model-to-implementation correspondence claim",
+    "the authoritative lanes keep their own claims; the exporter binds their bytes and reproduces their observations, it does not replace them",
+    "no LSLOT-01..09 canonical case state is promoted and no evidence is attached to a canonical case",
+    "the makepad-relax column is not-run: compiler-lab #188, #189 and #190 are unavailable, so no Relax profile is frozen and no cross-runtime correspondence is claimed",
+    "an expected refusal is recorded as a supported outcome of the frozen profile; only an unexpected refusal is a refusal-class result",
+    "timing and duration records are bounds observed in this export, not performance claims or regression evidence"
+  ],
+  "binding_sha256": "0ad4701c82892e295df914df52864132fb70060cc45a6d3a916250ff06ca9c74",
+  "controls": {
+    "suite": "verification/live-update-corpus/controls.mjs",
+    "controls": [
+      {
+        "control": "pristine-evidence-verifies",
+        "expected_reason": null,
+        "observed_reasons": [],
+        "passed": true,
+        "detail": [
+          "evidence verified"
+        ]
+      },
+      {
+        "control": "wrong-version-observation",
+        "expected_reason": "held-root.held-root-keeps-pinned-definition",
+        "observed_reasons": [
+          "mismatch:held-root.held-root-keeps-pinned-definition",
+          "class:contract-violation"
+        ],
+        "passed": true,
+        "detail": [
+          "declared {\"freshDiffersFromHeld\":true,\"freshEpochs\":[\"3\"],\"heldEpochs\":[\"2\"],\"heldEqualsPinned\":true}",
+          "observed {\"freshDiffersFromHeld\":false,\"freshEpochs\":[\"3\"],\"heldEpochs\":[\"2\"],\"heldEqualsPinned\":false}"
+        ]
+      },
+      {
+        "control": "premature-retirement-observation",
+        "expected_reason": "retention.no-retirement-while-owned",
+        "observed_reasons": [
+          "mismatch:retention.no-retirement-while-owned",
+          "class:contract-violation"
+        ],
+        "passed": true,
+        "detail": [
+          "declared []",
+          "observed [{\"generation\":1,\"length\":5,\"start\":4}]"
+        ]
+      },
+      {
+        "control": "stale-raw-evidence",
+        "expected_reason": "stale-evidence",
+        "observed_reasons": [
+          "derivation-drift",
+          "stale-evidence"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "stale-evidence",
+            "target": "raw/live_slot_package_retention/LREF-CASE-03-replacement.responses.jsonl",
+            "detail": "raw bytes differ from the recorded digest; the observation is stale"
+          },
+          {
+            "code": "derivation-drift",
+            "target": "noble-live-update/saved-program-and-package-retention",
+            "detail": "retained raw reports cannot be reloaded: Expected ',' or '}' after property value in JSON at position 181 (line 1 column 182)"
+          }
+        ]
+      },
+      {
+        "control": "mutated-event-binding",
+        "expected_reason": "event-binding-mismatch",
+        "observed_reasons": [
+          "event-binding-mismatch"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "event-binding-mismatch",
+            "target": "raw/live_slot_relocation_witness/reloc-denied.requests.jsonl",
+            "detail": "an edit or effect binding changed: the comparison evidence is invalid"
+          },
+          {
+            "code": "event-binding-mismatch",
+            "target": "noble-live-update/relocation-and-effect-prefix",
+            "detail": "the recorded event binding does not cover its own listed files"
+          }
+        ]
+      },
+      {
+        "control": "mutated-edit-binding",
+        "expected_reason": "event-binding-mismatch",
+        "observed_reasons": [
+          "event-binding-mismatch"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "event-binding-mismatch",
+            "target": "raw/live_slot_ownership_cases/OWN-CASE-02-A-then-B.requests.jsonl",
+            "detail": "an edit or effect binding changed: the comparison evidence is invalid"
+          }
+        ]
+      },
+      {
+        "control": "resealed-effect-mutation",
+        "expected_reason": "derivation-drift|expectation-drift|comparison-drift",
+        "observed_reasons": [
+          "comparison-drift",
+          "derivation-drift",
+          "expectation-drift",
+          "timing-unbound"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "derivation-drift",
+            "target": "noble-live-update/relocation-and-effect-prefix",
+            "detail": "the retained reports no longer derive the recorded observation"
+          },
+          {
+            "code": "derivation-drift",
+            "target": "noble-live-update/relocation-and-effect-prefix.effect_prefixes",
+            "detail": "the retained reports no longer derive the recorded effect prefixes"
+          },
+          {
+            "code": "expectation-drift",
+            "target": "relocation.one-effect-per-root",
+            "detail": "recorded holds, recomputed mismatch"
+          },
+          {
+            "code": "derivation-drift",
+            "target": "relocation.one-effect-per-root",
+            "detail": "the observed value no longer derives from the retained reports"
+          }
+        ]
+      },
+      {
+        "control": "mutated-profile",
+        "expected_reason": "profile-changed",
+        "observed_reasons": [
+          "profile-changed"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "profile-changed",
+            "target": "verification/live-update-corpus/profiles/noble.json",
+            "detail": "the live profile differs from the profile this evidence was produced under; prior comparison evidence is invalid"
+          }
+        ]
+      },
+      {
+        "control": "mutated-expectation",
+        "expected_reason": "expectation-drift",
+        "observed_reasons": [
+          "expectation-drift"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "expectation-drift",
+            "target": "typed.retention-saturation",
+            "detail": "the expected value differs from the frozen declaration"
+          }
+        ]
+      },
+      {
+        "control": "canonical-state-promotion",
+        "expected_reason": "canonical-case-promoted",
+        "observed_reasons": [
+          "canonical-case-promoted",
+          "schema-invalid"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "schema-invalid",
+            "target": "corpus.json",
+            "detail": "canonical_cases.states.LSLOT-02.implementation: expected absent"
+          },
+          {
+            "code": "canonical-case-promoted",
+            "target": "LSLOT-02.implementation",
+            "detail": "expected absent, recorded \"present\""
+          }
+        ]
+      },
+      {
+        "control": "canonical-lslot-states-unchanged",
+        "expected_reason": null,
+        "observed_reasons": [],
+        "passed": true,
+        "detail": [
+          "no canonical case is promoted"
+        ]
+      }
+    ],
+    "passed": true
+  }
+}

@@ -1,0 +1,23 @@
+{"operation":"install","id":"dupper","source":"[ 1 + ] dup","inputs":[]}
+{"operation":"install","id":"leaf","source":"drop [ 1 + ]","inputs":["I64"]}
+{"operation":"install","id":"composer","source":"compose","inputs":["Program<I64,I64,pure>","Program<I64,I64,pure>"]}
+{"operation":"install","id":"runner","source":"run","inputs":["I64","Program<I64,I64,pure>"]}
+{"operation":"install","id":"maker","source":"[ 1 + ]","inputs":[]}
+{"operation":"install","id":"passer","source":"dup","inputs":["Program<I64,I64,pure>"]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"0"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"1"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"4"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"5"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"6"}],"refs":[]}
+{"operation":"invoke","id":"leaf","inputs":[{"kind":"i64","value":"7"}],"refs":[]}
+{"operation":"invoke","id":"composer","inputs":[{"kind":"program","owner":"program-1"},{"kind":"program","owner":"program-2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"0"},{"kind":"program","owner":"program-9"}],"refs":[]}
+{"operation":"invoke","id":"composer","inputs":[{"kind":"program","owner":"program-9"},{"kind":"program","owner":"program-3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"0"},{"kind":"program","owner":"program-10"}],"refs":[]}
+{"operation":"invoke","id":"composer","inputs":[{"kind":"program","owner":"program-10"},{"kind":"program","owner":"program-4"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"0"},{"kind":"program","owner":"program-11"}],"refs":[]}
+{"operation":"invoke","id":"composer","inputs":[{"kind":"program","owner":"program-11"},{"kind":"program","owner":"program-5"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"0"},{"kind":"program","owner":"program-12"}],"refs":[]}
+{"operation":"invoke","id":"composer","inputs":[{"kind":"program","owner":"program-12"},{"kind":"program","owner":"program-6"}],"refs":[]}

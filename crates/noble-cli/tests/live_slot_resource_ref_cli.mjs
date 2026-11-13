@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,9 +15,12 @@ export const canonical = id => {
 };
 export const digest = source => createHash('sha256').update(source).digest('hex');
 const selectedEvidenceDirectory = process.env.NOBLE_SLOT_EVIDENCE_DIR;
+const tempRoot = path.resolve(os.tmpdir());
 if (selectedEvidenceDirectory) {
-  assert.match(selectedEvidenceDirectory, /^\/tmp\/noble-lslot-resource-[^/]+$/,
-    'preserved evidence must be a unique precreated /tmp/noble-lslot-resource-* directory');
+  assert.ok(path.isAbsolute(selectedEvidenceDirectory)
+    && path.dirname(path.resolve(selectedEvidenceDirectory)) === tempRoot
+    && path.basename(selectedEvidenceDirectory).startsWith('noble-lslot-resource-'),
+  'preserved evidence must be a unique precreated directory under the selected TMPDIR');
   const metadata = fs.lstatSync(selectedEvidenceDirectory);
   assert.ok(metadata.isDirectory() && !metadata.isSymbolicLink(),
     'preserved evidence must be a real directory');
@@ -26,18 +30,31 @@ if (selectedEvidenceDirectory) {
     'preserved evidence directory must be new and empty for this script');
 }
 export const evidenceDirectory = selectedEvidenceDirectory
-  ?? fs.mkdtempSync('/tmp/noble-lslot-resource-');
+  ?? fs.mkdtempSync(path.join(tempRoot, 'noble-lslot-resource-'));
 if (!selectedEvidenceDirectory) {
   process.once('exit', () => fs.rmSync(evidenceDirectory, { recursive: true }));
 }
 
-// The CLI rejects an authority below /tmp: all ancestors of its pinned path
-// must be non-group/world-writable. Only this unique, private directory under
-// the checked-out tests directory holds the temporary selected authority.
+// The exporter may place authorities under its private TMPDIR; the default fixture path remains
+// under this test directory, where its ancestors are also non-group/world-writable.
+const authorityRoot = process.env.NOBLE_SLOT_AUTHORITY_ROOT;
+if (authorityRoot) {
+  assert.ok(path.isAbsolute(authorityRoot)
+    && path.dirname(path.resolve(authorityRoot)) === tempRoot
+    && path.basename(authorityRoot).startsWith('noble-lslot-resource-authority-'),
+  'authority root must be a unique private directory under the selected TMPDIR');
+  const metadata = fs.lstatSync(authorityRoot);
+  assert.ok(metadata.isDirectory() && !metadata.isSymbolicLink(),
+    'authority root must be a real directory');
+  assert.equal(metadata.uid, process.getuid(), 'authority root must belong to the current user');
+  assert.equal(metadata.mode & 0o077, 0, 'authority root must not be accessible by other users');
+}
+
 export async function cli(binary, variant, authority) {
   assert.ok(path.isAbsolute(binary), 'select a real absolute noble CLI binary');
   const selectedBinarySha256 = digest(fs.readFileSync(binary));
-  const fixture = fs.mkdtempSync(path.join(here, 'live_slot_resource_ref_authority-'));
+  const fixture = fs.mkdtempSync(path.join(authorityRoot ?? here,
+    authorityRoot === undefined ? 'live_slot_resource_ref_authority-' : 'authority-'));
   const authorityPath = path.join(fixture, 'selected.json');
   fs.writeFileSync(authorityPath, JSON.stringify(authority), { mode: 0o600 });
   const log = path.join(evidenceDirectory, `${variant}.jsonl`);

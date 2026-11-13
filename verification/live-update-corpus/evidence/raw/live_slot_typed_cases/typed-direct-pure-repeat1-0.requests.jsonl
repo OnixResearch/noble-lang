@@ -1,0 +1,7 @@
+{"operation":"define","id":"defLeaf","name":"inertLeaf","source":"def inertLeaf [ drop 21 ]","inputs":[]}
+{"operation":"install","id":"leaf","source":"inertLeaf","inputs":["I64"],"selected_name":"inertLeaf"}
+{"operation":"install","id":"callerA","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,live.dispatch>"]}
+{"operation":"candidate","id":"callerA"}
+{"operation":"publish","slot":"A","id":"leaf","program_index":0,"expected_epoch":"0"}
+{"operation":"publish","slot":"B","id":"callerA","program_index":0,"expected_epoch":"1"}
+{"operation":"invoke","id":"callerA","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"A"}]}

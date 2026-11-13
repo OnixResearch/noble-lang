@@ -1,0 +1,124 @@
+{
+  "schema": "noble-live-update-profile/v1",
+  "id": "noble-live-update-profile/noble-v1",
+  "runtime": {
+    "name": "noble",
+    "family": "checked-live-slot",
+    "engine": "v8",
+    "selection_command": "noble live slot --engine v8 --authority <authority.json>"
+  },
+  "status": "frozen",
+  "frozen_on": "2026-11-13",
+  "meaning": "Declared update semantics of the selected Noble live-slot profile, frozen before any measurement governed by it. A profile is a declaration, not an observation, a proof or a conformance promotion.",
+  "frozen_from": [
+    {
+      "path": ".cairn/changes/live-reference-lifetimes/design.md",
+      "lines": "7-14",
+      "what": "the already-selected canonical contract K-LSLOT-01, K-LSLOT-02, H-LSLOT-01, S-LSLOT-01, VC-LSLOT-01, DX-LSLOT-01, EV-LSLOT-01 and the statement that LSLOT-01..09 stay absent/not-run/open/unassessed",
+      "sha256_at_freeze": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15"
+    },
+    {
+      "path": ".cairn/changes/live-reference-lifetimes/design.md",
+      "lines": "37-46,58-60,64-76,78-89,93-100",
+      "what": "the per-dimension decisions: one map per root, CAS publication without ABA, package retirement order, abnormal root exit, non-wrapping counters, escaped results and saved generic callers",
+      "sha256_at_freeze": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15"
+    },
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+      "lines": "157-176",
+      "what": "the host services constructor: the retained-version quota is a host-ledger count in 1..16384 and the slot count is bounded the same way",
+      "sha256_at_freeze": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a"
+    },
+    {
+      "path": "specs/conformance/live-reference-cases.json",
+      "what": "the canonical LSLOT-01..09 designs whose state this profile must never promote; all nine remain absent/not-run/open/unassessed with empty evidence",
+      "sha256_at_freeze": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63"
+    },
+    {
+      "path": ".cairn/changes/ownership-lifetime-contract/design.md",
+      "lines": "189-193",
+      "what": "the OWN-CASE-02, OWN-CASE-03 and OWN-CASE-06 ownership expectations reused by the retention scenarios",
+      "sha256_at_freeze": "7f889a3cfd1a19ddfd85267bffa4a0266d1303690ce04cf569f706a5509e2efb"
+    }
+  ],
+  "dimensions": {
+    "version_selection_boundary": {
+      "value": "root",
+      "statement": "One immutable slot map and registry epoch are pinned per root invocation and used for every nested and transitive dispatch. A nested call never selects independently, and two different versions of the same slot are never selected within one root.",
+      "requires": ["S-LSLOT-01", "K-LSLOT-02"],
+      "not_supported": ["per-call selection", "within-root version mixing for one slot"]
+    },
+    "active_frames": {
+      "value": "root-map-pin-plus-per-site-frames",
+      "statement": "The root's map pin is held for the whole root; each dispatch site pins the target it selected by count and releases it on restore. Pins end at root completion or at an abnormal root exit, not when the guest returns into an intermediate frame.",
+      "requires": ["S-LSLOT-01", "LREF-EXIT-01"]
+    },
+    "saved_callable_values": {
+      "value": "exact-own-lineage",
+      "statement": "A saved exact Program keeps its own captured code and dependencies forever and never follows a later publication of the slot it escaped from. A saved generic caller is ordinary reusable code: each invocation needs a new root, a fresh pin and fresh host-issued references, and a reference retained from an earlier root is refused.",
+      "requires": ["K-LSLOT-01", "LREF-ESCAPE-01", "LREF-PKG-01"]
+    },
+    "update_group_atomicity": {
+      "value": "single-slot-publication-per-commit",
+      "statement": "Publication is a compare-and-set on the global epoch plus the slot id, incarnation and generation; one persistent-map swap is the sole commit point and it advances the global epoch. Rejection leaves the epoch and map unchanged. Rollback is a new publication, never a rewind.",
+      "requires": ["H-LSLOT-01"],
+      "not_supported": ["multi-slot atomic replacement group", "transactional rollback of performed effects"]
+    },
+    "incompatible_layout_behavior": {
+      "value": "refuse-before-execution",
+      "statement": "A candidate whose exact ordered interface, nominal resource schema or effect ceiling differs from the selected slot contract is refused at admission, and the candidate body is not executed.",
+      "requires": ["H-LSLOT-01", "VC-LSLOT-01"],
+      "not_supported": ["structural coercion", "adapter synthesis"]
+    },
+    "reclamation": {
+      "value": "post-commit-reachability-retirement",
+      "statement": "The retained unit is the selected version's complete executable package. Root and frame pins release first, then saved owners, then package members; the code span retires only when its code owners reach zero, and only then is the table span cleared and the retained-version charge reclaimed. Retention capacity is checked against post-commit reachability.",
+      "requires": ["H-LSLOT-01", "LREF-PKG-01"],
+      "quota_bound": {
+        "minimum": 1,
+        "maximum": 16384,
+        "source": "crates/noble-cli/src/core/runtime/slot-registry.mjs:164-165"
+      }
+    },
+    "abnormal_exit": {
+      "value": "release-pins-exactly-once-then-poison",
+      "statement": "A trap, quota exhaustion, host abort, cancellation or save-time failure ends the root. The host releases the root's map pin and every active frame pin exactly once from its own ledger, no saved owner is issued for that root's outputs, the session may be poisoned (the selected runtime terminates the session after a guest failure), and performed effects are never rolled back.",
+      "requires": ["LREF-EXIT-01"]
+    },
+    "counters": {
+      "value": "non-wrapping-with-explicit-exhaustion",
+      "statement": "The global registry epoch, per-slot generation and incarnation, the code-retention revision and guest handle epochs do not wrap; exhaustion refuses explicitly and leaves the registry unchanged.",
+      "requires": ["LREF-CTR-01"]
+    }
+  },
+  "unsupported_dimensions": [
+    {
+      "id": "makepad-relax-runtime",
+      "reason": "compiler-lab #188 (Relax host) and #190 (persistent sessions) are not available, so no Relax profile is frozen and no Relax column is measured"
+    },
+    {
+      "id": "concurrent-host-threads",
+      "reason": "the selected CLI serves one ordered operator session; two host threads sharing one registry are not exercised by any existing lane"
+    },
+    {
+      "id": "cross-process-persistence",
+      "reason": "registry, pins and saved owners are process-lifetime state; no lane restarts a host process and reopens a registry"
+    },
+    {
+      "id": "model-to-implementation-correspondence",
+      "reason": "no retained model theorem is claimed for these observations; model proofs keep their own receipts"
+    }
+  ],
+  "canonical_case_state": {
+    "file": "specs/conformance/live-reference-cases.json",
+    "required_state": {
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    "cases": ["LSLOT-01", "LSLOT-02", "LSLOT-03", "LSLOT-04", "LSLOT-05", "LSLOT-06", "LSLOT-07", "LSLOT-08", "LSLOT-09"],
+    "meaning": "This profile is an experimental adapter over an opt-in runtime. It never promotes a canonical design case: the exporter refuses to write a corpus or receipt if any case state or evidence list differs from the required tuple."
+  }
+}

@@ -1,0 +1,9 @@
+{"variant":"replacement","observation":"publication-while-owned","outcome":"published","stack":null,"epoch":"2","diagnostic":null,"retire_code_spans":[]}
+{"variant":"replacement","observation":"run-after-replacement","outcome":"executed","stack":[{"kind":1,"value":"21"}],"epoch":"2","diagnostic":null,"retire_code_spans":[]}
+{"variant":"replacement","observation":"release","outcome":"program-released","stack":null,"epoch":null,"diagnostic":null,"retire_code_spans":[{"generation":1,"length":5,"start":4}]}
+{"variant":"replacement","observation":"run-after-release","outcome":"refused","stack":null,"epoch":null,"diagnostic":"root Program differs from checked ordered type","retire_code_spans":null}
+{"variant":"charge","observation":"publication-while-owned","outcome":"retention-budget-refused","stack":null,"epoch":"1","diagnostic":null,"retire_code_spans":[]}
+{"variant":"charge","observation":"run-while-owned","outcome":"executed","stack":[{"kind":1,"value":"21"}],"epoch":"1","diagnostic":null,"retire_code_spans":[]}
+{"variant":"charge","observation":"release","outcome":"program-released","stack":null,"epoch":null,"diagnostic":null,"retire_code_spans":[]}
+{"variant":"charge","observation":"publication-after-release","outcome":"published","stack":null,"epoch":"2","diagnostic":null,"retire_code_spans":[{"generation":1,"length":5,"start":4}]}
+{"case":"LREF-CASE-03","replacement":{"after_replacement":[{"kind":1,"value":"21"}],"retired_span":{"generation":1,"length":5,"start":4},"selected_binary_sha256":"83dfa3373bcec3009fe23fd97a42f28e8556ab1e7e304bf4f6d3a83df6b18f9c"},"charge":{"refused_while_owned":"retention-budget-refused","retired_span":{"generation":1,"length":5,"start":4},"selected_binary_sha256":"83dfa3373bcec3009fe23fd97a42f28e8556ab1e7e304bf4f6d3a83df6b18f9c"}}

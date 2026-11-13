@@ -1,0 +1,7 @@
+{"operation":"define","id":"defLeaf","name":"emittingLeaf","source":"def emittingLeaf [ drop \"x\" test.emit drop 21 ]","inputs":[]}
+{"operation":"install","id":"leaf","source":"emittingLeaf","inputs":["I64"],"selected_name":"emittingLeaf"}
+{"operation":"install","id":"callerA","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,live.dispatch+test.emit>"]}
+{"operation":"candidate","id":"callerA"}
+{"operation":"publish","slot":"A","id":"leaf","program_index":0,"expected_epoch":"0"}
+{"operation":"publish","slot":"B","id":"callerA","program_index":0,"expected_epoch":"1"}
+{"operation":"invoke","id":"callerA","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"A"}]}

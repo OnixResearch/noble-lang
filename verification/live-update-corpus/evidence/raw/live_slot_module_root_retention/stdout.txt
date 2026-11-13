@@ -1,0 +1,3 @@
+{"observation":"after-supersession","outcome":"executed","stack":[{"kind":1,"value":"42"}],"diagnostic":null,"retire_code_spans":[]}
+{"observation":"after-release","outcome":"program-released","stack":null,"diagnostic":null,"retire_code_spans":[{"generation":1,"length":6,"start":4}]}
+{"case":"OWN-CASE-06","selected_binary_sha256":"83dfa3373bcec3009fe23fd97a42f28e8556ab1e7e304bf4f6d3a83df6b18f9c","before":[{"kind":1,"value":"42"}],"after_supersession":[{"kind":1,"value":"42"}],"retired_span":{"generation":1,"length":6,"start":4}}
