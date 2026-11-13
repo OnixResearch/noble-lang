@@ -8812,6 +8812,12 @@
       "claim": "the chain family initial live-agent bound is two times its operation count plus one"
     },
     {
+      "name": "NobleFoundation.NetI64.chain_three_translation_checked",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "every 64-bit input to the three-operation chain lowers to an XNet accepted by the executable invariant checker"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",

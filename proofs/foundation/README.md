@@ -3594,7 +3594,10 @@ balanced tree of depth `d` has `2(2^d - 1)` planned interactions and `2^(d+1) - 
 fanout has its corresponding exact formulas as well. Read-back fixtures cover a three-operation
 chain, a depth-two balanced tree, fanout with three copies, fanout with an unused input, and two
 independent subtraction schedules including a wrapping case. These parameterized formulas are
-static graph counts, not an arbitrary-size normalization/read-back proof.
+static graph counts, not an arbitrary-size normalization/read-back proof. For every 64-bit input,
+`chain_three_translation_checked` additionally proves that the three-operation chain lowers to a
+finite net accepted by inets' executable invariant checker; it does not establish its normalization
+trace or output for all inputs.
 Arbitrary-size chain and balanced-tree execution/read-back semantics, plus a general graph-to-net
 observation proof (and the statement that every admitted graph's canonical lowering reaches a normal
 form), remain **open**. This module is a

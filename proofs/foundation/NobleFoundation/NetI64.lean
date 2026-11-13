@@ -1654,6 +1654,29 @@ theorem chain_three_reference :
       (chainProgram 3).referenceOutputs [5] = some [.i64 20] := by
   decide
 
+theorem chain_three_translation_checked (input : BitVec 64) :
+    (chainProgram 3).translateChecked [input] =
+      some ((chainProgram 3).translate [input]) := by
+  have hinput : (chainProgram 3).InputsOk [input] := rfl
+  have hwf : (chainProgram 3).WellFormed :=
+    (Program.wellFormedCheck_iff _).1 (by decide)
+  have htyped : (chainProgram 3).WellTyped :=
+    (Program.wellTypedCheck_iff _).1 (by decide)
+  have hadmission := (Program.acceptanceCheck_iff (chainProgram 3) [input]).2
+    ⟨hinput, hwf, htyped⟩
+  have hchecked : ((chainProgram 3).translate [input]).Checked arity := by
+    constructor <;> simp [chainProgram, chainNodes, Program.translate,
+      Program.nodeAt, Program.inputValue, Program.sourceRoute,
+      Program.extraAgents, Program.baseAgent, Program.sourcePort,
+      Program.usesOf, nodeUses, nodeConsumers, outputConsumers,
+      fanoutWires, valueId, opId, dupId, outputPort,
+      Consumer.port, XNet.ofWires, XNet.ends, XNet.ids, assoc, endsWith,
+      arity, List.range, List.range.loop,
+      List.flatMap]
+  have hnet : ((chainProgram 3).translate [input]).check arity = true :=
+    XNet.check_iff.2 hchecked
+  simp [Program.translateChecked, hadmission, hnet]
+
 /-- Kernel-evaluated depth-two balanced-tree trace: six firings and agreement
 between its read-back and the ordered packed-schedule reference. -/
 theorem balanced_depth_two_reference :
