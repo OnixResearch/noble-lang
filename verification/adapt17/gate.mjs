@@ -731,6 +731,8 @@ function main() {
   const finalStatus = git(['status', '--porcelain']);
   check(finalStatus === '', 'source tree remains clean after all executions');
   const sourceFiles = [
+    'Cargo.lock',
+    'crates/noble-cli/Cargo.toml',
     'crates/noble-cli/src/core.rs',
     'crates/noble-cli/src/core/arguments.rs',
     'crates/noble-cli/src/core/companions/session.rs',
@@ -744,12 +746,16 @@ function main() {
     'crates/noble-cli/src/core/runtime/engine-host.mjs',
     'crates/noble-cli/src/core/runtime/engine.mjs',
     'crates/noble-wasm/runtime/data.wat',
+    'crates/noble-wasm/Cargo.toml',
     'crates/noble-wasm/src/source/emit.rs',
     'crates/noble-wasm/src/source/emit/functions.rs',
     'crates/noble-wasm/src/source/mod.rs',
     'crates/noble-wasm/src/source/plan.rs',
     'crates/noble-wasm/src/source/plan/operations.rs',
     'crates/noble-wasm/src/source/transaction.rs',
+    'specs/BACKEND-EXPERIMENTS.md',
+    'specs/STATUS.json',
+    'specs/conformance/adaptation-cases.json',
     'verification/adapt17/freeze.md',
     'verification/adapt17/gate.mjs',
     'verification/adapt17/forms/branch-laziness-control.noble',
