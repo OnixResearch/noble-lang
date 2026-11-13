@@ -6,6 +6,7 @@ mod programs;
 use noble_ngraph::ir::{
     Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject,
 };
+use noble_ngraph::sem::Value;
 use programs::Program;
 
 const WIDTH: usize = 64;
@@ -161,4 +162,82 @@ fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[test]
+fn malformed_state_input_and_decoder_values_are_refused() {
+    let candidate =
+        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+            .expect("accumulator checker");
+    assert!(candidate.one_step(&[], &[0]).is_err());
+    assert!(candidate.one_step(&[0], &[]).is_err());
+    assert!(candidate.one_step(&[0, 1], &[0]).is_err());
+    let mut malformed = vec![Value::f32(0.0); 64];
+    malformed[7] = Value::f32(f32::NAN);
+    assert!(checker::decode_words(&malformed).is_err());
+    malformed[7] = Value::f32(-0.0);
+    assert!(checker::decode_words(&malformed).is_err());
+    assert!(checker::decode_words(&malformed[..63]).is_err());
+}
+
+#[test]
+fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
+    let corrupted =
+        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[1.0, 0.0])
+            .expect("bit-valued but corrupted snapshot");
+    assert!(corrupted.one_step(&[0], &[1]).is_err());
+
+    let mut builder = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&common::IDS, "recurrent-weights-seeded-zero-transition"),
+    );
+    for _ in 0..128 {
+        let input = builder.input(ScalarType::F32);
+        builder.guard(Fact::Bit, input);
+    }
+    let zero = builder.f32_const(0.0);
+    for _ in 0..64 {
+        builder.output(zero);
+    }
+    let incorrect = checker::CandidateChecker::new(Program::Accumulator, builder.finish(), &[])
+        .expect("seeded wrong candidate passes structural admission");
+    assert!(incorrect.one_step(&[0], &[1]).is_err());
+}
+
+#[test]
+fn wrong_program_configuration_and_little_endian_decoder_are_detected() {
+    let wrong_program =
+        checker::CandidateChecker::new(Program::StackSwap, exact_adder(), &[0.0, 1.0])
+            .expect("shape-compatible graph with wrong declared program");
+    assert!(wrong_program.one_step(&[1, 2], &[]).is_err());
+    let encoded = (0..64)
+        .map(|bit| Value::f32(((1u64 >> bit) & 1) as f32))
+        .collect::<Vec<_>>();
+    let expected = checker::decode_words(&encoded).expect("valid codec");
+    let mut reversed = encoded;
+    reversed.reverse();
+    let wrong_decode = checker::decode_words(&reversed).expect("valid but wrong byte order");
+    assert_eq!(expected, [1]);
+    assert_ne!(
+        wrong_decode, expected,
+        "wrong decoder must be caught against the source result"
+    );
+}
+
+#[test]
+fn insufficient_budget_cancellation_and_resume_are_explicit() {
+    let candidate =
+        checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+            .expect("accumulator checker");
+    assert!(candidate
+        .one_step_with_control(&[1], &[2], Some(0), None)
+        .is_err());
+    let cancel_at_layer = |_layer: u32| true;
+    assert!(candidate
+        .one_step_with_control(&[1], &[2], None, Some(&cancel_at_layer))
+        .is_err());
+    assert_eq!(
+        candidate.one_step(&[1], &[2]).expect("resume at boundary"),
+        [3]
+    );
 }

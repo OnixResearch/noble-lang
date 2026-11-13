@@ -39,6 +39,16 @@ impl CandidateChecker {
     }
 
     pub fn one_step(&self, state: &[u64], input: &[u64]) -> Result<Vec<u64>, String> {
+        self.one_step_with_control(state, input, None, None)
+    }
+
+    pub fn one_step_with_control(
+        &self,
+        state: &[u64],
+        input: &[u64],
+        fuel: Option<u64>,
+        cancel: Option<&dyn Fn(u32) -> bool>,
+    ) -> Result<Vec<u64>, String> {
         let source = programs::source_transition(self.program, state, input)
             .ok_or_else(|| "state/input shape refused".to_owned())?;
         let words = programs::inputs_for(self.program, state, input)
@@ -51,8 +61,16 @@ impl CandidateChecker {
                 .collect(),
             Program::StackSwap => words.iter().flat_map(|word| encode_word(*word)).collect(),
         };
-        let mut compiled_control = Control::default();
-        let mut reference_control = Control::default();
+        let mut compiled_control = Control {
+            fuel,
+            cancel,
+            ..Control::default()
+        };
+        let mut reference_control = Control {
+            fuel,
+            cancel,
+            ..Control::default()
+        };
         let compiled_obs = self
             .compiled
             .evaluate(&encoded, Some(&self.weights), &mut compiled_control)
@@ -86,7 +104,7 @@ fn encode_word(word: u64) -> [Value; 64] {
     core::array::from_fn(|bit| Value::f32(((word >> bit) & 1) as f32))
 }
 
-fn decode_words(values: &[Value]) -> Result<Vec<u64>, String> {
+pub(super) fn decode_words(values: &[Value]) -> Result<Vec<u64>, String> {
     if values.len() % 64 != 0 {
         return Err(format!(
             "decoder length {} is not a multiple of 64",
@@ -101,10 +119,12 @@ fn decode_word(values: &[Value]) -> Result<u64, String> {
         let Value::F32(bits) = value else {
             return Err(format!("decoder received non-F32 at bit {bit}"));
         };
-        match f32::from_bits(*bits) {
-            0.0 => Ok(word),
-            1.0 => Ok(word | (1u64 << bit)),
-            value => Err(format!("decoder received non-bit {value:?} at bit {bit}")),
+        match *bits {
+            0x0000_0000 => Ok(word),
+            0x3f80_0000 => Ok(word | (1u64 << bit)),
+            bits => Err(format!(
+                "decoder received non-bit 0x{bits:08x} at bit {bit}"
+            )),
         }
     })
 }
