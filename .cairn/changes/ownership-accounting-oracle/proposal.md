@@ -24,29 +24,31 @@ rather than Move's ownership policy. It is not a new source borrow feature.
   must-use obligations are conserved, that a branch accounts for the same
   obligations on both arms, and that an error return is admitted only with no
   outstanding operand. r[VC-OWN-01]
-- `verification/ownership/cases.mjs` is an independent expectation generator
-  written from that model, and `crates/noble-kernel/tests/acceptance/ownership.rs`
-  drives the unary fragment through the actual acceptance machine, compares a
-  test-local shadow checker against every expectation, and declares seven
-  checker mutations each of which the retained corpus catches. r[VC-OWN-02]
+- `verification/ownership/cases.mjs` is a handwritten JavaScript mirror of that
+  model which proposes expected rows; its generated Lean corpus kernel-checks
+  each row, and `crates/noble-kernel/tests/acceptance/ownership.rs` drives 28
+  accepted and 17 rejected cases through the actual acceptance machine one word
+  prefix at a time. The test-local shadow checker agrees with all 116 rows and
+  catches six declared rule mutations; a separate production mutation lane
+  checks actual rules. r[VC-OWN-02]
 - The previous receipt `verification/foundation/receipts/e7cc00993/` records
   the pre-correction model and is retained as historical evidence; the issue
-  owner records a fresh clean-source receipt for this correction. The updated
-  corpus has 108 cases (15 accepted and 6 rejected through the production
-  machine, 87 model-only, seven mutations caught), and the differential receipt
-  binds the corrected model, toolchain, case file and tested implementation.
-  r[VC-OWN-03]
+  owner records a fresh clean-source receipt for this correction. The current
+  corpus has 116 cases (28 accepted, 17 rejected and 71 model-only, each with a
+  reason); the dated differential receipt binds the model, toolchain, case file
+  and tested implementation. The production mutation receipt records five
+  caught mutants and the surviving quote mutant. r[VC-OWN-03]
 
 ## Impact
 
-- **Files**: `proofs/foundation/NobleFoundation/Ownership.lean`,
+- **Files**: `proofs/foundation/NobleFoundation/{Ownership,OwnershipTrace,OwnershipCorpus}.lean`,
   `proofs/foundation/NobleFoundation.lean`, `proofs/foundation/inventory.json`,
-  `verification/ownership/{cases.mjs,cases.txt,differential.mjs,differential.json}`,
-  `crates/noble-kernel/tests/acceptance/ownership.rs`,
-  `crates/noble-kernel/tests/acceptance.rs`.
+  `verification/ownership/{cases.mjs,cases.txt,differential.mjs,production-mutants.mjs,README.md}`,
+  `crates/noble-kernel/tests/acceptance/ownership.rs`.
 - **Not claimed**: no extraction or refinement proof relates
-  `crates/noble-kernel/src/acceptance` to the model. Wrapped payloads, the
-  two-operand swap slot ordering, the production quotation constructor, two-arm
-  accounting and the ordinary error return are model-only and are never counted
-  as executable production controls. No release of a native object and no
-  whole-compiler safety claim follows.
+  `crates/noble-kernel/src/acceptance` to the model; Phase 3 is decided not
+  selected. Wrapped payloads, the production quotation constructor, two-arm
+  accounting, the ordinary error return and the operand-arity refusals are
+  model-only, each with a stated reason, and are never counted as executable
+  production controls; owner identity is not observable through the machine. No
+  release of a native object and no whole-compiler safety claim follows.

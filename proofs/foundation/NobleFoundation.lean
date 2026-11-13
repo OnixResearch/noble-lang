@@ -55,6 +55,8 @@ import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations
 import NobleFoundation.OwnershipJudgment
+import NobleFoundation.OwnershipTrace
+import NobleFoundation.OwnershipCorpus
 import NobleFoundation.Binary32Subnormal
 import NobleFoundation.Binary32Sequence
 import NobleFoundation.Binary32SequenceFinite

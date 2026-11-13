@@ -45,28 +45,110 @@ the data-constraining words reject one in their constrained position.
 
 ## Correspondence and its open edge
 
-The comparison route is handwritten. `verification/ownership/cases.mjs` is
-written from the Lean model, never from the acceptance machine, and generates
-108 cases: operand shapes including empty, one data payload of each data type, a
-data pair, tagged must-use resources at each eligible position, and recursively
-rendered wrapped payloads at two depths, over nine programmes plus explicit
-branch/resource controls and the error return. The Rust lane drives the unary
-fragment (`dup`/`drop` sequences) through
-`noble_kernel::acceptance::check`, compares a test-local shadow checker against
-every expectation, and declares seven mutations (resource duplication, resource
-release, dropping one swap operand, consuming quote, branch ignoring
-accounting, error return permitting an outstanding operand) each of which the
-corpus catches. Model-only branch controls cover one arm attempting to lose a
-resource, one attempting to duplicate one, and equal-count arms with distinct
-resource identities; a separate model-only control covers moving a resource.
+The comparison route is handwritten. `verification/ownership/cases.mjs` is a
+JavaScript mirror of the Lean model, never of the acceptance machine; it proposes
+expected rows but does not execute Lean to print them. `OwnershipCorpus.lean`
+kernel-checks each proposed `run` and `runTrace` result, so a mirror disagreement
+fails the foundation build. Its 116 cases
+cover operand shapes (including recursively wrapped payloads), nine programmes,
+branch/resource controls and the error return. `OwnershipCorpus.lean` makes the
+kernel decide each row; the Rust lane checks the emitted row and drives 28
+accepted and 17 rejected cases through `noble_kernel::acceptance::check` one word
+prefix at a time. The test-local shadow checker agrees with every row, and its
+six declared rule mutations are caught. A separate production mutation lane
+catches five real rule changes and records the surviving quotation mutation,
+which has no production analogue. Branch/resource controls cover loss,
+duplication, wrong identity and movement; owner identity remains model-only.
 
-Only an eligibility rejection of nameable payloads by a programme with a
-retain-in-place analogue is an executable production control: a production arity
-mismatch, the quotation constructor's program value, and the two-operand swap
-slot ordering have no retain-in-place analogue and stay model-only. The
-production rejection category can also be a stack-join failure rather than
-eligibility; the lane asserts the agreement of the accounting decision and
-reports the category split rather than pinning one category.
+Model-only rows name their reason: branch accounting, error return, the
+quotation constructor's program value, wrapped payloads or operand arity. The
+production rejection class is the machine's own; the lane pins it per case so a
+lost word rule changes the class instead of hiding behind an unchanged rejected
+total.
+
+### Per-word comparison and the kernel-decided corpus (2026-11-13)
+
+The original lane compared each accepted case only on its final stack, so an
+intermediate divergence that cancelled out by the end went unseen, and it could
+not drive `swap` at all. Both are now closed.
+
+`OwnershipTrace.lean` gives the model a total per-word trace (`traceWords`), the
+flattening of a straight-line program to its word sequence (`straightLine`), the
+checker over that sequence (`runWords`) and the program-level `runTrace`.
+`run_eq_runWords`, `traceWords_length` (the trace has one more entry than the
+word list exactly when the checker accepts), `traceWords_take` (the trace of a
+word prefix is the prefix of the trace) and `runWords_prefix_accepted` carry the
+claims the lane relies on; `traceWords_last` and `runTrace_getLast` state that
+the last entry is the checker result. `cases.mjs` proposes rows using its
+handwritten Lean-model mirror and emits
+`NobleFoundation/OwnershipCorpus.lean`, where the kernel `decide`s `run` and
+`runTrace` for every corpus row: 116 rows, so a corpus expectation that does not
+follow from the model fails the foundation build. `cases.mjs --check` fails when
+the committed corpus differs from the emission, and the Rust lane compares every
+corpus row with its kernel-checked twin.
+
+The production lane now drives one candidate per word prefix. After `k` words the
+machine's derived stack must equal trace entry `k`, so the first diverging word
+is reported. The bindings of each invocation are the value types the trace records
+for the stack that word actually sees; that is what makes `swap` drivable (the
+machine instantiates one scheme per word, so a swap prefix derives its reordered
+stack) and what exposed the earlier final-stack-only lane's blind spot. 28
+accepted and 17 rejected cases are driven over 60 prefix comparisons; every
+rejected case refuses at the word the model refuses, in the eligibility class.
+
+Owner identity remains unobservable: every resource payload has the same kernel
+type, so the equal-count/different-identity control stays model-only. Every
+model-only row states why (`branch-accounting`, `error-return`,
+`quotation-program-value`, `wrapped-payload`, `operand-arity`) and the receipt
+reports the counts by reason.
+
+Two mutation lanes are now separate. The corpus mutations vary a test-local copy
+of the model (all six caught, the unmutated copy agrees everywhere).
+`verification/ownership/production-mutants.mjs` applies one exact byte
+replacement to a production file in a scratch copy of the clean commit and
+requires the lane to fail: releasing the `Drop` or `Dup` data slot, dropping an
+operand in the `swap` scheme, making `swap` an identity and making `dup`
+produce one copy are caught; releasing the `Quote` data slot survives because
+every `quote` case is model-only, and the survivor is recorded rather than
+counted as coverage. A failing comparison writes the shortest failing word
+prefix and trims trailing input operands while the divergence persists to
+`verification/ownership/minimised.txt`; leading operands stay because they may
+be the head a word inspects. The minimiser is exercised by a synthetic probe.
+
+### Phase 3 decision (2026-11-13): production-checker refinement not selected
+
+**Decision.** This change does not select an extraction or refinement route from
+`crates/noble-kernel/src/acceptance` to the model. The correspondence stays the
+handwritten, kernel-decided corpus comparison.
+
+**Evidence.**
+
+- The issue's own deliverable 5 says a handwritten translation or finite
+  differential agreement leaves production-checker refinement open and MUST NOT be
+  promoted to an implementation theorem; the body asks for the open edge to be
+  recorded, not discharged.
+- The comparison is now at every word prefix and every corpus row is decided by
+  the kernel, so the remaining gap is the route, not the expectations: a refinement
+  proof needs an extraction subject for the acceptance machine's candidate
+  derivation, a re-audited axiom set and a clean-source receipt for that route.
+  None of that exists in this change, and manufacturing it would be a new change
+  with its own reviewed subject list.
+- Nothing in the lane needs the refinement to be useful: the differential fails
+  when a production rule changes (the production-mutants receipt) and when the
+  model changes (the kernel build and the freshness check).
+
+**Criteria a future refinement route would have to meet.** (1) Name the extraction
+subject covering `crates/noble-kernel/src/acceptance`; (2) keep every theorem
+inside the foundation axiom allow-list; (3) prove that the production decision
+implies the model's `Accounts` for the selected fragment, with the untrusted
+candidate parsing included or explicitly excluded; (4) bind a clean-source receipt
+whose `sources_sha256` covers the production source.
+
+**Reopen conditions.** The owner decides to fund a separate refinement change;
+or the corpus and production disagree at a retained row (which would make the
+current evidence insufficient, not merely incomplete); or the acceptance machine
+gains a per-word interface that exposes owner identity, which would make the
+identity controls executable and the type-only derivation argument obsolete.
 
 The Rust-to-model edge stays open and labelled: no Charon/Aeneas extraction or
 refinement proof relates the acceptance machine to the model, and the

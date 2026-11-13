@@ -3,6 +3,7 @@
 - [x] [serial] Select the declared fragment: data and must-use resource payloads, recursive wrapping, `dup`/`drop`/`swap`/`quote`, composition, a finite two-arm branch and the ordinary error-return alternative, with an executable checker and an independent declarative judgment. r[VC-OWN-01]
 - [x] [serial] Prove checker soundness, the eligibility equivalence at every wrapping depth, that a resource operand blocks each data-constraining word, that swap moves either operand without an eligibility check, that dropping consumes only a duplicable operand, that duplication preserves both copies, that quoting retains, the opaque-segment conservation, the two-arm accounting rule and the empty-operand requirement for an error return. r[VC-OWN-01]
 - [x] [serial] Inventory the initial eighteen theorems and retain the clean-source kernel check: the historical `verification/foundation/receipts/e7cc00993/` records 252 theorems, `clean_source: true` and axiom sets inside the allow-list. The swap correction adds two fixture theorems and requires a fresh receipt. r[VC-OWN-03]
+- [ ] [serial] Retain a clean-source foundation receipt binding `Ownership.lean`, `OwnershipTrace.lean` and `OwnershipCorpus.lean`, with all 116 corpus equations inventoried. r[VC-OWN-03]
   Note (2026-10-29): the conservation follow-up adds the independently
   checked `OwnershipConservation` unit, proves whole-program filtered-resource
   conservation and arbitrary successful-configuration segment preservation,
@@ -31,11 +32,47 @@
 
 ## Phase 2: Independent corpus, production comparison and mutations
 
-- [x] [serial] Write `verification/ownership/cases.mjs` from the model and generate 108 cases over nine programmes and eleven operand shapes plus branch/resource controls, classifying each case as an executable production control or as model-only with a stated reason. r[VC-OWN-02]
-- [x] [serial] Drive the unary fragment through `noble_kernel::acceptance::check`: 15 accepted cases must derive exactly the model's stack and 6 rejected cases must surface the production rejection, with the category split reported. r[VC-OWN-02]
-- [x] [serial] Compare a test-local shadow checker against every expectation and declare six mutations plus the unmutated `None` control, each mutation caught by at least one retained expectation while the unmutated checker agrees everywhere (receipt counts `caught=[None=0 ResourceOperandDuplicated=9 ResourceOperandReleased=5 SwapDropsOperand=14 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]`). r[VC-OWN-02]
-- [x] [serial] Retain `verification/ownership/differential.json`: clean commit, rustc pin, host, case-file, reference, model and lane digests, the coverage counts, the mutation line and the open Rust-to-model edge. r[VC-OWN-03]
+- [x] [serial] Generate 116 corpus cases from the model over nine programmes and operand shapes plus branch/resource controls; state a reason for every model-only row and emit a Lean corpus whose `run` and `runTrace` equations are kernel-decided. r[VC-OWN-02]
+- [x] [serial] Drive 28 accepted and 17 rejected cases through `noble_kernel::acceptance::check` one word prefix at a time, compare the production stack with every model trace entry and pin each rejection class. r[VC-OWN-02]
+- [x] [serial] Compare a test-local shadow checker against every row, with the unmutated control agreeing everywhere and each of six rule mutations caught by a retained expectation. r[VC-OWN-02]
+- [x] [serial] Minimise any differential failure into a reproducible fixture; exercise the deterministic prefix/operand minimiser with a synthetic probe when the lane has no natural divergence. r[VC-OWN-02]
+- [ ] [serial] Retain `verification/ownership/differential-<commit8>.json`: clean commit, toolchain, host, source/corpus/lane digests, coverage counts, model-only counts by reason and the open Rust-to-model edge. r[VC-OWN-03]
+- [ ] [serial] Mutate production ownership rules in scratch copies and retain `verification/ownership/production-mutants-<commit8>.json`: the unmutated lane passes, five mutants are caught and the quotation mutant survives because it has no executable control. r[VC-OWN-03]
 
 ## Phase 3: Promotion (not selected)
 
-- [ ] [serial] Relate `crates/noble-kernel/src/acceptance` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-OWN-03]
+- [x] [serial] Relate `crates/noble-kernel/src/acceptance` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-OWN-03] **Decided 2026-11-13: not selected.** The edge stays open and labelled. A refinement route would need a named extraction subject for the acceptance machine's candidate derivation, a re-audited axiom set and a clean-source receipt for that route (see the decision, evidence, criteria and reopen conditions in `design.md`); this change does not attempt one, and the issue's deliverable 5 explicitly leaves refinement open. No implementation theorem is claimed.
+
+## Note (2026-11-13): per-word comparison, kernel-decided corpus, production mutants
+
+The corpus generator remains a handwritten JavaScript mirror of the Lean model. It emits
+both `cases.txt` and `proofs/foundation/NobleFoundation/OwnershipCorpus.lean`, where the
+kernel `decide`s `run` and the new per-word `runTrace` for every proposed row: 116 cases (28
+accepted and 17 rejected through the production acceptance machine, 71 model-only), every
+model-only row carrying a reason (`branch-accounting`, `error-return`,
+`quotation-program-value`, `wrapped-payload`, `operand-arity`). `cases.mjs --check` fails
+on any drift between the committed artefacts and the emission.
+
+`OwnershipTrace.lean` adds `straightLine`, `runWords`, `traceWords` and `runTrace` with eight
+public theorems (`run_eq_runWords`, `traceWords_length`, `traceWords_take`,
+`runWords_prefix_accepted`, `traceWords_last`, `runTrace_getLast`, `trace_dup_drop`,
+`trace_stops_at_refused_word`) and two private helpers, all inventoried.
+
+The production lane drives one candidate per word prefix: after `k` words the machine's
+derived stack must equal trace entry `k`, so the first diverging word is reported (60 prefix
+comparisons, `first-divergence=none`). `swap` is drivable through the machine's per-word
+scheme instantiation; owner identity stays unobservable and its controls stay model-only. A
+failing comparison writes the shortest failing word prefix and trims trailing
+operands while the divergence persists to `verification/ownership/minimised.txt`;
+leading operands stay because they may be the head a word inspects. The minimiser
+is exercised by a synthetic probe. The retained comparison receipt is now the dated
+`verification/ownership/differential-<commit8>.json`; the earlier undated
+`differential.json` survives only in git history.
+
+Two mutation lanes are separated: the corpus mutations (all six caught by the retained rows,
+the unmutated copy agreeing everywhere) and `verification/ownership/production-mutants.mjs`,
+which mutates a production file in a scratch copy of the clean commit and requires the lane to
+fail. Five mutants are caught (releasing the `Drop` or `Dup` data slot, dropping a `swap`
+operand, making `swap` an identity, making `dup` produce one copy); releasing the `Quote`
+data slot survives because every `quote` case is model-only, and the receipt records the
+survivor.
