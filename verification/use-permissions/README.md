@@ -116,14 +116,11 @@ Reproduce the local finite artifacts and source-profile measurements with the pi
 
 ```sh
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-NOBLE_ROOT="$HOME/.cache/noble-iss/wt/perm-112"
-NOBLE_TARGET="$HOME/.cache/noble-iss/target/perm-112"
 "$NODE" verification/use-permissions/cases.mjs
-NOBLE_ROOT="$NOBLE_ROOT" NOBLE_TARGET="$NOBLE_TARGET" \
-  "$HOME/.cache/noble-iss/cargo.sh" build -p noble-cli --bin noble --offline --locked
-OUT="$HOME/.cache/noble-iss/scratch/perm-112/measure.json"
+cargo build -p noble-cli --bin noble --offline --locked   # with the pinned toolchain
+OUT=<new file outside the repository>
 "$NODE" verification/use-permissions/measure.mjs \
-  --noble "$NOBLE_TARGET/debug/noble" --output "$OUT" --runs 7 --opt off
+  --noble <absolute path of the built noble CLI> --output "$OUT" --runs 7 --opt off
 ```
 
 The first step creates the committed deterministic corpus. The receipt producer must run only
