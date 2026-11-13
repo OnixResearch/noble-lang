@@ -194,6 +194,16 @@ try {
     declared.push(...found.public);
     privateDeclared.push(...found.private);
   }
+  // The vendored interaction-net library: its bytes must be the pinned upstream commit's, and it
+  // may contain no escape hatch either. Its theorems are not inventoried here; every inventoried
+  // theorem that uses one has the library's axioms audited transitively below.
+  const vendoredRecord = JSON.parse(readFileSync(join(root, 'proofs/inets/UPSTREAM.json')));
+  const vendored = join(root, 'proofs/inets', vendoredRecord.path);
+  requireThat(fileHash(vendored) === vendoredRecord.sha256,
+    `proofs/inets/${vendoredRecord.path} differs from the pinned upstream commit ${vendoredRecord.commit}`);
+  const vendoredViolations = hygieneViolations(`proofs/inets/${vendoredRecord.path}`,
+    readFileSync(vendored, 'utf8'));
+  requireThat(vendoredViolations.length === 0, vendoredViolations.join('; '));
   const inventory = JSON.parse(readFileSync(join(project, 'inventory.json')));
   const names = inventory.theorems.map(t => t.name);
   requireThat(new Set(names).size === names.length, 'duplicate inventory names');
@@ -263,6 +273,7 @@ try {
     'proofs/mc1/NobleContracts/NamedSubject.lean',
     'proofs/mc1/NobleContracts/Rules.lean', 'proofs/mc1/NobleContracts/Obligation.lean',
     'proofs/mc1/NobleContracts/Composition.lean', 'proofs/mc1/NobleContracts/Examples.lean',
+    'proofs/inets/InteractionNets.lean', 'proofs/inets/UPSTREAM.json',
     'policy/tool-selection.json', 'verification/foundation/check.mjs',
   ];
   const result = {

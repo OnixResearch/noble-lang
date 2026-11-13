@@ -1,11 +1,14 @@
-# I64 interaction-net contract: revision 2, selected
+# I64 interaction-net contract: revision 2 (superseded)
 
-Status: **selected for #37**. The four semantic questions left open in the candidate are decided
-below, each with the reason that decided it. Dependent issues (#105, #107, #108, #109, #110, #112–#115)
-may now reference revision 2 by name; they must still say which parts of it they implement. This
-document claims no proof of its own: the vocabulary is `proofs/m3/NobleM2/InteractionNetV2.lean` and
-the local rule and stack reducer are `proofs/m3/NobleM2/InteractionNetReduce.lean`, with the limits
-stated at the end of this document.
+Status: **superseded on 2026-11-13 by [revision 3](i64-net-contract-v3.md)**, an interaction system over
+the vendored, kernel-checked [OnixResearch/inets](https://github.com/OnixResearch/inets) library. Revision
+2 is a dataflow rule, not an interaction rule; it is kept only as a recorded comparison, and nothing new
+builds on it. The text below is the revision as it was selected.
+
+Former status: selected for #37. The four semantic questions left open in the candidate are decided
+below, each with the reason that decided it. This document claims no proof of its own: the vocabulary
+is `proofs/m3/NobleM2/InteractionNetV2.lean` and the local rule and stack reducer are
+`proofs/m3/NobleM2/InteractionNetReduce.lean`, with the limits stated at the end of this document.
 
 ## The four decisions
 

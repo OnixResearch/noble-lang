@@ -1,0 +1,15 @@
+{
+  "schema": "noble-vendored-lean-library/v1",
+  "library": "InteractionNets",
+  "upstream": "https://github.com/OnixResearch/inets",
+  "commit": "98bbb01070664e4462a35efa5d62de6f27143572",
+  "path": "InteractionNets.lean",
+  "sha256": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+  "bytes": 1926441,
+  "lean_toolchain": "leanprover/lean4:v4.35.0",
+  "imports": ["Std.Data.HashMap", "Std.Data.TreeMap"],
+  "selected": "2026-11-13, owner decision: the interaction-net issues are re-based on inets",
+  "compiled_by": "proofs/foundation (lean_lib InteractionNets, srcDir ../inets)",
+  "verified_by": "verification/foundation/check.mjs refuses a vendored file whose SHA-256 differs from this record or that contains a forbidden construct; every foundation theorem that uses it has its transitive axioms audited",
+  "licence": "upstream carries no licence file; it is published by the same organisation as this repository"
+}

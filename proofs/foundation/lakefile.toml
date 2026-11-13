@@ -24,3 +24,9 @@ srcDir = "../mc1"
 [[lean_lib]]
 name = "MathlibI64"
 srcDir = "../m3"
+
+# The vendored interaction-net library (proofs/inets/UPSTREAM.json pins its upstream commit and
+# SHA-256); the I64 interaction system of docs/i64-net-contract-v3.md is an instance of it.
+[[lean_lib]]
+name = "InteractionNets"
+srcDir = "../inets"
