@@ -1,0 +1,32 @@
+# noble-scoped-rewrite-cost/v1
+# Issue #108; descriptive cost rows for issue #64's proposal/check dimensions.
+# Frozen before measurement. This is not a release threshold or a speedup claim.
+#
+# Fixtures are admitted I64 graphs from the guarded-input and input-fact pilots. Before
+# any sample is retained, the source is admitted, the scoped certificate is accepted,
+# and the exact proposed candidate is admitted. A failure aborts the measurement and
+# emits no cost row: unadmitted candidates are never scored.
+#
+# Use the optimized release profile. Each fixture gets 64 unrecorded priming attempts
+# and 200 recorded attempts. Measure
+# cert_scoped::propose and cert_scoped::check separately with Instant. Candidate graph
+# admission and result assertions are outside these timers but must pass on every sample.
+# The proposal timer includes its normal output construction; the checker timer validates
+# the exact derivation and endpoints. These are isolated call timings, not an end-to-end
+# pipeline, cold-cache, allocator/RSS, wire-encoding, executor, or Lean measurement.
+#
+# Evidence size is an in-memory structural estimate: size_of::<Derivation>() plus the
+# revision String capacity and steps Vec capacity times size_of::<Step>(). It excludes
+# allocator metadata and is not a serialized/wire byte size.
+#
+# Summaries: median and interquartile range over recorded microsecond samples. No timed
+# result controls acceptance, quality, or a continuation decision.
+
+schema noble-scoped-rewrite-cost/v1
+fixtures guarded-input | source admission required | candidate admission required | 64 warmups | 200 samples
+guard fixture | I64Add(input, constant) | earlier single-valued Range guard on input | outputs keep both operands live
+fixtures input-fact | source admission required | candidate admission required | 64 warmups | 200 samples
+input-fact fixture | I64Sub(constant, input) | single-valued InputValidated Range fact | outputs keep both operands live
+measure proposal | cert_scoped::propose | elapsed time in microseconds | no admission timing included
+measure checker | cert_scoped::check | exact returned candidate and derivation | no candidate-admission timing included
+measure evidence | structural Derivation and Step capacities | bytes | not serialized size

@@ -8140,6 +8140,120 @@
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
     },
     {
+      "name": "NobleFoundation.GuardedRewrite.accepted_preserves_observations",
+      "phase": 2,
+      "role": "scoped-rewrite-semantic",
+      "claim": "accepted one-node scoped rewrites preserve complete observations, including the first failing guard, for every input"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.guarded_pilot_accepted",
+      "phase": 2,
+      "role": "scoped-rewrite-pilot",
+      "claim": "a guard-scoped input fold is accepted by the model checker"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.preflight_pilot_accepted",
+      "phase": 2,
+      "role": "scoped-rewrite-pilot",
+      "claim": "an input-fact-scoped fold is accepted by the model checker"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.future_guard_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a future guard cannot justify a rewrite at an earlier node"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.wrong_guarded_value_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a witness value that differs from the guarded exact value is refused"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.stale_input_fact_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a fact absent from the input-validated domain cannot justify a fold"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.removed_guard_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "removing a guard changes the interface and is refused"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.changed_input_domain_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "changing input facts changes the interface and is refused"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.substituted_result_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a result endpoint that differs from the checked fold is refused"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.scoped_equality_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a scoped-only relation cannot stand in for observation equality"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.directed_refinement_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "a directed-refinement relation cannot stand in for observation equality"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.reversed_directed_refinement_unsupported",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "reversing the directed-refinement endpoints still cannot yield an equality certificate"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.dropping_guard_assumption_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "dropping the guard assumption makes the scoped witness unavailable"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.over_bound_derivation_exhausted",
+      "phase": 2,
+      "role": "work-bound",
+      "claim": "a derivation beyond the declared step budget is exhausted, never accepted"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewrite.cancellation_is_not_acceptance",
+      "phase": 2,
+      "role": "work-bound",
+      "claim": "cancellation is a distinct outcome, never acceptance"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewriteCorpus.rustGuarded_accepted",
+      "phase": 2,
+      "role": "rust-certificate-model-verdict",
+      "claim": "the guard-scoped Rust proposer certificate is accepted by the smaller Lean model"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewriteCorpus.rustGuarded_preserves_all_inputs",
+      "phase": 2,
+      "role": "rust-certificate-model-preservation",
+      "claim": "the projected guard-scoped Rust certificate preserves model observations for every input"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewriteCorpus.rustPreflight_accepted",
+      "phase": 2,
+      "role": "rust-certificate-model-verdict",
+      "claim": "the input-fact-scoped Rust proposer certificate is accepted by the smaller Lean model"
+    },
+    {
+      "name": "NobleFoundation.GuardedRewriteCorpus.rustPreflight_preserves_all_inputs",
+      "phase": 2,
+      "role": "rust-certificate-model-preservation",
+      "claim": "the projected input-fact-scoped Rust certificate preserves model observations for every input"
+    },
+    {
       "name": "NobleFoundation.SymbolicEncoder.bodyOf_sub_swap_differs",
       "phase": 2,
       "role": "symbolic-encoder",
@@ -9097,6 +9211,13 @@
     "NobleFoundation.rep_succ",
     "NobleFoundation.rep_succ_succ",
     "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton",
+    "NobleFoundation.GuardedRewrite.inputFactsHold_member",
+    "NobleFoundation.GuardedRewrite.firstBeforeFailure_member_passes",
+    "NobleFoundation.GuardedRewrite.scopeValue_observes",
+    "NobleFoundation.GuardedRewrite.guardAfterFails_congr",
+    "NobleFoundation.GuardedRewrite.firstAfterFailure_congr",
+    "NobleFoundation.GuardedRewrite.verifyOperand_sound",
+    "NobleFoundation.GuardedRewrite.verifyStep_sound",
     "NobleFoundation.UsePermissions.isSome_map",
     "NobleFoundation.UsePermissions.signatureStep_dup",
     "NobleFoundation.UsePermissions.signatureStep_drop",

@@ -33,6 +33,8 @@ mod measure;
 mod pipeline;
 #[path = "rewrite_cost/report.rs"]
 mod report;
+#[path = "rewrite_cost/scoped.rs"]
+mod scoped;
 
 #[test]
 fn certified_rewrite_costs_are_reported_apart_from_validity_and_coverage(

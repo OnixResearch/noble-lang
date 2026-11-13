@@ -77,3 +77,5 @@ import NobleFoundation.ImplicitUnification
 import NobleFoundation.ImplicitScope
 import NobleFoundation.ImplicitPropositions
 import NobleFoundation.UsePermissions
+import NobleFoundation.GuardedRewrite
+import NobleFoundation.GuardedRewriteCorpus

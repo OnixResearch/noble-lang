@@ -1,0 +1,17 @@
+{
+  "schema":"noble-scoped-rewrite-cost-receipt/v1",
+  "issue":108,
+  "related_issue":64,
+  "source_commit":"37e93db0dda2502d20d2f59af881498b9db42dc5",
+  "source_tree":"eaa3025a16bbf3aa01760ba10edb2982ea07452c",
+  "clean_source":true,
+  "manifest":"verification/ngraph/scoped-rewrite-cost-v1.txt",
+  "manifest_sha256":"625d259b7cbc874358a21869c0c3b098ba198a01a4ed56f09904ac771194de73",
+  "identity_scheme":"existing test-siphash13x4",
+  "timing_profile":"optimized release",
+  "timing_scope":"isolated cert_scoped::propose and cert_scoped::check calls; admission asserted outside timers on every retained sample",
+  "rows":[
+    {"fixture":"guarded-input","source_admitted":true,"certificate_accepted":true,"candidate_admitted":true,"samples":200,"priming_attempts":64,"steps":2,"proposal_median_us":1.653,"proposal_iqr_us":0.020,"checker_median_us":1.894,"checker_iqr_us":0.020,"evidence_structural_bytes":364},
+    {"fixture":"input-fact","source_admitted":true,"certificate_accepted":true,"candidate_admitted":true,"samples":200,"priming_attempts":64,"steps":2,"proposal_median_us":2.464,"proposal_iqr_us":0.251,"checker_median_us":2.755,"checker_iqr_us":0.270,"evidence_structural_bytes":364}
+  ]
+}

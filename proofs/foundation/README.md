@@ -40,7 +40,7 @@ PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$
   lake exe cache get        # downloads Mathlib .oleans (not rebuilt)
 cd ../..
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-OUT="<new directory outside the repository>"
+OUT="<new directory outside the repository>"; mkdir -p "$OUT"
 # 1. proofs, axioms, inventory -> foundation-check.json
 env -i "$NODE" verification/foundation/check.mjs --output "$OUT/check"
 # 2. Phase 3 slice (needs the user systemd manager for the sandboxed Lean consumer)
@@ -3749,3 +3749,33 @@ about this finite model. The finite Node corpus and selected-profile CLI runs ar
 [`verification/use-permissions/README.md`](../../verification/use-permissions/README.md); neither is an
 implementation theorem. No Rust checker, elaborator, backend, or change to #59's retained oracle
 is claimed.
+## Guard-scoped rewrite model (issue #108)
+
+`NobleFoundation/GuardedRewrite.lean` is a separate small fragment with exact input facts,
+ordered before-guards, one wrapping I64 arithmetic node and ordered after-guards. Its
+`accepted_preserves_observations` theorem proves the checker implication for every input: normal
+outputs agree, an input-domain refusal remains a distinct `Refused` observation, and the identity
+and exact fact of the first failing guard agree. The model's `Refused` constructor is deliberately
+coarse; it does not claim to model runtime refusal codes or sites. The model names and decides the
+guarded and preflight pilots, all six required controls, unsupported relation claims, the step
+budget and cancellation outcomes. `GuardedRewriteCorpus.lean` adds certificates emitted by the Rust
+proposer and accepted by its checker, projected into this model's smaller graph vocabulary; its
+`decide` theorems establish only the encoded model verdicts.
+
+The four evidence layers remain separate:
+
+- **Model proof:** the theorem and kernel-decided controls in `GuardedRewrite.lean`, plus the
+  generated projected-certificate corpus. The proof has no implementation theorem.
+- **Implementation correspondence:** no theorem binds Rust graph bytes, certificate fields, or
+  evaluator execution to the Lean model. That link remains open.
+- **Concrete tests:** `crates/noble-ngraph/tests/cert/scoped.rs` admits and runs both endpoints
+  through the reference and compiled evaluators, comparing complete `Obs::obs_eq` observations for
+  the recorded finite inputs, including first-failure cases. These tests are not universal proofs.
+- **Packed-schedule proof:** `PackedSchedule.lean` / `PackedScheduleCorpus.lean` remains the
+  independent issue #43 claim; its model has no guards and is not extended by #108.
+
+The clean-source audit receipt is
+[`verification/foundation/receipts/ae4650016/foundation-check.json`](../../verification/foundation/receipts/ae4650016/foundation-check.json)
+(1312 inventoried theorems, `clean_source: true`, `allow_dirty: false`, and
+`implementation_theorem: false`; theorem axioms are within the foundation allow-list).
+It binds the proof and inventory state at source commit `ae46500167d424a062e590db7fff89254998b1df`.
