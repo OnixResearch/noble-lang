@@ -23,6 +23,16 @@ use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject}
 use noble_ngraph::layout::{self, PackedLayout, Refusal};
 use noble_ngraph::schedule::{self, I64Instruction, StreamRefusal};
 
+#[path = "belt_dir/corpus.rs"]
+mod belt_corpus;
+#[path = "belt_dir/correspondence.rs"]
+mod belt_correspondence;
+#[path = "belt_dir/fixtures.rs"]
+mod belt_fixtures;
+#[path = "belt_dir/measure.rs"]
+mod belt_measure;
+#[path = "belt_dir/mutations.rs"]
+mod belt_mutations;
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;

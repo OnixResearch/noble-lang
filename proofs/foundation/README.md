@@ -170,6 +170,7 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
+| Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in generated `BeltCorpus` | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
 | MC1 BitVec add/sub/mul decode to the comparator oracle | `toInt_add`, `toInt_sub`, `toInt_mul`, `oracle_add`, `oracle_sub`, `oracle_mul` | none | **proved** |
 | Checked I64 scalar arithmetic and explicit truncating division/remainder | `NobleFoundation.CheckedI64.checkedAdd_ok_iff`, `checkedSub_ok_iff`, `checkedMul_ok_iff`, `checkedNeg_ok_iff`, `checkedAbs_ok_iff`, `checkedAdd_overflow_iff`, `checkedSub_overflow_iff`, `checkedMul_overflow_iff`, `checkedNeg_overflow_iff`, `checkedAbs_overflow_iff`, `div_rem_identity`, `trem_natAbs_lt`, `trem_sign`, `checkedDivRem_overflow_iff`, `checkedDivRem_divisionByZero` | none (name-neutral mathematical model; no Rust/API correspondence) | **proved** |
@@ -1788,6 +1789,32 @@ facts, F32, cancellation, budget equivalence, or a Lean↔Rust instruction decod
 declares versioned export vocabulary tag `ngraph-packed-export/0`, which the guarded corpus imports.
 A source-bound receipt for the tagged artifact, model, theorem statements and open edges is retained
 under `verification/ngraph/`.
+## Bounded sequential belt checker model (issue #113)
+
+`NobleFoundation/Belt.lean` models a target-neutral newest-first symbolic belt
+for the `PackedSchedule` total I64/Bool graph fragment. It tracks graph-node
+identities in belt ages and explicit initialized save slots; operation bodies,
+ordered operands, liveness, completion, and exact output order are checked by
+`validate`. `validate_sound` proves that an accepted program's output-node list
+is exactly the requested list, so `runOutputs` equals
+`PackedSchedule.referenceOutputs` for every input. This is a theorem about the
+Lean identity model, not a Rust refinement theorem or an ISA/timing claim.
+
+`NobleFoundation/BeltCorpus.lean` is generated from the real capacity-2 Rust
+lowerer by `crates/noble-ngraph/tests/belt_dir/corpus.rs`. The kernel decides
+the artifact's validation and three exact input/output examples, including
+wrapping boundaries, asymmetric subtraction, equality, fanout, duplicate
+outputs, and preservation. The freshness test requires the generated file to
+match the current Rust emitter; it does not prove that Rust and Lean implement
+the same interpreter for arbitrary programs. Rust differential tests separately
+compare the independent belt checker/interpreter to the graph reference,
+`Compiled`, and exact expectations; extracted-source B2 compares L5 with
+BigInt and ordinary Wasm/V8 where the ordinary path is supported. The
+hand-built graph corpus has no Wasm source run.
+
+`verification/belt/README.md` carries the reproduction commands and evidence
+boundary. Its clean-commit receipt keeps the model proof, Rust finite
+correspondence, B2 comparison, and descriptive cost report separate.
 
 ## Graph rewrite certificates model (issue #42, phase 1)
 

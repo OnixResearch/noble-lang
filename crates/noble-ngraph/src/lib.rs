@@ -67,6 +67,7 @@
 extern crate alloc;
 
 pub mod batch;
+pub mod belt;
 pub mod cert;
 #[path = "cert/scoped.rs"]
 pub mod cert_scoped;

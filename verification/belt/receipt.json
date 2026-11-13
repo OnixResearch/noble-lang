@@ -1,0 +1,107 @@
+{
+  "schema": "noble-belt-backend-evidence/v1",
+  "issue": "OnixResearch/noble-lang#113",
+  "related_design_issue": "OnixResearch/noble-lang#114",
+  "source": {
+    "commit": "864b9e3797801cc1e10a1ef76e97516f8cdf4181",
+    "tree": "153b57a3dc0cdfa3593f44acd517e192232d7ee8",
+    "worktree_clean_before_evidence_runs": true
+  },
+  "evidence": {
+    "lean_model": {
+      "command": "slot.sh lean 3 verification/ci/lean-proofs.sh --allow-dirty <scratch>",
+      "result": "passed",
+      "m3_build": 0,
+      "m3_gate": 0,
+      "foundation_build": 0,
+      "foundation_check": 0,
+      "scope": "NobleFoundation.Belt validate_sound and the generated BeltCorpus kernel-decided examples; does not prove Rust implementation correctness"
+    },
+    "rust_tests_and_correspondence": {
+      "command": "cargo test -p noble-ngraph -p noble-ngraph-experiment --all-targets --all-features --offline --locked",
+      "result": "passed",
+      "tests_passed": 223,
+      "tests_ignored_by_default": 11,
+      "belt_correspondence": "belt_correspondence::lowered_programs_match_reference_compiled_and_exact_vectors passed",
+      "belt_mutations": "all belt_mutations tests passed, including rebound constants, malformed bounds/wire, graph identity/value loss, instruction order/completion, uninitialized or live-overwritten slots, and unsupported facts/F32/parameters",
+      "corpus_freshness": "belt_corpus::committed_lean_file_matches_real_lowered_programs passed"
+    },
+    "pinned_node_bigint": {
+      "command": "NOBLE_NODE=<pinned Node 24 directory> cargo test -p noble-ngraph-experiment --test extract_b2 --offline --locked -- --ignored l2_node_bigint_oracle_agrees_with_l3",
+      "result": "1 passed; 0 failed; 17 filtered out"
+    },
+    "rust_quality": {
+      "fmt": {
+        "command": "cargo fmt --all -- --check",
+        "result": "passed"
+      },
+      "clippy": {
+        "command": "cargo clippy --workspace --all-targets --all-features --offline --locked -- -D warnings",
+        "result": "passed"
+      },
+      "octet": {
+        "command": "octet.sh <artifact directory>",
+        "result": "clean; findings=0; warnings=0; errors=0; architecture findings=0",
+        "architecture_receipt": "d8734eec8458c7656d3177dd20ceec0698e86a79a6011bf9f61500821007d844"
+      }
+    },
+    "extracted_source_b2": {
+      "command": "cargo run --release -p noble-ngraph-experiment --bin ngraph-phase-b-extract -- --cli <release noble CLI> --node <pinned Node 24 binary> --out <outside-repository JSON> --source-rev 864b9e3797801cc1e10a1ef76e97516f8cdf4181 --toolchain 'rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)'",
+      "result": "passed; 3 evidence records passed; no mismatches",
+      "producer_output_sha256": "abfb30a50ce49fdcb19d7558d3ff2e386c3d45607f07cfc4ca8075120ad0341f",
+      "workload": "10 named and 64 seeded random Core I64 programs; L2 BigInt, L3, packed L4 and independently checked belt L5 each used 10,000 vectors per graph; L1 ordinary CLI/Wasm/V8 --opt off and --opt on agreed on 562/562 vectors per mode; I4 1,000 transition steps agreed in both modes",
+      "runtime_seconds": 281.684079011,
+      "node_version": "v24.13.0",
+      "source_revision": "864b9e3797801cc1e10a1ef76e97516f8cdf4181"
+    },
+    "cost_report": {
+      "command": "cargo test --release -p noble-ngraph --test schedule_correspondence --offline --locked -- --ignored --nocapture belt_measure::cost_report",
+      "result": "1 passed; 0 failed; 38 filtered out",
+      "measurements": {
+        "nodes": 8,
+        "outputs": 7,
+        "capacity": 2,
+        "save_slots": 8,
+        "admission_ns": 16531,
+        "compiled_cold_compile_ns": 4729,
+        "belt_cold_lower_ns": 8065,
+        "belt_cold_check_ns": 3887,
+        "belt_first_execution_ns": 2855,
+        "compiled_first_execution_ns": 3226,
+        "belt_warm_execution_median_ns": 1011,
+        "compiled_warm_execution_median_ns": 150,
+        "direct_scalar_median_ns": 30,
+        "consumer_readback_copy_median_ns": 30,
+        "instruction_count": 43,
+        "instruction_bytes": 118,
+        "artifact_bytes": 286,
+        "preservation_saves": 14,
+        "preservation_loads": 14,
+        "belt_peak_logical_payload_bytes": 590,
+        "checker_peak_aux_payload_bytes": 104,
+        "compiled_retained_code_bytes": 192,
+        "compiled_workspace_scratch_bytes": 72,
+        "compiled_peak_logical_payload_bytes": 376,
+        "warm_runs": 9
+      },
+      "interpretation": "Descriptive single-host observation only. The warm belt median exceeded the direct scalar and warm Compiled medians for this small fixture; no backend selection or hardware-performance claim is made. Logical payload is not allocator/RSS measurement."
+    },
+    "cairn": {
+      "task_gates": {
+        "belt-backend-v0": "passed",
+        "belt-target-schedules": "passed"
+      },
+      "validate": {
+        "result": "valid",
+        "changes": 35,
+        "findings": []
+      }
+    }
+  },
+  "claims_boundary": [
+    "The Lean theorem relates symbolic accepted belt programs to the graph reference; it is not a Rust implementation proof.",
+    "Rust exporter/checker/interpreter correspondence is finite test evidence.",
+    "B2 agreement is bounded by the recorded deterministic corpus and vectors.",
+    "The belt format is target-neutral; no Mill ISA compatibility, production-default backend, deployed implementation, or hardware speedup is claimed."
+  ]
+}
