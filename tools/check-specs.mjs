@@ -110,6 +110,7 @@ const ROUTES = {
   W: ['boundary-test', 'correspondence', 'review'],
   H: ['boundary-test', 'correspondence', 'review'],
   S: ['boundary-test', 'correspondence', 'review'],
+  WIT: ['boundary-test', 'model-proof', 'review'],
   WI: ['boundary-test', 'correspondence', 'review'],
   RA: ['boundary-test', 'correspondence', 'review'],
   C: ['policy-test', 'review'],

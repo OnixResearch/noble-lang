@@ -7769,6 +7769,78 @@
         "WI-02"
       ],
       "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WIT-TRACE-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WIT-TRACE-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WIT-TRACE-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WIT-TRACE-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WIT-TRACE-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WIT-TRACE-06",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
     }
   ]
 }
