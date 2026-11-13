@@ -250,6 +250,11 @@ fn payload(
         ),
     ]);
     // Ordinary worker configuration bytes retain their exact prior shape.
+    if options.checked_i64 {
+        if let crate::workflow::encoding::Json::Object(fields) = &mut configuration {
+            fields.push(("checked_i64", crate::workflow::encoding::Json::Bool(true)));
+        }
+    }
     if options.signed_self_recursion {
         if let crate::workflow::encoding::Json::Object(fields) = &mut configuration {
             fields.push((

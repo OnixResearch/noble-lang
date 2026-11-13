@@ -55,6 +55,18 @@ fn visible_behavior(
     if kind == crate::contracts::Behavior::I64Less {
         return env.text_cursor && env.declared_modules && !env.calculator && def.0 == 27;
     }
+    if env.checked_i64 {
+        match kind {
+            crate::contracts::Behavior::CheckedI64Add => return def.0 == 23,
+            crate::contracts::Behavior::CheckedI64Sub => return def.0 == 24,
+            crate::contracts::Behavior::CheckedI64Mul => return def.0 == 25,
+            crate::contracts::Behavior::CheckedI64Neg => return def.0 == 26,
+            crate::contracts::Behavior::CheckedI64Abs => return def.0 == 27,
+            crate::contracts::Behavior::CheckedI64Less => return def.0 == 28,
+            crate::contracts::Behavior::CheckedI64DivRem => return def.0 == 29,
+            _ => {}
+        }
+    }
     if env.calculator {
         match kind {
             crate::contracts::Behavior::CalculatorIterate => return def.0 == 27,
@@ -105,6 +117,13 @@ const fn generic_access(
         crate::contracts::Behavior::TestEmit => None,
         crate::contracts::Behavior::TextByte => None,
         crate::contracts::Behavior::I64Less => None,
+        crate::contracts::Behavior::CheckedI64Add => None,
+        crate::contracts::Behavior::CheckedI64Sub => None,
+        crate::contracts::Behavior::CheckedI64Mul => None,
+        crate::contracts::Behavior::CheckedI64Neg => None,
+        crate::contracts::Behavior::CheckedI64Abs => None,
+        crate::contracts::Behavior::CheckedI64Less => None,
+        crate::contracts::Behavior::CheckedI64DivRem => None,
         crate::contracts::Behavior::CalculatorIterate => None,
         crate::contracts::Behavior::CalculatorCompare => None,
         crate::contracts::Behavior::CalculatorDivRem => None,

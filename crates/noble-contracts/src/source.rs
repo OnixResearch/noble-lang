@@ -571,6 +571,7 @@ pub struct Prepared {
     live_slot_owner: Option<alloc::sync::Arc<()>>,
     limits: crate::Limits,
     calculator: bool,
+    checked_i64: bool,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
     selected_root: Option<u32>,
@@ -634,6 +635,7 @@ pub struct Session {
     live_selected: Option<alloc::string::String>,
     live_slots: Option<LiveSlots>,
     calculator: bool,
+    checked_i64: bool,
     bindings: Option<crate::component::Bindings>,
     declared: Option<declared::Context>,
 }
@@ -662,6 +664,7 @@ impl Session {
             live_selected: None,
             live_slots: None,
             calculator: false,
+            checked_i64: false,
             bindings: None,
             declared: None,
         }
@@ -676,6 +679,7 @@ impl Session {
             live_selected: None,
             live_slots: None,
             calculator: false,
+            checked_i64: false,
             bindings: None,
             declared: None,
         }
@@ -846,6 +850,13 @@ impl Session {
     pub fn new_calculator() -> Self {
         Self {
             calculator: true,
+            ..Self::without_test_hosts()
+        }
+    }
+    /// Opt-in checked signed-I64 arithmetic with explicit error results.
+    pub fn new_checked_i64() -> Self {
+        Self {
+            checked_i64: true,
             ..Self::without_test_hosts()
         }
     }
@@ -1065,6 +1076,7 @@ impl Session {
             live_selected: self.live_selected.clone(),
             live_slots: None,
             calculator: self.calculator,
+            checked_i64: self.checked_i64,
             bindings: None,
             declared: None,
         };
@@ -1420,6 +1432,7 @@ impl Session {
             || prepared.live_selected != self.live_selected
             || prepared.live_slots != self.live_slots.is_some()
             || prepared.calculator != self.calculator
+            || prepared.checked_i64 != self.checked_i64
             || prepared.history != self.history
             || !is_live_slot_owner_matches
         {
@@ -1460,27 +1473,50 @@ const fn classify_diagnostic(kind: PreviewRefusal, error: Error) -> PreviewError
 )]
 pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     let span = crate::Span { start: 0, end: 0 };
-    let mut env = match noble_kernel::contracts::environment() {
+    let env = match noble_kernel::contracts::environment() {
         Ok(env) => env,
         Err(_) => return Err(crate::internal(span)),
     };
+    source_environment(env, true)
+}
+
+pub(crate) fn checked_i64_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    let span = crate::Span { start: 0, end: 0 };
+    let env = match noble_kernel::contracts::checked_i64_environment() {
+        Ok(env) => env,
+        Err(_) => return Err(crate::internal(span)),
+    };
+    source_environment(env, false)
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
+)]
+fn source_environment(
+    mut env: noble_kernel::contracts::Env,
+    source_abort: bool,
+) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    let span = crate::Span { start: 0, end: 0 };
     let tail = noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
     match env.defs.get_mut(22) {
         Some(emit) => emit.stack_out = alloc::vec![tail.clone()],
         None => return Err(crate::internal(span)),
     }
-    env.defs.push(noble_kernel::words::Scheme {
-        var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
-        stack_in: alloc::vec![tail.clone()],
-        stack_out: alloc::vec![tail],
-        effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
-            noble_kernel::types::EffId(1)
-        )],
-    });
-    env.kinds.push(noble_kernel::contracts::Behavior::Named);
-    env.deps.push(alloc::vec::Vec::new());
-    env.definition_owners.push(None);
-    env.effects.push(noble_kernel::types::EffId(1));
+    if source_abort {
+        env.defs.push(noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
+            stack_in: alloc::vec![tail.clone()],
+            stack_out: alloc::vec![tail],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(1)
+            )],
+        });
+        env.kinds.push(noble_kernel::contracts::Behavior::Named);
+        env.deps.push(alloc::vec::Vec::new());
+        env.definition_owners.push(None);
+        env.effects.push(noble_kernel::types::EffId(1));
+    }
     Ok(env)
 }
 
@@ -1556,6 +1592,22 @@ mod tests {
             depth: 64,
             work: 2_000_000,
         }
+    }
+
+    #[test]
+    fn checked_i64_session_uses_its_opt_in_operation_environment() {
+        let session = Session::new_checked_i64();
+        let prepared = session
+            .prepare(b"1 2 i64.checked-add", &[], crate::Limits::default())
+            .expect("checked-I64 expression");
+        let environment = &prepared.submission().expect("submission").environment;
+        assert!(environment.checked_i64);
+        assert!(!environment.calculator);
+        assert!(!environment.text_cursor);
+        assert_eq!(
+            environment.kind(noble_kernel::contracts::Definition(23)),
+            Some(noble_kernel::contracts::Behavior::CheckedI64Add)
+        );
     }
 
     fn borrowed(

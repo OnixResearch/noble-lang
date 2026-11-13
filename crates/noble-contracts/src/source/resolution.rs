@@ -190,6 +190,11 @@ fn lookup(
             return Ok(target);
         }
     }
+    if session.checked_i64 {
+        if let Some(target) = checked_i64_word(word) {
+            return Ok(target);
+        }
+    }
     if word == b"text.byte" && session.text_cursor {
         return Ok(super::Target::Builtin(26));
     }
@@ -316,6 +321,20 @@ fn calculator_word(word: &[u8]) -> Option<super::Target> {
         b"i64.div-rem" => 29,
         b"text.from-ascii" => 30,
         b"text.length" => 31,
+        _ => return None,
+    };
+    Some(super::Target::Builtin(identity))
+}
+
+fn checked_i64_word(word: &[u8]) -> Option<super::Target> {
+    let identity = match word {
+        b"i64.checked-add" => 23,
+        b"i64.checked-sub" => 24,
+        b"i64.checked-mul" => 25,
+        b"i64.checked-neg" => 26,
+        b"i64.checked-abs" => 27,
+        b"i64.lt" => 28,
+        b"i64.checked-div-rem" => 29,
         _ => return None,
     };
     Some(super::Target::Builtin(identity))

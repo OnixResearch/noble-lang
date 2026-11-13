@@ -94,6 +94,20 @@ pub enum Behavior {
     TextByte,
     /// Pure signed comparison, visible only to the combined declared-text profile.
     I64Less,
+    /// Checked signed addition in the opt-in checked-I64 profile.
+    CheckedI64Add,
+    /// Checked signed subtraction in the opt-in checked-I64 profile.
+    CheckedI64Sub,
+    /// Checked signed multiplication in the opt-in checked-I64 profile.
+    CheckedI64Mul,
+    /// Checked signed negation in the opt-in checked-I64 profile.
+    CheckedI64Neg,
+    /// Checked signed absolute value in the opt-in checked-I64 profile.
+    CheckedI64Abs,
+    /// Pure signed comparison in the opt-in checked-I64 profile.
+    CheckedI64Less,
+    /// Checked truncating signed quotient and remainder in the opt-in profile.
+    CheckedI64DivRem,
     /// Pure, budget-metered guest iteration in the opt-in calculator profile.
     CalculatorIterate,
     /// Signed comparison returning -1, 0 or 1.
@@ -323,6 +337,8 @@ pub struct Env {
     pub text_cursor: bool,
     /// Selected calculator-only guest primitives and declared numeric modules.
     pub calculator: bool,
+    /// Selected checked-I64 builtins; this profile is disjoint from all others.
+    pub checked_i64: bool,
     /// Owner of each definition, supplied independently of a candidate.
     pub definition_owners: alloc::vec::Vec<Option<u64>>,
     /// Host-confirmed immutable dispatch identities for required operations.
@@ -352,6 +368,7 @@ impl Env {
     pub(crate) fn ambient_test_emit_visible(&self) -> bool {
         !self.text_cursor
             && !self.calculator
+            && !self.checked_i64
             && self.caller_module.is_none()
             && self.bound_adapters.is_empty()
             && ((!self.declared_modules
@@ -596,6 +613,7 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         declared_modules: false,
         text_cursor: false,
         calculator: false,
+        checked_i64: false,
         definition_owners: alloc::vec![None; table.len()],
         bound_adapters: alloc::vec::Vec::new(),
         effects: alloc::vec![TEST_EMIT],
@@ -647,6 +665,65 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
     env.deps.push(alloc::vec::Vec::new());
     env.definition_owners.push(None);
     env.text_cursor = true;
+    Ok(env)
+}
+
+/// The opt-in checked-I64 profile preserves the bootstrap prefix and appends
+/// seven pure operations at fixed identities 23..=29.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; each appended builtin scheme is independently validated before its parallel environment tables are extended"
+)]
+pub fn checked_i64_environment() -> Result<Env, crate::shapes::Defect> {
+    let mut env = environment()?;
+    let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
+    let result = crate::shapes::Pattern::Sum(
+        alloc::boxed::Box::new(crate::shapes::Pattern::I64),
+        alloc::boxed::Box::new(crate::shapes::Pattern::I64),
+    );
+    let div_rem_result = crate::shapes::Pattern::Sum(
+        alloc::boxed::Box::new(crate::shapes::Pattern::Pair(
+            alloc::boxed::Box::new(crate::shapes::Pattern::I64),
+            alloc::boxed::Box::new(crate::shapes::Pattern::I64),
+        )),
+        alloc::boxed::Box::new(crate::shapes::Pattern::I64),
+    );
+    let binary = |output: crate::shapes::Pattern| crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![
+            tail.clone(),
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::I64
+        ],
+        stack_out: alloc::vec![tail.clone(), output],
+        effects: alloc::vec![],
+    };
+    let unary = |output: crate::shapes::Pattern| crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![tail.clone(), crate::shapes::Pattern::I64],
+        stack_out: alloc::vec![tail.clone(), output],
+        effects: alloc::vec![],
+    };
+    let operations = [
+        (Behavior::CheckedI64Add, binary(result.clone())),
+        (Behavior::CheckedI64Sub, binary(result.clone())),
+        (Behavior::CheckedI64Mul, binary(result.clone())),
+        (Behavior::CheckedI64Neg, unary(result.clone())),
+        (Behavior::CheckedI64Abs, unary(result)),
+        (
+            Behavior::CheckedI64Less,
+            binary(crate::shapes::Pattern::Bool),
+        ),
+        (Behavior::CheckedI64DivRem, binary(div_rem_result)),
+    ];
+    for (behavior, scheme) in operations {
+        scheme.validate()?;
+        env.defs.push(scheme);
+        env.kinds.push(behavior);
+        env.deps.push(alloc::vec::Vec::new());
+        env.definition_owners.push(None);
+    }
+    env.checked_i64 = true;
     Ok(env)
 }
 
@@ -779,4 +856,58 @@ pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
     env.definition_owners.push(None);
     env.declared_modules = true;
     Ok(env)
+}
+
+#[cfg(test)]
+mod checked_i64_tests {
+    use super::{Behavior, Definition};
+
+    #[test]
+    fn checked_i64_profile_appends_the_fixed_pure_operation_table() {
+        let ordinary = super::environment().unwrap_or_else(|_| panic!("ordinary environment"));
+        let checked =
+            super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
+        assert!(!ordinary.checked_i64);
+        assert!(checked.checked_i64);
+        assert!(!checked.calculator);
+        assert!(!checked.text_cursor);
+        assert!(!checked.declared_modules);
+        assert_eq!(checked.defs.len(), 30);
+        assert_eq!(checked.kinds.len(), 30);
+        assert_eq!(checked.deps.len(), 30);
+        assert_eq!(checked.definition_owners.len(), 30);
+        assert_eq!(
+            checked.kinds[23..],
+            [
+                Behavior::CheckedI64Add,
+                Behavior::CheckedI64Sub,
+                Behavior::CheckedI64Mul,
+                Behavior::CheckedI64Neg,
+                Behavior::CheckedI64Abs,
+                Behavior::CheckedI64Less,
+                Behavior::CheckedI64DivRem,
+            ]
+        );
+        assert!(checked.deps[23..].iter().all(alloc::vec::Vec::is_empty));
+        assert!(checked.definition_owners[23..].iter().all(Option::is_none));
+        assert_eq!(checked.scheme(Definition(23)).unwrap().stack_in.len(), 3);
+        assert_eq!(checked.scheme(Definition(26)).unwrap().stack_in.len(), 2);
+    }
+
+    #[test]
+    fn checked_div_rem_result_is_pair_success_or_i64_error() {
+        let checked =
+            super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
+        let scheme = checked.scheme(Definition(29)).unwrap();
+        assert!(matches!(
+            scheme.stack_out.as_slice(),
+            [
+                crate::shapes::Pattern::StackVar(crate::words::Variable(0)),
+                crate::shapes::Pattern::Sum(success, error)
+            ] if matches!(success.as_ref(), crate::shapes::Pattern::Pair(q, r)
+                if matches!(q.as_ref(), crate::shapes::Pattern::I64)
+                    && matches!(r.as_ref(), crate::shapes::Pattern::I64))
+                && matches!(error.as_ref(), crate::shapes::Pattern::I64)
+        ));
+    }
 }

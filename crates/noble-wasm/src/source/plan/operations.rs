@@ -290,6 +290,18 @@ impl Input<'_> {
                 _ => {}
             }
         }
+        if self.submission.environment.checked_i64 {
+            match def.0 {
+                23 => return Ok(super::Action::CheckedI64Add),
+                24 => return Ok(super::Action::CheckedI64Sub),
+                25 => return Ok(super::Action::CheckedI64Mul),
+                26 => return Ok(super::Action::CheckedI64Neg),
+                27 => return Ok(super::Action::CheckedI64Abs),
+                28 => return Ok(super::Action::CheckedI64Less),
+                29 => return Ok(super::Action::CheckedI64DivRem),
+                _ => {}
+            }
+        }
         if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
             return match self.owner {
                 Some(owner) => Ok(super::Action::LivePropose(owner)),
@@ -371,6 +383,13 @@ impl Input<'_> {
                 | noble_kernel::contracts::Behavior::Reserved
                 | noble_kernel::contracts::Behavior::TextByte
                 | noble_kernel::contracts::Behavior::I64Less
+                | noble_kernel::contracts::Behavior::CheckedI64Add
+                | noble_kernel::contracts::Behavior::CheckedI64Sub
+                | noble_kernel::contracts::Behavior::CheckedI64Mul
+                | noble_kernel::contracts::Behavior::CheckedI64Neg
+                | noble_kernel::contracts::Behavior::CheckedI64Abs
+                | noble_kernel::contracts::Behavior::CheckedI64Less
+                | noble_kernel::contracts::Behavior::CheckedI64DivRem
                 | noble_kernel::contracts::Behavior::CalculatorIterate
                 | noble_kernel::contracts::Behavior::CalculatorCompare
                 | noble_kernel::contracts::Behavior::CalculatorDivRem

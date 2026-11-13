@@ -267,6 +267,7 @@ pub(super) fn check(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    checked_i64: bool,
     declared_text: bool,
     signed: bool,
     work: &mut super::Work,
@@ -276,12 +277,20 @@ pub(super) fn check(
     // text cursor; live and the calculator never do.
     if (submission.environment.declared_modules || calculator)
         && (live || (text_cursor && (calculator || !declared_text)))
+        || checked_i64
+            && (live
+                || live_slots
+                || text_cursor
+                || calculator
+                || declared_text
+                || submission.environment.declared_modules)
     {
         return Err(crate::Diagnostic::Invalid);
     }
     let environment_work = attempt!(environment::work(
         &submission.environment,
         calculator,
+        checked_i64,
         text_cursor,
         declared_text,
         work
@@ -293,6 +302,7 @@ pub(super) fn check(
         live_slots,
         text_cursor,
         calculator,
+        checked_i64,
         declared_text
     ));
     if calculator {

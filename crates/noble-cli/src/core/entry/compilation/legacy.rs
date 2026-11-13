@@ -1,4 +1,4 @@
-//! Core-Bootstrap compilation retains its concrete input and independent WAT path.
+//! Resource-free source profiles retain concrete inputs and independent WAT emission.
 
 #[expect(
     tigerstyle::assertion_density,
@@ -25,7 +25,9 @@ pub(super) fn compile(
         }
         input_index += 1;
     }
-    let frontend = if options.text_byte_cursor {
+    let frontend = if options.checked_i64 {
+        noble_contracts::source::Session::new_checked_i64()
+    } else if options.text_byte_cursor {
         noble_contracts::source::Session::new_text_cursor()
     } else {
         noble_contracts::source::Session::new()
@@ -42,7 +44,9 @@ pub(super) fn compile(
             "compile requires an expression submission",
         )
     }));
-    let compiler = if options.text_byte_cursor {
+    let compiler = if options.checked_i64 {
+        noble_wasm::source::Compiler::new_checked_i64()
+    } else if options.text_byte_cursor {
         noble_wasm::source::Compiler::new_text_cursor()
     } else {
         noble_wasm::source::Compiler::new()

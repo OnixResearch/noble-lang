@@ -1622,6 +1622,7 @@ impl ModuleSession {
                 live_selected: None,
                 live_slots: None,
                 calculator: self.source.calculator,
+                checked_i64: self.source.checked_i64,
                 bindings: None,
                 declared: self.source.declared.clone(),
             },

@@ -179,11 +179,11 @@ pub const USAGE: &str = "usage:
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
   Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
-  noble compile SOURCE [--text-byte-cursor] [--input-type I64|Bool|Text|Unit ...]
+  noble compile SOURCE [--text-byte-cursor | --checked-i64] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
   noble compile SOURCE --declared-modules --signed-self-recursion --bindings HOST_FILE [--module MODULE_FILE ...]
   noble compile SOURCE --declared-modules --text-byte-cursor [--signed-self-recursion] [--module MODULE_FILE ...]
-  noble session [--text-byte-cursor] [--framed] [--opt off|on] [--emit NEW_DIR]
+  noble session [--text-byte-cursor | --checked-i64] [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
@@ -201,6 +201,13 @@ pub const USAGE: &str = "usage:
   --retained-source-bytes N (1..=262144) requires declared compile or session;
   sets the cumulative retained original-source budget independently of the per-input
   --source-bytes limit; without it the cumulative budget equals --source-bytes.
+
+  --checked-i64 selects Checked-I64-v1 for compile/session only, separately from
+  the byte-cursor, declared-module and calculator profiles. It adds checked
+  add/sub/mul/neg/abs, signed less-than and truncating divrem; arithmetic returns
+  Sum<I64, I64> (or Sum<Pair<I64,I64>, I64> for divrem), with versioned error
+  codes for overflow and division by zero. Existing Core-Bootstrap identities
+  and ordinary behavior are unchanged.
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
 --text-byte-cursor alone selects Text-Byte-Cursor-v1 for ordinary compile/session;
@@ -258,13 +265,17 @@ impl Session {
             None
         };
         Ok(Self {
-            frontend: if options.text_byte_cursor {
+            frontend: if options.checked_i64 {
+                noble_contracts::source::Session::new_checked_i64()
+            } else if options.text_byte_cursor {
                 noble_contracts::source::Session::new_text_cursor()
             } else {
                 noble_contracts::source::Session::new()
             },
             declared,
-            compiler: if options.declared_text() {
+            compiler: if options.checked_i64 {
+                noble_wasm::source::Compiler::new_checked_i64()
+            } else if options.declared_text() {
                 noble_wasm::source::Compiler::new_declared_text()
             } else if options.text_byte_cursor {
                 noble_wasm::source::Compiler::new_text_cursor()
@@ -297,6 +308,7 @@ impl Session {
                     &error,
                     self.submissions,
                     options.text_byte_cursor,
+                    options.checked_i64,
                 ))
             }
         };
@@ -308,6 +320,7 @@ impl Session {
             return Ok(output::Report::defined_for_profile(
                 self.submissions,
                 options.text_byte_cursor,
+                options.checked_i64,
             ));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
@@ -326,6 +339,7 @@ impl Session {
                     error,
                     self.submissions,
                     options.text_byte_cursor,
+                    options.checked_i64,
                 ))
             }
         };

@@ -191,12 +191,15 @@ function readRecipe(engine, runtime, root, depth) {
           || engine.profile === 'Signed-Declared-Text-v1';
         const cursor = declaredText || engine.profile === 'Text-Byte-Cursor-v1';
         const calculator = engine.profile === 'Calculator-v1';
-        const maximum = calculator ? 31 : declaredText ? 27
+        const checkedI64 = engine.profile === 'Checked-I64-v1';
+        const maximum = calculator ? 31 : checkedI64 ? 29 : declaredText ? 27
           : engine.profile === 'Text-Byte-Cursor-v1' ? 26 : 25;
         const id = integer(Number(value), maximum, 'builtin identity');
         if ((calculator || engine.profile === 'Text-Byte-Cursor-v1')
           && id >= 22 && id <= 25) fail('reserved builtin in observable recipe');
-        if (id === 26 && cursor) result.push({ invoke: 'builtin:text.byte' });
+        if (checkedI64 && id >= 23 && id <= 29)
+          result.push({ invoke: `builtin:${checkedI64Names[id - 23]}` });
+        else if (id === 26 && cursor) result.push({ invoke: 'builtin:text.byte' });
         else if (id === 27 && declaredText) result.push({ invoke: 'builtin:<' });
         else if (id < names.length) {
           result.push({ invoke: `${id < 22 || calculator && id >= 26

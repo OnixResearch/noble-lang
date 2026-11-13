@@ -75,6 +75,7 @@ pub(super) fn check(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    checked_i64: bool,
     declared_text: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
@@ -83,7 +84,8 @@ pub(super) fn check(
     } else {
         super::super::DEFINITION_LIMIT
     };
-    let maximum_rows = super::super::maximum_rows(calculator, text_cursor, declared_text);
+    let maximum_rows =
+        super::super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
     if env.defs.len() > maximum_rows || submission.definitions.len() > definition_cap {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -120,6 +122,15 @@ pub(super) fn check(
                 || env.live_slots))
         || env.calculator != calculator
         || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
+        || env.checked_i64 != checked_i64
+        || (checked_i64
+            && (live
+                || live_slots
+                || text_cursor
+                || calculator
+                || declared_text
+                || env.declared_modules
+                || !env.bound_adapters.is_empty()))
         || (!live_slots && !env.live_resource_nominals.is_empty());
     if has_session_shape_mismatch {
         return Err(crate::Diagnostic::Invalid);
@@ -140,6 +151,7 @@ pub(super) fn check(
         live_slots,
         text_cursor,
         calculator,
+        checked_i64,
         declared_text
     ));
     if !exact_effects(env, count, live_slots) {
@@ -230,7 +242,7 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
                 ]
         };
     }
-    let mut effects = if count == 23 || count == 27 || count == 28 || count == 32 {
+    let mut effects = if count == 23 || count == 27 || count == 28 || count == 30 || count == 32 {
         alloc::vec![noble_kernel::contracts::TEST_EMIT]
     } else {
         alloc::vec![
@@ -277,8 +289,35 @@ fn canonical_prefix(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    checked_i64: bool,
     declared_text: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
+    if checked_i64 {
+        let mut fixed = attempt!(noble_kernel::contracts::checked_i64_environment()
+            .map_err(|_| crate::Diagnostic::Defective));
+        if env.defs.len() < 30 {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let emit = match fixed.defs.get_mut(22) {
+            Some(emit) => emit,
+            None => return Err(crate::Diagnostic::Defective),
+        };
+        emit.stack_out = alloc::vec![noble_kernel::shapes::Pattern::StackVar(
+            noble_kernel::words::Variable(0),
+        )];
+        let mut index = 0usize;
+        while index < 30 {
+            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
+                || env.kinds[index] != fixed.kinds[index]
+                || !env.deps[index].is_empty()
+                || env.definition_owners[index].is_some();
+            if has_definition_drift {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            index += 1;
+        }
+        return Ok((fixed, 30));
+    }
     if calculator {
         let fixed = attempt!(noble_kernel::contracts::calculator_environment()
             .map_err(|_| crate::Diagnostic::Defective));
@@ -490,6 +529,7 @@ fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagn
 pub(super) fn work(
     environment: &noble_kernel::contracts::Env,
     calculator: bool,
+    checked_i64: bool,
     text_cursor: bool,
     declared_text: bool,
     meter: &mut super::super::Work,
@@ -499,10 +539,10 @@ pub(super) fn work(
     } else {
         super::super::DEFINITION_LIMIT
     };
-    // The same per-profile row cap the declared-shape check uses: a full
-    // 256-definition declared-text environment (284 rows) is valid and must not
-    // be refused here after preflight admitted it.
-    let maximum_rows = super::super::maximum_rows(calculator, text_cursor, declared_text);
+    // The same per-profile row cap the declared-shape check uses; a full
+    // selected environment must not be refused after preflight admitted it.
+    let maximum_rows =
+        super::super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -656,7 +696,7 @@ mod contract_meter_tests {
         ));
         assert_eq!(sufficient.remaining, 0);
         assert!(
-            work(&env, false, false, false, &mut budget(u64::MAX))
+            work(&env, false, false, false, false, &mut budget(u64::MAX))
                 .ok()
                 .expect("full environment budget")
                 > cost
@@ -671,7 +711,7 @@ mod contract_meter_tests {
             .map(|_| noble_kernel::shapes::Pattern::Unit)
             .collect();
         assert!(matches!(
-            work(&env, false, false, false, &mut budget(u64::MAX)),
+            work(&env, false, false, false, false, &mut budget(u64::MAX)),
             Err(Diagnostic::Exhausted)
         ));
     }
@@ -705,8 +745,8 @@ mod declared_text_profile_tests {
             .expect("checked source token")
             .rederive()
             .expect("source-checked expression");
-        // (submission, live, live_slots, text_cursor, calculator, declared_text)
-        assert!(super::check(&original, false, false, true, false, true).is_ok());
+        // (submission, live, live_slots, text_cursor, calculator, checked-I64, declared-text)
+        assert!(super::check(&original, false, false, true, false, false, true).is_ok());
         for index in 22..28 {
             let mut forged = original.clone();
             forged.environment.kinds[index] = if (23..=25).contains(&index) {
@@ -715,25 +755,25 @@ mod declared_text_profile_tests {
                 noble_kernel::contracts::Behavior::Reserved
             };
             assert!(
-                super::check(&forged, false, false, true, false, true).is_err(),
+                super::check(&forged, false, false, true, false, false, true).is_err(),
                 "altered fixed row {index} passed merged admission"
             );
         }
         let mut forged = original.clone();
         forged.environment.deps[26].push(noble_kernel::contracts::Definition(0));
-        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        assert!(super::check(&forged, false, false, true, false, false, true).is_err());
         let mut forged = original.clone();
         forged.environment.definition_owners[26] = Some(1);
-        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        assert!(super::check(&forged, false, false, true, false, false, true).is_err());
         let mut forged = original.clone();
         forged.environment.defs[26].stack_in.clear();
-        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        assert!(super::check(&forged, false, false, true, false, false, true).is_err());
         let mut forged = original.clone();
         forged.environment.text_cursor = false;
-        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        assert!(super::check(&forged, false, false, true, false, false, true).is_err());
         let mut forged = original.clone();
         forged.environment.declared_modules = false;
-        assert!(super::check(&forged, false, false, true, false, true).is_err());
+        assert!(super::check(&forged, false, false, true, false, false, true).is_err());
         for (text_cursor, calculator, declared_text) in [
             (false, false, false),
             (true, false, false),
@@ -747,6 +787,7 @@ mod declared_text_profile_tests {
                     false,
                     text_cursor,
                     calculator,
+                    false,
                     declared_text
                 )
                 .is_err(),

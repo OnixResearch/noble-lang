@@ -17,6 +17,13 @@ pub(super) enum Action {
     Word(u32),
     TextByte,
     I64Less,
+    CheckedI64Add,
+    CheckedI64Sub,
+    CheckedI64Mul,
+    CheckedI64Neg,
+    CheckedI64Abs,
+    CheckedI64Less,
+    CheckedI64DivRem,
     CalculatorIterate,
     CalculatorCompare,
     CalculatorDivRem,
@@ -67,6 +74,13 @@ pub(super) fn atom_metadata(
         Action::Word(definition) => (2, i64::from(definition), None, None, 0),
         Action::TextByte => (2, 26, None, None, 0),
         Action::I64Less => (2, 27, None, None, 0),
+        Action::CheckedI64Add => (2, 23, None, None, 0),
+        Action::CheckedI64Sub => (2, 24, None, None, 0),
+        Action::CheckedI64Mul => (2, 25, None, None, 0),
+        Action::CheckedI64Neg => (2, 26, None, None, 0),
+        Action::CheckedI64Abs => (2, 27, None, None, 0),
+        Action::CheckedI64Less => (2, 28, None, None, 0),
+        Action::CheckedI64DivRem => (2, 29, None, None, 0),
         Action::CalculatorIterate => (2, 27, None, None, 0),
         Action::CalculatorCompare => (2, 28, None, None, 0),
         Action::CalculatorDivRem => (2, 29, None, None, 0),
@@ -200,6 +214,13 @@ impl Action {
             | Self::Program(_)
             | Self::TextByte
             | Self::I64Less
+            | Self::CheckedI64Add
+            | Self::CheckedI64Sub
+            | Self::CheckedI64Mul
+            | Self::CheckedI64Neg
+            | Self::CheckedI64Abs
+            | Self::CheckedI64Less
+            | Self::CheckedI64DivRem
             | Self::CalculatorCompare
             | Self::CalculatorDivRem
             | Self::CalculatorTextFromAscii
@@ -256,6 +277,7 @@ pub(super) struct Layout {
     pub(super) live_sites: alloc::vec::Vec<super::LiveSiteMetadata>,
     pub(super) text_cursor: bool,
     pub(super) calculator: bool,
+    pub(super) checked_i64: bool,
     pub(super) has_nominals: bool,
     pub(super) has_core_emit: bool,
     pub(super) has_core_abort: bool,
@@ -385,6 +407,7 @@ fn start(
         live_sites: alloc::vec::Vec::new(),
         text_cursor: submission.environment.text_cursor,
         calculator: submission.environment.calculator,
+        checked_i64: submission.environment.checked_i64,
         has_nominals: !submission.environment.nominals.is_empty()
             || !submission.environment.generic_variants.is_empty(),
         has_core_emit: false,

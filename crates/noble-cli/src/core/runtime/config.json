@@ -79,6 +79,7 @@
     "crates/noble-wasm/runtime/experiment.wat",
     "crates/noble-wasm/runtime/calculator-linear-address.wat",
     "crates/noble-wasm/runtime/calculator.wat",
+    "crates/noble-wasm/runtime/checked-i64.wat",
     "crates/noble-wasm/runtime/core-live-owners.wat",
     "crates/noble-wasm/runtime/i64-less.wat",
     "crates/noble-wasm/runtime/linear-address.wat",

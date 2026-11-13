@@ -178,6 +178,7 @@ const fn definition_limit(calculator: bool) -> usize {
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     calculator: bool,
+    checked_i64: bool,
     text_cursor: bool,
     declared_text: bool,
     work: &mut super::Work,
@@ -185,10 +186,10 @@ pub(super) fn check(
     // Profile selection is the compiler's own flags, never an untrusted Env
     // marker. The cap is the profile's definition limit plus its own fixed
     // prefix, exactly as `admission::environment` counts rows: the calculator
-    // adds 32 rows, the pure byte cursor adds its row (27) and declared text
-    // its signed-comparison row (28). A narrower prefix here would refuse a
-    // valid full-definition environment before the profile check ran.
-    let rows_cap = super::maximum_rows(calculator, text_cursor, declared_text);
+    // adds 32 rows, the pure byte cursor adds its row (27), declared text its
+    // signed-comparison row (28), and checked-I64 its seven operations (30).
+    // A narrower prefix would refuse a valid environment before profile audit.
+    let rows_cap = super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
     if submission.environment.defs.len() > rows_cap
         || submission.definitions.len() > definition_limit(calculator)
     {
@@ -328,12 +329,28 @@ mod row_cap_tests {
     fn maximum_rows_follows_the_profile_prefix() {
         // Ordinary profiles own 26 fixed rows, the pure byte cursor 27 and
         // declared text 28; the calculator owns its 32-row table.
-        assert_eq!(maximum_rows(false, false, false), DEFINITION_LIMIT + 26);
-        assert_eq!(maximum_rows(false, true, false), DEFINITION_LIMIT + 27);
-        assert_eq!(maximum_rows(false, false, true), DEFINITION_LIMIT + 28);
-        assert_eq!(maximum_rows(false, true, true), DEFINITION_LIMIT + 28);
         assert_eq!(
-            maximum_rows(true, false, false),
+            maximum_rows(false, false, false, false),
+            DEFINITION_LIMIT + 26
+        );
+        assert_eq!(
+            maximum_rows(false, true, false, false),
+            DEFINITION_LIMIT + 27
+        );
+        assert_eq!(
+            maximum_rows(false, false, true, false),
+            DEFINITION_LIMIT + 28
+        );
+        assert_eq!(
+            maximum_rows(false, true, true, false),
+            DEFINITION_LIMIT + 28
+        );
+        assert_eq!(
+            maximum_rows(false, false, false, true),
+            DEFINITION_LIMIT + 30
+        );
+        assert_eq!(
+            maximum_rows(true, false, false, false),
             noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
         );
     }
@@ -394,7 +411,7 @@ mod row_cap_tests {
         );
         let mut work = budget(submission.request.limits.work);
         assert!(
-            check(submission, false, true, true, &mut work).is_ok(),
+            check(submission, false, false, true, true, &mut work).is_ok(),
             "a full-definition declared-text environment must pass preflight"
         );
     }
@@ -438,7 +455,8 @@ mod row_cap_tests {
         assert_eq!(submission.environment.defs.len(), 28 + DEFINITION_LIMIT);
         let mut work = budget(submission.request.limits.work);
         assert!(
-            admission::check(submission, false, false, true, false, true, false, &mut work).is_ok(),
+            admission::check(submission, false, false, true, false, false, true, false, &mut work)
+                .is_ok(),
             "a full-definition declared-text module must be admitted, not refused by the row cap"
         );
     }

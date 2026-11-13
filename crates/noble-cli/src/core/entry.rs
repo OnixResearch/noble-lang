@@ -12,6 +12,7 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let is_cursor = parsed
         .as_ref()
         .is_ok_and(|options| options.text_byte_cursor);
+    let is_checked_i64 = parsed.as_ref().is_ok_and(|options| options.checked_i64);
     let result = parsed.and_then(execute);
     match result {
         Ok(exit) => std::process::ExitCode::from(exit),
@@ -22,6 +23,7 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                 is_signed,
                 is_declared_text,
                 is_cursor,
+                is_checked_i64,
             );
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);

@@ -786,6 +786,13 @@ impl<'a, 's> Machine<'a, 's> {
             | noble_kernel::contracts::Behavior::CalculatorCompare
             | noble_kernel::contracts::Behavior::CalculatorDivRem
             | noble_kernel::contracts::Behavior::I64Less
+            | noble_kernel::contracts::Behavior::CheckedI64Add
+            | noble_kernel::contracts::Behavior::CheckedI64Sub
+            | noble_kernel::contracts::Behavior::CheckedI64Mul
+            | noble_kernel::contracts::Behavior::CheckedI64Neg
+            | noble_kernel::contracts::Behavior::CheckedI64Abs
+            | noble_kernel::contracts::Behavior::CheckedI64Less
+            | noble_kernel::contracts::Behavior::CheckedI64DivRem
             | noble_kernel::contracts::Behavior::Reserved => {
                 return Err(self.err(
                     crate::diag::Code::Profile,
@@ -1052,6 +1059,13 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                         | noble_kernel::contracts::Behavior::TestEmit
                         | noble_kernel::contracts::Behavior::TextByte
                         | noble_kernel::contracts::Behavior::I64Less
+                        | noble_kernel::contracts::Behavior::CheckedI64Add
+                        | noble_kernel::contracts::Behavior::CheckedI64Sub
+                        | noble_kernel::contracts::Behavior::CheckedI64Mul
+                        | noble_kernel::contracts::Behavior::CheckedI64Neg
+                        | noble_kernel::contracts::Behavior::CheckedI64Abs
+                        | noble_kernel::contracts::Behavior::CheckedI64Less
+                        | noble_kernel::contracts::Behavior::CheckedI64DivRem
                         | noble_kernel::contracts::Behavior::CalculatorIterate
                         | noble_kernel::contracts::Behavior::CalculatorCompare
                         | noble_kernel::contracts::Behavior::CalculatorDivRem

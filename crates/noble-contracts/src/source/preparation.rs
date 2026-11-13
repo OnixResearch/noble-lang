@@ -319,6 +319,7 @@ impl super::Session {
             live_slot_owner: self.live_slots.as_ref().map(|slots| slots.owner.clone()),
             limits: meter.limits,
             calculator: self.calculator,
+            checked_i64: self.checked_i64,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
             selected_root,
@@ -346,6 +347,7 @@ impl super::Session {
             None if self.calculator => noble_kernel::contracts::calculator_environment()
                 .map(Cow::Owned)
                 .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
+            None if self.checked_i64 => super::checked_i64_environment().map(Cow::Owned),
             None if self.text_cursor => noble_kernel::contracts::text_cursor_environment()
                 .map(Cow::Owned)
                 .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),

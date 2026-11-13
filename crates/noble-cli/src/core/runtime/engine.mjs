@@ -278,7 +278,7 @@ function declaredLiveObject(value, fields, label) {
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
-    text_byte_cursor = false, calculator = false, calculator_shell_state = false,
+    text_byte_cursor = false, checked_i64 = false, calculator = false, calculator_shell_state = false,
     calculator_assembler = null, calculator_trace = false,
     calculator_module_cache = false, signed_self_recursion = false,
     worker_interruption = false } = {}) {
@@ -294,7 +294,7 @@ export class CoreEngine {
       : abi;
     this.inProcessLive = in_process_live === true;
     configureDeclaredAbi(this, this.abi, declared_modules, declared_extension, bindings,
-      text_byte_cursor, calculator, signed_self_recursion);
+      text_byte_cursor, checked_i64, calculator, signed_self_recursion);
     if (!calculator && calculator_assembler !== null) fail('calculator assembler cannot enter another profile');
     // The typed-worker execution profile: only that worker's modules may
     // import the interruption check, and only one execution answers it.

@@ -21,6 +21,7 @@ pub(crate) fn assemble_wat(
         retained_source_bytes: None,
         signed_self_recursion: false,
         text_byte_cursor: false,
+        checked_i64: false,
         bindings: None,
         manifest: None,
         framed: false,
