@@ -3,10 +3,8 @@
  * The `noble` host module for the Owi lane (issue #57).
  *
  * The committed subject imports one memory, one table and twenty-five mutable globals from module
- * `noble`, and no host function, so `host/noble-host.wat` satisfies it. This lane proves the stub
- * is still a faithful host for that subject: it validates the stub, parses the subject's imports
- * from the committed dump, and requires the stub's exports to match them by name, kind, limits and
- * global types. A control mutates the stub (one global removed) and requires a refusal.
+ * module `noble`, and no host function, so `host/noble-host.wat` satisfies it. This lane validates
+ * the subject imports and initial values against the ABI, including a zero-step-limit refusal.
  *
  * Usage (pinned Node and wasm-tools, env -i, from a clean checkout):
  *   node verification/owi/host.mjs --wasm-tools BIN --output NEW_FILE
@@ -23,6 +21,7 @@ const LANE = 'verification/owi/host.mjs';
 const STUB = 'verification/owi/host/noble-host.wat';
 const SUBJECT = 'verification/owi/receipts/2026-10-26/subject-module-1.wasm';
 const DUMP = 'verification/owi/receipts/2026-10-26/subject-imports-exports.txt';
+const ABI = 'crates/noble-cli/src/core/runtime/abi.json';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 function options() {
@@ -54,6 +53,14 @@ function imports() {
       global: global ? global[1] : null });
   }
   return found;
+}
+
+function initialGlobals(binary, file) {
+  const printed = spawnSync(binary, ['print', file], { encoding: 'utf8' });
+  assert.equal(printed.status, 0, `stub does not print: ${printed.stderr}`);
+  return Object.fromEntries([...printed.stdout.matchAll(
+    /\(global \(export "([^"]+)"\) \(mut i32\) \(i32\.const (-?\d+)\)\)/g,
+  )].map(([, name, value]) => [name, Number(value)]));
 }
 
 /** The stub's exports and definitions, read back from `wasm-tools print`. */
@@ -96,6 +103,13 @@ function mismatches(binary, file) {
     globals: { i32: shape.globals.filter(k => k === 'i32').length, i64: shape.globals.filter(k => k === 'i64').length } };
 }
 
+function initialMismatches(binary, file, limits) {
+  const observed = initialGlobals(binary, file);
+  return { observed, problems: Object.entries(limits)
+    .filter(([name, expected]) => observed[name] !== expected)
+    .map(([name, expected]) => `${name} initial value ${observed[name]} is not ${expected}`) };
+}
+
 function main() {
   const flags = options();
   const binary = flags['--wasm-tools'];
@@ -106,15 +120,23 @@ function main() {
   assert.equal(wanted.filter(entry => entry.kind === 'global').length, 25);
   const stub = mismatches(binary, path.join(ROOT, STUB));
   assert.deepEqual(stub.problems, [], `stub is not a faithful host: ${stub.problems.join('; ')}`);
-  // Control: a stub missing one global must be refused.
+  const abi = JSON.parse(fs.readFileSync(path.join(ROOT, ABI), 'utf8'));
+  const limits = Object.fromEntries(abi.globals.filter(entry => entry.name.endsWith('_limit'))
+    .map(entry => [entry.name, Number(entry.value)]));
+  assert.deepEqual(Object.keys(limits).sort(), ['allocation_limit','continuation_limit','depth_limit','operand_limit','recipe_limit','step_limit'].sort());
+  const initial = initialMismatches(binary, path.join(ROOT, STUB), limits);
+  assert.deepEqual(initial.problems, [], `stub initial state differs from ABI: ${initial.problems.join('; ')}`);
+  // A matching interface with a zeroed step limit is not a faithful initial state.
   const text = fs.readFileSync(path.join(ROOT, STUB), 'utf8');
-  const mutated = text.replace(/^ {2}\(global \(export "step_limit".*\n/m, '');
-  assert.notEqual(mutated, text, 'control removes one global');
-  const control = path.join('/tmp', `noble-host-control-${process.pid}.wat`);
+  const mutated = text.replace('(global (export "step_limit") (mut i32) (i32.const 100000))',
+    '(global (export "step_limit") (mut i32) (i32.const 0))');
+  assert.notEqual(mutated, text, 'control zeroes step_limit');
+  const control = path.join(process.env.TMPDIR ?? '', `noble-host-control-${process.pid}.wat`);
+  assert.ok(path.isAbsolute(control) && process.env.TMPDIR, 'TMPDIR must be an absolute private directory');
   fs.writeFileSync(control, mutated, { flag: 'wx' });
-  const refused = mismatches(binary, control);
+  const refused = initialMismatches(binary, control, limits);
   fs.rmSync(control);
-  assert.ok(refused.problems.length > 0, 'a stub missing a global is refused');
+  assert.ok(refused.problems.includes('step_limit initial value 0 is not 100000'), 'zero step_limit is refused');
   const receipt = {
     schema: 'noble-owi-host-receipt/v1',
     claim: 'the committed stub satisfies the committed subject\'s noble imports by name, kind, limits and global types',
@@ -124,7 +146,9 @@ function main() {
       dump: DUMP, dump_sha256: sha(fs.readFileSync(path.join(ROOT, DUMP))) },
     imports: wanted,
     observed: stub,
-    control: { removed: 'step_limit', problems: refused.problems },
+    abi: { path: ABI, sha256: sha(fs.readFileSync(path.join(ROOT, ABI))), expected_limits: limits },
+    initial_state: initial,
+    control: { zeroed: 'step_limit', observed: refused.observed, problems: refused.problems },
     non_claims: [
       'a faithful host module is not a faithful runtime: the globals start at zero and no host function exists because the subject imports none',
       'symbolic execution still needs the engine to link the stub with the subject; this lane only proves the interface matches',

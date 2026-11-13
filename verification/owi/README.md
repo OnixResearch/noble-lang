@@ -6,15 +6,13 @@ nothing here claims source-to-Wasm correctness.
 
 ## Decision
 
-**No-go on the pinned Owi build.** The pinned Owi cannot decode the instructions
-that Noble's real emitted modules actually contain, so the lane cannot start
-without an upstream fix. This is not a Noble defect: the same artifact passes
-`wasm-tools validate`, and the failure is in Owi's binary decoder before
-validation, imports or wrapping are reached.
-
-Per issue #57, a reproducible compatibility blocker that documents why the lane
-cannot start is a valid outcome. No counterexample was found, no wrapper was
-built and no `certified`/`replayed counterexample` status is claimed.
+**Evaluation in progress; no symbolic result is claimed.** The decoder-only
+blocker described below was fixed and its patched package validates the subject,
+but `owi sym` still cannot load the separate Noble host module. A second Owi
+patch must register that module without changing the subject bytes; the lane is
+NO-GO unless that route is reproducibly implementable and executes a driver
+against the real emitted artifact. See [`decision.md`](decision.md) for the
+criteria, current evidence and reopen conditions.
 
 ## Update (2026-11-09): the decoder is fixed in a fork
 
@@ -143,6 +141,12 @@ The retained run is
 
 `host/noble-host.wat` is the host module a live subject imports. The committed subject imports one memory (`16 16`), one table (`16384 16384 funcref`) and twenty-five mutable globals from `noble` — twenty-three `i32` counters and pointers, two `i64` byte totals — and no host function, so a pure-data module satisfies it.
 
-`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. A control removes one global and requires a refusal. The run is retained as [`receipts/2026-11-10/host.json`](receipts/2026-11-10/host.json), from the clean commit `36fe625a`: 27 imports matched, 23 `i32` and 2 `i64` globals, and the control refused.
+`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. It also reads the six quota limits from `crates/noble-cli/src/core/runtime/abi.json`, checks the WAT initial values, and requires a zeroed-`step_limit` control to be refused. The 2026-11-10 host receipt predates these initial-state checks; it must not be cited as evidence for them. A faithful host module is not a faithful runtime: pointer/counter globals remain zero, are not advanced, and no host function is imported.
 
-A faithful host module is not a faithful runtime: every global starts at zero and there is no host function to call. Whether the engine can link the stub with the subject for `owi sym` is the next step, and it is engine-side, not an interface question.
+## Reproduction and support status
+
+`nix/flake.nix` is a standalone locked build recipe applying the decoder patch to the pinned
+nixpkgs Owi package. Its package output is separate from the repository flake and policy pins.
+The artifact matrix and symbolic link/driver remain unimplemented; no measurement, witness or
+independent replay is claimed. The next step is the separate-module registration patch described
+in `decision.md`, not `wasm-merge` (which would alter the subject bytes).
