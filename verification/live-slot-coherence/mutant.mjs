@@ -9,9 +9,11 @@
  * lanes against both, so the mutation check is a retained artifact rather than a claim:
  *
  *   clean  : the coherence lane and the two-selection lane both pass;
- *   mutant : both fail, and the two-selection lane measures exactly one event in *both*
- *            publication directions — an omission when the pinned leaf version emits and an extra
- *            event when only the republished version does.
+ *   mutant : both fail. In the two-selection lane the publication lands while the root is held
+ *            before its first leaf selection, so the current-map CLI runs the *republished* leaf
+ *            for both selections of a root pinned on the old map: both of the pinned version's
+ *            events are omitted when it emits (2 -> 0), and two events the pinned version never
+ *            performs appear when only the republished version emits (0 -> 2).
  *
  * Both source copies come from `git archive <commit>` of this repository, so neither binary can
  * include an uncommitted edit. The patch text, both source copies' lane digests, both binary
@@ -179,20 +181,25 @@ try {
 
   mutantDirections = ['emitting-old', 'inert-old'].map(direction =>
     runLane(mutant.binary, 'live_slot_two_selections.mjs', direction));
-  const expected = { 'emitting-old': { pinned: 2, mutant: 1 }, 'inert-old': { pinned: 0, mutant: 1 } };
+  // Measured, not assumed: the root is pinned at the dispatcher selection and held at its first
+  // leaf selection, the publication lands during the hold, and the current-map CLI then selects the
+  // republished leaf both times. Its event count is therefore the *new* version's, in both directions.
+  const expected = { 'emitting-old': { pinned: 2, mutant: 0 }, 'inert-old': { pinned: 0, mutant: 2 } };
   for (const row of mutantDirections) {
     assert.notEqual(row.status, 0, `the current-map CLI must fail the two-selection lane (${row.direction})`);
-    assert.match(row.stderr, /both selections of one root must name the same pinned Program/,
-      `the two-selection failure must be the pinned-Program assertion: ${row.failure}`);
+    assert.match(row.stderr, /the held root must perform the pinned version's event exactly \d+ times/,
+      `the two-selection failure must be the pinned-event-count assertion: ${row.failure}`);
     assert.ok(row.observed?.variants?.length === 1,
       `the mutant run must report its measured variant (${row.direction})`);
     const [measured] = row.observed.variants;
     assert.equal(measured.heldCounts.leafSelections, 2,
       'both selections still happen; only their source map changes');
-    assert.equal(measured.heldPrograms.length, 2,
-      'the mutant must mix the two versions inside one root');
+    assert.equal(measured.heldPrograms.length, 1,
+      'the mutant selects one version for both selections of the held root');
+    assert.deepEqual(measured.heldPrograms, measured.nextPrograms,
+      'the version the mutant ran in the held root is the republished one, not the pinned one');
     assert.equal(measured.heldCounts.effects, expected[row.direction].mutant,
-      `the mutant must perform exactly one event (${row.direction})`);
+      `the mutant must perform the republished version's ${expected[row.direction].mutant} events (${row.direction})`);
     assert.equal(measured.expectedHeldEffects, expected[row.direction].pinned);
     assert.notEqual(measured.heldCounts.effects, measured.expectedHeldEffects,
       'the mutant must differ from the pinned count in the same measurement');
@@ -233,9 +240,11 @@ const receipt = {
       ({ variant: row.observed.variants[0].variant,
         held: row.observed.variants[0].heldCounts.effects,
         pinned_expected: row.observed.variants[0].expectedHeldEffects,
-        mixed_programs: row.observed.variants[0].heldPrograms.length })),
-    omitted_event: 'emitting-old: the pinned version emitted twice, the current-map CLI once',
-    extra_event: 'inert-old: the pinned version never emitted, the current-map CLI once',
+        held_programs: row.observed.variants[0].heldPrograms.length,
+        held_ran_republished: JSON.stringify(row.observed.variants[0].heldPrograms)
+          === JSON.stringify(row.observed.variants[0].nextPrograms) })),
+    omitted_event: 'emitting-old: the pinned version emits twice in the held root; the current-map CLI ran the republished inert version for both selections and emitted 0 times',
+    extra_event: 'inert-old: the pinned version never emits; the current-map CLI ran the republished emitting version for both selections and emitted 2 times',
   },
   does_not_establish: [
     'that the model theorems hold (they are kernel-checked separately)',
