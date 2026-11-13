@@ -147,14 +147,22 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
+The current clean replay receipt `verification/region-trace/receipt-20261113-01cbe814.json` was
+produced from clean commit `01cbe814f9b69d3ea3587c47450a9fcaa6776808` with Lean 4.35.0. It records
+**135** kernel-audited theorem declarations: 93 relation/model theorems and 42 generated runtime
+fixture theorems; implementation theorems remain 0. The runtime fixtures comprise 18 related traces
+and 2 related under registration. The receipt reports `propext` and `Quot.sound`, both within the
+standard allow-list. It binds the effect-protocol observation receipt and the component, helper and
+engine selections; all eight stale-binding controls and the refused-retirement fixture control have
+their expected refusal result. The correspondence route is named, not proved.
+
 The immutable historical receipt `verification/region-trace/receipt.json` is from the clean commit
 `109ac318` with Lean 4.35.0: **116** theorems, 74 model theorems and 42 runtime fixtures. Of
 the fixtures, 18 traces relate, each with its control, and 2 relate under their registration, each
-with its premise-free refusal and its forged-retirement control. The reported axioms are `propext`,
-`Classical.choice` and `Quot.sound`, all inside the standard allow-list. Most proofs report
-`Classical.choice` under Lean 4.35.0. The receipt at `1bf39a52`, under Lean 4.31.0, reported only
-`propext` and `Quot.sound`. The previous receipt, at `6b4301b1`, had 106 theorems and the two early
-retirements as model gaps.
+with its premise-free refusal and its forged-retirement control. That historical receipt reports
+`propext`, `Classical.choice` and `Quot.sound`, all inside the standard allow-list. The earlier
+receipt at `1bf39a52`, under Lean 4.31.0, reported only `propext` and `Quot.sound`. The previous
+receipt, at `6b4301b1`, had 106 theorems and the two early retirements as model gaps.
 
 ## Revisions the verdict depends on (WIT-TRACE-06)
 

@@ -74,9 +74,11 @@
   Complete: swapped responses are now refused by the relation itself, with a positive correctly paired
   response and an explicit incomplete-prefix control. The runtime generator applies the same pairing
   rule to every retained trace.
-- [ ] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
-  Partial: the retained receipt binds the source and model revisions (pinned Lean version and executable
-  hash, source and inventory hashes) and labels the verdict (model theorems 68 at `918db86a`, Lean 4.35.0,
-  implementation theorems 0, correspondence none, liveness none, cancellation unsupported). `component`, `helper` and `engine`
-  are recorded as null with the reason, because no correspondence route exists yet; the task stays open
-  until those three are bound to real revisions.
+- [x] [serial] Bind source, component, helper, engine and model revisions in a retained receipt and label every proved model theorem separately from correspondence. r[WIT-TRACE-06]
+  Complete: `verification/region-trace/receipt-20261113-01cbe814.json` is a clean replay of
+  `01cbe814f9b69d3ea3587c47450a9fcaa6776808` with Lean 4.35.0. It records 135 kernel-audited
+  theorem declarations (93 relation/model theorems and 42 generated runtime-fixture theorems), 0
+  implementation theorems, and explicitly leaves emitted-step correspondence open. The receipt binds
+  the exact source/model/inventory hashes, effect-protocol observation receipt, component bytes,
+  helper selection and engine version. All eight stale-binding controls and the refused-retirement
+  fixture control have the expected refusal result. The correspondence route is named but not proved.

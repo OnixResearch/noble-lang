@@ -1,0 +1,2171 @@
+{
+  "schema": "noble-region-trace-proof/v1",
+  "result": "passed",
+  "source_commit": "01cbe814f9b69d3ea3587c47450a9fcaa6776808",
+  "source_tree": "8d1a3ff6d51b1a34dd6b2898f62818297fc57251",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "bindings": {
+    "model": {
+      "status": "tested",
+      "theorem_status": "proved",
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+      "sources_sha256": {
+        "proofs/m5/RegionTrace.lean": "f32ad46071f29eb96ba2b12dc1eaf40cc59814d47770ba58e60736edec9d9292",
+        "proofs/m5/region-trace-inventory.json": "6420d2c2d831fb484bfb706490e6d863724ae7e6658f62dc6f4d2698da2c275c",
+        "proofs/m5/RegionTraceRuntime.lean": "440c00008de38b1aa2b40604238c90e446efae3c0ff1c1c40a7d088a7045a86c",
+        "proofs/m5/region-trace-runtime-inventory.json": "989aa97257111b71b942a052a4ffd608a1790848cf29db81e2c15ff3cdbff313"
+      }
+    },
+    "observations": {
+      "status": "tested",
+      "correspondence": "open",
+      "receipt": "verification/effect-protocol/execution-20261113-547c0eee.json",
+      "receipt_sha256": "ae92cccf2ec4cb8232d602e8099103d58179b1317302fb2599f49289d6ad43ae",
+      "source_commit": "547c0eee8a71828a43678f5d6b509f6f13ff1e78",
+      "source_tree": "b4764a7b6e143f008e9d22a13ca3187bfd363e2f"
+    },
+    "component": {
+      "status": "tested",
+      "correspondence": "open",
+      "components": {
+        "compiled/subject/component.wasm": "49efbf3b7412e0aa6f28c27e7b8647f2ae9ef6574ec42a4ab65ce8a18a638258",
+        "hostile/double-release/component.wasm": "fbbc43137f46d02ec43d1209e0f29fadedf55eae934980c5a9c4877fcc2e62b0",
+        "hostile/omitted-release/component.wasm": "77ecc799b3d0cbec83b14f12d0c372a6b2a5c457e12dcd73a63f88c068cd8516",
+        "hostile/read-after-release/component.wasm": "500a6df3067458f7ab660b5210aa7fa3b676cd84e189baa78869c4b62a856274",
+        "hostile/read-then-spin/component.wasm": "f47016232bec744e643d1384e3f1857c6e8893ce9045588faf5233f1dd53ea94",
+        "hostile/read-twice/component.wasm": "798cde0586eb740325c8b9c9cfac7f53704aa3ddd0db5543e0b66c1c8c9bd981",
+        "hostile/scope-exhaustion/component.wasm": "f52443114feabb6de3069ec877ecb100e69d9e0d1840db5f6efb88024f815dff",
+        "hostile/short-ok/component.wasm": "a6ee02d66f2227d403af4fa4014a961e13430fb31a05c4b985bd6d0c1ba17ba8",
+        "hostile/trap-after-commit/component.wasm": "4d0a969f101d113ac87218895cf6321d2eeb363b669b1dc6502db017cdb956b8",
+        "hostile/trap-before-use/component.wasm": "220bf7c03cd72ee02cad6c709a15bcda9c4c389e037afb365adb70c93b914933",
+        "hostile/unmodeled-error/component.wasm": "106f6830a4cbdd88573020b79530f23b00219c7a7f477648a4603e79af02ecc9"
+      },
+      "verified": "every component byte string the observation receipt retains hashes to its recorded sha256, and the artifact map agrees with each component record. The emitted component is not a subject of these theorems"
+    },
+    "helper": {
+      "status": "tested",
+      "correspondence": "open",
+      "cli_sha256": "11276feb75ef61a1586c02e68b07977b9b562ed3e38db652a07ff9323f98fdc0",
+      "wasm_tools_version": "wasm-tools 1.245.1",
+      "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=",
+      "verified": "the wasm-tools that assembled the hostile guests equals the pinned tool selection. The CLI is the one the observation receipt recorded by hash; it is not re-hashed here"
+    },
+    "engine": {
+      "status": "tested",
+      "correspondence": "open",
+      "wasmtime_version": "40.0.2",
+      "cargo_lock_version": "40.0.2",
+      "tool_selection_version": "40.0.2",
+      "verified": "the Wasmtime version the receipt names agrees with the Cargo.lock entry and the pinned tool selection"
+    },
+    "correspondence_route": [
+      "Canonical ABI lift/lower of a guest request -> importCrossing plus the host decision; its lowered result -> returned.",
+      "Host::read / Host::release / Host::abnormal_exit_cleanup -> hostDecision, protectedCopy and cleanup.",
+      "A Wasmtime Trap (OutOfFuel included) or a host cancellation -> abnormalExit with the class the report names; a result outside the schema -> abnormalExit outsideModel; a refused retirement -> cleanupFailure, committing nothing.",
+      "The route is named, not proved. PO-17/PO-18 cover emitted-component evidence, and #10 owns any real lowering correspondence."
+    ]
+  },
+  "claims": {
+    "model_theorems": 135,
+    "model_theorems_status": "proved",
+    "implementation_theorems": 0,
+    "runtime_fixtures": {
+      "status": "tested",
+      "related": 18,
+      "related_under_registration": 2
+    },
+    "correspondence": {
+      "status": "open",
+      "claim": "none proved: the route is named and the revisions are bound, no emitted-step correspondence is proved"
+    },
+    "liveness": {
+      "status": "open",
+      "claim": "none"
+    },
+    "cancellation": {
+      "status": "tested",
+      "claim": "the host reports the cancelled exit class and the projection erases it; no general cancellation API or liveness property is claimed"
+    },
+    "cleanup_failure": {
+      "host_method_status": "tested",
+      "guest_path_status": "open",
+      "evidence": "verification/host-locality/evidence-1bf39a52.json: cleanup-release-refusal-retains-owner",
+      "evidence_sha256": "5961fb3fc1e5f93ee69b84b8edbc3163244899639b65f3b53eba9be9ae92bc8a"
+    },
+    "assumptions": [
+      {
+        "name": "host-identity-supply",
+        "status": "assumed",
+        "claim": "the host supplies the exact identity that authorized each protected commit"
+      },
+      {
+        "name": "request-response-pairing",
+        "status": "assumed",
+        "claim": "a response in an execution answers the request whose operation the target model pairs with it"
+      },
+      {
+        "name": "fuel-accounting",
+        "status": "assumed",
+        "claim": "an exhaustion observation cuts the target trace at its recorded committed prefix; it does not authorize dropping a prior protected commit"
+      }
+    ],
+    "open_items": [
+      {
+        "name": "emitted-step-correspondence",
+        "status": "open",
+        "owner": "#10"
+      },
+      {
+        "name": "guest-reachable-cleanup-refusal",
+        "status": "open",
+        "claim": "the refused-retirement path is retained at the host method but cannot be induced through the guest interface"
+      },
+      {
+        "name": "liveness",
+        "status": "open"
+      },
+      {
+        "name": "general-cancellation-api",
+        "status": "open"
+      }
+    ]
+  },
+  "sources_sha256": {
+    "proofs/m5/RegionTrace.lean": "f32ad46071f29eb96ba2b12dc1eaf40cc59814d47770ba58e60736edec9d9292",
+    "proofs/m5/region-trace-inventory.json": "6420d2c2d831fb484bfb706490e6d863724ae7e6658f62dc6f4d2698da2c275c",
+    "proofs/m5/RegionTraceRuntime.lean": "440c00008de38b1aa2b40604238c90e446efae3c0ff1c1c40a7d088a7045a86c",
+    "proofs/m5/region-trace-runtime-inventory.json": "989aa97257111b71b942a052a4ffd608a1790848cf29db81e2c15ff3cdbff313",
+    "verification/region-trace/check.mjs": "ebd908ee2db310b3c74b8b570e5984e1ba648c72b7ad556653478c43796600ba",
+    "verification/region-trace/runtime-fixtures.mjs": "681e395b002badde19cbc9c0f51a3b659965a925f6e000f98e03f1b1a5b30e2c",
+    "verification/host-locality/evidence-1bf39a52.json": "5961fb3fc1e5f93ee69b84b8edbc3163244899639b65f3b53eba9be9ae92bc8a",
+    "verification/effect-protocol/execution-20261113-547c0eee.json": "ae92cccf2ec4cb8232d602e8099103d58179b1317302fb2599f49289d6ad43ae"
+  },
+  "theorem_count": 135,
+  "theorems": [
+    {
+      "name": "RegionTrace.erase_preserves_projection",
+      "role": "WIT-TRACE-02: erasure of the two named bookkeeping classes never changes the projected source trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_projection : ∀ (steps : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (RegionTrace.erase steps) = List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_decisions",
+      "role": "WIT-TRACE-02: erasure leaves the decided identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_decisions : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.decisions (RegionTrace.erase steps) = RegionTrace.decisions steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_commit_authority",
+      "role": "WIT-TRACE-02: erasure leaves prefix-ordered commit authorization unchanged",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_commit_authority : ∀ (registered decided : List Nat) (steps : List RegionTrace.AbiStep), RegionTrace.commitAuthorityInOrder registered decided (RegionTrace.erase steps) = RegionTrace.commitAuthorityInOrder registered decided steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.commit_authority_mono",
+      "role": "#50: a registration only adds host-retirement authority and cannot revoke prior decisions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.commit_authority_mono : ∀ (registered decided : List Nat) (steps : List RegionTrace.AbiStep), RegionTrace.commitAuthorityInOrder [] decided steps = true → RegionTrace.commitAuthorityInOrder registered decided steps = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_commit_identities",
+      "role": "WIT-TRACE-02: erasure leaves the commit identities alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_commit_identities : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.commitIdentities (RegionTrace.erase steps) = RegionTrace.commitIdentities steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_crossings",
+      "role": "WIT-TRACE-02: erasure leaves the read crossings alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_read_crossings : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.readCrossings (RegionTrace.erase steps) = RegionTrace.readCrossings steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_release_members",
+      "role": "WIT-TRACE-02: erasure leaves the release/retirement members alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_release_members : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.releaseMembers (RegionTrace.erase steps) = RegionTrace.releaseMembers steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_release_trace_events",
+      "role": "WIT-TRACE-02: erasure leaves release request, decision, commit and response ordering alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_release_trace_events : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.releaseTraceEvents (RegionTrace.erase steps) = RegionTrace.releaseTraceEvents steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_commits",
+      "role": "WIT-TRACE-02: erasure leaves the protected read commits alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_read_commits : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.readCommits (RegionTrace.erase steps) = RegionTrace.readCommits steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_trace_events",
+      "role": "WIT-TRACE-02: erasure leaves read request, decision, copy, commit and response ordering alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_read_trace_events : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.readTraceEvents (RegionTrace.erase steps) = RegionTrace.readTraceEvents steps",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_well_formedness",
+      "role": "WIT-TRACE-02: erasure cannot repair a forged target trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.erase_preserves_well_formedness : ∀ (steps : List RegionTrace.AbiStep), RegionTrace.wellFormed (RegionTrace.erase steps) = RegionTrace.wellFormed steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_erase_invariant",
+      "role": "WIT-TRACE-02: the relation is erasure-invariant, so an erased class cannot create or remove a source event",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_erase_invariant : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = RegionTrace.related source (RegionTrace.erase target)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.denial_projects_to_request_only",
+      "role": "WIT-TRACE-02: a refused request stays visible as its request step and gains no response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.denial_projects_to_request_only : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.normal_success_projects_request_and_commit",
+      "role": "WIT-TRACE-01: a normal success projects its request and protected commit; decision, copy and return carry no source event",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.normal_success_projects_request_and_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 8) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 8) none, RegionTrace.AbiStep.normalReturn] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.identity_is_decision_identity",
+      "role": "WIT-TRACE-01: the projection keeps the exact identity it was emitted with",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.identity_is_decision_identity : ∀ (kind : RegionTrace.CommitKind) (identity : Nat), RegionTrace.projectStep (RegionTrace.AbiStep.cleanup kind identity) = some (RegionTrace.SourceEvent.commit kind identity)",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.retirement_is_not_a_guest_release",
+      "role": "WIT-TRACE-02: host retirement projects to its own commit kind, never to a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retirement_is_not_a_guest_release : ∀ (identity : Nat), ∃ committed, RegionTrace.projectStep (RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire identity) = some (RegionTrace.SourceEvent.commit committed identity) ∧ committed ≠ RegionTrace.CommitKind.guestRelease",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_class_is_not_in_the_projection",
+      "role": "WIT-TRACE-05 premise: the projection carries no abnormal-exit class, so the trap/quota/cleanup distinction is a target-side observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_class_is_not_in_the_projection : ∀ (exitClass : RegionTrace.ExitClass), RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit exitClass) = none",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_classes_collapse_in_projection",
+      "role": "WIT-TRACE-05 premise: trap and quota exhaustion are indistinguishable in the projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_classes_collapse_in_projection : RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap) = RegionTrace.projectStep (RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.quotaExhaustion)",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.append_projection",
+      "role": "WIT-TRACE-04: projecting a concatenation is concatenating the projections (prefix compatibility)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.append_projection : ∀ (first second : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (first ++ second) = List.filterMap RegionTrace.projectStep first ++ List.filterMap RegionTrace.projectStep second",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.take_projection",
+      "role": "WIT-TRACE-04: a trace cut by an exhaustion boundary relates to the projection of its retained prefix",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.take_projection : ∀ (steps : List RegionTrace.AbiStep) (bound : Nat), RegionTrace.wellFormed (List.take bound steps) = true → RegionTrace.related (List.filterMap RegionTrace.projectStep (List.take bound steps)) (List.take bound steps) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_identity",
+      "role": "WIT-TRACE-01 negative control: a commit identity the host never decided is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 9, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_unexplained_read_commit",
+      "role": "WIT-TRACE-02 negative control: a read commit with no preceding crossing is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_unexplained_read_commit : RegionTrace.related [RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 5] [RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_read_as_guest_release_commit",
+      "role": "WIT-TRACE-02 control: a guest-release commit cannot satisfy a protected read request",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_read_as_guest_release_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_read_commit_before_its_decision",
+      "role": "WIT-TRACE-02 control: a later host decision cannot authorize an earlier read commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_read_commit_before_its_decision : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 5, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_crossed_read_commit_identities",
+      "role": "WIT-TRACE-02 control: a prior decision for another request cannot authorize a read commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_crossed_read_commit_identities : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 4, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 1) 4, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 4, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 4, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none, RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 1 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 1 1) 4, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none] = false ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 4, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 1) 5, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 4, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 4, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none, RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 1 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 1 1) 5, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_two_guest_releases",
+      "role": "WIT-TRACE-03 negative control: a second release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_two_guest_releases : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.guestRelease 0 0, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.guestRelease true 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_guest_release_commit",
+      "role": "WIT-TRACE-02 positive control: a guest-release commit is paired to its own request decision",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_guest_release_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.guestRelease 0 0, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.guestRelease true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7, RegionTrace.AbiStep.returned RegionTrace.Operation.guestRelease none none] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_crossed_guest_release_identity",
+      "role": "WIT-TRACE-02 control: a guest-release commit cannot reuse a prior read identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_crossed_guest_release_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 5, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 5] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 5, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none, RegionTrace.AbiStep.importCrossing RegionTrace.Operation.guestRelease 0 0, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.guestRelease true 4, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 5] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_release_then_retirement",
+      "role": "WIT-TRACE-03 negative control: a guest release followed by a host retirement of the same region is a second release and is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_release_then_retirement : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.guestRelease 0 0, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.guestRelease true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 7, RegionTrace.AbiStep.returned RegionTrace.Operation.guestRelease none none, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_missing_protected_commit",
+      "role": "WIT-TRACE-03 negative control: a source protected commit missing from the target is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_missing_protected_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 8) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.normalReturn] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_host_cleanup_as_guest_release",
+      "role": "WIT-TRACE-02 negative control: host retirement disguised as a guest release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_host_cleanup_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 7] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.guestRelease 0 0, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.guestRelease true 7, RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.hostRetire 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_denial_erased_into_success",
+      "role": "WIT-TRACE-02 negative control: a denial cannot be traded for a success commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_denial_erased_into_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_well_formed_success",
+      "role": "WIT-TRACE-01 positive control: the refusals above are not vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_well_formed_success : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 8) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 8) none] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_prefix",
+      "role": "WIT-TRACE-04: a retained trace is a prefix of the full trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_prefix : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.retainFrom fuel steps <+: steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.filterMap_prefix",
+      "role": "WIT-TRACE-04: a filtered prefix is a prefix (generic)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "@RegionTrace.filterMap_prefix : ∀ {alpha beta : Type} (project : alpha → Option beta) {left right : List alpha}, left <+: right → List.filterMap project left <+: List.filterMap project right",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_committed_prefix",
+      "role": "WIT-TRACE-04: the commits a retained trace projects are a prefix of the full trace commits",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_keeps_committed_prefix : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), List.filterMap RegionTrace.projectStep (RegionTrace.retainFrom fuel steps) <+: List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_cost_bounded",
+      "role": "WIT-TRACE-04: the retained trace cost stays inside the fuel budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_cost_bounded : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.traceCost (RegionTrace.retainFrom fuel steps) ≤ fuel",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_keeps_commit_identities",
+      "role": "WIT-TRACE-04: exhaustion cannot drop an already committed identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_keeps_commit_identities : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.commitIdentities (RegionTrace.retainFrom fuel steps) <+: RegionTrace.commitIdentities steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit",
+      "role": "WIT-TRACE-04 control: an unaffordable commit does not relate under the budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_cannot_relate_an_unaffordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7] (RegionTrace.retainFrom 1 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.exhaustion_relates_when_affordable",
+      "role": "WIT-TRACE-04 control: the same trace relates when the budget affords it (refusal not vacuous)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exhaustion_relates_when_affordable : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7] (RegionTrace.retainFrom 11 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.retained_projection_is_permitted_prefix",
+      "role": "WIT-TRACE-03 corollary: an ordered permitted prefix of the related *source* trace, so exhaustion composes with the relation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retained_projection_is_permitted_prefix : ∀ (fuel : Nat) (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → List.filterMap RegionTrace.projectStep (RegionTrace.retainFrom fuel steps) <+: source",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_commits_are_decided",
+      "role": "WIT-TRACE-03 corollary: no forged identity at the source level",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.source_commits_are_decided : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → ((RegionTrace.commitIdentities steps).all fun identity => (RegionTrace.decisions steps).contains identity) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.source_release_is_at_most_once",
+      "role": "WIT-TRACE-03 corollary: a related trace commits at most one release or retirement, inherited by the source alphabet",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.source_release_is_at_most_once : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep), RegionTrace.related source steps = true → (RegionTrace.releaseMembers steps).length ≤ 1",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_ordinary_error",
+      "role": "WIT-TRACE-05 fixture: ordinary error with a reason relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_ordinary_error : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead none (some \"bounds-reject\")] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_host_bounds_refusal",
+      "role": "WIT-TRACE-05 fixture: host bounds refusal keeps the request visible and copies nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_host_bounds_refusal : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead false 7] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_trap_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: a trap after a protected copy relates to the request, the class staying target-side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_trap_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_cleanup_failure_after_protected_copy",
+      "role": "WIT-TRACE-05 fixture: cleanup failure stays distinct from trap and quota exhaustion on the target side",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_cleanup_failure_after_protected_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cleanupFailure] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_stops_before_the_copy",
+      "role": "WIT-TRACE-05 fixture: a quota boundary that stops before the copy relates to the request alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_quota_prefix_stops_before_the_copy : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 2 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 8) 7]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit",
+      "role": "WIT-TRACE-05 fixture: measurability control for the quota boundary",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.fixture_quota_prefix_keeps_the_affordable_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8] (RegionTrace.retainFrom 10 [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 8, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 7, RegionTrace.AbiStep.protectedCopy 8]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: the ordered trace the host actually records for an in-bounds read and a consuming release lowers onto the target alphabet and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_read_and_release_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.lower_keeps_read_arguments",
+      "role": "#90: for every observed trace, the lowering's read crossings are exactly the observed read requests' signed arguments, in order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lower_keeps_read_arguments : ∀ (events : List RegionTrace.ObservedEvent), RegionTrace.readCrossings (RegionTrace.lower events) = RegionTrace.observedReadArguments events",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_exit_lowers_to_its_abnormal_exit_class",
+      "role": "#50: the host's reported exit class lowers to the target's own abnormal-exit step, keeping the class the projection erases",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_exit_lowers_to_its_abnormal_exit_class : RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.trap] = [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.trap] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.quotaExhaustion] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.quotaExhaustion] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cancelled] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.adapterInvalid] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.adapterInvalid] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.outsideModel] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.outsideModel]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.exit_classes_stay_distinct_after_lowering",
+      "role": "#50 control: a trap, a quota exhaustion, a cancellation and an adapter fault stay distinct target steps after lowering",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exit_classes_stay_distinct_after_lowering : RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.trap] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.quotaExhaustion] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.quotaExhaustion] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.trap] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.adapterInvalid] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.adapterInvalid] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.trap] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.outsideModel] ≠ RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.adapterInvalid]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.exit_class_is_not_in_the_projection",
+      "role": "#50: two observations that differ only in their exit class project to the same source trace, so the class is a target-side observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exit_class_is_not_in_the_projection : List.filterMap RegionTrace.projectStep (RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.trap]) = List.filterMap RegionTrace.projectStep (RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled])",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.exit_without_events_relates_vacuously",
+      "role": "#50: an abnormal exit with no other event relates to the empty source trace; the projection says nothing about which exit it was",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.exit_without_events_relates_vacuously : RegionTrace.related [] (RegionTrace.lower [RegionTrace.ObservedEvent.exit RegionTrace.ExitClass.cancelled]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.retirement_refused_is_a_cleanup_failure",
+      "role": "#50: a refused retirement lowers to the cleanup-failure exit class and commits nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retirement_refused_is_a_cleanup_failure : RegionTrace.lower [RegionTrace.ObservedEvent.retirementRefused 2 (some \"already-retired\")] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cleanupFailure] ∧ RegionTrace.lower [RegionTrace.ObservedEvent.retirementRefused 2 none] = [RegionTrace.AbiStep.abnormalExit RegionTrace.ExitClass.cleanupFailure]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.a_refused_retirement_is_not_a_retirement",
+      "role": "#50 control: a source trace that claims a refused retirement did retire the owner is refused, and the trace that claims nothing relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.a_refused_retirement_is_not_a_retirement : RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.retirementRefused 2 (some \"already-retired\")]) = false ∧ RegionTrace.related [] (RegionTrace.lower [RegionTrace.ObservedEvent.retirementRefused 2 (some \"already-retired\")]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.refused_retirement_keeps_the_committed_prefix",
+      "role": "#50: a refused retirement neither drops nor invents the protected commit the run already made",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.refused_retirement_keeps_the_committed_prefix : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.retirementRefused 2 (some \"already-retired\")]) = true ∧ List.filterMap RegionTrace.projectStep (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.retirementRefused 2 (some \"already-retired\")]) = [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2]",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_negative_request_projects_with_its_sign",
+      "role": "#90 fixture: a refused read with offset -1 lowers and projects with -1, not with its unsigned 64-bit reinterpretation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_negative_request_projects_with_its_sign : List.filterMap RegionTrace.projectStep (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_unsigned_reinterpretation",
+      "role": "#90: a source trace reporting the refused -1 offset as 2^64 - 1 does not relate to the observed trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_unsigned_reinterpretation : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 18446744073709551615 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_the_signed_refused_request",
+      "role": "#90 positive control: the same observed refused trace relates to the source trace that keeps the sign, so the refusal above is not vacuous",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_the_signed_refused_request : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\")] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 (-1) 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead none (some \"bounds-reject\")]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_commit_of_reinterpreted_region",
+      "role": "#90: a protected read commit of the reinterpreted region is not explained by the signed crossing that asked for -1",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_commit_of_reinterpreted_region : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead (-1) 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 18446744073709551615 1) 2] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace",
+      "role": "WIT-TRACE-05: an abnormal exit after the read lowers to its own host-retirement commit and relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_abnormal_exit_lowers_to_a_related_trace : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.lowered_projection_starts_with_the_request",
+      "role": "WIT-TRACE-03: the lowering keeps the request ahead of its own commit and response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lowered_projection_starts_with_the_request : List.filterMap RegionTrace.projectStep (RegionTrace.lower RegionTrace.observedReadAndRelease) = [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none]",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.observed_traces_are_paired",
+      "role": "WIT-TRACE-03: every response in the observed trace follows a request of its own operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.observed_traces_are_paired : RegionTrace.responsesPaired [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] = true",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_implies_read_commits_explained",
+      "role": "WIT-TRACE-03: the corollary the pilot was missing — a related trace explains every read commit by its import crossing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_implies_read_commits_explained : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.readCommitsExplained target = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.swapped_response_is_unpaired",
+      "role": "WIT-TRACE-02 control: a response answering an operation its request never asked for is unpaired",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.swapped_response_is_unpaired : RegionTrace.responsesPaired [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] = false",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_response",
+      "role": "WIT-TRACE-02 control: a response answering the wrong operation is refused by the relation's pairing condition",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_swapped_response : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.AbiStep.returned RegionTrace.Operation.guestRelease none none] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_resource_identity",
+      "role": "WIT-TRACE-03 control: a commit under an identity the host never authorised is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_resource_identity : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 3 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_observed_retirement_as_guest_release",
+      "role": "WIT-TRACE-02 control: an observed host retirement cannot be claimed as a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_observed_retirement_as_guest_release : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 2] (RegionTrace.lower [RegionTrace.ObservedEvent.request RegionTrace.Operation.regionRead 2 0 1, RegionTrace.ObservedEvent.protectedReadCommit 2 0 1, RegionTrace.ObservedEvent.response RegionTrace.Operation.regionRead (some 1) none, RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_complete",
+      "role": "WIT-TRACE-04: a budget that affords the whole trace cuts nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_complete : ∀ (fuel : Nat) (steps : List RegionTrace.AbiStep), RegionTrace.traceCost steps ≤ fuel → RegionTrace.retainFrom fuel steps = steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retainFrom_fuel_stable",
+      "role": "WIT-TRACE-04: the budgeted semantics is fuel stable (Langlib halted_stable)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.retainFrom_fuel_stable : RegionTrace.FuelStable RegionTrace.retainFrom",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_stable_under_more_fuel",
+      "role": "WIT-TRACE-04: a relation that holds at a completing budget holds at every larger budget",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_stable_under_more_fuel : ∀ (source : List RegionTrace.SourceEvent) (steps : List RegionTrace.AbiStep) (fuel more : Nat), RegionTrace.traceCost steps ≤ fuel → fuel ≤ more → RegionTrace.related source (RegionTrace.retainFrom fuel steps) = true → RegionTrace.related source (RegionTrace.retainFrom more steps) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_relates_only_at_one_budget",
+      "role": "WIT-TRACE-04 control: a semantics right at one fuel value only relates there and not one unit later",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.magic_fuel_relates_only_at_one_budget : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7] (RegionTrace.magicFuelRetain 11 RegionTrace.protectedReadTarget) = true ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 8, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 8) 7] (RegionTrace.magicFuelRetain 12 RegionTrace.protectedReadTarget) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.magic_fuel_is_not_fuel_stable",
+      "role": "WIT-TRACE-04 control: fuel stability refuses the one-fuel-value semantics",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.magic_fuel_is_not_fuel_stable : ¬RegionTrace.FuelStable RegionTrace.magicFuelRetain",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.related_rejects_omitted_unused_read",
+      "role": "WIT-TRACE-02 control: a trace omitting a protected read whose value is unused is refused although its final answer agrees",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_omitted_unused_read : RegionTrace.finalResponse (RegionTrace.lower RegionTrace.observedReleaseWithoutRead) = RegionTrace.finalResponse (RegionTrace.lower RegionTrace.observedReadAndRelease) ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReleaseWithoutRead) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_source_reads_are_target_reads",
+      "role": "WIT-TRACE-02: a related source trace claims exactly the target read crossings, in order",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_source_reads_are_target_reads : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.sourceReads source = RegionTrace.readCrossings target",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.abnormal_exit_keeps_commits",
+      "role": "WIT-TRACE-04: an abnormal exit projects to nothing, so a trap cannot remove an earlier commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.abnormal_exit_keeps_commits : ∀ (steps : List RegionTrace.AbiStep) (exitClass : RegionTrace.ExitClass), List.filterMap RegionTrace.projectStep (steps ++ [RegionTrace.AbiStep.abnormalExit exitClass]) = List.filterMap RegionTrace.projectStep steps",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_trap_that_drops_a_commit",
+      "role": "WIT-TRACE-04 control: a source trace dropping a commit made before a trap is refused; keeping it relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_trap_that_drops_a_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1] RegionTrace.trappedAfterCommit = false ∧ RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2] RegionTrace.trappedAfterCommit = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.lower_correct_on_every_input",
+      "role": "WIT-TRACE-05: the lowering relates every read-and-release input (identity, region, value)",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.lower_correct_on_every_input : RegionTrace.CorrectOnEveryInput RegionTrace.lower",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_matches_on_the_empty_input",
+      "role": "WIT-TRACE-05 control: a lowering right only on the empty input agrees with the model there",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.empty_only_lowering_matches_on_the_empty_input : RegionTrace.lowerEmptyOnly [] = RegionTrace.lower [] ∧ RegionTrace.related [] (RegionTrace.lowerEmptyOnly []) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.empty_only_lowering_is_not_correct_on_every_input",
+      "role": "WIT-TRACE-05 control: the universally quantified statement refuses the empty-input-only lowering",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.empty_only_lowering_is_not_correct_on_every_input : ¬RegionTrace.CorrectOnEveryInput RegionTrace.lowerEmptyOnly",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_swapped_requests",
+      "role": "WIT-TRACE-03 control: a swapped request order is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_swapped_requests : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_substituted_response_value",
+      "role": "WIT-TRACE-03 control: a substituted response value is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_rejects_substituted_response_value : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.observedReadAndRelease) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.authorisedFrom_of_identitiesDecided",
+      "role": "#50: every commit a decision authorises stays authorised under any registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.authorisedFrom_of_identitiesDecided : ∀ (registered : List Nat) (steps : List RegionTrace.AbiStep), RegionTrace.identitiesDecided steps = true → RegionTrace.authorisedFrom registered steps = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_of_related",
+      "role": "#50: a registration premise only widens the relation; every trace related relates under any registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.relatedFrom_of_related : ∀ (registered : List Nat) (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.relatedFrom registered source target = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_authorises_an_early_retirement",
+      "role": "#50: a host retirement before any guest request relates under the registration the host reports, and is refused without it",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_authorises_an_early_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 1]) = true ∧ RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 1]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.relatedFrom_rejects_a_forged_retirement",
+      "role": "#50 control: a retirement of an identity nobody registered or decided is refused under the registration premise",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.relatedFrom_rejects_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_read_commit",
+      "role": "#50 control: a registration does not authorise a read commit whose read was decided for another identity",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_does_not_authorise_a_read_commit : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 5, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 1] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.registration_does_not_authorise_a_guest_release",
+      "role": "#50 control: a registration does not authorise a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.registration_does_not_authorise_a_guest_release : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.guestRelease 1] [RegionTrace.AbiStep.cleanup RegionTrace.CommitKind.guestRelease 1] = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_projects_only_paired_traces",
+      "role": "WIT-TRACE-02: every related source prefix pairs each response with the preceding request of the same operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_projects_only_paired_traces : ∀ (source : List RegionTrace.SourceEvent) (target : List RegionTrace.AbiStep), RegionTrace.related source target = true → RegionTrace.responsesPaired source = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_paired_response",
+      "role": "WIT-TRACE-02 positive control: a response answering its preceding request relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.related_accepts_paired_response : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none] [RegionTrace.AbiStep.importCrossing RegionTrace.Operation.regionRead 0 1, RegionTrace.AbiStep.hostDecision RegionTrace.Operation.regionRead true 2, RegionTrace.AbiStep.protectedCopy 1, RegionTrace.AbiStep.cleanup (RegionTrace.CommitKind.regionRead 0 1) 2, RegionTrace.AbiStep.returned RegionTrace.Operation.regionRead (some 1) none] = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.paired_prefix_may_end_with_an_unanswered_request",
+      "role": "WIT-TRACE-02: a prefix ending before a response remains paired rather than inventing a response",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.paired_prefix_may_end_with_an_unanswered_request : RegionTrace.responsesPaired [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1] = true",
+      "axioms": []
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_1_2_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-01 read-1-2 trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case01_read_1_2_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case01_read_1_2) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_1_2_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-01 read-1-2 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case01_read_1_2_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case01_read_1_2 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_3_0_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-01 read-3-0 trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case01_read_3_0_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 3 0, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 3 0) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 0) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case01_read_3_0) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case01_read_3_0_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-01 read-3-0 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case01_read_3_0_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 3 0, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 3 0) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 0) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case01_read_3_0 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_3_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-3-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_3_1_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 3 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case02_bounds_3_1) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_3_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-3-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_3_1_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 3 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case02_bounds_3_1 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_2_2_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-2-2 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_2_2_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 2 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case02_bounds_2_2) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_2_2_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-2-2 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_2_2_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 2 2, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case02_bounds_2_2 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_neg1_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds--1-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_neg1_1_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case02_bounds_neg1_1) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_neg1_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds--1-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_neg1_1_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead (-1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case02_bounds_neg1_1 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-02 bounds-9223372036854775807-1 trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 9223372036854775807 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case02_bounds_9223372036854775807_1) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-02 bounds-9223372036854775807-1 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case02_bounds_9223372036854775807_1_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 9223372036854775807 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"bounds-reject\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case02_bounds_9223372036854775807_1 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case03_scope_exhaustion_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-03 scope-exhaustion trace (exit rejected) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case03_scope_exhaustion_relates : RegionTrace.related (have y := have y := have y := have y := have y := [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"invalid-handle\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none]; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := have y := have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := have y := have y := have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y) (RegionTrace.lower RegionTrace.runtime_case03_scope_exhaustion) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case03_scope_exhaustion_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-03 scope-exhaustion trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case03_scope_exhaustion_refuses_an_unexplained_commit : RegionTrace.related (have y := have y := have y := have y := have y := [RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none, RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead none (some \"invalid-handle\"), RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1]; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := have y := have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; have y := have y := have y := have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; have y := have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; have y := RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y; RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 0 1 :: RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 0 1) 1 :: RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 1) none :: y) (RegionTrace.lower (RegionTrace.runtime_case03_scope_exhaustion ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case04_trap_after_commit_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-04 trap-after-commit trace (exit trap) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case04_trap_after_commit_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case04_trap_after_commit) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case04_trap_after_commit_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-04 trap-after-commit trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case04_trap_after_commit_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case04_trap_after_commit ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-05 trap-before-use trace, a host retirement before any guest request, is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case05_trap_before_use_is_refused_without_a_registration_decision : RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case05_trap_before_use) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-05 trap-before-use trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case05_trap_before_use_relates_under_its_registration : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case05_trap_before_use) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case05_trap_before_use_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-05 trap-before-use host did not register is refused under its registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case05_trap_before_use_refuses_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_74_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-06 fuel-74 trace (exit quota-exhausted) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_74_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case06_fuel_74) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_74_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-06 fuel-74 trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_74_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case06_fuel_74 ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision",
+      "role": "WIT-TRACE-05: without a registration premise, the recorded EPROTO-CASE-06 fuel-73 trace, a host retirement before any guest request, is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_73_is_refused_without_a_registration_decision : RegionTrace.related [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case06_fuel_73) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_relates_under_its_registration",
+      "role": "WIT-TRACE-05 runtime fixture (#50): the recorded EPROTO-CASE-06 fuel-73 trace relates under the registration its report names",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_73_relates_under_its_registration : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case06_fuel_73) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case06_fuel_73_refuses_a_forged_retirement",
+      "role": "WIT-TRACE-02 control (#50): a retirement of an identity the EPROTO-CASE-06 fuel-73 host did not register is refused under its registration",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case06_fuel_73_refuses_a_forged_retirement : RegionTrace.relatedFrom [1] [RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 2] (RegionTrace.lower [RegionTrace.ObservedEvent.hostRetirement 2]) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_between_two_reads_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-between-two-reads trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_between_two_reads_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case07_cancel_between_two_reads) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_between_two_reads_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-between-two-reads trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_between_two_reads_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case07_cancel_between_two_reads ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_a_computing_guest_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-a-computing-guest trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_a_computing_guest_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case07_cancel_a_computing_guest) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_a_computing_guest_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-a-computing-guest trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_a_computing_guest_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case07_cancel_a_computing_guest ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_same_guest_uncancelled_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 same-guest-uncancelled trace (exit quota-exhausted) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_same_guest_uncancelled_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case07_same_guest_uncancelled) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_same_guest_uncancelled_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 same-guest-uncancelled trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_same_guest_uncancelled_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case07_same_guest_uncancelled ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_the_compiled_subject_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-07 cancel-the-compiled-subject trace (exit cancelled) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_the_compiled_subject_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case07_cancel_the_compiled_subject) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case07_cancel_the_compiled_subject_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-07 cancel-the-compiled-subject trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case07_cancel_the_compiled_subject_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case07_cancel_the_compiled_subject ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case08_omitted_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-08 omitted-release trace (exit normal) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case08_omitted_release_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1] (RegionTrace.lower RegionTrace.runtime_case08_omitted_release) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case08_omitted_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-08 omitted-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case08_omitted_release_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.commit RegionTrace.CommitKind.hostRetire 1, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case08_omitted_release ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_double_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-09 double-release trace (exit adapter-invalid) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case09_double_release_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case09_double_release) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_double_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-09 double-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case09_double_release_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case09_double_release ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_read_after_release_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-09 read-after-release trace (exit adapter-invalid) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case09_read_after_release_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case09_read_after_release) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case09_read_after_release_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-09 read-after-release trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case09_read_after_release_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case09_read_after_release ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_unmodeled_error_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-11 unmodeled-error trace (exit outside-model) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case11_unmodeled_error_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case11_unmodeled_error) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_unmodeled_error_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-11 unmodeled-error trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case11_unmodeled_error_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case11_unmodeled_error ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_short_ok_relates",
+      "role": "WIT-TRACE-05 runtime fixture: the recorded EPROTO-CASE-11 short-ok trace (exit outside-model) relates to its projection",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case11_short_ok_relates : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none] (RegionTrace.lower RegionTrace.runtime_case11_short_ok) = true",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "RegionTrace.runtime_case11_short_ok_refuses_an_unexplained_commit",
+      "role": "WIT-TRACE-02 control: the EPROTO-CASE-11 short-ok trace with a read commit no crossing explains is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "RegionTrace.runtime_case11_short_ok_refuses_an_unexplained_commit : RegionTrace.related [RegionTrace.SourceEvent.req RegionTrace.Operation.regionRead 1 2, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 1 2) 1, RegionTrace.SourceEvent.resp RegionTrace.Operation.regionRead (some 2) none, RegionTrace.SourceEvent.req RegionTrace.Operation.guestRelease 0 0, RegionTrace.SourceEvent.resp RegionTrace.Operation.guestRelease none none, RegionTrace.SourceEvent.commit (RegionTrace.CommitKind.regionRead 7 1) 1] (RegionTrace.lower (RegionTrace.runtime_case11_short_ok ++ [RegionTrace.ObservedEvent.protectedReadCommit 1 7 1])) = false",
+      "axioms": [
+        "propext"
+      ]
+    }
+  ],
+  "binding_controls": [
+    {
+      "id": "stale-component-digest",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-component-bytes",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-helper-receipt-wasm-tools",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-helper-wasm-tools",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-observation-receipt",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-engine-receipt-version",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-engine-selection",
+      "expected": "refused",
+      "observed": "refused"
+    },
+    {
+      "id": "stale-engine-cargo-lock",
+      "expected": "refused",
+      "observed": "refused"
+    }
+  ],
+  "fixture_controls": [
+    {
+      "id": "synthetic-refused-host-retirement",
+      "expected": "cleanup-refusal-without-commit",
+      "observed": "cleanup-refusal-without-commit"
+    }
+  ],
+  "commands": [
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "build",
+        "RegionTrace",
+        "RegionTraceRuntime"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "/home/brittonr/.cache/noble-iss/scratch/trace-50/trace-check-01cbe814/Audit.lean"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    }
+  ],
+  "implementation_theorem": false,
+  "scope": [
+    ".cairn/changes/region-trace-relation WIT-TRACE-01 model: source alphabet, target ABI alphabet and the relation.",
+    "The target alphabet is a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,",
+    "no Rust host or lowering claim, and no liveness claim. The component, helper and engine bindings record",
+    "the revisions the observed traces came from and label them tested; they are not a correspondence.",
+    "The host records its own ordered trace with",
+    "the exact retained identity, and pairing is stated over projected source traces rather than proved",
+    "for the emitted component own steps; the observed-trace lowering maps an observation, not a",
+    "correspondence. The runtime fixtures are finite tests of the traces in the retained effect-protocol",
+    "receipt: each recorded observation, its exit class included, lowers to a trace the relation accepts",
+    "or, for a host retirement before any request, accepts under the registration the host report names",
+    "(relatedFrom)."
+  ]
+}
