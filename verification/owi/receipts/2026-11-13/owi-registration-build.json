@@ -1,0 +1,32 @@
+{
+  "schema": "noble-owi-registration-build/v1",
+  "claim": "the standalone locked Owi recipe applies both the memory.init decoder patch and the auxiliary-module registration patch and builds successfully",
+  "source": {
+    "commit": "b1a9b5c5f8a65270ef0c1be0c621cbde8e64af82",
+    "tree": "95dbc00a60c7aa5bab8d1dce11cd668e58926852",
+    "clean": true
+  },
+  "recipe": {
+    "flake": "verification/owi/nix/flake.nix",
+    "flake_sha256": "34e3ce7607e3036abb49c0215542a14f7af4aeaa10ed0aad200ff7493c3c167a",
+    "lock": "verification/owi/nix/flake.lock",
+    "lock_sha256": "c690694ceb77b4edf1639f9e2dc7f7d06592c782f137bb99201583d6086e30b7",
+    "nixpkgs_rev": "643809054d65fdd466a63e3155b8c498cb483c04",
+    "decoder_patch": "nix/owi-memory-init-decode.patch",
+    "decoder_patch_sha256": "e59c84b2d9adeced7ba512e74b98881acd0acfd60c71e248335c77f68af9407e",
+    "registration_patch": "nix/owi-register-modules.patch",
+    "registration_patch_sha256": "e1eb143f8934c4551bfd8f429792d9bce39c9c615015d182255d4adb37296ade"
+  },
+  "build": {
+    "command": "TMPDIR=$HOME/.cache/noble-iss/tmp nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option connect-timeout 10 --option fallback true -L ./verification/owi/nix",
+    "exit": 0,
+    "derivation": "/nix/store/5dznmpmrvk9ch3kq4d0nc8zv3a2dhbjd-ocaml5.4.1-owi-0.2-unstable-2026-05-22.drv",
+    "output": "/nix/store/95q34dnr3hpn1ckx004rk6pb5dn1nfmg-ocaml5.4.1-owi-0.2-unstable-2026-05-22",
+    "output_binary": "/nix/store/95q34dnr3hpn1ckx004rk6pb5dn1nfmg-ocaml5.4.1-owi-0.2-unstable-2026-05-22/bin/owi",
+    "binary_sha256": "f61f5ef752b5adce526dc49d540312c6569cb53d110a0e0eeaa317d6c1886344"
+  },
+  "non_claims": [
+    "successful build proves the recipe applies and compiles; it does not prove registered-module linking or symbolic execution",
+    "Owi --version reports unknown for this package; identity is bound by the pinned Nix derivation, store output and binary digest"
+  ]
+}

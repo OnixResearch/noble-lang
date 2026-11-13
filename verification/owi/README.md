@@ -6,15 +6,13 @@ nothing here claims source-to-Wasm correctness.
 
 ## Decision
 
-**No-go on the pinned Owi build.** The pinned Owi cannot decode the instructions
-that Noble's real emitted modules actually contain, so the lane cannot start
-without an upstream fix. This is not a Noble defect: the same artifact passes
-`wasm-tools validate`, and the failure is in Owi's binary decoder before
-validation, imports or wrapping are reached.
-
-Per issue #57, a reproducible compatibility blocker that documents why the lane
-cannot start is a valid outcome. No counterexample was found, no wrapper was
-built and no `certified`/`replayed counterexample` status is claimed.
+**No-go for the current Noble artifact/interface.** The decoder and additional-module
+registration patches build reproducibly, and a clean symbolic run linked the explicit host,
+unchanged subject, and driver. The driver then hit the subject runtime's empty-input-stack
+precondition after pushing two symbolic I64s. The current editor AST has no I64-input node, so
+the required parameterized emitted subjects and arithmetic witness/control matrix cannot be
+produced through this lane. This is not a counterexample or evidence of an Owi arithmetic defect.
+See [`decision.md`](decision.md) for the exact evidence and reopen criteria.
 
 ## Update (2026-11-09): the decoder is fixed in a fork
 
@@ -32,11 +30,11 @@ The blocker is a four-line decoder defect, so it is carried rather than waited o
 - **Observed.** Unpatched, `owi validate` refuses the reproducer and the real emitted subject with
   `data count section required` (exit 30) and accepts the control. Patched, all three validate with
   exit 0 and no diagnostic.
-- **What is still open.** `owi sym` now reaches module instantiation and stops at
-  `unknown module noble`: the lane needs a bounded host-module wrapper for `noble`'s memory, table
-  and globals, plus the entry point and quota bridge this record already lists. That is Noble-side
-  work, no longer an upstream block. The no-go above still describes what was executed before the
-  fix: nothing was run symbolically then, and nothing is claimed now beyond validation.
+- **Next blocker.** The 2026-11-13 registration patch now validates and links separately registered
+  modules before the driver. The attempted driver reaches the production subject, but its two
+  symbolic pushes violate the subject's empty-input-stack precondition. This is recorded in
+  [`receipts/2026-11-13/owi-runtime-probe.json`](receipts/2026-11-13/owi-runtime-probe.json),
+  and is a runtime/interface refusal, not a mathematical counterexample.
 
 ## Pinned toolchain and subject
 
@@ -48,7 +46,7 @@ The blocker is a four-line decoder defect, so it is carried rather than waited o
 | Emitted module | `receipts/2026-10-26/subject-module-1.wasm`, 10474 bytes |
 | `wasm-tools` | 1.245.1 (pinned by `policy/tool-selection.json`) |
 | `binaryen`/`wasm-opt` | 125 (pinned by `policy/tool-selection.json`) |
-| Owi | 0.2-unstable-2026-01-29 from the flake's pinned nixpkgs (`ocaml5.3.0-owi`) |
+| Owi | 0.2-unstable-2026-05-22 from the standalone locked recipe (`ocaml5.4.1-owi`) |
 | Emit outcome | `noble-core-report/v1` `stage:"wasm"`, `outcome:"normal"`, stack `I64 26` |
 
 Exact bytes are bound by `receipts/2026-10-26/sha256sums.txt`.
@@ -126,9 +124,9 @@ which would be a different artifact and is not substituted here).
 ## Replay
 
 ```
-noble editor admit verification/owi/receipts/2026-10-26/subject-ast.json --emit /tmp/owi-emit
-wasm-tools validate /tmp/owi-emit/engine/module-1.wasm     # exit 0
-owi validate /tmp/owi-emit/engine/module-1.wasm            # exit 30, decoder refusal
+noble editor admit verification/owi/receipts/2026-10-26/subject-ast.json --emit <new directory outside the repository>
+wasm-tools validate <new directory outside the repository>/engine/module-1.wasm     # exit 0
+owi validate <new directory outside the repository>/engine/module-1.wasm            # exit 30, decoder refusal
 ```
 
 `noble` requires the pinned `wasm-tools 1.245.1` and `binaryen 125` binaries from
@@ -143,6 +141,20 @@ The retained run is
 
 `host/noble-host.wat` is the host module a live subject imports. The committed subject imports one memory (`16 16`), one table (`16384 16384 funcref`) and twenty-five mutable globals from `noble` — twenty-three `i32` counters and pointers, two `i64` byte totals — and no host function, so a pure-data module satisfies it.
 
-`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. A control removes one global and requires a refusal. The run is retained as [`receipts/2026-11-10/host.json`](receipts/2026-11-10/host.json), from the clean commit `36fe625a`: 27 imports matched, 23 `i32` and 2 `i64` globals, and the control refused.
+`host.mjs` keeps the stub tied to the subject: it validates the stub, parses the subject's imports from the committed dump, and requires the exports to match by name, kind, memory and table limits, and global types. It also reads the six quota limits from `crates/noble-cli/src/core/runtime/abi.json`, checks the WAT initial values, and requires a zeroed-`step_limit` control to be refused. The 2026-11-10 host receipt predates these initial-state checks; it must not be cited as evidence for them. A faithful host module is not a faithful runtime: pointer/counter globals remain zero, are not advanced, and no host function is imported.
 
-A faithful host module is not a faithful runtime: every global starts at zero and there is no host function to call. Whether the engine can link the stub with the subject for `owi sym` is the next step, and it is engine-side, not an interface question.
+## Reproduction and support status
+
+`nix/flake.nix` is a standalone locked build recipe applying the decoder and symbolic module
+registration patches to the pinned nixpkgs Owi package. The registration patch is opt-in through
+`OWI_REGISTER_MODULES=NAME=<module.wasm>,NAME=<module.wasm>`; modules are validated and linked in
+the listed order before the positional `owi sym` source module. This preserves subject bytes and
+allows a host then a subject module to be registered before a driver.
+`nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option
+connect-timeout 10 --option fallback true -L ./verification/owi/nix` builds the package; the
+successful clean-commit identity for the decoder-only recipe is in
+`receipts/2026-11-13/owi-build.json`, and the two-patch registration build is in
+`receipts/2026-11-13/owi-registration-build.json`. The linked symbolic probe is retained in
+`receipts/2026-11-13/owi-runtime-probe.json`. Unit 3's I64-input matrix and unit 5's controls,
+measurements, witness/replay and complete receipt are not done. Do not treat `wasm-merge` output
+as an unmodified subject.

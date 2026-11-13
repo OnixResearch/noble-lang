@@ -1,0 +1,24 @@
+{
+  "schema": "noble-owi-build-receipt/v1",
+  "claim": "the standalone locked recipe builds the pinned Owi package with the memory.init decoder patch",
+  "source": {"commit":"1e218e150ea17f7945c4b31b27c3f7788154c926","tree":"094f5dcf368f79d2e0791c15c454de0da49463c8","clean":true},
+  "recipe": {
+    "flake":"verification/owi/nix/flake.nix",
+    "flake_sha256":"88a9311efb590c2bc8c7d973c05f3ed19fe9c6953e803f5ed8cdc60f64b52882",
+    "lock":"verification/owi/nix/flake.lock",
+    "lock_sha256":"c690694ceb77b4edf1639f9e2dc7f7d06592c782f137bb99201583d6086e30b7",
+    "nixpkgs_rev":"643809054d65fdd466a63e3155b8c498cb483c04",
+    "decoder_patch":"nix/owi-memory-init-decode.patch",
+    "decoder_patch_sha256":"e59c84b2d9adeced7ba512e74b98881acd0acfd60c71e248335c77f68af9407e"
+  },
+  "build": {
+    "command":"nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option connect-timeout 10 --option fallback true -L ./verification/owi/nix",
+    "exit":0,
+    "derivation":"/nix/store/xd4rcmjx42n95pjnfizfsadb29n06ql6-ocaml5.4.1-owi-0.2-unstable-2026-05-22.drv",
+    "output":"/nix/store/37fb74k0fd9wj3gkbh32i8agydwzwili-ocaml5.4.1-owi-0.2-unstable-2026-05-22",
+    "output_binary":"/nix/store/37fb74k0fd9wj3gkbh32i8agydwzwili-ocaml5.4.1-owi-0.2-unstable-2026-05-22/bin/owi",
+    "binary_sha256":"7f502314c0e331028158379516525b63abd164e1c7da52704b013c62988ccdd9"
+  },
+  "runtime_check": {"command":"owi validate verification/owi/receipts/2026-10-26/subject-module-1.wasm","exit":0,"diagnostic":""},
+  "non_claims":["Owi reports `owi version unknown` for this package; package identity is bound by the Nix derivation and store path.","this build only repairs memory.init decoding; it does not yet register extra modules or perform symbolic execution"]
+}

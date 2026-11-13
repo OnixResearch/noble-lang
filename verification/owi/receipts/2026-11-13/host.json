@@ -1,0 +1,12 @@
+{
+  "schema": "noble-owi-host-receipt/v1",
+  "claim": "committed host matches subject imports and initializes six ABI quota limits",
+  "source": {"commit":"220c0aeffe595c2345e01a0e7d5bcf28bd8cb170","tree":"d1dd9533c210683af0a2483aec272a9526c51b42","clean":true,"lane_sha256":"8e5d90d2a8ca24c0c0593e1c3b2b54fb9fdb48a93ef94238f57db15783d10719"},
+  "stub":{"path":"verification/owi/host/noble-host.wat","sha256":"31cab4c4f187ccff077be530e4526b41a9fe61d349a9bae9dc9674c543417cdc"},
+  "subject":{"path":"verification/owi/receipts/2026-10-26/subject-module-1.wasm","sha256":"261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac","dump":"verification/owi/receipts/2026-10-26/subject-imports-exports.txt","dump_sha256":"e440692978a9d0bf1e7dd1d172ea94f47b99560a87cbb7a373013781f0cf722f"},
+  "imports":{"count":27,"memory":[16,16],"table":[16384,16384,"funcref"],"globals":{"i32":23,"i64":2}},
+  "abi":{"path":"crates/noble-cli/src/core/runtime/abi.json","sha256":"2eb6c057c70ae4f32be45e5c1bfd00ee225c6f8409ca0e126dec29304fceee1d","limits":{"allocation_limit":196608,"recipe_limit":256,"depth_limit":256,"operand_limit":2048,"continuation_limit":4096,"step_limit":100000}},
+  "initial_state":{"limits_match":true,"pointer_and_counter_globals_zero":true},
+  "control":{"zeroed":"step_limit","observed":0,"expected":100000,"refused":true},
+  "non_claims":["a faithful host module is not a faithful runtime: pointer/counter globals start at zero, quota limits use ABI initial values, and no host function exists because the subject imports none","symbolic execution still needs the engine to link the stub with the subject; this lane only proves the interface matches","no Owi counterexample, witness or claim is produced here"]
+}

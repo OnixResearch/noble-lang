@@ -1,17 +1,13 @@
-diff --git a/src/parser/binary_parser.ml b/src/parser/binary_parser.ml
-index 5bb71e5b..c9f59c57 100644
 --- a/src/parser/binary_parser.ml
 +++ b/src/parser/binary_parser.ml
-@@ -336,8 +336,10 @@ let read_FC input =
-   | 7 -> Ok (I_trunc_sat_f (S64, S64, U), input)
+@@ -495,8 +495,8 @@
+   | 7 -> Ok (I64 (Trunc_sat_f (S64, U)), input)
    | 8 ->
      let* dataidx, input = read_indice input in
 -    let* memidx, input = read_indice input in
 -    let+ input = check_zero_opcode input in
-+    (* `memory.init` encodes `0xFC 8 dataidx memidx` and nothing more: the memory index is the
-+       second immediates field, so reading a further zero byte consumes the next instruction's
-+       opcode. Wasm 2.0 spells memidx as the single byte 0x00 and 3.0 permits other indices. *)
++    (* `memory.init` encodes `0xFC 8 dataidx memidx` with no following zero byte. *)
 +    let+ memidx, input = read_indice input in
-     (Memory_init (memidx, dataidx), input)
+     (Memory (Init (memidx, dataidx)), input)
    | 9 ->
      let+ dataidx, input = read_indice input in
