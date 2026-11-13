@@ -171,6 +171,8 @@ function parseManifest(text) {
   for (const task of tasks) {
     assert.ok(task.ref, `task ${task.name}: a ref line`);
     assert.ok(task.train.length > 0, `task ${task.name}: at least one train example`);
+    assert.equal(task.precondition, task.family === 'bitwise-0/1',
+      `task ${task.name}: every bitwise-0/1 task declares its input precondition`);
     const seen = new Map();
     for (const example of task.train) {
       const key = example.inputs.join(',');
@@ -447,7 +449,7 @@ function baseline(task, examples, expected, spec, budget) {
     if (complete(stacks, task.out)) {
       const observed = observedOf(stacks);
       const matches = observed.every((value, at) => stable(value) === stable(expected[at]));
-      return matches ? { program: depth, observed } : null;
+      if (matches) return { program: depth, observed };
     }
     if (depth.length === spec.bound) return null;
     for (const step of spec.words) {
@@ -600,7 +602,8 @@ function modelValue(task, program, inputs, maxStack) {
 
 /** The deterministic boundary points shared by every admitted candidate. */
 function boundaryPoints(task) {
-  return task.inputs === 2 ? [[MIN, 0n], [MAX, 1n], [0n, MIN], [-7n, 7n]] : [[MIN], [MAX], [-7n]];
+  return task.inputs === 2 ? [[MIN, 0n], [MAX, 1n], [0n, MIN], [(-7n) & MASK, 7n]]
+    : [[MIN], [MAX], [(-7n) & MASK]];
 }
 
 const uniquePoints = points => {
@@ -780,7 +783,7 @@ function solverCheck(task, pair, tools, solverMs, semantic, profile) {
   const types = admit(pair);
   const bare = encode(pair, types);
   const assumptions = task.precondition
-    ? bare.names.map(name => `(or (= ${name} ${ZERO}) (= ${name} 0x0000000000000001))`)
+    ? bare.names.map(name => `(or (= ${name} #x0000000000000000) (= ${name} #x0000000000000001))`)
     : [];
   const query = assumptions.length ? encode(pair, types, { assumptions }) : bare;
   const expected = { encoder: ENCODER, semantic_revision: semantic, profile };
