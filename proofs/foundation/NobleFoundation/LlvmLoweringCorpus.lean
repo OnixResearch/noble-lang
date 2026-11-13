@@ -30,7 +30,7 @@ def wrappingNodes : List Node :=
 
 def wrappingGraph : Graph := FirstProjection.ofList wrappingNodes 6
 
-def wrappingInstrs : List Instr :=
+def wrappingInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 4, opcode := .add, left := .param 0, right := .constant 0x7FFFFFFFFFFFFFFF },
    { dst := 5, opcode := .mul, left := .constant 0x8000000000000000, right := .value 4 },
    { dst := 6, opcode := .mul, left := .value 5, right := .param 1 }]
@@ -71,7 +71,7 @@ def negativeNodes : List Node :=
 
 def negativeGraph : Graph := FirstProjection.ofList negativeNodes 6
 
-def negativeInstrs : List Instr :=
+def negativeInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 4, opcode := .mul, left := .param 0, right := .constant 0xFFFFFFFFFFFFFFFD },
    { dst := 5, opcode := .sub, left := .value 4, right := .constant 0xFFFFFFFFFFFFFFF9 },
    { dst := 6, opcode := .mul, left := .value 5, right := .param 1 }]
@@ -110,7 +110,7 @@ def subtractiveNodes : List Node :=
 
 def subtractiveGraph : Graph := FirstProjection.ofList subtractiveNodes 4
 
-def subtractiveInstrs : List Instr :=
+def subtractiveInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 2, opcode := .sub, left := .param 0, right := .param 1 },
    { dst := 3, opcode := .sub, left := .param 1, right := .param 0 },
    { dst := 4, opcode := .mul, left := .value 2, right := .value 3 }]
@@ -153,7 +153,7 @@ def sharedNodes : List Node :=
 
 def sharedGraph : Graph := FirstProjection.ofList sharedNodes 8
 
-def sharedInstrs : List Instr :=
+def sharedInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 2, opcode := .mul, left := .param 0, right := .param 0 },
    { dst := 3, opcode := .add, left := .value 2, right := .value 2 },
    { dst := 5, opcode := .mul, left := .value 3, right := .constant 0xFFFFFFFFFFFFFFFF },
@@ -199,7 +199,7 @@ def foldableNodes : List Node :=
 
 def foldableGraph : Graph := FirstProjection.ofList foldableNodes 8
 
-def foldableInstrs : List Instr :=
+def foldableInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 4, opcode := .add, left := .constant 0x0000000000000003, right := .constant 0x0000000000000005 },
    { dst := 5, opcode := .mul, left := .param 0, right := .value 4 },
    { dst := 6, opcode := .add, left := .value 5, right := .param 1 },
@@ -244,7 +244,7 @@ def foldable_rewrittenNodes : List Node :=
 
 def foldable_rewrittenGraph : Graph := FirstProjection.ofList foldable_rewrittenNodes 8
 
-def foldable_rewrittenInstrs : List Instr :=
+def foldable_rewrittenInstrs : List NobleFoundation.LlvmLowering.Instr :=
   [{ dst := 5, opcode := .mul, left := .param 0, right := .constant 0x0000000000000008 },
    { dst := 6, opcode := .add, left := .value 5, right := .param 1 },
    { dst := 7, opcode := .add, left := .value 6, right := .constant 0x0000000000000003 },
@@ -282,7 +282,7 @@ theorem subtractive_operand_swapped_refused :
     validate subtractiveGraph
   [{ dst := 2, opcode := .sub, left := .param 1, right := .param 0 },
    { dst := 3, opcode := .sub, left := .param 1, right := .param 0 },
-   { dst := 4, opcode := .mul, left := .value 2, right := .value 3 }] .value 4 = false := by
+   { dst := 4, opcode := .mul, left := .value 2, right := .value 3 }] (.value 4) = false := by
   decide
 
 /-- Refused by the Rust validator with `L-OPERANDS`, and refused here. -/
@@ -290,7 +290,7 @@ theorem negative_constant_changed_refused :
     validate negativeGraph
   [{ dst := 4, opcode := .mul, left := .param 0, right := .constant 0xFFFFFFFFFFFFFFFE },
    { dst := 5, opcode := .sub, left := .value 4, right := .constant 0xFFFFFFFFFFFFFFF9 },
-   { dst := 6, opcode := .mul, left := .value 5, right := .param 1 }] .value 6 = false := by
+   { dst := 6, opcode := .mul, left := .value 5, right := .param 1 }] (.value 6) = false := by
   decide
 
 /-- Refused by the Rust validator with `L-OUTPUT`, and refused here. -/
@@ -301,7 +301,7 @@ theorem shared_return_changed_refused :
    { dst := 5, opcode := .mul, left := .value 3, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 6, opcode := .mul, left := .value 2, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 7, opcode := .sub, left := .value 5, right := .value 6 },
-   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] .value 3 = false := by
+   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] (.value 3) = false := by
   decide
 
 /-- Refused by the Rust validator with `L-NODEMAP`, and refused here. -/
@@ -310,7 +310,7 @@ theorem foldable_artifact_substituted_refused :
   [{ dst := 5, opcode := .mul, left := .param 0, right := .constant 0x0000000000000008 },
    { dst := 6, opcode := .add, left := .value 5, right := .param 1 },
    { dst := 7, opcode := .add, left := .value 6, right := .constant 0x0000000000000003 },
-   { dst := 8, opcode := .add, left := .value 7, right := .constant 0x0000000000000005 }] .value 8 = false := by
+   { dst := 8, opcode := .add, left := .value 7, right := .constant 0x0000000000000005 }] (.value 8) = false := by
   decide
 
 /-- Refused by the Rust validator with `L-NODEMAP`, and refused here. -/
@@ -320,7 +320,7 @@ theorem shared_instruction_missing_refused :
    { dst := 5, opcode := .mul, left := .value 3, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 6, opcode := .mul, left := .value 2, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 7, opcode := .sub, left := .value 5, right := .value 6 },
-   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] .value 8 = false := by
+   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] (.value 8) = false := by
   decide
 
 /-- Refused by the Rust validator with `L-NODEMAP`, and refused here. -/
@@ -331,7 +331,7 @@ theorem shared_destination_changed_refused :
    { dst := 5, opcode := .mul, left := .value 3, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 6, opcode := .mul, left := .value 2, right := .constant 0xFFFFFFFFFFFFFFFF },
    { dst := 7, opcode := .sub, left := .value 5, right := .value 6 },
-   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] .value 8 = false := by
+   { dst := 8, opcode := .add, left := .value 7, right := .param 1 }] (.value 8) = false := by
   decide
 
 end NobleFoundation.LlvmLoweringCorpus

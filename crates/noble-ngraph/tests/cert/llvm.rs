@@ -30,11 +30,11 @@ mod model;
 #[path = "llvm/profile_tests.rs"]
 mod profile_tests;
 
-use bundle::{bundle_text, request_text, retained_files};
+use bundle::{request_text, retained_files, retained_json};
 use controls::{
     control_path, control_records, json_list, json_string, retained_identity, ControlRecord,
 };
-use corpus::{certificate_text, corpus_text};
+use corpus::{certificate_text, lean_source};
 use fixtures::{artifact_named, artifacts, simple_graph, Artifact};
 use model::{
     executed, hex_bits, lean_instruction, lean_name, lean_node, lean_operand, operand_text,

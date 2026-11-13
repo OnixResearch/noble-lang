@@ -31,7 +31,7 @@ fn the_lean_corpus_is_the_real_export() {
     let records = control_records(&everything);
     let corpus = read_repo_file("proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean");
     assert_eq!(
-        corpus_text(&everything, &records),
+        lean_source(&everything, &records),
         corpus,
         "the exported artifacts changed: regenerate LlvmLoweringCorpus.lean with \
          `cargo test -p noble-ngraph --test cert_differential -- --ignored write_the_artifacts` and \
@@ -45,7 +45,7 @@ fn the_retained_bundle_is_the_real_export() {
     let records = control_records(&everything);
     let bundle = read_repo_file("verification/llvm-lowering/bundle.json");
     assert_eq!(
-        bundle_text(&everything, &records),
+        retained_json(&everything, &records),
         bundle,
         "the retained bundle changed: regenerate it with \
          `cargo test -p noble-ngraph --test cert_differential -- --ignored write_the_artifacts`"
@@ -91,7 +91,7 @@ fn write_the_artifacts() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean"
         ),
-        corpus_text(&everything, &records),
+        lean_source(&everything, &records),
     )
     .expect("the generated corpus is written");
     std::fs::write(
@@ -99,7 +99,7 @@ fn write_the_artifacts() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../verification/llvm-lowering/bundle.json"
         ),
-        bundle_text(&everything, &records),
+        retained_json(&everything, &records),
     )
     .expect("the retained bundle is written");
     std::fs::write(

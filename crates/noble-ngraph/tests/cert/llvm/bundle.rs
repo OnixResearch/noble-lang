@@ -150,10 +150,10 @@ fn source_binding_entries() -> String {
         .join(",\n")
 }
 
-pub(super) fn bundle_text(all: &[Artifact], records: &[ControlRecord]) -> String {
+pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> String {
     let certificate = certificate_text(all);
     let request = request_text();
-    let corpus = corpus_text(all, records);
+    let corpus = lean_source(all, records);
     let mut text = String::from("{\n  \"schema\": \"noble-llvm-lowering-bundle/v1\",\n");
     text.push_str(&format!(
         "  \"profile\": {},\n  \"identity_scheme\": {},\n",

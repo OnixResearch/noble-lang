@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn the_profile_and_interface_are_pinned() {
+fn the_abi_and_interface_are_pinned() {
     assert_eq!(llvm::PROFILE, "ngraph-llvm-i64/0");
     assert_eq!(llvm::TARGET_TRIPLE, "x86_64-unknown-linux-gnu");
     assert_eq!(llvm::CALLING_CONVENTION, "ccc");
@@ -38,7 +38,7 @@ fn the_profile_and_interface_are_pinned() {
 }
 
 #[test]
-fn admission_names_every_out_of_profile_graph_feature() {
+fn admission_names_each_unsupported_graph_feature() {
     let mut graph = simple_graph("llvm-profile-refusals");
 
     graph.profile = SubProfile::F32;

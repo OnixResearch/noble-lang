@@ -271,7 +271,41 @@ pub fn admit(checked: &crate::check::CheckedGraph) -> Result<(), Refusal> {
     admit_graph(checked.graph())
 }
 
-/// Appends the value an operand names, spelled as the module spells it.
+/// Appends an unsigned integer without allocating a temporary decimal string.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-ngraph-maintainers; appending digits requires the caller-owned String builder, not an immutable string slice."
+)]
+fn append_u64_decimal(text: &mut alloc::string::String, mut value: u64) {
+    let mut digits = [0_u8; 20];
+    let mut start = digits.len();
+    loop {
+        start -= 1;
+        digits[start] = b'0' + (value % 10).to_le_bytes()[0];
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    for digit in &digits[start..] {
+        text.push(char::from(*digit));
+    }
+}
+
+/// Appends the canonical signed decimal spelling, including `i64::MIN` without overflow.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-ngraph-maintainers; appending digits requires the caller-owned String builder, not an immutable string slice."
+)]
+fn append_i64_decimal(text: &mut alloc::string::String, value: i64) {
+    if value < 0 {
+        text.push('-');
+        append_u64_decimal(text, value.unsigned_abs());
+    } else {
+        append_u64_decimal(text, value as u64);
+    }
+}
+
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-ngraph-maintainers; this helper appends formatted values to the caller-owned module output buffer, so its mutable String sink is required."
@@ -287,17 +321,19 @@ fn append_value(
             if *slot >= PARAMETERS {
                 return Err(Refusal::Interface);
             }
-            crate::format::push_fmt(text, format_args!("%a{slot}"));
+            text.push_str("%a");
+            append_u64_decimal(text, u64::from(*slot));
             Ok(())
         }
         crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
-            crate::format::push_fmt(text, format_args!("{value}"));
+            append_i64_decimal(text, *value);
             Ok(())
         }
         // An arithmetic node is named by its own SSA value. The checker admits only earlier nodes
         // as operands, so the fallback is the arithmetic arm for every admitted graph.
         crate::ir::Op::I64Add(..) | crate::ir::Op::I64Sub(..) | crate::ir::Op::I64Mul(..) => {
-            crate::format::push_fmt(text, format_args!("%v{}", node.0));
+            text.push_str("%v");
+            append_u64_decimal(text, u64::from(node.0));
             Ok(())
         }
         crate::ir::Op::Param(_) => Err(Refusal::Param),

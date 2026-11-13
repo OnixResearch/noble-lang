@@ -27,11 +27,13 @@ What is modelled, and what is not:
   parser-to-model step is the trusted translation the lane's README names.
 -/
 import NobleFoundation.FirstProjection
+import NobleFoundation.GraphRewrite
 
 namespace NobleFoundation.LlvmLowering
 
 open NobleFoundation.PackedSchedule
 open NobleFoundation.FirstProjection
+open NobleFoundation.GraphRewrite
 
 /-! ## The parsed module -/
 
@@ -349,7 +351,7 @@ theorem checkFrom_sound (graph : Graph) (wellFormed : WellFormed graph)
             have advanced : Agrees graph inputs (step inputs regs ins) (index + 1) := by
               intro node earlier arith
               by_cases same : node = index
-              · subst same
+              · subst node
                 obtain ⟨bits, computed, held⟩ :=
                   spells_computes graph wellFormed inputs regs index ins agrees spelled
                 exact ⟨bits, computed, held⟩
@@ -373,7 +375,7 @@ theorem checkFrom_sound (graph : Graph) (wellFormed : WellFormed graph)
                 _ = regs node := untouched
             · intro node after before arith
               by_cases same : node = index
-              · subst same
+              · subst node
                 have reached : index < index + 1 := by omega
                 obtain ⟨bits, computed, graphheld⟩ :=
                   spells_computes graph wellFormed inputs regs index ins agrees spelled
@@ -398,9 +400,8 @@ theorem checkFrom_sound (graph : Graph) (wellFormed : WellFormed graph)
         have advanced : Agrees graph inputs regs (index + 1) := by
           intro node earlier arith
           by_cases same : node = index
-          · subst same
-            rw [plain] at arith
-            exact absurd arith (by decide)
+          · subst node
+            simp [IsArith, plain] at arith
           · exact agrees node (by omega) arith
         obtain ⟨keeps, values⟩ := ih (index + 1) instrs regs advanced walked
         refine ⟨?_, ?_⟩
@@ -408,9 +409,8 @@ theorem checkFrom_sound (graph : Graph) (wellFormed : WellFormed graph)
           exact keeps node (by omega)
         · intro node after before arith
           by_cases same : node = index
-          · subst same
-            rw [plain] at arith
-            exact absurd arith (by decide)
+          · subst node
+            simp [IsArith, plain] at arith
           · exact values node (by omega) (by omega) arith
 
 /-- **The claim.** An instruction list and a return operand the validator accepts for a well-formed

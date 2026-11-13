@@ -1,6 +1,7 @@
 use super::*;
+use std::fmt;
 
-fn corpus_preamble() -> String {
+fn lean_preamble() -> String {
     String::from(
         "import NobleFoundation.LlvmLowering\n\n\
          /-!\n\
@@ -29,10 +30,16 @@ fn corpus_preamble() -> String {
     )
 }
 
-fn append_execution(text: &mut String, held: &Artifact, index: usize, inputs: [i64; 2]) {
+fn append_execution(
+    text: &mut impl fmt::Write,
+    held: &Artifact,
+    index: usize,
+    inputs: [i64; 2],
+) -> fmt::Result {
     let name = lean_name(held.name);
     let observed = executed(held, inputs);
-    text.push_str(&format!(
+    write!(
+        text,
         "\n/-- The Rust interpreter, agreeing with the graph reference here, read {bits} at \
          ({left}, {right}). -/\n\
          theorem {name}_execution_{index}_agrees :\n    \
@@ -41,10 +48,10 @@ fn append_execution(text: &mut String, held: &Artifact, index: usize, inputs: [i
         bits = hex_bits(observed),
         left = hex_bits(inputs[0]),
         right = hex_bits(inputs[1]),
-    ));
+    )
 }
 
-fn append_fixture(text: &mut String, held: &Artifact) {
+fn append_fixture(text: &mut impl fmt::Write, held: &Artifact) -> fmt::Result {
     let name = lean_name(held.name);
     let nodes: Vec<String> = held
         .graph
@@ -59,11 +66,12 @@ fn append_fixture(text: &mut String, held: &Artifact) {
         .map(lean_instruction)
         .collect();
     let output = held.graph.outputs.first().expect("one selected output").0;
-    text.push_str(&format!(
+    write!(
+        text,
         "\n/-! ## `{name}`: {doc} -/\n\n\
          def {name}Nodes : List Node :={nodes}\n\n\
          def {name}Graph : Graph := FirstProjection.ofList {name}Nodes {output}\n\n\
-         def {name}Instrs : List Instr :={instructions}\n\n\
+         def {name}Instrs : List NobleFoundation.LlvmLowering.Instr :={instructions}\n\n\
          def {name}Out : Operand := {out}\n\n\
          theorem {name}_validated : validate {name}Graph {name}Instrs {name}Out = true := by\n  \
          decide\n\n\
@@ -78,15 +86,16 @@ fn append_fixture(text: &mut String, held: &Artifact) {
         nodes = term_list(&nodes),
         instructions = term_list(&instructions),
         out = lean_operand(held.module.output),
-    ));
+    )?;
     for (index, inputs) in EXECUTIONS.iter().enumerate() {
-        append_execution(text, held, index, *inputs);
+        append_execution(text, held, index, *inputs)?;
     }
+    Ok(())
 }
 
-fn append_control(text: &mut String, record: &ControlRecord) {
+fn append_control(text: &mut impl fmt::Write, record: &ControlRecord) -> fmt::Result {
     let Some(mutated) = record.mutated.as_ref() else {
-        return;
+        return Ok(());
     };
     let name = format!(
         "{}_{}",
@@ -95,20 +104,21 @@ fn append_control(text: &mut String, record: &ControlRecord) {
     );
     let graph = lean_name(record.artifact);
     let instructions: Vec<String> = mutated.instructions.iter().map(lean_instruction).collect();
-    text.push_str(&format!(
+    write!(
+        text,
         "\n/-- Refused by the Rust validator with `{refusal}`, and refused here. -/\n\
          theorem {name}_refused :\n    \
-         validate {graph}Graph{nodes} {out} = false := by\n  decide\n",
+         validate {graph}Graph{nodes} ({out}) = false := by\n  decide\n",
         refusal = record.model_refusal,
         nodes = term_list(&instructions),
         out = lean_operand(mutated.output),
-    ));
+    )
 }
 
-pub(super) fn corpus_text(all: &[Artifact], records: &[ControlRecord]) -> String {
-    let mut text = corpus_preamble();
+pub(super) fn lean_source(all: &[Artifact], records: &[ControlRecord]) -> String {
+    let mut text = lean_preamble();
     for held in all {
-        append_fixture(&mut text, held);
+        append_fixture(&mut text, held).expect("writing to String cannot fail");
     }
     text.push_str(
         "\n/-! ## Controls\n\n\
@@ -116,7 +126,7 @@ pub(super) fn corpus_text(all: &[Artifact], records: &[ControlRecord]) -> String
          of bytes the Rust validator refused, so the kernel is deciding the same refusals. -/\n",
     );
     for record in records.iter().filter(|record| record.model) {
-        append_control(&mut text, record);
+        append_control(&mut text, record).expect("writing to String cannot fail");
     }
     text.push_str("\nend NobleFoundation.LlvmLoweringCorpus\n");
     text

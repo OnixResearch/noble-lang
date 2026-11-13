@@ -18,7 +18,7 @@ fn replaced(text: &str, from: &str, to: &str) -> String {
     text.replacen(from, to, 1)
 }
 
-fn operand_controls(all: &[Artifact]) -> Vec<ControlMutation> {
+fn operand_changes(all: &[Artifact]) -> Vec<ControlMutation> {
     let subtractive = artifact_named(all, "subtractive");
     let negative = artifact_named(all, "negative");
     let shared = artifact_named(all, "shared");
@@ -58,7 +58,7 @@ fn operand_controls(all: &[Artifact]) -> Vec<ControlMutation> {
     ]
 }
 
-fn instruction_controls(all: &[Artifact]) -> Vec<ControlMutation> {
+fn instruction_changes(all: &[Artifact]) -> Vec<ControlMutation> {
     let wrapping = artifact_named(all, "wrapping");
     let shared = artifact_named(all, "shared");
     vec![
@@ -97,7 +97,7 @@ fn instruction_controls(all: &[Artifact]) -> Vec<ControlMutation> {
     ]
 }
 
-fn interface_controls(all: &[Artifact]) -> Vec<ControlMutation> {
+fn interface_changes(all: &[Artifact]) -> Vec<ControlMutation> {
     let wrapping = artifact_named(all, "wrapping");
     vec![
         ControlMutation {
@@ -139,7 +139,7 @@ fn interface_controls(all: &[Artifact]) -> Vec<ControlMutation> {
     ]
 }
 
-fn structure_controls(all: &[Artifact]) -> Vec<ControlMutation> {
+fn structure_changes(all: &[Artifact]) -> Vec<ControlMutation> {
     let rewritten = artifact_named(all, "foldable-rewritten");
     let shared = artifact_named(all, "shared");
     let wrapping = artifact_named(all, "wrapping");
@@ -182,12 +182,12 @@ fn structure_controls(all: &[Artifact]) -> Vec<ControlMutation> {
     ]
 }
 
-pub(super) fn controls(all: &[Artifact]) -> Vec<ControlMutation> {
-    let mut controls = operand_controls(all);
-    controls.extend(instruction_controls(all));
-    controls.extend(interface_controls(all));
-    controls.extend(structure_controls(all));
-    controls
+pub(super) fn all_changes(all: &[Artifact]) -> Vec<ControlMutation> {
+    let mut changes = operand_changes(all);
+    changes.extend(instruction_changes(all));
+    changes.extend(interface_changes(all));
+    changes.extend(structure_changes(all));
+    changes
 }
 
 /// What the lane observed for one control: the refusal it raised, where it stopped, and whether the
@@ -220,7 +220,7 @@ pub(super) fn control_path(artifact: &str, class: &str) -> String {
 }
 
 pub(super) fn control_records(all: &[Artifact]) -> Vec<ControlRecord> {
-    controls(all)
+    all_changes(all)
         .into_iter()
         .map(|control| {
             let held = artifact_named(all, control.artifact);
