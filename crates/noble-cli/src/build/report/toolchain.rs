@@ -364,6 +364,8 @@ mod tests {
             std::panic!("library tree is an object");
         };
         assert_eq!(library_entries.len(), 4);
+        let library_keys: std::vec::Vec<_> = library_entries.iter().map(|(key, _)| *key).collect();
+        assert_eq!(library_keys, ["blake3", "files", "bytes", "basis"]);
         let Some((_, crate::workflow::encoding::Json::String(library_hash))) =
             library_entries.iter().find(|(key, _)| *key == "blake3")
         else {
