@@ -30,7 +30,7 @@ theorem coverage_dup : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 0 = some dupScheme := by decide +kernel
   have hinst : dupScheme.instantiate (canonInst 0)
       = some ((wordCheckedOf 0).interface.stackIn, (wordCheckedOf 0).interface.stackOut,
-          (wordCheckedOf 0).interface.effects) := by native_decide
+          (wordCheckedOf 0).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 0) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst ⟨canonTy, by decide +kernel, by decide +kernel⟩
   rw [union_empty_right] at h
@@ -47,7 +47,7 @@ theorem coverage_drop : ∃ (req : Request) (cand : Candidate) (checked : Checke
   have hlook : bootstrapEnv.scheme 1 = some dropScheme := by decide +kernel
   have hinst : dropScheme.instantiate (canonInst 1)
       = some ((wordCheckedOf 1).interface.stackIn, (wordCheckedOf 1).interface.stackOut,
-          (wordCheckedOf 1).interface.effects) := by native_decide
+          (wordCheckedOf 1).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 1) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst ⟨canonTy, by decide +kernel, by decide +kernel⟩
   rw [union_empty_right] at h
@@ -64,7 +64,7 @@ theorem coverage_swap : ∃ (req : Request) (cand : Candidate) (checked : Checke
   have hlook : bootstrapEnv.scheme 2 = some swapScheme := by decide +kernel
   have hinst : swapScheme.instantiate (canonInst 2)
       = some ((wordCheckedOf 2).interface.stackIn, (wordCheckedOf 2).interface.stackOut,
-          (wordCheckedOf 2).interface.effects) := by native_decide
+          (wordCheckedOf 2).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 2) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -98,7 +98,7 @@ theorem coverage_add : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 4 = some arithScheme := by decide +kernel
   have hinst : arithScheme.instantiate (canonInst 4)
       = some ((wordCheckedOf 4).interface.stackIn, (wordCheckedOf 4).interface.stackOut,
-          (wordCheckedOf 4).interface.effects) := by native_decide
+          (wordCheckedOf 4).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 4) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -115,7 +115,7 @@ theorem coverage_sub : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 5 = some arithScheme := by decide +kernel
   have hinst : arithScheme.instantiate (canonInst 5)
       = some ((wordCheckedOf 5).interface.stackIn, (wordCheckedOf 5).interface.stackOut,
-          (wordCheckedOf 5).interface.effects) := by native_decide
+          (wordCheckedOf 5).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 5) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -132,7 +132,7 @@ theorem coverage_mul : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 6 = some arithScheme := by decide +kernel
   have hinst : arithScheme.instantiate (canonInst 6)
       = some ((wordCheckedOf 6).interface.stackIn, (wordCheckedOf 6).interface.stackOut,
-          (wordCheckedOf 6).interface.effects) := by native_decide
+          (wordCheckedOf 6).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 6) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -149,7 +149,7 @@ theorem coverage_equals : ∃ (req : Request) (cand : Candidate) (checked : Chec
   have hlook : bootstrapEnv.scheme 7 = some equalsScheme := by decide +kernel
   have hinst : equalsScheme.instantiate (canonInst 7)
       = some ((wordCheckedOf 7).interface.stackIn, (wordCheckedOf 7).interface.stackOut,
-          (wordCheckedOf 7).interface.effects) := by native_decide
+          (wordCheckedOf 7).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 7) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -166,7 +166,7 @@ theorem coverage_quote : ∃ (req : Request) (cand : Candidate) (checked : Check
   have hlook : bootstrapEnv.scheme 8 = some quoteScheme := by decide +kernel
   have hinst : quoteScheme.instantiate (canonInst 8)
       = some ((wordCheckedOf 8).interface.stackIn, (wordCheckedOf 8).interface.stackOut,
-          (wordCheckedOf 8).interface.effects) := by native_decide
+          (wordCheckedOf 8).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 8) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst ⟨canonTy, by decide +kernel, by decide +kernel⟩
   rw [union_empty_right] at h
@@ -234,7 +234,7 @@ theorem coverage_unit : ∃ (req : Request) (cand : Candidate) (checked : Checke
   have hlook : bootstrapEnv.scheme 12 = some unitScheme := by decide +kernel
   have hinst : unitScheme.instantiate (canonInst 12)
       = some ((wordCheckedOf 12).interface.stackIn, (wordCheckedOf 12).interface.stackOut,
-          (wordCheckedOf 12).interface.effects) := by native_decide
+          (wordCheckedOf 12).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 12) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -251,7 +251,7 @@ theorem coverage_pair : ∃ (req : Request) (cand : Candidate) (checked : Checke
   have hlook : bootstrapEnv.scheme 13 = some pairScheme := by decide +kernel
   have hinst : pairScheme.instantiate (canonInst 13)
       = some ((wordCheckedOf 13).interface.stackIn, (wordCheckedOf 13).interface.stackOut,
-          (wordCheckedOf 13).interface.effects) := by native_decide
+          (wordCheckedOf 13).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 13) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -268,7 +268,7 @@ theorem coverage_unpair : ∃ (req : Request) (cand : Candidate) (checked : Chec
   have hlook : bootstrapEnv.scheme 14 = some unpairScheme := by decide +kernel
   have hinst : unpairScheme.instantiate (canonInst 14)
       = some ((wordCheckedOf 14).interface.stackIn, (wordCheckedOf 14).interface.stackOut,
-          (wordCheckedOf 14).interface.effects) := by native_decide
+          (wordCheckedOf 14).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 14) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -285,7 +285,7 @@ theorem coverage_inl : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 15 = some inlScheme := by decide +kernel
   have hinst : inlScheme.instantiate (canonInst 15)
       = some ((wordCheckedOf 15).interface.stackIn, (wordCheckedOf 15).interface.stackOut,
-          (wordCheckedOf 15).interface.effects) := by native_decide
+          (wordCheckedOf 15).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 15) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -302,7 +302,7 @@ theorem coverage_inr : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 16 = some inrScheme := by decide +kernel
   have hinst : inrScheme.instantiate (canonInst 16)
       = some ((wordCheckedOf 16).interface.stackIn, (wordCheckedOf 16).interface.stackOut,
-          (wordCheckedOf 16).interface.effects) := by native_decide
+          (wordCheckedOf 16).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 16) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -353,7 +353,7 @@ theorem coverage_nil : ∃ (req : Request) (cand : Candidate) (checked : Checked
   have hlook : bootstrapEnv.scheme 19 = some nilScheme := by decide +kernel
   have hinst : nilScheme.instantiate (canonInst 19)
       = some ((wordCheckedOf 19).interface.stackIn, (wordCheckedOf 19).interface.stackOut,
-          (wordCheckedOf 19).interface.effects) := by native_decide
+          (wordCheckedOf 19).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 19) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h
@@ -370,7 +370,7 @@ theorem coverage_cons : ∃ (req : Request) (cand : Candidate) (checked : Checke
   have hlook : bootstrapEnv.scheme 20 = some consScheme := by decide +kernel
   have hinst : consScheme.instantiate (canonInst 20)
       = some ((wordCheckedOf 20).interface.stackIn, (wordCheckedOf 20).interface.stackOut,
-          (wordCheckedOf 20).interface.effects) := by native_decide
+          (wordCheckedOf 20).interface.effects) := by decide +kernel
   have h := invoke_derives (cand := wordCandidate 20) rfl rfl hlook
     (resolvesTo_refl _ (by decide +kernel)) hinst trivial
   rw [union_empty_right] at h

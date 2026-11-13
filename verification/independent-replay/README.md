@@ -69,19 +69,28 @@ historical artifacts.
 ## Kernel-checked proof conversions
 
 Kernel conversion trials used at most 1,000,000 heartbeats and recursion depth 4,096. Four direct
-proofs now use `decide +kernel`: `NobleM2.rule_case_sound`, `rule_if_sound`, and
+theorem proofs now use `decide +kernel`: `NobleM2.rule_case_sound`, `rule_if_sound`, and
 `rule_listcase_sound` in `proofs/m3/NobleM3/Rules.lean`, plus the finite table lookup
-`NobleM2.addLook` in `proofs/m2/NobleM2/Termination.lean`. The M3 gate's reviewed native list
-removed exactly the three converted rule theorem names; no names were added. Thus three gate-reviewed
-declarations moved to the strict axiom set (and one additional, unlisted M2 helper was converted).
-None became a new issue #62 replay root: `statements.json` remains bound to the existing foundation
-roots.
+`NobleM2.Coverage.addLook` in `proofs/m2/NobleM2/Termination.lean`. The M3 gate's reviewed native
+list removed exactly the three converted rule theorem names; no names were added. Thus three
+gate-reviewed declarations moved to the strict axiom set (and one additional M2 helper was
+converted).
+
+The per-word coverage family in `proofs/m3/NobleM3/CoverageWords.lean` also now kernel-checks 15 of
+its 23 canonical scheme-instantiation premises, along with the finite scheme lookups, witness
+resolutions and canonical-data premises. The other eight canonical instantiations stop at Lean's
+well-founded `Scheme.instantiate` reduction and remain `native_decide`: `dip`, `compose`, `run`,
+`reflect`, `case`, `if`, `listCase`, and `emit`. The root `NobleM2.check` acceptance premises remain
+native for all 23 words; they ask for full checker reduction rather than only a finite instance.
+These local premise conversions do not change their parent theorem axiom sets. No converted
+declaration became a new issue #62 replay root: `statements.json` remains bound to the existing
+foundation roots.
 
 The other native proofs in the requested sources remain deliberately classified as follows:
 
 | Sources / declarations | Why they remain native |
 |---|---|
-| `Rules.lean::fresh_instantiation`; `Coverage.lean::ee_accepted`; `CoverageWords.lean` word fixtures | Their acceptance conclusions ask the reference `NobleM2.check` to reduce a full checker result. Bounded `decide +kernel` trials on `fresh_instantiation`, `ee_accepted`, and the first word fixture did not reduce that result; the trials were restored without raising the budget. `Scheme.instantiate` also uses well-founded recursion, which `Termination.lean` documents as opaque to kernel definitional reduction. |
+| `Rules.lean::fresh_instantiation`; `Coverage.lean::ee_accepted`; `CoverageWords.lean` word fixtures | Their acceptance conclusions ask the reference `NobleM2.check` to reduce a full checker result. Bounded `decide +kernel` trials on `fresh_instantiation`, `ee_accepted`, and the word-fixture acceptance conclusions did not reduce that result. For the per-word instantiation premises, 15 of 23 reduce under the declared budget; the eight remaining cases listed above stop at well-founded `Scheme.instantiate` reduction. |
 | `proofs/m3/NobleM2/Refinement.lean`, `proofs/m3/NobleM3/{Refinement,RefinementWords,Refine}.lean`, and `proofs/m2/NobleM2/Refinement.lean` | These are finite comparisons involving the extracted checker or instantiator. The refinement sources document the extracted checker's fuel-driven `partial_fixpoint` loops; kernel reduction cannot unfold those loops. |
 | Other M2 checker fixtures in `CheckSoundness.lean`, `SignedSelf.lean`, and `Termination.lean` | Their remaining acceptance/derivation equations evaluate `NobleM2.check` or the well-founded scheme instantiator. Only the finite `addLook` table lookup was converted. |
 | `proofs/mc1/NobleContractImpl/Statement.lean` | The source-bound equations evaluate the extracted frontend and Lean-statement exporter; the module explicitly records these as native-evaluation evidence, not universal proofs. |
