@@ -13,11 +13,9 @@
  (local.set $left (call $pop_kind (i32.const 1)))
  (if (global.get $failure) (then (return)))
  (local.set $result (i64.add (local.get $left) (local.get $right)))
- (if (i32.or
-       (i32.and (i64.gt_s (local.get $left) (i64.const 0))
-                (i64.lt_s (local.get $result) (local.get $left)))
-       (i32.and (i64.lt_s (local.get $left) (i64.const 0))
-                (i64.gt_s (local.get $result) (local.get $left))))
+ (if (i32.and
+       (i64.lt_s (i64.xor (local.get $left) (local.get $result)) (i64.const 0))
+       (i64.lt_s (i64.xor (local.get $right) (local.get $result)) (i64.const 0)))
   (then (call $checked_i64_error (i64.const 1)) (return)))
  (call $checked_i64_success (local.get $result)))
 

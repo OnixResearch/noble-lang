@@ -4828,6 +4828,12 @@
       "claim": "signed minimum divided by negative one returns overflow rather than a quotient"
     },
     {
+      "name": "NobleFoundation.CheckedI64Expectations.retained_expectations_checked",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "every retained external scalar-boundary proposal agrees with the kernel-checked checked-I64 model"
+    },
+    {
       "name": "NobleFoundation.InteractionNet.version_ok_sound",
       "phase": 1,
       "role": "validator-soundness",

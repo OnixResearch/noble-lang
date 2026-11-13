@@ -1,0 +1,404 @@
+{
+  "schema": "noble-checked-i64-proposals/v1",
+  "cases": [
+    {
+      "name": "add-max-minus-one-plus-one",
+      "operation": "add",
+      "left": "9223372036854775806",
+      "right": "1",
+      "expected": "ok:9223372036854775807"
+    },
+    {
+      "name": "add-max-plus-one",
+      "operation": "add",
+      "left": "9223372036854775807",
+      "right": "1",
+      "expected": "error:1"
+    },
+    {
+      "name": "add-min-plus-one-minus-one",
+      "operation": "add",
+      "left": "-9223372036854775807",
+      "right": "-1",
+      "expected": "ok:-9223372036854775808"
+    },
+    {
+      "name": "add-min-minus-one",
+      "operation": "add",
+      "left": "-9223372036854775808",
+      "right": "-1",
+      "expected": "error:1"
+    },
+    {
+      "name": "add-zero-minus-one",
+      "operation": "add",
+      "left": "0",
+      "right": "-1",
+      "expected": "ok:-1"
+    },
+    {
+      "name": "add-minus-one-zero",
+      "operation": "add",
+      "left": "-1",
+      "right": "0",
+      "expected": "ok:-1"
+    },
+    {
+      "name": "add-zero-zero",
+      "operation": "add",
+      "left": "0",
+      "right": "0",
+      "expected": "ok:0"
+    },
+    {
+      "name": "add-positive-positive",
+      "operation": "add",
+      "left": "1",
+      "right": "2",
+      "expected": "ok:3"
+    },
+    {
+      "name": "add-positive-negative",
+      "operation": "add",
+      "left": "1",
+      "right": "-2",
+      "expected": "ok:-1"
+    },
+    {
+      "name": "add-negative-positive",
+      "operation": "add",
+      "left": "-1",
+      "right": "2",
+      "expected": "ok:1"
+    },
+    {
+      "name": "add-negative-negative",
+      "operation": "add",
+      "left": "-1",
+      "right": "-2",
+      "expected": "ok:-3"
+    },
+    {
+      "name": "sub-min-plus-one-minus-one",
+      "operation": "sub",
+      "left": "-9223372036854775807",
+      "right": "1",
+      "expected": "ok:-9223372036854775808"
+    },
+    {
+      "name": "sub-min-minus-one",
+      "operation": "sub",
+      "left": "-9223372036854775808",
+      "right": "1",
+      "expected": "error:1"
+    },
+    {
+      "name": "sub-max-minus-negative-one",
+      "operation": "sub",
+      "left": "9223372036854775807",
+      "right": "-1",
+      "expected": "error:1"
+    },
+    {
+      "name": "sub-max-minus-one",
+      "operation": "sub",
+      "left": "9223372036854775807",
+      "right": "1",
+      "expected": "ok:9223372036854775806"
+    },
+    {
+      "name": "sub-zero-minus-negative-one",
+      "operation": "sub",
+      "left": "0",
+      "right": "-1",
+      "expected": "ok:1"
+    },
+    {
+      "name": "sub-minus-one-zero",
+      "operation": "sub",
+      "left": "-1",
+      "right": "0",
+      "expected": "ok:-1"
+    },
+    {
+      "name": "sub-one-minus-two",
+      "operation": "sub",
+      "left": "1",
+      "right": "2",
+      "expected": "ok:-1"
+    },
+    {
+      "name": "sub-two-minus-one",
+      "operation": "sub",
+      "left": "2",
+      "right": "1",
+      "expected": "ok:1"
+    },
+    {
+      "name": "sub-negative-negative",
+      "operation": "sub",
+      "left": "-1",
+      "right": "-2",
+      "expected": "ok:1"
+    },
+    {
+      "name": "mul-max-one",
+      "operation": "mul",
+      "left": "9223372036854775807",
+      "right": "1",
+      "expected": "ok:9223372036854775807"
+    },
+    {
+      "name": "mul-min-one",
+      "operation": "mul",
+      "left": "-9223372036854775808",
+      "right": "1",
+      "expected": "ok:-9223372036854775808"
+    },
+    {
+      "name": "mul-min-negative-one",
+      "operation": "mul",
+      "left": "-9223372036854775808",
+      "right": "-1",
+      "expected": "error:1"
+    },
+    {
+      "name": "mul-max-two",
+      "operation": "mul",
+      "left": "9223372036854775807",
+      "right": "2",
+      "expected": "error:1"
+    },
+    {
+      "name": "mul-min-zero",
+      "operation": "mul",
+      "left": "-9223372036854775808",
+      "right": "0",
+      "expected": "ok:0"
+    },
+    {
+      "name": "mul-negative-one-three",
+      "operation": "mul",
+      "left": "-1",
+      "right": "3",
+      "expected": "ok:-3"
+    },
+    {
+      "name": "mul-positive-negative",
+      "operation": "mul",
+      "left": "3",
+      "right": "-2",
+      "expected": "ok:-6"
+    },
+    {
+      "name": "mul-negative-negative",
+      "operation": "mul",
+      "left": "-2",
+      "right": "-3",
+      "expected": "ok:6"
+    },
+    {
+      "name": "neg-max",
+      "operation": "neg",
+      "left": "9223372036854775807",
+      "right": "0",
+      "expected": "ok:-9223372036854775807"
+    },
+    {
+      "name": "neg-min-plus-one",
+      "operation": "neg",
+      "left": "-9223372036854775807",
+      "right": "0",
+      "expected": "ok:9223372036854775807"
+    },
+    {
+      "name": "neg-min",
+      "operation": "neg",
+      "left": "-9223372036854775808",
+      "right": "0",
+      "expected": "error:1"
+    },
+    {
+      "name": "neg-zero",
+      "operation": "neg",
+      "left": "0",
+      "right": "0",
+      "expected": "ok:0"
+    },
+    {
+      "name": "neg-negative-one",
+      "operation": "neg",
+      "left": "-1",
+      "right": "0",
+      "expected": "ok:1"
+    },
+    {
+      "name": "abs-min",
+      "operation": "abs",
+      "left": "-9223372036854775808",
+      "right": "0",
+      "expected": "error:1"
+    },
+    {
+      "name": "abs-min-plus-one",
+      "operation": "abs",
+      "left": "-9223372036854775807",
+      "right": "0",
+      "expected": "ok:9223372036854775807"
+    },
+    {
+      "name": "abs-negative-one",
+      "operation": "abs",
+      "left": "-1",
+      "right": "0",
+      "expected": "ok:1"
+    },
+    {
+      "name": "abs-zero",
+      "operation": "abs",
+      "left": "0",
+      "right": "0",
+      "expected": "ok:0"
+    },
+    {
+      "name": "abs-max",
+      "operation": "abs",
+      "left": "9223372036854775807",
+      "right": "0",
+      "expected": "ok:9223372036854775807"
+    },
+    {
+      "name": "lt-negative-one-zero",
+      "operation": "lt",
+      "left": "-1",
+      "right": "0",
+      "expected": "bool:true"
+    },
+    {
+      "name": "lt-zero-negative-one",
+      "operation": "lt",
+      "left": "0",
+      "right": "-1",
+      "expected": "bool:false"
+    },
+    {
+      "name": "lt-min-max",
+      "operation": "lt",
+      "left": "-9223372036854775808",
+      "right": "9223372036854775807",
+      "expected": "bool:true"
+    },
+    {
+      "name": "lt-max-min",
+      "operation": "lt",
+      "left": "9223372036854775807",
+      "right": "-9223372036854775808",
+      "expected": "bool:false"
+    },
+    {
+      "name": "lt-negative-one-equal",
+      "operation": "lt",
+      "left": "-1",
+      "right": "-1",
+      "expected": "bool:false"
+    },
+    {
+      "name": "lt-positive-positive",
+      "operation": "lt",
+      "left": "1",
+      "right": "2",
+      "expected": "bool:true"
+    },
+    {
+      "name": "lt-positive-negative",
+      "operation": "lt",
+      "left": "1",
+      "right": "-2",
+      "expected": "bool:false"
+    },
+    {
+      "name": "lt-negative-negative",
+      "operation": "lt",
+      "left": "-2",
+      "right": "-1",
+      "expected": "bool:true"
+    },
+    {
+      "name": "divrem-negative-seven-two",
+      "operation": "divrem",
+      "left": "-7",
+      "right": "2",
+      "expected": "pair:-3:-1"
+    },
+    {
+      "name": "divrem-seven-negative-two",
+      "operation": "divrem",
+      "left": "7",
+      "right": "-2",
+      "expected": "pair:-3:1"
+    },
+    {
+      "name": "divrem-seven-two",
+      "operation": "divrem",
+      "left": "7",
+      "right": "2",
+      "expected": "pair:3:1"
+    },
+    {
+      "name": "divrem-negative-negative",
+      "operation": "divrem",
+      "left": "-7",
+      "right": "-2",
+      "expected": "pair:3:-1"
+    },
+    {
+      "name": "divrem-two-seven",
+      "operation": "divrem",
+      "left": "2",
+      "right": "7",
+      "expected": "pair:0:2"
+    },
+    {
+      "name": "divrem-min-one",
+      "operation": "divrem",
+      "left": "-9223372036854775808",
+      "right": "1",
+      "expected": "pair:-9223372036854775808:0"
+    },
+    {
+      "name": "divrem-min-plus-one-one",
+      "operation": "divrem",
+      "left": "-9223372036854775807",
+      "right": "1",
+      "expected": "pair:-9223372036854775807:0"
+    },
+    {
+      "name": "divrem-max-negative-one",
+      "operation": "divrem",
+      "left": "9223372036854775807",
+      "right": "-1",
+      "expected": "pair:-9223372036854775807:0"
+    },
+    {
+      "name": "divrem-min-negative-one",
+      "operation": "divrem",
+      "left": "-9223372036854775808",
+      "right": "-1",
+      "expected": "error:1"
+    },
+    {
+      "name": "divrem-seven-zero",
+      "operation": "divrem",
+      "left": "7",
+      "right": "0",
+      "expected": "error:2"
+    },
+    {
+      "name": "divrem-zero-negative-one",
+      "operation": "divrem",
+      "left": "0",
+      "right": "-1",
+      "expected": "pair:0:0"
+    }
+  ]
+}
