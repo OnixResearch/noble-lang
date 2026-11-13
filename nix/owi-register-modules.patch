@@ -4,7 +4,7 @@
  open Bos
  open Syntax
  
-+let registered_modules () =
++let registered_modules () : ((string * Fpath.t) list, Result.err) result =
 +  match Bos.OS.Env.var "OWI_REGISTER_MODULES" with
 +  | None | Some "" -> Ok []
 +  | Some modules ->
