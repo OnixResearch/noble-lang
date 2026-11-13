@@ -15,7 +15,7 @@
       },
       "selected_cell_count": 18,
       "cell_id_template": "P1/{quotation_composition}/{boundary_arithmetic}/{output_shape}",
-      "execution_witness": "The source program is admitted, the intended arithmetic operator executes, and quote/run or compose/run is observed in the accepted source trace; for preserved_prefix_multiple, at least two untouched prefix values survive in order before the result.",
+      "execution_witness": "The source program is admitted and both Wasm modes finish with the expected result and positive execution-step metrics. The actual CLI report has no per-operator trace: record the source operators and the output-discriminating witness separately, and do not claim direct operator tracing. For preserved_prefix_multiple, at least two untouched prefix values survive in order before the result.",
       "properties": ["reference_stack_matches_source_wasm", "ordered_stack_and_prefix_preserved"],
       "comparison_legs": ["BigInt reference", "per-case Lean-kernel-checked expectation", "managed Wasm opt-off", "managed Wasm opt-on"],
       "unsupported": [],
@@ -31,7 +31,7 @@
       },
       "selected_cell_count": 24,
       "cell_id_template": "P2/{interaction_family}/{fp_class}",
-      "execution_witness": "The checked graph admits and runtime evidence names each required operation and the selected guard/select/index branch; a generated node alone is insufficient.",
+      "execution_witness": "The checked graph contains the required operation nodes and the L3 reference reports all checked nodes evaluated on a normal result. Record select/index branches from the concrete input bits and output-discriminating values. L4 exposes no per-node trace, so its witness kind is a successful comparison of those exact inputs/outputs, not an asserted internal trace.",
       "properties": ["all_supported_f32_observations_agree", "selected_edge_branch_matches_reference"],
       "comparison_legs": ["L2 APFloat oracle", "binary64-per-operation oracle", "L3 reference interpreter", "L4 compiled evaluator"],
       "unsupported": [
