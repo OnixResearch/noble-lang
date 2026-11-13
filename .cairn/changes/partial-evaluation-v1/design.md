@@ -66,6 +66,9 @@ slot it is `Input(rank(k))`, where `rank(k)` counts the dynamic input slots stri
 `k` — the Lean `rank` verbatim. The same module exposes `merge` so a call site can
 reconstruct the original input vector for comparison:
 `merge(σ, d)[k] = σ[k]` when static, else `d[rank(k)]`.
+The dynamic vector carries the residual leaf types: a `Bool` leaf cannot be
+static under the I64-valued map, but remains a dynamic `Bool` in slot order;
+the typed residual helper validates those values when reconstructing inputs.
 
 `rank` is `O(#inputs)` once per input slot and the substitution is one linear pass.
 
@@ -97,20 +100,25 @@ extension, not as model-covered.
 fixes the substitution order. Algebraic identities are where "fold more" becomes a proof
 obligation; excluding them keeps the residual a literal instance of the model.
 
-### D4 — Prune nodes that reach no output, then renumber; guards and facts are refused, so pruning is unobservable
+### D4 — Prune unreachable computations, preserve dynamic input slots, then renumber
 
 **Choice:** after substitution and folding, keep the nodes reachable from `outputs` in
-canonical order, drop the rest, and renumber nodes densely in that order. Then run
-`check::check_with` on the result and return its `CheckedGraph`. Every kept node charges the
-`RESIDUAL-NODES` cap once, before pruning; pruning does not refund.
+canonical order and every remaining dynamic `Input` node, drop other unreachable nodes, and
+renumber nodes densely in that order. Preserving unused dynamic inputs keeps every residual
+interface slot defined, as required by the graph checker. Then run `check::check_with` on the
+result and return its `CheckedGraph`. Every transformed node, including nodes later pruned,
+charges the `RESIDUAL-NODES` cap once before pruning; pruning does not refund.
 
 **Rationale:** pruning is not optional — the checker refuses a node that reaches no output
-(`E-GRAPH-MALFORMED`/`dangling-node`), and folding creates exactly such nodes. The
-observation argument is short because D1 refused every node whose evaluation can *fail* or
-have a fact: the remaining ops (`Input`, `Const`, `I64Add/Sub/Mul/Eq`) are pure and total, so
-a node that no output depends on cannot change any output or any failure. This argument is
-not in the Lean model (which keeps indices fixed); it is a separate, documented step backed
-by the whitelist restriction and by differential tests, not by a theorem.
+(`E-GRAPH-MALFORMED`/`dangling-node`), and folding creates exactly such computed nodes. The
+checker permits unused `Input` nodes but still requires one node for each interface slot, so
+dynamic input nodes are retained even when no output uses them; statically substituted inputs
+become constants and can be pruned when unreachable. The observation argument is short
+because D1 refused every node whose evaluation can *fail* or have a fact: the remaining ops
+(`Input`, `Const`, `I64Add/Sub/Mul/Eq`) are pure and total, so an unreachable computation
+cannot change any output or any failure. This argument is not in the Lean model (which keeps
+indices fixed); it is a separate, documented step backed by the whitelist restriction and by
+differential tests, not by a theorem.
 
 ### D5 — The residual is a new identity, never a mutated original
 
@@ -185,6 +193,11 @@ A refusal in the first three stages publishes nothing. `noble ngraph specialize`
 stage in the existing report field, so a test asserts *where* it stopped, not only which code
 came out.
 
+Every `noble ngraph` report also carries the existing `guest_requests` counter, which is
+exactly zero for this command family: none of these commands enters the guest runtime. The
+CLI-representable effectful negative test asserts the counter alongside the refusal code and
+stage.
+
 Effectful, resource, recursive, aggregate and control subjects are refused by the profile's
 **extraction** stage (`noble ngraph extract`, `crate::extract::admit`) exactly as before this
 change, so they never become a checked graph and cannot reach `specialize` at all: the entry
@@ -206,11 +219,15 @@ binding per node, exactly as the source sugar's own discipline requires:
   chain), the operation is applied, and the result is bound with `let v<node>`;
 - constants are emitted as decimal `I64` literals or `true`/`false` for `Bool`;
 - outputs are read in output order after all bindings; the sugar's scope cleanup drops the
-  hidden locals beneath them.
+  hidden locals beneath them. An empty output vector is valid: cleanup leaves the residual
+  with an empty stack effect. A zero-node residual with no inputs or outputs is emitted as
+  `0 drop` rather than an empty source module, because the ordinary compiler rejects empty
+  source; this effect-free body re-extracts to the empty checked graph.
 
-The label names are `v<index>` and the caller supplies nothing but the residual's interface
-types (derived from `CheckedGraph::ty`). The emitted text is then re-prepared with
-`noble_contracts::source::ModuleSession::new_declared_text` under the ordinary source limits,
+The label names are `v<index>` and are derived from residual node indices; the caller supplies
+the residual's interface types (derived from `CheckedGraph::ty`) and the ordinary source
+limits. The emitted text is then re-prepared with
+`noble_contracts::source::ModuleSession::new_declared_text` under caller-provided ordinary source limits,
 its `submission()` is re-admitted with `extract::admit` (the kernel independently accepts it),
 re-extracted, and only then published. A refusal at re-preparation or re-admission is
 reported as that refusal; nothing is written.
@@ -225,15 +242,18 @@ ordinary selected profile with a real Wasm compile path, so the residual stays a
 accepted by the same frontend and kernel as any other Program; publication before acceptance
 would let a bad residual escape.
 
-### D10 — Public surface: library entry point and `noble ngraph specialize`, no syntax
+### D10 — Public surface: library entry point and `noble ngraph specialize`, no source syntax
 
-**Choice:** `noble_ngraph::specialize::{specialize, merge, emit_source, readmit,
-ACCOUNTING_REVISION, Limits, Request, Report, Residual}` plus
+**Choice:** this change modifies `NGRAPH-CLI-01` to add `specialize` as its sixth exact
+subcommand. It selects `noble_ngraph::specialize::{specialize, merge, emit_source, readmit,
+ACCOUNTING_REVISION, Request, Report, Residual}` plus
 `noble ngraph specialize GRAPH --static INDEX=VALUE,... --out RESIDUAL [--graph-out GRAPH]
 [--budget-* N]...` with the existing `noble-ngraph-report/v1` schema, the existing D8 exit
-mapping, existing file bounds and create-new publication. `--static` names 0-based input-leaf
-indices, which is the same order as the graph's `input` slots and as the static map. No new
-source syntax, no new kernel word, no ambient policy.
+mapping, `guest_requests: 0`, existing file bounds and create-new publication. `--static`
+names 0-based input-leaf indices, which is the same order as the graph's `input` slots and as
+the static map. `readmit` receives `noble_contracts::Limits` explicitly so its caller chooses
+the ordinary frontend policy rather than a hidden library default. No new source syntax, no
+new kernel word, no ambient policy.
 
 **Rationale:** every existing subcommand in this profile is a thin composition root over the
 library; a second parsing or evaluation path here would be a second contract.
@@ -244,10 +264,10 @@ library; a second parsing or evaluation path here would be a second contract.
 `accounting` (`ngraph-pe/0`), `original_graph` (32-byte id), `residual_graph` (32-byte id),
 `static_inputs` (the accepted map, indexed by input leaf), `dynamic_inputs` (the residual
 interface types), `original_nodes`, `folded`, `pruned`, `residual_nodes`, `variants`, plus, at
-the CLI, `source_sha256` of the emitted text and the re-admitted graph id. This is the set #33
-binds in its build key: subject identity (D5), static map, accounting revision, both graph
-ids and the residual source digest. Nothing in the record is trusted by a consumer: the
-consumer recomputes the ids from files.
+the CLI, `source_blake3` (the BLAKE3 digest of the emitted text) and the re-admitted graph
+id. This is the set #33 binds in its build key: subject identity (D5), static map, accounting
+revision, both graph ids and the residual source digest. Nothing in the record is trusted by
+a consumer: it recomputes the ids from files.
 
 **Rationale:** a cache keyed on a producer's self-reported relation is exactly the defect #33
 must avoid; the record is an index into recomputable facts.
@@ -310,25 +330,44 @@ The frozen protocol (committed before any measurement it governs) is:
   input positions and one empty map.
 - **Differential.** For each fixture and 1,000 seeded vectors per graph: L3 and L4 of the
   original under `merge(σ, d)`, L3 and L4 of the residual under `d`, L3 and L4 of the graph
-  re-admitted from the emitted residual source under `d`, and (when `NOBLE_NODE` is set) the
-  Node BigInt oracle on the original. Every pair must agree under `≡obs`. Agreement is
-  finite differential evidence, not a proof.
+  re-admitted from the emitted residual source under `d`, and the Node BigInt oracle on the
+  original, residual and re-admitted graphs. The BigInt leg is an ignored B2 test run with
+  the pinned `NOBLE_NODE`. Every pair must agree under `≡obs`. Agreement is finite
+  differential evidence, not a proof. The seeded B2 Core-program sample also tries 16
+  programs under two static maps each; map pairs whose emitted `let` source exceeds the
+  ordinary Declared-Text-v1 frontend node limit are expected `E-SUBJECT` refusals, not
+  mismatches, and at least half of the pairs must be compared through both evaluators and
+  re-admission. The ignored Node leg uses 1,000 vectors per accepted pair.
 - **Negative / zero host requests.** effectful (`E-EFFECT`), resource (`E-RESOURCE`) and
   recursive (`E-RECURSION`) subjects from the existing B3 control set are refused before any
   graph exists, so `specialize` — which takes an admitted graph — is unreachable for them;
-  the CLI controls assert the code, the stage and that no output file exists. The zero-host
-  claim is a property of the profile, not a counter in its report: `noble-ngraph` executes no
-  host effect and the command spawns no process. The Core-Bootstrap profile is *not* the
-  same profile — it grants `test.emit`/`test.abort` test hosts and really does execute
-  `"hi" test.emit 5` (measured: one guest request) — so a Core session report is never used
-  as evidence for this profile, and the controls record that distinction explicitly.
+  the extraction controls assert the code and no graph. For the CLI-representable effectful
+  refusal, the black-box test asserts `guest_requests: 0` and no output file. The
+  resource-input subject and forged recursive subject are library-only:
+  `ngraph extract` accepts scalar input types and cannot manufacture the resource subject; the
+  recursive `Submission` is forged from accepted source then mutated before extraction, not
+  constructed through public recursion syntax. The B3 resource row marks its ordinary Core path
+  not expressible, and the recursive row separately records the ordinary-source frontend
+  refusal; neither ordinary control is treated as evidence for the extraction refusal's
+  `guest_requests` count.
+  `noble-ngraph` executes no host effect and the command spawns no process. The
+  Core-Bootstrap profile is *not* the same profile — it grants `test.emit`/`test.abort` test
+  hosts and really does execute `"hi" test.emit 5` (measured: one guest request) — so a Core
+  session report is never used as evidence for this profile, and the controls record that
+  distinction explicitly.
 - **Budget ladder.** below/at/above each cap: a `RESIDUAL-NODES` refusal at
-  `residual_nodes - 1`, acceptance at exactly `residual_nodes`, and a `VARIANTS` refusal at
-  `0`; plus a raised cap refused with `E-PROFILE`.
-- **Measurement.** Per fixture: `original_nodes`, `residual_nodes`, `folded`, `pruned`,
-  total L3 and L4 node visits on each side over the vectors, retained bytes of each compiled
-  graph, and specialization elapsed time measured only in the harness (the library reports
-  counts, never time). Reported in a receipt; no threshold and no adoption decision.
+  `residual_nodes - 1`, acceptance at exactly `residual_nodes` and one above; a `VARIANTS`
+  refusal at `0`, acceptance at `1` and a raised cap at `2` refused with `E-PROFILE`. A cap
+  above the default residual-node value is also refused with `E-PROFILE`.
+- **Measurement.** Per fixture: `original_nodes`, `residual_nodes`, `folded`, `pruned`, total
+  L3 and L4 node visits on each side over the vectors, retained bytes of each compiled graph,
+  `specialization_ns` timed around only the checked-graph specialization call,
+  residualization/readmission pipeline elapsed time, and evaluator time. `cold_eval_ns` is the first
+  single-vector evaluation after graph construction; `warm_eval_ns_total` is one 1,000-vector
+  batch after one untimed warm-up. Both have distinct L3/L4 rows for original, residual and
+  re-admitted graphs. Timing is measured only in the harness (the library reports counts,
+  never time); it is descriptive and has no threshold or adoption decision. The receipt binds
+  the clean source commit and records the seed and vector count.
 
 ## Risks / Trade-offs
 
