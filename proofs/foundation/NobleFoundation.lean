@@ -50,6 +50,7 @@ import NobleFoundation.TaskInterleaving
 import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.InteractionNetOrientation
+import NobleFoundation.NetLabelled
 import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse

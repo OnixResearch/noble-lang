@@ -3556,6 +3556,24 @@ The clean-source receipt for the orientation analysis is
 (1005 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+## Labelled DUP/SUP interaction system (issue #105, selected v3)
+
+[`NobleFoundation/NetLabelled.lean`](NobleFoundation/NetLabelled.lean) defines
+the labelled DUP/SUP rules as an `INet.System` over the pinned vendored inets
+library. It proves rule well-formedness and mirror symmetry, instantiates
+strong confluence, unique normal forms with equal reduction lengths, and the
+conditional reduction bound. The finite model also checks bounded labelled
+net validation and complete ordered readback/collapse, with equal-label,
+different-label, OP1-SUP, OP2-SUP, and plain-v3 fixtures plus seeded semantic
+faults.
+
+**Gate decision:** model-only GO; runtime HOLD pending the #37 Rust-backend
+decision and #105-specific runtime evidence. This model is not a Rust reducer,
+source-to-net translation, runtime resource proof, or backend selection. See
+the [labelled-lane README](../../verification/labelled-sup/README.md),
+[gate decision](../../verification/labelled-sup/decision.md), and
+[selected v3 contract](../../docs/i64-net-contract-v3.md).
+
 ## Static-input specialization model (issue #32, phase 1)
 
 `NobleFoundation/Specialize.lean` defines a static map
