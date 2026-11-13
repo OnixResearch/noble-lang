@@ -2,11 +2,13 @@
 
 `execution.mjs` executes the `behavioral-effect-protocol` scenarios against the bounded-region adapter. It uses the CLI built from the checked-out commit and the `noble-bounded-region/v2` report. `monitor.mjs` replays each recorded trace against the RegionProtocol-v1 transition table.
 
+The opt-in v2 trace holds 256 events, enough for case 03's complete 196-event scope-ceiling trace. The default v1 report remains capped at 64 events with its existing event encoding and truncation flag; v2 does not change retained v1 receipts.
+
 Run it from a clean checkout with the selected Node and an empty environment:
 
 ```sh
 env -i HOME="$HOME" PATH=/run/current-system/sw/bin GIT_TERMINAL_PROMPT=0 \
-  "$(node -p 'require("./policy/tool-selection.json").tool_paths.node.output')/bin/node" \
+  /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
   verification/effect-protocol/execution.mjs NEW_EXTERNAL_DIRECTORY
 ```
 
@@ -18,7 +20,7 @@ The lane does the following:
 4. It runs every scenario as one public `noble component read-region --report v2` invocation.
 5. It checks each expected observation, then the monitor's verdicts.
 
-Every executed scenario must end with no live owner, no native pin, no lost owner and no native memory access. Unless its trace is truncated, it must also hold exactly one release commit. Its report must name the owner the host registered before guest start (`registration.identity`), and every event must carry that identity, a host retirement included (#50). `NEW_EXTERNAL_DIRECTORY/execution.json` retains, for every scenario:
+Every executed scenario must end with no live owner, no native pin, no lost owner and no native memory access. Unless its trace is truncated, it must also hold exactly one release commit; no executed scenario truncates, because the `noble-bounded-region/v2` trace is bounded above the scope ceiling's own trace (#50). Its report must name the owner the host registered before guest start (`registration.identity`), and every event must carry that identity, a host retirement included (#50). `NEW_EXTERNAL_DIRECTORY/execution.json` retains, for every scenario:
 - the full v2 report, which includes the trace prefix;
 - the monitor result;
 - the component bytes, in base64, with their hashes;
@@ -36,7 +38,7 @@ The executed scenarios are registered as `specs/conformance/effect-protocol-case
 |---|---|---|
 | 01 | compiled subject, `(1,2)` and `(3,0)` | `read` of `0102` and of nothing. The trace is a read, its commit, a value response and a guest release. No verdict. |
 | 02 | compiled subject, `(3,1)`, `(2,2)`, `(-1,1)`, `(i64::MAX,1)` | `bounds-reject` with no commit and a `bounds` refusal, then the guest release. |
-| 03 | hostile: 65 reads | 64 commits. The 65th read is refused as `scope-exhausted` and the guest sees `invalid-handle`. The trace is truncated at 64 events, so the monitor judges only the prefix. Forged and cross-host claims are direct `Host::read` fixtures, because a guest always presents the retained handle. |
+| 03 | hostile: 65 reads | 64 commits. The first 64 reads produce 192 events; the refused 65th read and the guest's release add four, for a complete, untruncated 196-event v2 trace. The 65th read is refused as `scope-exhausted` and the guest sees `invalid-handle`; the monitor judges the whole trace, making it the pilot's runtime host-refusal trace. Forged and cross-host claims are direct `Host::read` fixtures, because a guest always presents the retained handle. |
 | 04 | hostile: read, then `unreachable` | `trap` after the commit; the host retires the owner for reason `trap`. |
 | 05 | hostile: `unreachable` first | `trap` with no read; the host retires the owner. |
 | 06 | compiled subject, `--fuel` | A search finds the smallest fuel that reaches the read. At that fuel the quota is exhausted after the commit and before the release. One unit less never reaches the read. |

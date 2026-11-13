@@ -15,9 +15,11 @@ before any guest request, have no decision for the retired identity, so `related
 relate under the registration premise (`relatedFrom`) with the identity the host's report names as
 registered, never one taken from the retirement, and a forged retirement identity stays refused.
 
-These are finite tests of recorded traces. The exit class is outside `ObservedEvent`, so a trap, a
-quota exhaustion and a cancellation that leave the same events lower to the same trace. No
-correspondence between emitted-component steps and the model is claimed.
+These are finite tests of recorded traces. The report's exit class is inserted before any
+post-exit retirement, so a trap, a quota exhaustion and a cancellation that leave the same events
+still lower to *distinct* target steps, while projecting to the same source trace. A conformant return (`normal`,
+`rejected`) adds no exit step. No correspondence between emitted-component steps and the model is
+claimed.
 -/
 
 namespace RegionTrace
@@ -184,7 +186,7 @@ theorem runtime_case02_bounds_9223372036854775807_1_refuses_an_unexplained_commi
       (lower (runtime_case02_bounds_9223372036854775807_1 ++ [.protectedReadCommit 1 7 1])) = false := by
   decide
 
-/-- EPROTO-CASE-03 scope-exhaustion: exit `rejected`, its trace truncated at the host's 64-event bound. -/
+/-- EPROTO-CASE-03 scope-exhaustion: exit `rejected`, its trace truncated at the host's v2 event bound. -/
 def runtime_case03_scope_exhaustion : List ObservedEvent :=
   [.request .regionRead 1 0 1,
    .protectedReadCommit 1 0 1,
@@ -395,6 +397,7 @@ def runtime_case04_trap_after_commit : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .trap,
    .hostRetirement 1]
 
 theorem runtime_case04_trap_after_commit_relates :
@@ -418,7 +421,8 @@ theorem runtime_case04_trap_after_commit_refuses_an_unexplained_commit :
 
 /-- EPROTO-CASE-05 trap-before-use: exit `trap`. -/
 def runtime_case05_trap_before_use : List ObservedEvent :=
-  [.hostRetirement 1]
+  [.exit .trap,
+   .hostRetirement 1]
 
 /-- Without a registration premise, no decision authorises the retirement and
 `identitiesDecided` refuses it. -/
@@ -447,6 +451,7 @@ def runtime_case06_fuel_74 : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .quotaExhaustion,
    .hostRetirement 1]
 
 theorem runtime_case06_fuel_74_relates :
@@ -470,7 +475,8 @@ theorem runtime_case06_fuel_74_refuses_an_unexplained_commit :
 
 /-- EPROTO-CASE-06 fuel-73: exit `quota-exhausted`. -/
 def runtime_case06_fuel_73 : List ObservedEvent :=
-  [.hostRetirement 1]
+  [.exit .quotaExhaustion,
+   .hostRetirement 1]
 
 /-- Without a registration premise, no decision authorises the retirement and
 `identitiesDecided` refuses it. -/
@@ -499,6 +505,7 @@ def runtime_case07_cancel_between_two_reads : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .cancelled,
    .hostRetirement 1]
 
 theorem runtime_case07_cancel_between_two_reads_relates :
@@ -525,6 +532,7 @@ def runtime_case07_cancel_a_computing_guest : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .cancelled,
    .hostRetirement 1]
 
 theorem runtime_case07_cancel_a_computing_guest_relates :
@@ -551,6 +559,7 @@ def runtime_case07_same_guest_uncancelled : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .quotaExhaustion,
    .hostRetirement 1]
 
 theorem runtime_case07_same_guest_uncancelled_relates :
@@ -577,6 +586,7 @@ def runtime_case07_cancel_the_compiled_subject : List ObservedEvent :=
   [.request .regionRead 1 1 2,
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
+   .exit .cancelled,
    .hostRetirement 1]
 
 theorem runtime_case07_cancel_the_compiled_subject_relates :
@@ -627,7 +637,8 @@ theorem runtime_case08_omitted_release_refuses_an_unexplained_commit :
 /-- EPROTO-CASE-09 double-release: exit `adapter-invalid`. -/
 def runtime_case09_double_release : List ObservedEvent :=
   [.request .guestRelease 1 0 0,
-   .response .guestRelease none none]
+   .response .guestRelease none none,
+   .exit .adapterInvalid]
 
 theorem runtime_case09_double_release_relates :
     related
@@ -647,7 +658,8 @@ theorem runtime_case09_double_release_refuses_an_unexplained_commit :
 /-- EPROTO-CASE-09 read-after-release: exit `adapter-invalid`. -/
 def runtime_case09_read_after_release : List ObservedEvent :=
   [.request .guestRelease 1 0 0,
-   .response .guestRelease none none]
+   .response .guestRelease none none,
+   .exit .adapterInvalid]
 
 theorem runtime_case09_read_after_release_relates :
     related
@@ -667,7 +679,8 @@ theorem runtime_case09_read_after_release_refuses_an_unexplained_commit :
 /-- EPROTO-CASE-11 unmodeled-error: exit `outside-model`. -/
 def runtime_case11_unmodeled_error : List ObservedEvent :=
   [.request .guestRelease 1 0 0,
-   .response .guestRelease none none]
+   .response .guestRelease none none,
+   .exit .outsideModel]
 
 theorem runtime_case11_unmodeled_error_relates :
     related
@@ -690,7 +703,8 @@ def runtime_case11_short_ok : List ObservedEvent :=
    .protectedReadCommit 1 1 2,
    .response .regionRead (some 2) none,
    .request .guestRelease 1 0 0,
-   .response .guestRelease none none]
+   .response .guestRelease none none,
+   .exit .outsideModel]
 
 theorem runtime_case11_short_ok_relates :
     related

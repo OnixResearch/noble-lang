@@ -330,6 +330,8 @@
             "outcome": "invalid-handle",
             "exit_class": "rejected",
             "region_reads": 64,
+            "events_truncated": false,
+            "event_count": 196,
             "releases": {
               "guest": 1,
               "destructor": 0,
@@ -338,9 +340,7 @@
             "refusals.scope-exhausted": 1,
             "refusals.identity": 0,
             "refusals.bounds": 0,
-            "monitor_verdicts": [
-              "truncated"
-            ]
+            "monitor_verdicts": []
           },
           "forged-and-cross-host-claims": {
             "tests_passed": [
@@ -363,7 +363,7 @@
         {
           "kind": "test",
           "subject": "EPROTO-CASE-03",
-          "claim": "A hostile component gets 64 region-read commits, and its 65th read is refused `invalid-handle` and counted as scope exhaustion, apart from identity and bounds refusals. The host bounds the trace at 64 events, and the monitor reports `truncated`. Direct host fixtures refuse forged and cross-host claims without reading or consuming the region.",
+          "claim": "Historical execution from source 3ef3f43a: a hostile component gets 64 region-read commits, and its 65th read is refused `invalid-handle` and counted as scope exhaustion, apart from identity and bounds refusals. At that revision the host bounded the trace at 64 events and the monitor reported `truncated`; a later execution records the complete trace. Direct host fixtures refuse forged and cross-host claims without reading or consuming the region.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
           "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",

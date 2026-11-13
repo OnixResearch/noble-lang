@@ -292,6 +292,7 @@ function scenario(context, {
   const observed = {
     outcome: report.outcome, exit_class: report.exit_class, bytes_hex: report.bytes_hex,
     trace: kinds(report), region_reads: report.region_reads,
+    events_truncated: report.events_truncated, event_count: report.events.length,
     releases: report.releases, retirement_reason: report.cleanup.retirement_reason,
     cleanup_state: report.cleanup.state,
   };
@@ -486,16 +487,37 @@ function main() {
     });
   }
 
-  // EPROTO-CASE-03 (i): 65 in-bounds reads meet the scope ceiling. The trace is bounded at 64
-  // events, so the counts carry the 65th read's class.
-  scenario(context, {
+  // EPROTO-CASE-03 (i): 65 in-bounds reads meet the scope ceiling. The v2 bound reaches the
+  // refusal (three events per admitted read, then the refused read and the guest's release), so the
+  // trace itself records the host's refusal of the read past the ceiling instead of truncating.
+  const exhaustion = scenario(context, {
     id: 'EPROTO-CASE-03', variant: 'scope-exhaustion', kind: 'hostile-component',
     component: hostile['scope-exhaustion'], offset: 0, length: 1,
     expected: { outcome: 'invalid-handle', exit_class: 'rejected', region_reads: 64,
+      events_truncated: false, event_count: 3 * 64 + 4,
       releases: { guest: 1, destructor: 0, host_retirement: 0 },
       'refusals.scope-exhausted': 1, 'refusals.identity': 0, 'refusals.bounds': 0 },
-    verdicts: ['truncated'],
+    verdicts: [],
   });
+  {
+    const { events, events_truncated: truncated } = exhaustion.observed;
+    requireThat(!truncated, 'EPROTO-CASE-03: the v2 trace still truncates before the scope ceiling');
+    requireThat(events.length === 3 * 64 + 4,
+      `EPROTO-CASE-03: the trace records ${events.length} events, not the whole ceiling trace`);
+    const [request, refusal] = events.slice(-4, -2);
+    requireThat(request.kind === 'request' && request.operation === 'region.read'
+      && request.offset === 0 && request.length === 1,
+    `EPROTO-CASE-03: the read past the ceiling is not recorded: ${stable(request)}`);
+    requireThat(refusal.kind === 'response' && refusal.result === 'refused'
+      && refusal.reason === 'invalid-handle' && refusal.host_class === 'scope-exhausted',
+    `EPROTO-CASE-03: the host's refusal is not recorded as the runtime host-refusal trace: ${stable(refusal)}`);
+    const [release, answer] = events.slice(-2);
+    requireThat(release.kind === 'request' && release.operation === 'region.release'
+      && answer.kind === 'response' && answer.result === 'value',
+    'EPROTO-CASE-03: the guest release after the refusal is not recorded');
+    requireThat(exhaustion.monitor.release_commits === 1,
+      `EPROTO-CASE-03: the complete trace has ${exhaustion.monitor.release_commits} release commits`);
+  }
   const fixtures = hostFixtureTests(cargo, cliEnv);
   cases.push({
     id: 'EPROTO-CASE-03', variant: 'forged-and-cross-host-claims', kind: 'direct-host-fixture',

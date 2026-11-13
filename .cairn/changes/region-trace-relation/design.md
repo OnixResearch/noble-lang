@@ -1,6 +1,6 @@
 ## Context
 
-Grounded at worktree HEAD `1b581105` (issue #50 cites `2c96d4c1`; the cited
+Grounded at the worktree baseline `fed77835` (issue #50 cites `2c96d4c1`; the cited
 facts still hold):
 
 - `.cairn/changes/behavioral-effect-protocol/design.md` is an accepted design.
@@ -31,11 +31,12 @@ facts still hold):
 ### Decision: relate traces over the protocol's own event classes, not over a new calculus
 
 **Choice:** the source alphabet is `RegionProtocol-v1`'s `Req`/`Resp`/`Commit`
-events. The target alphabet is the emitted ABI step sequence the bounded-region
-host actually performs — the Canonical-ABI import crossing, the host decision
-steps, the protected copy, the return, the abnormal-exit class, and the
-post-return cleanup or retirement. The relation is defined first; the properties
-are *derived* from it.
+events. The target alphabet is a handwritten sequence of abstract ABI/host steps
+for the bounded-region operation — the Canonical-ABI import crossing, host
+decision, protected copy, return, abnormal-exit class, and post-return cleanup or
+retirement. It is not claimed to be the emitted step sequence of a particular
+component or engine. The relation is defined first; the properties are *derived*
+from it.
 
 **Rationale:** the TOPLAS discipline is explicit that a relation between
 non-identical traces does not preserve arbitrary properties, so anything not
@@ -59,15 +60,18 @@ onto the guest.
 ### Decision: preserve the trap/quota/cleanup distinction instead of one trap class
 
 **Choice:** the target model carries the abnormal-exit class, the quota/fuel
-boundary and the cleanup outcome as separate observations. Where the current host
-collapses them into `adapter-trap`, the pilot names the exact observation needed
-to separate them, and an absent observation stays **unknown** rather than being
-filled in with a successful protocol outcome.
+boundary and the cleanup outcome as separate observations. The opt-in v2 host
+report records `normal`, `rejected`, `trap`, `quota-exhausted`, `cancelled`,
+`adapter-invalid` and `outside-model`, plus cleanup state/reason and fuel left.
+The runtime fixtures lower the reported abnormal-exit class before post-exit
+retirement; an absent class stays **unknown** rather than being filled in with a
+successful protocol outcome. A refused cleanup is retained at the host method but
+is not guest-reachable.
 
 **Rationale:** the host already distinguishes `Err(error)` from a rejected
-response carrying a reason string, but its single outcome label discards that
-difference. A theorem stated over a coarse label would be a theorem about the
-label, not the execution.
+response carrying a reason string. The new v2 observation keeps those classes
+distinct without changing the v1 schema or trace prefix. A theorem stated over a
+coarse label would be a theorem about the label, not the execution.
 
 ### Decision: cost/fuel is an explicit relation, never a free trap clause
 
@@ -100,53 +104,73 @@ assumptions stay visible until established separately.
 **Rationale:** two handwritten machines give a model theorem. Claiming more
 would need the emitted-step correspondence, which is #10's territory.
 
-## Risks / Trade-offs
+### Decision: no production fault-injection seam for cleanup failure
 
-- The pilot's observation surface is small: only a read-then-release execution
-  has been exercised, so most of the fixture set (trap, exhaustion, quota-prefix,
-  cleanup failure, destructor release) needs instrumentation that does not exist
-  yet. That is the pilot's cost, not a hidden assumption.
-- Distinguishing quota from trap may require a host-side observation change;
-  until then those classes stay unknown, so some corollaries stay conditional.
-- Unsupported cancellation remains unsupported: there is no real control to
-  cancel, so no cancellation lane is modelled.
-- The relation can be made vacuous by declaring an unbounded erasure class; the
-  per-class justification requirement is the guard, and it is a proof obligation
-  rather than a syntactic check.
+**Choice:** the pilot does not add a seam to the production host that would let it
+fail a retirement on demand. The refused-retirement observation is modelled
+(`ObservedEvent.retirementRefused`, which lowers to the cleanup-failure exit class
+and commits nothing) and the generator accepts a refused `host.retire` when a run
+records one. The checker exercises that generator branch with a synthetic control;
+no executed case produces the observation.
 
-## Proof obligations
+**Rationale:** the only way to reach a refused retirement today is a corrupted
+host context, which a guest cannot produce. The retained evidence for that path is
+the test-only host fixture `cleanup-release-refusal-retains-owner` in
+`verification/host-locality/evidence-1bf39a52.json`, and the model proof is
+`cleanup_failure_is_selected_invoked_and_retained` in `proofs/m5/HostLocality.lean`.
+Adding a production seam to manufacture the observation would put a fault-injection
+affordance in the shipped adapter, which is a larger risk than the gap it closes.
 
-Named here, not discharged by this package:
+**Reopen if:** a real API path (for example a retirement refused because the owner
+was already retired by another path) becomes guest-reachable, or the owner
+authorises an explicitly test-only, feature-gated seam.
 
-- the relation itself (a Lean definition with named source/target alphabets);
-- per-class erasure justifications;
-- prefix compatibility and the RegionProtocol corollaries (permitted ordered
-  prefixes, no forged identity, no unexplained read commit, at-most-once
-  release/retirement under the declared host, identity, cost and cleanup
-  premises);
-- the cost/accounting relation that keeps the committed prefix across a fuel
-  boundary;
-- the correspondence route, kept separate from the model theorems.
+### Decision: no Lentil pin
 
-## Fixtures (future, unchecked here)
+**Choice:** the Lentil projection from #50's follow-on comment is not pinned or
+imported. The issues it raises are recorded instead: the finite traces embed as a
+terminal-padded `Nat → state` only after the relation exists, and any progress
+claim belongs to a separate temporal theorem under named fairness assumptions.
 
-- normal success (`region.read`, then `regions.release`, normal return);
-- ordinary error (rejected response with a reason);
-- host refusal (identity or bounds);
-- trap;
-- quota prefix (fuel exhaustion after a committed prefix);
-- unsupported cancellation, explicitly not modelled.
+**Rationale:** Lentil's moving main requires Lean 4.34.1 while this pilot is on
+4.35.0, and the comment itself defers the progress gate to #46. Pinning an
+incompatible dependency would either force a toolchain move this package does not
+need or leave an unbuildable dependency in the tree.
 
-Controls: swapped requests, substituted responses, substituted resource
-identity, an erased denial, a missing protected commit, host cleanup disguised
-as a guest release, and cleanup-selection vs cleanup-invocation vs successful
-retirement distinguished with cleanup-failure evidence retained.
+**Reopen if:** #46 defines a progressing transition system and its runtime
+observation mapping, and a compatible pinned closure is available.
+
+## Evidence and remaining boundaries
+
+The model and finite fixtures are implemented and kernel-checked. The event
+relation enforces response pairing (while permitting an unmatched final request
+at a truncated prefix), exact identity, read-commit explanation and at-most-once
+release/retirement; the two erased bookkeeping classes have per-scan preservation
+proofs. Runtime fixtures cover normal success, ordinary refusal, the complete
+scope-exhaustion refusal, traps, quota boundaries, cancellations, omitted release,
+adapter-invalid results and outside-model results. Controls cover swapped
+requests/responses, substituted values and identities, missing or unexplained
+commits, erased denials, release/retirement confusion, and an empty-input-only
+lowering.
+
+The remaining boundary is deliberate: the source/target relation is a theorem
+about handwritten alphabets. The region-trace receipt binds the effect-protocol
+observations and their source, component, helper and engine revisions, along with
+the model revision it checks; the correspondence route is named, but no
+emitted-component/Canonical-ABI/Wasmtime step correspondence is proved. Cleanup
+selection, invocation and failed-retirement retention are proved/tested at the
+host method, not guest-reachable; no production fault-injection seam is added. The
+`--cancel-after-reads` lane is a real host test control, not a general asynchronous
+cancellation API. No liveness, eventual return, rollback, or host-death cleanup
+claim is made. Per-class erasure justification remains a model proof obligation,
+not a syntactic check.
 
 ## Non-claims
 
-- No completed compiler proof, no source-to-artifact correctness claim and no
-  claim about a real Wasmtime instance beyond what the correspondence route
-  establishes.
-- No liveness, rollback, cancellation-support or cleanup-after-host-death claim.
-- No instrumentation is added by this package, and the accepted `#9` design is
-  not reopened.
+- No source-to-artifact correctness or emitted-step correspondence claim. The
+  runtime receipt is finite execution evidence and does not establish the named
+  Canonical-ABI/Wasmtime route.
+- No liveness, rollback, general cancellation API or cleanup-after-host-death
+  claim.
+- The opt-in host report is instrumentation for the existing bounded-region
+  route; the accepted `#9` protocol design is not reopened.
