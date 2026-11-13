@@ -7766,6 +7766,216 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_num_pos",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a spelling with nonzero digit value has a positive decimal numerator"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactValue_signedMagnitude",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "signed magnitude encodings interpret as the positive rational or its negation"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_nonzero_encoding",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a nonzero spelling rounds its positive decimal ratio once and then applies its sign"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_exactValue_absolute_error",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a nonzero finite decimal RNE result is within half its binade spacing, with the subnormal spacing below the normal range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactImport_accepts_representable_rne",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a finite RNE encoding whose scaled magnitude matches its decimal spelling is accepted by exact import"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_mixed_error",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "finite I64-to-F32 RNE conversion has the shared mixed error bound under explicit nonzero and finite premises"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.truncateScaled_division_identity",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "a negative scaled integer division reconstructs its numerator from truncating quotient and signed remainder"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_success_range",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "every successful F32-to-I64 truncation result is in signed I64 range"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_success_value",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "every successful F32-to-I64 truncation result equals the model's truncating integer value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_success_value",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "every successful exact F32-to-I64 conversion preserves the binary32 rational value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_refuses_fractional",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "an in-range finite fractional F32 value is refused by exact conversion as inexact"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_signed_zero",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "both signed binary32 zeros truncate to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_signed_zero",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "both signed binary32 zeros convert exactly to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_zero",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "I64 zero rounds to the unique positive binary32 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_twoPow24_plus_one",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the positive 2^24 plus one tie rounds to the even lower binary32 value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_twoPow24_plus_three",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the positive 2^24 plus three tie rounds to the even upper binary32 value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_negative_twoPow24_plus_one",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the negative 2^24 plus one tie rounds to the even lower-magnitude binary32 value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_negative_twoPow24_plus_three",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the negative 2^24 plus three tie rounds to the even upper-magnitude binary32 value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_minimum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "I64 minimum rounds to its exact binary32 value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_minimum_succ",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the I64 value adjacent above minimum rounds without signed wraparound"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_maximum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "I64 maximum rounds to the binary32 value 2^63"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_maximum_pred",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the I64 value adjacent below maximum rounds to binary32 2^63"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Exact_minimum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "exact I64 minimum conversion succeeds"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Exact_maximum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "exact I64 maximum conversion refuses the inexact rounded value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_positive_fraction",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "positive one-half truncates toward zero to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_negative_fraction",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "negative one-half truncates toward zero to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_subnormal_underflow",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the least positive subnormal truncates to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_negative_subnormal_underflow",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the least negative subnormal truncates to I64 zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_minimum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "binary32 negative 2^63 truncates successfully to I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_minimum",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "binary32 negative 2^63 converts exactly to I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_positive_overflow",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "positive 2^63 refuses rather than wrapping or saturating to I64 maximum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_positive_overflow",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "exact conversion of positive 2^63 refuses with overflow"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_negative_overflow",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the value below I64 minimum refuses rather than wrapping or saturating"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Trunc_infinity_and_nan",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "positive and negative infinities and NaNs refuse under truncating conversion"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.f32ToI64Exact_infinity_and_nan",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "positive and negative infinities and NaNs refuse under exact conversion"
     }
   ],
   "private_theorems": [
