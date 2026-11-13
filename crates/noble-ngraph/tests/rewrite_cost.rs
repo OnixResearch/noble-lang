@@ -20,7 +20,7 @@
 //! derivations stay in the denominator, with later stages explicitly not reached.
 //!
 //! The continuation thresholds come from the frozen manifest
-//! `verification/ngraph/rewrite-cost-v2.txt`. Fresh attempts and reused compiled/workspace execution
+//! `verification/ngraph/rewrite-cost-v3.txt`. Fresh attempts and reused compiled/workspace execution
 //! are measured separately; no OS-cache-cold, allocator/RSS or Lean correspondence claim is made.
 
 mod common;
@@ -96,7 +96,8 @@ fn a_valid_certificate_cannot_bypass_candidate_admission() {
     reason = "Owner: noble-maintainers; this regression executes source and certificate refusal paths and observes actual evaluation counters."
 )]
 fn source_and_certificate_refusals_stop_at_their_own_boundaries() {
-    let invalid_source = corpus_graph("independent-folds");
+    let mut invalid_source = corpus_graph("independent-folds");
+    invalid_source.outputs = vec![noble_ngraph::ir::NodeId(5)];
     let input = pipeline::measure(&invalid_source, noble_ngraph::cert::Proposer::Identity, 2);
     assert_eq!(input.disposition, "input-refused");
     assert_eq!(input.baseline_execution_calls, 0);
@@ -107,6 +108,42 @@ fn source_and_certificate_refusals_stop_at_their_own_boundaries() {
     assert_eq!(certificate.disposition, "certificate-refused");
     assert!(certificate.baseline_execution_calls > 0);
     assert_eq!(certificate.candidate_execution_calls, 0);
+}
+
+#[test]
+fn v2_ordered_and_repeated_outputs_are_source_admitted() {
+    let cases: [(&str, &[u32], &[i64]); 3] = [
+        ("independent-folds", &[2, 5], &[12, 7]),
+        ("ordered-outputs", &[4, 2], &[12, 5]),
+        ("repeated-outputs", &[2, 2], &[12, 12]),
+    ];
+    for (name, expected_nodes, expected_values) in cases {
+        let graph = corpus_graph(name);
+        assert_eq!(
+            graph
+                .outputs
+                .iter()
+                .map(|output| output.0)
+                .collect::<Vec<_>>(),
+            expected_nodes,
+            "{name}: output order and multiplicity are frozen"
+        );
+        let checked = noble_ngraph::check(&common::IDS, graph)
+            .expect("each explicit-output graph is admitted by the source checker");
+        let observed =
+            noble_ngraph::reference(&checked, &[], None, &mut noble_ngraph::Control::default());
+        assert_eq!(
+            observed.obs,
+            noble_ngraph::Obs::Normal(
+                expected_values
+                    .iter()
+                    .copied()
+                    .map(noble_ngraph::Value::I64)
+                    .collect()
+            ),
+            "{name}: evaluated values preserve the declared output vector"
+        );
+    }
 }
 
 #[test]

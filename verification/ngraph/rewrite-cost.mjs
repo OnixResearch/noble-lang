@@ -1,7 +1,7 @@
 // Issue #64 cost-lane receipt runner.  This runner deliberately stays outside the Rust
 // measurement path: it binds the selected offline toolchain and source snapshot, executes the
-// real rewrite_cost integration test, and retains the unmodified process streams beside the v2
-// receipt.  A failed process is evidence, not a reason to retry with a different environment.
+// real rewrite_cost integration test, and retains the unmodified process streams beside the v3
+// receipt. A failed process is evidence, not a reason to retry with a different environment.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -12,8 +12,8 @@ import { reviewedVendorRecipe, selectedVendor } from '../selected-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const scriptRelative = 'verification/ngraph/rewrite-cost.mjs';
-const manifestRelative = 'verification/ngraph/rewrite-cost-v2.txt';
-const corpusRelative = 'verification/ngraph/rewrite-quality-v1.txt';
+const manifestRelative = 'verification/ngraph/rewrite-cost-v3.txt';
+const corpusRelative = 'verification/ngraph/rewrite-quality-v2.txt';
 const policyRelative = 'policy/tool-selection.json';
 const commandArgs = Object.freeze([
   'test', '-p', 'noble-ngraph', '--test', 'rewrite_cost', '--offline', '--locked', '--', '--nocapture',
@@ -103,7 +103,7 @@ function gitRun(...argv) {
 function parseManifest(text) {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
   const schema = lines.find(line => line.startsWith('schema '));
-  requireThat(schema === 'schema noble-rewrite-cost/v2', 'rewrite cost manifest is not v2');
+  requireThat(schema === 'schema noble-rewrite-cost/v3', 'rewrite cost manifest is not v3');
   const corpus = lines.find(line => line.startsWith('corpus '));
   requireThat(corpus === `corpus ${path.basename(corpusRelative)}`, 'rewrite cost corpus binding changed');
   const lens = [];
@@ -134,21 +134,49 @@ function parseManifest(text) {
   requireThat(new Set(stages.map(stage => stage.name)).size === stages.length,
     'rewrite cost manifest repeats a stage');
   requireThat(threshold !== null, 'rewrite cost manifest has no retention threshold');
-  return { schema: 'noble-rewrite-cost/v2', corpus: path.basename(corpusRelative), lens, stages, threshold };
+  return { schema: 'noble-rewrite-cost/v3', corpus: path.basename(corpusRelative), lens, stages, threshold };
 }
 
 function parseCorpus(text) {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-  requireThat(lines.includes('schema noble-rewrite-quality/v1'), 'rewrite quality corpus schema changed');
+  requireThat(lines.includes('schema noble-rewrite-quality/v2'), 'rewrite quality corpus schema changed');
+  const reviewedOutputs = new Map([
+    ['independent-folds', [2, 5]],
+    ['single-fold', [2]],
+    ['chained-folds', [4]],
+    ['ordered-outputs', [4, 2]],
+    ['shared-operand', [3]],
+    ['wrapping-boundary', [2]],
+    ['operand-order', [2]],
+    ['repeated-outputs', [2, 2]],
+  ]);
   const fixtures = [];
   for (const line of lines) {
-    const match = line.match(/^fixture ([^|]+) \| target ([^|]+) \| nodes (.+)$/u);
-    if (!match) continue;
-    fixtures.push({ name: match[1].trim(), target: match[2].trim() });
+    if (!line.startsWith('fixture ')) continue;
+    const [namePart, targetPart, outputsPart, nodesPart, ...extra] = line.split('|').map(part => part.trim());
+    requireThat(extra.length === 0 && namePart?.startsWith('fixture ') &&
+      targetPart?.startsWith('target ') && outputsPart?.startsWith('outputs ') &&
+      nodesPart?.startsWith('nodes '), `malformed explicit-output fixture: ${line}`);
+    const name = namePart.slice('fixture '.length).trim();
+    const target = targetPart.slice('target '.length).trim();
+    const outputText = outputsPart.slice('outputs '.length).trim();
+    requireThat(/^[0-9]+(?:,[0-9]+)*$/u.test(outputText), `${name}: malformed output list`);
+    const outputs = outputText.split(',').map(index => Number(index));
+    const nodes = nodesPart.slice('nodes '.length).trim().split(/\s+/u);
+    requireThat(target === 'no-foldable-sites' && outputs.length > 0 &&
+      outputs.every(index => Number.isSafeInteger(index) && index >= 0 && index < nodes.length),
+    `${name}: invalid target or explicit outputs`);
+    const expectedOutputs = reviewedOutputs.get(name);
+    requireThat(expectedOutputs !== undefined && JSON.stringify(outputs) === JSON.stringify(expectedOutputs),
+      `${name}: reviewed explicit output vector changed`);
+    fixtures.push({ name, target, outputs });
   }
-  requireThat(fixtures.length === 7, `expected seven corpus fixtures, found ${fixtures.length}`);
+  requireThat(fixtures.length === reviewedOutputs.size,
+    `expected ${reviewedOutputs.size} corpus fixtures, found ${fixtures.length}`);
   requireThat(new Set(fixtures.map(fixture => fixture.name)).size === fixtures.length,
     'rewrite quality corpus repeats a fixture');
+  requireThat(fixtures.map(fixture => fixture.name).join(',') === [...reviewedOutputs.keys()].join(','),
+    'rewrite quality corpus fixture order changed');
   return fixtures;
 }
 
@@ -482,9 +510,9 @@ function validateReport(report, manifest, corpus) {
   requireThat(plainObject(report.threshold), 'report threshold is missing');
   requireThat(report.threshold.residual === manifest.threshold.residual &&
     report.threshold.check_per_step_us === manifest.threshold.check_per_step_us,
-  'report threshold differs from frozen v2 plan');
+  'report threshold differs from frozen v3 plan');
   requireThat(Array.isArray(report.stages) && report.stages.length === manifest.stages.length,
-    'report stage roster differs from frozen v2 plan');
+    'report stage roster differs from frozen v3 plan');
   for (const [index, expected] of manifest.stages.entries()) {
     const actual = report.stages[index];
     requireThat(actual.name === expected.name && actual.status === expected.status,
@@ -492,7 +520,9 @@ function validateReport(report, manifest, corpus) {
     requireThat(actual.reason === expected.reason,
       `report stage ${expected.name} observation reason differs from frozen declaration`);
   }
-  requireThat(Array.isArray(report.rows) && report.rows.length === 28, 'report must retain 28 rows');
+  const expectedRows = corpus.length * proposers.length;
+  requireThat(Array.isArray(report.rows) && report.rows.length === expectedRows,
+    `report must retain all ${expectedRows} fixture/proposer rows`);
   const fixtureNames = new Set(corpus.map(fixture => fixture.name));
   const rowKeys = new Set();
   const dispositionCounts = Object.fromEntries(dispositions.map(disposition => [disposition, 0]));
@@ -523,7 +553,7 @@ function validateReport(report, manifest, corpus) {
     if (row.refused) rawRefused++;
     if (!row.refused && row.residual === 0) rawTargetReached++;
   }
-  requireThat(rowKeys.size === 28 && [...fixtureNames].every(fixture =>
+  requireThat(rowKeys.size === expectedRows && [...fixtureNames].every(fixture =>
     proposers.every(proposer => rowKeys.has(`${fixture}\0${proposer}`))),
   'report does not contain every fixture/proposer pair');
   const certificate = report.certificate_coverage;
@@ -532,15 +562,17 @@ function validateReport(report, manifest, corpus) {
     requireThat(Number.isInteger(certificate[field]) && certificate[field] >= 0,
       `certificate_coverage.${field} is invalid`);
   }
-  requireThat(certificate.attempts === 28 && certificate.accepted + certificate.refused === 28,
+  requireThat(certificate.attempts === expectedRows &&
+    certificate.accepted + certificate.refused === expectedRows,
     'certificate_coverage denominator is invalid');
-  requireThat(certificate.refused === rawRefused && certificate.accepted === 28 - rawRefused,
+  requireThat(certificate.refused === rawRefused && certificate.accepted === expectedRows - rawRefused,
     'certificate_coverage does not describe raw row refusals');
   requireThat(certificate.target_reached === rawTargetReached,
     'certificate_coverage target count is not derived from raw rows');
   const pipeline = report.pipeline_coverage;
   requireThat(plainObject(pipeline), 'pipeline_coverage is missing');
-  requireThat(pipeline.attempts === 28, 'pipeline_coverage denominator is not 28');
+  requireThat(pipeline.attempts === expectedRows,
+    `pipeline_coverage denominator is not ${expectedRows}`);
   for (const disposition of dispositions) {
     requireThat(Number.isInteger(pipeline[disposition.replaceAll('-', '_')]) &&
       pipeline[disposition.replaceAll('-', '_')] >= 0,
@@ -549,7 +581,7 @@ function validateReport(report, manifest, corpus) {
       `pipeline_coverage.${disposition} disagrees with rows`);
   }
   const total = dispositions.reduce((sum, disposition) => sum + dispositionCounts[disposition], 0);
-  requireThat(total === 28, 'pipeline disposition counts do not cover all rows');
+  requireThat(total === expectedRows, 'pipeline disposition counts do not cover all rows');
 }
 
 function evidenceHashes(evidence) {
@@ -570,7 +602,7 @@ function failureRecord(evidence, phase, error, before, processRecord) {
   if (fs.existsSync(file)) return;
   try {
     writeJsonExclusive(file, {
-      schema: 'noble-rewrite-cost-failure/v2',
+      schema: 'noble-rewrite-cost-failure/v3',
       phase,
       error: { message: error.message, name: error.name },
       source_before: before,
@@ -648,7 +680,7 @@ if (options !== undefined) {
       'source commit/tree/status or bound source hashes changed before receipt write');
     const files = evidenceHashes(evidence);
     const receipt = {
-      schema: 'noble-rewrite-cost-receipt/v2',
+      schema: 'noble-rewrite-cost-receipt/v3',
       issue: 64,
       source_commit: before.source_commit,
       source_tree: before.source_tree,
@@ -714,7 +746,7 @@ if (options !== undefined) {
     }));
   } catch (error) {
     failureRecord(evidence, phase, error, before, processRecord);
-    console.error(`rewrite-cost v2 failed (${phase}): ${error.message}`);
+    console.error(`rewrite-cost v3 failed (${phase}): ${error.message}`);
     process.exitCode = 1;
   }
 }

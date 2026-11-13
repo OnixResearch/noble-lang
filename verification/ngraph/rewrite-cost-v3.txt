@@ -1,0 +1,53 @@
+# noble-rewrite-cost/v3
+# Issue #64: pre-registered before any v3 measurement; v1/v2 plans and receipts remain historical.
+# The input is the explicit-output v2 quality corpus. Its order, repeated outputs, supported rules,
+# source nodes and residual targets are pinned by the Rust cost tests and the external receipt runner.
+# Every one of the eight fixtures is retained with all four proposer controls (32 attempts total).
+# No pruning, endpoint repair, unsupported relabelling or execution of a refused candidate is allowed.
+# Identity scheme: existing test-siphash13x4; these are library measurements, not deployed BLAKE3,
+# source compiler, Wasm execution or a Lean-to-runtime correspondence result.
+#
+# Per row: 64 unrecorded priming iterations, then 200 samples; alternate baseline/certified order.
+# Fresh means no admitted graph, compiled artifact or workspace reused, not OS/page-cache cold.
+# Baseline: input admission -> packed preparation -> actual-layout export/validation -> first run.
+# Certified: the same source admission -> proposal/construction -> exact certificate check -> exact
+# candidate admission -> packed preparation -> actual-layout export/validation -> first run.
+# Warm execution reuses the admitted compiled artifact and workspace and checks exact outputs.
+# A refusal stops later stages; skipped durations are null with a reason, never zero. Directly timed
+# refusal prefixes include cleanup; stage medians are not summed into an invented total.
+#
+# v3 corpus controls: `independent-folds` and `ordered-outputs` must be source-admitted with every
+# declared node reachable from their explicit outputs. `ordered-outputs` preserves order 4,2;
+# `repeated-outputs` preserves duplicate output 2,2. The source test records the exact resulting
+# values. These controls do not repair or prune certificate endpoints; any candidate refusal stays
+# counted, and a refused candidate receives zero execution calls.
+#
+# Report raw-graph certificate coverage separately from the full pipeline. Keep all 32
+# fixture/proposer rows, including every refusal. Retain exact observed output agreement, timings,
+# variability, actual execution-call counts, and separate cold-fresh/warm scopes. Wire bytes,
+# decoder/replay and allocator/RSS gaps remain explicitly unmeasured with reasons.
+#
+# Retention requires an admitted execution, exact output agreement, the declared residual target,
+# the inherited informational 50 us/step checker ceiling and a positive measured warm saving. No
+# elapsed-time assertion is a pass/fail gate on the shared host. A break-even estimate is allowed
+# only for an executed quality-eligible candidate with positive warm saving; it assumes measured
+# medians persist and is not an observed crossover.
+
+schema noble-rewrite-cost/v3
+corpus rewrite-quality-v2.txt
+lens crates/noble-ngraph/src/cert.rs
+threshold retention | residual no-foldable-sites | check-per-step-us 50
+
+stage input-admission | status measured | reason check::check on the exact owned source graph
+stage proposal-search | status measured | reason cert::propose after successful source admission
+stage certificate-construction | status measured | reason included in cert::propose; not a second additive stage
+stage certificate-checking | status measured | reason cert::check over the exact proposed endpoints before candidate admission
+stage certificate-wire-bytes | status unmeasured | reason no Rust certificate encoder exists; structural footprint is not wire size
+stage decoding-replay | status unmeasured | reason no Rust decoder is in this in-memory path
+stage candidate-admission | status measured | reason check::check consumes the exact certificate-checked candidate without pruning
+stage backend-preparation | status measured | reason Compiled::new from the independently admitted graph
+stage schedule-validation | status measured | reason packed_layout export plus layout::check on the object that executes; not instruction-byte correspondence
+stage first-execution | status measured | reason Compiled::evaluate with a fresh workspace after all admission stages succeed
+stage warm-execution | status measured | reason Compiled::evaluate_in reuses the accepted compiled object and workspace
+stage full-fresh-attempt | status measured | reason directly timed successful or refused baseline/certified pipeline; no sums of medians
+stage retained-memory | status unmeasured | reason no allocator or RSS accounting; graph/code estimates and scratch lease observations are separately labeled
