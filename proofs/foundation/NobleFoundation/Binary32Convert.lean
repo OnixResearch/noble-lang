@@ -1,4 +1,5 @@
 import NobleFoundation.Binary32SequenceFinite
+import NobleFoundation.Binary32Checker
 import NobleFoundation.CheckedI64
 import NobleFoundation.DecimalImport
 
@@ -87,6 +88,71 @@ theorem i64ToF32Rne_mixed_error (value : BitVec 64) (nonzero : value.toInt ≠ 0
       unit * |(value.toInt : ℚ)| + eta := by
   have bound := roundScaled_mixed_error value.toInt 0 nonzero finite
   simpa [i64ToF32Rne, nonzero] using bound
+
+/-- A finite model encoding is recognized as finite by the import model. -/
+theorem finiteBits_of_Finite {bits : Bits}
+    (finite : NobleFoundation.Binary32.Sequence.Finite bits) :
+    finiteBits bits = true := by
+  have notNaN := finite.1
+  have notInfinity := finite.2
+  unfold finiteBits
+  cases hclass : classify bits with
+  | negZero => rfl
+  | posZero => rfl
+  | subnormal => rfl
+  | normal => rfl
+  | infinity => exact False.elim (notInfinity hclass)
+  | notANumber => exact False.elim (notNaN hclass)
+
+/-- Every signed I64 is far below the binary32 overflow range, so RNE conversion always returns a
+finite encoding. -/
+theorem i64ToF32Rne_finite (value : BitVec 64) :
+    finiteBits (i64ToF32Rne value) = true := by
+  by_cases zero : value.toInt = 0
+  · have finite := NobleFoundation.Binary32.Checker.zeroOf_finite false
+    simpa [i64ToF32Rne, zero] using finiteBits_of_Finite finite
+  · have range := toInt_range value
+    have lower : -(2 : ℚ) ^ 63 ≤ (value.toInt : ℚ) := by exact_mod_cast range.1
+    have upper : (value.toInt : ℚ) ≤ (2 : ℚ) ^ 63 := by
+      exact_mod_cast (le_of_lt range.2)
+    have magnitude : |(value.toInt : ℚ)| ≤ (2 : ℚ) ^ 63 := abs_le.mpr ⟨lower, upper⟩
+    have small : |(value.toInt : ℚ) * (2 : ℚ) ^ (0 : Int)| <
+        NobleFoundation.Binary32.Checker.overflowLimit := by
+      have powers : (2 : ℚ) ^ (63 : Int) < (2 : ℚ) ^ (127 : Int) := by norm_num
+      exact lt_of_le_of_lt (by simpa using magnitude) (by simpa [NobleFoundation.Binary32.Checker.overflowLimit] using powers)
+    have noOverflow := NobleFoundation.Binary32.Checker.noOverflow_scaled
+      value.toInt 0 zero small
+    have finite := NobleFoundation.Binary32.Checker.roundScaled_finite
+      value.toInt 0 zero noOverflow (decide (value.toInt < 0))
+    simpa [i64ToF32Rne, zero] using finiteBits_of_Finite finite
+
+/-- Exact conversion from I64 cannot fail for overflow: its RNE intermediate is always finite. -/
+theorem i64ToF32Exact_no_overflow (value : BitVec 64) :
+    i64ToF32Exact value ≠ .error .overflow := by
+  by_cases exact : exactValue (i64ToF32Rne value) = (value.toInt : ℚ)
+  · simp [i64ToF32Exact, i64ToF32Rne_finite, exact]
+  · simp [i64ToF32Exact, i64ToF32Rne_finite, exact]
+
+/-- Every successful exact I64-to-F32 conversion preserves the signed integer's exact rational
+value. -/
+theorem i64ToF32Exact_success_value (value : BitVec 64) (result : Bits)
+    (success : i64ToF32Exact value = .ok result) :
+    exactValue result = (value.toInt : ℚ) := by
+  unfold i64ToF32Exact at success
+  by_cases finite : finiteBits (i64ToF32Rne value) = true
+  · simp only [finite, ite_true] at success
+    by_cases exact : exactValue (i64ToF32Rne value) = (value.toInt : ℚ)
+    · simp only [exact, ite_true] at success
+      cases success
+      exact exact
+    · simp only [exact, ite_false] at success
+      cases success
+  · have finiteFalse : finiteBits (i64ToF32Rne value) = false := by
+      cases resultFinite : finiteBits (i64ToF32Rne value) with
+      | false => rfl
+      | true => exact False.elim (finite resultFinite)
+    simp only [finiteFalse] at success
+    cases success
 
 /-- A negative scaled quotient reconstructs its source as divisor times the truncating quotient
 plus the signed remainder. This pins the toward-zero division rule used by the F32-to-I64 adapter.

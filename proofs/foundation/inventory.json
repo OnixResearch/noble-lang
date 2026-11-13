@@ -5248,6 +5248,12 @@
       "claim": "a zero digit value rounds to the signed zero of the spelling"
     },
     {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_zero_exactValue",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the signed-zero RNE result for a zero decimal spelling has its exact signed rational value"
+    },
+    {
       "name": "NobleFoundation.Binary32.DecimalImport.rne_empty_digits",
       "phase": 1,
       "role": "binary32-decimal-import",
@@ -5374,10 +5380,10 @@
       "claim": "exactImport of 340282356779733661637539395458142568448e0 is the value sem::exact_f32_decimal returns"
     },
     {
-      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.halfwayToOverflow_rne",
+      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.halfwayToOverflow_overflow",
       "phase": 1,
       "role": "implementation-agreement",
-      "claim": "rne of 340282356779733661637539395458142568448e0 is the bits Rust's correctly rounded f32 parse returns"
+      "claim": "the decimal halfway to overflow is refused by the Rust parser and classified as overflow by the model"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.Corpus.oneE39_exact",
@@ -5386,10 +5392,10 @@
       "claim": "exactImport of 1e39 is the value sem::exact_f32_decimal returns"
     },
     {
-      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.oneE39_rne",
+      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.oneE39_overflow",
       "phase": 1,
       "role": "implementation-agreement",
-      "claim": "rne of 1e39 is the bits Rust's correctly rounded f32 parse returns"
+      "claim": "the decimal 10^39 is refused by the Rust parser and classified as overflow by the model"
     },
     {
       "name": "NobleFoundation.Binary32.DecimalImport.Corpus.smallestNormal_exact",
@@ -6094,6 +6100,30 @@
       "claim": "on the power boundary the rounded significand is exactly 2^24"
     },
     {
+      "name": "NobleFoundation.Binary32.Scale.roundNearest_exact_multiple",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "nearest integer quotient rounding returns any exactly divisible quotient"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.floorLog2Ratio_eq_of_ratio_brackets",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "off the power boundary the strict rational bracket uniquely determines the model floor exponent"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.roundPositive_eq_normal_encoding_of_dyadic",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "a normal exact dyadic significand rounds once to its corresponding binary32 encoding, including power-boundary carry"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.exactValue_roundPositive_of_dyadic",
+      "phase": 2,
+      "role": "binary32-error",
+      "claim": "the exact value of a normal exact dyadic input's rounded encoding equals that input rational"
+    },
+    {
       "name": "NobleFoundation.Binary32.Scale.boundary_rounds_exactly",
       "phase": 2,
       "role": "binary32-error",
@@ -6116,6 +6146,30 @@
       "phase": 2,
       "role": "binary32-error",
       "claim": "at 1/2, where the upper premise fails, the result is exact and the absolute bound holds"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.overflowMidpoint_eq_maxFinite_plus_halfUlp",
+      "phase": 1,
+      "role": "binary32-overflow-boundary",
+      "claim": "the overflow midpoint is the largest finite binary32 value plus half its final ulp"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.roundPositive_belowOverflowMidpoint",
+      "phase": 1,
+      "role": "binary32-overflow-boundary",
+      "claim": "immediately below the overflow midpoint, roundPositive returns the largest finite value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.roundPositive_overflowMidpoint",
+      "phase": 1,
+      "role": "binary32-overflow-boundary",
+      "claim": "at the exact overflow midpoint, ties-to-even returns the overflow encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Scale.carriedPair_finite_iff_below_overflowMidpoint",
+      "phase": 1,
+      "role": "binary32-overflow-boundary",
+      "claim": "a positive rational rounds to a finite carried exponent exactly below the ties-to-even overflow midpoint"
     },
     {
       "name": "NobleFoundation.ReverseAD.Mutations.adjointAfterWith_stepCoefficient",
@@ -7798,10 +7852,46 @@
       "claim": "a finite RNE encoding whose scaled magnitude matches its decimal spelling is accepted by exact import"
     },
     {
+      "name": "NobleFoundation.Binary32.DecimalImport.scaledMatches_of_exactValue",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "signed rational equality with a finite binary32 value implies the exact-import cross-product witness"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactImport_accepts_representable",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a finite RNE result equal to the signed decimal rational is accepted by exact import"
+    },
+    {
       "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_mixed_error",
       "phase": 1,
       "role": "binary32-conversion",
       "claim": "finite I64-to-F32 RNE conversion has the shared mixed error bound under explicit nonzero and finite premises"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.finiteBits_of_Finite",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "the decimal import model recognizes every finite binary32 encoding as finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Rne_finite",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "round-to-nearest conversion of every signed I64 returns a finite binary32 encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Exact_no_overflow",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "exact I64-to-F32 conversion cannot report overflow because its RNE intermediate is finite"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.i64ToF32Exact_success_value",
+      "phase": 1,
+      "role": "binary32-conversion",
+      "claim": "every successful exact I64-to-F32 conversion preserves the signed integer rational value"
     },
     {
       "name": "NobleFoundation.Binary32.Convert.truncateScaled_division_identity",
@@ -7976,6 +8066,360 @@
       "phase": 1,
       "role": "fixture",
       "claim": "positive and negative infinities and NaNs refuse under exact conversion"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.negativeUnderflow_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact import refuses the inexact decimal -1e-46"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.Corpus.negativeUnderflow_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the RNE parser and model agree that -1e-46 rounds to negative zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_zero_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model at zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_twoPow24_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model at 2^24"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_twoPow24PlusOne_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model on the lower even tie at 2^24 plus one"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_twoPow24PlusThree_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model on the upper even tie at 2^24 plus three"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_negativeTwoPow24PlusOne_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model on the negative lower-even tie"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_negativeTwoPow24PlusThree_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model on the negative upper-even tie"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_minimum_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model at I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_minimumSuccessor_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model adjacent above I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_maximum_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model at I64 maximum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_maximumPredecessor_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model adjacent below I64 maximum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_one_rne",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust I64 RNE adapter agrees with the model at one"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_zero_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter agrees with the model at zero"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_twoPow24_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter agrees with the model at 2^24"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_twoPow24PlusOne_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter refuses the inexact 2^24 plus one value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_negativeTwoPow24_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter agrees with the model at negative 2^24"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_minimum_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter agrees with the model at I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_minimumSuccessor_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter refuses the inexact integer adjacent above I64 minimum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.i64_maximum_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust exact I64 adapter refuses the inexact I64 maximum"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_one_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 one truncates to I64 one in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveFraction_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust truncating adapter agrees with the model for positive 1.75"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeFraction_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the Rust truncating adapter agrees with the model for negative 1.75"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveZero_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "positive binary32 zero truncates to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeZero_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "negative binary32 zero truncates to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveSubnormal_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the least positive subnormal truncates to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeSubnormal_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the least negative subnormal truncates to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_minimum_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 negative 2^63 converts to I64 minimum in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_maximumFiniteInRange_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the greatest binary32 value below 2^63 truncates consistently in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveLimit_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 positive 2^63 is refused as overflow by Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeBelowLimit_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 below negative 2^63 is refused as overflow by Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveInfinity_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "positive infinity is refused by Rust and the truncation model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeInfinity_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "negative infinity is refused by Rust and the truncation model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveNaN_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "positive NaN is refused by Rust and the truncation model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeNaN_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "negative NaN is refused by Rust and the truncation model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_largeFraction_trunc",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "a fractional value just above one truncates consistently in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_one_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 one converts exactly to I64 one in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveFraction_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "positive 1.75 is refused as inexact by Rust and the exact model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeFraction_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "negative 1.75 is refused as inexact by Rust and the exact model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveZero_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "positive binary32 zero converts exactly to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeZero_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "negative binary32 zero converts exactly to I64 zero in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveSubnormal_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the least positive subnormal is refused as inexact by Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeSubnormal_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the least negative subnormal is refused as inexact by Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_minimum_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "binary32 negative 2^63 converts exactly to I64 minimum in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_maximumFiniteInRange_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "the greatest binary32 value below 2^63 converts exactly in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveLimit_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses positive 2^63 as overflow in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeBelowLimit_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses the value below negative 2^63 as overflow in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveInfinity_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses positive infinity in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeInfinity_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses negative infinity in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_positiveNaN_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses positive NaN in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Convert.Corpus.f32_negativeNaN_exact",
+      "phase": 1,
+      "role": "implementation-agreement",
+      "claim": "exact conversion refuses negative NaN in Rust and the model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.digitsValue_decimalDigits",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the canonical finite decimal digit expansion preserves every natural integer value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.exactDecimalValue_spellingOf",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the exact decimal spelling of any binary32 encoding denotes its exact rational value"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.bits_toNat_fields",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a binary32 encoding decomposes exactly into sign exponent and fraction fields"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.bits_eq_fields",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the sign exponent and fraction fields reconstruct every binary32 encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.nat_or_two_pow_eq_add",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "a power-of-two sign bit combines with a smaller magnitude by exact addition"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.signedMagnitude_eq_fields",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "applying the original sign to decoded magnitude fields reconstructs the binary32 encoding"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_spellingOf_dyadic",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "the nonnegative ratio of the canonical decimal spelling equals the encoding's exact dyadic magnitude"
+    },
+    {
+      "name": "NobleFoundation.Binary32.DecimalImport.rne_spellingOf_finite",
+      "phase": 1,
+      "role": "binary32-decimal-import",
+      "claim": "rounding the canonical decimal spelling of any finite binary32 encoding returns its identical bits"
     }
   ],
   "private_theorems": [
@@ -8024,6 +8468,16 @@
     "NobleFoundation.ofInt_wrap_mul",
     "NobleFoundation.rep_succ",
     "NobleFoundation.rep_succ_succ",
-    "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton"
+    "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton",
+    "NobleFoundation.Binary32.Scale.roundNearest_overflowMidpoint_iff",
+    "NobleFoundation.Binary32.Scale.carriedPair_lower_exponent",
+    "NobleFoundation.Binary32.Scale.carriedPair_upper_exponent",
+    "NobleFoundation.Binary32.Scale.overflowMidpoint_double",
+    "NobleFoundation.Binary32.Scale.overflowMidpoint_above_twoPow127",
+    "NobleFoundation.Binary32.Scale.overflowMidpoint_at_most_twoPow128",
+    "NobleFoundation.Binary32.DecimalImport.finite_exp_lt_255",
+    "NobleFoundation.Binary32.DecimalImport.subnormal_spelling_rounds",
+    "NobleFoundation.Binary32.DecimalImport.normal_spelling_rounds",
+    "NobleFoundation.Binary32.DecimalImport.signedMagnitude_eq_of_unsigned_encoding"
   ]
 }

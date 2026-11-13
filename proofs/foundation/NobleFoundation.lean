@@ -13,6 +13,7 @@ import NobleFoundation.DecimalImport
 import NobleFoundation.DecimalImportSpec
 import NobleFoundation.DecimalImportCorpus
 import NobleFoundation.Binary32Convert
+import NobleFoundation.Binary32ConvertCorpus
 import NobleFoundation.LiveDispatch
 import NobleFoundation.Ownership
 import NobleFoundation.OwnershipConservation

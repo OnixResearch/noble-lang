@@ -185,7 +185,7 @@ Status words:
 | Reverse-AD refinement of `grad.rs` (issue #45, NG-PO-F) | none | `ngraph-deriv-real/0`, the Rust side | **open**: no theorem relates `grad.rs` to either model, so NG-PO-F stays open. The issue's ordered affine terms are recorded as outside this established slice, with a reopen condition in its README section |
 | Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **reviewed trusted, tested assumption** on `x86_64-unknown-linux-gnu` (issue #38 decision), not proved; NG-PO-D stays **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
-| Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Implementation correspondence **open** |
+| Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error`; exact dyadic conversion `roundPositive_eq_normal_encoding_of_dyadic`, `exactValue_roundPositive_of_dyadic` (issue #40) | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Exact normal dyadics round to their matching bits. Implementation correspondence **open** |
 | Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
 | Rounding error of whole operation sequences (issue #44) | `exactValue_signed`, `roundScaled_relative_error`, `add_relative_error`, `mul_relative_error`, `step_bound`, `fold_error`, `cancellation_needs_the_term_scale` | exact `Binary32Sequence` model only; each rounding's carried exponent in the normal range is a premise, and no Rust/host correspondence is claimed | model **proved**: one model addition or multiplication is within `2^-24` of its exact result relatively, and the ordered affine fold of `n` terms within `((1 + 2^-24)^(2n) - 1)` times the bias and term magnitudes. Implementation correspondence **open** |
 | Sequence error with subnormal intermediates (issue #44) | `roundPositive_mixed_error`, `add_mixed_error`, `mul_mixed_error`, `step_bound_mixed`, `fold_finite_error`, `subnormal_needs_the_absolute_term` | exact `Binary32SequenceFinite` model only; no overflow is the only premise, and no Rust/host correspondence is claimed | model **proved**: every finite rounding is within `2^-24 · \|x\| + 2^-150`, and the ordered affine fold adds `3n(1 + 2^-24)^n · 2^-150` to the relative bound. Implementation correspondence **open** |
@@ -201,8 +201,8 @@ Status words:
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `closers_below_zero_depth_do_not_reduce_the_reached_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. The Rust stream is exported (`Compiled::i64_instructions()`); a general Lean↔Rust correspondence is **open** |
 | Real packed I64/Bool artifacts, validated one at a time (issue #43) | `interleaved_validated`, `interleaved_sound`, `interleaved_wellFormed`, `lateInput_validated`, `lateInput_sound`, `lateInput_wellFormed`, the seven `*_refused` mutated copies and the ten `*_execution_*_agrees` runs in the generated PackedScheduleCorpus module | two artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and bound by `the_lean_file_is_the_real_emission`; the slot and constant preload translation is trusted | **proved** for those two artifacts; the Rust executor agrees at ten inputs, a **tested** fact, not a theorem about it |
-| Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `rne_exactValue_absolute_error`, `exactImport_accepts_representable_rne`, the retained decimal fixtures, and generated `DecimalImport.Corpus` agreements | decimal syntax/resource bounds, Rust implementation correspondence, import receipt persistence, and byte-exact CLI replay | exact model and conditional half-spacing error bound **proved**; boundary agreement **tested** independently; no general implementation or parser theorem claimed |
-| Explicit I64/F32 scalar adapters | `i64ToF32Rne_mixed_error`, `f32ToI64Trunc_success_range`, `f32ToI64Trunc_success_value`, `f32ToI64Exact_success_value`, `f32ToI64Exact_refuses_fractional`, signed-zero and boundary fixtures in `Binary32.Convert` | the four Rust adapter paths and their published conversion diagnostics | model definitions, universal result properties and selected kernel fixtures; Rust correspondence is tested separately and is not a theorem |
+| Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `rne_exactValue_absolute_error`, `exactImport_accepts_representable_rne`, the retained decimal fixtures, and 38 generated `DecimalImport.Corpus` agreements | decimal syntax/resource bounds, Rust implementation correspondence, import receipt persistence, and byte-exact CLI replay | exact model and conditional half-spacing error bound **proved**; 19 boundary rows agree with Rust **tested**; no general implementation or parser theorem claimed |
+| Explicit I64/F32 scalar adapters | `i64ToF32Rne_mixed_error`, `f32ToI64Trunc_success_range`, `f32ToI64Trunc_success_value`, `f32ToI64Exact_success_value`, `f32ToI64Exact_refuses_fractional`, signed-zero and boundary fixtures in `Binary32.Convert`, and 49 generated `Binary32.Convert.Corpus` agreements | the four Rust adapter paths and their published conversion diagnostics | model definitions, universal result properties and selected kernel fixtures; 49 Rust/model rows are **tested** separately and are not theorems about Rust |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker and replay endpoint | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `multiFold_endpoint`, `substituted_result_differs` | `crates/noble-ngraph/src/ir.rs` graph producer and any future untrusted transformation | model **proved** (rules, lifting, checker soundness and the Lean replay endpoint). Correspondence to `cert.rs`, Rust transformation, derivation encoding/replay budget, endpoint decoding of actual graphs and independent differential execution **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict`, and the six `SymbolicSolver.Corpus.*_first` verdicts | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Six fixed pairs of checked `noble-ngraph` graphs: compiled and reference verdicts **tested**, and the same verdicts kernel-decided. Encoder correspondence, solver, emitted-Wasm replay and witness shrinking **open** |
@@ -703,6 +703,11 @@ That exponent range is the only premise left; `absolute_error_covers_one_half` a
 absolute rule on the boundary. Subnormal results are covered by the next unit; any implementation
 correspondence stays open.
 
+The same module pins the exact overflow midpoint `2^128 − 2^103` as the largest finite value plus
+half its final ulp. At that exact tie `roundPositive` returns the overflow encoding, while the
+immediately preceding integer rounds to the largest finite encoding. These are kernel-checked
+boundary facts; the universal range theorem for every rational below the midpoint remains open.
+
 The clean-source receipt for the scale-premise unit is
 [`verification/foundation/receipts/3b1841f35/`](../../verification/foundation/receipts/3b1841f35/foundation-check.json)
 (792 theorems, `clean_source: true`, axiom sets inside the allow-list,
@@ -911,7 +916,7 @@ The remaining `sem.rs` layers are classified rather than left ambiguous:
 | ordered `affine` fold | **modelled and proved** (`fold`, `fold_append`, `fold_order_is_load_bearing`) |
 | activations `relu`, `reglu`, `step` | **not modelled**: they are activation corners and surrogate policies, which the Numeric-Graph-v1 selection excludes; no theorem here says anything about them |
 | guard/index rules (`is_bit`, `select`, `index_position`) | **not modelled**: index refusal is a `crates/noble-ngraph` admission rule, not a binary32 operation, and no Lean model exists |
-| decimal import / codec (`exact_f32_decimal`) | `DecimalImport.rne`, `DecimalImport.exactImport`, `DecimalImport.exactImport_some_iff`, `DecimalImport.exactImport_agrees_with_rne`, `DecimalImport.exactImport_exactValue`, the retained decimal fixtures, and the 36 `DecimalImport.Corpus` agreements | `crates/noble-ngraph/src/sem.rs` exact-import implementation, syntax/resource bounds, overflow response and executable correspondence | model **proved**. Agreement with `exact_f32_decimal` and Rust's `f32` parse at 18 boundary decimals **tested** and kernel-checked. A general implementation correspondence and owner policy decisions remain **open** |
+| decimal import / codec (`exact_f32_decimal`, `rne_f32_decimal`) | `DecimalImport.rne`, `DecimalImport.exactImport`, `DecimalImport.exactImport_some_iff`, `DecimalImport.exactImport_agrees_with_rne`, `DecimalImport.exactImport_exactValue`, `DecimalImport.rne_exactValue_absolute_error`, the retained decimal fixtures, and 38 `DecimalImport.Corpus` agreements | `crates/noble-ngraph/src/sem.rs` parser implementation, syntax/resource bounds and general executable correspondence | model **proved**, with the explicit finite-input premise on the half-spacing error bound. Exact/RNE Rust agreement at 19 boundary rows **tested** and kernel-checked. General implementation correspondence, round-trip spelling, and overflow-threshold proofs remain **open** |
 | snapshot / parameter layout (`snapshot.rs`) | **not modelled**: layout and retention are #33/#43 subjects and have no binary32 obligation |
 | training admission (`grad.rs`) | **not modelled here**: #45 owns the derivative and training admission |
 | software helpers (`pow2`, `log2`, `pow2Int`, `roundPositive`) | **model-internal and structural**: they are the reference's own arithmetic, total and kernel-reducible, so they carry no Rust correspondence claim. `Binary32Error` additionally proves quotient rounding and conditional normal-range error bounds |
@@ -1069,29 +1074,33 @@ universal model claims are `decimalRatio_den_pos`, `isNegative_eq_msb`,
 `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`,
 `exactImport_some_iff`, `exactImport_agrees_with_rne`,
 and `exactImport_exactValue` (with its explicit sign premise). The companion
-`DecimalImportSpec.lean` adds the conditional single-round error theorem
+`DecimalImportSpec.lean` gives exact rational agreement for a zero spelling
+(`rne_zero_exactValue`) and adds the conditional single-round error theorem
 `rne_exactValue_absolute_error`: for a nonzero spelling whose positive ratio
 does not overflow the reference rounding path, the signed result is within
 half the spacing of its binade (using subnormal spacing below the normal
-range). `exactImport_accepts_representable_rne` states exact-path acceptance
-when finiteness and the natural scaled-magnitude equality are supplied as
-premises; it does not prove that every representable spelling satisfies that
-equality.
+range). `scaledMatches_of_exactValue` derives the natural cross-product witness
+from signed rational equality, and `exactImport_accepts_representable` proves
+that a finite RNE result exactly equal to its decimal rational is accepted by
+the exact path without assuming the internal cross-product check.
 
 The kernel-checked fixtures retain the exact/RNE split for `0.1` and `0.5`,
 negative zero, `10^39` overflow classification, `10^-45` least-subnormal
 rounding, an exact halfway case, and a decimal just above that tie. The last
 fixture states only the single RNE result (`0x3F800001`); it makes no claim
-about a binary64 route. The clean-source receipt for the decimal-import model is
-[`verification/foundation/receipts/58aaefd05/`](../../verification/foundation/receipts/58aaefd05/foundation-check.json)
-(707 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
+about a binary64 route. The last retained clean-source receipt before this
+branch is
+[`verification/foundation/receipts/e59906c67/`](../../verification/foundation/receipts/e59906c67/foundation-check.json)
+(1179 theorems, `clean_source: true`, Lean 4.35.0). It predates the added
+boundary rows and adapter corpus, so it does not attest this source; the
+integrator must refresh the receipt after integration.
 
 **Agreement with `sem.rs` at binary32 boundaries.** `NobleFoundation/DecimalImportCorpus.lean` is
-generated by `crates/noble-ngraph/tests/soft_float_dir/decimal.rs`. For each of 18 decimals the
+generated by `crates/noble-ngraph/tests/soft_float_dir/decimal.rs`. For each of 19 decimals the
 generator checks that `sem::exact_f32_decimal` returns the row's intended exact import, and that
-Rust's correctly rounded `f32` parse returns its intended RNE bits. The kernel then decides that the
-model's `exactImport` and `rne` give the same answers (`*_exact`, `*_rne`). The rows are:
+`sem::rne_f32_decimal` returns its intended bits or explicit overflow refusal. The kernel then
+decides that the model's `exactImport`, `rne` or `outcomeClass` gives the same answer (`*_exact`,
+`*_rne` or `*_overflow`). The rows are:
 - `2^24` and its two neighbours, and `-2^24`;
 - the largest finite value, one above it, and the tie to overflow (RNE to infinity);
 - `10^39`;
@@ -1099,15 +1108,15 @@ model's `exactImport` and `rne` give the same answers (`*_exact`, `*_rne`). The 
 - the largest subnormal, at the 112-digit limit `sem.rs` admits;
 - the least subnormal and the ties around it (`2^-150` to zero, `3 × 2^-151` up);
 - `1 + 2^-24 + 2^-80`, which double rounding through binary64 would round down;
-- a carry into the next binade (`0.99999999999` to `1.0`), `8388607.5`, `0.1` and `-0`.
+- a carry into the next binade (`0.99999999999` to `1.0`), `8388607.5`, `0.1`, `-0` and
+  negative underflow (`-1e-46` to `-0`).
 
 `the_lean_file_is_the_real_import` fails when either Rust result changes, until the file is
 regenerated. `other_spellings_import_the_same` checks that five other spellings import the same.
 Reading `[-]digits e exponent` as the model's `Decimal` is the one trusted translation. This is
-agreement at these rows, not a proof about `sem.rs` or Rust's float parser.
-The clean-source receipt is
-[`verification/foundation/receipts/e59906c67/`](../../verification/foundation/receipts/e59906c67/foundation-check.json)
-(1179 theorems, `clean_source: true`, Lean 4.35.0). The 36 agreements report only `propext`.
+agreement at these rows, not a proof about `sem.rs` or Rust's float parser. The predecessor receipt
+records 36 earlier agreements reporting only `propext`; the 38 current finite comparisons are not
+covered by it.
 
 Open, and deliberately not closed by this model:
 
@@ -1115,29 +1124,32 @@ Open, and deliberately not closed by this model:
   general exact-import implementation correspondence in `sem.rs` beyond the
   boundary rows above;
 
-**Spelling algebra for those open lemmas.** `NobleFoundation/DecimalImportSpec.lean` proves the
-facts the universal range and round-trip lemmas need, without new definitions:
+**Spelling algebra and universal model theorems.** `NobleFoundation/DecimalImportSpec.lean` proves:
 - `digitsValue_snoc`: appending a digit multiplies the value by ten and adds it;
 - `decimalRatio_nonneg` and `decimalRatio_neg`: the two ratio branches, each with its exponent
   condition as an explicit premise (the identity does not hold across `e = -1`, where the
   denominator is `10` and the next exponent's is `1`);
 - `rne_zero_magnitude` and `rne_empty_digits`: a zero digit value rounds to the spelling's own
   signed zero, with `zeroOf_false`/`zeroOf_true` pinning both encodings;
+- `rne_zero_exactValue`: the result of the zero branch equals the spelling's exact signed rational;
 - `signedMagnitude_false`: an unsigned magnitude is the plain encoding.
+- `spellingOf` renders a finite binary32 dyadic with decimal digits of `m · 5^k` for a negative
+  binary exponent, and `rne_spellingOf_finite` proves that one RNE pass returns every finite input
+  encoding unchanged, including both zero signs and subnormals;
+- `rne_exactValue_absolute_error` relates one RNE pass directly to `exactDecimalValue`, with an
+  explicit finite-range premise and half the result-binade spacing (or subnormal spacing);
+- `exactImport_accepts_representable` proves a finite signed RNE result equal to its decimal
+  rational is accepted, deriving the internal cross-product check rather than assuming it.
 
-The round-trip lemma itself (`rne (spellingOf b) = b` for a finite binary32 `b`) still needs a
-decimal spelling of `m · 5^149`, and the range lemma at `2^128 − 2^103` needs the scaled branch of
-`roundPositive`. Both remain open; this module is the shared algebra they will consume.
+`Binary32Scale.carriedPair_finite_iff_below_overflowMidpoint` now gives the universal positive-ratio
+range boundary at `2^128 − 2^103`: the carried exponent is finite exactly below the midpoint, and
+the tie selects the overflow encoding. `roundPositive_belowOverflowMidpoint` and
+`roundPositive_overflowMidpoint` remain retained point fixtures for the finite predecessor and
+overflow tie.
 
 - the overflow response and versioned public mode/signature/error policy are
   specified outside this Lean reference in
   `.cairn/changes/binary32-literal-modes-v2/`;
-- a decimal `spellingOf` for every finite encoding together with the universal
-  `rne (spellingOf b) = b` round-trip theorem; the needed decimal spelling of
-  `m · 5^149` has not been constructed;
-- the universal overflow-boundary theorem at `2^128 − 2^103`; its scaled branch
-  through `roundPositive` remains unproved. The finite-input error theorem
-  above has an explicit `NoOverflow` premise and does not close this gap;
 - finite-decimal provenance, serialization, graph identity, and executable
   import/export replay as properties of the Lean reference. The Rust/CLI lane
   is specified and tested separately, not proved by this model.
@@ -1151,14 +1163,21 @@ reject nonfinite encodings and then check the mathematical signed I64 range;
 they do not model saturating or wrapping casts. The exact paths compare the
 exact rational values. Universal theorems establish the finite mixed RNE bound,
 successful truncation range/value, successful exact-value preservation, and
-refusal of finite in-range fractional values. Kernel fixtures cover both signed
+refusal of finite in-range fractional values. Every I64 RNE result is proved
+finite (`i64ToF32Rne_finite`), so exact I64-to-F32 conversion cannot report
+overflow; every successful exact I64-to-F32 result preserves the source integer
+rational value. Kernel fixtures cover both signed
 zeros, subnormal truncation to zero, ±2^24 tie sides, I64 MIN/MAX and adjacent
 values, and positive/negative overflow, infinities and NaNs.
 
-These are model results, not a proof of the Rust adapters in `sem.rs`. The
-implementation-agreement tests and mutation controls are separate evidence;
-neither that evidence nor the model claims imply a kernel F32 type or implicit
-coercions.
+`NobleFoundation/Binary32ConvertCorpus.lean` is generated by
+`crates/noble-ngraph/tests/soft_float_dir/adapters.rs`. Its 49 rows cover I64-to-F32 RNE and exact
+conversion, and F32-to-I64 truncating and exact conversion at signed zero, tie, range, fractional,
+subnormal and nonfinite boundaries. The generator asserts the Rust adapter's selected outcome;
+the corresponding `decide` theorem checks that the Lean model has that result. Freshness testing
+rejects a stale corpus. This is finite implementation-agreement evidence, not a universal proof of
+the Rust adapters. Mutation controls are separate tests; neither the corpus nor the model claims
+imply a kernel F32 type or implicit coercions.
 
 ## Ownership accounting oracle (issue #59)
 
