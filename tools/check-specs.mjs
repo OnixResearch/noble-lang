@@ -108,6 +108,7 @@ const ROUTES = {
   NGRAPH: ['experiment-test', 'correspondence', 'review'],
   EA: ['form-admission-test', 'isolated-backend-correspondence', 'review'],
   W: ['boundary-test', 'correspondence', 'review'],
+  WIT: ['boundary-test', 'model-proof', 'review'],
   H: ['boundary-test', 'correspondence', 'review'],
   S: ['boundary-test', 'correspondence', 'review'],
   WI: ['boundary-test', 'correspondence', 'review'],
