@@ -38,3 +38,15 @@ fn ordered_multi_output_shapes_preserve_repetition_and_shared_values() {
     let net = shared.l5(&shared_input).expect("shared net");
     assert_eq!(net.obs, Obs::Normal(reference));
 }
+
+#[test]
+fn nested_pair_outputs_flatten_in_order_for_the_net() {
+    let lowered = Lowered::new(&[], "dup dup 1 + swap pair pair", 1).expect("nested pair extracts");
+    let inputs = i64s(&[41]);
+    let expected = vec![Value::I64(41), Value::I64(42), Value::I64(41)];
+    assert_eq!(lowered.outputs(), expected.len());
+    assert_eq!(lowered.l3(&inputs).expect("reference outputs"), expected);
+    let report = lowered.l5(&inputs).expect("nested-pair net");
+    assert_eq!(report.obs, Obs::Normal(expected));
+    assert_eq!(report.interactions, 4);
+}
