@@ -252,9 +252,9 @@ function renderRefusals(receipts) {
 
 /* ---------- The encoder corpus module ---------- */
 
-function renderEncoder(receipts) {
+function renderEncoder(receipts, root) {
   const { solver, queries, digests } = receipts;
-  const pairs = parseCorpus(fs.readFileSync(path.join(ROOT, CORPUS), 'utf8'));
+  const pairs = parseCorpus(fs.readFileSync(path.join(root, CORPUS), 'utf8'));
   const byName = new Map(pairs.map(pair => [pair.name, pair]));
   assert.equal(queries.corpus_sha256, solver.source.corpus_sha256, 'the query file binds the receipt corpus');
   for (const claim of solver.claims) {
@@ -345,9 +345,9 @@ function renderEncoder(receipts) {
 /* ---------- Entry points ---------- */
 
 /** Read the three retained files and render both modules. Every argument is a repository path. */
-export function generate(solverPath, queriesPath, endpointsPath) {
+export function generate(solverPath, queriesPath, endpointsPath, root = ROOT) {
   const readJson = relative => {
-    const bytes = fs.readFileSync(path.join(ROOT, relative));
+    const bytes = fs.readFileSync(path.join(root, relative));
     return { value: JSON.parse(bytes.toString('utf8')), sha256: sha(bytes), path: relative };
   };
   const solver = readJson(solverPath);
@@ -361,16 +361,22 @@ export function generate(solverPath, queriesPath, endpointsPath) {
     digests: { solver: { path: solverPath, sha256: solver.sha256 },
       queries: { path: queriesPath, sha256: queries.sha256 },
       endpoints: { path: endpointsPath, sha256: endpoints.sha256 } } };
-  return { [REFUSALS_MODULE]: renderRefusals(receipts), [ENCODER_MODULE]: renderEncoder(receipts) };
+  return { [REFUSALS_MODULE]: renderRefusals(receipts), [ENCODER_MODULE]: renderEncoder(receipts, root) };
 }
 
 function main() {
   const argv = process.argv.slice(2);
   const flags = {};
-  for (let at = 0; at < argv.length; at += 2) {
-    assert.ok(['--solver', '--queries', '--endpoints', '--check', '--write'].includes(argv[at]) || at + 1 === argv.length,
-      `unexpected argument ${argv[at]}`);
-    flags[argv[at]] = argv[at + 1];
+  for (let at = 0; at < argv.length; at += 1) {
+    const flag = argv[at];
+    if (flag === '--check' || flag === '--write') {
+      flags[flag] = true;
+      continue;
+    }
+    assert.ok(['--solver', '--queries', '--endpoints'].includes(flag), `unexpected argument ${flag}`);
+    assert.ok(at + 1 < argv.length, `${flag} needs a value`);
+    flags[flag] = argv[at + 1];
+    at += 1;
   }
   assert.ok(flags['--solver'] && flags['--queries'] && flags['--endpoints'],
     'usage: solver-lean.mjs --solver S --queries Q --endpoints E --check|--write');
