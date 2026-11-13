@@ -9,9 +9,9 @@ new language category on any located workload.
 
 ## Worked comparisons
 
-The CLI evidence is in `receipts/2026-11-13/measure.json`; the receipt records its own clean
-source commit/tree. All source examples run under the selected Core-Bootstrap profile and use
-current Data.
+The CLI evidence is in [`receipts/2026-11-13/measure.json`](receipts/2026-11-13/measure.json),
+bound to clean source commit `74b1748153fb778e53c4dd8830d6912889f00524`. All source examples run
+under the selected Core-Bootstrap profile and use current Data.
 
 1. **Reuse:** `3 dup 4 + swap -` leaves `I64 4`. The value is required twice, so explicit `dup`
    expresses the intent. `Data` admits it today. The existing Resource policy refuses the same
@@ -64,8 +64,8 @@ explicit boundaries prevent a structural permission from becoming host authority
 
 The measured examples remain concise explicit stack code: the repeated-use case uses `dup`, and
 the disposal case uses `drop`. Across seven warm-after-one compile runs, the existing-profile
-medians are 4.405 ms for harmless duplication, 5.104 ms for the discarded intermediate, 6.069 ms
-for the must-handle counterfactual, and 4.560 ms for the shared value; emitted modules are 56,121
+medians are 10.744 ms for harmless duplication, 8.994 ms for the discarded intermediate, 9.038 ms
+for the must-handle counterfactual, and 10.375 ms for the shared value; emitted modules are 56,121
 to 58,218 bytes. No source annotation currently names the two bits, so authoring cost for a
 hypothetical profile cannot be measured honestly. These are existing-profile CLI measurements,
 not a price for the proposed checker.
