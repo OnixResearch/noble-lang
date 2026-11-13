@@ -1316,7 +1316,7 @@
           "../verification/binary32/replay.json",
           "../verification/binary32/shrinker.json",
           "../verification/foundation/receipts/aa074e1/index.json",
-          "../.cairn/changes/binary32-lean-reference/"
+          "../.cairn/archive/2026-11-13-binary32-lean-reference/"
         ],
         "open": "Correspondence with sem.rs, wasm-opt, V8, the loader or any other target is not established. The retained replay receipt predates the Lean 4.35 bump and one corrected retained expectation, so it binds older lane and model bytes and must be re-recorded before it cites current bytes.",
         "non_claims": [

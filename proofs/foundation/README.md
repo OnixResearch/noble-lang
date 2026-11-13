@@ -975,7 +975,7 @@ Open, and deliberately not closed by this model:
 - correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
   is a separate trusted-correspondence claim: the replay shows agreement on 26
   retained expectations on one host and target, not a refinement proof. The
-  reviewed decision (`.cairn/changes/binary32-lean-reference/design.md`, issue
+  reviewed decision (`.cairn/archive/2026-11-13-binary32-lean-reference/design.md`, issue
   #38) records it as a **trusted, tested assumption** on
   `x86_64-unknown-linux-gnu` and reopens when #92 lands. The retained
   `verification/binary32/replay.json` predates the Lean 4.35 bump and the
