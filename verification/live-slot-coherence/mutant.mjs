@@ -63,7 +63,7 @@ const tail = text => text.split('\n').filter(Boolean).slice(-6).join('\n');
 // The control is only meaningful over committed source: the archive below must equal the review.
 const status = run('git', ['-C', repository, 'status', '--porcelain']);
 assert.equal(status.status, 0, `git status failed: ${status.stderr}`);
-assert.deepEqual(status.stdout.trim(), [], 'the repository tree must be clean before the mutant run');
+assert.equal(status.stdout.trim(), '', 'the repository tree must be clean before the mutant run');
 const commit = run('git', ['-C', repository, 'rev-parse', 'HEAD']).stdout.trim();
 assert.match(commit, /^[0-9a-f]{40}$/, 'select the source commit of the clean tree');
 
@@ -198,7 +198,7 @@ try {
   removeCreatedFixtures();
 }
 const finalStatus = run('git', ['-C', repository, 'status', '--porcelain']);
-assert.deepEqual(finalStatus.stdout.trim(), [], 'the lane runs must not leave the reviewed tree dirty');
+assert.equal(finalStatus.stdout.trim(), '', 'the lane runs must not leave the reviewed tree dirty');
 
 const receipt = {
   schema: 'noble-live-slot-current-map-mutant/v1',
