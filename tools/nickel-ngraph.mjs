@@ -17,10 +17,12 @@ const TOOLS = JSON.parse(readFileSync(path.join(ROOT, "policy/tool-selection.jso
 const NICKEL = path.join(TOOLS.nickel.output, "bin/nickel");
 const PINNED_NODE = path.join(TOOLS.node.output, "bin/node");
 const SOURCE = "nickel/ngraph/fixtures/arithmetic.ncl";
+const COMPOSITION_SOURCE = "nickel/ngraph/fixtures/composition.ncl";
 const DELAYED_SOURCE = "nickel/ngraph/fixtures/delayed-contract-failure.ncl";
 const LIBRARY = "nickel/ngraph/library.ncl";
 const CONTRACT = "nickel/ngraph/contract.ncl";
 const DECLARED_CLOSURE = [SOURCE, LIBRARY, CONTRACT];
+const COMPOSITION_CLOSURE = [COMPOSITION_SOURCE, LIBRARY, CONTRACT];
 const I64_MIN = -(1n << 63n);
 const I64_MAX = (1n << 63n) - 1n;
 const I64_WIDE = 9007199254740993n;
@@ -195,6 +197,146 @@ function evaluate(noble, graph, vectors, reference) {
   );
 }
 
+function admitConstructor(noble, bundle, options, out, label) {
+  const versions = {
+    schema: bundle.schema,
+    library: bundle.library_version,
+    contract: bundle.contract_version,
+  };
+  const bundleSha = sha256(Buffer.from(stable({
+    source_sha256: options.sourceSha,
+    import_closure: options.importClosure,
+    parameters: bundle.parameters,
+    versions,
+    evaluator: options.evaluator,
+    declared_import_closure: options.declaredClosure,
+    exported_sha256: options.exportSha,
+    case: label,
+    bundle,
+  })));
+  const bound = { ...bundle, bundle_sha256: bundleSha };
+  const boundBytes = Buffer.from(`${JSON.stringify(bound, null, 2)}\n`);
+  const boundPath = path.join(out, `${label}.constructor.json`);
+  const graphPath = path.join(out, `${label}.ngraph`);
+  writeFileSync(boundPath, boundBytes);
+  const checked = nobleReports(noble, [
+    "ngraph", "check", boundPath,
+    "--graph-out", graphPath,
+    "--budget-work", "4096",
+    "--budget-expansion", "1024",
+    "--budget-inputs", "32",
+    "--budget-outputs", "64",
+    "--budget-layers", "128",
+    "--budget-live-nodes", "1024",
+    "--budget-graph-bytes", "1048576",
+  ], `native admission for ${label}`)[0];
+  if (checked.profile !== "ngraph-i64/0" || !checked.subject.includes("authored-nickel")) {
+    throw new Error(`${label}: native checker admitted an unexpected graph profile or producer identity`);
+  }
+  const graphBytes = readFileSync(graphPath);
+  return {
+    bound,
+    boundBytes,
+    boundPath,
+    graphPath,
+    graphBytes,
+    checked,
+    graphSha: sha256(graphBytes),
+  };
+}
+
+function vectorFile(rows) {
+  const arity = rows[0].length;
+  return [
+    "noble-ngraph-vectors/0",
+    `types ${Array.from({ length: arity }, () => "i64").join(" ")}`,
+    ...rows.map((row) => `v ${row.join(" ")}`),
+    "",
+  ].join("\n");
+}
+
+function compositionExpected(name, row) {
+  const x = BigInt(row[0]);
+  if (name === "identity") return [x.toString()];
+  if (name === "scalar_copy") return [x.toString(), x.toString()];
+  if (name === "product") {
+    const y = BigInt(row[1]);
+    return [wrap64(x + 5n).toString(), wrap64(y - 2n).toString()];
+  }
+  if (name === "permutation") return [row[1], row[0]];
+  if (name === "reassociation_left" || name === "reassociation_right") {
+    return [wrap64(wrap64(wrap64(x + 5n) * 2n) - 3n).toString()];
+  }
+  throw new Error(`unknown composition case ${name}`);
+}
+
+function runCompositionLaws(noble, evaluator, out) {
+  const closure = observeClosure(COMPOSITION_SOURCE, COMPOSITION_CLOSURE);
+  const source = readFileSync(path.join(ROOT, COMPOSITION_SOURCE));
+  const exportedBytes = exportNickel(COMPOSITION_SOURCE);
+  const exported = JSON.parse(exportedBytes.toString("utf8"));
+  const names = ["identity", "scalar_copy", "product", "permutation", "reassociation_left", "reassociation_right"];
+  if (stable(Object.keys(exported).sort()) !== stable([...names].sort())) {
+    throw new Error("composition fixture export does not have the exact expected law matrix");
+  }
+  writeFileSync(path.join(out, "composition-exported-constructor.json"), exportedBytes);
+  const scalarRows = ["0", "1", "-1", I64_MIN.toString(), I64_MAX.toString(), I64_WIDE.toString(), "-9007199254740995"]
+    .map((value) => [value]);
+  const pairRows = [
+    ["0", "1"], ["1", "-1"], ["-1", I64_MIN.toString()],
+    [I64_MIN.toString(), I64_MAX.toString()], [I64_MAX.toString(), I64_WIDE.toString()],
+    [I64_WIDE.toString(), "-9007199254740995"], ["-9007199254740995", "0"],
+  ];
+  const cases = {};
+  const admitted = {};
+  for (const name of names) {
+    const rows = name === "product" || name === "permutation" ? pairRows : scalarRows;
+    const constructor = admitConstructor(noble, exported[name], {
+      sourceSha: sha256(source),
+      importClosure: closure,
+      evaluator,
+      declaredClosure: COMPOSITION_CLOSURE,
+      exportSha: sha256(exportedBytes),
+    }, out, `composition-${name}`);
+    admitted[name] = constructor;
+    const vectorsPath = path.join(out, `composition-${name}.vectors`);
+    writeFileSync(vectorsPath, vectorFile(rows));
+    const expected = rows.map((row) => compositionExpected(name, row));
+    const reference = evaluate(noble, constructor.graphPath, vectorsPath, true);
+    const packed = evaluate(noble, constructor.graphPath, vectorsPath, false);
+    if (stable(reference) !== stable(expected)) throw new Error(`${name}: reference result differs from independent model`);
+    if (stable(packed) !== stable(expected)) throw new Error(`${name}: packed result differs from independent model`);
+    cases[name] = {
+      graph_identity: constructor.checked.graph,
+      graph_sha256: constructor.graphSha,
+      construction_parameters: constructor.bound.parameters,
+      input_rows: rows,
+      expected,
+      reference,
+      packed,
+    };
+  }
+  const reassociationMatches = stable(cases.reassociation_left.reference) === stable(cases.reassociation_right.reference)
+    && stable(cases.reassociation_left.packed) === stable(cases.reassociation_right.packed);
+  if (!reassociationMatches) throw new Error("reassociation pair differs under the ordered-output observer");
+  const result = {
+    schema: "noble-ngraph-nickel-composition-result/v1",
+    source: { path: COMPOSITION_SOURCE, sha256: sha256(source), bytes: source.length },
+    import_closure: { declared: COMPOSITION_CLOSURE, observed: closure },
+    exported: { sha256: sha256(exportedBytes), bytes: exportedBytes.length },
+    observer: "ordered outputs under exact wrapping-I64 evaluation",
+    law_results: cases,
+    reassociation_equal: reassociationMatches,
+    theorem_status: "No theorem binds these Nickel fixture bytes, lowerer, or evaluators to the observed laws.",
+    gaps: [
+      "No source-to-implementation correspondence theorem is established.",
+      "No effects, resource permissions, or arbitrary output reordering are modeled or claimed.",
+    ],
+  };
+  writeFileSync(path.join(out, "composition-result.json"), `${JSON.stringify(result, null, 2)}\n`);
+  return { result, exportedBytes, exported, source, closure, admitted };
+}
+
 function cleanSourceCommit() {
   const status = run("git", ["status", "--porcelain"]);
   if (status.status !== 0) throw new Error(`git status failed: ${status.stderr}`);
@@ -275,6 +417,7 @@ function replay(noblePath, outPath) {
   const packed = evaluate(noble, graphPath, vectorsPath, false);
   if (stable(reference) !== stable(expected)) throw new Error(`reference mismatch: ${stable(reference)}`);
   if (stable(packed) !== stable(expected)) throw new Error(`packed mismatch: ${stable(packed)}`);
+  const composition = runCompositionLaws(noble, evaluator, out);
 
   const result = {
     schema: "noble-ngraph-nickel-fixture-result/v1",
@@ -303,6 +446,7 @@ function replay(noblePath, outPath) {
     },
     reference,
     packed,
+    composition: composition.result,
     non_claims: [
       "Finite implementation observations do not prove source-to-IR correspondence.",
       "No effect independence, resource permission, or arbitrary output reordering is claimed.",
@@ -310,7 +454,7 @@ function replay(noblePath, outPath) {
   };
   writeFileSync(path.join(out, "fixture-result.json"), `${JSON.stringify(result, null, 2)}\n`);
   writeFileSync(path.join(out, "expected-results.json"), `${JSON.stringify(result.independent_expected, null, 2)}\n`);
-  return result;
+  return { ...result, compositionRun: composition };
 }
 
 function main(args) {
@@ -323,6 +467,7 @@ function main(args) {
     source_commit: result.source_commit,
     graph_identity: result.admission.graph_identity,
     evaluators_match: true,
+    composition_laws_match: result.composition.reassociation_equal,
   })}\n`);
 }
 
