@@ -27,6 +27,11 @@ mod differential;
 #[path = "cert/tamper.rs"]
 mod tamper;
 
+#[path = "cert/scoped.rs"]
+mod scoped;
+#[path = "cert/scoped_corpus.rs"]
+mod scoped_corpus;
+
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>
 {

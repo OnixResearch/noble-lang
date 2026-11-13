@@ -68,6 +68,8 @@ extern crate alloc;
 
 pub mod batch;
 pub mod cert;
+#[path = "cert/scoped.rs"]
+pub mod cert_scoped;
 pub mod check;
 pub mod compiled;
 pub mod diag;

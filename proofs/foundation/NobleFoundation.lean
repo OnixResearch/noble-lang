@@ -69,3 +69,5 @@ import NobleFoundation.RegionProtocol
 import NobleFoundation.ImplicitUnification
 import NobleFoundation.ImplicitScope
 import NobleFoundation.ImplicitPropositions
+import NobleFoundation.GuardedRewrite
+import NobleFoundation.GuardedRewriteCorpus
