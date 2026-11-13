@@ -79,6 +79,7 @@ pub mod grad;
 pub mod identity;
 pub mod ir;
 pub mod layout;
+pub mod net;
 pub mod prng;
 pub mod schedule;
 pub mod sem;
