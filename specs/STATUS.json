@@ -1288,6 +1288,60 @@
       "NG-PO-H"
     ],
     "ng_po_discharged": [],
+    "proof_slices": {
+      "NG-PO-C": {
+        "issue": 43,
+        "obligation": "open",
+        "slice": "lean-validator-and-per-artifact-kernel-validation",
+        "model": "proofs/foundation/NobleFoundation/PackedSchedule.lean: validate and validate_sound over every well-formed graph; PackedScheduleCorpus.lean kernel-checks two real packed emissions (interleaved, and lateInput packed as [0,1,3,2,4] with a repeated output)",
+        "implementation": "crates/noble-ngraph/src/schedule.rs check, tested in crates/noble-ngraph/tests/schedule_correspondence.rs, layout_differential.rs and layout_reorder.rs",
+        "evidence": [
+          "../verification/ngraph/schedule-receipt-29fc1e17.json",
+          "../verification/ngraph/validation-cost-2026-11-05.json"
+        ],
+        "open": "No theorem relates the Rust packed executor to run, and no extraction subject covers crates/noble-ngraph/src/schedule.rs. #97 re-extracts the noble-contracts, noble-kernel and noble-wasm subjects only, so it neither carries nor blocks this executor correspondence; the retained receipt's #97 sentence is corrected by the erratum in verification/ngraph/README.md.",
+        "non_claims": [
+          "Per-artifact validation does not prove the executor runs every stream as run does.",
+          "No decoder, no guard or failure-suffix model, no cross-platform claim."
+        ]
+      },
+      "NG-PO-D": {
+        "issue": 38,
+        "obligation": "open",
+        "slice": "kernel-reducible-binary32-model-with-tested-correspondence",
+        "model": "proofs/foundation/NobleFoundation/Binary32.lean and Binary32Expectations.lean: raw encodings, classification, scaled exact interpretation, round-to-nearest/ties-to-even with gradual underflow, add/subtract/multiply, and 26 retained kernel-checked expectations",
+        "implementation": "crates/noble-ngraph/src/sem.rs add/subtract/multiply, replayed through the packed reference and the compiled graph legs",
+        "correspondence": "reviewed trusted, tested assumption on x86_64-unknown-linux-gnu; not proved. Reopens when #92 lands (AeneasVerif/aeneas#1073) or a reviewed float-capable extraction is selected.",
+        "evidence": [
+          "../verification/binary32/replay.json",
+          "../verification/binary32/shrinker.json",
+          "../verification/foundation/receipts/aa074e1/index.json",
+          "../.cairn/archive/2026-11-13-binary32-lean-reference/"
+        ],
+        "open": "Correspondence with sem.rs, wasm-opt, V8, the loader or any other target is not established. The retained replay receipt predates the Lean 4.35 bump and one corrected retained expectation, so it binds older lane and model bytes and must be re-recorded before it cites current bytes.",
+        "non_claims": [
+          "Model theorems are not implementation proofs.",
+          "The replayed expectations, the APFloat lane and the ignored 10^7 soft-float tier are finite tested evidence, not proof."
+        ]
+      },
+      "NG-PO-F": {
+        "issue": 45,
+        "obligation": "open",
+        "slice": "proved-real-and-ordered-models-with-tested-grad-rs",
+        "model": "proofs/foundation/NobleFoundation/ReverseAD.lean, ReverseADTranspose.lean and ReverseADAdjoint.lean prove the real-valued substantial derivative, the transpose identity and the node-by-node adjoint equation; ReverseADOrdered.lean adds an ordered binary32 reference with duplicate-output-seed accumulation (repeated_output_seeds_accumulate), and ReverseADMutations.lean catches five seeded update-rule faults",
+        "implementation": "crates/noble-ngraph/src/grad.rs forward and backward, tested against the ordered model on 306 generated cases",
+        "evidence": [
+          "../verification/grad-ordered/differential.json",
+          "../verification/foundation/receipts/31caad931/foundation-check.json",
+          "../verification/foundation/receipts/956d8ca07/foundation-check.json"
+        ],
+        "open": "No theorem relates grad.rs to either model, so ngraph-deriv-real/0 refinement is open. Ordered affine terms are outside the established slice, with a reopen condition recorded in proofs/foundation/README.md; no binary32 gradient error bound is claimed.",
+        "non_claims": [
+          "The differential is tested-implementation evidence, not refinement.",
+          "Real-valued proofs do not transfer to binary32 or to grad.rs."
+        ]
+      }
+    },
     "platform_scope": "One pinned x86_64 Linux toolchain/platform; no cross-platform bit-reproducibility claim.",
     "trusted_assumptions": [
       "rustc, cargo, selected Node and git are trusted tools; binary hashes identify bytes and retained build logs are not cryptographic reproducible-build attestation.",

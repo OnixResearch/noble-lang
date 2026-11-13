@@ -280,6 +280,26 @@ A numeric graph training contract MUST name a versioned derivative policy that i
 
 Numeric graph assurance claims MUST separately state reference agreement, finite differential or test coverage, discharged theorem obligations and trusted compiler, runtime and toolchain boundaries. Extraction preservation, graph-checker soundness, compiled-evaluator refinement, FP32 reference-model correspondence, fact-transfer soundness and derivative-policy conformance MUST remain open obligations until separately proved or evidenced. Matching hashes, agreement between evaluators, finite differential tests and producer-supplied metadata MUST NOT be reported as discharging any of them.
 
+**NGV-F32-01.**
+
+A kernel-checked binary32 reference MUST select exactly one model with a documented trusted base, and MUST NOT depend on an opaque host floating-point primitive or an unaudited toolchain pin change.
+
+The selected model MUST define raw 32-bit encodings with sign, 8-bit biased exponent and 23-bit fraction; classify infinity, NaN, both zero signs, subnormal and normal; interpret every finite encoding exactly as `mantissa * 2^exponent`; round to nearest with ties to even at one rounding per operation; retain gradual underflow at `2^-149`; form an infinity at or above `2^128` with the operand sign; keep signed zeros distinct; and treat every NaN encoding as one observation class while every other class keeps its exact bytes.
+
+Addition, subtraction and multiplication MUST follow the IEEE 754 rules for NaN propagation, infinities, signed zeros, overflow and underflow. Reassociation and implicit contraction MUST be observable, so a fold order and a single rounding per operation are normative.
+
+**NGV-F32-02.**
+
+Reference expectations MUST be proposed by an independent external tool and MUST each be checked against the selected model by the Lean kernel. A proposal alone MUST NOT be evidence, and inability to check one MUST NOT be a pass.
+
+The retained family MUST cover halfway ties in both directions, cancellation, both zero signs, the smallest and largest subnormals, the normal/subnormal boundary, gradual underflow, overflow in both signs, infinities and NaNs. Native or external tools MAY propose expected bits, but no `native_decide`, `decide +native` or native `#eval` MAY replace kernel checking.
+
+**NGV-F32-03.**
+
+A receipt MUST identify the model, the Lean and Mathlib pins, the proposer, the checker and the clean source revision, and MUST list every proved theorem with its printed statement and axioms. Stale evidence MUST be refused rather than reinterpreted.
+
+Separate claims MUST be maintained for the proved model, tested implementations, trusted correspondence and open obligations. A model-level receipt MUST NOT be reported as implementation or correspondence evidence, and no universal target claim MAY come from one host.
+
 **FXORACLE-SEM-01.**
 
 An opt-in `finite-effects/v1` reference semantics MUST interpret the existing finite effect-constraint grammar without changing production acceptance, using an independently represented finite universe, exact set union, explicit equations and rigid binders. For a concrete system it MUST define the assignment `A(const S) = S`, `A(union a b) = A(a) ∪ A(b)` and `A(a) = A(b)` for every equation, MUST interpret the solver's result as the unique greatest assignment, and MUST determine satisfiability by bounded exhaustive enumeration. For the rigid lane it MUST separate a rigid valuation from a hole assignment, MUST establish rigid consistency first, MUST report `goals-valid` only when every enumerated rigid valuation and equation-satisfying hole assignment satisfies every rigid goal, and MUST NOT report an inconsistent system as a vacuously valid implication. Cyclic or otherwise unrepresentable systems MUST be reported `unsupported-reference` with no semantic verdict, and a production refusal of a semantically valid goal MUST be characterized as a conservative refusal unless the case is in the explicitly declared symbolically exact subfamily.

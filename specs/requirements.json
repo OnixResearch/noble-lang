@@ -3362,6 +3362,66 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "NGRAPH-ERR-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-ERR-02",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-ERR-03",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-ERR-04",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-ERR-05",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "NGRAPH-EXTRACT-01",
       "document": "../.cairn/specs/language/spec.md",
       "document_id": "SPEC-0001",
@@ -3495,6 +3555,48 @@
         "NGRAPH-CASE-11",
         "NGRAPH-CASE-12",
         "NGRAPH-CASE-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGV-F32-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGV-F32-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGV-F32-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "NGV-F32-CASE-03"
       ],
       "test_design": "scenario-described-not-executed"
     },

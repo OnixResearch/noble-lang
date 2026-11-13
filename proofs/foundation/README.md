@@ -179,8 +179,11 @@ Status words:
 | Finite sequences equal an independent reference machine | `exec_lowerAll`, `run_lowerAll`, `refRun_range`, `depthRun_of_refRun`, `codeTyped_lowerAll` | lowering of literal pushes (`emit/functions.rs` `call $push_i64`) | model **proved**. Implementation **tested** |
 | quote/compose/run: construction is pure, run executes the composed body, reflect observes the exact recipe | `PExpr.exec_code`, `PExpr.exec_code_run`, `PExpr.exec_code_reflect`, `PExpr.exec_run_ref`, `PExpr.codeTyped(_run)`, `exec_quote_program_run_run`, `compose_order_matters`, `quote_compose_run_examples` | `$op_quote_typed`, `$op_compose`, `$op_run` (`runtime/programs.wat`), `emit/functions.rs` | model **proved**. Implementation **tested** |
 | Specification-quality obligations are separate from implementation satisfaction | `realizable_of_uninhabited`, `unrealizable_of_contradictory_post`, `not_deterministic_of_two_outputs`, `deterministic_of_functional_post`, `increment_inhabited`, `increment_realizable`, `increment_deterministic`, `contradictory_inhabited`, `contradictory_not_realizable`, `underconstrainedBool_two_outputs`, `underconstrainedBool_realizable`, `underconstrainedBool_not_deterministic`, `emptyOutput_deterministic`, `emptyOutput_not_realizable`, `determinacy_does_not_imply_realizability` | none (model relations only; `NobleContracts.exportedClaim` is not related to this file) | **proved** (model). Renderer/retained-contract correspondence **open** |
-| Reverse-mode AD reference over the bounded smooth fragment | `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, `exampleGraph_wellFormed`, `exampleGraph_value`, `exampleGraph_tangent`, `exampleGraph_derivative`, `unused_input_slot_tangent`, `non_unit_seed_unconsumed`, `exampleGraph_adjointDot`, `the_sweep_pairs_to_eight_on_the_second_slot`, `slotGraph_wellFormed`, `slotGraph_slotNode_map`, `slotGraph_value`, `slotGraph_tangent_slot_zero`, `slotGraph_tangent_slot_one`, `slotGraph_derivative_slot_zero`, `slotGraph_derivative_slot_one`, `slotGraph_slotGradient_unit`, `slotGraph_slotGradients_match_unit_tangent`, `slotGraph_slotGradient_five`, `slotGraph_slotGradients_match_five_tangent`, `slotGraph_wrong_slot_control` | `crates/noble-ngraph/src/grad.rs` `slot_grads`/`slot_node` and reverse loop; binary32 operation sequence | model **proved** (JVP, per-step accumulation, slot extraction, unit and seed-5 fixture transpose checks, the wrong-slot control, and five seeded update-rule mutations caught, including the subtraction sign), and the transpose identity over every well-formed graph, so the reverse sweep computes the derivative. Ordered binary32 gradient model and Rust refinement **open** |
-| Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **open** |
+| Reverse-mode AD reference: the real-valued derivative, transpose and adjoint (issue #45) | ReverseAD.lean: `line_zero`, `evalStep_hasDerivAt`, `valuesUpTo_hasDerivAt`, `tangent_is_directional_derivative`, `repeated_operand_contributes_twice`, `adjoint_step_adds_contribution`, `adjoint_unchanged_when_operand_absent`, `adjointDot_step`, the `exampleGraph_*` and `slotGraph_*` fixtures, `slotGraph_wrong_slot_control`; ReverseADTranspose.lean: `transpose_identity`, `reverse_sweep_is_the_derivative`; ReverseADAdjoint.lean: `final_adjoint_eq_seed_plus_consumers` | the **intended real-valued** smooth fragment only, with no floating-point rounding and no Rust relation | model **proved**: the tangent is the directional derivative, the transpose identity holds over every well-formed graph, the reverse sweep computes the derivative, and the final adjoint is the seed plus that node's consumers |
+| Reverse-mode AD over the ordered binary32 model (issue #45) | ReverseADOrdered.lean: `stored_order_changes_the_gradient`, `ascending_traversal_is_caught`, `per_occurrence_accumulation_is_observable`, `repeated_output_seeds_accumulate`, `negative_zero_seed_becomes_positive`, `exact_fixture_gives_the_derivative`, `exact_gradient_is_one_in_both_orders`; ReverseADMutations.lean: `slotGraph_mulOwnValue_caught`, `slotGraph_addDropsSecond_caught`, `slotGraph_repeatedCountedOnce_caught`, `slotGraph_overwrite_caught`, `subGraph_subSignFlipped_caught` | the #38 binary32 model as the machine, one rounding per stored operation; receipt [`verification/foundation/receipts/956d8ca07/`](../../verification/foundation/receipts/956d8ca07/foundation-check.json) | model **proved**: stored order, traversal direction, per-occurrence accumulation and seed initialisation are observable and decided, duplicate output seeds accumulate per occurrence, and five seeded update-rule faults are caught. No binary32 error bound and no Rust relation is claimed |
+| `grad.rs` against the ordered binary32 reference (issue #45) | 306 generated cases and 7 seeded reverse-pass faults in [`verification/grad-ordered/differential.json`](../../verification/grad-ordered/differential.json) (`cases=306 values=2270 grads=2270 nonfinite=63 repeated-operand=196`) | `crates/noble-ngraph/src/grad.rs` `forward`/`backward` on one host and target | implementation **tested**: every forward value and gradient matches the Lean-generated expectation, and each declared fault disagrees with at least one case. This is not refinement |
+| Reverse-AD refinement of `grad.rs` (issue #45, NG-PO-F) | none | `ngraph-deriv-real/0`, the Rust side | **open**: no theorem relates `grad.rs` to either model, so NG-PO-F stays open. The issue's ordered affine terms are recorded as outside this established slice, with a reopen condition in its README section |
+| Binary32 reference: rounding, signed zeros, NaN class, boundaries and the ordered fold | `retained_expectations_checked`, `halfway_ties_round_to_even`, `signed_zero_rules`, `nan_class_and_zero_separation`, `encoding_boundaries`, `exact_sum_exceeds_the_rounded_result`, `reassociation_is_observable`, `implicit_contraction_is_observable`, `multiplication_rounds_once`, `fold_append`, `fold_order_is_load_bearing`, `all_declared_mutations_are_caught` | `crates/noble-ngraph/src/sem.rs` add/sub/mul/affine and the compiled legs, on the receipted host and target only | model **proved**. Packed and compiled replay of the 26 retained expectations **tested** (`verification/binary32/replay.json`). `sem.rs` correspondence **reviewed trusted, tested assumption** on `x86_64-unknown-linux-gnu` (issue #38 decision), not proved; NG-PO-D stays **open** |
 | Conditional normal-range rounding error for positive exact quotients | `roundPositive_normal_absolute_error`, `roundPositive_normal_relative_error`, `flush_to_zero_violates_absolute_bound` | exact `Binary32Error` model only; scale/bin/value premises are explicit checker obligations, and no Rust/host correspondence is claimed | model **proved** under the stated normal-range premises. Subnormal error rule and implementation correspondence **open** |
 | Scale premises of the normal-range rounding error, derived (issue #44) | `scale_lower`, `scale_upper`, `scale_at_boundary`, `boundary_rounds_exactly`, `roundPositive_absolute_error`, `roundPositive_relative_error` | exact `Binary32Scale` model only; the carried-exponent range stays a premise, and no Rust/host correspondence is claimed | model **proved**; the upper scale premise is **refuted** on the power boundary, where the result is exact. Implementation correspondence **open** |
 | Subnormal rounding error and the finite absolute error rule (issue #44) | `exactValue_small`, `roundPositive_subnormal_absolute_error`, `roundPositive_finite_absolute_error`, `rounding_to_the_smallest_normal_attains_the_bound`, `subnormal_results_are_not_relatively_bounded` | exact `Binary32Subnormal` model only; overflow is outside, and no Rust/host correspondence is claimed | model **proved**: the subnormal branch is within `2^-150`, attained, and absolute only. Implementation correspondence **open** |
@@ -971,7 +974,14 @@ Open, and deliberately not closed by this model:
 
 - correspondence between `crates/noble-ngraph/src/sem.rs` and the model, which
   is a separate trusted-correspondence claim: the replay shows agreement on 26
-  retained expectations on one host and target, not a refinement proof;
+  retained expectations on one host and target, not a refinement proof. The
+  reviewed decision (`.cairn/archive/2026-11-13-binary32-lean-reference/design.md`, issue
+  #38) records it as a **trusted, tested assumption** on
+  `x86_64-unknown-linux-gnu` and reopens when #92 lands. The retained
+  `verification/binary32/replay.json` predates the Lean 4.35 bump and the
+  correction of one retained tie expectation, so it binds older lane and model
+  bytes and must be re-recorded — with its output outside the repository — before
+  any receipt cites current bytes;
 
 - the extraction, training, snapshot and codec layers, guard/index rules, software
   helpers and optimizer behavior;
@@ -1570,10 +1580,29 @@ Open, and deliberately not closed:
   compares `grad.rs` with the ordered binary32 reference on 306 Lean-generated
   cases, which is tested-implementation evidence, not refinement;
 - guards, indexing, Boolean paths, activation corners, surrogate policies,
-  dynamic Programs, multi-output seeds and duplicate output-node accumulation
-  are outside the selected fragment;
+  dynamic Programs and ordered affine terms are outside the selected fragment
+  (multi-output seeds and duplicate output-node accumulation are **inside** the
+  ordered fragment: `repeated_output_seeds_accumulate` decides them, in the
+  ordered model only, and the real-valued model has no multi-output seed rule);
 - vanishing checks are absent by construction (no `sorry`, no axiom, no
   `native_decide`), but that is a hygiene fact, not a claim about the Rust side.
+
+### Decision: the ordered affine terms are outside the established slice (issue #45)
+
+The issue's first deliverable grants "add subtraction and ordered affine terms only after that core
+is proved". Subtraction was admitted after the add/multiply core (`evalStep_hasDerivAt` carries its
+case). The **ordered affine terms were not added**, and they are outside this slice rather than
+silently owed: they are not in the issue's acceptance list, `grad.rs`'s affine path
+(`crates/noble-ngraph/src/grad.rs`, its `Op::F32Affine` arm accumulating `gn * coefficient` per node
+operand) has no counterpart in either Lean model, and the ordered model fixes one rounding per stored
+add/subtract/multiply only. Implementing them is a separate unit: a `Node.affine` constructor in
+`ReverseAD.lean` with the transpose and adjoint proofs extended over term lists, the per-term ordered
+rounding in `ReverseADOrdered`, and affine nodes in the corpus generator, followed by a regenerated
+`corpus.txt` and a re-run `verification/grad-ordered/differential.mjs`.
+
+Reopen condition: a decision to state the affine derivative policy, or a measured disagreement
+between `grad.rs`'s affine path and the ordered model that the current corpus cannot express.
+Until one of those exists, no affine gradient claim is made and NG-PO-F stays open.
 
 ## Packed schedule validator model (issue #43, phase 1)
 

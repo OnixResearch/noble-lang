@@ -117,6 +117,7 @@ const ROUTES = {
   V: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
   VT: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
   VC: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
+  NGV: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
   DX: ['semantic-test', 'policy-test', 'review'],
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
   FXORACLE: ['experiment-test', 'correspondence', 'review'],
