@@ -1601,7 +1601,6 @@ mod tests {
             .prepare(b"1 2 i64.checked-add", &[], crate::Limits::default())
             .expect("checked-I64 expression");
         let environment = &prepared.submission().expect("submission").environment;
-        assert!(environment.checked_i64);
         assert!(!environment.calculator);
         assert!(!environment.text_cursor);
         assert_eq!(

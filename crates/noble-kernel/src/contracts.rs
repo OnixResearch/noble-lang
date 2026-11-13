@@ -337,8 +337,6 @@ pub struct Env {
     pub text_cursor: bool,
     /// Selected calculator-only guest primitives and declared numeric modules.
     pub calculator: bool,
-    /// Selected checked-I64 builtins; this profile is disjoint from all others.
-    pub checked_i64: bool,
     /// Owner of each definition, supplied independently of a candidate.
     pub definition_owners: alloc::vec::Vec<Option<u64>>,
     /// Host-confirmed immutable dispatch identities for required operations.
@@ -368,13 +366,19 @@ impl Env {
     pub(crate) fn ambient_test_emit_visible(&self) -> bool {
         !self.text_cursor
             && !self.calculator
-            && !self.checked_i64
+            && !self.has_checked_i64()
             && self.caller_module.is_none()
             && self.bound_adapters.is_empty()
             && ((!self.declared_modules
                 && self.nominals.is_empty()
                 && self.generic_variants.is_empty())
                 || (self.live_slots && self.live_test_hosts))
+    }
+
+    /// The checked-I64 profile is identified by its host-selected builtin
+    /// table, keeping legacy environment debug identities unchanged.
+    pub(crate) fn has_checked_i64(&self) -> bool {
+        self.kinds.contains(&Behavior::CheckedI64Add)
     }
 
     /// Register a host-owned versioned nominal backed by a unique opaque
@@ -613,7 +617,6 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         declared_modules: false,
         text_cursor: false,
         calculator: false,
-        checked_i64: false,
         definition_owners: alloc::vec![None; table.len()],
         bound_adapters: alloc::vec::Vec::new(),
         effects: alloc::vec![TEST_EMIT],
@@ -723,7 +726,6 @@ pub fn checked_i64_environment() -> Result<Env, crate::shapes::Defect> {
         env.deps.push(alloc::vec::Vec::new());
         env.definition_owners.push(None);
     }
-    env.checked_i64 = true;
     Ok(env)
 }
 
@@ -867,8 +869,8 @@ mod checked_i64_tests {
         let ordinary = super::environment().unwrap_or_else(|_| panic!("ordinary environment"));
         let checked =
             super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
-        assert!(!ordinary.checked_i64);
-        assert!(checked.checked_i64);
+        assert!(!ordinary.has_checked_i64());
+        assert!(checked.has_checked_i64());
         assert!(!checked.calculator);
         assert!(!checked.text_cursor);
         assert!(!checked.declared_modules);

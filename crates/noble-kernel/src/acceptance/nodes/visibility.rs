@@ -55,7 +55,7 @@ fn visible_behavior(
     if kind == crate::contracts::Behavior::I64Less {
         return env.text_cursor && env.declared_modules && !env.calculator && def.0 == 27;
     }
-    if env.checked_i64 {
+    if env.has_checked_i64() {
         match kind {
             crate::contracts::Behavior::CheckedI64Add => return def.0 == 23,
             crate::contracts::Behavior::CheckedI64Sub => return def.0 == 24,
