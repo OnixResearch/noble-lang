@@ -719,11 +719,12 @@ pub fn checked_i64_environment() -> Result<Env, crate::shapes::Defect> {
         ),
         (Behavior::CheckedI64DivRem, binary(div_rem_result)),
     ];
+    env.deps
+        .extend(alloc::vec![alloc::vec::Vec::new(); operations.len()]);
     for (behavior, scheme) in operations {
         scheme.validate()?;
         env.defs.push(scheme);
         env.kinds.push(behavior);
-        env.deps.push(alloc::vec::Vec::new());
         env.definition_owners.push(None);
     }
     Ok(env)
@@ -862,10 +863,8 @@ pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
 
 #[cfg(test)]
 mod checked_i64_tests {
-    use super::{Behavior, Definition};
-
     #[test]
-    fn checked_i64_profile_appends_the_fixed_pure_operation_table() {
+    fn profile_appends_the_fixed_pure_operation_table() {
         let ordinary = super::environment().unwrap_or_else(|_| panic!("ordinary environment"));
         let checked =
             super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
@@ -881,26 +880,40 @@ mod checked_i64_tests {
         assert_eq!(
             checked.kinds[23..],
             [
-                Behavior::CheckedI64Add,
-                Behavior::CheckedI64Sub,
-                Behavior::CheckedI64Mul,
-                Behavior::CheckedI64Neg,
-                Behavior::CheckedI64Abs,
-                Behavior::CheckedI64Less,
-                Behavior::CheckedI64DivRem,
+                super::Behavior::CheckedI64Add,
+                super::Behavior::CheckedI64Sub,
+                super::Behavior::CheckedI64Mul,
+                super::Behavior::CheckedI64Neg,
+                super::Behavior::CheckedI64Abs,
+                super::Behavior::CheckedI64Less,
+                super::Behavior::CheckedI64DivRem,
             ]
         );
         assert!(checked.deps[23..].iter().all(alloc::vec::Vec::is_empty));
         assert!(checked.definition_owners[23..].iter().all(Option::is_none));
-        assert_eq!(checked.scheme(Definition(23)).unwrap().stack_in.len(), 3);
-        assert_eq!(checked.scheme(Definition(26)).unwrap().stack_in.len(), 2);
+        assert_eq!(
+            checked
+                .scheme(super::Definition(23))
+                .unwrap()
+                .stack_in
+                .len(),
+            3
+        );
+        assert_eq!(
+            checked
+                .scheme(super::Definition(26))
+                .unwrap()
+                .stack_in
+                .len(),
+            2
+        );
     }
 
     #[test]
-    fn checked_div_rem_result_is_pair_success_or_i64_error() {
+    fn div_rem_result_is_pair_success_or_i64_error() {
         let checked =
             super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
-        let scheme = checked.scheme(Definition(29)).unwrap();
+        let scheme = checked.scheme(super::Definition(29)).unwrap();
         assert!(matches!(
             scheme.stack_out.as_slice(),
             [
