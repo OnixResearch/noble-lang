@@ -98,6 +98,26 @@ function writeSource(directory, name, text) {
   return { file, sha256: sha(Buffer.from(`${text}\n`)) };
 }
 
+/**
+ * The bytes one endpoint observation is bound to: the module the CLI ran must be the module it
+ * compiled from the exact source bytes this lane wrote, identified by both digests. The CLI
+ * re-checks the executed observation's digests against the prepared module before it reports
+ * (`crates/noble-cli/src/core/worker_scalar.rs`), and `worker scalar` accepts no module path, so
+ * other loaded bytes are not an input this lane can be given — only a binding it can refuse.
+ */
+const boundTo = (expected, endpointValue) =>
+  endpointValue.source_sha256 === expected.source_sha256 && endpointValue.wasm_sha256 === expected.wasm_sha256;
+
+/** The status one endpoint row supports: other bytes than the bound ones are inconclusive. */
+const endpointStatus = (bindingCurrent, verdict) => (bindingCurrent ? verdict : 'inconclusive');
+
+/** One byte of a digest replaced, so a row claims a module the lane did not record. */
+const flipDigest = digest => `${digest[0] === '0' ? '1' : '0'}${digest.slice(1)}`;
+
+/** The observation tuple a row with these facts has under the #56 status vocabulary. */
+const refusalObservation = (withinBudget) => ({ within_budget: withinBudget, bound: false, certificate: false,
+  model_parsed: false, model_replays: false, answer: 'notRun' });
+
 /** The source's real Wasm endpoint: compile, then one checked invocation. */
 function endpoint(binary, source, [a, b]) {
   const { rows, status, elapsed_ns } = cli(binary, ['worker', 'scalar', source.file,
@@ -158,9 +178,14 @@ function main() {
         const digests = new Set(points.map(point => point.endpoint.wasm_sha256));
         assert.equal(digests.size, 1, `${pair.name}/${side}: one module per source`);
         assert.ok([...digests][0].match(/^[0-9a-f]{64}$/), `${pair.name}/${side}: module digest is a SHA-256`);
+        points.forEach(point => assert.equal(point.endpoint.source_sha256, sides[side].sha256,
+          `${pair.name}/${side}: the module the CLI ran came from the bytes this lane wrote`));
         assert.equal(graph.reference.length, UNIVERSE.length);
+        const binding = { source_sha256: sides[side].sha256, wasm_sha256: [...digests][0] };
+        points.forEach(point => assert.ok(boundTo(binding, point.endpoint),
+          `${pair.name}/${side}: every candidate ran the bound module`));
         observed[side] = { source: sides[side].sha256, graph: graph.graph,
-          wasm_sha256: [...digests][0], extraction_ns: graph.extraction_ns, points };
+          wasm_sha256: [...digests][0], binding, extraction_ns: graph.extraction_ns, points };
       }
       // The pair's verdict must be the same on the endpoints and on the graphs, candidate by candidate.
       const differing = UNIVERSE.map((_, at) => observed.left.points[at].endpoint.value !== observed.right.points[at].endpoint.value);
@@ -174,6 +199,32 @@ function main() {
         first_differing_candidate: first < 0 ? null : first, sides: observed };
     });
     // Controls.
+    const altered = rows.flatMap(row => ['left', 'right'].flatMap(side => {
+      const observed = row.sides[side];
+      const point = observed.points[0].endpoint;
+      const other = row.sides[side === 'left' ? 'right' : 'left'].binding;
+      return [
+        ['flipped module digest', { ...point, wasm_sha256: flipDigest(point.wasm_sha256) }],
+        ['another side\'s module digest', { ...point, wasm_sha256: other.wasm_sha256 }],
+        ['another source digest', { ...point, source_sha256: flipDigest(point.source_sha256) }],
+      ].map(([kind, value]) => {
+        const bindingCurrent = boundTo(observed.binding, value);
+        return { pair: row.name, side, kind, verdict: row.verdict, binding_current: bindingCurrent,
+          status: endpointStatus(bindingCurrent, row.verdict), observation: refusalObservation(true) };
+      });
+    }));
+    assert.ok(altered.every(entry => entry.binding_current === false),
+      'an observation whose bytes are not the bound bytes fails the endpoint binding');
+    assert.ok(altered.every(entry => entry.status === 'inconclusive'),
+      'other loaded bytes never produce a verdict');
+    const unchanged = rows.flatMap(row => ['left', 'right'].map(side => {
+      const observed = row.sides[side];
+      const bindingCurrent = observed.points.every(point => boundTo(observed.binding, point.endpoint));
+      return { pair: row.name, side, verdict: row.verdict, binding_current: bindingCurrent,
+        status: endpointStatus(bindingCurrent, row.verdict) };
+    }));
+    assert.ok(unchanged.every(entry => entry.binding_current && entry.status === entry.verdict),
+      'the bound rows keep the pair verdict');
     const controlSource = writeSource(directory, 'control-mul', '*');
     const controlPoints = UNIVERSE.map(inputs => endpoint(binary, controlSource, inputs).value);
     assert.notDeepEqual(controlPoints, rows[0].sides.right.points.map(point => point.endpoint.value),
@@ -201,6 +252,16 @@ function main() {
         crossed_graph_disagrees: true,
         interface_refusal: refused.rows.outcome,
         ill_typed_refusal: rejected.rows.outcome,
+        altered_loaded_bytes: {
+          subject: 'the Wasm endpoint `noble worker scalar` compiles and runs',
+          execution: 'unsupported',
+          execution_reason: 'the CLI compiles SOURCE and runs the freshly compiled module in one invocation and accepts no module path (crates/noble-cli/src/core/worker_scalar.rs:111-115), so no invocation of this lane can be handed other loaded bytes',
+          binding: 'the module digest the CLI reports must be the digest recorded for that source, and the module\'s source digest must be the bytes this lane wrote',
+          observation: refusalObservation(false),
+          status: 'unsupported',
+          rows: altered,
+          positive_control: unchanged,
+        },
       },
       non_claims: [
         'agreement is on one fixed universe of eight candidates per pair, not a proof for every input',

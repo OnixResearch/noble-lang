@@ -1,0 +1,821 @@
+{
+  "schema": "noble-symbolic-endpoints-receipt/v1",
+  "claim": "source-backed pairs whose two sides each run as a checked Wasm module; graph and endpoint verdicts agree on a fixed universe",
+  "source": {
+    "commit": "661cf4c7e9cc425503d52df8ef6cabb373ae226b",
+    "tree": "b822f59122db4e1814900aca4b07bd0286dc7195",
+    "clean": true,
+    "lane_sha256": "2200973514390661caf1e705770c8c86b0e16afaf42b0d116294693e666ba920"
+  },
+  "cli_sha256": "4bf05d9fdccf617444a3c59f369b0d96027d5a5bafd7e3d9e2535369eaecbdb4",
+  "interface": "I64 I64 -- I64 ! {}",
+  "universe": [
+    [
+      "1",
+      "2"
+    ],
+    [
+      "5",
+      "7"
+    ],
+    [
+      "-3",
+      "4"
+    ],
+    [
+      "0",
+      "0"
+    ],
+    [
+      "-9223372036854775808",
+      "1"
+    ],
+    [
+      "9223372036854775807",
+      "1"
+    ],
+    [
+      "-9223372036854775808",
+      "-9223372036854775808"
+    ],
+    [
+      "81985529216486895",
+      "9223372036854775807"
+    ]
+  ],
+  "pairs": [
+    {
+      "name": "sourceCommutativeAdd",
+      "claim": "wrapping `+` and `swap +` agree on every input",
+      "expected": "agree",
+      "verdict": "agree",
+      "first_differing_candidate": null,
+      "sides": {
+        "left": {
+          "source": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+          "graph": "ef72991c8667e5dfdc1b6d95d42c4575cc63554169c018b174718e8aab6fbccc",
+          "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+          "binding": {
+            "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+            "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97"
+          },
+          "extraction_ns": 64798482,
+          "points": [
+            {
+              "inputs": [
+                "1",
+                "2"
+              ],
+              "endpoint": {
+                "value": "3",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 864057116
+              },
+              "expected": "3"
+            },
+            {
+              "inputs": [
+                "5",
+                "7"
+              ],
+              "endpoint": {
+                "value": "12",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 850769693
+              },
+              "expected": "12"
+            },
+            {
+              "inputs": [
+                "-3",
+                "4"
+              ],
+              "endpoint": {
+                "value": "1",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 716628213
+              },
+              "expected": "1"
+            },
+            {
+              "inputs": [
+                "0",
+                "0"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 676321601
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775807",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 654807644
+              },
+              "expected": "-9223372036854775807"
+            },
+            {
+              "inputs": [
+                "9223372036854775807",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775808",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 731457258
+              },
+              "expected": "-9223372036854775808"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "-9223372036854775808"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 747798136
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "81985529216486895",
+                "9223372036854775807"
+              ],
+              "endpoint": {
+                "value": "-9141386507638288914",
+                "wasm_sha256": "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97",
+                "source_sha256": "4e3cf60495dca6411d155372c42aa62f07a6f0c5792f016cff361dd7a3965b20",
+                "compilations": 1,
+                "elapsed_ns": 913587428
+              },
+              "expected": "-9141386507638288914"
+            }
+          ]
+        },
+        "right": {
+          "source": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+          "graph": "dc8956535afe578ff95df9eed9d6ab3ef3aca6b31e93e274dabd91d10ddb0c2f",
+          "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+          "binding": {
+            "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+            "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97"
+          },
+          "extraction_ns": 61013153,
+          "points": [
+            {
+              "inputs": [
+                "1",
+                "2"
+              ],
+              "endpoint": {
+                "value": "3",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 880612338
+              },
+              "expected": "3"
+            },
+            {
+              "inputs": [
+                "5",
+                "7"
+              ],
+              "endpoint": {
+                "value": "12",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 687537220
+              },
+              "expected": "12"
+            },
+            {
+              "inputs": [
+                "-3",
+                "4"
+              ],
+              "endpoint": {
+                "value": "1",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 730745823
+              },
+              "expected": "1"
+            },
+            {
+              "inputs": [
+                "0",
+                "0"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 704235996
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775807",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 804229254
+              },
+              "expected": "-9223372036854775807"
+            },
+            {
+              "inputs": [
+                "9223372036854775807",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775808",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 715037989
+              },
+              "expected": "-9223372036854775808"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "-9223372036854775808"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 819554415
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "81985529216486895",
+                "9223372036854775807"
+              ],
+              "endpoint": {
+                "value": "-9141386507638288914",
+                "wasm_sha256": "287e19c88b57404b729245a8a8e17b17728903da9f131329c2cb9e8e94c74c97",
+                "source_sha256": "b6945b73d4daecf72ff07468822d0f96a115b2a2504cf25cad516d445cbcf1e8",
+                "compilations": 1,
+                "elapsed_ns": 864900520
+              },
+              "expected": "-9141386507638288914"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "sourceSubOrder",
+      "claim": "`-` and `swap -` differ whenever the inputs differ",
+      "expected": "refute",
+      "verdict": "refute",
+      "first_differing_candidate": 0,
+      "sides": {
+        "left": {
+          "source": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+          "graph": "ba6a3328f5c03b3b9086bb2d95ff63114bd9d8540591767876f4dcef60f1ef16",
+          "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+          "binding": {
+            "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+            "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b"
+          },
+          "extraction_ns": 67574998,
+          "points": [
+            {
+              "inputs": [
+                "1",
+                "2"
+              ],
+              "endpoint": {
+                "value": "-1",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 692879019
+              },
+              "expected": "-1"
+            },
+            {
+              "inputs": [
+                "5",
+                "7"
+              ],
+              "endpoint": {
+                "value": "-2",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 835519662
+              },
+              "expected": "-2"
+            },
+            {
+              "inputs": [
+                "-3",
+                "4"
+              ],
+              "endpoint": {
+                "value": "-7",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 732222665
+              },
+              "expected": "-7"
+            },
+            {
+              "inputs": [
+                "0",
+                "0"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 739633645
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "1"
+              ],
+              "endpoint": {
+                "value": "9223372036854775807",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 522763568
+              },
+              "expected": "9223372036854775807"
+            },
+            {
+              "inputs": [
+                "9223372036854775807",
+                "1"
+              ],
+              "endpoint": {
+                "value": "9223372036854775806",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 726034410
+              },
+              "expected": "9223372036854775806"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "-9223372036854775808"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 567158878
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "81985529216486895",
+                "9223372036854775807"
+              ],
+              "endpoint": {
+                "value": "-9141386507638288912",
+                "wasm_sha256": "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b",
+                "source_sha256": "61d1954b9aba0c9aedb8d1338804e817c7262cfc36da94161dab8e3ed7a3a43a",
+                "compilations": 1,
+                "elapsed_ns": 787611426
+              },
+              "expected": "-9141386507638288912"
+            }
+          ]
+        },
+        "right": {
+          "source": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+          "graph": "03a58160065c3c62024ae9c30407b55237116622f69db50a9e1e8e09d638ffc9",
+          "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+          "binding": {
+            "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+            "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53"
+          },
+          "extraction_ns": 63076306,
+          "points": [
+            {
+              "inputs": [
+                "1",
+                "2"
+              ],
+              "endpoint": {
+                "value": "1",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 687603330
+              },
+              "expected": "1"
+            },
+            {
+              "inputs": [
+                "5",
+                "7"
+              ],
+              "endpoint": {
+                "value": "2",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 769062156
+              },
+              "expected": "2"
+            },
+            {
+              "inputs": [
+                "-3",
+                "4"
+              ],
+              "endpoint": {
+                "value": "7",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 796270108
+              },
+              "expected": "7"
+            },
+            {
+              "inputs": [
+                "0",
+                "0"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 782230910
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775807",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 780936353
+              },
+              "expected": "-9223372036854775807"
+            },
+            {
+              "inputs": [
+                "9223372036854775807",
+                "1"
+              ],
+              "endpoint": {
+                "value": "-9223372036854775806",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 638699173
+              },
+              "expected": "-9223372036854775806"
+            },
+            {
+              "inputs": [
+                "-9223372036854775808",
+                "-9223372036854775808"
+              ],
+              "endpoint": {
+                "value": "0",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 767817284
+              },
+              "expected": "0"
+            },
+            {
+              "inputs": [
+                "81985529216486895",
+                "9223372036854775807"
+              ],
+              "endpoint": {
+                "value": "9141386507638288912",
+                "wasm_sha256": "f0345839a94b0e3ac4c1b19e5cba9423c96a1aee030887c98cc26e127a6f0f53",
+                "source_sha256": "7b4a0e3937747fb550f21f2d3abf78a0da771fa96c2db49b4541d57676c4c131",
+                "compilations": 1,
+                "elapsed_ns": 782890765
+              },
+              "expected": "9141386507638288912"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "controls": {
+    "mutated_endpoint": [
+      "2",
+      "35",
+      "-12",
+      "0",
+      "-9223372036854775808",
+      "9223372036854775807",
+      "0",
+      "9141386507638288913"
+    ],
+    "crossed_graph_disagrees": true,
+    "interface_refusal": "interface-reject",
+    "ill_typed_refusal": "type-reject",
+    "altered_loaded_bytes": {
+      "subject": "the Wasm endpoint `noble worker scalar` compiles and runs",
+      "execution": "unsupported",
+      "execution_reason": "the CLI compiles SOURCE and runs the freshly compiled module in one invocation and accepts no module path (crates/noble-cli/src/core/worker_scalar.rs:111-115), so no invocation of this lane can be handed other loaded bytes",
+      "binding": "the module digest the CLI reports must be the digest recorded for that source, and the module's source digest must be the bytes this lane wrote",
+      "observation": {
+        "within_budget": false,
+        "bound": false,
+        "certificate": false,
+        "model_parsed": false,
+        "model_replays": false,
+        "answer": "notRun"
+      },
+      "status": "unsupported",
+      "rows": [
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "left",
+          "kind": "flipped module digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "left",
+          "kind": "another side's module digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "left",
+          "kind": "another source digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "right",
+          "kind": "flipped module digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "right",
+          "kind": "another side's module digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "right",
+          "kind": "another source digest",
+          "verdict": "agree",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "left",
+          "kind": "flipped module digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "left",
+          "kind": "another side's module digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "left",
+          "kind": "another source digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "right",
+          "kind": "flipped module digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "right",
+          "kind": "another side's module digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "right",
+          "kind": "another source digest",
+          "verdict": "refute",
+          "binding_current": false,
+          "status": "inconclusive",
+          "observation": {
+            "within_budget": true,
+            "bound": false,
+            "certificate": false,
+            "model_parsed": false,
+            "model_replays": false,
+            "answer": "notRun"
+          }
+        }
+      ],
+      "positive_control": [
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "left",
+          "verdict": "agree",
+          "binding_current": true,
+          "status": "agree"
+        },
+        {
+          "pair": "sourceCommutativeAdd",
+          "side": "right",
+          "verdict": "agree",
+          "binding_current": true,
+          "status": "agree"
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "left",
+          "verdict": "refute",
+          "binding_current": true,
+          "status": "refute"
+        },
+        {
+          "pair": "sourceSubOrder",
+          "side": "right",
+          "verdict": "refute",
+          "binding_current": true,
+          "status": "refute"
+        }
+      ]
+    }
+  },
+  "non_claims": [
+    "agreement is on one fixed universe of eight candidates per pair, not a proof for every input",
+    "each endpoint is the CLI's own compiled module run on V8, identified by its SHA-256; no independent Wasm engine or second implementation is compared",
+    "the graph the pair is decided on comes from `noble ngraph extract` on the same source; the extractor's own preservation claim remains NG-PO-A"
+  ]
+}

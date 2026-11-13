@@ -99,6 +99,9 @@ refuting and 8 rejected models.
   certifies.
 - **Item 5 controls.** Every binding, witness, certificate, UNKNOWN, timeout and budget control has
   the outcome above, against its positive control.
+- **Recorded decisions.** The current receipt carries the observation tuple and status for every
+  solver row. `SymbolicRefusalsReplay.lean` replays that entire table in the kernel, including the
+  selected row for each seeded `classify` mutation.
 - **Measurements, one run.** Solver runs took 4.5 to 18.7 ms of wall time (median 8.2 ms), with
   peak memory of 4.7 to 5.5 MB for Bitwuzla and 22 to 32 MB for Z3. Replays took 17 to 59 µs, and
   warm cache hits took 1.2 to 28 µs, against 14 retained entries totalling 1674 bytes. On the
@@ -130,6 +133,13 @@ The universe includes both wrap boundaries, `i64::MIN` and `i64::MAX`, and mixed
 other side's endpoint somewhere. A checked source outside the interface is `interface-reject` and
 compiles no module, and an ill-typed source is `type-reject`.
 
+Every endpoint observation is bound to both the source bytes written by this lane and the reported
+Wasm module SHA-256. The receipt flips a module digest, substitutes the other side's module digest,
+and flips a source digest; each fails the binding and is `inconclusive`. Loading arbitrary module
+bytes is itself `unsupported`: `noble worker scalar` accepts a source path, compiles it and executes
+that fresh module in one invocation, with no module-path argument. This boundary and the digest
+controls are retained under `controls.altered_loaded_bytes`.
+
 ## Non-claims
 
 Endpoint agreement is on one fixed universe of eight candidates per pair, not a proof for every
@@ -141,3 +151,14 @@ The retained run is
 [`receipts/2026-11-09/endpoints.json`](receipts/2026-11-09/endpoints.json), from the clean commit
 `4cd732c5`: `+` against `swap +` agrees on all eight candidates, and `-` against `swap -` refutes at
 the first, on the endpoints and on both graph evaluators.
+
+The source-bound endpoint-byte control is retained in
+[`receipts/2026-11-12/endpoints.json`](receipts/2026-11-12/endpoints.json), from clean commit
+`661cf4c7`. The latest solver run is
+[`receipts/2026-11-13/solver.json`](receipts/2026-11-13/solver.json), from clean commit `5437f270`;
+its matching query texts and witnesses are [`queries.json`](receipts/2026-11-13/queries.json) and
+[`witnesses.txt`](receipts/2026-11-13/witnesses.txt). It records an observation tuple per row:
+the seven claims classify as three `certified` and four `refuted`, 9 of 11 seeded mutations are
+detected, and all 18 corrupted encodings fail an encoder check. The pair statuses come from bound
+kernel certificates or replay on original graphs; encoder-check results remain recorded but are not
+status inputs.

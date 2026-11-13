@@ -2908,100 +2908,10 @@
       "claim": "A corrupted witness can flip the verdict, so the recorded bits are load-bearing."
     },
     {
-      "name": "NobleFoundation.SymbolicSolver.stale_revision_inconclusive",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A stale or altered query binding is inconclusive."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.malformed_certificate_inconclusive",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A malformed certificate or witness is inconclusive."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.corrupted_encoding_inconclusive",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A corrupted graph encoding is inconclusive."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_unsupported",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "An exhausted query budget is unsupported, not a refusal of the pair."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.unfinished_query_inconclusive",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "An unfinished query (UNKNOWN, error or timeout) is inconclusive."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.unfinished_query_not_certified",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "An unfinished query is never certified."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_not_refuted",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A model that does not replay on the original graphs is never refuted."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.no_witness_inconclusive",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A finished query with no witness is inconclusive: external UNSAT is not agreement."
-    },
-    {
       "name": "NobleFoundation.SymbolicSolver.refuted_requires_replay",
       "phase": 2,
       "role": "symbolic-refusal",
       "claim": "A refuted status implies a found witness that replayed on the original graphs."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.clean_query_certifies",
-      "phase": 2,
-      "role": "symbolic-refusal",
-      "claim": "A clean finished query whose bound certificate established agreement is certified."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.clean_query_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "The clean fixture outcome is certified."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.unfinished_query_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "An unfinished fixture outcome that already found agreement is inconclusive, not certified."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.no_witness_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "A finished fixture outcome with no agreement and no witness is inconclusive, not refuted."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.unreplayed_witness_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "A fixture model that does not replay is inconclusive, not refuted."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.refuted_witness_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "A fixture model that replays is refuted."
-    },
-    {
-      "name": "NobleFoundation.SymbolicSolver.exhausted_budget_fixture",
-      "phase": 2,
-      "role": "fixture",
-      "claim": "An exhausted-budget fixture outcome is unsupported, not inconclusive."
     },
     {
       "name": "NobleFoundation.SymbolicSolver.encode_length",
@@ -7766,6 +7676,486 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.bodyOf_sub_swap_differs",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "The seeded `sub`-operand-swap fault changes the emitted body."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.evalStep_eq_bodyValue",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "The graph evaluator of one node is the value of that node's emitted body."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.evalStep_congr",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "`evalStep` reads only the node's operands."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.valuesUpTo_succ",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "The value of the first `count + 1` nodes, at `count`."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.valuesUpTo_stable",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "An earlier node's value does not change once the value list has reached a later index."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.value_eq_bodyValue",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "**The `define-fun` fixed point.** A node's value is its emitted body evaluated with the values of the earlier nodes — which is exactly how a query's bodies are read, one symbol per node."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.bodyValue_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "**The encoded node bodies simulate the graph, node by node, for every input.**"
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.any_congruence",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "`List.any` respects a pointwise equality."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.claimAt_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "One compared output of the query is one compared output of the model."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.EarlierWithin.mp",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "A checked `EarlierWithin` is the operand-order premise of `claim_simulates`."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.OutputsWithin.mp",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "A checked `OutputsWithin` is the output-range premise of `claim_simulates`."
+    },
+    {
+      "name": "NobleFoundation.SymbolicEncoder.claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder",
+      "claim": "**The query's assertion is the refutation predicate, for every 64-bit input.** For a subject inside the admitted fragment — every operand an earlier node on both sides, every listed output a node of both graphs — the claim the encoded assertion makes, read through the emitted bodies, is exactly `refuted` of the model pair the subject denotes."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refused_is_unsupported",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A refused row is `unsupported`, whatever else it carries: refusal precedes every other check."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.stale_binding_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A stale or altered binding is `inconclusive` whatever certificate or answer it carries."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.certificate_certifies",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A bound kernel certificate certifies, whatever the solver answered and whichever model it returned: the certificate's subject is the graphs, not the answer."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unfinished_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "An answer other than `sat` is never a counterexample: without a certificate it stays `inconclusive`, whether it is UNSAT, UNKNOWN, a timeout, an error or a row that never ran."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.rejected_model_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A model that did not parse is never a counterexample."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.agreeing_model_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A model that parses but agrees on the original graphs is never a counterexample."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.replaying_model_refutes",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A parsed model that replays on the original graphs is a counterexample."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.not_refused_not_unsupported",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A row that was not refused is never `unsupported`."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unsupported_iff_refused",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "`unsupported` is exactly a refused row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.certificate_absent_not_certified",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Without a certificate a row never certifies."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.certified_requires_certificate",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "`certified` requires a certificate: nothing else in a row can produce that status."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_certificate",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A claim with a bound certificate is certified whatever its rows say."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_refutes",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A claim with a refuted row is refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_inconclusive",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A claim with neither a certificate nor a refuted row is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refused_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A refused row is unsupported."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.stale_binding_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A stale binding with a certificate is inconclusive: the binding is checked first."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.certificate_with_unknown_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A certificate with an UNKNOWN answer is certified: the certificate is checked before the answer."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.certificate_with_replayed_model_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A certificate with a sat answer and a replaying model is still certified at row level; the claim-level refusal of that contradiction is the lane's assertion, not this row rule."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unsat_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "External UNSAT without a certificate is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.rejected_model_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A sat answer whose model did not parse is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.agreeing_model_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A sat answer whose model agrees is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.replayed_model_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A sat answer whose model replays is refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.unknown_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "UNKNOWN is inconclusive, a different status from refusal."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.timeout_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A watchdog timeout is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.error_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A solver error is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.refused_with_certificate_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A refused claim row with a certificate the caller supplied is still unsupported."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_certificate_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A certified claim is certified even when its only row is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_refuted_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A claim with a refuted row is refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.claim_inconclusive_fixture",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "A claim with neither is inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_binding_first_differs",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "The retired model's order differs on a refused row whose binding is also stale."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_binding_first_refusal",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Checking the binding first would also hide a refusal behind a stale binding."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_answer_first_differs",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Certifying after the answer changes a certified pair whose model also replayed."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_encoding_checked_differs",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Feeding the encoder verdict into the status changes a corrupted query whose model replayed."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_sat_refutes_differs",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Reporting a sat answer as a counterexample changes an unparsed model."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.mutation_unsat_certifies_differs",
+      "phase": 2,
+      "role": "symbolic-refusal",
+      "claim": "Accepting external UNSAT as agreement changes an inconclusive row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.receipt_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "The kernel decides that classify reproduces every solver and endpoint receipt row from its recorded observation tuple."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.certified_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as certified is classified certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.refuted_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as refuted is classified refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.inconclusive_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as inconclusive is classified inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.unsupported_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as unsupported is classified unsupported."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.claims_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "The kernel decides the aggregate status of every recorded claim from its certificate and row statuses."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_binding_first_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "The binding-before-refusal mutation changes the recorded node-budget refusal."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_answer_first_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "The answer-before-certificate mutation changes a recorded bound certificate row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_encoding_checked_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Using the encoder check as a status input changes a recorded corrupted-query row whose model replays."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_sat_refutes_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Treating every SAT answer as a counterexample changes a recorded malformed-witness row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_unsat_certifies_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Treating unproved external UNSAT as certification changes a recorded inconclusive row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced sharedInput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced sharedInput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced subtractionOrder query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced subtractionOrder query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced wrapOnlyEquivalent query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced wrapOnlyEquivalent query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced wrapBoundary query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced wrapBoundary query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced boolOutput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced boolOutput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced repeatedOutputs query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced repeatedOutputs query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced negation query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced negation query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The sharedInput encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The subtractionOrder encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The wrapOnlyEquivalent encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The wrapBoundary encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The boolOutput encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The repeatedOutputs encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The negation encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_sub_swap_fault_not_simulated",
+      "phase": 2,
+      "role": "symbolic-encoder-mutation",
+      "claim": "Swapping subtraction operands in the encoder fails simulation at the checked subtractionOrder input."
     },
     {
       "name": "NobleFoundation.UsePermissions.combine_commutative",

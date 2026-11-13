@@ -27,11 +27,14 @@ import NobleFoundation.SymbolicMutations
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver
 import NobleFoundation.SymbolicRefusals
+import NobleFoundation.SymbolicEncoder
 import NobleFoundation.SymbolicShrink
 import NobleFoundation.SymbolicPairCorpus
 import NobleFoundation.SymbolicShrinkCorpus
 import NobleFoundation.SymbolicPairCertified
 import NobleFoundation.SymbolicSolverReplay
+import NobleFoundation.SymbolicRefusalsReplay
+import NobleFoundation.SymbolicEncoderCorpus
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
 import NobleFoundation.PackedLayout

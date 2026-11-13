@@ -1,0 +1,22 @@
+# noble-symbolic-witnesses/v1: distinct solver models for the fixed graph pairs,
+# written by verification/symbolic/solver.mjs; refutes = replayed on the original graphs, rejects = did not
+refutes subtractionOrder s0=0x7ffffffffffffffe s1=0x7fffffffffffffff
+refutes subtractionOrder s0=0x7fffffffffffffff s1=0x0000000000000000
+refutes wrapBoundary s0=0x0000000000000001
+refutes repeatedOutputs s0=0x7ffffffffffffffe s1=0x7fffffffffffffff
+refutes repeatedOutputs s0=0x7fffffffffffffff s1=0x0000000000000000
+refutes negation s0=0x7fffffffffffffff
+refutes negation s0=0x4000000000000001
+rejects sharedInput s0=0x0000000000000000
+rejects sharedInput s0=0xffffffffffffffff
+rejects sharedInput s0=0xfffffffffffffffd
+refutes subtractionOrder s0=0x7fffffffffffffff s1=0x7ffffffffffffffe
+refutes subtractionOrder s0=0x0000000000000000 s1=0x7fffffffffffffff
+rejects wrapOnlyEquivalent s0=0x0000000000000000
+rejects wrapOnlyEquivalent s0=0xffffffffffffffff
+rejects wrapBoundary s0=0x0000000000000000
+refutes wrapBoundary s0=0xffffffffffffffff
+rejects boolOutput s0=0xfffffffffffffffd
+rejects boolOutput s0=0x0000000000000001
+refutes repeatedOutputs s0=0x7fffffffffffffff s1=0x7ffffffffffffffe
+refutes repeatedOutputs s0=0x0000000000000000 s1=0x7fffffffffffffff
