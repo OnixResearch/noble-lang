@@ -262,13 +262,17 @@ theorem accepted : check bootstrapEnv req cand = .accepted checked := by
 /-! The declarative witness, built by hand from the judgment's constructors.
 Each node's premise is its scheme instantiation, closed by evaluation. -/
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 theorem lit41 : (litScheme (.i64 41)).instantiate ⟨[.stack .nil]⟩
     = some (ty [], ty [.i64], EffSet.empty) := by
-  native_decide
+  decide +kernel
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 theorem lit1 : (litScheme (.i64 1)).instantiate ⟨[.stack (ty [.i64])]⟩
     = some (ty [.i64], ty [.i64, .i64], EffSet.empty) := by
-  native_decide
+  decide +kernel
 
 /-- The bootstrap `add` word's rank-1 scheme, `S -- S i64 i64` to `S -- S i64`. -/
 def addScheme : Scheme :=
@@ -282,9 +286,11 @@ set_option maxRecDepth 4096 in
 theorem addLook : bootstrapEnv.scheme 4 = some addScheme := by
   decide +kernel
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 theorem addInst : addScheme.instantiate ⟨[.stack .nil]⟩
     = some (ty [.i64, .i64], ty [.i64], EffSet.empty) := by
-  native_decide
+  decide +kernel
 
 /-- The fixture's entry body derives its checked interface: EMPTY closes the
 body after the three nodes, and every union is the empty bound. -/
