@@ -17,6 +17,16 @@
 //! report is the report of an independent single-row run, and limits are checked before any row
 //! runs. It adds no arithmetic of its own, and its rows are compared against independent runs by
 //! tests, not proved against `BatchRows.lean`.
+//!
+//! **Parameters do not apply to `I64` graphs.** The checker refuses a param slot in any profile
+//! other than `ngraph-f32/0` (see `check.rs`: `F32 slot in ngraph-i64/0`), so an `I64` graph has no
+//! parameter slots, [`Prepared::run`] takes no snapshot and a batch has no parameter state to bind.
+//! A graph outside the `I64` whitelist is refused outright by [`Prepared::new`].
+//!
+//! **Interface shapes are metadata, not row layout.** A row is the graph's *flattened* input-slot
+//! values in slot order. The graph's `input_shape`/`output_shape` trees record how interface items
+//! nest pairs; they change neither the row width, nor the result association, nor the order the
+//! checker already assigns to slots and outputs.
 
 /// One batch row: one wrapping `I64` operation over two explicit operands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

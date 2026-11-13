@@ -28,6 +28,8 @@
 //! The `graph` and `budgets` modules run the graph-backed batch (`batch::Prepared`) and compare
 //! every row with independent single-row runs of the same checked graph.
 
+#[path = "batch_rows/batch_cases.rs"]
+mod batch_cases;
 #[path = "batch_rows/breakdown.rs"]
 mod breakdown;
 #[path = "batch_rows/budgets.rs"]

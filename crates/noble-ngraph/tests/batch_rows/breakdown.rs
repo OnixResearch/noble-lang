@@ -32,7 +32,7 @@ use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::Report;
 use noble_ngraph::sem::Value;
 
-use super::measure::{growth, resident_bytes, rows, values, workload, SIZES};
+use super::measure::{growth, resident_bytes, rows, values, workload, BREAKDOWN_SIZES};
 
 const RUNS: usize = 5;
 
@@ -137,7 +137,7 @@ fn cold_staging_and_bytes() {
     };
     let warm = values(&rows(1));
     black_box(prepared.run(1, &warm, limits, None));
-    for size in SIZES {
+    for size in BREAKDOWN_SIZES {
         per_size(&mut prepared, size, limits);
     }
 }

@@ -1,15 +1,17 @@
 #![allow(
     tigerstyle::ambiguous_params,
+    tigerstyle::ambient_env,
     tigerstyle::assertion_density,
     tigerstyle::explicit_defaults,
-    tigerstyle::non_trait_imports,
     tigerstyle::missing_const_fn,
+    tigerstyle::no_panic,
     tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
     tigerstyle::numeric_units,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::underscore_in_module_filename,
     tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-maintainers; this reporting-only measurement lane compares four evaluation lanes over identical rows, so dense assertions, owner-path imports and checked unwraps are the readable form. Nothing here asserts a timing value."
+    reason = "Owner: noble-maintainers; this reporting-only harness keeps shared workload and resident-set helpers plus a DHAT-selected process lane together. Its environment is supplied by the pinned runner; checked unwraps, deliberate panic-on-bad-selector and owner-path imports are intentional, and no timing value is asserted."
 )]
 //! Repeated-workload measurement for the CPU batch entry point (issue #41), reporting only.
 //!
@@ -20,16 +22,26 @@
 //!
 //! The continuation criteria, every size and every threshold used here are frozen in
 //! `verification/ngraph/batch-continuation-criteria.md` **before** any number in this lane was
-//! taken.
+//! taken. The frozen sizes are 1, 4096 and 65536 rows; the re-measurement below adds 16, 64, 256 and
+//! 1024 rows so the batch/single crossover can be stated, and each lane is run `RUNS` times so a
+//! median is reported instead of one sample. Per lane and size the lane reports the median and best
+//! total, the derived per-row cost, the first row's own time (`first_row_ns`; for `batch`, which
+//! does not report intermediate timing, it is the run's mean row time), the resident growth of the
+//! first run and of the second identical run. The native lane measures its first row with one
+//! `Instant` around that iteration, like the other per-row lanes.
 //!
-//! What this lane cannot measure: **allocation counts**. The workspace forbids `unsafe_code`, so no
-//! counting global allocator can exist here. The lane reports resident-set growth instead and
-//! records that missing instrument rather than inferring an allocation count from register reuse.
+//! The `native` lane keeps every row's value alive: each row's difference is folded into a checksum
+//! that reaches the caller through `black_box`, so the optimiser cannot delete the loop body and
+//! report a floor of 0 ns/row. That live checksum is *not* one of the graph's outputs; the last
+//! row's own values are compared across lanes.
 //!
-//! Run it with `cargo test -p noble-ngraph --test batch_row_reference -- --ignored --nocapture
-//! repeated_workloads`.
-
-use std::time::Instant;
+//! Allocation counts are measured separately: the workspace forbids `unsafe_code`, so no counting
+//! global allocator can exist here. `verification/ngraph/batch-allocation.mjs` profiles the
+//! ignored `allocation_lane` out of process with Valgrind's DHAT.
+//!
+//! Run it through `verification/ngraph/batch-measure.mjs`, or with
+//! `cargo test --release -p noble-ngraph --test batch_row_reference -- --ignored --nocapture
+//! measure::repeated::timed_workloads`.
 
 use noble_ngraph::batch::{Limits, Prepared};
 use noble_ngraph::check;
@@ -39,12 +51,15 @@ use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject}
 use noble_ngraph::sem::Value;
 
 /// One row of the workload: two operands.
-type Row = (i64, i64);
+pub(super) type Row = (i64, i64);
 
-/// Outputs one row produces.
-type Outputs = Vec<Value>;
+/// The sizes the post-decision re-measurement reports: the three frozen decision sizes (1, 4096,
+/// 65536 rows) plus 16, 64, 256 and 1024 so the batch/single crossover can be stated.
+pub(super) const SIZES: [usize; 7] = [1, 16, 64, 256, 1024, 4096, 65536];
 
-pub(super) const SIZES: [usize; 3] = [1, 4096, 65536];
+/// The sizes the retained 2026-11-07 breakdown receipt covers; kept separate so that receipt's
+/// table stays reproducible without a new breakdown measurement.
+pub(super) const BREAKDOWN_SIZES: [usize; 3] = [1, 4096, 65536];
 
 /// Five arithmetic nodes over two inputs and two outputs, so one row does more than one step while
 /// staying small enough to measure per-row cost honestly.
@@ -112,101 +127,21 @@ pub(super) fn growth(before: Option<u64>, after: Option<u64>) -> u64 {
     }
 }
 
-fn per_row(total_ns: u128, size: usize) -> u128 {
-    total_ns.checked_div(size.max(1) as u128).unwrap_or(0)
-}
+#[path = "measure_repeated.rs"]
+mod repeated;
 
-fn report(lane: &str, size: usize, timed: (u128, u128), grown: u64) {
-    let (total_ns, first_row_ns) = timed;
-    println!(
-        "MEASURE {{\"lane\":\"{lane}\",\"rows\":{size},\"total_ns\":{total_ns},\"ns_per_row\":{},\"first_row_ns\":{first_row_ns},\"resident_growth_bytes\":{grown}}}",
-        per_row(total_ns, size)
-    );
-}
-
-fn native(rows: &[Row]) -> (i64, bool) {
-    let mut last = (0, false);
-    for (left, right) in rows {
-        let sum = left.wrapping_add(*right);
-        let product = left.wrapping_mul(*right);
-        let scaled = sum.wrapping_mul(product);
-        let difference = scaled.wrapping_sub(*right);
-        last = (difference, difference == sum);
-    }
-    last
-}
-
-/// The reference interpreter once per row: total, first-row latency, last row's outputs, growth.
-fn reference_lane(
-    accepted: &noble_ngraph::check::CheckedGraph,
-    rows: &[Row],
-) -> (u128, u128, Option<Outputs>, u64) {
-    let before = resident_bytes();
-    let mut last = None;
-    let mut first = 0;
-    let start = Instant::now();
-    for (index, row) in rows.iter().enumerate() {
-        let two = [Value::I64(row.0), Value::I64(row.1)];
-        let at = Instant::now();
-        let outcome = eval::reference(accepted, &two, None, &mut Control::default());
-        if index == 0 {
-            first = at.elapsed().as_nanos();
-        }
-        if let Some(outputs) = outcome.obs.outputs() {
-            last = Some(outputs.to_vec());
-        }
-    }
-    let total = start.elapsed().as_nanos();
-    (total, first, last, growth(before, resident_bytes()))
-}
-
-/// The compiled evaluator once per row, reusing one workspace.
-fn single_lane(
-    compiled: &Compiled,
-    workspace: &mut noble_ngraph::compiled::Workspace,
-    rows: &[Row],
-) -> (u128, u128, Option<Outputs>, u64) {
-    let before = resident_bytes();
-    let mut last = None;
-    let mut first = 0;
-    let start = Instant::now();
-    for (index, row) in rows.iter().enumerate() {
-        let two = [Value::I64(row.0), Value::I64(row.1)];
-        let at = Instant::now();
-        let outcome = compiled.evaluate_in(workspace, &two, None, &mut Control::default());
-        if index == 0 {
-            first = at.elapsed().as_nanos();
-        }
-        if let Some(outputs) = outcome.obs.outputs() {
-            last = Some(outputs.to_vec());
-        }
-    }
-    let total = start.elapsed().as_nanos();
-    (total, first, last, growth(before, resident_bytes()))
-}
-
-/// `batch::Prepared::run` over all rows at once.
-fn batch_lane(
-    prepared: &mut Prepared<'_>,
-    inputs: &[Value],
-    size: usize,
-    limits: Limits,
-) -> (u128, u128, Option<Outputs>, u64) {
-    let before = resident_bytes();
-    let start = Instant::now();
-    let outcome = prepared.run(size, inputs, limits, None);
-    let total = start.elapsed().as_nanos();
-    let last = outcome
-        .reports
-        .last()
-        .and_then(|report| report.obs.outputs().map(<[Value]>::to_vec));
-    let first = per_row(total, size);
-    (total, first, last, growth(before, resident_bytes()))
+fn output_count(report: &noble_ngraph::eval::Report) -> usize {
+    report.obs.outputs().map_or(0, <[Value]>::len)
 }
 
 #[test]
-#[ignore = "reporting-only measurement lane; run it explicitly with --ignored --nocapture"]
-fn repeated_workloads() {
+#[ignore = "allocation-count lane; run it under Valgrind DHAT through verification/ngraph/batch-allocation.mjs"]
+fn allocation_lane() {
+    let lane = std::env::var("NOBLE_BATCH_ALLOC_LANE").expect("NOBLE_BATCH_ALLOC_LANE is set");
+    let count: usize = std::env::var("NOBLE_BATCH_ALLOC_ROWS")
+        .expect("NOBLE_BATCH_ALLOC_ROWS is set")
+        .parse()
+        .expect("NOBLE_BATCH_ALLOC_ROWS is a row count");
     let scheme = super::common::IDS;
     let accepted = check::check(&scheme, workload()).expect("the workload checks");
     let compiled = Compiled::new(&scheme, &accepted);
@@ -217,37 +152,35 @@ fn repeated_workloads() {
         row_fuel: None,
         run_fuel: None,
     };
-    let declared = compiled.retained_bytes();
-    println!(
-        "MEASURE {{\"lane\":\"declared\",\"retained_bytes\":{declared},\"debug_assertions\":{}}}",
-        cfg!(debug_assertions)
-    );
-    let mut workspace = compiled.workspace();
-    let warm: Vec<Value> = vec![Value::I64(1), Value::I64(2)];
-    let _ = compiled.evaluate_in(&mut workspace, &warm, None, &mut Control::default());
-    let _ = prepared.run(1, &warm, limits, None);
-    for size in SIZES {
-        let rows = rows(size);
-        let inputs = values(&rows);
-        let (total, first, reference_last, grown) = reference_lane(&accepted, &rows);
-        report("reference", size, (total, first), grown);
-        let (total, first, single_last, grown) = single_lane(&compiled, &mut workspace, &rows);
-        report("single", size, (total, first), grown);
-        let (total, first, batch_last, grown) = batch_lane(&mut prepared, &inputs, size, limits);
-        report("batch", size, (total, first), grown);
-        let before = resident_bytes();
-        let start = Instant::now();
-        let (last, equal) = native(&rows);
-        let total = start.elapsed().as_nanos();
-        report(
-            "native",
-            size,
-            (total, total),
-            growth(before, resident_bytes()),
-        );
-        let native_last = vec![Value::I64(last), Value::Bool(equal)];
-        println!(
-            "MEASURE {{\"agreement\":{{\"rows\":{size},\"reference\":{reference_last:?},\"single\":{single_last:?},\"batch\":{batch_last:?},\"native\":{native_last:?}}}}}"
-        );
+    let operands = rows(count);
+    let inputs = values(&operands);
+    let mut outputs: usize = 0;
+    match lane.as_str() {
+        "reference" => {
+            for row in &operands {
+                let two = [Value::I64(row.0), Value::I64(row.1)];
+                let report = eval::reference(&accepted, &two, None, &mut Control::default());
+                outputs = outputs.saturating_add(output_count(&report));
+            }
+        }
+        "single" => {
+            let mut workspace = compiled.workspace();
+            for row in &operands {
+                let two = [Value::I64(row.0), Value::I64(row.1)];
+                let report =
+                    compiled.evaluate_in(&mut workspace, &two, None, &mut Control::default());
+                outputs = outputs.saturating_add(output_count(&report));
+            }
+        }
+        "batch" => {
+            let outcome = prepared.run(count, &inputs, limits, None);
+            assert_eq!(outcome.stop, None, "an unbounded batch run completes");
+            for report in &outcome.reports {
+                outputs = outputs.saturating_add(output_count(report));
+            }
+        }
+        other => panic!("unknown lane {other}"),
     }
+    println!("ALLOC {{\"lane\":\"{lane}\",\"rows\":{count},\"outputs\":{outputs}}}");
+    std::hint::black_box(outputs);
 }

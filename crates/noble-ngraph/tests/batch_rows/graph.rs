@@ -58,7 +58,6 @@ fn arithmetic() -> Graph {
     builder.output(is_equal);
     builder.finish()
 }
-
 pub(super) fn compiled() -> (CheckedGraph, Compiled) {
     let checked = super::common::checked(arithmetic());
     let compiled = Compiled::new(&super::common::IDS, &checked);
