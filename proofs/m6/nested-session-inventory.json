@@ -1,6 +1,6 @@
 {
   "schema": "noble-nested-session-inventory/v1",
-  "scope": ".cairn/changes/nested-session-protocol: finite grammar with bounded unfolding, duality, the abstract move-only endpoint resource and a bounded mailbox. Definitions table is handwritten; no lowering/runtime/peer correspondence; the only progress statement is guest-local; the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs a return stack, while this model admits it only up to the declared stack limit; the legacy depth-only control drops returns; delegation excluded.",
+  "scope": ".cairn/changes/nested-session-protocol: finite grammar with bounded unfolding, duality, the abstract move-only endpoint resource, a bounded mailbox and an admission-side table check (definition count, constructor arity, label-set width, in-range indices, no repeated label). Definitions table is handwritten; no lowering/runtime/peer correspondence; the only progress statement is guest-local; the balanced table's unbounded trace language sendⁿ·recvⁿ is not regular and needs a return stack, while this model admits it only up to the declared stack limit; the legacy depth-only control drops returns; delegation excluded; the Pact preference-factor adjunct and the Vine source-form comparison are default off and carry no utility, decision or correspondence claim.",
   "theorems": [
     {
       "name": "NestedSession.dual_is_involutive",
@@ -1408,7 +1408,331 @@
     },
     {
       "name": "NestedSession.first_declared_label_wins",
-      "role": "WIT-SESSION-01 fixture: with a repeated label the first declared pair is taken",
+      "role": "WIT-SESSION-01 accessor equation: on a table the admission check rejects, the first declared pair is taken; no accepted table reaches this rule",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateContinuation_none",
+      "role": "WIT-SESSION-01 table check: an accepted continuation names one of the table's definitions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.outOfRangeBranch_none",
+      "role": "WIT-SESSION-01 table check: an accepted branch list names only definitions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateBranches_none_no_repeated_label",
+      "role": "WIT-SESSION-01 table check: an accepted label set declares no repeated label",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateBranches_none_outOfRange",
+      "role": "WIT-SESSION-01 table check: an accepted label set declares only in-range continuations",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateEntry_eq_none_iff",
+      "role": "WIT-SESSION-01 table check: validating the whole table validates every one of its definitions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateEntry_cons_some",
+      "role": "WIT-SESSION-01 table check: a refused first definition makes the entry list report that fault",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateEntry_cons_none",
+      "role": "WIT-SESSION-01 table check: an accepted first definition leaves the rest of the table to validate",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_wellFormed_definitions_bounded",
+      "role": "WIT-SESSION-01 table check: an accepted table is inside its declared definition count",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_wellFormed_entry",
+      "role": "WIT-SESSION-01 table check: an accepted table's entry list validates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.repeated_label_branches_are_malformed",
+      "role": "WIT-SESSION-01 table check: any branch list with a repeated label is refused with that label's own fault",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.repeated_label_entry_is_malformed",
+      "role": "WIT-SESSION-01 table check: a table whose first definition repeats a label is malformed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.repeated_label_table_is_refused",
+      "role": "WIT-SESSION-01 table check: the check refuses a repeated-label table rather than resolving the repeat",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.wellFormed_tables_have_unique_labels",
+      "role": "WIT-SESSION-01 table check: every accepted table declares no label twice, so the accessor's first-pair rule is unreachable on accepted tables",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateNode_none_namedIndices",
+      "role": "WIT-SESSION-01 table check: a validated definition names only in-range indices",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.wellFormed_tables_have_in_range_indices",
+      "role": "WIT-SESSION-01 table check: every accepted table names only its own definitions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_accepts_the_model_fixtures",
+      "role": "WIT-SESSION-01 table check control: the balanced table, the label set and its dual, the handshake and the single-branch choices are well formed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_the_legacy_fixture",
+      "role": "WIT-SESSION-01 table check control: the legacy depth-only fixture's nested parameter is outside its table, so it is malformed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_a_repeated_label",
+      "role": "WIT-SESSION-01 table check control: a repeated label is malformed with its own fault",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_an_out_of_range_continuation",
+      "role": "WIT-SESSION-01 table check control: a continuation outside the table is refused by index",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_an_out_of_range_name",
+      "role": "WIT-SESSION-01 table check control: a nested constructor naming no definition is refused by index",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_an_out_of_range_parameter",
+      "role": "WIT-SESSION-01 table check control: a nested parameter naming no definition is refused by index",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_a_constructor_past_the_arity",
+      "role": "WIT-SESSION-01 table check control: the bounded-constructor-arity scenario refuses a constructor past the grammar's arity as malformed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_too_many_definitions",
+      "role": "WIT-SESSION-01 table check control: a table past its definition bound is refused before any index is read",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_a_wide_label_set",
+      "role": "WIT-SESSION-01 table check control: a label set wider than its branch bound is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.validateTable_refuses_an_out_of_range_branch",
+      "role": "WIT-SESSION-01 table check control: an out-of-range label-set continuation is refused by index",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.repeated_label_is_refused_before_it_is_resolved",
+      "role": "WIT-SESSION-01 table check control: the repeated-label table is refused while the accessor's first-pair equation remains a fact about that rejected table",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_label_set_erases_to_the_fixture",
+      "role": "Pact adjunct (default off): annotating the label-set fixture erases to the fixture",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_reannotation_is_not_observable",
+      "role": "Pact adjunct (default off): re-annotation is not observable because factors and the world value are erased",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_label_set_duality_holds",
+      "role": "Pact adjunct (default off): duality is unchanged on the erased skeleton",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_label_set_wrong_branch_is_refused",
+      "role": "Pact adjunct (default off): wrong-branch refusal is unchanged on the erased skeleton",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_label_set_preserves_the_endpoint_identity",
+      "role": "Pact adjunct (default off): endpoint identity preservation is unchanged on the erased skeleton",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_work_bound_is_the_skeleton_bound",
+      "role": "Pact adjunct (default off): the work bound is the skeleton's bound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.pact_factor_does_not_select",
+      "role": "Pact adjunct (default off): a factor does not select a label; both declared labels stay enabled with the factor order reversed",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.vine_source_forms_denote_the_same_fixture",
+      "role": "Vine comparison (design example): both proposed source forms denote the same model fixture",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.vine_source_continuation_mismatch_is_refused",
+      "role": "Vine comparison (design example): a source continuation that differs from the model's is refused with a witness trace",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NestedSession.vine_source_continuation_match_is_accepted",
+      "role": "Vine comparison (design example): the matched source continuation is the same type",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",

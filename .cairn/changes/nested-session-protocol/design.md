@@ -103,6 +103,83 @@ generally unclaimed, and no result of one kind is reported as another.
 processes can encode two-counter machines. A communication-safety proof is not a
 termination proof, and saying so is part of the design rather than a footnote.
 
+### Decision: WIT-SESSION-06 correspondence is a recorded follow-up, not a runtime pilot (2026-11-13)
+
+**Choice:** **NO-GO on a runtime pilot now.** The ADDED WIT-SESSION-06 requirement
+now binds correspondence to lowering, runtime and helper revisions **once such a
+lowering, runtime or helper exists**, and requires a receipt to name each absent
+revision with its reason instead of binding one that does not exist. The retained
+receipt does exactly that (`helper`, `runtime` and `peer` are null with the
+reason), and the smallest future source-to-model obligation is recorded in
+`verification/nested-session/vine-comparison.md` §6: a source-to-table lowering
+of one closed protocol definition whose operations equal the model's step
+relation, plus a replay of the negative controls on the lowered table.
+
+**Criteria, fixed before the decision:**
+
+1. a runtime pilot needs a lowering, runtime or helper revision in the repository
+   that the correspondence could bind;
+2. it needs a source protocol definition and an endpoint resource for the model's
+   channel machines to be related to;
+3. it needs a trace relation between emitted transitions and the model's steps.
+
+**Evidence:** criterion 1 fails — the proposal states "No runtime pilot is added,
+`Task` is not retrofitted into a channel, and no production adoption is
+authorized" (`proposal.md:50-51`), and no such revision exists. Criterion 2 fails
+at source level: `crates/` has no session-type, `Channel` or protocol
+send/receive-continuation code (grep count 0 for each); the four `Endpoint`
+matches are `noble-ngraph`'s certificate `EndpointMismatch`, which is a rewrite
+endpoint, not a session resource. Criterion 3 is the obligation quoted above and
+is not discharged. The model side is complete for its scope: its receipt binds
+the model revision and the definitions fixtures, records the six endpoint identity
+fields and the ledger-based queue accounting, and marks helper/runtime/peer absent
+with this reason.
+
+**Reopen conditions:** a lowering, runtime or helper revision lands (for example a
+source endpoint type, a protocol lowering, or a session runtime). Then WIT-SESSION-06
+is bound by its own successor change using the §6 obligation; binding a revision
+that does not exist, or reporting a model theorem as an implementation
+correspondence, remains forbidden in the meantime.
+
+**Not decided here:** adoption, endpoint delegation, multiparty session types, a
+network transport, or interaction-net execution (#37).
+
+### Decision: the Pact preference-factor adjunct stays default off (2026-11-13)
+
+**Choice:** land the 11-11 addendum as a default-off, definitional adjunct only. An
+annotated table's sole meaning is its erasure to the plain skeleton, so the
+existing duality, wrong-branch refusal, endpoint identity preservation and work
+bound results hold unchanged, and a factor never selects, enables or refuses a
+label. Factors only: no utility function, no decision rule, no solver, no agent
+model and no game-theoretic claim.
+
+**Rationale:** the addendum asks for measure-first treatment, and Pact's own
+semantics are unpublished, so the conservative call is to prove the conservative
+extension (erasure) and to name the obligations a factor-carrying profile would
+add rather than invent them. Those obligations are listed in
+`verification/nested-session/README.md`.
+
+**Reopen conditions:** a decision to give factors meaning — a utility semantics, a
+selection rule with its own refusal class, an agent model — or any solver or
+equilibrium claim reopens this as its own change with those obligations.
+
+### Decision: the source comparison recommends explicit `Endpoint<Protocol, Role>` (2026-11-13)
+
+**Choice:** recommend the explicit endpoint form and **no general inverse type**,
+as the 11-11 Vine addendum permits. The model is unchanged: both proposed source
+forms denote the same fixture, and the one new control is a source continuation
+that differs from the model's, refused with the witness `[send i64, recv bool]`.
+
+**Rationale:** protocol equality and duality are already decided by a work-bounded
+exploration, and the inverse operator would add an involution obligation with no
+proved bound here while the reported Vine value/space role swap has no Noble
+counterpart. The comparison, the operation map and the one missing control (a
+wrong-side endpoint is identity data, not a step gate) are recorded in
+`verification/nested-session/vine-comparison.md`.
+
+**Reopen conditions:** a decision to add a checked type-level inverse, or a source
+form that needs role-indexed endpoints to be enforced at step time.
+
 ## Risks / Trade-offs
 
 - A bounded unfolding limit may refuse protocols that are well-typed but deep;

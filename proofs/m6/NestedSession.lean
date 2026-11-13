@@ -25,10 +25,14 @@ Declared premises, kept premises:
   nested operand: a recursive entry saves the nested parameter and a finished node pops it. The
   balanced table's unbounded trace language `sendⁿ·recvⁿ` is not regular and needs that return stack;
   this model admits it only up to the declared stack limit, and claims no external runtime stack;
-* no protocol type-equality algorithm is defined: `dual` is definitional and endpoint identity is
-  compared field by field;
-* a `select`/`branch` node carries a label set, and the first pair naming a label is the one taken;
-  the exploration's work bound scales with the table's `width`, the largest label set and at least two;
+* protocol type equality and duality are decided under a declared work bound
+  (`protocolEquality_decides`, `protocolDuality_decides`); the proved bound is sufficient for every
+  pair of tables but not tight, so a smaller declared bound is refused as exhaustion rather than
+  decided;
+* a `select`/`branch` node carries a label set, and the table check (`validateTable`) refuses a
+  repeated label as `malformed`, so the accessor's first-pair rule is reachable only on a table this
+  check rejects; the exploration's work bound scales with the table's `width`, the largest label set
+  and at least two;
 * endpoint delegation (passing an endpoint as a message) is excluded, so ownership obligations stay
   outside this model.
 -/
@@ -2762,9 +2766,575 @@ theorem a_wide_choice_needs_its_width :
         (0, []) (0, []) = .equal := by
   decide
 
-/-- **With a repeated label, the first declared pair is the one taken.** -/
+/-- **On a table the check rejects, the accessor takes the first declared pair.** The table below is
+`malformed` (`validateTable_refuses_a_repeated_label`), so no accepted table reaches this rule; it
+documents the accessor's equation rather than a profile behaviour. -/
 theorem first_declared_label_wins :
     protoStep [.select [(0, 1), (0, 2)], .finished, .finished] 0 (0, []) (.choose 0) = some (1, []) := by
+  decide
+
+/-! ## Table well-formedness (WIT-SESSION-01)
+
+The grammar's bounds are admission-side. A table that declares more definitions than it is allowed,
+names an index for which it declares no definition, applies a named nested constructor to more
+explicit parameters than the grammar admits, declares more branches at one label set than it is
+allowed, or declares one label twice is `malformed`, and each fault has its own class so that no fault
+is reported as another and none is reported as an acceptance.
+
+A repeated label is **refused, not resolved**. `List.lookup` keeps its first-pair equation, but the
+accessor is reachable only on tables this check rejects: `wellFormed_tables_have_unique_labels` proves
+that every table the check accepts declares no label twice. A malformed table is refused admission as
+a whole, so no partial unfolding is retained from one.
+
+The check is a precondition of the profile, not an operand of its step functions: `resolve`, `step`,
+`protoStep`, `stackStep` and the equality check are unchanged, and every result above keeps its
+subject. -/
+
+/-- The declared table bounds. -/
+structure TableLimits where
+  /-- The largest number of definitions this grammar admits. -/
+  definitions : Nat
+  /-- The explicit parameters a named nested constructor may carry; the grammar admits one. -/
+  parameters : Nat
+  /-- The branches one label-set node may declare. -/
+  branches : Nat
+  deriving DecidableEq, Repr
+
+/-- Every refusal class of the table check, named rather than merged. -/
+inductive TableFault where
+  | tooManyDefinitions (count : Nat)
+  | continuationOutOfRange (index : Nat)
+  | nameOutOfRange (index : Nat)
+  | parameterOutOfRange (index : Nat)
+  | constructorArity (parameters : Nat)
+  | branchArity (branches : Nat)
+  | repeatedLabel (label : Nat)
+  deriving DecidableEq, Repr
+
+/-- The table check's verdict. `malformed` is a refusal: it admits no session. -/
+inductive TableCheck where
+  | wellFormed
+  | malformed (fault : TableFault)
+  deriving DecidableEq, Repr
+
+/-- A continuation index is in range exactly when it names one of the table's definitions. -/
+def validateContinuation (count : Nat) (continuation : Nat) : Option TableFault :=
+  if continuation < count then none else some (.continuationOutOfRange continuation)
+
+/-- The first label a label set declares twice, if any. -/
+def firstRepeatedLabel : List (Nat × Nat) → Option Nat
+  | [] => none
+  | (label, _) :: rest =>
+      if rest.any (fun entry => entry.1 == label) then some label
+      else firstRepeatedLabel rest
+
+/-- The first branch whose continuation names no definition. -/
+def outOfRangeBranch (count : Nat) : List (Nat × Nat) → Option Nat
+  | [] => none
+  | (_, continuation) :: rest =>
+      if continuation < count then outOfRangeBranch count rest
+      else some continuation
+
+/-- Validate one label set: no repeated label, at most the declared number of branches, and every
+continuation in range. -/
+def validateBranches (limits : TableLimits) (count : Nat)
+    (branches : List (Nat × Nat)) : Option TableFault :=
+  match firstRepeatedLabel branches with
+  | some label => some (.repeatedLabel label)
+  | none =>
+      if limits.branches < branches.length then some (.branchArity branches.length)
+      else
+        match outOfRangeBranch count branches with
+        | some continuation => some (.continuationOutOfRange continuation)
+        | none => none
+
+/-- Validate one definition against the table bounds. The grammar admits exactly one explicit
+parameter at a named nested constructor, so `limits.parameters = 0` refuses every such node. -/
+def validateNode (limits : TableLimits) (count : Nat) : Node → Option TableFault
+  | .finished => none
+  | .send _ continuation => validateContinuation count continuation
+  | .recv _ continuation => validateContinuation count continuation
+  | .choose _ continuation => validateContinuation count continuation
+  | .offer _ continuation => validateContinuation count continuation
+  | .nested name parameter =>
+      if count ≤ name then some (.nameOutOfRange name)
+      else if count ≤ parameter then some (.parameterOutOfRange parameter)
+      else if limits.parameters < 1 then some (.constructorArity 1)
+      else none
+  | .select branches => validateBranches limits count branches
+  | .branch branches => validateBranches limits count branches
+
+/-- Validate every definition, reporting the first fault. -/
+def validateEntry (limits : TableLimits) (count : Nat) : List Node → Option TableFault
+  | [] => none
+  | node :: rest =>
+      match validateNode limits count node with
+      | some fault => some fault
+      | none => validateEntry limits count rest
+
+/-- The table check. The definition count is checked first, so a table past its bound is refused
+before any index is read. -/
+def validateTable (limits : TableLimits) (definitions : List Node) : TableCheck :=
+  if definitions.length ≤ limits.definitions then
+    match validateEntry limits definitions.length definitions with
+    | some fault => .malformed fault
+    | none => .wellFormed
+  else .malformed (.tooManyDefinitions definitions.length)
+
+/-! ### What the check accepts -/
+
+/-- A continuation the check accepted names one of the table's definitions. -/
+theorem validateContinuation_none (count continuation : Nat)
+    (accepted : validateContinuation count continuation = none) : continuation < count := by
+  unfold validateContinuation at accepted
+  split at accepted
+  · assumption
+  · cases accepted
+
+/-- A branch list the check accepted names only definitions. -/
+theorem outOfRangeBranch_none (count : Nat) (branches : List (Nat × Nat))
+    (accepted : outOfRangeBranch count branches = none) :
+    ∀ entry ∈ branches, entry.2 < count := by
+  induction branches with
+  | nil => intro entry member; cases member
+  | cons head rest ih =>
+      intro entry member
+      rw [List.mem_cons] at member
+      rcases member with same | later
+      · subst same
+        unfold outOfRangeBranch at accepted
+        split at accepted
+        · assumption
+        · cases accepted
+      · unfold outOfRangeBranch at accepted
+        split at accepted
+        · exact ih accepted entry later
+        · cases accepted
+
+/-- An accepted branch list declares no label twice. -/
+theorem validateBranches_none_no_repeated_label (limits : TableLimits) (count : Nat)
+    (branches : List (Nat × Nat)) (accepted : validateBranches limits count branches = none) :
+    firstRepeatedLabel branches = none := by
+  unfold validateBranches at accepted
+  cases found : firstRepeatedLabel branches with
+  | none => rfl
+  | some label =>
+      simp only [found] at accepted
+      cases accepted
+
+/-- An accepted branch list declares only in-range continuations. -/
+theorem validateBranches_none_outOfRange (limits : TableLimits) (count : Nat)
+    (branches : List (Nat × Nat)) (accepted : validateBranches limits count branches = none) :
+    outOfRangeBranch count branches = none := by
+  unfold validateBranches at accepted
+  cases repeated : firstRepeatedLabel branches with
+  | some label =>
+      simp only [repeated] at accepted
+      cases accepted
+  | none =>
+      simp only [repeated] at accepted
+      split at accepted
+      · cases accepted
+      · cases found : outOfRangeBranch count branches with
+        | none => rfl
+        | some continuation =>
+            simp only [found] at accepted
+            cases accepted
+
+/-- Validating every definition is validating each one of them. -/
+theorem validateEntry_cons_some (limits : TableLimits) (count : Nat) (head : Node)
+    (rest : List Node) (fault : TableFault)
+    (failed : validateNode limits count head = some fault) :
+    validateEntry limits count (head :: rest) = some fault := by
+  show (match validateNode limits count head with
+      | some fault => some fault
+      | none => validateEntry limits count rest) = some fault
+  rw [failed]
+
+/-- A definition that validates leaves the rest of the table to validate. -/
+theorem validateEntry_cons_none (limits : TableLimits) (count : Nat) (head : Node)
+    (rest : List Node) (accepted : validateNode limits count head = none) :
+    validateEntry limits count (head :: rest) = validateEntry limits count rest := by
+  show (match validateNode limits count head with
+      | some fault => some fault
+      | none => validateEntry limits count rest) = validateEntry limits count rest
+  rw [accepted]
+
+theorem validateEntry_eq_none_iff (limits : TableLimits) (count : Nat) (definitions : List Node) :
+    validateEntry limits count definitions = none ↔
+      ∀ node ∈ definitions, validateNode limits count node = none := by
+  induction definitions with
+  | nil => simp [validateEntry]
+  | cons head rest ih =>
+      constructor
+      · intro accepted node member
+        rw [List.mem_cons] at member
+        rcases member with same | later
+        · rw [same]
+          cases checked : validateNode limits count head with
+          | none => rfl
+          | some fault =>
+              rw [validateEntry_cons_some limits count head rest fault checked] at accepted
+              cases accepted
+        · cases checked : validateNode limits count head with
+          | none =>
+              rw [validateEntry_cons_none limits count head rest checked] at accepted
+              exact ih.mp accepted node later
+          | some fault =>
+              rw [validateEntry_cons_some limits count head rest fault checked] at accepted
+              cases accepted
+      · intro all
+        have headNone := all head List.mem_cons_self
+        rw [validateEntry_cons_none limits count head rest headNone]
+        exact ih.mpr (fun node member => all node (List.mem_cons_of_mem _ member))
+
+/-- An accepted table is inside its declared definition count. -/
+theorem validateTable_wellFormed_definitions_bounded (limits : TableLimits)
+    (definitions : List Node) (accepted : validateTable limits definitions = .wellFormed) :
+    definitions.length ≤ limits.definitions := by
+  unfold validateTable at accepted
+  split at accepted
+  · assumption
+  · cases accepted
+
+/-- An accepted table's entry list validates. -/
+theorem validateTable_wellFormed_entry (limits : TableLimits) (definitions : List Node)
+    (accepted : validateTable limits definitions = .wellFormed) :
+    validateEntry limits definitions.length definitions = none := by
+  cases checked : validateEntry limits definitions.length definitions with
+  | none => rfl
+  | some fault =>
+      unfold validateTable at accepted
+      split at accepted
+      · simp only [checked] at accepted
+        cases accepted
+      · cases accepted
+
+/-! ### Repeated labels are refused, not resolved -/
+
+/-- **Any branch list with a repeated label is refused** with that label's own fault. -/
+theorem repeated_label_branches_are_malformed (limits : TableLimits) (count : Nat)
+    (branches : List (Nat × Nat)) (label : Nat)
+    (repeated : firstRepeatedLabel branches = some label) :
+    validateBranches limits count branches = some (.repeatedLabel label) := by
+  simp [validateBranches, repeated]
+
+/-- **A table whose first definition repeats a label is malformed**, whatever follows it. -/
+theorem repeated_label_entry_is_malformed (limits : TableLimits) (count : Nat)
+    (branches : List (Nat × Nat)) (rest : List Node) (label : Nat)
+    (repeated : firstRepeatedLabel branches = some label) :
+    validateEntry limits count (.select branches :: rest) = some (.repeatedLabel label) := by
+  show (match validateNode limits count (.select branches) with
+      | some fault => some fault
+      | none => validateEntry limits count rest) = some (.repeatedLabel label)
+  rw [show validateNode limits count (.select branches) = some (.repeatedLabel label) by
+    simp [validateNode, repeated_label_branches_are_malformed limits count branches label repeated]]
+
+/-- **The table check refuses the repeated-label table** rather than resolving the repeat. -/
+theorem repeated_label_table_is_refused (limits : TableLimits) (branches : List (Nat × Nat))
+    (rest : List Node) (label : Nat) (repeated : firstRepeatedLabel branches = some label)
+    (fits : (Node.select branches :: rest).length ≤ limits.definitions) :
+    validateTable limits (.select branches :: rest) = .malformed (.repeatedLabel label) := by
+  unfold validateTable
+  simp only [fits, ↓reduceIte]
+  show (match validateEntry limits (Node.select branches :: rest).length
+        (Node.select branches :: rest) with
+      | some fault => TableCheck.malformed fault
+      | none => TableCheck.wellFormed) = TableCheck.malformed (.repeatedLabel label)
+  rw [repeated_label_entry_is_malformed limits _ branches rest label repeated]
+
+/-- **Every table the check accepts declares no label twice.** No accepted table reaches the
+accessor's first-pair rule, so a repeated label is a refusal rather than a resolution. -/
+theorem wellFormed_tables_have_unique_labels (limits : TableLimits) (definitions : List Node)
+    (accepted : validateTable limits definitions = .wellFormed) :
+    (∀ branches, Node.select branches ∈ definitions → firstRepeatedLabel branches = none) ∧
+      (∀ branches, Node.branch branches ∈ definitions → firstRepeatedLabel branches = none) := by
+  have entryNone := validateTable_wellFormed_entry limits definitions accepted
+  have nodes := (validateEntry_eq_none_iff limits definitions.length definitions).mp entryNone
+  constructor
+  · intro branches member
+    exact validateBranches_none_no_repeated_label limits definitions.length branches
+      (show validateBranches limits definitions.length branches = none from
+        nodes (.select branches) member)
+  · intro branches member
+    exact validateBranches_none_no_repeated_label limits definitions.length branches
+      (show validateBranches limits definitions.length branches = none from
+        nodes (.branch branches) member)
+
+/-! ### In-range indices -/
+
+/-- Every index a node names in the closed table. -/
+def namedIndices : Node → List Nat
+  | .finished => []
+  | .send _ continuation => [continuation]
+  | .recv _ continuation => [continuation]
+  | .choose _ continuation => [continuation]
+  | .offer _ continuation => [continuation]
+  | .nested name parameter => [name, parameter]
+  | .select branches => branches.map (fun entry => entry.2)
+  | .branch branches => branches.map (fun entry => entry.2)
+
+/-- A validated node names only definitions of a table with `count` entries. -/
+theorem validateNode_none_namedIndices (limits : TableLimits) (count : Nat) (node : Node)
+    (accepted : validateNode limits count node = none) :
+    ∀ index ∈ namedIndices node, index < count := by
+  cases node with
+  | finished => intro index member; cases member
+  | send message continuation =>
+      intro index member
+      have indexEq : index = continuation := by simpa [namedIndices] using member
+      rw [indexEq]
+      exact validateContinuation_none count continuation accepted
+  | recv message continuation =>
+      intro index member
+      have indexEq : index = continuation := by simpa [namedIndices] using member
+      rw [indexEq]
+      exact validateContinuation_none count continuation accepted
+  | choose branch continuation =>
+      intro index member
+      have indexEq : index = continuation := by simpa [namedIndices] using member
+      rw [indexEq]
+      exact validateContinuation_none count continuation accepted
+  | offer branch continuation =>
+      intro index member
+      have indexEq : index = continuation := by simpa [namedIndices] using member
+      rw [indexEq]
+      exact validateContinuation_none count continuation accepted
+  | nested name parameter =>
+      intro index member
+      have nameSmall : name < count := by
+        by_cases fits : count ≤ name
+        · simp [validateNode, fits] at accepted
+        · omega
+      have parameterSmall : parameter < count := by
+        by_cases fits : count ≤ parameter
+        · simp [validateNode, fits, Nat.not_le.mpr nameSmall] at accepted
+        · omega
+      have indexEq : index = name ∨ index = parameter := by
+        simpa [namedIndices] using member
+      rcases indexEq with same | same
+      · rw [same]; exact nameSmall
+      · rw [same]; exact parameterSmall
+  | select branches =>
+      intro index member
+      have checked := validateBranches_none_outOfRange limits count branches
+        (show validateBranches limits count branches = none from accepted)
+      simp only [namedIndices, List.mem_map] at member
+      obtain ⟨entry, entryMember, entryIndex⟩ := member
+      rw [← entryIndex]
+      exact outOfRangeBranch_none count branches checked entry entryMember
+  | branch branches =>
+      intro index member
+      have checked := validateBranches_none_outOfRange limits count branches
+        (show validateBranches limits count branches = none from accepted)
+      simp only [namedIndices, List.mem_map] at member
+      obtain ⟨entry, entryMember, entryIndex⟩ := member
+      rw [← entryIndex]
+      exact outOfRangeBranch_none count branches checked entry entryMember
+
+/-- **Every table the check accepts names only its own definitions**: continuations, nested names and
+nested parameters are all in range. -/
+theorem wellFormed_tables_have_in_range_indices (limits : TableLimits) (definitions : List Node)
+    (accepted : validateTable limits definitions = .wellFormed) :
+    ∀ node ∈ definitions, ∀ index ∈ namedIndices node, index < definitions.length := by
+  intro node member index named
+  have entryNone := validateTable_wellFormed_entry limits definitions accepted
+  exact validateNode_none_namedIndices limits definitions.length node
+    ((validateEntry_eq_none_iff limits definitions.length definitions).mp entryNone node member)
+    index named
+
+/-! ### Decided controls -/
+
+/-- The check accepts the fixtures the traces above run: the balanced table, the label set and its
+dual, the client/server handshake, both single-branch choices and the finite handshake. -/
+theorem validateTable_accepts_the_model_fixtures :
+    validateTable ⟨8, 1, 4⟩ balancedProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ labelSetProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ clientProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ serverProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ choiceProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ offerProtocol = .wellFormed ∧
+      validateTable ⟨8, 1, 4⟩ handshakeProtocol = .wellFormed := by
+  decide
+
+/-- The legacy depth-only fixture's nested parameter is outside its four-entry table, so the check
+refuses it as malformed: the depth-only control is not a well-formed profile table. -/
+theorem validateTable_refuses_the_legacy_fixture :
+    validateTable ⟨8, 1, 4⟩ exampleProtocol = .malformed (.parameterOutOfRange 7) := by
+  decide
+
+/-- A repeated label is `malformed` with that label's own fault. -/
+theorem validateTable_refuses_a_repeated_label :
+    validateTable ⟨4, 1, 4⟩ [.select [(0, 1), (0, 2)], .finished, .finished] =
+      .malformed (.repeatedLabel 0) := by
+  decide
+
+/-- A continuation outside the table is refused by index. -/
+theorem validateTable_refuses_an_out_of_range_continuation :
+    validateTable ⟨4, 1, 4⟩ [.send .i64 7] = .malformed (.continuationOutOfRange 7) := by
+  decide
+
+/-- A named nested constructor naming no definition is refused by index. -/
+theorem validateTable_refuses_an_out_of_range_name :
+    validateTable ⟨4, 1, 4⟩ [.finished, .nested 5 0] = .malformed (.nameOutOfRange 5) := by
+  decide
+
+/-- A nested parameter naming no definition is refused by index. -/
+theorem validateTable_refuses_an_out_of_range_parameter :
+    validateTable ⟨4, 1, 4⟩ [.finished, .nested 0 9] = .malformed (.parameterOutOfRange 9) := by
+  decide
+
+/-- The specification's bounded-constructor-arity scenario: the grammar admits one explicit parameter,
+so a limit of zero refuses the constructor as malformed instead of retaining a partial unfolding. -/
+theorem validateTable_refuses_a_constructor_past_the_arity :
+    validateTable ⟨4, 0, 4⟩ [.finished, .nested 0 0] = .malformed (.constructorArity 1) := by
+  decide
+
+/-- A table past its declared definition count is refused before any index is read. -/
+theorem validateTable_refuses_too_many_definitions :
+    validateTable ⟨2, 1, 4⟩ balancedProtocol = .malformed (.tooManyDefinitions 4) := by
+  decide
+
+/-- A label set wider than its declared branch bound is refused. -/
+theorem validateTable_refuses_a_wide_label_set :
+    validateTable ⟨8, 1, 2⟩ threeLabels = .malformed (.branchArity 3) := by
+  decide
+
+/-- A label-set continuation outside the table is refused by index. -/
+theorem validateTable_refuses_an_out_of_range_branch :
+    validateTable ⟨4, 1, 4⟩ [.select [(0, 7)]] = .malformed (.continuationOutOfRange 7) := by
+  decide
+
+/-- **The repeated-label table is refused before it is resolved**: the check reports `malformed`, and
+the accessor equation that would take the first pair is a fact about the rejected table only. -/
+theorem repeated_label_is_refused_before_it_is_resolved :
+    validateTable ⟨4, 1, 4⟩ [.select [(0, 1), (0, 2)], .finished, .finished] =
+        .malformed (.repeatedLabel 0) ∧
+      protoStep [.select [(0, 1), (0, 2)], .finished, .finished] 0 (0, []) (.choose 0) =
+        some (1, []) := by
+  decide
+
+/-! ## Pact preference-factor adjunct (default off)
+
+The 11-11 addendum asks for a default-off, measure-first adjunct: attach Pact-style preference factors
+to the *decider* of an existing finite choice and check whether the existing results still hold on the
+unannotated skeleton. They do, and this section proves it by definition: an annotated table's only
+meaning in this model is its skeleton (`PactTable.erase`), so every step, verdict and bound is the
+plain table's.
+
+This section defines factors only. It defines no utility function, no decision rule, no solver and no
+agent model, and no factor is read by any function here. The obligations a factor-carrying profile
+would add are listed in `verification/nested-session/README.md`; none of them is discharged here. The
+adjunct is default off: it is not part of any claim above, and nothing in this model consults an
+annotation. -/
+
+/-- One Pact-style preference factor: a declared weight for one label at one state. -/
+structure Preference where
+  state : Nat
+  label : Nat
+  factor : Nat
+  deriving DecidableEq, Repr
+
+/-- A default-off annotated table: the plain skeleton, the decider's factors, and the optional
+exogenous world value the addendum allows. The annotations carry no semantics here. -/
+structure PactTable where
+  skeleton : List Node
+  preferences : List Preference
+  world : Option Nat
+  deriving DecidableEq, Repr
+
+/-- Erasure: the annotated table's only operation in this model. Every existing result is stated on
+the erased skeleton. -/
+def PactTable.erase (table : PactTable) : List Node := table.skeleton
+
+/-- The label-set fixture annotated with two factors and one world value. -/
+def pactLabelSet : PactTable :=
+  { skeleton := labelSetProtocol
+    preferences := [⟨0, 0, 3⟩, ⟨0, 1, 1⟩]
+    world := some 7 }
+
+/-- The same skeleton with the factors reversed: a factor never selects. -/
+def pactLabelSetReversed : PactTable :=
+  { pactLabelSet with preferences := [⟨0, 0, 1⟩, ⟨0, 1, 3⟩] }
+
+/-- Annotating the fixture and erasing is the identity on its skeleton. -/
+theorem pact_label_set_erases_to_the_fixture : pactLabelSet.erase = labelSetProtocol := rfl
+
+/-- **Re-annotation is not observable**: factors and the world value are erased before any step, so
+every step of an annotated table is a step of its skeleton. -/
+theorem pact_reannotation_is_not_observable (table : PactTable) (preferences : List Preference)
+    (world : Option Nat) (config : Config) (action : StackAction) :
+    protoStep { table with preferences := preferences, world := world }.erase 2 config action =
+      protoStep table.erase 2 config action := rfl
+
+/-- **Duality is unchanged on the erased skeleton** under the skeleton's work bound. -/
+theorem pact_label_set_duality_holds :
+    protocolDuality pactLabelSet.erase 0 (pactLabelSet.erase.map dual) 0
+        (workBound pactLabelSet.erase 0 0 ((pactLabelSet.erase.map dual).map dual) 0 0)
+        (0, []) (0, []) = .equal := by
+  decide
+
+/-- **Wrong-branch refusal is unchanged on the erased skeleton.** -/
+theorem pact_label_set_wrong_branch_is_refused :
+    protoStep pactLabelSet.erase 0 (0, []) (.choose 2) = none := by
+  decide
+
+/-- **Endpoint identity preservation is unchanged on the erased skeleton**: the guest's selection
+advances only the state and leaves channel, side, protocol and generation as they were. -/
+theorem pact_label_set_preserves_the_endpoint_identity :
+    step pactLabelSet.erase 1 ⟨5, false, 9, 0, 4, false⟩ (.choose 1) =
+      some ⟨5, false, 9, 2, 4, false⟩ := by
+  decide
+
+/-- **The work bound is the skeleton's bound**, whatever the annotations are. -/
+theorem pact_work_bound_is_the_skeleton_bound :
+    workBound pactLabelSet.erase 0 0 pactLabelSetReversed.erase 0 0 =
+      workBound labelSetProtocol 0 0 labelSetProtocol 0 0 := rfl
+
+/-- **A factor is not a selection**: with the factor order reversed, both declared labels are still
+enabled and each still reaches its own continuation, and the two annotations erase to one skeleton. -/
+theorem pact_factor_does_not_select :
+    enabled pactLabelSetReversed.erase 0 (0, []) = [.choose 0, .choose 1] ∧
+      protoStep pactLabelSetReversed.erase 0 (0, []) (.choose 1) = some (2, []) ∧
+      pactLabelSetReversed.erase = pactLabelSet.erase := by
+  decide
+
+/-! ## Vine source-form comparison (default off, design examples)
+
+The 11-11 Vine addendum compares two proposed source forms for the same protocols. A different source
+notation is not a reason to create another duality algorithm, so both forms below denote the model's
+own table and the model stays the only semantics. These are design examples: neither source form is
+implemented. `verification/nested-session/vine-comparison.md` maps both forms to this model's state,
+continuation, side and generation, and the one new control the addendum asks for is here: a source
+continuation that differs from the model's is refused with a witness, not coerced. -/
+
+/-- The scalar handshake as the explicit-endpoint source form writes it: the client sends an `i64`,
+then receives the `bool` acknowledgement. -/
+def vineExplicitForm : List Node := [.send .i64 1, .recv .bool 2, .finished]
+
+/-- The same handshake as a paired/inverse-endpoint library would write it. Written correctly it is
+the same table; the source form is a notation, not a second semantics. -/
+def vinePairedForm : List Node := [.send .i64 1, .recv .bool 2, .finished]
+
+/-- The paired form with the continuation slip this control measures: after the send, the author
+wrote a second `i64` receive where the model's protocol receives a `bool`. -/
+def vinePairedFormSlip : List Node := [.send .i64 1, .recv .i64 2, .finished]
+
+/-- Both proposed source forms denote the fixture the model already decides. -/
+theorem vine_source_forms_denote_the_same_fixture :
+    vineExplicitForm = vinePairedForm ∧ vineExplicitForm = clientProtocol := ⟨rfl, rfl⟩
+
+/-- **A source continuation that differs from the model's is refused, not coerced**: the equality
+check carries the trace on which the two tables disagree. -/
+theorem vine_source_continuation_mismatch_is_refused :
+    protocolEquality vineExplicitForm 0 vinePairedFormSlip 0 8 (0, []) (0, []) =
+      .differ [.send .i64, .recv .bool] := by
+  decide
+
+/-- The matched control: with the model's continuation the two forms are the same type, so the refusal
+above measures the continuation mismatch and not the comparison. -/
+theorem vine_source_continuation_match_is_accepted :
+    protocolEquality vineExplicitForm 0 vinePairedForm 0 8 (0, []) (0, []) = .equal := by
   decide
 
 end NestedSession
