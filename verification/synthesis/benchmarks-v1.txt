@@ -1,0 +1,176 @@
+# noble-synthesis-benchmarks/v1
+#
+# The frozen benchmark set of issue #116: bounded typed program synthesis with
+# counterexample-guided refinement, in `verification/synthesis/cegis.mjs`.
+#
+# FREEZE. This file is committed before the retained measurement it governs and the lane's
+# receipt binds its SHA-256. Changing any line changes the declared benchmark set; a new set
+# needs a new file (`benchmarks-v2.txt`) so retained receipts keep their meaning.
+#
+# ---------------------------------------------------------------------------------------------
+# Grammar `synth-i64/0`
+#
+# A program is a straight-line sequence of words over the interface's inputs. The stack starts
+# with the declared inputs, deepest first (slot 0 at the bottom). Words:
+#   +  -  *  =      I64 `a b op` with `a` deeper and `b` on top; `-` is `a - b` and `=` is
+#                   `a = b`, yielding Bool (so `=` can only be a program's last word: no word
+#                   consumes a Bool).  Wrapping I64 arithmetic, as `PackedSchedule.evalStep`.
+#   dup swap        wiring on the top of the stack (both are Core's own builtins). They add no
+#                   arithmetic; `drop` is excluded because a value it discards never needed to
+#                   be computed, so it cannot shorten a minimal program.
+#   <constant>      one of the `consts` below, pushed as I64.
+# A program is complete when the stack holds exactly one value of the task's output type.
+# Bounds: `size` is the maximum number of words (the search's size bound), `max-stack` the
+# maximum stack depth (the depth bound), `max-candidates` the number of one-word extensions the
+# search may try in total (the fuel bound).
+#
+# Grammar `synth-list/0` (declared, but run-only: no solver and no certificate covers it)
+#
+# The same stack discipline with `nil` (push the empty `List<I64>`), `cons` (`I64 List<I64> --
+# List<I64>`, the list on top), `dup`, `swap`, `+`, `-` and `list-consts`. The interface is
+# `I64 -- List<I64>`; because `noble live repl` starts with an empty stack, the instance's input
+# word is pushed by the program itself, exactly as a caller would push it.
+# ---------------------------------------------------------------------------------------------
+#
+# Reference graphs are written as s-expressions over `x` (slot 0) and `y` (slot 1) with `+ - *`.
+# A reference is a *graph* (the lane compiles it bottom-up with no sharing) and the examples
+# below are checked against it before any search, so a typo in an example is a refused run, not
+# a wrong benchmark. `train` examples drive discovery and refinement; `heldout` examples are
+# never shown to the search and are run only on the final program.
+#
+# Families: `arithmetic` (I64 or Bool out), `bitwise-0/1` (the 0/1 domain declared by
+# `precondition`, so a solver query is restricted to that domain), `list-run` (run only).
+#
+# Negative cases: `contradictory` examples (the same inputs with two output values: no function,
+# hence no program, can satisfy them), `overBound` (inside the grammar, one word past the
+# declared `bound`, with `control-bound` showing the same task is solved at the wider bound),
+# and `bitOr` / `bitXor`, whose 0/1 reference functions are not found within their declared search
+# bounds. These bounded outcomes make no claim about all program sizes or a widened grammar.
+
+grammar synth-i64/0
+grammar-list synth-list/0
+seed 0x9e3779b97f4a7c15
+consts 0 1 2 3 5 7
+list-consts 1 2 3
+size 8
+max-stack 4
+max-candidates 400000
+max-rounds 4
+solver-ms 10000
+list-max-stack 4
+
+# ---------------------------------------------------------------------------------------------
+# Arithmetic, I64 out: x + (7 + y) written as (x + 7) + y. The reference and any affine winner
+# with the same form are proved by a generated `bv_omega` theorem over the two graphs.
+task arithCommuted arithmetic i64 inputs=2 bound=8
+  ref (+ (+ x 7) y)
+  train 0 0 = 7
+  train 1 2 = 10
+  train -1 3 = 9
+  heldout 5 -5 = 7
+  heldout 2147483647 -2147483648 = 6
+
+task arithSubtract arithmetic i64 inputs=2 bound=8
+  ref (- (+ x 7) y)
+  train 0 0 = 7
+  train 1 2 = 6
+  train -1 3 = 3
+  heldout 5 -5 = 17
+  heldout -2147483648 2147483647 = -4294967288
+
+task arithScaled arithmetic i64 inputs=2 bound=8
+  ref (+ x (* 5 (+ 7 y)))
+  train 0 0 = 35
+  train 1 2 = 46
+  train -1 3 = 49
+  heldout 5 -5 = 15
+  heldout 3037000499 3037000499 = 18222003029
+
+# Outside the linear class: `x + (y+5)(y+3)` is expressible using `dup`, but its graph multiplies
+# two input-dependent values. It can be solver-checked and tested, but this lane does not certify
+# nonlinear products.
+task arithProduct arithmetic i64 inputs=2 bound=9
+  ref (+ x (* (+ y 5) (+ y 3)))
+  train 0 0 = 15
+  train 1 2 = 36
+  train -1 3 = 47
+  heldout 5 -5 = 5
+  heldout 7 7 = 127
+
+# Arithmetic, Bool out: `=` is the last word, so the program computes `x + 1 = y + 1`.
+# A Bool output is not a linear equivalence of I64 graphs, so this family is solver-checked and
+# tested, never certified.
+task arithEquality arithmetic bool inputs=2 bound=8
+  ref (= (+ x 1) (+ y 1))
+  train 0 0 = true
+  train 2 1 = false
+  train -3 -2 = false
+  heldout 7 7 = true
+  heldout 1 -1 = false
+
+# ---------------------------------------------------------------------------------------------
+# Bitwise, 0/1-valued I64 encodings under the declared input precondition. `*` is and; the or and
+# xor reference graphs are `x + y - x y` and `x + y - 2 x y`. They are bounded negative search
+# cases, not claims that no program in any grammar or at any size can express them. Every query
+# asserts the precondition on every slot it reads.
+task bitAnd bitwise-0/1 i64 inputs=2 bound=8
+  precondition 0/1
+  ref (* x y)
+  train 0 0 = 0
+  train 1 1 = 1
+  heldout 1 0 = 0
+  heldout 0 1 = 0
+
+task bitOr bitwise-0/1 i64 inputs=2 bound=8
+  precondition 0/1
+  ref (- (+ x y) (* x y))
+  train 0 0 = 0
+  train 1 0 = 1
+  heldout 1 1 = 1
+  heldout 0 1 = 1
+
+task bitXor bitwise-0/1 i64 inputs=2 bound=8
+  precondition 0/1
+  ref (- (+ x y) (* 2 (* x y)))
+  train 0 0 = 0
+  train 1 0 = 1
+  heldout 1 1 = 0
+  heldout 0 1 = 1
+
+# ---------------------------------------------------------------------------------------------
+# List, run only: the declared interface is `I64 -- List<I64>` and only `noble live repl`
+# executes these programs. `(list e ...)` is the expected ordered result.
+task listSingleton list-run list inputs=1 bound=8
+  ref (list n)
+  train 2 = [2]
+  train 7 = [7]
+  heldout 0 = [0]
+  heldout -3 = [-3]
+
+task listDouble list-run list inputs=1 bound=8
+  ref (list n n)
+  train 2 = [2, 2]
+  train 7 = [7, 7]
+  heldout 0 = [0, 0]
+  heldout -3 = [-3, -3]
+
+# ---------------------------------------------------------------------------------------------
+# Negative cases.
+
+# The same input with two output values: unsatisfiable, no program can satisfy both.
+task contradictory arithmetic i64 inputs=2 bound=8
+  ref (+ x y)
+  train 1 2 = 3
+  train 1 2 = 4
+
+# Inside the grammar but one word past the declared bound: the minimal program is
+# `3 + 2 2 + * +` (7 words), so the declared bound of 6 must exhaust, and the control bound of 7
+# must solve the same task.
+task overBound arithmetic i64 inputs=2 bound=6 control-bound=7
+  ref (+ x (* (+ y 3) 4))
+  train 0 0 = 12
+  train 1 2 = 21
+  train -1 3 = 23
+  heldout 5 -5 = -3
+  heldout 7 7 = 47
+
