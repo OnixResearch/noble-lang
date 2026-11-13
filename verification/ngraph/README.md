@@ -94,8 +94,8 @@ cost lane's denominator from 20 to 28 attempts, so coverage is reported against 
 the same frozen v2 plan and all 28 fixture/proposer rows were rerun from clean source commit
 `f5aef69f77c8bd144f0174dfd8aca1a6aa4f074b`. The fresh [receipt](rewrite-cost-2026-11-13.json)
 retains its runner evidence alongside it. `cert::check` now replays each derivation against the
-result endpoint; its measured per-call medians are 13.70–33.57 µs and per-step medians are
-7.96–33.30 µs across the 21 step-bearing rows (informational shared-host debug timings, not a
+result endpoint; its measured per-call medians are 15.07–27.75 µs and per-step medians are
+9.09–27.75 µs across the 21 step-bearing rows (informational shared-host debug timings, not a
 retention or speedup claim). The measurement now records `cert::encode` token-envelope lengths per
 row: 28 B for zero steps, 42–78 B for one step (fixture-dependent decimal node/value token widths),
 and 57–59 B for two steps. The corresponding structural in-memory estimates are 161, 201 and 241 B.
