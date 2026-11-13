@@ -51,8 +51,7 @@ mod multi_step;
 mod admission;
 #[path = "cert/scoped.rs"]
 mod scoped;
-#[path = "cert/scoped_corpus.rs"]
-mod scoped_corpus;
+
 #[path = "cert/llvm.rs"]
 mod llvm;
 
