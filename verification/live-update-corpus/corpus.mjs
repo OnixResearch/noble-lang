@@ -976,7 +976,8 @@ function observeRetention(bundle) {
   };
 }
 
-const retentionEffectRows = bundle => ({
+function retentionEffectRows(bundle) {
+  return {
   normal: [
     { subject: 'retention.replacement.run-after-replacement', purpose: 'saved Program runs after the slot was replaced',
       rows: rowsOf(laneRun(bundle, 'packageRetention').responses, 'LREF-CASE-03-replacement')
@@ -994,7 +995,8 @@ const retentionEffectRows = bundle => ({
       rows: [{ ordinal: 0, operation: 'invoke', slot: 'runner', request: null,
         response: 'refused' }] },
   ],
-});
+  };
+}
 
 // --- Scenario C observation -------------------------------------------------------------------
 
@@ -1041,7 +1043,7 @@ function observeRelocation(bundle) {
   };
 }
 
-const relocationEffectRows = bundle => {
+function relocationEffectRows(bundle) {
   const responses = variant => rowsOf(laneRun(bundle, 'relocation').responses, variant);
   const traceOf = variant => responses(variant)
     .filter(row => row.outcome === 'executed' && Array.isArray(row.request_trace))
@@ -1061,7 +1063,7 @@ const relocationEffectRows = bundle => {
         rows: traceSummary(denied?.request_trace ?? []) },
     ],
   };
-};
+}
 
 // --- Scenario D observation -------------------------------------------------------------------
 
@@ -1108,7 +1110,7 @@ function observeTyped(bundle) {
   };
 }
 
-const typedEffectRows = bundle => {
+function typedEffectRows(bundle) {
   const typed = laneRun(bundle, 'typed');
   const emitted = [...typed.responses.keys()].sort((a, b) => a.localeCompare(b, 'en'))
     .map(variant => ({
@@ -1169,7 +1171,8 @@ function observeOwnership(bundle) {
   };
 }
 
-const ownershipEffectRows = bundle => ({
+function ownershipEffectRows(bundle) {
+  return {
   normal: [
     { subject: 'ownership.shared-owners', purpose: 'each duplicate runs the same Program',
       rows: rowsOf(laneRun(bundle, 'ownership').responses, 'OWN-CASE-02-A-then-B')
@@ -1182,7 +1185,8 @@ const ownershipEffectRows = bundle => ({
       rows: [{ ordinal: 0, operation: 'invoke', slot: 'runner', request: null,
         response: 'refused' }] },
   ],
-});
+  };
+}
 
 // ---------------------------------------------------------------------------------------------
 // Classification
