@@ -13,9 +13,13 @@
 +        let* parsed = parsed in
 +        match String.split_on_char '=' module_spec with
 +        | [ name; path ] when not (String.equal name "") && not (String.equal path "") ->
-+          let+ path = Fpath.of_string path in
-+          (name, path) :: parsed
-+        | _ -> Fmt.error_msg "invalid OWI_REGISTER_MODULES entry: %s" module_spec )
++          let* path =
++            Fpath.of_string path
++            |> Result.map_error (fun (`Msg message) -> (`Msg message : Result.err))
++          in
++          Ok ((name, path) :: parsed)
++        | _ ->
++          Error (`Msg (Fmt.str "invalid OWI_REGISTER_MODULES entry: %s" module_spec) : Result.err) )
 +      (Ok []) (String.split_on_char ',' modules)
 +    |> Result.map List.rev
 +
