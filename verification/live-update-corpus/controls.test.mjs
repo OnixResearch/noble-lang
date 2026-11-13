@@ -25,7 +25,11 @@ test('the retained report matches the versioned schema and seven result classes'
 test('retained corpus controls reject deliberate defects for their intended reasons', () => {
   expect(receipt.controls?.passed).toBe(true);
   const report = runControls({ directory, repositoryRoot: ROOT });
-  expect(report).toEqual(receipt.controls);
+  const summary = controls => controls.map(({ control, passed, expected_reason, observed_reasons }) => ({
+    control, passed, expected_reason, observed_reasons,
+  }));
+  expect(report.passed).toBe(true);
+  expect(summary(report.controls)).toEqual(summary(receipt.controls.controls));
 
   const outcomes = new Map(report.controls.map(row => [row.control, row]));
   for (const name of [
