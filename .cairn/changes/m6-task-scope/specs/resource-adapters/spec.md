@@ -36,8 +36,11 @@ changed and no new kernel surface is added.
 r[RA-GROUP-02]
 
 Scope admission MUST be incremental, one child at a time, because the kernel's
-`Admission` value holds the table exclusively; whole-group preflight MUST NOT be
-claimed or implied. A refused admission MUST preserve every previously committed
+`Admission` value holds the table exclusively; no more than one scope-issued
+child value may await attachment, and whole-group preflight MUST NOT be claimed
+or implied. Dropping an unattached scope-issued value MUST transfer its
+retirement to the host registry and leave the scope fail-closed. A refused
+admission MUST preserve every previously committed
 child as a member with its custody, reservations, pins and native obligations
 unchanged, and MUST return every caller-owned input unchanged. A refused or
 failed later admission MUST NOT be described as rollback of native work, of a
@@ -98,7 +101,12 @@ settlement and cleanup MUST remain separate decisions rather than one shielded
 operation. An unsettled child MUST keep the scope unsettled. Dropping the scope
 wrapper MUST NOT invent cleanup: the retained host owner (the scope registry)
 MUST inherit the outstanding retirement, because dropping a task value performs no
-cleanup in the kernel.
+cleanup in the kernel. The host-retained input payload MUST remain owned while
+cleanup is outstanding and MUST be dropped only after the table accepts cleanup;
+the host registry MUST inherit that payload if the wrapper is dropped earlier. If
+the table snapshot confirms an empty pin set after native stop, the host MUST
+record the empty settlement without issuing a zero-mask table operation, and MUST
+still acknowledge cleanup separately.
 
 #### Scenario: cancellation is not settlement
 
@@ -115,6 +123,20 @@ cleanup in the kernel.
 - WHEN retirement is asked for afterwards
 - THEN the host scope registry MUST own it, and no cleanup MUST be reported as
   complete merely because the wrapper no longer exists
+
+#### Scenario: cleanup releases the host input only when accepted
+
+- GIVEN a child whose input payload remains host-owned while native stop, pins or
+  cleanup are outstanding
+- WHEN table cleanup is refused or succeeds
+- THEN refusal MUST preserve the payload, and successful cleanup MUST release it
+
+#### Scenario: an empty pin set needs no fabricated table release
+
+- GIVEN a native-stopped child whose table snapshot has no outstanding pins
+- WHEN the host acknowledges pin settlement
+- THEN it MUST record the empty settlement without changing table accounting, and
+  cleanup MUST remain a separate required step
 
 ### Requirement: RA-GROUP-05
 r[RA-GROUP-05]

@@ -79,10 +79,14 @@ that a scope may be nested.
 
 ### Decision: admission is incremental, and a refused second admission keeps the first child
 
-**Choice:** one child at a time, at the host's serialized boundary. When the
-second admission is refused, the first child stays a member with its footprint,
-pins and native obligations unchanged, and the caller's second input comes back
-unchanged (the kernel already does this: `admit` returns `Rejected { error, input }`).
+**Choice:** one child at a time, at the host's serialized boundary, with at most
+one scope-issued value awaiting attachment. A later `admit` is refused until
+that move-only value is attached; dropping the scope-issued value transfers its
+retirement to the host registry and leaves the scope fail-closed. When the
+second table admission is refused, the first child stays a member with its
+footprint, pins and native obligations unchanged, and the caller's second input
+comes back unchanged (the kernel already does this: `admit` returns
+`Rejected { error, input }`).
 
 **Rationale:** `Admission<'a>` holds `table: &'a mut Table`, so whole-group
 preflight is not expressible without a new kernel API — and a new kernel API
@@ -136,6 +140,13 @@ settlement and cleanup stay separate steps, and the scope reports "cancellation
 acknowledged" distinctly from "settled". Dropping the wrapper does not clean up:
 the host scope registry inherits the outstanding retirement (the same shape as
 `ExecutionScope::drop`, which retires the task rather than assuming it finished).
+The host-retained input payload remains owned while cleanup is outstanding and is
+dropped only after the table accepts cleanup; if the wrapper is dropped earlier,
+the registry inherits that payload with the pending obligations.
+
+When the retained table snapshot has no pins after native stop, the host may
+acknowledge the empty pin set without issuing the table's invalid zero-mask
+settlement; cleanup remains a separate required decision.
 
 **Rationale:** the kernel's `Task` drop performs no cleanup (`mod.rs:37`), so a
 wrapper drop that reported cleanup would be false. In the pilot the registry is an

@@ -9,12 +9,12 @@
 
 ## Phase 2: Foundation model
 
-- [ ] [serial] Add `proofs/foundation/NobleFoundation/TaskScope.lean` importing `TaskInterleaving`, register it in `NobleFoundation.lean`, `inventory.json` and the README, and prove the membership, result-order, refusal, cancellation, settlement and capacity obligations at the declared bound. r[RA-GROUP-01] r[RA-GROUP-03] r[RA-GROUP-04] r[RA-GROUP-02]
+- [x] [serial] Add `proofs/foundation/NobleFoundation/TaskScope.lean` importing `TaskInterleaving`, register it in `NobleFoundation.lean`, `inventory.json` and the README, and prove the membership, result-order, refusal, cancellation, settlement and capacity obligations at the declared bound. r[RA-GROUP-01] r[RA-GROUP-03] r[RA-GROUP-04] r[RA-GROUP-02]
 
 ## Phase 3: Adapter pilot
 
-- [ ] [serial] Add the host scope adapter and its reference traces to the existing `m6-interleaving` target by `#[path]`, replay the model traces over the real table, and compare results, refusals, accounting deltas and `observation()`. r[RA-GROUP-01] r[RA-GROUP-02] r[RA-GROUP-03] r[RA-GROUP-04] r[RA-GROUP-05]
-- [ ] [serial] Emit the generated scope corpus from the adapter and check the committed file matches the emission, so the model's declared traces cannot drift from the adapter's. r[RA-GROUP-06]
+- [x] [serial] Add the host scope adapter and its reference traces to the existing `m6-interleaving` target by `#[path]`, replay the model traces over the real table, compare results, refusals, accounting deltas and `observation()`, and check input ownership through cleanup. r[RA-GROUP-01] r[RA-GROUP-02] r[RA-GROUP-03] r[RA-GROUP-04] r[RA-GROUP-05]
+- [x] [serial] Emit the generated scope corpus from the adapter and check the committed file matches the emission, so the model's declared traces cannot drift from the adapter's. r[RA-GROUP-06]
 
 ## Phase 4: Evidence
 

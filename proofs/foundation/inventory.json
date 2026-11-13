@@ -7766,6 +7766,276 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.results_sublist_members",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "reported results preserve attachment order and are drawn only from scope membership"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.results_mem_members",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "every reported result belongs to the retained member list"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.results_mem_delivered",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "every reported result passed the delivery gate"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.results_nodup",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a membership list without duplicates yields a result list without duplicates"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.table_actions_are_composed",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "every scope action carrying a table event uses the imported TaskInterleaving transition"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.host_observations_keep_the_table",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "host-only bookkeeping leaves the imported table unchanged"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.close_requires_settlement",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "an unsettled scope refuses close"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.release_is_released_once",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a previously released member cannot be released again"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.duplicate_attachment_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a consumed admission cannot attach the same member again"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.attachment_is_bounded",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "attachment refuses when the two-child bound is full"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.closed_scopes_refuse_attachment",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a closed scope refuses a new attachment"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.foreign_scope_admission_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a child descriptor issued for another scope cannot be admitted"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.foreign_table_admission_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a child descriptor bound to another table cannot enter this scope"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.stale_generation_admission_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a stale slot generation cannot be issued as a new child"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.fabricated_membership_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a member without an issued admission cannot be attached, delivered, finalized or released"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.primary_failure_is_retained",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "once recorded, the primary failure survives every accepted later scope step"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.scope_bounded_sequence_count",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "the declared depth-three scope alphabet contains 3616 sequences"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.scope_bounded_history_count",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "the one-capacity depth-three scope/table search reaches nine histories"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.task_interleaving_reference_sequence_count",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "the imported TaskInterleaving enumerator has the same declared sequence count"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.wake_reservation_trace_is_in_declared_bound",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "the wake-reservation trace is one of the declared depth-three scope sequences"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.wake_reservation_keeps_the_shared_task_live",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a bounded wake reservation leaves the task occupying shared capacity"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.cancellation_releases_wakeup_reservation_but_not_retirement_capacity",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "cancellation removes a wake reservation but retains the pinned retiring task"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.distinct_child_capacity_actions_are_not_independent",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "distinct child ids remain dependent when one action releases shared admission capacity"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.imported_distinct_id_control_is_retained",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "the original #46 shared-capacity counterexample remains intact"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.normal_completion_orders_report_attachment_order",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "either completion order reports the same attachment-ordered results in the model"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.normal_completion_traces_reach_the_imported_table",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "normal scope traces project to the imported TaskInterleaving reachability relation"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.later_ready_member_delivery_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a later ready child cannot be delivered ahead of the earliest attached child"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.completion_does_not_report_before_delivery",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "completion alone does not add a scope result before table delivery"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.late_success_after_cancellation_is_not_a_result",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "cancellation followed by late success keeps failure, result suppression and pin retention"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.completed_sibling_survives_cancelled_late_completion",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a completed first child remains reportable while a cancelled sibling's late failure is retained"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.cancellation_before_sibling_completion_preserves_result_and_retirement",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "cancellation before a sibling completes preserves the later result and cancelled member retirement"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.refused_second_admission_keeps_first_member",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "refusal of incremental second admission neither rolls back nor removes the first member"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.second_unattached_admission_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a second scope-issued admission is refused while the first awaits attachment"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.explicit_refusal_keeps_scope_state",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "an explicit refusal observation preserves the table and scope"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.duplicate_attachment_control",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "an actual second attach after consuming the move-only admission is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.fabricated_attachment_control",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "attachment without any successful scope admission is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.post_close_admission_control",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "a scope refuses admission after final close"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.repeated_close_is_idempotent",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "repeated close retains one release and a closed state"
+    },
+    {
+      "name": "NobleFoundation.TaskScope.early_close_is_refused",
+      "phase": 6,
+      "role": "task-scope",
+      "claim": "close before final settlement is refused"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_left_first_results_match_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the generated left-first adapter result sequence matches the finite scope model"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_right_first_results_match_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the generated right-first adapter result sequence matches the finite scope model"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_out_of_order_delivery_refusal_matches_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the adapter's out-of-order delivery refusal matches the model refusal"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_second_refusal_matches_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the generated adapter second-admission refusal preserves the modeled first member"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_cancel_after_sibling_completion_matches_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the generated adapter cancellation-after-completion trace matches the modeled result, failure and retained-pin projection"
+    },
+    {
+      "name": "NobleFoundation.TaskScopeCorpus.adapter_cancel_before_sibling_completion_matches_model",
+      "phase": 6,
+      "role": "task-scope-corpus",
+      "claim": "the generated adapter cancellation-before-completion trace matches the modeled result, failure and retained-pin projection"
     }
   ],
   "private_theorems": [
