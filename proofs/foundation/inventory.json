@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, pinned NamedV1 normal-return linking and operand/continuation ABI model, and the selected v3 labelled interaction-net model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, pinned NamedV1 normal-return linking and operand/continuation ABI model, and the selected v3 labelled interaction-net model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module. The ownership per-word trace module and the `ownership-corpus` rows are kernel-decided statements about the model own checker; neither is an implementation theorem.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -6700,6 +6700,54 @@
       "claim": "two derivations of one program from eligibility-agreeing stacks end in agreeing stacks"
     },
     {
+      "name": "NobleFoundation.Ownership.run_eq_runWords",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "a straight-line program is checked by `runWords` over its own flattened word sequence"
+    },
+    {
+      "name": "NobleFoundation.Ownership.traceWords_length",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the per-word trace has one more entry than the word list exactly when the checker accepts, so a refused word ends a short trace"
+    },
+    {
+      "name": "NobleFoundation.Ownership.traceWords_take",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the trace of a word prefix is the prefix of the trace, so entry k is the stack the first k words leave"
+    },
+    {
+      "name": "NobleFoundation.Ownership.runWords_prefix_accepted",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "every word prefix of an accepted word sequence is accepted"
+    },
+    {
+      "name": "NobleFoundation.Ownership.traceWords_last",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the last entry of a per-word trace is the checker result"
+    },
+    {
+      "name": "NobleFoundation.Ownership.runTrace_getLast",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "the last entry of a straight-line program trace is the program's checker result"
+    },
+    {
+      "name": "NobleFoundation.Ownership.trace_dup_drop",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "decided trace fixture: `dup` then `drop` over [data 1, resource 7] traces the incoming stack, the duplicated stack and the restored stack"
+    },
+    {
+      "name": "NobleFoundation.Ownership.trace_stops_at_refused_word",
+      "phase": 5,
+      "role": "ownership-accounting",
+      "claim": "decided refusal fixture: a must-use resource as the constrained operand leaves a trace holding only the incoming stack"
+    },
+    {
       "name": "NobleFoundation.Binary32.Subnormal.floorLog2Ratio_le_carried",
       "phase": 2,
       "role": "binary32-error",
@@ -8186,6 +8234,702 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-empty` (model-only): `run` refuses `dup` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-one-i64` (accepted): `run` accepts `dup` from `d:0` leaving `d:0,d:0`, and `runTrace` gives the per-word trace d:0;d:0,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-one-text` (accepted): `run` accepts `dup` from `d:1` leaving `d:1,d:1`, and `runTrace` gives the per-word trace d:1;d:1,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-pair-i64-text` (accepted): `run` accepts `dup` from `d:0,d:1` leaving `d:0,d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:0,d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-pair-text-i64` (accepted): `run` accepts `dup` from `d:1,d:0` leaving `d:1,d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:1,d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-one-resource` (rejected): `run` refuses `dup` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-pair-resource-resource` (rejected): `run` refuses `dup` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-resource-then-i64` (rejected): `run` refuses `dup` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-i64-then-resource` (accepted): `run` accepts `dup` from `d:0,r:1` leaving `d:0,d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;d:0,d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-wrapped-data` (model-only): `run` accepts `dup` from `w:d:0` leaving `w:d:0,w:d:0`, and `runTrace` gives the per-word trace w:d:0;w:d:0,w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-wrapped-resource` (model-only): `run` refuses `dup` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-deep-wrapped-resource` (model-only): `run` refuses `dup` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-empty` (model-only): `run` refuses `drop` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-one-i64` (accepted): `run` accepts `drop` from `d:0` leaving `empty`, and `runTrace` gives the per-word trace d:0;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-one-text` (accepted): `run` accepts `drop` from `d:1` leaving `empty`, and `runTrace` gives the per-word trace d:1;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-pair-i64-text` (accepted): `run` accepts `drop` from `d:0,d:1` leaving `d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-pair-text-i64` (accepted): `run` accepts `drop` from `d:1,d:0` leaving `d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-one-resource` (rejected): `run` refuses `drop` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-pair-resource-resource` (rejected): `run` refuses `drop` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-resource-then-i64` (rejected): `run` refuses `drop` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-i64-then-resource` (accepted): `run` accepts `drop` from `d:0,r:1` leaving `r:1`, and `runTrace` gives the per-word trace d:0,r:1;r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-wrapped-data` (model-only): `run` accepts `drop` from `w:d:0` leaving `empty`, and `runTrace` gives the per-word trace w:d:0;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-wrapped-resource` (model-only): `run` refuses `drop` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-deep-wrapped-resource` (model-only): `run` refuses `drop` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-empty` (model-only): `run` refuses `swap` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-one-i64` (model-only): `run` refuses `swap` from `d:0`, and `runTrace` gives the per-word trace d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-one-text` (model-only): `run` refuses `swap` from `d:1`, and `runTrace` gives the per-word trace d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-pair-i64-text` (accepted): `run` accepts `swap` from `d:0,d:1` leaving `d:1,d:0`, and `runTrace` gives the per-word trace d:0,d:1;d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-pair-text-i64` (accepted): `run` accepts `swap` from `d:1,d:0` leaving `d:0,d:1`, and `runTrace` gives the per-word trace d:1,d:0;d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-one-resource` (model-only): `run` refuses `swap` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-pair-resource-resource` (accepted): `run` accepts `swap` from `r:1,r:2` leaving `r:2,r:1`, and `runTrace` gives the per-word trace r:1,r:2;r:2,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-resource-then-i64` (accepted): `run` accepts `swap` from `r:1,d:0` leaving `d:0,r:1`, and `runTrace` gives the per-word trace r:1,d:0;d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-i64-then-resource` (accepted): `run` accepts `swap` from `d:0,r:1` leaving `r:1,d:0`, and `runTrace` gives the per-word trace d:0,r:1;r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-wrapped-data` (model-only): `run` refuses `swap` from `w:d:0`, and `runTrace` gives the per-word trace w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-wrapped-resource` (model-only): `run` refuses `swap` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-deep-wrapped-resource` (model-only): `run` refuses `swap` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-empty` (model-only): `run` refuses `quote` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-one-i64` (model-only): `run` accepts `quote` from `d:0` leaving `d:0`, and `runTrace` gives the per-word trace d:0;d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-one-text` (model-only): `run` accepts `quote` from `d:1` leaving `d:1`, and `runTrace` gives the per-word trace d:1;d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-pair-i64-text` (model-only): `run` accepts `quote` from `d:0,d:1` leaving `d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-pair-text-i64` (model-only): `run` accepts `quote` from `d:1,d:0` leaving `d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-one-resource` (model-only): `run` refuses `quote` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-pair-resource-resource` (model-only): `run` refuses `quote` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-resource-then-i64` (model-only): `run` refuses `quote` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-i64-then-resource` (model-only): `run` accepts `quote` from `d:0,r:1` leaving `d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-wrapped-data` (model-only): `run` accepts `quote` from `w:d:0` leaving `w:d:0`, and `runTrace` gives the per-word trace w:d:0;w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-wrapped-resource` (model-only): `run` refuses `quote` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-deep-wrapped-resource` (model-only): `run` refuses `quote` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-empty` (model-only): `run` refuses `dup+drop` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-one-i64` (accepted): `run` accepts `dup+drop` from `d:0` leaving `d:0`, and `runTrace` gives the per-word trace d:0;d:0,d:0;d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-one-text` (accepted): `run` accepts `dup+drop` from `d:1` leaving `d:1`, and `runTrace` gives the per-word trace d:1;d:1,d:1;d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-pair-i64-text` (accepted): `run` accepts `dup+drop` from `d:0,d:1` leaving `d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:0,d:0,d:1;d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-pair-text-i64` (accepted): `run` accepts `dup+drop` from `d:1,d:0` leaving `d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:1,d:1,d:0;d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-one-resource` (rejected): `run` refuses `dup+drop` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-pair-resource-resource` (rejected): `run` refuses `dup+drop` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-resource-then-i64` (rejected): `run` refuses `dup+drop` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-i64-then-resource` (accepted): `run` accepts `dup+drop` from `d:0,r:1` leaving `d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;d:0,d:0,r:1;d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-wrapped-data` (model-only): `run` accepts `dup+drop` from `w:d:0` leaving `w:d:0`, and `runTrace` gives the per-word trace w:d:0;w:d:0,w:d:0;w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-wrapped-resource` (model-only): `run` refuses `dup+drop` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_drop_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-drop-deep-wrapped-resource` (model-only): `run` refuses `dup+drop` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-empty` (model-only): `run` refuses `quote+dup` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-one-i64` (model-only): `run` accepts `quote+dup` from `d:0` leaving `d:0,d:0`, and `runTrace` gives the per-word trace d:0;d:0;d:0,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-one-text` (model-only): `run` accepts `quote+dup` from `d:1` leaving `d:1,d:1`, and `runTrace` gives the per-word trace d:1;d:1;d:1,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-pair-i64-text` (model-only): `run` accepts `quote+dup` from `d:0,d:1` leaving `d:0,d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:0,d:1;d:0,d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-pair-text-i64` (model-only): `run` accepts `quote+dup` from `d:1,d:0` leaving `d:1,d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:1,d:0;d:1,d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-one-resource` (model-only): `run` refuses `quote+dup` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-pair-resource-resource` (model-only): `run` refuses `quote+dup` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-resource-then-i64` (model-only): `run` refuses `quote+dup` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-i64-then-resource` (model-only): `run` accepts `quote+dup` from `d:0,r:1` leaving `d:0,d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;d:0,r:1;d:0,d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-wrapped-data` (model-only): `run` accepts `quote+dup` from `w:d:0` leaving `w:d:0,w:d:0`, and `runTrace` gives the per-word trace w:d:0;w:d:0;w:d:0,w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-wrapped-resource` (model-only): `run` refuses `quote+dup` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_quote_dup_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `quote-dup-deep-wrapped-resource` (model-only): `run` refuses `quote+dup` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-empty` (model-only): `run` refuses `swap+drop` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-one-i64` (model-only): `run` refuses `swap+drop` from `d:0`, and `runTrace` gives the per-word trace d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-one-text` (model-only): `run` refuses `swap+drop` from `d:1`, and `runTrace` gives the per-word trace d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-pair-i64-text` (accepted): `run` accepts `swap+drop` from `d:0,d:1` leaving `d:0`, and `runTrace` gives the per-word trace d:0,d:1;d:1,d:0;d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-pair-text-i64` (accepted): `run` accepts `swap+drop` from `d:1,d:0` leaving `d:1`, and `runTrace` gives the per-word trace d:1,d:0;d:0,d:1;d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-one-resource` (model-only): `run` refuses `swap+drop` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-pair-resource-resource` (rejected): `run` refuses `swap+drop` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2;r:2,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-resource-then-i64` (accepted): `run` accepts `swap+drop` from `r:1,d:0` leaving `r:1`, and `runTrace` gives the per-word trace r:1,d:0;d:0,r:1;r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-i64-then-resource` (rejected): `run` refuses `swap+drop` from `d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-wrapped-data` (model-only): `run` refuses `swap+drop` from `w:d:0`, and `runTrace` gives the per-word trace w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-wrapped-resource` (model-only): `run` refuses `swap+drop` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_swap_drop_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `swap-drop-deep-wrapped-resource` (model-only): `run` refuses `swap+drop` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-empty` (model-only): `run` refuses `dup+swap` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-one-i64` (accepted): `run` accepts `dup+swap` from `d:0` leaving `d:0,d:0`, and `runTrace` gives the per-word trace d:0;d:0,d:0;d:0,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-one-text` (accepted): `run` accepts `dup+swap` from `d:1` leaving `d:1,d:1`, and `runTrace` gives the per-word trace d:1;d:1,d:1;d:1,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-pair-i64-text` (accepted): `run` accepts `dup+swap` from `d:0,d:1` leaving `d:0,d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:0,d:0,d:1;d:0,d:0,d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-pair-text-i64` (accepted): `run` accepts `dup+swap` from `d:1,d:0` leaving `d:1,d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:1,d:1,d:0;d:1,d:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-one-resource` (rejected): `run` refuses `dup+swap` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-pair-resource-resource` (rejected): `run` refuses `dup+swap` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-resource-then-i64` (rejected): `run` refuses `dup+swap` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-i64-then-resource` (accepted): `run` accepts `dup+swap` from `d:0,r:1` leaving `d:0,d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;d:0,d:0,r:1;d:0,d:0,r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-wrapped-data` (model-only): `run` accepts `dup+swap` from `w:d:0` leaving `w:d:0,w:d:0`, and `runTrace` gives the per-word trace w:d:0;w:d:0,w:d:0;w:d:0,w:d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-wrapped-resource` (model-only): `run` refuses `dup+swap` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_dup_swap_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `dup-swap-deep-wrapped-resource` (model-only): `run` refuses `dup+swap` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_empty",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-empty` (model-only): `run` refuses `drop+swap` from `empty`, and `runTrace` gives the per-word trace empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_one_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-one-i64` (model-only): `run` refuses `drop+swap` from `d:0`, and `runTrace` gives the per-word trace d:0;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_one_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-one-text` (model-only): `run` refuses `drop+swap` from `d:1`, and `runTrace` gives the per-word trace d:1;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_pair_i64_text",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-pair-i64-text` (model-only): `run` refuses `drop+swap` from `d:0,d:1`, and `runTrace` gives the per-word trace d:0,d:1;d:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_pair_text_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-pair-text-i64` (model-only): `run` refuses `drop+swap` from `d:1,d:0`, and `runTrace` gives the per-word trace d:1,d:0;d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_one_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-one-resource` (rejected): `run` refuses `drop+swap` from `r:1`, and `runTrace` gives the per-word trace r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_pair_resource_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-pair-resource-resource` (rejected): `run` refuses `drop+swap` from `r:1,r:2`, and `runTrace` gives the per-word trace r:1,r:2"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_resource_then_i64",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-resource-then-i64` (rejected): `run` refuses `drop+swap` from `r:1,d:0`, and `runTrace` gives the per-word trace r:1,d:0"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_i64_then_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-i64-then-resource` (model-only): `run` refuses `drop+swap` from `d:0,r:1`, and `runTrace` gives the per-word trace d:0,r:1;r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_wrapped_data",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-wrapped-data` (model-only): `run` refuses `drop+swap` from `w:d:0`, and `runTrace` gives the per-word trace w:d:0;empty"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-wrapped-resource` (model-only): `run` refuses `drop+swap` from `w:r:1`, and `runTrace` gives the per-word trace w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_drop_swap_deep_wrapped_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `drop-swap-deep-wrapped-resource` (model-only): `run` refuses `drop+swap` from `w:w:r:1`, and `runTrace` gives the per-word trace w:w:r:1"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_equal_accounting",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-equal-accounting` (model-only): `run` accepts `branch(dup|dup)` from `d:0` leaving `d:0,d:0`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_unequal_accounting",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-unequal-accounting` (model-only): `run` refuses `branch(dup|drop)` from `d:0`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_rejects_ineligible_arm",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-rejects-ineligible-arm` (model-only): `run` refuses `branch(dup|dup)` from `r:1`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_loses_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-loses-resource` (model-only): `run` refuses `branch(swap|drop)` from `r:1,d:0`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_doubles_resource",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-doubles-resource` (model-only): `run` refuses `branch(swap|dup)` from `r:1,d:0`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_branch_wrong_owner_identity",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `branch-wrong-owner-identity` (model-only): `run` refuses `branch(swap|swap+swap)` from `r:1,r:2`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_fail_outstanding_operand",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `fail-outstanding-operand` (model-only): `run` refuses `fail` from `d:0`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
+    },
+    {
+      "name": "NobleFoundation.OwnershipCorpus.case_fail_without_outstanding_operand",
+      "phase": 5,
+      "role": "ownership-corpus",
+      "claim": "the kernel decides the ownership corpus row `fail-without-outstanding-operand` (model-only): `run` accepts `fail` from `empty` leaving `empty`, and `runTrace` gives no per-word trace, because the program is not a word sequence"
     },
     {
       "name": "NobleFoundation.PackedScheduleGuard.holdsRegister_eq_false",
@@ -9805,6 +10549,8 @@
     "NobleFoundation.rep_succ",
     "NobleFoundation.rep_succ_succ",
     "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton",
+    "NobleFoundation.Ownership.runWords_append",
+    "NobleFoundation.Ownership.traceWords_ne_nil",
     "NobleFoundation.GuardedRewrite.inputFactsHold_member",
     "NobleFoundation.GuardedRewrite.firstBeforeFailure_member_passes",
     "NobleFoundation.GuardedRewrite.scopeValue_observes",

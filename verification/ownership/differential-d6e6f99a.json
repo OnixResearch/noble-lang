@@ -1,0 +1,106 @@
+{
+  "schema": "noble-ownership-differential/v2",
+  "assertion": "the ownership-accounting fragment of the production acceptance machine agrees with every independent expectation generated from the Lean model on this host and target, one word prefix at a time; every corpus row is also a kernel-checked equation, the shadow checker agrees with every expectation and each declared mutation of it is caught. Not a refinement proof.",
+  "source_commit": "d6e6f99a08d00fc3d723f32dcfb5d0fc837955ec",
+  "source_tree": "c3f561880d93fd172078b917e2ec070b929208b7",
+  "clean_source": true,
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+    "host": "Linux 6.18.60 x86_64"
+  },
+  "cargo": "/home/brittonr/.cache/noble-iss/cargo.sh",
+  "rustc": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+  "host": "Linux 6.18.60 x86_64",
+  "command": "cargo test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture",
+  "lanes": [
+    "ownership::ownership_corpus_matches_the_acceptance_machine",
+    "ownership::ownership_corpus_detects_each_declared_checker_mutation",
+    "ownership::ownership_minimiser_finds_shortest_failing_prefix",
+    "ownership::ownership_minimiser_preserves_model_acceptance"
+  ],
+  "case_file": "verification/ownership/cases.txt",
+  "case_file_sha256": "0e314a28fccb9aba204ebfa4821ced9b517cf207f8fc7630834e9183ca4b43f5",
+  "reference_file": "verification/ownership/cases.mjs",
+  "reference_file_sha256": "d186de2be172cdebc572eeeadb2ec0462a68cbf8420cbb827d63c75b2c0b17a9",
+  "model_file": "proofs/foundation/NobleFoundation/Ownership.lean",
+  "model_file_sha256": "53e4b0bb95927746d06f8037653a09102c24b154efeb11a11d712475fdd2dbfc",
+  "trace_file": "proofs/foundation/NobleFoundation/OwnershipTrace.lean",
+  "trace_file_sha256": "3edfeb2d08f8a3e1bb15ae43f44f8766f943bbace641b55f6ce7efb9b6520fe0",
+  "corpus_file": "proofs/foundation/NobleFoundation/OwnershipCorpus.lean",
+  "corpus_file_sha256": "7e04f37e168b2163c6206d45e4883b3c43dfae4e3c12d6fbcf21c0696ba0633d",
+  "lane_file": "crates/noble-kernel/tests/acceptance/ownership.rs",
+  "lane_file_sha256": "4bf21b9078844ec591d5b6f12f31ee35721c234f813ca1d7f2c860c202a34ca5",
+  "freshness": {
+    "check": "node verification/ownership/cases.mjs --check",
+    "result": "clean",
+    "files": [
+      "/home/brittonr/.cache/noble-iss/wt/ownership-59/verification/ownership/cases.txt",
+      "/home/brittonr/.cache/noble-iss/wt/ownership-59/proofs/foundation/NobleFoundation/OwnershipCorpus.lean"
+    ],
+    "cases": 116,
+    "kernel_checked_rows": 116
+  },
+  "coverage": {
+    "cases": 116,
+    "accepted": 28,
+    "rejected": 17,
+    "model_only": 71,
+    "model_only_by_reason": {
+      "branch-accounting": 6,
+      "error-return": 2,
+      "operand-arity": 18,
+      "quotation-program-value": 24,
+      "wrapped-payload": 21
+    },
+    "production_prefixes": 60,
+    "rejection_categories": {
+      "eligibility": 17,
+      "stack_join": 0,
+      "other": 0
+    },
+    "summary": "ownership-differential cases=116 accepted=28 rejected=17 model-only=71 prefixes=60 categories=eligibility:17 stack-join:0 other:0 model-only-reasons=branch-accounting:6 error-return:2 operand-arity:18 quotation-program-value:24 wrapped-payload:21 first-divergence=none",
+    "mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+    "minimiser": "ownership-minimiser fixture=minimised-synthetic ops=dup+swap+drop in=d:0,r:1 divergence=word 3 refused by the synthetic probe"
+  },
+  "correspondence": {
+    "route": "handwritten Lean reference, emitted as kernel-decided corpus rows and compared against the production acceptance machine one word prefix at a time, with a test-local shadow checker for the mutation controls",
+    "model_theorems": {
+      "model_files_sha256": {
+        "proofs/foundation/NobleFoundation/Ownership.lean": "53e4b0bb95927746d06f8037653a09102c24b154efeb11a11d712475fdd2dbfc",
+        "proofs/foundation/NobleFoundation/OwnershipTrace.lean": "3edfeb2d08f8a3e1bb15ae43f44f8766f943bbace641b55f6ce7efb9b6520fe0",
+        "proofs/foundation/NobleFoundation/OwnershipCorpus.lean": "7e04f37e168b2163c6206d45e4883b3c43dfae4e3c12d6fbcf21c0696ba0633d"
+      },
+      "receipts": [
+        {
+          "receipt": "verification/foundation/receipts/2e932250/foundation-check.json",
+          "source_commit": "2e93225005129c1a0d43b2496ca6b4e7ce57776c",
+          "model_theorems": 50
+        }
+      ]
+    },
+    "corpus_theorems": {
+      "model_files_sha256": {
+        "proofs/foundation/NobleFoundation/Ownership.lean": "53e4b0bb95927746d06f8037653a09102c24b154efeb11a11d712475fdd2dbfc",
+        "proofs/foundation/NobleFoundation/OwnershipTrace.lean": "3edfeb2d08f8a3e1bb15ae43f44f8766f943bbace641b55f6ce7efb9b6520fe0",
+        "proofs/foundation/NobleFoundation/OwnershipCorpus.lean": "7e04f37e168b2163c6206d45e4883b3c43dfae4e3c12d6fbcf21c0696ba0633d"
+      },
+      "receipts": [
+        {
+          "receipt": "verification/foundation/receipts/2e932250/foundation-check.json",
+          "source_commit": "2e93225005129c1a0d43b2496ca6b4e7ce57776c",
+          "model_theorems": 116
+        }
+      ]
+    },
+    "production_analogue": "dup, drop and swap word sequences, driven one prefix at a time through noble_kernel::acceptance::check",
+    "first_divergence": "none: every accepted prefix matched the model trace and every refused case refused at the word the model refuses",
+    "open_edge": "no extraction or refinement proof relates crates/noble-kernel/src/acceptance to the Lean model; the differential is finite evidence on one host and target"
+  },
+  "claims": [
+    "Tested-implementation evidence that the word fragment of the acceptance machine agrees with a specification written down independently of it, at every word prefix rather than at the final stack only.",
+    "Model-only cases state why they have no production analogue (branch accounting, the ordinary error return, the quotation constructor, wrapped payloads, operand arity) and are counted by reason, never reported as executable production controls.",
+    "The production rejection class of a must-use resource is the machine's own classification; the lane asserts the agreement of the accounting decision and reports the class split.",
+    "The model-to-Rust edge stays open: no refinement proof, no cross-platform claim, no claim about release of native objects."
+  ]
+}
