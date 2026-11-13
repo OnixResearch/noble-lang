@@ -2,12 +2,10 @@
 
 ## Decision
 
-**NO-GO for symbolic execution on this lane at this revision.** The original binary decoder
-failure was repaired and patched `owi validate` accepts the exact retained production artifact,
-but the patched engine's symbolic CLI rejects the separate `noble` host module with
-`unknown module noble` (exit 49). The current `owi sym` interface accepts one source module and
-does not register an additional host module. Without that registration, this is not a faithful
-runtime wrapper; merging modules would change the subject bytes and is permitted only as a
+**Evaluation in progress; no final go/no-go decision yet.** The patched engine previously rejected
+the separate `noble` host module with `unknown module noble` (exit 49). Per the decision route, this
+is the reason to implement the additional-module registration patch, not a final blocker until that
+patch is attempted. Merging modules would change the subject bytes and is permitted only as a
 separately labelled experiment, not as acceptance evidence.
 
 ## Frozen criteria
@@ -29,31 +27,31 @@ measurements. `wasm-merge` output is never treated as an unmodified emitted modu
   ABI digest and all six limits bound, initial-state comparison passed, and zeroed `step_limit`
   was refused. This is an interface/initial-state check, not execution.
 - The patched symbolic attempt recorded in `receipts/2026-11-09/patched.json` reports
-  `unknown module noble`, exit 49. This is a module-registration failure, not a solver result.
+  `unknown module noble`, exit 49. It predates the required module-registration patch and is not
+  treated as a final blocker or solver result.
 - No I64-input optimized/unoptimized matrix, symbolic driver, counterexample, replay, timeout
-  control, or performance measurement exists in the retained lane evidence. Therefore the decision
-  is a NO-GO, not an equivalence result or a successful Owi pilot.
+  control, or performance measurement exists in the retained lane evidence. No final decision is
+  recorded until the module-registration and execution route is attempted.
 - Unit 1: DONE in `220c0aef`; verification used the pinned Node 24 with `env -i`, a private
   temporary directory, pinned wasm-tools 1.245.1, and `verification/owi/host.mjs`; result
   `{"clean":true,"imports":27,"globals":{"i32":23,"i64":2}}`. The receipt is
   `receipts/2026-11-13/host.json`.
-- Unit 2: NOT DONE. The standalone locked recipe exists, but store path and hashes are not
-  recorded. Initial `nix build --no-link --print-out-paths ./verification/owi/nix` failed because
-  the historical decoder patch hunk did not match the locked package source; after adapting the
-  patch, a rerun exited 1 after cache timeouts with no retained successful output path. Reopen only
-  with a successful clean recipe build and a receipt binding its derivation, output and binary
-  digest.
+- Unit 2: DONE — clean build at source commit `1e218e15`; `nix build --no-link --print-out-paths
+  --option min-free 0 --option max-free 0 --option connect-timeout 10 --option fallback true -L
+  ./verification/owi/nix` exited 0 and returned `/nix/store/37fb74k0fd9wj3gkbh32i8agydwzwili-ocaml5.4.1-owi-0.2-unstable-2026-05-22`.
+  Derivation, recipe/patch hashes and binary SHA-256 are bound in
+  `receipts/2026-11-13/owi-build.json`.
 - Unit 3: NOT DONE. No `--opt on` I64-input emitted artifact or `-`, `swap -`, `+` symbolic fixtures
   were produced.
-- Unit 4: NOT DONE. The driver and second module-registration patch are not implemented; the
-  observed `unknown module noble` is the current exact blocker.
+- Unit 4: IN PROGRESS. The registration patch is being implemented; it must register both the host
+  and unchanged subject before the driver is tried.
 - Unit 5: NOT DONE. Required refusal controls, symbolic measurements, and a complete bound receipt
-  do not exist. This NO-GO records the known blocker but does not claim the remaining evaluation.
+  do not exist. No final go/no-go is recorded yet.
 
-## Reopen conditions
+## Decision criteria and next step
 
-Reopen when a source-pinned Owi registration patch and standalone build reproducibly load the host
-and driver alongside the unchanged production-emitted module, and a bounded run reaches the target
-entry point. Then complete units 3–5 before changing NO-GO to GO. If registration cannot be made
-without replacing or rewriting the subject, keep this lane NO-GO and label any merged-module run as
-a secondary experiment only.
+Complete the source-pinned registration patch and build, register host then unchanged subject,
+and run the driver through the target entry point before making the final decision. Complete units
+3 and 5 as well. If the patched engine fails on the runtime itself, record that exact reproducible
+blocker and make NO-GO. If registration cannot be made without replacing or rewriting the subject,
+record that attempt and keep any merged-module result explicitly secondary.

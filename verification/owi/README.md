@@ -6,12 +6,11 @@ nothing here claims source-to-Wasm correctness.
 
 ## Decision
 
-**NO-GO for symbolic execution on this lane.** The decoder-only blocker
-described below was fixed and patched Owi validates the subject, but `owi sym`
-still cannot load the separate Noble host module (`unknown module noble`, exit
-49). A second Owi patch must register that module without changing the subject
-bytes; no symbolic driver, witness, replay or measurements were produced.
-See [`decision.md`](decision.md) for criteria, evidence and reopen conditions.
+**Evaluation in progress; no final go/no-go decision yet.** The decoder patch
+builds reproducibly and patched Owi validates the production subject. The prior
+`unknown module noble` result is the trigger for unit 4's additional-module
+registration patch, not a final blocker until that patch is built and tried.
+See [`decision.md`](decision.md) for frozen criteria and current evidence.
 
 ## Update (2026-11-09): the decoder is fixed in a fork
 
@@ -146,6 +145,8 @@ The retained run is
 
 `nix/flake.nix` is a standalone locked build recipe applying the decoder patch to the pinned
 nixpkgs Owi package. Its package output is separate from the repository flake and policy pins.
-The artifact matrix and symbolic link/driver remain unimplemented; no measurement, witness or
-independent replay is claimed. The next step is the separate-module registration patch described
-in `decision.md`, not `wasm-merge` (which would alter the subject bytes).
+`nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option
+connect-timeout 10 --option fallback true -L ./verification/owi/nix` builds the package; the
+successful clean-commit output identity is retained in `receipts/2026-11-13/owi-build.json`.
+The artifact matrix and symbolic link/driver remain incomplete. Continue with the separate-module
+registration patch in `decision.md`; do not treat `wasm-merge` output as an unmodified subject.
