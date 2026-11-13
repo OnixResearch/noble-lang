@@ -355,11 +355,6 @@ const failures = results.filter(result => result.compile.status !== 0 ||
 const mismatchedExpansions = sugar.filter(entry => entry.role === 'expansion' && !entry.matchesForm);
 const mismatchedComparisons = comparisons.filter(comparison =>
   comparison.forms.some(form => form.tokens === null));
-const values = new Map();
-for (const result of results) {
-  const key = JSON.stringify(result.executed?.stack ?? null);
-  values.set(key, [...(values.get(key) ?? []), result.form]);
-}
 receipt.summary = {
   forms: results.length,
   compiled: results.filter(result => result.compile.status === 0).length,
@@ -398,6 +393,12 @@ if (!stackOrderProbe.bottomToTop) {
 }
 if (mismatchedExpansions.length > 0) {
   console.error(`expansion block(s) do not restate their form: ${mismatchedExpansions.map(e => e.name)}`);
+  process.exit(1);
+}
+if (mismatchedComparisons.length > 0) {
+  console.error(
+    `comparison(s) name a form that was not measured: ${mismatchedComparisons.map(e => e.sugar)}`,
+  );
   process.exit(1);
 }
 if (failures.length > 0) {
