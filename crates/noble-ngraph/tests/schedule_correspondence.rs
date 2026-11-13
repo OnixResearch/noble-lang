@@ -26,8 +26,14 @@ use noble_ngraph::schedule::{self, I64Instruction, StreamRefusal};
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;
+#[path = "schedule_lean_dir/corpus_guard.rs"]
+mod corpus_guard;
+#[path = "schedule_lean_dir/corpus_shared.rs"]
+mod corpus_shared;
 #[path = "schedule_lean_dir/emit.rs"]
 mod emit;
+#[path = "schedule_lean_dir/emit_guard.rs"]
+mod emit_guard;
 #[path = "schedule_cost_dir/limits.rs"]
 mod limits;
 #[path = "schedule_cost_dir/measure.rs"]
