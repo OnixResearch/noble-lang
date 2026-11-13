@@ -411,7 +411,6 @@ pub enum DecimalRefusal {
 /// Exponents are saturated by [`decimal`], the decimal order is classified
 /// before any big-integer expansion, and the remaining exact work is bounded
 /// by the token-length cap.
-#[must_use]
 pub fn rne_f32_decimal(text: &str) -> Result<u32, DecimalRefusal> {
     if text.len() > MAX_RNE_DECIMAL_BYTES {
         return Err(DecimalRefusal::TooLong);
