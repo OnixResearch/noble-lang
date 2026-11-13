@@ -493,7 +493,10 @@ let contracts = import "./architecture.contracts.ncl" in
     # The truncated issue #22 CLI shards were already 27,781,842 and
     # 26,658,831 bytes, so complete shards cannot fit 32 MiB. Double the
     # independent shard and artifact byte caps with the call caps above.
-    max_shard_bytes = 67108864,
+    # The complete noble-cli bin+test shard measured 66,597,099 bytes at
+    # 8698dca0, within 0.8% of the 64 MiB cap, and further CLI additions
+    # exceed it. Double the shard cap again; the artifact cap is unchanged.
+    max_shard_bytes = 134217728,
     max_artifact_bytes = 268435456,
   },
   non_claims = [
