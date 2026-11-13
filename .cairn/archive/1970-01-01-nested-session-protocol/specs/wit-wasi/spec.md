@@ -120,10 +120,14 @@ r[WIT-SESSION-06]
 
 Correspondence between the handwritten channel machines and actual Noble
 transitions MUST be bound to source protocol definitions, endpoint identities,
-queue limits and lowering, runtime and helper revisions, and MUST reuse #50's
-trace-relating discipline and #46's interleaving infrastructure where applicable.
-A theorem over handwritten channel machines MUST NOT be presented as a theorem
-about emitted Wasm or a native transport.
+queue limits and lowering, runtime and helper revisions **once such a lowering,
+runtime or helper exists**. This profile ships none of them. Until one exists, a
+correspondence receipt MUST record the model revision, MUST name each absent
+lowering, runtime and helper revision together with the reason it is absent, and
+MUST NOT bind a revision that does not exist. Where a correspondence route
+exists it MUST reuse #50's trace-relating discipline and #46's interleaving
+infrastructure. A theorem over handwritten channel machines MUST NOT be
+presented as a theorem about emitted Wasm or a native transport.
 
 #### Scenario: labelled correspondence
 
@@ -131,6 +135,13 @@ about emitted Wasm or a native transport.
 - WHEN the evidence is reported
 - THEN it MUST be labelled a model theorem and MUST NOT be cited as an
   implementation correspondence
+
+#### Scenario: an absent lowering is recorded, not invented
+
+- GIVEN a profile change that ships no lowering, runtime or helper revision
+- WHEN its correspondence receipt is produced
+- THEN each absent revision MUST be recorded together with the reason it is
+  absent, and no revision MUST be bound that does not exist
 
 #### Scenario: unresolved cleanup stays unresolved
 

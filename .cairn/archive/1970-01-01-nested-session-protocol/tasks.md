@@ -94,8 +94,16 @@
   (`bounded_admission_is_bounded`, `admission_at_the_limit_is_refused`, `dequeue_restores_admission_room`)
   plus the `unchecked_admission_breaks_the_bound` control.
 - [x] [serial] Preserve the committed trace prefix across cancellation, trap, quota exhaustion and peer disappearance, retaining unresolved cleanup facts. r[WIT-SESSION-06]
-- [ ] [serial] Bind protocol definitions, endpoint identities, queue limits and lowering/runtime/helper revisions in a retained correspondence receipt. r[WIT-SESSION-06]
-  Partial: the retained receipt binds the model revision, names the closed definitions fixtures, the six
-  endpoint identity fields and the ledger-based queue accounting, and records helper/runtime/peer as null
-  with the reason. Lowering/runtime/helper revisions cannot be bound because no correspondence route
-  exists, so the task stays open.
+- [x] [serial] Bind protocol definitions, endpoint identities, queue limits and lowering/runtime/helper revisions in a retained correspondence receipt. r[WIT-SESSION-06]
+  Closed 2026-11-13 by decision, not by binding a missing revision. The retained receipt
+  (`verification/nested-session/receipt-2026-11-13.json`) binds the model revision, names the closed
+  definitions fixtures, the six endpoint identity fields and the ledger-based queue accounting, and
+  records `helper`, `runtime` and `peer` as null with the reason. Nothing to bind exists: the proposal
+  states "No runtime pilot is added, `Task` is not retrofitted into a channel, and no production
+  adoption is authorized" (`proposal.md:50-51`), and `crates/` has no session-type, `Channel` or
+  protocol send/receive-continuation code. Decision: **NO-GO on a runtime pilot now** (`design.md`,
+  "WIT-SESSION-06 correspondence is a recorded follow-up, not a runtime pilot"). The ADDED
+  WIT-SESSION-06 delta now binds correspondence once a lowering, runtime or helper exists, and
+  requires an absent revision to be recorded with its reason rather than bound. The smallest future
+  obligation is in `verification/nested-session/vine-comparison.md` §6. Reopen when such a revision
+  lands.

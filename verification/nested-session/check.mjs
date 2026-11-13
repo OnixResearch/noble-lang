@@ -142,19 +142,45 @@ const bindings = {
   runtime: null,
   peer: null,
   absent_bindings_reason:
-    'This model proves grammar, duality and endpoint-resource theorems over a handwritten closed ' +
-    'definitions table. No lowering helper, runtime or peer is a subject of these theorems, so binding ' +
-    'one would imply a correspondence this package does not establish. WIT-SESSION-06 stays open.',
+    'This model proves grammar, duality, endpoint-resource and admission-side table-check theorems over ' +
+    'a handwritten closed definitions table. No lowering helper, runtime or peer is a subject of these ' +
+    'theorems, so binding one would imply a correspondence this package does not establish; this change ' +
+    'ships none of them, and WIT-SESSION-06 requires the binding once such a lowering, runtime or helper ' +
+    'exists.',
 };
 const claims = {
   model_theorems: names.length,
   implementation_theorems: 0,
   correspondence: 'none',
   liveness: 'none',
+  // WIT-SESSION-05/06: the four kinds stay separate; no result is reported as another.
+  communication_safety:
+    'every successful step is a resolved current node declaring that action, and its sole successor is ' +
+    'that node\'s declared continuation; a send never observes a peer; no endpoint is duplicated, and ' +
+    'duality is equality with the dual table. Peer authenticity, payload ownership transfer and ' +
+    'endpoint delegation are not established',
+  deadlock_freedom:
+    'under explicit premises only, and only for one guest step: progress_under_explicit_premises takes ' +
+    'the scheduler grant, host admission, outbox room, or an accounted inbox payload (and the peer\'s ' +
+    'selected branch for receiveBranch) as premises. Whole-session deadlock freedom, fairness, eventual ' +
+    'delivery and network reliability are unclaimed',
+  termination:
+    'the table check and the equality/duality exploration terminate for every declared bound, and an ' +
+    'exhausted bound is refused (exhaustion_is_refused); no session, scheduler or runtime termination ' +
+    'is claimed',
+  resource_bounds:
+    'definition count, constructor arity, label-set width and every named index are checked at ' +
+    'admission (validateTable); mailbox depth and return-stack length are bounded by declared limits, ' +
+    'and every successful step stays within them; the equality work bound is proved sufficient for ' +
+    'every pair of tables but grows exponentially in the return-stack limit; memory, time and host ' +
+    'quotas are unclaimed',
   progress: 'one guest step: an open endpoint whose resolved node declares the action has a successor, and the environment-aware step succeeds under explicit queue, peer, scheduler and host premises, each shown load-bearing; termination, fairness, eventual delivery and deadlock freedom are unclaimed',
   cancellation: 'an event class that cuts the committed prefix; it carries no endpoint or session transition',
   nested_recursion: 'the balanced table\'s unbounded trace language sendⁿ·recvⁿ is not regular and needs the return stack; this model admits it only up to the declared stack limit, and the dropped-continuation mutant accepts an unbalanced trace and refuses a balanced one; no runtime correspondence',
-  type_equality: 'strong equality of guest-visible traces and orderly ends over the stack-aware semantics, decided by a memoised pair exploration that spends one unit of a declared work bound per pair; an exhausted bound is refused, an equal verdict is proved to be trace equivalence, a differ verdict carries a proved witness trace, and duality is equality with the dual table; no bound is proved sufficient for every protocol',
+  type_equality: 'strong equality of guest-visible traces and orderly ends over the stack-aware semantics, decided by a memoised pair exploration that spends one unit of a declared work bound per pair; an exhausted bound is refused, an equal verdict is proved to be trace equivalence, a differ verdict carries a proved witness trace, and duality is equality with the dual table; a sufficient work bound is proved for every pair of tables (protocolEquality_not_exhausted, protocolEquality_decides, protocolDuality_decides), so a declared bound below it is refused as exhaustion while one at or above it decides, and the bound is sufficient rather than tight',
+  table_check: 'admission-side: definition count, constructor arity, label-set width and every named index are checked, and a repeated label is malformed rather than resolved; every accepted table is proved to declare no label twice and to name only its own definitions',
+  pact_adjunct: 'default off: preference factors and one optional world value annotate a table whose only meaning is its erasure to the plain skeleton; duality, wrong-branch refusal, endpoint identity preservation and the work bound are the skeleton\'s, and a factor never selects, enables or refuses a label. No utility function, decision rule, solver, agent model or equilibrium claim',
+  vine_comparison: 'design example only: both proposed source forms denote the model\'s fixture, and a source continuation that differs from the model\'s is refused with a witness trace. No source form is implemented and no source-to-model correspondence is claimed',
 };
 const receipt = {
   schema: 'noble-nested-session-proof/v1', result: 'passed',
@@ -166,9 +192,10 @@ const receipt = {
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
   theorem_count: names.length, theorems, commands,
   implementation_theorem: false,
-  scope: ['.cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource and a bounded mailbox.',
+  scope: ['.cairn/changes/nested-session-protocol model: finite grammar, duality, the endpoint resource, a bounded mailbox and an admission-side table check.',
     'The definitions table is handwritten. No lowering, runtime, scheduler, queue or peer correspondence is claimed;',
-    'progress is stated for one step under explicit premises, never derived; the balanced table\'s unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt.'],
+    'progress is stated for one step under explicit premises, never derived; the balanced table\'s unbounded sendⁿ·recvⁿ language needs a return stack and this model admits it only up to the declared limit; endpoint delegation is excluded and send is never modelled as receipt;',
+    'the Pact preference-factor adjunct and the Vine source-form comparison are default off and carry no utility, decision or correspondence claim.'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`NESTED-SESSION: ${names.length} model theorems; strict axioms accepted\n`);
