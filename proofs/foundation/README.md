@@ -40,7 +40,7 @@ PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$
   lake exe cache get        # downloads Mathlib .oleans (not rebuilt)
 cd ../..
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-OUT=$HOME/.cache/noble-foundation-$(date +%s); mkdir -p "$OUT"
+OUT="<new directory outside the repository>"
 # 1. proofs, axioms, inventory -> foundation-check.json
 env -i "$NODE" verification/foundation/check.mjs --output "$OUT/check"
 # 2. Phase 3 slice (needs the user systemd manager for the sandboxed Lean consumer)
@@ -208,7 +208,7 @@ Status words:
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
-| Bounded ISOP Boolean core with an independent checker | `valuation_mem`, `equivOn_sound`, `shannon_exact`, `shannon_bounds`, `majority_cover_has_a_nonprime_cube`, `constant_true_checked`, `constant_false_checked`, `contradiction_checked`, `repeated_atom_checked`, `parity3_checked`, `contradiction_irredundant_fixture`, `repeated_atom_irredundant_fixture`, `parity3_irredundant_fixture`, `parity3_cover_growth`, `parity3_orders_differ`, `parity3_orders_equivalent`, `wrong_cofactor_rejected`, `wrong_complement_rejected` | `proofs/foundation/NobleFoundation/Isop.lean` only; no source integration is claimed | model **proved** (exact bounded cofactors, support interval, independent exhaustive checker and fixture controls). Checked Boolean DAG representation, lowering to `Program`, branching extensions, care sets and adoption criteria **open** |
+| Bounded Boolean Shannon control, interval ISOP, and independent checker (issue #35) | `Isop.shannon_exact`, `Isop.majority_cover_has_a_nonprime_cube`, `Isop.equivOn_sound`; `IsopInterval.isop_bounds`, `isopCover_eval`, `isopCover_bounds`, `isopCover_exact`, `allCubes_complete`, `majority_isop_cover_prime_and_irredundant`, `intervalChecker_sound`, `isopCover_interval_checked`, interval fixtures, and seeded atom-map/care-set controls | Lean truth-table model and `crates/noble-ngraph-experiment/src/isop.rs`; standalone checked Boolean DAG only, not connected to source lowering or `Program` | Shannon control and interval ISOP semantics **proved**; Rust core/checker and seeded limits **tested**; synthetic comparison and frozen adoption decision in `verification/isop/`. Source integration **NO-GO/deferred**: the current #32 whitelist contains no Boolean-composition regions, and no lazy Bool/branch extension is admitted |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
@@ -523,7 +523,7 @@ From a clean committed checkout with the existing foundation dependency cache:
 
 ```sh
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-OUT="$HOME/.cache/noble-host-locality-$(date +%s)"
+OUT="<new directory outside the repository>"
 env -i "$NODE" verification/host-locality/run.mjs --output "$OUT"
 env -i "$NODE" verification/host-locality/run.mjs --verify "$OUT/locality.json"
 ```
@@ -3024,37 +3024,60 @@ Open, and deliberately not closed:
 - `abnormal_failure_*` are concrete reachable witnesses rather than a universal
   sticky-failure theorem.
 
-## Bounded ISOP Boolean core (issue #35, phase 1)
+## Bounded Boolean core and Minato–Morreale interval ISOP (issue #35)
 
-[`NobleFoundation/Isop.lean`](NobleFoundation/Isop.lean) is a standalone
-truth-table model. `Valuation n` is the finite row type for `n` Boolean
-variables, `BFun n` is a function on those rows, `Formula` supplies
-`const`/`var`/`and`/`or`/`not` syntax, and `Cube`/`Cover` supply optional
-literals and their disjunction. The exact mode has `L = U = F`: `shannonCover` splits
-on the fixed head-first variable order, recursively covers both cofactors and
-attaches the complementary literals. `shannon_exact` proves the generated cover
-has the input function, and `shannon_bounds` proves the support interval
-`L ≤ cover ≤ U` pointwise whenever `L ≤ F ≤ U`.
+[`NobleFoundation/Isop.lean`](NobleFoundation/Isop.lean) is the fixed-order
+Shannon-cover control. It is **not** Minato–Morreale ISOP: `shannonCover`
+recursively covers both cofactors, and `majority_cover_has_a_nonprime_cube`
+shows that one of its cubes is subsumed by a wider implicant. Its exactness and
+fixture-only irredundancy results do not establish primeness or minimization.
 
-`equivOn` is an independent exhaustive checker over `valuations`; its
-soundness theorem does not call `shannonCover` or any recurrence. The checked fixtures
-include true and false constants, `x ∧ ¬x`, a repeated atom, three-variable
-parity (including its four-cube growth and fixture-only irredundancy), and two
-orders whose parity covers differ as lists but are checker-equivalent. The
-wrong-cofactor and wrong-complement seeded recurrences are rejected by that
-checker on the repeated-atom fixture. The recurrence is the cofactor recursion without
-care-set refinement, so its cubes are Shannon cubes, not prime implicants:
-`majority_cover_has_a_nonprime_cube` exhibits an in-cover cube that a strictly wider
-implicant subsumes. These irredundancy results are fixture computations only; no
-universal irredundancy, primeness or minimization theorem is stated.
+[`NobleFoundation/IsopInterval.lean`](NobleFoundation/IsopInterval.lean)
+implements the binary Minato–Morreale lower/upper recurrence and emits its
+three-branch cube cover. `isop_bounds` proves the characteristic function is
+between every valid interval; `isopCover_eval` connects that function to the
+direct cover, and `isopCover_bounds` proves the cover bound. Exact-mode
+preservation is `isopCover_exact`. The separate `intervalChecker` enumerates
+all finite rows, checks both bounds without invoking the recurrence, and has a
+soundness theorem. Constant, complementary-atom, shared/repeated-atom,
+three-variable parity and variable-order fixtures are included; parity's four
+cubes and differing but equivalent order variants are checked. Care-set
+acceptance and a forged care-bound rejection are also checked. The complete
+finite cube enumeration (`allCubes_complete`) proves that the three-variable
+majority interval cover is prime and irredundant. `Isop.majority_cover_has_a_nonprime_cube`
+contrasts it with the Shannon control. Primality and irredundancy remain
+fixture-only; no universal minimization claim is made.
 
-The module is deliberately a Boolean core, not source integration. A checked
-Boolean DAG representation, lowering to `Program`, branching extensions, care
-sets and adoption criteria are open. No theorem here claims correspondence to
-the Rust frontend, compiler, runtime or any source-level optimizer. The clean-source receipt for the ISOP core is
-[`verification/foundation/receipts/42350bf01/`](../../verification/foundation/receipts/42350bf01/foundation-check.json)
-(674 theorems, `clean_source: true`, axiom sets inside the allow-list,
-`implementation_theorem: false`).
+`crates/noble-ngraph-experiment/src/isop.rs` is a separate experimental Rust
+implementation over an explicitly checked Boolean DAG. It has bounded truth
+tables, memo states, work, elapsed time, allocation size, and output cubes;
+cap exhaustion returns an explicit fallback without a candidate cover. Its
+independent checker evaluates the input DAGs and cube literals directly rather
+than reusing the optimizer's truth tables or memo. Tests include malformed
+graphs and covers, seeded atom-map and care-set faults, zero/lowered limits and
+refusal paths. The `ngraph-phase-c --isop-bench true --samples 30` arm
+measures no-pass, Boolean folding, and checked interval ISOP separately on
+synthetic inputs.
+Neither tests nor measurements establish correspondence to the Noble source
+language or graph IR.
+
+The frozen whitelist and adoption criterion are in
+[`verification/isop/criteria.md`](../../verification/isop/criteria.md); the
+three synthetic runs and source-integration decision are in
+[`verification/isop/decision.md`](../../verification/isop/decision.md), with
+their manifest and raw run receipts beside it. The current #32 residual
+whitelist contains only two I64 arithmetic operations;
+the graph does not contain general Boolean AND/OR/NOT, and the foundation
+fragment excludes branching. The Boolean-region census is therefore zero by
+construction, so source integration is **NO-GO/deferred** until a separately
+reviewed Boolean/branch extension preserves K-CONTROL-01 laziness and yields a
+real residual workload. Neither Lean nor Rust claims source lowering,
+`Program`, compiler, Wasm, runtime, or cache correspondence. The clean
+nomenclature-correction receipt for the Shannon control is
+[`f8555afa3`](../../verification/foundation/receipts/f8555afa3/foundation-check.json).
+The older immutable `42350bf01` record retains the original `isop_exact` name;
+[`verification/foundation/receipts/README.md`](../../verification/foundation/receipts/README.md)
+documents that erratum. Neither receipt covers the newly added interval model.
 
 
 ## Restricted SGD reference (issue #58, phase 2)

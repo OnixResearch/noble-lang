@@ -5032,6 +5032,126 @@
       "claim": "the wrong-complement recurrence is rejected on the repeated-atom fixture"
     },
     {
+      "name": "NobleFoundation.IsopInterval.isop_bounds",
+      "phase": 1,
+      "role": "isop-bounds",
+      "claim": "the Minato-Morreale interval recurrence returns a function between its lower and upper endpoints"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.isopCover_eval",
+      "phase": 1,
+      "role": "isop-cover",
+      "claim": "the direct three-branch interval cover evaluates to the characteristic function of the interval recurrence"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.isopCover_bounds",
+      "phase": 1,
+      "role": "isop-bounds",
+      "claim": "the direct interval cover lies pointwise between valid lower and upper bounds"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.isop_exact",
+      "phase": 1,
+      "role": "isop-exact",
+      "claim": "the exact interval recurrence preserves its input function"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.isopCover_exact",
+      "phase": 1,
+      "role": "isop-exact",
+      "claim": "the direct exact-mode cube cover preserves the input function"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.allCubes_complete",
+      "phase": 1,
+      "role": "enumeration",
+      "claim": "the finite three-literal-alphabet list contains every cube of the requested width"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.majority_isop_cover_prime_and_irredundant",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the interval cover of three-variable majority is prime and irredundant"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.intervalChecker_sound",
+      "phase": 1,
+      "role": "independent-checker",
+      "claim": "an accepted finite interval check implies both pointwise endpoint bounds"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.isopCover_interval_checked",
+      "phase": 1,
+      "role": "independent-checker",
+      "claim": "the generated direct cover passes the independently enumerated support-interval check"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.constant_true_independently_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the true constant's direct interval cover passes the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.constant_false_independently_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the false constant's direct interval cover passes the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.contradiction_independently_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the complementary-atom contradiction's direct cover passes the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.repeated_atom_independently_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a shared repeated-atom DAG's direct cover passes the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.parity3_independently_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the three-variable parity direct cover passes the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.parity3_cover_growth",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the fixed-order three-variable parity cover contains four cubes"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.parity3_orders_differ",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "forward and reverse fixed variable orders produce distinct parity covers"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.parity3_orders_equivalent",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the reverse-order parity cover is equivalent under the independent checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.care_set_interval_checked",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a justified Boolean care interval passes the interval checker"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.seeded_care_set_fault_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a cover that violates the care-set upper bound is rejected"
+    },
+    {
+      "name": "NobleFoundation.IsopInterval.seeded_atom_map_fault_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the independent checker rejects a candidate with two atoms mapped to one slot"
+    },
+    {
       "name": "NobleFoundation.Specialize.staticValuesUpTo_eq_staticValue",
       "phase": 1,
       "role": "static-prefix",
@@ -8739,6 +8859,16 @@
     "NobleFoundation.Isop.map_none_eval_true",
     "NobleFoundation.Isop.map_true_eval_false",
     "NobleFoundation.Isop.map_true_eval_true",
+    "NobleFoundation.IsopInterval.fullCube_matches",
+    "NobleFoundation.IsopInterval.coverEval_append",
+    "NobleFoundation.IsopInterval.attach_false_eval_false",
+    "NobleFoundation.IsopInterval.attach_false_eval_true",
+    "NobleFoundation.IsopInterval.attach_true_eval_false",
+    "NobleFoundation.IsopInterval.attach_true_eval_true",
+    "NobleFoundation.IsopInterval.attach_none_eval_false",
+    "NobleFoundation.IsopInterval.attach_none_eval_true",
+    "NobleFoundation.IsopInterval.allFalse_row",
+    "NobleFoundation.IsopInterval.allTrue_row",
     "NobleFoundation.snoc2_inj",
     "NobleFoundation.LinkBoundary.split_body_run_unique",
     "NobleFoundation.LinkBoundary.caller_root_run_unique",

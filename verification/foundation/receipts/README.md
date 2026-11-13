@@ -296,12 +296,22 @@ contract, `validate_sound` (reciprocal unique-incidence wiring, compatible ports
 boundary) and accepted/rejected wiring fixtures (11 new theorems; that run reported 657
 in total). Reduction, readback and translation remain open.
 
-## 42350bf01 — bounded ISOP Boolean core (issue #35)
+## 42350bf01 — initial Boolean-cover record (issue #35)
 
-`42350bf01/` records the clean run that added `NobleFoundation.Isop`: the exact Minato–Morreale
-cover, `isop_bounds`, the independent `equivOn` checker with its soundness theorem, fixtures and
-wrong-cofactor/complement controls (17 new theorems; that run reported 674 in total).
-Irredundancy is fixture-only; integration remains open.
+`42350bf01/` is the immutable initial clean run for `NobleFoundation.Isop`.
+Its JSON retains the original `isop_exact`/`isop_bounds` names and 17-theorem
+count, but the recurrence is the fixed-order Shannon cofactor cover, **not**
+Minato–Morreale ISOP. Do not read those historical names as an algorithm
+claim; the following receipt records the nomenclature correction. The JSON is
+unchanged.
+
+## f8555afa3 — Shannon-cover nomenclature correction (issue #35)
+
+`f8555afa3/` is the clean-source receipt after the correction: the model uses
+`shannon_exact` and `shannon_bounds`, and `majority_cover_has_a_nonprime_cube`
+explicitly refutes a universal prime-cover claim. The separate interval
+recurrence and direct cover are in `NobleFoundation.IsopInterval`; neither
+model implies source integration. Irredundancy remains fixture-only.
 
 ## 84753c99e — static-input specialization model (issue #32)
 
