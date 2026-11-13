@@ -1,0 +1,14 @@
+{
+  "outcome": "kernel-accepted",
+  "class": "replay-accepted",
+  "checker_invoked": true,
+  "status": 0,
+  "elapsed_ms": 144559,
+  "silent": true,
+  "log_tail": "",
+  "source_commit": "a3953ba3dadda4f2a3bc8bd3692f820d283ba5f0",
+  "project": "proofs/foundation",
+  "module": "NobleFoundation",
+  "manifest": "verification/independent-replay/olean-integrity.txt",
+  "host": "Linux 6.18.60 x64"
+}

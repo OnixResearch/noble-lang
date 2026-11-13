@@ -1,0 +1,74 @@
+{
+  "holds": true,
+  "checks": {
+    "intact_copy_accepted": true,
+    "single_byte_flip_refused": true,
+    "removed_artifact_refused": true,
+    "extra_artifact_refused": true,
+    "external_aggregate_flip_refused": true
+  },
+  "intact": {
+    "integrity": "artifact-intact",
+    "detail": "79 files in 1 directories, 10 aggregates",
+    "checker_invoked": false
+  },
+  "coverage": {
+    "internal": [
+      "proofs/foundation/.lake/build/lib/lean"
+    ],
+    "external": [
+      { "label": "packages/batteries/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/batteries/.lake/build/lib/lean" },
+      { "label": "packages/Qq/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/Qq/.lake/build/lib/lean" },
+      { "label": "packages/aesop/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/aesop/.lake/build/lib/lean" },
+      { "label": "packages/proofwidgets/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/proofwidgets/.lake/build/lib/lean" },
+      { "label": "packages/importGraph/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/importGraph/.lake/build/lib/lean" },
+      { "label": "packages/LeanSearchClient/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/LeanSearchClient/.lake/build/lib/lean" },
+      { "label": "packages/plausible/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/plausible/.lake/build/lib/lean" },
+      { "label": "packages/mathlib/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/mathlib/.lake/build/lib/lean" },
+      { "label": "packages/aeneas/backends/lean/.lake/build/lib/lean", "path": "/home/brittonr/.cache/noble-iss/wt/replay-62/proofs/foundation/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean" },
+      { "label": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean", "path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean" }
+    ]
+  },
+  "controls": [
+    {
+      "name": "single-byte-flip",
+      "target": "NobleFoundation.olean",
+      "position": 4672,
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "digest mismatch proofs/foundation/.lake/build/lib/lean/NobleFoundation.olean",
+        "checker_invoked": false
+      }
+    },
+    {
+      "name": "removed-artifact",
+      "target": "MathlibI64.olean",
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "missing proofs/foundation/.lake/build/lib/lean/MathlibI64.olean",
+        "checker_invoked": false
+      }
+    },
+    {
+      "name": "unexpected-artifact",
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "unexpected proofs/foundation/.lake/build/lib/lean/Extra.olean",
+        "checker_invoked": false
+      }
+    },
+    {
+      "name": "external-aggregate-flip",
+      "target": "packages/LeanSearchClient/.lake/build/lib/lean",
+      "result": {
+        "integrity": "artifact-integrity",
+        "detail": "aggregate mismatch packages/LeanSearchClient/.lake/build/lib/lean (3 files, 428592 bytes, f20b121176d0c1a4e6ef8fc5128553c710bf1cf65141014ccbc90bdc8f9c5de8)",
+        "checker_invoked": false
+      }
+    }
+  ],
+  "source_commit": "a3953ba3dadda4f2a3bc8bd3692f820d283ba5f0",
+  "project": "proofs/foundation",
+  "manifest": "verification/independent-replay/olean-integrity.txt",
+  "host": "Linux 6.18.60 x64"
+}
