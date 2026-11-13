@@ -870,6 +870,17 @@ fn case_theorem(name: &str) -> String {
 /// message and `None` means production agreed with the model trace.
 type MismatchProbe<'a> = dyn Fn(&[Word], &[Payload]) -> Option<String> + 'a;
 
+/// A shrinking candidate from an accepted production case must still be
+/// accepted by the model; otherwise an unrelated arity refusal can masquerade
+/// as the original production divergence.
+fn candidate_preserves_model_acceptance(
+    source_case: &Case,
+    words: &[Word],
+    trace: &[Vec<Payload>],
+) -> bool {
+    source_case.decision != Decision::Accepted || trace.len() == words.len() + 1
+}
+
 /// A deterministic reproducer: the shortest failing word prefix with the fewest
 /// trailing operands that still fails the probe. Leading operands are not
 /// removed, because they are the head the word inspects.
@@ -925,6 +936,9 @@ fn production_divergence(
     maker: noble_kernel::contracts::Definition,
 ) -> Option<String> {
     let trace = shadow_trace_words(Mutation::None, words, operands);
+    if !candidate_preserves_model_acceptance(source_case, words, &trace) {
+        return None;
+    }
     let case = Case {
         name: source_case.name.clone(),
         row: String::new(),
@@ -1278,5 +1292,51 @@ fn ownership_minimiser_finds_shortest_failing_prefix() -> Result<(), String> {
         ));
     }
     println!("ownership-minimiser fixture={fixture}");
+    Ok(())
+}
+
+#[test]
+fn ownership_minimiser_preserves_model_acceptance() -> Result<(), String> {
+    let first = Payload::Data { tag: 0 };
+    let second = Payload::Data { tag: 1 };
+    let words = [Word::Swap];
+    let operands = vec![first.clone(), second.clone()];
+    let accepted_trace = shadow_trace_words(Mutation::None, &words, &operands);
+    let one_operand_trace =
+        shadow_trace_words(Mutation::None, &words, std::slice::from_ref(&first));
+    let source_case = Case {
+        name: "swap-pair-i64-text".to_string(),
+        row: String::new(),
+        program: Program::Words(words.to_vec()),
+        operands,
+        expected: Some(vec![second, first.clone()]),
+        trace: Some(accepted_trace.clone()),
+        decision: Decision::Accepted,
+        reason: None,
+    };
+
+    if !candidate_preserves_model_acceptance(&source_case, &words, &accepted_trace) {
+        return Err("the full swap control was not kept as model-accepted".to_string());
+    }
+    if candidate_preserves_model_acceptance(&source_case, &words, &one_operand_trace) {
+        return Err(
+            "the minimizer allowed an accepted swap control to become an arity refusal".to_string(),
+        );
+    }
+    let (env, maker) = production_environment()?;
+    if production_divergence(&env, &source_case, &words, &source_case.operands, maker).is_some() {
+        return Err("the production control diverged from its accepted model trace".to_string());
+    }
+    if production_divergence(
+        &env,
+        &source_case,
+        &words,
+        std::slice::from_ref(&first),
+        maker,
+    )
+    .is_some()
+    {
+        return Err("a model-refused shrink was reported as a production divergence".to_string());
+    }
     Ok(())
 }

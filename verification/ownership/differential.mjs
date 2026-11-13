@@ -55,6 +55,7 @@ const lanes = [
   'ownership::ownership_corpus_matches_the_acceptance_machine',
   'ownership::ownership_corpus_detects_each_declared_checker_mutation',
   'ownership::ownership_minimiser_finds_shortest_failing_prefix',
+  'ownership::ownership_minimiser_preserves_model_acceptance',
 ];
 const command = 'cargo test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture';
 

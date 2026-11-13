@@ -114,6 +114,9 @@ counted as coverage. A failing comparison writes the shortest failing word
 prefix and trims trailing input operands while the divergence persists to
 `verification/ownership/minimised.txt`; leading operands stay because they may
 be the head a word inspects. The minimiser is exercised by a synthetic probe.
+When minimizing an accepted production control, it also preserves model
+acceptance, so a real mismatch cannot collapse into an unrelated model-only
+operand-arity refusal.
 
 ### Phase 3 decision (2026-11-13): production-checker refinement not selected
 

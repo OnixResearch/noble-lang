@@ -114,6 +114,10 @@ allocates a separate Cargo target directory for the baseline and every mutant un
 the specified target base. These commands assume the repository's pinned Rust
 toolchain and offline dependency configuration are active.
 
+The pre-existing undated `differential.json` is retained byte-for-byte as historical
+evidence for source `419c0144`; its model binding is stale. Use only the matching
+dated differential receipt as current evidence.
+
 ## The mutation lanes
 
 Two kinds of mutant, kept separate because they answer different questions:
@@ -132,6 +136,10 @@ A surviving production mutant is recorded, not suppressed. `quote-unconstrained`
 survives by construction: every `quote` case is model-only, so the corpus has no
 executable control for the quotation eligibility rule. The receipt states that
 instead of counting it as covered.
+
+The minimiser's synthetic probe pins prefix and trailing-operand reduction.
+`ownership_minimiser_preserves_model_acceptance` prevents a failing accepted
+control from shrinking into an unrelated model-only operand-arity refusal.
 
 ## Correspondence route and non-claims
 

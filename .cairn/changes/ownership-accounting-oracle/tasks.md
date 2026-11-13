@@ -41,7 +41,7 @@
 
 ## Phase 3: Promotion (not selected)
 
-- [x] [serial] Relate `crates/noble-kernel/src/acceptance` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-OWN-03] **Decided 2026-11-13: not selected.** The edge stays open and labelled. A refinement route would need a named extraction subject for the acceptance machine's candidate derivation, a re-audited axiom set and a clean-source receipt for that route (see the decision, evidence, criteria and reopen conditions in `design.md`); this change does not attempt one, and the issue's deliverable 5 explicitly leaves refinement open. No implementation theorem is claimed.
+- [x] [serial] Decide whether to relate `crates/noble-kernel/src/acceptance` to the model through an extraction or refinement route; until then the differential stays finite evidence and the correspondence edge stays open. r[VC-OWN-03] **Decided 2026-11-13: not selected.** The edge stays open and labelled. A refinement route would need a named extraction subject for the acceptance machine's candidate derivation, a re-audited axiom set and a clean-source receipt for that route (see the decision, evidence, criteria and reopen conditions in `design.md`); this change does not attempt one, and the issue's deliverable 5 explicitly leaves refinement open. No implementation theorem is claimed.
 
 ## Note (2026-11-13): per-word comparison, kernel-decided corpus, production mutants
 
@@ -65,9 +65,11 @@ scheme instantiation; owner identity stays unobservable and its controls stay mo
 failing comparison writes the shortest failing word prefix and trims trailing
 operands while the divergence persists to `verification/ownership/minimised.txt`;
 leading operands stay because they may be the head a word inspects. The minimiser
-is exercised by a synthetic probe. The retained comparison receipt is now the dated
-`verification/ownership/differential-<commit8>.json`; the earlier undated
-`differential.json` survives only in git history.
+is exercised by a synthetic probe, and an accepted-case guard prevents shrinking
+into a model-only arity refusal. The current comparison receipt is dated
+`verification/ownership/differential-<commit8>.json`. The immutable legacy
+`differential.json` remains byte-for-byte unchanged; its `419c0144` source/model
+binding is stale and it is not current evidence.
 
 Two mutation lanes are separated: the corpus mutations (all six caught by the retained rows,
 the unmutated copy agreeing everywhere) and `verification/ownership/production-mutants.mjs`,
