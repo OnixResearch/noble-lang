@@ -93,6 +93,7 @@ export function differentialImport() {
 
 function flat(program) {
   if (program.arith) return program.arith;
+  if (program.quoted !== undefined) return [{ push: program.quoted }];
   return [...flat(program.compose[0]), ...flat(program.compose[1])];
 }
 
