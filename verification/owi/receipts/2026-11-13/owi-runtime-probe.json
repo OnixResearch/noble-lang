@@ -1,0 +1,48 @@
+{
+  "schema": "noble-owi-runtime-probe/v1",
+  "claim": "the clean patched Owi engine registers the separate host and unchanged subject, then reaches the real subject runtime; the requested two-symbolic-input driver is rejected by the runtime's empty-input-stack precondition",
+  "source": {
+    "commit": "149b508ba45023737283898a646aa66e98be1116",
+    "tree": "32f0a83c5e8d719a07ff2c874b989e0a8069ec4b",
+    "clean": true
+  },
+  "engine": {
+    "output": "/nix/store/95q34dnr3hpn1ckx004rk6pb5dn1nfmg-ocaml5.4.1-owi-0.2-unstable-2026-05-22",
+    "binary": "/nix/store/95q34dnr3hpn1ckx004rk6pb5dn1nfmg-ocaml5.4.1-owi-0.2-unstable-2026-05-22/bin/owi",
+    "sha256": "f61f5ef752b5adce526dc49d540312c6569cb53d110a0e0eeaa317d6c1886344",
+    "reported_version": "owi version unknown",
+    "identity_binding": "verification/owi/receipts/2026-11-13/owi-registration-build.json"
+  },
+  "inputs": {
+    "module_registration_order": ["noble", "subject"],
+    "host_wat": {"path": "verification/owi/host/noble-host.wat", "sha256": "31cab4c4f187ccff077be530e4526b41a9fe61d349a9bae9dc9674c543417cdc"},
+    "host_wasm": {"path": "scratch/owi-57/runtime/clean-149b508/host.wasm", "sha256": "7e78f6ae0ac7a3f2b35480dd9eecafb412d30117cb3c3fb4a642e07497d08ccd"},
+    "subject_wasm": {"path": "verification/owi/receipts/2026-10-26/subject-module-1.wasm", "sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac"},
+    "driver_wat": {"path": "verification/owi/driver-input-probe.wat", "sha256": "7db0f8166e5b722049ea5e8acb3c4bfdfffe5d8f571710c8fa6a3bfbd0756a97"},
+    "driver_wasm": {"path": "scratch/owi-57/runtime/clean-149b508/driver.wasm", "sha256": "4c2b19d170f1033a51c00a57b7f80156c4c7c2f0009f69d0e47168aad063c726"},
+    "host_initial_state": "The host WAT contains ABI limits; current check is retained in verification/owi/receipts/2026-11-13/host.json. The subject itself is byte-identical to the emitted artifact."
+  },
+  "tools_and_limits": {
+    "wasm_tools": "1.245.1 at /nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+    "owi_flags": ["sym", "--entry-point=run", "--workers=1"],
+    "abi_limits": {"allocation": 196608, "recipes": 256, "depth": 256, "operands": 2048, "continuations": 4096, "steps": 100000},
+    "driver_symbols": ["symbol_0:i64", "symbol_1:i64"],
+    "driver_workspace": "/home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/work"
+  },
+  "run": {
+    "preparation_commands": [
+      "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools parse verification/owi/host/noble-host.wat -o /home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/host.wasm",
+      "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools parse verification/owi/driver-input-probe.wat -o /home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/driver.wasm"
+    ],
+    "command": "env -i HOME=/home/brittonr TMPDIR=/home/brittonr/.cache/noble-iss/tmp OWI_REGISTER_MODULES=noble=/home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/host.wasm,subject=/home/brittonr/.cache/noble-iss/wt/owi-57/verification/owi/receipts/2026-10-26/subject-module-1.wasm /nix/store/95q34dnr3hpn1ckx004rk6pb5dn1nfmg-ocaml5.4.1-owi-0.2-unstable-2026-05-22/bin/owi sym --entry-point=run --workers=1 --workspace=/home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/work /home/brittonr/.cache/noble-iss/scratch/owi-57/runtime/clean-149b508/driver.wasm",
+    "exit": 13,
+    "stdout": "",
+    "stderr": "owi: [ERROR] Trap: unreachable\\nmodel {\\n  symbol symbol_0 i64 0\\n  symbol symbol_1 i64 0\\n}\\nowi: [ERROR] Reached problem!\\n"
+  },
+  "interpretation": {
+    "linking": "host, unchanged subject and driver all linked; execution reached submit",
+    "runtime_refusal": "The subject's submit path checks that the operand stack is empty before evaluating its fixed recipe. The driver pushes two symbolic I64s, so submit returns a failure and the driver's explicit nonzero-result trap fires.",
+    "counterexample": false,
+    "non_claims": ["not a mathematical counterexample", "not independent replay", "not a successful symbolic arithmetic comparison", "no timeout/UNKNOWN or refusal-control matrix"]
+  }
+}

@@ -6,11 +6,13 @@ nothing here claims source-to-Wasm correctness.
 
 ## Decision
 
-**Evaluation in progress; no final go/no-go decision yet.** The decoder patch
-builds reproducibly and patched Owi validates the production subject. The prior
-`unknown module noble` result is the trigger for unit 4's additional-module
-registration patch, not a final blocker until that patch is built and tried.
-See [`decision.md`](decision.md) for frozen criteria and current evidence.
+**No-go for the current Noble artifact/interface.** The decoder and additional-module
+registration patches build reproducibly, and a clean symbolic run linked the explicit host,
+unchanged subject, and driver. The driver then hit the subject runtime's empty-input-stack
+precondition after pushing two symbolic I64s. The current editor AST has no I64-input node, so
+the required parameterized emitted subjects and arithmetic witness/control matrix cannot be
+produced through this lane. This is not a counterexample or evidence of an Owi arithmetic defect.
+See [`decision.md`](decision.md) for the exact evidence and reopen criteria.
 
 ## Update (2026-11-09): the decoder is fixed in a fork
 
@@ -28,11 +30,11 @@ The blocker is a four-line decoder defect, so it is carried rather than waited o
 - **Observed.** Unpatched, `owi validate` refuses the reproducer and the real emitted subject with
   `data count section required` (exit 30) and accepts the control. Patched, all three validate with
   exit 0 and no diagnostic.
-- **What is still open.** `owi sym` now reaches module instantiation and stops at
-  `unknown module noble`: the lane needs a bounded host-module wrapper for `noble`'s memory, table
-  and globals, plus the entry point and quota bridge this record already lists. That is Noble-side
-  work, no longer an upstream block. The no-go above still describes what was executed before the
-  fix: nothing was run symbolically then, and nothing is claimed now beyond validation.
+- **Next blocker.** The 2026-11-13 registration patch now validates and links separately registered
+  modules before the driver. The attempted driver reaches the production subject, but its two
+  symbolic pushes violate the subject's empty-input-stack precondition. This is recorded in
+  [`receipts/2026-11-13/owi-runtime-probe.json`](receipts/2026-11-13/owi-runtime-probe.json),
+  and is a runtime/interface refusal, not a mathematical counterexample.
 
 ## Pinned toolchain and subject
 
@@ -44,7 +46,7 @@ The blocker is a four-line decoder defect, so it is carried rather than waited o
 | Emitted module | `receipts/2026-10-26/subject-module-1.wasm`, 10474 bytes |
 | `wasm-tools` | 1.245.1 (pinned by `policy/tool-selection.json`) |
 | `binaryen`/`wasm-opt` | 125 (pinned by `policy/tool-selection.json`) |
-| Owi | 0.2-unstable-2026-01-29 from the flake's pinned nixpkgs (`ocaml5.3.0-owi`) |
+| Owi | 0.2-unstable-2026-05-22 from the standalone locked recipe (`ocaml5.4.1-owi`) |
 | Emit outcome | `noble-core-report/v1` `stage:"wasm"`, `outcome:"normal"`, stack `I64 26` |
 
 Exact bytes are bound by `receipts/2026-10-26/sha256sums.txt`.
@@ -150,6 +152,9 @@ the listed order before the positional `owi sym` source module. This preserves s
 allows a host then a subject module to be registered before a driver.
 `nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option
 connect-timeout 10 --option fallback true -L ./verification/owi/nix` builds the package; the
-successful clean-commit output identity is retained in `receipts/2026-11-13/owi-build.json`.
-The artifact matrix, driver, and symbolic run remain incomplete. Do not treat `wasm-merge` output
+successful clean-commit identity for the decoder-only recipe is in
+`receipts/2026-11-13/owi-build.json`, and the two-patch registration build is in
+`receipts/2026-11-13/owi-registration-build.json`. The linked symbolic probe is retained in
+`receipts/2026-11-13/owi-runtime-probe.json`. Unit 3's I64-input matrix and unit 5's controls,
+measurements, witness/replay and complete receipt are not done. Do not treat `wasm-merge` output
 as an unmodified subject.
