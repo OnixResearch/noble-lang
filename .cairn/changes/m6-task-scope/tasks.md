@@ -18,5 +18,5 @@
 
 ## Phase 4: Evidence
 
-- [ ] [serial] Retain `verification/task-scope/` with a README and a `run.mjs` receipt binding the source commit, change revision, foundation module and declared bounds, keeping model proofs, runtime tests and host assumptions separate. r[RA-GROUP-06]
-- [ ] [serial] Rerun the existing M6 lifecycle and single-invocation `ExecutionScope` regressions and record them in the receipt. r[RA-GROUP-05]
+- [x] [serial] Retain `verification/task-scope/` with a README and a `run.mjs` receipt binding the source commit, change revision, foundation module and declared bounds, keeping model proofs, runtime tests and host assumptions separate. r[RA-GROUP-06]
+- [x] [serial] Rerun the existing M6 lifecycle and single-invocation `ExecutionScope` regressions and record them in the receipt. r[RA-GROUP-05]
