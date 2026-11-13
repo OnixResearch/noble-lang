@@ -277,8 +277,10 @@ def addScheme : Scheme :=
     (PartList.ofList [stackVar 0, patternPart .i64])
     SlotList.nil
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 theorem addLook : bootstrapEnv.scheme 4 = some addScheme := by
-  native_decide
+  decide +kernel
 
 theorem addInst : addScheme.instantiate ⟨[.stack .nil]⟩
     = some (ty [.i64, .i64], ty [.i64], EffSet.empty) := by
