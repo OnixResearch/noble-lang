@@ -248,7 +248,8 @@ The selected Rust reference experiment admits and interprets this exact
 envelope in `crates/noble-ngraph-experiment/src/opt/`. Its wire parser checks
 the published field/type/effect limits; its evaluator uses
 `noble_ngraph::sem::{mul,sub}` and classifies nonfinite values from their bits.
-`tests/opt_kernel.rs` emits the finite Rust observations into
+`tests/support/opt_kernel/corpus.rs`, loaded through `tests/support/opt_kernel.rs`
+in the existing `b3_rejections` target, emits the finite Rust observations into
 `proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean`, where Lean decides
 the matching `checkStep` rows. This is finite comparison evidence, not a proof
 of the Rust parser/interpreter or the compiler's execution of those bytes.

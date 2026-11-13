@@ -10,7 +10,7 @@
 ## Phase 2: Reference experiment
 
 - [x] [serial] Implement the bounded candidate envelope and admission that refuses malformed, effectful, over-budget, shape-mismatched, aliasing, nonfinite and invalid-state-transition candidates. r[NGRAPH-OPT-01] r[NGRAPH-OPT-03]
-- Note (2026-11-13): `noble-ngraph-experiment/src/opt/` strictly parses `ngraph-opt/1`, rejects duplicate JSON keys and unsupported capabilities, measures its fixed budgets, and evaluates admitted programs with `noble_ngraph::sem::{mul,sub}`. `tests/opt_kernel.rs` (registered in the existing `b3_rejections` target) covers refusal locations and finite behavior.
+- Note (2026-11-13): `noble-ngraph-experiment/src/opt/` strictly parses `ngraph-opt/1`, rejects duplicate JSON keys and unsupported capabilities, measures its fixed budgets, and evaluates admitted programs with `noble_ngraph::sem::{mul,sub}`. `tests/support/opt_kernel/corpus.rs` emits the Lean comparison corpus; `tests/support/opt_kernel.rs` (registered in the existing `b3_rejections` target) covers refusal locations and finite behavior.
 - [x] [serial] Provide Lean kernel-checked semantics for the selected `F32` reference update, reusing #38, with a named theorem inventory and a version-aware per-theorem axiom audit. r[NGRAPH-OPT-02]
   Complete at model level (2026-10-29): `proofs/foundation/NobleFoundation/SgdReference.lean` defines
   the two-rounding update over the #38 `Binary32` model and the published admission rule, with
