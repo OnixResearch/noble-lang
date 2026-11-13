@@ -313,7 +313,6 @@ def classifyAnswerFirst (observed : Observation) : Verdict :=
   else if observed.answer = .sat then
     (if !observed.modelParsed then .inconclusive
      else if observed.modelReplays then .refuted else .inconclusive)
-  else if observed.certificate then .certified
   else .inconclusive
 
 /-- Mutation: a corrupted encoding is treated as inconclusive, as the retired model did. Unlike

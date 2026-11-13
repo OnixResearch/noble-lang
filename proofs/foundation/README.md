@@ -2207,7 +2207,7 @@ The seeded mutations, and the recorded row that kills each:
 | Mutation of `classify` | Killed by |
 |---|---|
 | check the binding before refusal | a `refusal/*` row: `within_budget = false`, `bound = false`, recorded `unsupported` |
-| let the answer decide before the certificate | `forced/bound certificate with an injected UNKNOWN`, recorded `certified` |
+| let the answer decide before the certificate | `certificate/bound receipt, the positive control`, recorded `certified` |
 | feed the encoder verdict into the status | a `corrupt/*` row recorded `refuted` |
 | report a sat answer as a counterexample | `witness/narrow value`, recorded `inconclusive` |
 | accept external UNSAT as agreement | a `corrupt/*` row recorded `inconclusive` |
