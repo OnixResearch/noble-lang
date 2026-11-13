@@ -662,11 +662,12 @@ try {
     const r = refRun(wrapped, []);
     return { outcome: 'normal', stack: [...c.prefix, ...[...r].reverse().map(v => ['I64', String(v)])], trace: [] };
   };
-  const refusalFailing = cases.filter(c => c.expected.outcome === 'reject')
+  const refusalCases = cases.filter(c => c.expected.outcome === 'reject');
+  const refusalFailing = refusalCases
     .filter(c => !agrees(wrappedExpectation(c), observations.get(`${c.index}/off`)));
   controls.push({ id: 'literal-wrapping-instead-of-refusal', intended: 'out-of-range literal assumed to wrap',
-    detected_cases: refusalFailing.length, demonstrably_fails: refusalFailing.length === rejectionCases.length });
-  requireThat(refusalFailing.length === rejectionCases.length, 'refusal control did not fail');
+    detected_cases: refusalFailing.length, demonstrably_fails: refusalFailing.length === refusalCases.length });
+  requireThat(refusalFailing.length === refusalCases.length, 'refusal control did not fail');
   // Stale proof subject: Lean text bound to another case's program.
   const a = cases[0], b = cases.find(c => c.source !== a.source && c.expected.outcome === 'normal');
   const rebound = leanCase(a, a.index, refRun(caseOps(a), []));
