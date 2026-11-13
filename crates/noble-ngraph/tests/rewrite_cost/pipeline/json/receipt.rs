@@ -26,13 +26,16 @@ fn certificate(value: Option<&CertificateInfo>) -> String {
         |value| {
             std::format!(
                 concat!(
-        "{{\"revision\":{},\"steps\":{},\"left\":{},\"right\":{},\"in_memory_bytes\":{},",
-        "\"wire_bytes\":null,\"wire_bytes_reason\":\"no Rust certificate encoder exists\"}}"),
+                    "{{\"revision\":{},\"model\":{},\"steps\":{},\"left\":{},\"right\":{},",
+                    "\"in_memory_bytes\":{},\"wire_bytes\":{}}}"
+                ),
                 quoted(&value.revision),
+                quoted(&value.model),
                 value.steps,
                 quoted(&value.left),
                 quoted(&value.right),
-                value.in_memory_bytes
+                value.in_memory_bytes,
+                value.wire_bytes
             )
         },
     )
@@ -92,10 +95,8 @@ fn path(aggregate: &mut PathAggregate, is_certified: bool) -> String {
 
 const fn unmeasured_stages() -> &'static str {
     concat!(
-        "[{\"name\":\"certificate_wire_bytes\",\"status\":\"unmeasured\",",
-        "\"reason\":\"no Rust certificate encoder exists; structural footprint is not wire size\"},",
-        "{\"name\":\"decoding_replay\",\"status\":\"unmeasured\",",
-        "\"reason\":\"no Rust decoder exists in this in-memory path\"},",
+        "[{\"name\":\"decoding_replay\",\"status\":\"unmeasured\",",
+        "\"reason\":\"this in-memory pipeline never transports the certificate, so the decoder is exercised by the codec tests and not timed here\"},",
         "{\"name\":\"retained_memory\",\"status\":\"unmeasured\",",
         "\"reason\":\"no allocator or RSS accounting; graph/code estimates and scratch lease observations are separately labeled\"}]"
     )

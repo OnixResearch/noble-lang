@@ -5,6 +5,7 @@ use noble_ngraph::{cert, layout};
 pub(super) const fn certificate(value: &cert::Refusal) -> &'static str {
     match value {
         cert::Refusal::StaleRevision => "stale-revision",
+        cert::Refusal::StaleModel => "stale-model",
         cert::Refusal::TooManySteps => "too-many-steps",
         cert::Refusal::Malformed => "malformed",
         cert::Refusal::ConstantMismatch => "constant-mismatch",

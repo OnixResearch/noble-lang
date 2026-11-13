@@ -28,7 +28,7 @@ const noCandidateExecution = new Set([
 ]);
 const rawRowFields = Object.freeze([
   'fixture', 'proposer', 'steps', 'refused', 'residual', 'propose_us', 'propose_iqr_us',
-  'check_us', 'check_iqr_us', 'check_per_step_us', 'in_memory_footprint_bytes',
+  'check_us', 'check_iqr_us', 'check_per_step_us', 'in_memory_footprint_bytes', 'wire_bytes',
   'check_threshold_met',
 ]);
 const pipelineStages = Object.freeze([
@@ -37,7 +37,7 @@ const pipelineStages = Object.freeze([
   'full_fresh_attempt', 'warm_execution',
 ]);
 const unmeasuredPipelineStages = Object.freeze([
-  'certificate_wire_bytes', 'decoding_replay', 'retained_memory',
+  'decoding_replay', 'retained_memory',
 ]);
 
 function requireThat(condition, message) {
@@ -516,6 +516,8 @@ function validateReport(report, manifest, corpus) {
     }
     requireThat(Number.isInteger(row.in_memory_footprint_bytes) && row.in_memory_footprint_bytes >= 0,
       `row ${index}.in_memory_footprint_bytes is invalid`);
+    requireThat(Number.isInteger(row.wire_bytes) && row.wire_bytes > 0,
+      `row ${index}.wire_bytes is invalid`);
     requireThat(typeof row.check_threshold_met === 'boolean',
       `row ${index}.check_threshold_met is invalid`);
     validatePipeline(row, index);
@@ -693,6 +695,7 @@ if (options !== undefined) {
         identity: 'actual test-siphash13x4 library calls',
         fresh_extraction: false,
         deployment_timing: false,
+        wire_bytes: true,
         wire_decoder: false,
       },
       evidence: {

@@ -17,8 +17,11 @@
 # and returned outputs, and must agree with the source reference on the same empty input vector.
 #
 # Report both raw-graph certificate-component coverage and full pipeline coverage separately.
-# A stage skipped by a particular refusal is null/not-reached, never zero. Existing certificate
-# wire/decoder and allocator/RSS gaps remain unmeasured, with reasons. Report library graph/code
+# A stage skipped by a particular refusal is null/not-reached, never zero. Certificate wire size is
+# measured as the length of the `cert::encode` token envelope of the exact checked derivation, in
+# each row (`wire_bytes`) and in each certified path (`certificate.wire_bytes`); this is an
+# encoding size, not a time. The in-memory path still never decodes a transported envelope, so
+# decoder timing and allocator/RSS remain unmeasured, with reasons. Report library graph/code
 # estimates and scratch lease counters with their scopes, not as measured allocator peaks.
 #
 # Retention requires: admitted execution, exact observed output agreement, residual target,
@@ -37,7 +40,7 @@ stage input-admission | status measured | reason check::check on the exact owned
 stage proposal-search | status measured | reason cert::propose after successful source admission
 stage certificate-construction | status measured | reason included in cert::propose; not a second additive stage
 stage certificate-checking | status measured | reason cert::check over the exact proposed endpoints before candidate admission
-stage certificate-wire-bytes | status unmeasured | reason no Rust certificate encoder exists; structural footprint is not wire size
+stage certificate-wire-bytes | status measured | reason cert::encode token-envelope length of the exact checked derivation, recorded as wire_bytes; an encoding size, not a time
 stage decoding-replay | status unmeasured | reason no Rust decoder is in this in-memory path
 stage candidate-admission | status measured | reason check::check consumes the exact certificate-checked candidate without pruning
 stage backend-preparation | status measured | reason Compiled::new from the independently admitted graph

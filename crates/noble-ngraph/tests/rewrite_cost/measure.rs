@@ -44,6 +44,7 @@ const fn to_us(nanos: f64) -> f64 {
 pub(super) struct Measured {
     pub(super) steps: usize,
     pub(super) footprint_bytes: usize,
+    pub(super) wire_bytes: usize,
     pub(super) propose_us: f64,
     pub(super) propose_iqr_us: f64,
     pub(super) check_us: f64,
@@ -77,14 +78,17 @@ fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
             assert_eq!(outcome.as_ref().err(), expected_refusal.as_ref());
         },
     );
-    // Structural in-memory estimate: one `Step` per step plus the derivation header. This is not the
-    // wire size, and no Rust encoder exists to produce that.
+    // Structural in-memory estimate: one `Step` per step plus the derivation header. This is not
+    // the wire size; `wire_bytes` below is the encoded envelope the checker's codec transports.
     let footprint_bytes = std::mem::size_of::<Derivation>()
         + std::mem::size_of::<Step>() * derivation.steps.len()
-        + derivation.revision.capacity();
+        + derivation.revision.capacity()
+        + derivation.model.capacity();
+    let wire_bytes = cert::encode(&derivation).len();
     Measured {
         steps: derivation.steps.len(),
         footprint_bytes,
+        wire_bytes,
         propose_us: to_us(propose_median),
         propose_iqr_us: to_us(propose_iqr),
         check_us: to_us(check_median),
