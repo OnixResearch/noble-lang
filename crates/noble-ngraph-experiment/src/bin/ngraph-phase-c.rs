@@ -58,6 +58,7 @@ struct Args {
     samples: usize,
     cold_reps: usize,
     phase_profile: bool,
+    isop_bench: bool,
 }
 
 fn args() -> Args {
@@ -69,6 +70,7 @@ fn args() -> Args {
         samples: 2_000,
         cold_reps: 21,
         phase_profile: false,
+        isop_bench: false,
     };
     let v: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
@@ -82,6 +84,7 @@ fn args() -> Args {
             "--samples" => a.samples = val.parse().unwrap_or(a.samples),
             "--cold-reps" => a.cold_reps = val.parse().unwrap_or(a.cold_reps),
             "--phase-profile" => a.phase_profile = val.parse().expect("true or false"),
+            "--isop-bench" => a.isop_bench = val.parse().expect("true or false"),
             other => panic!("unknown argument {other}"),
         }
         i += 2;
@@ -593,6 +596,36 @@ fn w12(a: &Args) -> (Json, bool) {
 )]
 fn main() {
     let a = args();
+    if a.isop_bench {
+        let load_start = read("/proc/loadavg");
+        let process_affinity = read("/proc/self/status")
+            .lines()
+            .find(|line| line.starts_with("Cpus_allowed_list:"))
+            .and_then(|line| line.split(':').nth(1))
+            .map(str::trim)
+            .map(str::to_owned)
+            .unwrap_or_else(|| "unsupported".to_owned());
+        let mut report = noble_ngraph_experiment::isop::run_benchmark(a.samples)
+            .unwrap_or_else(|e| panic!("ISOP benchmark: {e}"));
+        report.push("source_revision", Json::s(a.source_rev));
+        report.push("toolchain", Json::s(a.toolchain));
+        report.push("cpu", Json::s(cpu_model()));
+        report.push("loadavg_start", Json::s(load_start));
+        report.push("process_affinity", Json::s(process_affinity));
+        report.push("pinned_cpu", Json::s(a.pinned_cpu));
+        report.push(
+            "timer",
+            Json::s("std::time::Instant (CLOCK_MONOTONIC); warm batches >= 20 us"),
+        );
+        let text = report.pretty();
+        match &a.out {
+            Some(path) => {
+                std::fs::write(path, text).unwrap_or_else(|e| panic!("write {path}: {e}"))
+            }
+            None => print!("{text}"),
+        }
+        return;
+    }
     let load_start = read("/proc/loadavg");
     let started = Instant::now();
     let w3s: Vec<W3Out> = W3_SIZES.iter().map(|(n, net)| w3(&a, n, *net)).collect();

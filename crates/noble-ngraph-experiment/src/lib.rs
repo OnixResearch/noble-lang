@@ -136,6 +136,7 @@ pub mod controls;
 pub mod differential;
 pub mod evidence;
 pub mod fixtures;
+pub mod isop;
 pub mod json;
 pub mod l1;
 pub mod oracle;

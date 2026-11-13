@@ -47,6 +47,7 @@ import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.InteractionNetOrientation
 import NobleFoundation.Isop
+import NobleFoundation.IsopInterval
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
