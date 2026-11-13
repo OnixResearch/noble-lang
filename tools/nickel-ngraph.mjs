@@ -47,6 +47,7 @@ function run(command, args) {
     return { status: 0, stdout: execFileSync(command, args, {
       cwd: ROOT,
       encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
       maxBuffer: 32 * 1024 * 1024,
     }), stderr: "" };
   } catch (error) {
